@@ -26,7 +26,7 @@ struct PersistenceController {
         container = NSPersistentContainer(name: "JabTracker")
 
         if inMemory {
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         }
 
         container.loadPersistentStores(completionHandler: { _, error in

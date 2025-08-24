@@ -40,7 +40,7 @@ struct ContentView: View {
 
 struct DashboardView: View {
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Text("Dashboard")
                     .font(.largeTitle)
@@ -55,7 +55,7 @@ struct DashboardView: View {
 
 struct AddDoseView: View {
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Text("Add Dose")
                     .font(.largeTitle)
@@ -73,7 +73,7 @@ struct AddDoseView: View {
 
 struct HistoryView: View {
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Text("Dose History")
                     .font(.largeTitle)
@@ -88,7 +88,7 @@ struct HistoryView: View {
 
 struct AnalyticsView: View {
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Text("Analytics")
                     .font(.largeTitle)
@@ -103,7 +103,7 @@ struct AnalyticsView: View {
 
 struct SettingsView: View {
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Text("Settings")
                     .font(.largeTitle)

@@ -188,3 +188,6 @@ This app handles medical data and dosing information. Ensure:
 
 - Project Spec: @docs/spec.md
 - GitHub Repo: https://github.com/gannonh/jab-tracker-ios
+
+# Reminders
+- Use NavigationStack instead of NavigationBView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
