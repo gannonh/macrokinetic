@@ -48,3 +48,15 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: JabTracker
+
+schemes:
+  JabTracker:
+    build:
+      targets:
+        JabTracker: all
+        JabTrackerTests: [test]
+        JabTrackerUITests: [test]
+    test:
+      targets:
+        - JabTrackerTests
+        - JabTrackerUITests
