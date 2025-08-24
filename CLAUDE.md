@@ -16,17 +16,61 @@ JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 med
 
 ## Development Commands
 
-Since this is a new iOS project, standard Xcode commands will apply once the project is initialized:
-
+### Building and Running
 ```bash
 # Build the project
 xcodebuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' build
 
-# Run tests
+# Install and launch app on simulator (manual testing)
+xcrun simctl install <SIMULATOR_ID> "<APP_PATH>"
+xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
+```
+
+### Testing Commands
+```bash
+# Run all tests (unit + UI)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'
 
+# Run only unit tests
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests
+
+# Run only UI tests (E2E)
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerUITests
+
+# Run specific test method
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests/JabTrackerTests/testUserCreation
+
+# Find available simulators
+xcrun simctl list devices | grep iPhone
+
+# Pretty output with xcpretty (install with: gem install xcpretty)
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' | xcpretty --test --color
+
+# Generate HTML test report
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' | xcpretty --report html --output build/reports/tests.html
+```
+
+### Documentation
+```bash
 # Generate Swift documentation (if using DocC)
 xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'
+
+# Or use the convenience script
+./scripts/docs.sh
+```
+
+### Convenience Scripts
+```bash
+# Build project
+./scripts/build.sh
+
+# Run tests
+./scripts/test.sh unit    # Unit tests only
+./scripts/test.sh ui      # UI tests only
+./scripts/test.sh all     # All tests
+
+# Generate documentation
+./scripts/docs.sh
 ```
 
 ## Architecture & Code Structure
