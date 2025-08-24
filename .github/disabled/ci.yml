@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: List available runtimes and simulators
+      run: |
+        echo "Available iOS runtimes:"
+        xcrun simctl list runtimes | grep iOS
+        echo "Available iPhone simulators:" 
+        xcrun simctl list devices available | grep iPhone
+      
+    - name: Show Xcode and Swift versions
+      run: |
+        xcodebuild -version
+        swift --version
+        
+    - name: Cache Xcode build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-xcode-${{ hashFiles('**/*.pbxproj') }}
+        restore-keys: |
+          ${{ runner.os }}-xcode-
+          
+    - name: Build
+      run: |
+        xcodebuild build \
+          -scheme JabTracker \
+          -destination 'platform=iOS Simulator,OS=18.6' \
+          -configuration Debug \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Run Unit Tests
+      run: |
+        xcodebuild test \
+          -scheme JabTracker \
+          -destination 'platform=iOS Simulator,OS=18.6' \
+          -only-testing:JabTrackerTests \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Run UI Tests
+      run: |
+        xcodebuild test \
+          -scheme JabTracker \
+          -destination 'platform=iOS Simulator,OS=18.6' \
+          -only-testing:JabTrackerUITests \
+          CODE_SIGNING_ALLOWED=NO
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Install SwiftLint
+      run: brew install swiftlint
+      
+    - name: Run SwiftLint
+      run: swiftlint

@@ -1,12 +1,9 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
 JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 medication doses (Ozempic, Wegovy, Mounjaro) with pharmacokinetic modeling for drug concentration calculations.
 
 **Technology Stack:**
+
 - Framework: SwiftUI (iOS 16.0+)
 - Backend: CloudKit (Sync, Storage, User Management)
 - Data: Core Data + CloudKit Sync (NSPersistentCloudKitContainer)
@@ -17,6 +14,7 @@ JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 med
 ## Development Commands
 
 ### Building and Running
+
 ```bash
 # Build the project
 xcodebuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' build
@@ -27,6 +25,7 @@ xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
 ```
 
 ### Testing Commands
+
 ```bash
 # Run all tests (unit + UI)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'
@@ -51,6 +50,7 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 ```
 
 ### Documentation
+
 ```bash
 # Generate Swift documentation (if using DocC)
 xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'
@@ -60,6 +60,7 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 ```
 
 ### Convenience Scripts
+
 ```bash
 # Build project
 ./scripts/build.sh
@@ -71,35 +72,14 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 
 # Generate documentation
 ./scripts/docs.sh
-
-# Run full CI check suite (recommended before PR merge)
-./scripts/check-all.sh    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
 ```
-
-### Local CI Verification
-Since GitHub Actions can be unreliable, use the comprehensive check script before merging PRs:
-
-```bash
-./scripts/check-all.sh
-```
-
-This script runs:
-- ✅ SwiftLint code quality checks
-- ✅ Build verification  
-- ✅ Unit tests
-- ✅ UI tests
-- ✅ SwiftFormat style checks (if installed)
-
-**Pre-merge checklist:**
-1. Run `./scripts/check-all.sh`
-2. All checks must pass ✅
-3. Fix any issues with `swiftlint --fix` and `swiftformat .`
-4. Re-run until all checks pass
 
 ## Architecture & Code Structure
 
 ### Core Data Models
+
 The app uses three primary Core Data entities:
+
 - `User`: Profile information including weight, timezone, medication preferences
 - `Dose`: Individual dose records with timestamp, amount, injection site, notes
 - `MedicationProfile`: Medication details, current dose, refill dates
@@ -107,8 +87,9 @@ The app uses three primary Core Data entities:
 ### Key Components
 
 **Medication Support:**
+
 - Semaglutide (Ozempic, Wegovy) - 7 day half-life, weekly dosing
-- Tirzepatide (Mounjaro, Zepbound) - 5 day half-life, weekly dosing  
+- Tirzepatide (Mounjaro, Zepbound) - 5 day half-life, weekly dosing
 - Liraglutide (Victoza, Saxenda) - 0.54 day half-life, daily dosing
 - Dulaglutide (Trulicity) - 4.7 day half-life, weekly dosing
 
@@ -117,6 +98,7 @@ Core calculation logic for drug concentration modeling using exponential decay b
 
 **Navigation Structure:**
 TabView with 5 main tabs:
+
 - Dashboard (Home) - Current levels, next dose
 - Add Dose - Quick entry and manual logging
 - History - Dose tracking and calendar view
@@ -124,6 +106,7 @@ TabView with 5 main tabs:
 - Settings - Profile, notifications, export
 
 ### Data Flow
+
 1. User logs doses through AddDoseView
 2. Doses stored in Core Data with CloudKit sync
 3. PharmacokineticsEngine calculates real-time concentrations
@@ -133,6 +116,7 @@ TabView with 5 main tabs:
 ### Key Features to Implement
 
 **Phase 1 (MVP):**
+
 - Core Data setup with User/Dose/MedicationProfile entities
 - Sign in with Apple authentication
 - Face ID/Touch ID for app access security
@@ -142,6 +126,7 @@ TabView with 5 main tabs:
 - Simple local notifications for dose reminders
 
 **Phase 2:**
+
 - Multiple medication support with enum-based medication definitions
 - Swift Charts integration for concentration timeline
 - PDF export using PDFKit for healthcare provider reports
@@ -155,12 +140,14 @@ TabView with 5 main tabs:
 **Components:** Follow Human Interface Guidelines with accessibility support
 
 ### Testing Strategy
+
 - Unit tests for pharmacokinetic calculations (100% coverage goal)
 - UI tests for critical user flows (90% coverage goal)
 - Core Data operations testing (95% coverage goal)
 - XCTest framework for unit testing, XCUITest for UI testing
 
 ### Privacy & Security
+
 - Core Data encryption enabled
 - Keychain storage for sensitive data
 - Face ID/Touch ID authentication
@@ -179,6 +166,7 @@ TabView with 5 main tabs:
 ## Regulatory Considerations
 
 This app handles medical data and dosing information. Ensure:
+
 - FDA medical device classification compliance
 - Clinical validation of pharmacokinetic models
 - Proper disclaimers about not replacing medical advice
@@ -188,6 +176,3 @@ This app handles medical data and dosing information. Ensure:
 
 - Project Spec: @docs/spec.md
 - GitHub Repo: https://github.com/gannonh/jab-tracker-ios
-
-# Reminders
-- Use NavigationStack instead of NavigationBView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types

@@ -1,0 +1,50 @@
+name: JabTracker
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "16.0"
+  defaultConfig: Debug
+  createIntermediateGroups: true
+  
+targets:
+  JabTracker:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: JabTracker
+        excludes:
+          - "*.xcassets"
+    resources:
+      - path: JabTracker/Assets.xcassets
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      CURRENT_PROJECT_VERSION: "1"
+      MARKETING_VERSION: "1.0"
+      INFOPLIST_KEY_CFBundleDisplayName: JabTracker
+      INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.medical
+      INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+      INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+      INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
+      TARGETED_DEVICE_FAMILY: 1
+      ENABLE_PREVIEWS: NO
+      
+  JabTrackerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [JabTrackerTests]
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: JabTracker
+      
+  JabTrackerUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [JabTrackerUITests]
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: JabTracker
