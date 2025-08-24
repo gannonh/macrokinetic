@@ -71,7 +71,30 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 
 # Generate documentation
 ./scripts/docs.sh
+
+# Run full CI check suite (recommended before PR merge)
+./scripts/check-all.sh    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
 ```
+
+### Local CI Verification
+Since GitHub Actions can be unreliable, use the comprehensive check script before merging PRs:
+
+```bash
+./scripts/check-all.sh
+```
+
+This script runs:
+- ✅ SwiftLint code quality checks
+- ✅ Build verification  
+- ✅ Unit tests
+- ✅ UI tests
+- ✅ SwiftFormat style checks (if installed)
+
+**Pre-merge checklist:**
+1. Run `./scripts/check-all.sh`
+2. All checks must pass ✅
+3. Fix any issues with `swiftlint --fix` and `swiftformat .`
+4. Re-run until all checks pass
 
 ## Architecture & Code Structure
 
