@@ -8,13 +8,21 @@
 
 /* Begin PBXBuildFile section */
 		1CCF439326CA9C3EFF296D8E /* JabTracker.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B3E61A5FD735958F97E61F52 /* JabTracker.xcdatamodeld */; };
+		25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = E302221806254B729984868B /* DesignTokens.swift */; };
 		45A5E4209720B7BF84E43977 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8C09A0577005D7848EAB16 /* ContentView.swift */; };
+		4667532FC92891E871E29355 /* DebugUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */; };
 		56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65714DDE038569FC5C471011 /* DesignSystemUITests.swift */; };
 		80F00B03F4A9C63A52D46AAE /* JabTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45ABB67198C53503C20D15E /* JabTrackerApp.swift */; };
 		82F0C084814F378314314189 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E301977A5B33833162621B43 /* PersistenceController.swift */; };
+		9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4068B3EB73128183393A2D3B /* ButtonComponents.swift */; };
 		A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */; };
 		B000368714C479D72A1E41B7 /* JabTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */; };
+		BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92209045E4347373E0C9BCAB /* Colors+Extensions.swift */; };
+		D620D4D470F1A3912620A111 /* DesignSystemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */; };
+		DB2729859B9AB311F4A8120D /* CardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE66B10C09A23B18DE262674 /* CardComponents.swift */; };
 		DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */; };
+		F55D33FC517BE359F05C333C /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */; };
+		FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7150A995B6D4936C3556044A /* PersistenceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,16 +43,24 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4068B3EB73128183393A2D3B /* ButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonComponents.swift; sourceTree = "<group>"; };
 		468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITests.swift; sourceTree = "<group>"; };
 		64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65714DDE038569FC5C471011 /* DesignSystemUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemUITests.swift; sourceTree = "<group>"; };
+		7150A995B6D4936C3556044A /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
+		7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugUITests.swift; sourceTree = "<group>"; };
+		92209045E4347373E0C9BCAB /* Colors+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Colors+Extensions.swift"; sourceTree = "<group>"; };
 		93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		9AEA120D761ACDBE31C04D6F /* JabTracker.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = JabTracker.xcdatamodel; sourceTree = "<group>"; };
+		A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
+		AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemTests.swift; sourceTree = "<group>"; };
 		C69716C0F961F4C16B0D08D6 /* JabTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JabTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerTests.swift; sourceTree = "<group>"; };
 		E27D5ACAC4996BC70713166E /* JabTrackerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E301977A5B33833162621B43 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		E302221806254B729984868B /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		E45ABB67198C53503C20D15E /* JabTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerApp.swift; sourceTree = "<group>"; };
+		EE66B10C09A23B18DE262674 /* CardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardComponents.swift; sourceTree = "<group>"; };
 		FE8C09A0577005D7848EAB16 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -69,10 +85,24 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		692FF9348E5A0E755003F23B /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				4068B3EB73128183393A2D3B /* ButtonComponents.swift */,
+				A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */,
+				EE66B10C09A23B18DE262674 /* CardComponents.swift */,
+				92209045E4347373E0C9BCAB /* Colors+Extensions.swift */,
+				E302221806254B729984868B /* DesignTokens.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
 		7EDF9808D9D9424A7F56EEEA /* JabTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
+				AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */,
 				CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */,
+				7150A995B6D4936C3556044A /* PersistenceTests.swift */,
 			);
 			path = JabTrackerTests;
 			sourceTree = "<group>";
@@ -80,6 +110,7 @@
 		DCB0F02017ACFBDE12BF527A /* JabTrackerUITests */ = {
 			isa = PBXGroup;
 			children = (
+				7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */,
 				65714DDE038569FC5C471011 /* DesignSystemUITests.swift */,
 				468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */,
 				93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */,
@@ -94,6 +125,7 @@
 				B3E61A5FD735958F97E61F52 /* JabTracker.xcdatamodeld */,
 				E45ABB67198C53503C20D15E /* JabTrackerApp.swift */,
 				E301977A5B33833162621B43 /* PersistenceController.swift */,
+				692FF9348E5A0E755003F23B /* Design */,
 			);
 			path = JabTracker;
 			sourceTree = "<group>";
@@ -186,6 +218,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4667532FC92891E871E29355 /* DebugUITests.swift in Sources */,
 				56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */,
 				A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */,
 				DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */,
@@ -196,7 +229,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D620D4D470F1A3912620A111 /* DesignSystemTests.swift in Sources */,
 				B000368714C479D72A1E41B7 /* JabTrackerTests.swift in Sources */,
+				FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -204,7 +239,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */,
+				F55D33FC517BE359F05C333C /* ButtonStyles.swift in Sources */,
+				DB2729859B9AB311F4A8120D /* CardComponents.swift in Sources */,
+				BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */,
 				45A5E4209720B7BF84E43977 /* ContentView.swift in Sources */,
+				25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */,
 				1CCF439326CA9C3EFF296D8E /* JabTracker.xcdatamodeld in Sources */,
 				80F00B03F4A9C63A52D46AAE /* JabTrackerApp.swift in Sources */,
 				82F0C084814F378314314189 /* PersistenceController.swift in Sources */,

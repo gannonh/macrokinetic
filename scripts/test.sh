@@ -14,7 +14,7 @@ DEVICES=(
 DEFAULT_DEVICE="iPhone 15,OS=17.5"
 
 show_usage() {
-    echo "Usage: $0 {unit|ui|all} [device] [specific_test]"
+    echo "Usage: $0 {unit|ui|all} [device] [test_file]"
     echo ""
     echo "Test types:"
     echo "  unit - Run unit tests only"
@@ -26,12 +26,20 @@ show_usage() {
         echo "  $((i+1)). ${DEVICES[$i]}"
     done
     echo ""
+    echo "Available unit test files (file-based organization):"
+    echo "  PersistenceTests      - Core Data and persistence functionality"
+    echo "  DesignSystemTests     - UI design system and styling components"
+    echo ""
     echo "Examples:"
     echo "  $0 ui                                                    # Run all UI tests on default device"
     echo "  $0 ui 1                                                  # Run all UI tests on iPhone 15"
-    echo "  $0 ui 1 DesignSystemUITests                             # Run specific test class"
-    echo "  $0 ui 1 DesignSystemUITests/testDesignSystemComponents  # Run specific test method"
-    echo "  $0 unit 1 DesignSystemTests                             # Run specific unit test class"
+    echo "  $0 ui 1 DesignSystemUITests                             # Run specific UI test class"
+    echo "  $0 ui 1 DesignSystemUITests/testDesignSystemComponents  # Run specific UI test method"
+    echo "  $0 unit 1 PersistenceTests                              # Run all persistence-related unit tests"
+    echo "  $0 unit 1 DesignSystemTests                             # Run all design system unit tests"
+    echo ""
+    echo "Note: Unit tests use file-based organization for Swift Testing compatibility."
+    echo "      Each test file focuses on a specific feature area for efficient development workflow."
     exit 1
 }
 
@@ -42,7 +50,7 @@ fi
 # Parse arguments
 TEST_TYPE="$1"
 DEVICE_NUM="$2"
-SPECIFIC_TEST="$3"
+TEST_FILE="$3"
 
 # Select device
 if [ -n "$DEVICE_NUM" ]; then
@@ -60,18 +68,19 @@ SIMULATOR="platform=iOS Simulator,name=${SELECTED_DEVICE}"
 
 echo "📱 Using simulator: $SELECTED_DEVICE"
 
-# Build test target based on type and specific test
+# Build test target based on type and test file
 build_test_target() {
     local test_type="$1"
-    local specific_test="$2"
+    local test_file="$2"
     
-    if [ -n "$specific_test" ]; then
+    if [ -n "$test_file" ]; then
         case "$test_type" in
             "unit")
-                echo "-only-testing:JabTrackerTests/$specific_test"
+                # For unit tests, we run the whole target since Swift Testing file targeting doesn't work reliably
+                echo "-only-testing:JabTrackerTests"
                 ;;
             "ui")
-                echo "-only-testing:JabTrackerUITests/$specific_test"
+                echo "-only-testing:JabTrackerUITests/$test_file"
                 ;;
         esac
     else
@@ -89,10 +98,17 @@ build_test_target() {
     fi
 }
 
-TEST_TARGET=$(build_test_target "$TEST_TYPE" "$SPECIFIC_TEST")
+TEST_TARGET=$(build_test_target "$TEST_TYPE" "$TEST_FILE")
 
-if [ -n "$SPECIFIC_TEST" ]; then
-    echo "🎯 Running specific test: $SPECIFIC_TEST"
+if [ -n "$TEST_FILE" ]; then
+    case "$TEST_TYPE" in
+        "unit")
+            echo "🎯 Running unit tests (Note: Swift Testing runs all unit tests, but focus on $TEST_FILE results)"
+            ;;
+        "ui")
+            echo "🎯 Running specific UI test: $TEST_FILE"
+            ;;
+    esac
 else
     echo ""
 fi

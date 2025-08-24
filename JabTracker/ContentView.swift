@@ -104,12 +104,72 @@ struct AnalyticsView: View {
 struct SettingsView: View {
     var body: some View {
         NavigationStack {
-            VStack {
-                Text("Settings")
-                    .font(.largeTitle)
-                    .bold()
-                Text("App preferences and profile")
-                    .foregroundColor(.secondary)
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 8) {
+                        Text("Settings")
+                            .font(DesignTokens.Typography.largeTitle)
+                            .accessibilityIdentifier("design-system-large-title")
+                        Text("App preferences and profile")
+                            .font(DesignTokens.Typography.body)
+                            .foregroundColor(.secondary)
+                    }
+
+                    // Design System Demo Section
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Design System Demo")
+                                .font(DesignTokens.Typography.headline)
+                                .accessibilityIdentifier("design-system-headline")
+
+                            Text("Typography and Colors")
+                                .font(DesignTokens.Typography.body)
+                                .foregroundColor(.secondary)
+                                .accessibilityIdentifier("design-system-body")
+
+                            Text("Sample caption text")
+                                .font(DesignTokens.Typography.caption)
+                                .foregroundColor(.secondary)
+                                .accessibilityIdentifier("design-system-caption")
+
+                            VStack(spacing: 12) {
+                                PrimaryButton(title: "Primary Button") {
+                                    // Demo action
+                                }
+
+                                SecondaryButton(title: "Secondary Button") {
+                                    // Demo action
+                                }
+                            }
+                        }
+                    }
+
+                    // Settings Options
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Preferences")
+                                .font(DesignTokens.Typography.headline)
+
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Text("Notifications")
+                                        .font(DesignTokens.Typography.body)
+                                    Spacer()
+                                    Toggle("", isOn: .constant(true))
+                                }
+
+                                HStack {
+                                    Text("Face ID")
+                                        .font(DesignTokens.Typography.body)
+                                    Spacer()
+                                    Toggle("", isOn: .constant(false))
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
             }
             .navigationTitle("Settings")
         }

@@ -12,3 +12,4 @@ build/
 # Swift Package Manager
 .swiftpm/
 Package.resolved
+.serena/cache/

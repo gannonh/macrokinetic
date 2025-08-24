@@ -1,0 +1,150 @@
+│ │ Migration Plan: Core Data to SwiftData                                                                                                                     │ │
+│ │                                                                                                                                                            │ │
+│ │ Overview                                                                                                                                                   │ │
+│ │                                                                                                                                                            │ │
+│ │ Migrate JabTracker from Core Data to SwiftData, targeting iOS 17.0+ to leverage modern data persistence with cleaner syntax and better SwiftUI             │ │
+│ │ integration.                                                                                                                                               │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 1: Update iOS Deployment Target                                                                                                                      │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Update project.yml                                                                                                                                      │ │
+│ │   - Change iOS deployment target from 16.0 to 17.0                                                                                                         │ │
+│ │   - Update both global and target-specific settings                                                                                                        │ │
+│ │ 2. Regenerate Xcode project                                                                                                                                │ │
+│ │   - Run xcodegen generate to apply changes                                                                                                                 │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 2: Create SwiftData Models                                                                                                                           │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Create new Model files                                                                                                                                  │ │
+│ │   - Models/User.swift - User profile with @Model macro                                                                                                     │ │
+│ │   - Models/Dose.swift - Dose tracking model                                                                                                                │ │
+│ │   - Models/MedicationProfile.swift - Medication information                                                                                                │ │
+│ │ 2. Model structure with SwiftData attributes:                                                                                                              │ │
+│ │ @Model                                                                                                                                                     │ │
+│ │ final class User {                                                                                                                                         │ │
+│ │     var id: UUID                                                                                                                                           │ │
+│ │     var email: String?                                                                                                                                     │ │
+│ │     var name: String?                                                                                                                                      │ │
+│ │     var dateOfBirth: Date?                                                                                                                                 │ │
+│ │     var weight: Double                                                                                                                                     │ │
+│ │     var weightUnit: String?                                                                                                                                │ │
+│ │     var timezone: String?                                                                                                                                  │ │
+│ │     var createdAt: Date?                                                                                                                                   │ │
+│ │     @Relationship(deleteRule: .cascade) var doses: [Dose]                                                                                                  │ │
+│ │ }                                                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ @Model                                                                                                                                                     │ │
+│ │ final class Dose {                                                                                                                                         │ │
+│ │     var id: UUID                                                                                                                                           │ │
+│ │     var amount: Double                                                                                                                                     │ │
+│ │     var timestamp: Date?                                                                                                                                   │ │
+│ │     var site: String?                                                                                                                                      │ │
+│ │     var notes: String?                                                                                                                                     │ │
+│ │     var imageData: Data?                                                                                                                                   │ │
+│ │     var skipped: Bool                                                                                                                                      │ │
+│ │     var user: User?                                                                                                                                        │ │
+│ │     var medication: MedicationProfile?                                                                                                                     │ │
+│ │ }                                                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ @Model                                                                                                                                                     │ │
+│ │ final class MedicationProfile {                                                                                                                            │ │
+│ │     var id: UUID                                                                                                                                           │ │
+│ │     var genericName: String?                                                                                                                               │ │
+│ │     var brandName: String?                                                                                                                                 │ │
+│ │     var currentDose: Double                                                                                                                                │ │
+│ │     var startDate: Date?                                                                                                                                   │ │
+│ │     var refillDate: Date?                                                                                                                                  │ │
+│ │     @Relationship(deleteRule: .cascade) var doses: [Dose]                                                                                                  │ │
+│ │ }                                                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 3: Replace PersistenceController                                                                                                                     │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Create DataController.swift                                                                                                                             │ │
+│ │   - Replace NSPersistentContainer with ModelContainer                                                                                                      │ │
+│ │   - Use ModelContext instead of NSManagedObjectContext                                                                                                     │ │
+│ │   - Implement CloudKit sync configuration                                                                                                                  │ │
+│ │ 2. Structure:                                                                                                                                              │ │
+│ │ @MainActor                                                                                                                                                 │ │
+│ │ class DataController: ObservableObject {                                                                                                                   │ │
+│ │     static let shared = DataController()                                                                                                                   │ │
+│ │     let container: ModelContainer                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │     init(inMemory: Bool = false) {                                                                                                                         │ │
+│ │         let schema = Schema([User.self, Dose.self, MedicationProfile.self])                                                                                │ │
+│ │         let config = ModelConfiguration(                                                                                                                   │ │
+│ │             schema: schema,                                                                                                                                │ │
+│ │             isStoredInMemoryOnly: inMemory,                                                                                                                │ │
+│ │             cloudKitDatabase: inMemory ? .none : .automatic                                                                                                │ │
+│ │         )                                                                                                                                                  │ │
+│ │         container = try! ModelContainer(for: schema, configurations: [config])                                                                             │ │
+│ │     }                                                                                                                                                      │ │
+│ │ }                                                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 4: Update App Entry Point                                                                                                                            │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Modify JabTrackerApp.swift                                                                                                                              │ │
+│ │   - Replace Core Data environment injection with SwiftData                                                                                                 │ │
+│ │   - Use .modelContainer() modifier                                                                                                                         │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 5: Update Views                                                                                                                                      │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Replace @FetchRequest with @Query                                                                                                                       │ │
+│ │ 2. Update environment access:                                                                                                                              │ │
+│ │   - Replace @Environment(\.managedObjectContext)                                                                                                           │ │
+│ │   - With @Environment(\.modelContext)                                                                                                                      │ │
+│ │ 3. Update ContentView.swift to use SwiftData context                                                                                                       │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 6: Update Tests                                                                                                                                      │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Modify PersistenceTests.swift                                                                                                                           │ │
+│ │   - Create test ModelContainer with in-memory configuration                                                                                                │ │
+│ │   - Update entity creation to use SwiftData models                                                                                                         │ │
+│ │   - Remove Core Data specific test cases                                                                                                                   │ │
+│ │ 2. Clean test structure - no more NSManagedObjectModel conflicts!                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 7: Clean Up                                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Remove Core Data artifacts:                                                                                                                             │ │
+│ │   - Delete JabTracker.xcdatamodeld                                                                                                                         │ │
+│ │   - Remove old PersistenceController.swift                                                                                                                 │ │
+│ │   - Clean up Core Data imports                                                                                                                             │ │
+│ │ 2. Update documentation:                                                                                                                                   │ │
+│ │   - Update CLAUDE.md with SwiftData commands                                                                                                               │ │
+│ │   - Update spec.md to reflect iOS 17+ requirement                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ Phase 8: Testing & Verification                                                                                                                            │ │
+│ │                                                                                                                                                            │ │
+│ │ 1. Run all tests to ensure migration success                                                                                                               │ │
+│ │ 2. Test CloudKit sync functionality                                                                                                                        │ │
+│ │ 3. Verify data persistence works correctly                                                                                                                 │ │
+│ │ 4. Test in-memory store for previews                                                                                                                       │ │
+│ │                                                                                                                                                            │ │
+│ │ Benefits After Migration                                                                                                                                   │ │
+│ │                                                                                                                                                            │ │
+│ │ - ✅ No more Core Data warnings                                                                                                                             │ │
+│ │ - ✅ Cleaner, more maintainable code                                                                                                                        │ │
+│ │ - ✅ Better SwiftUI integration                                                                                                                             │ │
+│ │ - ✅ Simplified CloudKit sync                                                                                                                               │ │
+│ │ - ✅ Modern Swift concurrency support                                                                                                                       │ │
+│ │ - ✅ Type-safe queries with @Query                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ Files to be Modified                                                                                                                                       │ │
+│ │                                                                                                                                                            │ │
+│ │ - project.yml - Update iOS version                                                                                                                         │ │
+│ │ - JabTracker/JabTrackerApp.swift - SwiftData integration                                                                                                   │ │
+│ │ - JabTracker/ContentView.swift - Update context usage                                                                                                      │ │
+│ │ - JabTrackerTests/PersistenceTests.swift - SwiftData tests                                                                                                 │ │
+│ │                                                                                                                                                            │ │
+│ │ Files to be Created                                                                                                                                        │ │
+│ │                                                                                                                                                            │ │
+│ │ - JabTracker/Models/User.swift                                                                                                                             │ │
+│ │ - JabTracker/Models/Dose.swift                                                                                                                             │ │
+│ │ - JabTracker/Models/MedicationProfile.swift                                                                                                                │ │
+│ │ - JabTracker/DataController.swift                                                                                                                          │ │
+│ │                                                                                                                                                            │ │
+│ │ Files to be Deleted                                                                                                                                        │ │
+│ │                                                                                                                                                            │ │
+│ │ - JabTracker/PersistenceController.swift                                                                                                                   │ │
+│ │ - JabTracker/JabTracker.xcdatamodeld/                                                                                                                      │ │
+│ │                                                                                                                                                            │ │
+│ │ This migration will modernize the codebase and eliminate all Core Data-related warnings while maintaining full functionality.      

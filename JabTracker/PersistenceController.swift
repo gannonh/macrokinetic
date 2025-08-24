@@ -37,4 +37,9 @@ struct PersistenceController {
 
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
+    
+    /// Create a test container with isolated context for testing
+    static func testContainer() -> PersistenceController {
+        return PersistenceController(inMemory: true)
+    }
 }
