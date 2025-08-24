@@ -15,8 +15,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       
-    - name: List available simulators
-      run: xcrun simctl list devices available | grep iPhone
+    - name: List available runtimes and simulators
+      run: |
+        echo "Available iOS runtimes:"
+        xcrun simctl list runtimes | grep iOS
+        echo "Available iPhone simulators:" 
+        xcrun simctl list devices available | grep iPhone
       
     - name: Show Xcode and Swift versions
       run: |
@@ -36,7 +40,7 @@ jobs:
       run: |
         xcodebuild build \
           -scheme JabTracker \
-          -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
           -configuration Debug \
           CODE_SIGNING_ALLOWED=NO
           
@@ -44,7 +48,7 @@ jobs:
       run: |
         xcodebuild test \
           -scheme JabTracker \
-          -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
           -only-testing:JabTrackerTests \
           CODE_SIGNING_ALLOWED=NO
           
@@ -52,7 +56,7 @@ jobs:
       run: |
         xcodebuild test \
           -scheme JabTracker \
-          -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
           -only-testing:JabTrackerUITests \
           CODE_SIGNING_ALLOWED=NO
 
