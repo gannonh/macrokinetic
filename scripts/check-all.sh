@@ -12,8 +12,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Default simulator
-SIMULATOR="platform=iOS Simulator,name=iPhone 15,OS=17.5"
+# Use the same configuration as test.sh - DEFAULT_DEVICE from working setup
+DEFAULT_DEVICE="iPhone 15,OS=17.5"
+SIMULATOR="platform=iOS Simulator,name=${DEFAULT_DEVICE}"
 
 print_header() {
     echo ""
@@ -42,7 +43,8 @@ run_check() {
     
     echo -e "${BLUE}Running: $name${NC}"
     
-    if eval "$command"; then
+    # Run command and capture exit code properly
+    if bash -c "$command"; then
         print_success "$name passed"
         return 0
     else
@@ -65,19 +67,19 @@ fi
 
 # 2. Build check
 print_header "2️⃣ Build Verification"
-if ! run_check "Build" "xcodebuild build -scheme JabTracker -destination '$SIMULATOR' CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
+if ! run_check "Build" "set -o pipefail && xcodebuild build -scheme JabTracker -destination '$SIMULATOR' CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
     ((FAILED_CHECKS++))
 fi
 
 # 3. Unit tests
 print_header "3️⃣ Unit Tests"
-if ! run_check "Unit Tests" "xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
+if ! run_check "Unit Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
     ((FAILED_CHECKS++))
 fi
 
 # 4. UI tests
 print_header "4️⃣ UI Tests"
-if ! run_check "UI Tests" "xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
+if ! run_check "UI Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
     ((FAILED_CHECKS++))
 fi
 
