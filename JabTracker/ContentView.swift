@@ -1,36 +1,36 @@
-import SwiftUI
 import CoreData
+import SwiftUI
 
 struct ContentView: View {
     var body: some View {
         TabView {
             DashboardView()
-                .tabItem { 
+                .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
                 .tag("home")
-            
+
             AddDoseView()
-                .tabItem { 
-                    Label("Add", systemImage: "plus.circle.fill") 
+                .tabItem {
+                    Label("Add", systemImage: "plus.circle.fill")
                 }
                 .tag("add")
-            
+
             HistoryView()
-                .tabItem { 
-                    Label("History", systemImage: "clock.fill") 
+                .tabItem {
+                    Label("History", systemImage: "clock.fill")
                 }
                 .tag("history")
-            
+
             AnalyticsView()
-                .tabItem { 
-                    Label("Analytics", systemImage: "chart.line.uptrend.xyaxis") 
+                .tabItem {
+                    Label("Analytics", systemImage: "chart.line.uptrend.xyaxis")
                 }
                 .tag("analytics")
-            
+
             SettingsView()
-                .tabItem { 
-                    Label("Settings", systemImage: "gear") 
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
                 }
                 .tag("settings")
         }
