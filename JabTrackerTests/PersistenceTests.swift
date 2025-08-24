@@ -1,6 +1,6 @@
 import Foundation
-import SwiftData
 @testable import JabTracker
+import SwiftData
 import Testing
 
 @MainActor
@@ -9,7 +9,7 @@ struct DataPersistenceTests {
     @Test("DataController initialization")
     func dataControllerInit() throws {
         let controller = DataController.testContainer()
-        
+
         // Verify container and context are accessible
         _ = controller.container.mainContext
         #expect(controller.container.schema.entities.count == 3)
@@ -27,11 +27,10 @@ struct DataPersistenceTests {
             email: "save-test-\(uniqueID)@example.com",
             weight: 70.0,
             weightUnit: "kg",
-            timezone: "UTC"
-        )
-        
+            timezone: "UTC")
+
         context.insert(user)
-        
+
         // This should not throw
         try context.save()
         #expect(user.id == uniqueID) // If we get here, save was successful
@@ -65,9 +64,8 @@ struct SwiftDataModelTests {
             weight: 70.0,
             weightUnit: "kg",
             timezone: "UTC",
-            createdAt: Date()
-        )
-        
+            createdAt: Date())
+
         context.insert(user)
         try context.save()
 
@@ -88,9 +86,8 @@ struct SwiftDataModelTests {
             genericName: "semaglutide",
             brandName: "Ozempic",
             currentDose: 1.0,
-            startDate: Date()
-        )
-        
+            startDate: Date())
+
         context.insert(medication)
         try context.save()
 
@@ -111,9 +108,8 @@ struct SwiftDataModelTests {
             amount: 1.0,
             timestamp: Date(),
             site: "Abdomen",
-            skipped: false
-        )
-        
+            skipped: false)
+
         context.insert(dose)
         try context.save()
 
@@ -122,7 +118,7 @@ struct SwiftDataModelTests {
         #expect(dose.site == "Abdomen")
         #expect(dose.skipped == false)
     }
-    
+
     @Test("User-Dose relationship works correctly")
     func userDoseRelationship() throws {
         let controller = DataController.testContainer()
@@ -130,26 +126,24 @@ struct SwiftDataModelTests {
 
         let userID = UUID()
         let doseID = UUID()
-        
+
         // Create user first
         let user = User(
             id: userID,
             email: "relationship-test-\(userID)@example.com",
-            weight: 70.0
-        )
+            weight: 70.0)
         context.insert(user)
-        
+
         // Create dose without setting user relationship initially
         let dose = Dose(
             id: doseID,
             amount: 1.0,
-            timestamp: Date()
-        )
+            timestamp: Date())
         context.insert(dose)
-        
+
         // Set the relationship after both objects are inserted
         dose.user = user
-        
+
         try context.save()
 
         #expect(dose.user?.id == user.id)

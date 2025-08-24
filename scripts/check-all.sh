@@ -68,19 +68,19 @@ fi
 
 # 2. Build check
 print_header "2️⃣ Build Verification"
-if ! run_check "Build" "set -o pipefail && xcodebuild build -scheme JabTracker -destination '$SIMULATOR' CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
+if ! run_check "Build" "set -o pipefail && xcodebuild build -scheme JabTracker -destination '$SIMULATOR' | xcbeautify"; then
     ((FAILED_CHECKS++))
 fi
 
 # 3. Unit tests
 print_header "3️⃣ Unit Tests"
-if ! run_check "Unit Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
+if ! run_check "Unit Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests | xcbeautify"; then
     ((FAILED_CHECKS++))
 fi
 
 # 4. UI tests
 print_header "4️⃣ UI Tests"
-if ! run_check "UI Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests CODE_SIGNING_ALLOWED=NO | xcpretty --color"; then
+if ! run_check "UI Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests | xcbeautify"; then
     ((FAILED_CHECKS++))
 fi
 

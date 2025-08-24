@@ -116,15 +116,15 @@ fi
 case "$TEST_TYPE" in
   "unit")
     echo "🧪 Running unit tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcpretty --color
+    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcbeautify
     ;;
   "ui")
     echo "🖱️  Running UI tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcpretty --color
+    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcbeautify
     ;;
   "all")
     echo "🎯 Running all tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcpretty --color
+    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcbeautify
     ;;
   *)
     show_usage

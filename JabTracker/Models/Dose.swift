@@ -15,11 +15,21 @@ final class Dose {
     var notes: String?
     var imageData: Data?
     var skipped: Bool = false
-    
+
     var user: User?
     var medication: MedicationProfile?
-    
-    init(id: UUID = UUID(), amount: Double? = nil, timestamp: Date? = nil, site: String? = nil, notes: String? = nil, imageData: Data? = nil, skipped: Bool = false, user: User? = nil, medication: MedicationProfile? = nil) {
+
+    init(
+        id: UUID = UUID(),
+        amount: Double? = nil,
+        timestamp: Date? = nil,
+        site: String? = nil,
+        notes: String? = nil,
+        imageData: Data? = nil,
+        skipped: Bool = false,
+        user: User? = nil,
+        medication: MedicationProfile? = nil)
+    {
         self.id = id
         self.amount = amount
         self.timestamp = timestamp

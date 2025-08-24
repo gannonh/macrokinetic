@@ -14,17 +14,24 @@ final class MedicationProfile {
     var currentDose: Double?
     var startDate: Date?
     var refillDate: Date?
-    
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
     var doses: [Dose]?
-    
-    init(id: UUID = UUID(), genericName: String? = nil, brandName: String? = nil, currentDose: Double? = nil, startDate: Date? = nil, refillDate: Date? = nil) {
+
+    init(
+        id: UUID = UUID(),
+        genericName: String? = nil,
+        brandName: String? = nil,
+        currentDose: Double? = nil,
+        startDate: Date? = nil,
+        refillDate: Date? = nil)
+    {
         self.id = id
         self.genericName = genericName
         self.brandName = brandName
         self.currentDose = currentDose
         self.startDate = startDate
         self.refillDate = refillDate
-        self.doses = []
+        doses = []
     }
 }
