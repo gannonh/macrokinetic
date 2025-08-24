@@ -9,7 +9,9 @@ struct JabTrackerTests {
         let controller = PersistenceController(inMemory: true)
 
         #expect(controller.container.name == "JabTracker")
-        #expect(controller.container.viewContext != nil)
+        // viewContext is non-optional, so just verify it's accessible
+        let context = controller.container.viewContext
+        #expect(context.concurrencyType == .mainQueueConcurrencyType)
     }
 
     @Test("Core Data context saves successfully")
@@ -27,7 +29,9 @@ struct JabTrackerTests {
         let previewController = PersistenceController.preview
 
         #expect(previewController.container.name == "JabTracker")
-        #expect(previewController.container.viewContext != nil)
+        // viewContext is non-optional, so just verify it's accessible
+        let context = previewController.container.viewContext
+        #expect(context.concurrencyType == .mainQueueConcurrencyType)
     }
 }
 
