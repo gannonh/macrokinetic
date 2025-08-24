@@ -31,7 +31,7 @@ if [ -n "$1" ]; then
     if [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
         show_usage
     elif [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le ${#DEVICES[@]} ]; then
-        SELECTED_DEVICE="${DEVICES[$((1-1))]}"
+        SELECTED_DEVICE="${DEVICES[$((10#$1-1))]}"
     else
         echo "❌ Invalid device number. Choose 1-${#DEVICES[@]}"
         show_usage

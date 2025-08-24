@@ -38,7 +38,7 @@ fi
 # Select device
 if [ -n "$2" ]; then
     if [[ "$2" =~ ^[0-9]+$ ]] && [ "$2" -ge 1 ] && [ "$2" -le ${#DEVICES[@]} ]; then
-        SELECTED_DEVICE="${DEVICES[$((2-1))]}"
+        SELECTED_DEVICE="${DEVICES[$((10#$2-1))]}"
     else
         echo "❌ Invalid device number. Choose 1-${#DEVICES[@]}"
         show_usage
