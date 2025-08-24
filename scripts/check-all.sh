@@ -4,6 +4,7 @@
 # Runs all tests, SwiftLint, and build verification
 
 set -e  # Exit on any error
+set -o pipefail  # Ensure pipeline failures are detected
 
 # Colors for output
 RED='\033[0;31m'

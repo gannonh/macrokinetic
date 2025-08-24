@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail  # Ensure pipeline failures are detected
+
 # Build the project with pretty output and device selection
 
 # Available simulators
@@ -46,12 +48,10 @@ echo "🔨 Building JabTracker..."
 echo "📱 Using simulator: $SELECTED_DEVICE"
 echo ""
 
-xcodebuild build \
+if xcodebuild build \
   -scheme JabTracker \
   -destination "$SIMULATOR" \
-  | xcpretty --color
-
-if [ $? -eq 0 ]; then
+  | xcpretty --color; then
     echo "✅ Build succeeded"
 else
     echo "❌ Build failed"

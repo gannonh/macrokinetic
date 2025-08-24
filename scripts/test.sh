@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail  # Ensure pipeline failures are detected
+
 # Run tests with pretty output and device selection
 
 # Available simulators
