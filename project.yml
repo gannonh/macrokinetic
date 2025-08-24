@@ -3,6 +3,8 @@ options:
   bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "16.0"
+  defaultConfig: Debug
+  createIntermediateGroups: true
   
 targets:
   JabTracker:
