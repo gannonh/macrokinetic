@@ -1,13 +1,14 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct JabTrackerApp: App {
-    let persistenceController = PersistenceController.shared
+    let dataController = DataController.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .modelContainer(dataController.container)
         }
     }
 }

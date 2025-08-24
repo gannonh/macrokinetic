@@ -1,5 +1,5 @@
-import CoreData
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     var body: some View {
@@ -178,5 +178,5 @@ struct SettingsView: View {
 
 #Preview {
     ContentView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .modelContainer(DataController.preview.container)
 }

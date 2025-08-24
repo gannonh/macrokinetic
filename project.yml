@@ -1,8 +1,8 @@
 name: JabTracker
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: com.gannonhall
   deploymentTarget:
-    iOS: "16.0"
+    iOS: "17.0"
   defaultConfig: Debug
   createIntermediateGroups: true
   
@@ -10,7 +10,7 @@ targets:
   JabTracker:
     type: application
     platform: iOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "17.0"
     sources:
       - path: JabTracker
         excludes:
@@ -30,6 +30,8 @@ targets:
       INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
       TARGETED_DEVICE_FAMILY: 1
       ENABLE_PREVIEWS: NO
+      CODE_SIGN_ENTITLEMENTS: JabTracker/JabTracker.entitlements
+      DEVELOPMENT_TEAM: WLXX9L7UL
       
   JabTrackerTests:
     type: bundle.unit-test
