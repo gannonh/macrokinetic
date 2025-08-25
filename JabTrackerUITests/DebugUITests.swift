@@ -28,7 +28,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Settings"].exists, "Settings title should be visible")
         
         // Test that at least one interactive element exists
-        let interactiveElementsExist = allButtons.count > 0
+        let interactiveElementsExist = !allButtons.isEmpty
         XCTAssertTrue(interactiveElementsExist, "Settings view should have interactive elements")
         
         // Test that design system components are accessible

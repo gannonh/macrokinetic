@@ -24,8 +24,7 @@ final class MedicationProfile {
         brandName: String? = nil,
         currentDose: Double? = nil,
         startDate: Date? = nil,
-        refillDate: Date? = nil)
-    {
+        refillDate: Date? = nil) {
         self.id = id
         self.genericName = genericName
         self.brandName = brandName

@@ -28,8 +28,7 @@ final class Dose {
         imageData: Data? = nil,
         skipped: Bool = false,
         user: User? = nil,
-        medication: MedicationProfile? = nil)
-    {
+        medication: MedicationProfile? = nil) {
         self.id = id
         self.amount = amount
         self.timestamp = timestamp

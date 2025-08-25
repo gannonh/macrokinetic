@@ -28,8 +28,7 @@ final class User {
         weight: Double? = nil,
         weightUnit: String? = nil,
         timezone: String? = nil,
-        createdAt: Date? = nil)
-    {
+        createdAt: Date? = nil) {
         self.id = id
         self.email = email
         self.name = name

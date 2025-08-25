@@ -6,7 +6,7 @@ import UIKit
 // Helper extension for testing color values
 extension Color {
     var uiColor: UIColor {
-        return UIColor(self)
+        UIColor(self)
     }
     
     func rgbComponents() -> (red: Double, green: Double, blue: Double, alpha: Double)? {
