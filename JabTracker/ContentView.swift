@@ -118,6 +118,9 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
 
+                    // User Profile Section
+                    UserProfileView()
+
                     // Design System Demo Section
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
@@ -163,13 +166,8 @@ struct SettingsView: View {
                                     Spacer()
                                     Toggle("", isOn: .constant(true))
                                 }
-
-                                HStack {
-                                    Text("Face ID")
-                                        .font(DesignTokens.Typography.body)
-                                    Spacer()
-                                    Toggle("", isOn: .constant(false))
-                                }
+                                
+                                // Face ID toggle is handled in UserProfileView when user is authenticated
                             }
                         }
                     }

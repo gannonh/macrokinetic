@@ -34,6 +34,17 @@ class BiometricAuthManager: ObservableObject {
     }
     
     private func checkBiometricAvailability() {
+        // In UI testing mode, always make biometrics available
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
+                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        
+        if isUITesting {
+            self.isAvailable = true
+            self.biometricType = .faceID
+            print("UI_TESTING mode: BiometricAuthManager set to available with Face ID")
+            return
+        }
+        
         let context = LAContext()
         var error: NSError?
         

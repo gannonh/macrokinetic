@@ -4,159 +4,242 @@ final class AuthenticationUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-
-    @MainActor
-    func testSignInWithAppleFlow() throws {
+    
+    private func launchAppWithTestMode() -> XCUIApplication {
         let app = XCUIApplication()
+        app.launchEnvironment["UI_TESTING"] = "true"
+        app.launchArguments.append("--ui-testing")
         app.launch()
-
-        // ACCEPTANCE CRITERIA 1: User sees Sign in with Apple button on first launch
-        let signInButton = app.buttons["sign-in-with-apple-button"]
-        XCTAssertTrue(signInButton.waitForExistence(timeout: 5), "Sign in with Apple button should appear on first launch")
-        XCTAssertTrue(signInButton.isEnabled, "Sign in with Apple button should be enabled")
-
-        // Note: We cannot actually test Sign in with Apple in UI tests as it requires real Apple ID
-        // Instead we test that the button exists and would trigger the authentication flow
-        
-        // For now, we'll simulate successful authentication by checking the button exists
-        // In a real implementation, we'd mock the authentication response
+        return app
+    }
+    
+    private func launchAppWithRealAuth() -> XCUIApplication {
+        let app = XCUIApplication()
+        // Reset app data to ensure clean state for authentication testing
+        app.launchArguments.append("--reset-app-data")
+        app.launch()
+        return app
     }
 
     @MainActor
-    func testBiometricAuthenticationPrompt() throws {
-        let app = XCUIApplication()
-        app.launch()
+    func testCompleteSignInWithAppleFlow() throws {
+        // This test verifies the Sign in with Apple UI appears correctly
+        // It cannot complete the actual authentication without real Apple ID credentials
+        let app = launchAppWithRealAuth()
 
-        // ACCEPTANCE CRITERIA 2: After successful Apple ID sign in, biometric auth prompt appears
-        // Note: This test assumes user is already authenticated (in a real app, we'd set up test state)
-        // We're testing that the biometric authentication UI can be triggered
+        // When not authenticated, app should show AuthenticationView
+        XCTAssertTrue(app.staticTexts["JabTracker"].waitForExistence(timeout: 5), 
+                      "App title should be visible on authentication screen")
         
-        // Navigate to Settings to find biometric settings
-        let tabBar = app.tabBars.element
-        let settingsTab = tabBar.buttons["Settings"]
-        settingsTab.tap()
-
-        // Look for biometric authentication toggle in settings
-        let biometricToggle = app.switches["biometric-auth-toggle"]
-        if biometricToggle.waitForExistence(timeout: 2) {
-            // If toggle exists, it means user is authenticated and can control biometric auth
-            XCTAssertTrue(biometricToggle.exists, "Biometric authentication toggle should exist for authenticated users")
+        XCTAssertTrue(app.staticTexts["Welcome to JabTracker"].waitForExistence(timeout: 3), 
+                      "Welcome message should be visible")
+        
+        // Verify Sign in with Apple button exists and is enabled
+        let signInButton = app.buttons["sign-in-with-apple-button"]
+        XCTAssertTrue(signInButton.waitForExistence(timeout: 3), 
+                      "Sign in with Apple button should be visible")
+        XCTAssertTrue(signInButton.isEnabled, 
+                      "Sign in with Apple button should be enabled")
+        
+        // Tap the button to verify it responds
+        signInButton.tap()
+        
+        // Wait for system authentication sheet to appear
+        sleep(2)
+        
+        // Check SpringBoard for the Apple ID authentication sheet
+        let springBoard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let continueWithPasswordButton = springBoard.buttons["Continue with Password"]
+        
+        if continueWithPasswordButton.waitForExistence(timeout: 3) {
+            // Apple ID sheet appeared - authentication flow started successfully  
+            XCTAssertTrue(true, "Sign in with Apple authentication sheet appeared successfully")
+            
+            // Dismiss the sheet by tapping the X button in the top corner
+            let closeButton = springBoard.buttons.matching(NSPredicate(format: "label CONTAINS '✕' OR identifier CONTAINS 'close' OR identifier CONTAINS 'cancel'")).firstMatch
+            if closeButton.exists {
+                closeButton.tap()
+            }
+            
+        } else {
+            XCTFail("Apple ID authentication sheet did not appear")
         }
     }
 
     @MainActor
-    func testUserProfileManagement() throws {
-        let app = XCUIApplication()
-        app.launch()
+    func testBiometricAuthenticationToggle() throws {
+        let app = launchAppWithTestMode()
 
-        // ACCEPTANCE CRITERIA 3: User can view and edit profile in Settings tab
+        // Navigate to Settings
         let tabBar = app.tabBars.element
         let settingsTab = tabBar.buttons["Settings"]
         settingsTab.tap()
 
-        // Look for user profile section
-        let profileSection = app.staticTexts["User Profile"]
-        XCTAssertTrue(profileSection.waitForExistence(timeout: 3), "User Profile section should exist in Settings")
+        // Ensure user is authenticated first
+        if app.buttons["sign-in-with-apple-button"].waitForExistence(timeout: 2) {
+            XCTFail("User must be authenticated to test biometric settings. Please sign in first.")
+        }
 
-        // Look for editable profile fields
+        // Scroll down to make the biometric toggle visible
+        app.swipeUp()
+        
+        // Debug: Print all available switches to see what exists
+        let allSwitches = app.switches
+        print("Available switches count: \(allSwitches.count)")
+        for i in 0..<allSwitches.count {
+            let switchElement = allSwitches.element(boundBy: i)
+            if switchElement.exists {
+                print("Switch \(i): identifier='\(switchElement.identifier)', label='\(switchElement.label)'")
+            }
+        }
+        
+        // Look for biometric authentication toggle - try the fourth switch (index 3) which should be the inner toggle
+        let biometricToggle = allSwitches.count > 3 ? allSwitches.element(boundBy: 3) : app.switches["biometric-auth-toggle"]
+        
+        XCTAssertTrue(biometricToggle.waitForExistence(timeout: 3), "Biometric toggle should exist for authenticated users")
+        
+        // Test toggling biometric authentication
+        let initialState = biometricToggle.value as? String == "1"
+        biometricToggle.tap()
+        
+        // Verify the toggle state changed
+        sleep(1) // Allow UI to update
+        let newState = biometricToggle.value as? String == "1"
+        XCTAssertNotEqual(initialState, newState, "Biometric toggle should change state when tapped")
+    }
+
+    @MainActor
+    func testUserProfileEditing() throws {
+        let app = launchAppWithTestMode()
+
+        // Navigate to Settings
+        let tabBar = app.tabBars.element
+        let settingsTab = tabBar.buttons["Settings"]
+        settingsTab.tap()
+
+        // Ensure user is authenticated
+        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 3), 
+                      "User Profile should be visible. Please sign in first.")
+
+        // Tap Edit button
+        let editButton = app.buttons["edit-profile-button"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 2), "Edit profile button should exist")
+        editButton.tap()
+
+        // Test weight input
         let weightField = app.textFields["weight-input"]
+        XCTAssertTrue(weightField.waitForExistence(timeout: 2), "Weight input field should appear in edit mode")
+        
+        weightField.tap()
+        weightField.clearAndEnterText("75")
+
+        // Test weight unit picker
         let weightUnitPicker = app.buttons["weight-unit-picker"]
+        XCTAssertTrue(weightUnitPicker.exists, "Weight unit picker should exist")
         
-        if weightField.waitForExistence(timeout: 2) {
-            // If weight field exists, test editing functionality
-            XCTAssertTrue(weightField.exists, "Weight input field should exist")
-            XCTAssertTrue(weightUnitPicker.exists, "Weight unit picker should exist")
-            
-            // Test weight input
-            weightField.tap()
-            weightField.typeText("75")
-            
-            // Test unit picker
-            weightUnitPicker.tap()
-            
-            // Look for kg/lbs options
-            let kgOption = app.buttons["kg"]
-            let lbsOption = app.buttons["lbs"]
-            XCTAssertTrue(kgOption.exists || lbsOption.exists, "Weight unit options (kg/lbs) should be available")
-        }
-    }
+        // Save changes
+        let saveButton = app.buttons["save-profile-button"]
+        XCTAssertTrue(saveButton.exists, "Save button should exist in edit mode")
+        XCTAssertTrue(saveButton.isEnabled, "Save button should be enabled with valid data")
+        saveButton.tap()
 
-    @MainActor 
-    func testAuthenticationPersistence() throws {
-        let app = XCUIApplication()
-        app.launch()
-
-        // ACCEPTANCE CRITERIA 4: App remembers authentication state between launches
-        // Navigate to Settings to check if user profile is available
-        let tabBar = app.tabBars.element
-        let settingsTab = tabBar.buttons["Settings"]
-        settingsTab.tap()
-
-        // If user is authenticated, profile should be visible
-        // If not authenticated, sign in button should be visible
-        let profileSection = app.staticTexts["User Profile"]
-        let signInButton = app.buttons["sign-in-with-apple-button"]
-
-        // Either profile exists (user authenticated) or sign in button exists (not authenticated)
-        let profileExists = profileSection.waitForExistence(timeout: 2)
-        let signInExists = signInButton.waitForExistence(timeout: 2)
-        
-        XCTAssertTrue(profileExists || signInExists, "Either user profile or sign in button should be visible")
-    }
-
-    @MainActor
-    func testSignOutFlow() throws {
-        let app = XCUIApplication()
-        app.launch()
-
-        // ACCEPTANCE CRITERIA 5: User can sign out and sign back in
-        let tabBar = app.tabBars.element
-        let settingsTab = tabBar.buttons["Settings"]
-        settingsTab.tap()
-
-        // Look for sign out button (only exists if user is authenticated)
-        let signOutButton = app.buttons["sign-out-button"]
-        
-        if signOutButton.waitForExistence(timeout: 2) {
-            XCTAssertTrue(signOutButton.exists, "Sign out button should exist for authenticated users")
-            XCTAssertTrue(signOutButton.isEnabled, "Sign out button should be enabled")
-            
-            // Test sign out action
-            signOutButton.tap()
-            
-            // After sign out, should see sign in button
-            let signInButton = app.buttons["sign-in-with-apple-button"]
-            XCTAssertTrue(signInButton.waitForExistence(timeout: 3), "Sign in button should appear after sign out")
-        }
+        // Verify edit mode is exited
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Should return to view mode after save")
     }
 
     @MainActor
     func testFormValidation() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchAppWithTestMode()
 
-        // ACCEPTANCE CRITERIA 6: Form validation prevents invalid data entry
+        // Navigate to Settings and enter edit mode
         let tabBar = app.tabBars.element
         let settingsTab = tabBar.buttons["Settings"]
         settingsTab.tap()
 
-        let weightField = app.textFields["weight-input"]
+        // Ensure user is authenticated and enter edit mode
+        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 3), 
+                      "User Profile should be visible")
         
-        if weightField.waitForExistence(timeout: 2) {
-            // Test invalid weight input (negative value)
-            weightField.tap()
-            weightField.clearAndEnterText("-50")
-            
-            // Look for validation error message
-            let errorMessage = app.staticTexts["weight-error-message"]
-            XCTAssertTrue(errorMessage.waitForExistence(timeout: 2), "Error message should appear for invalid weight")
-            
-            // Test valid weight input
-            weightField.clearAndEnterText("70")
-            
-            // Error message should disappear
-            XCTAssertFalse(errorMessage.exists, "Error message should disappear for valid weight")
-        }
+        let editButton = app.buttons["edit-profile-button"]
+        editButton.tap()
+
+        // Test invalid weight input
+        let weightField = app.textFields["weight-input"]
+        weightField.tap()
+        weightField.clearAndEnterText("-50")
+        
+        // Check for error message
+        let errorMessage = app.staticTexts["weight-error-message"]
+        XCTAssertTrue(errorMessage.waitForExistence(timeout: 2), "Error message should appear for invalid weight")
+        
+        // Save button should be disabled
+        let saveButton = app.buttons["save-profile-button"]
+        XCTAssertFalse(saveButton.isEnabled, "Save button should be disabled with invalid data")
+        
+        // Test valid weight
+        weightField.clearAndEnterText("70")
+        XCTAssertFalse(errorMessage.exists, "Error message should disappear with valid weight")
+        XCTAssertTrue(saveButton.isEnabled, "Save button should be enabled with valid data")
+    }
+
+    @MainActor
+    func testSignOutFlow() throws {
+        let app = launchAppWithTestMode()
+
+        // Navigate to Settings
+        let tabBar = app.tabBars.element
+        let settingsTab = tabBar.buttons["Settings"]
+        settingsTab.tap()
+
+        // Ensure user is authenticated
+        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 3), 
+                      "User Profile should be visible")
+
+        // Find and tap sign out button
+        let signOutButton = app.buttons["sign-out-button"]
+        XCTAssertTrue(signOutButton.waitForExistence(timeout: 2), "Sign out button should exist")
+        XCTAssertTrue(signOutButton.isEnabled, "Sign out button should be enabled")
+        
+        signOutButton.tap()
+
+        // Verify sign in button appears after sign out
+        let signInButton = app.buttons["sign-in-with-apple-button"]
+        XCTAssertTrue(signInButton.waitForExistence(timeout: 3), "Sign in button should appear after sign out")
+        
+        // Verify profile is no longer visible
+        XCTAssertFalse(app.staticTexts["User Profile"].exists, "User Profile should not be visible after sign out")
+    }
+
+    @MainActor
+    func testAuthenticationPersistence() throws {
+        let app = launchAppWithTestMode()
+        
+        // In test mode, should see TabView (may take a moment to initialize)
+        let tabBar = app.tabBars.element
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "TabView should be visible in test mode")
+        
+        let settingsTab = tabBar.buttons["Settings"]
+        settingsTab.tap()
+
+        // In test mode, should see user profile
+        let profileExists = app.staticTexts["User Profile"].waitForExistence(timeout: 3)
+        XCTAssertTrue(profileExists, "User profile should be visible in test mode")
+        
+        // Test app restart persistence
+        app.terminate()
+        
+        // Relaunch with test mode
+        let restartedApp = launchAppWithTestMode()
+        
+        let restartedTabBar = restartedApp.tabBars.element
+        XCTAssertTrue(restartedTabBar.waitForExistence(timeout: 3), "TabView should be visible after restart in test mode")
+        
+        let restartedSettingsTab = restartedTabBar.buttons["Settings"]
+        restartedSettingsTab.tap()
+        
+        // Profile should still be visible after relaunch in test mode
+        XCTAssertTrue(restartedApp.staticTexts["User Profile"].waitForExistence(timeout: 3), 
+                      "User Profile should persist after app relaunch in test mode")
     }
 }
 

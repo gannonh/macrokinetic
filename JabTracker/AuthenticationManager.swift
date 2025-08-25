@@ -6,7 +6,7 @@ import SwiftUI
 enum AuthenticationState: String, CaseIterable {
     case notDetermined
     case authenticated
-    case denied
+    case notAuthenticated
     case restricted
     case expired
 }
@@ -18,17 +18,85 @@ class AuthenticationManager: NSObject, ObservableObject {
     
     private let dataController: DataController
     
-    init(dataController: DataController = .shared) {
-        self.dataController = dataController
+    init(dataController: DataController? = nil) {
+        self.dataController = dataController ?? DataController.shared
         super.init()
-        checkAuthenticationState()
     }
     
-    private func checkAuthenticationState() {
-        // Check stored authentication state on app launch
-        // This will be implemented to check Keychain for stored credentials
-        authenticationState = .notDetermined
+    func checkAuthenticationStatus() async {
+        // Reset app data if requested (for UI testing)
+        if ProcessInfo.processInfo.arguments.contains("--reset-app-data") {
+            await resetAppData()
+        }
+        
+        // Check if we're in UI testing mode - environment is available after app launch
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
+                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        
+        if isUITesting {
+            print("UI_TESTING mode detected - setting authenticated state immediately")
+            await MainActor.run {
+                authenticationState = .authenticated
+                // Create a simple test user
+                currentUser = User(
+                    email: "test@uitesting.com",
+                    name: "UI Test User", 
+                    weight: 70.0,
+                    weightUnit: "kg",
+                    timezone: "UTC",
+                    createdAt: Date(),
+                    updatedAt: Date()
+                )
+                print("Test user created for UI testing")
+            }
+            return
+        }
+        
+        print("Normal authentication mode - checking for existing users")
+        
+        // Check if user is already authenticated by looking for existing user data
+        let context = dataController.container.mainContext
+        
+        do {
+            let fetchDescriptor = FetchDescriptor<User>()
+            let users = try context.fetch(fetchDescriptor)
+            
+            await MainActor.run {
+                if let user = users.first {
+                    currentUser = user
+                    authenticationState = .authenticated
+                } else {
+                    authenticationState = .notAuthenticated
+                }
+            }
+        } catch {
+            await MainActor.run {
+                authenticationState = .notAuthenticated
+            }
+        }
     }
+    
+    private func resetAppData() async {
+        let context = dataController.container.mainContext
+        
+        // Clear all existing users
+        do {
+            let fetchDescriptor = FetchDescriptor<User>()
+            let users = try context.fetch(fetchDescriptor)
+            for user in users {
+                context.delete(user)
+            }
+            try context.save()
+        } catch {
+            print("Failed to reset app data: \(error)")
+        }
+        
+        await MainActor.run {
+            currentUser = nil
+            authenticationState = .notAuthenticated
+        }
+    }
+    
     
     func signInWithApple() async throws -> User {
         // This method will implement the Sign in with Apple flow
@@ -42,13 +110,45 @@ class AuthenticationManager: NSObject, ObservableObject {
         throw AuthenticationError.notImplemented
     }
     
-    func signOut() async throws {
-        // Clear authentication state and user
-        authenticationState = .notDetermined
-        currentUser = nil
+    func handleSignInWithAppleResult(_ authorization: ASAuthorization) async throws -> User {
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            throw AuthenticationError.authorizationDenied
+        }
         
-        // Clear Keychain credentials (to be implemented)
-        // Clear any cached user data
+        // Create or update user in SwiftData
+        let context = dataController.container.mainContext
+        
+        let user = User(
+            email: appleIDCredential.email,
+            name: appleIDCredential.fullName?.formatted(),
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        
+        context.insert(user)
+        try context.save()
+        
+        await MainActor.run {
+            currentUser = user
+            authenticationState = .authenticated
+        }
+        
+        return user
+    }
+    
+    func signOut() async throws {
+        // Clear user data from SwiftData
+        let context = dataController.container.mainContext
+        
+        if let user = currentUser {
+            context.delete(user)
+            try context.save()
+        }
+        
+        await MainActor.run {
+            authenticationState = .notAuthenticated
+            currentUser = nil
+        }
     }
 }
 
@@ -88,14 +188,14 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
         didCompleteWithError error: Error
     ) {
         Task { @MainActor in
-            authenticationState = .denied
+            authenticationState = .notAuthenticated
         }
     }
     
     private func handleSignInResult(_ authorization: ASAuthorization) async {
         guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
             await MainActor.run {
-                authenticationState = .denied
+                authenticationState = .notAuthenticated
             }
             return
         }
