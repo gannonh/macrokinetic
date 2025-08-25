@@ -43,7 +43,7 @@
 
 ## 🚧 Current Sprint
 
-### SwiftData User Profile & Authentication 🚧
+### SwiftData User Profile & Authentication (issue [#11](https://github.com/gannonh/jab-tracker-ios/issues/11))
 **User Model & Sign in with Apple Integration**
 - Implement SwiftData User model with profile fields (name, email, weight, timezone)
 - Add Sign in with Apple as sole authentication method

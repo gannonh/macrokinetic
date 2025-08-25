@@ -190,6 +190,7 @@ This app handles medical data and dosing information. Ensure:
 ## Resources
 
 - Project Spec: @docs/spec.md
+- Implementation Plan: @docs/implementation-plan.md
 - GitHub Repo: https://github.com/gannonh/jab-tracker-ios
 
 # Technical Learnings & Best Practices
