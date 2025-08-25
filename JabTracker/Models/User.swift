@@ -16,6 +16,7 @@ final class User {
     var weightUnit: String?
     var timezone: String?
     var createdAt: Date?
+    var updatedAt: Date?
 
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]?
@@ -28,7 +29,8 @@ final class User {
         weight: Double? = nil,
         weightUnit: String? = nil,
         timezone: String? = nil,
-        createdAt: Date? = nil)
+        createdAt: Date? = nil,
+        updatedAt: Date? = nil)
     {
         self.id = id
         self.email = email
@@ -38,6 +40,7 @@ final class User {
         self.weightUnit = weightUnit
         self.timezone = timezone
         self.createdAt = createdAt
+        self.updatedAt = updatedAt
         doses = []
     }
 }
