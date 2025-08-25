@@ -20,7 +20,7 @@ JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 med
 ### Building and Running
 ```bash
 # Build the project
-xcodebuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' build
+xcodebuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' build
 
 # Install and launch app on simulator (manual testing)
 xcrun simctl install <SIMULATOR_ID> "<APP_PATH>"
@@ -30,22 +30,22 @@ xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
 ### Testing Commands
 ```bash
 # Run all tests (unit + UI)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
 
 # Run only unit tests
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests
 
 # Run only UI tests (E2E)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerUITests
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerUITests
 
 # Run specific test method
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests/JabTrackerTests/testUserCreation
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests/JabTrackerTests/testUserCreation
 
 # Find available simulators
 xcrun simctl list devices | grep iPhone
 
 # Pretty output with xcbeautify (install with: brew install xcbeautify)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' | xcbeautify
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' | xcbeautify
 
 # xcbeautify provides better Swift Testing support than xcpretty
 ```
@@ -53,7 +53,7 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 ### Documentation
 ```bash
 # Generate Swift documentation (if using DocC)
-xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
 
 # Or use the convenience script
 ./scripts/docs.sh
@@ -97,6 +97,25 @@ This script runs:
 2. All checks must pass ✅
 3. Fix any issues with `swiftlint --fix` and `swiftformat .`
 4. Re-run until all checks pass
+
+### XcodeGen Project Regeneration
+This project uses XcodeGen for project file management. **Important**: When adding new Swift files (especially test files), you must regenerate the Xcode project:
+
+```bash
+# Regenerate Xcode project after adding new files
+xcodegen generate
+```
+
+**Common Issue**: New test files not appearing in test runs
+- **Symptom**: Tests don't run or show "0 tests executed" even though test files exist
+- **Cause**: XcodeGen hasn't included the new files in the Xcode project
+- **Solution**: Run `xcodegen generate` then run tests again
+
+**When to regenerate:**
+- After adding new Swift files to JabTracker/, JabTrackerTests/, or JabTrackerUITests/
+- After modifying project.yml configuration
+- If build/test targets seem missing files
+- When file references appear broken in Xcode
 
 ## Architecture & Code Structure
 
@@ -216,6 +235,12 @@ This app handles medical data and dosing information. Ensure:
 - xcbeautify > xcpretty for modern Xcode output formatting
 - Clean DerivedData resolves filesystem/result bundle issues
 - Comprehensive pre-merge checks prevent integration issues
+
+## XcodeGen Workflow
+- **CRITICAL**: Always run `xcodegen generate` after adding new Swift files
+- Project uses XcodeGen for automatic project file management
+- New test files won't appear in test runs until project is regenerated
+- Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
 
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
