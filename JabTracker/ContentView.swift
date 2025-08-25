@@ -232,7 +232,7 @@ struct SyncStatusCard: View {
                                 .foregroundColor(.secondary)
                         }
 
-                        Text("Data is stored locally on this device only. Sign in to iCloud to sync across your devices.")
+                        Text("Data is stored locally on this device only. Sign in to iCloud to sync across your devices.") // swiftlint:disable:this line_length
                             .font(DesignTokens.Typography.caption)
                             .foregroundColor(.secondary)
                     }

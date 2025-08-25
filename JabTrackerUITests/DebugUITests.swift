@@ -1,8 +1,8 @@
 import XCTest
 
-final class DebugUITests: XCTestCase {
+final class SettingsUITests: XCTestCase {
     @MainActor
-    func testSettingsViewElements() throws {
+    func testSettingsViewElementsExist() throws {
         let app = XCUIApplication()
         app.launch()
 
@@ -15,37 +15,51 @@ final class DebugUITests: XCTestCase {
         let settingsTitle = app.navigationBars["Settings"]
         XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5), "Settings navigation should exist")
 
-        // Print all buttons in the view
-        print("=== ALL BUTTONS ===")
+        // Validate that essential UI elements exist
         let allButtons = app.buttons
-        for index in 0 ..< allButtons.count {
-            let button = allButtons.element(boundBy: index)
-            if button.exists {
-                print("Button \(index): identifier='\(button.identifier)', label='\(button.label)'")
-            }
-        }
-
-        // Print all static texts
-        print("=== ALL STATIC TEXTS ===")
         let allStaticTexts = app.staticTexts
-        for index in 0 ..< allStaticTexts.count {
-            let text = allStaticTexts.element(boundBy: index)
-            if text.exists {
-                print("Text \(index): identifier='\(text.identifier)', label='\(text.label)'")
-            }
-        }
+        let allOtherElements = app.otherElements
 
-        // Print all other elements
-        print("=== ALL OTHER ELEMENTS ===")
-        let allOthers = app.otherElements
-        for index in 0 ..< allOthers.count {
-            let other = allOthers.element(boundBy: index)
-            if other.exists {
-                print("Other \(index): identifier='\(other.identifier)', label='\(other.label)'")
-            }
-        }
+        // Test that we have actual UI elements (not an empty view)
+        XCTAssertGreaterThan(allButtons.count, 0, "Settings view should contain buttons")
+        XCTAssertGreaterThan(allStaticTexts.count, 0, "Settings view should contain text elements")
 
-        // Force pass this test - it's just for debugging
-        XCTAssertTrue(true)
+        // Test that the Settings title text exists
+        XCTAssertTrue(app.staticTexts["Settings"].exists, "Settings title should be visible")
+
+        // Test that at least one interactive element exists
+        // swiftlint:disable:next empty_count
+        let interactiveElementsExist = allButtons.count > 0
+        XCTAssertTrue(interactiveElementsExist, "Settings view should have interactive elements")
+
+        // Test that design system components are accessible
+        // Look for design system card if it exists in settings
+        let designSystemCard = app.descendants(matching: .any)["design-system-card"]
+        if designSystemCard.exists {
+            XCTAssertTrue(designSystemCard.exists, "Design system card should be accessible when present")
+        }
+    }
+
+    @MainActor
+    func testSettingsViewAccessibility() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        // Navigate to Settings tab
+        let tabBar = app.tabBars.element
+        let settingsTab = tabBar.buttons["Settings"]
+        settingsTab.tap()
+
+        // Wait for Settings view to load
+        let settingsTitle = app.navigationBars["Settings"]
+        XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5), "Settings navigation should exist")
+
+        // Test that key accessibility elements have labels
+        let buttonsWithLabels = app.buttons.allElementsBoundByIndex.filter { !$0.label.isEmpty }
+        XCTAssertGreaterThan(buttonsWithLabels.count, 0, "At least one button should have accessibility label")
+
+        // Test that text elements are accessible
+        let textsWithContent = app.staticTexts.allElementsBoundByIndex.filter { !$0.label.isEmpty }
+        XCTAssertGreaterThan(textsWithContent.count, 0, "At least one text element should have content")
     }
 }
