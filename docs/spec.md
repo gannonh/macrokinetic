@@ -1,4 +1,6 @@
-# SwiftUI Mobile App Requirements Specification
+# JabTracker Product Requirements Specification
+
+> **Implementation Status**: For detailed progress tracking and current development status, see [`docs/implementation-plan.md`](./implementation-plan.md)
 
 ## 1. Executive Summary
 
@@ -9,12 +11,14 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 ### 1.2 Technology Stack
 
 - **Framework**: SwiftUI
-- **Platform**: iOS 16.0+
+- **Platform**: iOS 17.0+
 - **Backend**: CloudKit (Sync, Storage, User Management)
-- **Data Persistence**: Core Data + CloudKit Sync
+- **Data Persistence**: SwiftData + CloudKit Sync (with graceful local-only fallback)
 - **Charts**: Swift Charts
 - **Notifications**: User Notifications Framework
 - **Health Integration**: HealthKit
+- **Testing**: Swift Testing (unit tests) + XCUITest (UI tests)
+- **Build Tools**: xcbeautify for enhanced output formatting
 
 ### 1.3 Key Features
 
@@ -25,6 +29,8 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - Multiple medication support
 - Export data for healthcare providers
 - Educational content about GLP-1 medications
+- **✅ iCloud sync status monitoring** - Real-time feedback on data synchronization
+- **✅ Offline-first functionality** - Full app functionality without internet connection
 
 ## 2. Functional Requirements
 
@@ -230,10 +236,18 @@ class PharmacokineticsEngine: ObservableObject {
 
 #### 2.7.2 Backup & Sync
 
-- CloudKit automatic sync
-- iCloud backup
-- Multi-device sync (iPad, Apple Watch)
-- Data recovery options
+- **CloudKit automatic sync** with real-time status monitoring
+- **iCloud backup** with graceful fallback to local-only storage
+- **Sync status display** with user-friendly messaging and actionable guidance
+- **Offline-first architecture** ensures full functionality without internet
+- **Multi-device sync** (iPad, Apple Watch)
+- **Data recovery options** and conflict resolution
+
+**Sync Status Monitoring Requirements:**
+- Real-time iCloud account status detection
+- Network connectivity monitoring
+- User guidance for resolving sync issues (sign in to iCloud, network problems)
+- Visual indicators in Settings tab with appropriate icons and colors
 
 ### 2.8 Educational Content
 
@@ -427,47 +441,87 @@ struct CKField {
 
 ## 6. Development Phases
 
-### Phase 1: MVP (8-10 weeks)
+### Phase 1: Foundation & Infrastructure (4-6 weeks)
 
-- Core Data setup
-- Basic authentication
-- Single medication support
-- Dose tracking
-- Simple concentration calculations
-- Basic reminders
+**Core Infrastructure:**
+- SwiftData setup with User/Dose/MedicationProfile models
+- CloudKit sync with graceful local-only fallback
+- iCloud sync status monitoring with real-time user feedback
+- Design system foundation with DesignTokens and reusable components
+- Comprehensive testing infrastructure (Swift Testing + XCUITest)
+- Build tooling with automated checks and quality gates
 
-### Phase 2: Enhanced Features (6-8 weeks)
+### Phase 2: Core User Features (6-8 weeks)
 
-- Multiple medication support
-- Swift Charts integration
-- PDF export with PDFKit
-- CloudKit sync
-- HealthKit integration
+**Authentication & Security:**
+- Sign in with Apple integration
+- Face ID/Touch ID for app access security
+- Secure data storage and encryption
 
-### Phase 3: Advanced Features (6-8 weeks)
+**Medication Management:**
+- Single medication support (starting with Semaglutide)
+- Medication profile creation and management
+- Dose scheduling and tracking
 
-- Apple Watch companion app
-- Widget extensions
-- Siri Shortcuts
+**Dose Tracking:**
+- Quick dose entry with one-tap functionality
+- Manual dose entry with detailed logging
+- Dose history with calendar view
+- Missed dose handling and rescheduling
+
+### Phase 3: Advanced Analytics & Integration (6-8 weeks)
+
+**Pharmacokinetics & Analytics:**
+- Real-time drug concentration calculations
+- Concentration timeline visualization with Swift Charts
+- Adherence tracking and insights
+- Peak/trough level monitoring
+
+**Data & Health Integration:**
+- Multiple medication support with enum-based definitions
+- HealthKit integration for weight and health data
+- PDF export for healthcare provider reports
+- Advanced analytics dashboard
+
+### Phase 4: Platform Extensions (6-8 weeks)
+
+**Multi-Platform Support:**
+- Apple Watch companion app for quick dose logging
+- iOS Widget extensions for at-a-glance information
+- iPad optimizations with enhanced layouts
+
+**Advanced Features:**
+- Siri Shortcuts integration
 - App Clips for quick dose entry
 - SharePlay for provider consultations
+- Push notifications with rich content
 
 ## 7. Testing Requirements
 
 ### 7.1 Testing Types
 
-- **Unit Testing**: XCTest for logic
-- **UI Testing**: XCUITest for user flows
-- **Performance Testing**: Instruments profiling
-- **Accessibility Testing**: Accessibility Inspector
-- **Beta Testing**: TestFlight
+- **Unit Testing**: Swift Testing framework for modern, clean test syntax
+- **UI Testing**: XCUITest for user flows and end-to-end testing
+- **Model Testing**: SwiftData model and persistence testing
+- **Design System Testing**: Component accessibility and functionality testing
+- **Performance Testing**: Instruments profiling for optimization
+- **Accessibility Testing**: Accessibility Inspector for compliance
+- **Beta Testing**: TestFlight for user acceptance testing
+
+**Testing Infrastructure Requirements:**
+- File-based test organization for better maintainability
+- Enhanced test output formatting for developer experience
+- Automated test runs via scripts (unit, UI, all)
+- Comprehensive pre-merge testing pipeline
 
 ### 7.2 Test Coverage Goals
 
-- Pharmacokinetic calculations: 100%
-- Critical user flows: 90%
-- View models: 85%
-- Core Data operations: 95%
+- **SwiftData operations**: Comprehensive coverage for all model operations
+- **Design system components**: Full component testing with accessibility
+- **Model relationships**: Complete relationship testing (User-Dose, etc.)
+- **Pharmacokinetic calculations**: 100% coverage target for medical accuracy
+- **Critical user flows**: 90% coverage for core functionality
+- **View models**: 85% coverage for business logic
 
 ## 8. Success Metrics
 
