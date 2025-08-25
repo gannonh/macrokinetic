@@ -50,6 +50,16 @@
         "/Users/gannonhall/dev/jab-tracker-ios"
       ],
       "env": {}
+    },
+    "XcodeBuildMCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "xcodebuildmcp@latest"
+      ],
+      "env": {
+        "XCODEBUILDMCP_DYNAMIC_TOOLS": "true"
+      }
     }
   }
 }

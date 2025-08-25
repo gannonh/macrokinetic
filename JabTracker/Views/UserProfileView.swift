@@ -207,7 +207,6 @@ struct UserProfileView: View {
                 Spacer()
                 
                 Toggle("", isOn: $biometricManager.isBiometricEnabled)
-                    .accessibilityElement()
                     .accessibilityIdentifier("biometric-auth-toggle")
             }
         }
@@ -313,10 +312,15 @@ struct UserProfileView: View {
     
     private func handleSignInResult(_ result: Result<ASAuthorization, Error>) async {
         switch result {
-        case .success(_):
-            // Handle successful authorization
-            // Note: Full implementation would process the authorization
-            break
+        case .success(let authorization):
+            do {
+                _ = try await authManager.handleSignInWithAppleResult(authorization)
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Sign in failed: \(error.localizedDescription)"
+                    showingError = true
+                }
+            }
             
         case .failure(let error):
             await MainActor.run {

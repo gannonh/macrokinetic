@@ -13,7 +13,11 @@ enum AuthenticationState: String, CaseIterable {
 
 @MainActor
 class AuthenticationManager: NSObject, ObservableObject {
-    @Published var authenticationState: AuthenticationState = .notDetermined
+    @Published var authenticationState: AuthenticationState = .notDetermined {
+        didSet {
+            print("🔄 AuthenticationManager: State changed from \(oldValue) to \(authenticationState)")
+        }
+    }
     @Published var currentUser: User?
     
     private let dataController: DataController
@@ -24,6 +28,8 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
     
     func checkAuthenticationStatus() async {
+        print("🔍 AuthenticationManager: checkAuthenticationStatus() called")
+        
         // Reset app data if requested (for UI testing)
         if ProcessInfo.processInfo.arguments.contains("--reset-app-data") {
             await resetAppData()
@@ -34,7 +40,6 @@ class AuthenticationManager: NSObject, ObservableObject {
                          ProcessInfo.processInfo.arguments.contains("--ui-testing")
         
         if isUITesting {
-            print("UI_TESTING mode detected - setting authenticated state immediately")
             await MainActor.run {
                 authenticationState = .authenticated
                 // Create a simple test user
@@ -47,12 +52,9 @@ class AuthenticationManager: NSObject, ObservableObject {
                     createdAt: Date(),
                     updatedAt: Date()
                 )
-                print("Test user created for UI testing")
             }
             return
         }
-        
-        print("Normal authentication mode - checking for existing users")
         
         // Check if user is already authenticated by looking for existing user data
         let context = dataController.container.mainContext
@@ -61,15 +63,23 @@ class AuthenticationManager: NSObject, ObservableObject {
             let fetchDescriptor = FetchDescriptor<User>()
             let users = try context.fetch(fetchDescriptor)
             
+            print("🔍 AuthenticationManager: Found \(users.count) users in database")
+            if let user = users.first {
+                print("🔍 AuthenticationManager: First user - ID: \(user.id), Email: \(user.email ?? "nil")")
+            }
+            
             await MainActor.run {
                 if let user = users.first {
                     currentUser = user
                     authenticationState = .authenticated
+                    print("✅ AuthenticationManager: Set state to authenticated")
                 } else {
                     authenticationState = .notAuthenticated
+                    print("❌ AuthenticationManager: Set state to notAuthenticated - no users found")
                 }
             }
         } catch {
+            print("❌ AuthenticationManager: Fetch error: \(error)")
             await MainActor.run {
                 authenticationState = .notAuthenticated
             }
@@ -126,7 +136,17 @@ class AuthenticationManager: NSObject, ObservableObject {
         )
         
         context.insert(user)
+        print("📝 AuthenticationManager: User inserted into context - ID: \(user.id)")
+        
         try context.save()
+        print("💾 AuthenticationManager: Context saved successfully")
+        
+        // Verify the user was actually saved
+        let fetchDescriptor = FetchDescriptor<User>()
+        let savedUsers = try context.fetch(fetchDescriptor)
+        print("🔍 AuthenticationManager: After save, found \(savedUsers.count) users in database")
+        
+        print("✅ AuthenticationManager: User created and saved successfully - ID: \(user.id), Email: \(user.email ?? "nil")")
         
         await MainActor.run {
             currentUser = user

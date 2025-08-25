@@ -1,10 +1,18 @@
 import XCTest
 
 final class SettingsUITests: XCTestCase {
+    
+    private func launchAppWithTestMode() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchEnvironment["UI_TESTING"] = "true"
+        app.launchArguments.append("--ui-testing")
+        app.launch()
+        return app
+    }
+    
     @MainActor
     func testSettingsViewElementsExist() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchAppWithTestMode()
 
         // Navigate to Settings tab
         let tabBar = app.tabBars.element
@@ -42,8 +50,7 @@ final class SettingsUITests: XCTestCase {
 
     @MainActor
     func testSettingsViewAccessibility() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchAppWithTestMode()
 
         // Navigate to Settings tab
         let tabBar = app.tabBars.element

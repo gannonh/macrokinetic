@@ -17,7 +17,6 @@ struct DesignCard<Content: View>: View {
                 .fill(Color(.systemBackground))
                 .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
         )
-        .accessibilityIdentifier("design-system-card")
         .accessibilityElement(children: .contain)
     }
 }

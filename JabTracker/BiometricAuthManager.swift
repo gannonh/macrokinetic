@@ -20,8 +20,19 @@ enum BiometricAvailability {
 @MainActor
 class BiometricAuthManager: ObservableObject {
     @Published var isBiometricEnabled: Bool {
+        willSet {
+            print("🔐 BiometricAuthManager: isBiometricEnabled will change from \(isBiometricEnabled) to \(newValue)")
+            objectWillChange.send()
+        }
         didSet {
-            UserDefaults.standard.set(isBiometricEnabled, forKey: "biometricAuthEnabled")
+            print("🔐 BiometricAuthManager: isBiometricEnabled did change to \(isBiometricEnabled)")
+            // In UI testing mode, just store in memory since UserDefaults can be unreliable
+            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
+                             ProcessInfo.processInfo.arguments.contains("--ui-testing")
+            
+            if !isUITesting {
+                UserDefaults.standard.set(isBiometricEnabled, forKey: "biometricAuthEnabled")
+            }
         }
     }
     
@@ -29,7 +40,16 @@ class BiometricAuthManager: ObservableObject {
     @Published var isAvailable: Bool = false
     
     init() {
-        self.isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
+        // In UI testing mode, start with a default value since UserDefaults can be unreliable
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
+                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        
+        if isUITesting {
+            self.isBiometricEnabled = false // Start with disabled state for predictable testing
+        } else {
+            self.isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
+        }
+        
         checkBiometricAvailability()
     }
     
@@ -41,7 +61,6 @@ class BiometricAuthManager: ObservableObject {
         if isUITesting {
             self.isAvailable = true
             self.biometricType = .faceID
-            print("UI_TESTING mode: BiometricAuthManager set to available with Face ID")
             return
         }
         
@@ -145,6 +164,12 @@ class BiometricAuthManager: ObservableObject {
     
     func setBiometricPreference(enabled: Bool) {
         isBiometricEnabled = enabled
+    }
+    
+    // Force objectWillChange for testing
+    func toggleBiometric() {
+        objectWillChange.send()
+        isBiometricEnabled.toggle()
     }
     
     var biometricTypeDisplayName: String {
