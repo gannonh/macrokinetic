@@ -85,7 +85,7 @@ class BiometricAuthManager: ObservableObject {
         } else {
             guard let error = error else { return .unknown }
             
-            switch LAError(rawValue: error.code) {
+            switch LAError.Code(rawValue: error.code) {
             case .biometryNotAvailable:
                 return .notAvailable
             case .biometryNotEnrolled:
