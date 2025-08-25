@@ -7,12 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 medication doses (Ozempic, Wegovy, Mounjaro) with pharmacokinetic modeling for drug concentration calculations.
 
 **Technology Stack:**
-- Framework: SwiftUI (iOS 16.0+)
-- Backend: CloudKit (Sync, Storage, User Management)
-- Data: Core Data + CloudKit Sync (NSPersistentCloudKitContainer)
+- Framework: SwiftUI (iOS 17.0+)
+- Backend: CloudKit (Sync, Storage, User Management)  
+- Data: SwiftData + CloudKit Sync (with graceful fallback to local-only storage)
 - Charts: Swift Charts
 - Health: HealthKit integration
 - Auth: Sign in with Apple (sole authentication method)
+- Testing: Swift Testing for unit tests, XCUITest for UI tests
 
 ## Development Commands
 
@@ -43,11 +44,10 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 # Find available simulators
 xcrun simctl list devices | grep iPhone
 
-# Pretty output with xcpretty (install with: gem install xcpretty)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' | xcpretty --test --color
+# Pretty output with xcbeautify (install with: brew install xcbeautify)
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' | xcbeautify
 
-# Generate HTML test report
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' | xcpretty --report html --output build/reports/tests.html
+# xcbeautify provides better Swift Testing support than xcpretty
 ```
 
 ### Documentation
@@ -86,9 +86,11 @@ Since GitHub Actions can be unreliable, use the comprehensive check script befor
 This script runs:
 - ✅ SwiftLint code quality checks
 - ✅ Build verification  
-- ✅ Unit tests
-- ✅ UI tests
+- ✅ Unit tests (Swift Testing framework)
+- ✅ UI tests (XCUITest framework)
 - ✅ SwiftFormat style checks (if installed)
+
+**Note:** All scripts use xcbeautify for better output formatting and Swift Testing support.
 
 **Pre-merge checklist:**
 1. Run `./scripts/check-all.sh`
@@ -98,11 +100,17 @@ This script runs:
 
 ## Architecture & Code Structure
 
-### Core Data Models
-The app uses three primary Core Data entities:
+### SwiftData Models
+The app uses three primary SwiftData models with CloudKit sync:
 - `User`: Profile information including weight, timezone, medication preferences
 - `Dose`: Individual dose records with timestamp, amount, injection site, notes
 - `MedicationProfile`: Medication details, current dose, refill dates
+
+**DataController Features:**
+- Automatic CloudKit sync with iCloud availability detection
+- Graceful fallback to local-only storage when iCloud is unavailable
+- Real-time sync status monitoring (`SyncStatus` enum)
+- User-friendly sync status display with actionable guidance
 
 ### Key Components
 
@@ -125,28 +133,20 @@ TabView with 5 main tabs:
 
 ### Data Flow
 1. User logs doses through AddDoseView
-2. Doses stored in Core Data with CloudKit sync
+2. Doses stored in SwiftData with automatic CloudKit sync (when available)
 3. PharmacokineticsEngine calculates real-time concentrations
 4. Charts display concentration timeline and trends
 5. Notifications remind users of upcoming doses
+6. SyncStatusCard displays real-time iCloud sync status to users
 
-### Key Features to Implement
+### Project Status
 
-**Phase 1 (MVP):**
-- Core Data setup with User/Dose/MedicationProfile entities
-- Sign in with Apple authentication
-- Face ID/Touch ID for app access security
-- Single medication support (start with semaglutide)
-- Basic dose entry and history
-- Concentration calculations with PharmacokineticsEngine
-- Simple local notifications for dose reminders
+**Current Phase**: Core Functionality Implementation  
+**Completed**: Foundation & Infrastructure (GitHub Issues #1-4)  
+**Next Up**: Authentication & Dose Tracking (GitHub Issues #5-7)
 
-**Phase 2:**
-- Multiple medication support with enum-based medication definitions
-- Swift Charts integration for concentration timeline
-- PDF export using PDFKit for healthcare provider reports
-- CloudKit sync for multi-device support
-- HealthKit integration for weight/health data
+For detailed progress tracking and roadmap, see `docs/implementation-plan.md`.  
+For product vision and feature specifications, see `docs/spec.md`.
 
 ### Design System
 
@@ -155,15 +155,18 @@ TabView with 5 main tabs:
 **Components:** Follow Human Interface Guidelines with accessibility support
 
 ### Testing Strategy
-- Unit tests for pharmacokinetic calculations (100% coverage goal)
-- UI tests for critical user flows (90% coverage goal)
-- Core Data operations testing (95% coverage goal)
-- XCTest framework for unit testing, XCUITest for UI testing
+- Unit tests using Swift Testing framework for modern testing approach
+- UI tests using XCUITest for end-to-end user flow testing
+- SwiftData model and persistence testing (comprehensive coverage implemented)
+- Design system component testing for accessibility and functionality
+- xcbeautify for enhanced test output formatting with Swift Testing support
 
 ### Privacy & Security
-- Core Data encryption enabled
-- Keychain storage for sensitive data
-- Face ID/Touch ID authentication
+- SwiftData encryption enabled
+- CloudKit private database for user data protection
+- Graceful handling of iCloud availability without compromising functionality
+- Keychain storage for sensitive data (planned)
+- Face ID/Touch ID authentication (planned)
 - HIPAA compliance considerations
 - App Tracking Transparency implementation
 
@@ -189,5 +192,31 @@ This app handles medical data and dosing information. Ensure:
 - Project Spec: @docs/spec.md
 - GitHub Repo: https://github.com/gannonh/jab-tracker-ios
 
+# Technical Learnings & Best Practices
+
+## CloudKit + SwiftData Integration
+- Always implement graceful fallback when CloudKit is unavailable
+- Check for test environment before enabling CloudKit to avoid test conflicts
+- Use `@Published` properties for real-time sync status updates
+- Provide clear user feedback about sync status with actionable guidance
+
+## Testing Framework Migration
+- Swift Testing provides cleaner, more modern test syntax than XCTest
+- xcbeautify offers better Swift Testing output support than xcpretty
+- Never use `CODE_SIGNING_ALLOWED=NO` for UI tests - prevents app launch
+- File-based test organization improves maintainability
+
+## Info.plist Configuration
+- Custom Info.plist required for CloudKit background notifications
+- `remote-notification` background mode essential for CloudKit push notifications
+- XcodeGen's auto-generated Info.plist doesn't handle all CloudKit requirements
+
+## Development Tooling
+- xcbeautify > xcpretty for modern Xcode output formatting
+- Clean DerivedData resolves filesystem/result bundle issues
+- Comprehensive pre-merge checks prevent integration issues
+
 # Reminders
-- Use NavigationStack instead of NavigationBView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
+- Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
+- Always test iCloud sync scenarios: available, unavailable, not signed in
+- Swift Testing framework docs: https://developer.apple.com/documentation/testing
