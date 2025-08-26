@@ -8,6 +8,7 @@ struct JabTrackerApp: App {
     @StateObject private var biometricManager = BiometricAuthManager()
     @Environment(\.scenePhase) var scenePhase
     @State private var hasJustSignedIn = false
+    @State private var hasRecentBiometricAuth = false
 
     var body: some Scene {
         WindowGroup {
@@ -56,18 +57,21 @@ struct JabTrackerApp: App {
         switch newPhase {
         case .active:
             print("📱 JabTrackerApp: Scene became active")
-            print("📱 JabTrackerApp: Auth state = \(authManager.authenticationState), Biometric enabled = \(biometricManager.isBiometricEnabled), Just signed in = \(hasJustSignedIn)")
-            // Check for biometric authentication when app becomes active (but not right after sign-in)
-            if authManager.authenticationState == .authenticated && biometricManager.isBiometricEnabled && !hasJustSignedIn {
+            print("📱 JabTrackerApp: Auth state = \(authManager.authenticationState), Biometric enabled = \(biometricManager.isBiometricEnabled), Just signed in = \(hasJustSignedIn), Recent biometric = \(hasRecentBiometricAuth)")
+            // Check for biometric authentication when app becomes active (but not right after sign-in or recent biometric auth)
+            if authManager.authenticationState == .authenticated && biometricManager.isBiometricEnabled && !hasJustSignedIn && !hasRecentBiometricAuth {
                 print("📱 JabTrackerApp: Triggering biometric authentication")
                 Task {
                     await handleBiometricAuthentication()
                 }
             } else if hasJustSignedIn {
                 print("📱 JabTrackerApp: Skipping biometric auth - user just signed in")
+            } else if hasRecentBiometricAuth {
+                print("📱 JabTrackerApp: Skipping biometric auth - recent authentication")
             }
         case .background, .inactive:
-            // Clear sensitive data when app goes to background if needed
+            // Reset biometric auth flag when app goes to background
+            hasRecentBiometricAuth = false
             break
         @unknown default:
             break
@@ -80,7 +84,15 @@ struct JabTrackerApp: App {
         do {
             let success = try await biometricManager.authenticateWithBiometrics(reason: "Unlock JabTracker")
             print("🔐 JabTrackerApp: Biometric authentication result = \(success)")
-            if !success {
+            if success {
+                // Set flag to prevent immediate re-authentication
+                hasRecentBiometricAuth = true
+                // Reset the flag after a reasonable delay
+                Task {
+                    try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
+                    hasRecentBiometricAuth = false
+                }
+            } else {
                 print("🔐 JabTrackerApp: Biometric auth failed, signing out user")
                 // If biometric authentication fails, sign out the user
                 try? await authManager.signOut()
