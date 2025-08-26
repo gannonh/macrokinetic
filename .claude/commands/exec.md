@@ -15,7 +15,7 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 
 ## Active Context
 
-GitHub Issue: $ARGUMENTS
+- GitHub Issue: $ARGUMENTS
 
 ## Core Principles
 

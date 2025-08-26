@@ -83,17 +83,24 @@ class DataController: ObservableObject {
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+        
+        // TEMPORARY: Disable CloudKit to fix authentication issues
+        // TODO: Re-enable CloudKit after fixing sync conflicts
+        let shouldEnableCloudKit = false // Change to true when CloudKit sync issues are resolved
 
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: inMemory,
-            cloudKitDatabase: (inMemory || isTestEnvironment) ? .none : .private(cloudKitContainerIdentifier))
+            cloudKitDatabase: (inMemory || isTestEnvironment || !shouldEnableCloudKit) ? .none : .private(cloudKitContainerIdentifier))
 
         do {
             container = try ModelContainer(for: schema, configurations: [configuration])
-            if !inMemory, !isTestEnvironment {
+            if !inMemory, !isTestEnvironment, shouldEnableCloudKit {
                 isCloudKitEnabled = true
                 checkCloudKitStatus()
+            } else {
+                isCloudKitEnabled = false
+                syncStatus = .unavailable
             }
         } catch {
             // If CloudKit setup fails, try without CloudKit as fallback

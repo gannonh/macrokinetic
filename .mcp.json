@@ -21,12 +21,6 @@
         "@upstash/context7-mcp@latest"
       ]
     },
-    "playwright": {
-      "command": "/Users/gannonhall/.local/bin/mcp-node-exec",
-      "args": [
-        "/Users/gannonhall/dev/oss/playwright-mcp/cli.js"
-      ]
-    },
     "perplexity-server": {
       "command": "/Users/gannonhall/.local/bin/mcp-node-exec",
       "args": [
@@ -50,6 +44,16 @@
         "/Users/gannonhall/dev/jab-tracker-ios"
       ],
       "env": {}
+    },
+    "XcodeBuildMCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "xcodebuildmcp@latest"
+      ],
+      "env": {
+        "XCODEBUILDMCP_DYNAMIC_TOOLS": "false"
+      }
     }
   }
 }
