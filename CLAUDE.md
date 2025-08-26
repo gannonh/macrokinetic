@@ -17,7 +17,11 @@ JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 med
 
 ## Development Commands
 
+**IMPORTANT:** 
+- XcodeBuildMCP provides a range of useful tools for working with the project.
+
 ### Building and Running
+
 ```bash
 # Build the project
 xcodebuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' build
@@ -48,6 +52,42 @@ xcrun simctl list devices | grep iPhone
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' | xcbeautify
 
 # xcbeautify provides better Swift Testing support than xcpretty
+```
+
+### UI Testing with Authentication
+```bash
+# Launch app in UI testing mode (bypasses real authentication)
+app.launchEnvironment["UI_TESTING"] = "true"
+app.launchArguments.append("--ui-testing")
+
+# Reset app data for clean test state
+app.launchArguments.append("--reset-app-data")
+```
+
+### XcodeBuildMCP Authentication Bypass
+When using XcodeBuildMCP tools for manual testing or debugging, you can bypass authentication:
+
+```bash
+# Launch app with authentication bypass using XcodeBuildMCP
+launch_app_sim({ 
+  simulatorUuid: "SIMULATOR_UUID", 
+  bundleId: "com.gannonhall.JabTracker", 
+  args: ["--ui-testing"] 
+})
+
+# This will:
+# - Skip Sign in with Apple authentication flow
+# - Create mock user data (test@uitesting.com, "UI Test User")
+# - Go directly to main app interface with all tabs accessible
+# - Enable full app functionality for testing without real Apple ID
+
+# Alternative: Build and run with bypass in one step
+build_run_sim({ 
+  projectPath: "/path/to/JabTracker.xcodeproj", 
+  scheme: "JabTracker", 
+  simulatorName: "iPhone 15",
+  extraArgs: ["--ui-testing"]  # Note: This may not work - use launch_app_sim instead
+})
 ```
 
 ### Documentation
@@ -122,6 +162,9 @@ xcodegen generate
 ### SwiftData Models
 The app uses three primary SwiftData models with CloudKit sync:
 - `User`: Profile information including weight, timezone, medication preferences
+  - ✅ `appleUserId` for authentication linking
+  - ✅ `updatedAt` for tracking profile modifications
+  - ✅ Weight unit conversion between kg/lbs with real-time validation
 - `Dose`: Individual dose records with timestamp, amount, injection site, notes
 - `MedicationProfile`: Medication details, current dose, refill dates
 
@@ -142,6 +185,13 @@ The app uses three primary SwiftData models with CloudKit sync:
 **Pharmacokinetics Engine:**
 Core calculation logic for drug concentration modeling using exponential decay based on medication half-lives. Located in `PharmacokineticsEngine` class.
 
+**Authentication System:**
+- `AuthenticationManager`: Handles Sign in with Apple, credential management, state persistence
+- `BiometricAuthManager`: Face ID/Touch ID integration with fallback to device passcode  
+- `AuthenticationView`: Clean Sign in with Apple UI following HIG
+- `UserProfileView`: Complete profile management with weight conversion, validation
+- Authentication state persistence across app launches using Keychain
+
 **Navigation Structure:**
 TabView with 5 main tabs:
 - Dashboard (Home) - Current levels, next dose
@@ -161,8 +211,8 @@ TabView with 5 main tabs:
 ### Project Status
 
 **Current Phase**: Core Functionality Implementation  
-**Completed**: Foundation & Infrastructure (GitHub Issues #1-4)  
-**Next Up**: Authentication & Dose Tracking (GitHub Issues #5-7)
+**Completed**: Foundation & Infrastructure (GitHub Issues #1-4) + ✅ Authentication & User Profile (GitHub Issue #11)  
+**Next Up**: User Onboarding Flow & Dose Tracking Features
 
 For detailed progress tracking and roadmap, see `docs/implementation-plan.md`.  
 For product vision and feature specifications, see `docs/spec.md`.
@@ -178,20 +228,29 @@ For product vision and feature specifications, see `docs/spec.md`.
 - UI tests using XCUITest for end-to-end user flow testing
 - SwiftData model and persistence testing (comprehensive coverage implemented)
 - Design system component testing for accessibility and functionality
+- ✅ Authentication unit tests (`AuthenticationTests`) - comprehensive coverage
+- ✅ Authentication UI tests (`AuthenticationUITests`) - complete E2E testing
+- ✅ Biometric authentication testing with mock scenarios
+- ✅ Keychain integration security testing
 - xcbeautify for enhanced test output formatting with Swift Testing support
 
 ### Privacy & Security
 - SwiftData encryption enabled
 - CloudKit private database for user data protection
 - Graceful handling of iCloud availability without compromising functionality
-- Keychain storage for sensitive data (planned)
-- Face ID/Touch ID authentication (planned)
+- ✅ Keychain storage for sensitive authentication credentials (implemented)
+- ✅ Face ID/Touch ID authentication with BiometricAuthManager (implemented)
+- ✅ Sign in with Apple as sole authentication method (implemented)
+- ✅ Secure authentication state management with AuthenticationManager (implemented)
 - HIPAA compliance considerations
 - App Tracking Transparency implementation
 
 ## Development Notes
 
 - Follow TDD approach especially for pharmacokinetic calculations
+- Implement authentication early to establish user context for all features
+- Use environment variables to differentiate test vs production authentication
+- Always provide UI testing bypass for authentication flows
 - Prioritize accessibility with VoiceOver, Dynamic Type, and Reduced Motion support
 - Implement offline-first functionality with CloudKit sync
 - Use ProMotion (120Hz) support for smooth animations
@@ -212,7 +271,27 @@ This app handles medical data and dosing information. Ensure:
 - Implementation Plan: @docs/implementation-plan.md
 - GitHub Repo: https://github.com/gannonh/jab-tracker-ios
 
+## Security Implementation Guidelines
+
+- Never log sensitive authentication credentials in production code
+- Store Apple ID credentials securely in Keychain with proper access controls
+- Implement biometric authentication with proper fallback to device passcode
+- Handle authentication errors gracefully with user-friendly guidance messages
+- Clear authentication state properly on sign out to prevent credential leakage
+- Use `@MainActor` for authentication UI updates to ensure thread safety
+- Validate authentication state on app launch for proper flow control
+- Implement test authentication bypass for reliable UI testing
+
 # Technical Learnings & Best Practices
+
+## Authentication Testing Patterns
+- Use `--ui-testing` launch argument for predictable test authentication
+- Reset app data with `--reset-app-data` for clean test states
+- Mock authentication in UI tests to avoid Apple ID dependencies
+- Separate test user creation for isolated test scenarios
+- Handle biometric authentication differently in test vs production
+- Use environment variables to differentiate test behavior
+- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
 
 ## CloudKit + SwiftData Integration
 - Always implement graceful fallback when CloudKit is unavailable
@@ -242,7 +321,18 @@ This app handles medical data and dosing information. Ensure:
 - New test files won't appear in test runs until project is regenerated
 - Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
 
+## Authentication Implementation Gotchas
+- UI testing with real Sign in with Apple is not feasible - use mock authentication
+- Biometric authentication simulator limitations - test on real devices for accuracy
+- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
+- Authentication state must be checked on app launch for proper flow control
+- Face ID prompt timing can cause test flakiness - add appropriate waits and timeouts
+- Environment variables and launch arguments are key for test/production differentiation
+- Always provide authentication bypass for UI testing to avoid external dependencies
+- Keychain access can fail in test scenarios - implement proper error handling
+
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
 - Always test iCloud sync scenarios: available, unavailable, not signed in
 - Swift Testing framework docs: https://developer.apple.com/documentation/testing
+- XcodeBuildMCP provides a range of useful tools for working with the project.

@@ -1,6 +1,7 @@
 import Foundation
 import LocalAuthentication
 import SwiftUI
+import OSLog
 
 enum BiometricType: String, CaseIterable {
     case none
@@ -19,13 +20,15 @@ enum BiometricAvailability {
 
 @MainActor
 class BiometricAuthManager: ObservableObject {
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "JabTracker", category: "BiometricAuthManager")
+    
     @Published var isBiometricEnabled: Bool {
         willSet {
-            print("🔐 BiometricAuthManager: isBiometricEnabled will change from \(isBiometricEnabled) to \(newValue)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(self.isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
             objectWillChange.send()
         }
         didSet {
-            print("🔐 BiometricAuthManager: isBiometricEnabled did change to \(isBiometricEnabled)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)")
             // In UI testing mode, just store in memory since UserDefaults can be unreliable
             let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
                              ProcessInfo.processInfo.arguments.contains("--ui-testing")

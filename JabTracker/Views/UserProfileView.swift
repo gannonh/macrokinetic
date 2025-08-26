@@ -267,7 +267,7 @@ struct UserProfileView: View {
         guard let user = authManager.currentUser else { return }
         
         editingName = user.name ?? ""
-        editingWeight = user.weight?.formatted() ?? ""
+        editingWeight = user.weight.map { String($0) } ?? ""
         editingWeightUnit = user.weightUnit ?? "kg"
         editingTimezone = user.timezone ?? TimeZone.current.identifier
         editingDateOfBirth = user.dateOfBirth ?? Date()

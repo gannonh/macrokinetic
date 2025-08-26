@@ -2,6 +2,7 @@ import Foundation
 import AuthenticationServices
 import SwiftData
 import SwiftUI
+import OSLog
 
 enum AuthenticationState: String, CaseIterable {
     case notDetermined
@@ -13,9 +14,11 @@ enum AuthenticationState: String, CaseIterable {
 
 @MainActor
 class AuthenticationManager: NSObject, ObservableObject {
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "JabTracker", category: "AuthenticationManager")
+    
     @Published var authenticationState: AuthenticationState = .notDetermined {
         didSet {
-            print("🔄 AuthenticationManager: State changed from \(oldValue) to \(authenticationState)")
+            Self.logger.info("🔄 AuthenticationManager: State changed from \(oldValue.rawValue, privacy: .public) to \(self.authenticationState.rawValue, privacy: .public)")
         }
     }
     @Published var currentUser: User?
@@ -28,7 +31,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
     
     func checkAuthenticationStatus() async {
-        print("🔍 AuthenticationManager: checkAuthenticationStatus() called")
+        Self.logger.info("🔍 AuthenticationManager: checkAuthenticationStatus() called")
         
         // Reset app data if requested (for UI testing)
         if ProcessInfo.processInfo.arguments.contains("--reset-app-data") {
@@ -63,23 +66,23 @@ class AuthenticationManager: NSObject, ObservableObject {
             let fetchDescriptor = FetchDescriptor<User>()
             let users = try context.fetch(fetchDescriptor)
             
-            print("🔍 AuthenticationManager: Found \(users.count) users in database")
+            Self.logger.info("🔍 AuthenticationManager: Found \(users.count, privacy: .public) users in database")
             if let user = users.first {
-                print("🔍 AuthenticationManager: First user - ID: \(user.id), Email: \(user.email ?? "nil")")
+                Self.logger.info("🔍 AuthenticationManager: First user - ID: \(user.id, privacy: .public), Email: \(user.email ?? "nil", privacy: .public)")
             }
             
             await MainActor.run {
                 if let user = users.first {
                     currentUser = user
                     authenticationState = .authenticated
-                    print("✅ AuthenticationManager: Set state to authenticated")
+                    Self.logger.info("✅ AuthenticationManager: Set state to authenticated")
                 } else {
                     authenticationState = .notAuthenticated
-                    print("❌ AuthenticationManager: Set state to notAuthenticated - no users found")
+                    Self.logger.info("❌ AuthenticationManager: Set state to notAuthenticated - no users found")
                 }
             }
         } catch {
-            print("❌ AuthenticationManager: Fetch error: \(error)")
+            Self.logger.error("❌ AuthenticationManager: Fetch error: \(error, privacy: .public)")
             await MainActor.run {
                 authenticationState = .notAuthenticated
             }
@@ -98,7 +101,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             }
             try context.save()
         } catch {
-            print("Failed to reset app data: \(error)")
+            Self.logger.error("Failed to reset app data: \(error, privacy: .public)")
         }
         
         await MainActor.run {
@@ -136,17 +139,17 @@ class AuthenticationManager: NSObject, ObservableObject {
         )
         
         context.insert(user)
-        print("📝 AuthenticationManager: User inserted into context - ID: \(user.id)")
+        Self.logger.info("📝 AuthenticationManager: User inserted into context - ID: \(user.id, privacy: .public)")
         
         try context.save()
-        print("💾 AuthenticationManager: Context saved successfully")
+        Self.logger.info("💾 AuthenticationManager: Context saved successfully")
         
         // Verify the user was actually saved
         let fetchDescriptor = FetchDescriptor<User>()
         let savedUsers = try context.fetch(fetchDescriptor)
-        print("🔍 AuthenticationManager: After save, found \(savedUsers.count) users in database")
+        Self.logger.info("🔍 AuthenticationManager: After save, found \(savedUsers.count, privacy: .public) users in database")
         
-        print("✅ AuthenticationManager: User created and saved successfully - ID: \(user.id), Email: \(user.email ?? "nil")")
+        Self.logger.info("✅ AuthenticationManager: User created and saved successfully - ID: \(user.id, privacy: .public), Email: \(user.email ?? "nil", privacy: .public)")
         
         await MainActor.run {
             currentUser = user
