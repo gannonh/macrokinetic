@@ -10,6 +10,11 @@ enum DesignTokens {
         static let warning = Color.orange
         static let danger = Color.red
         static let info = Color.blue
+        
+        // Background colors following Apple HIG
+        static let background = Color(.systemBackground)
+        static let secondaryBackground = Color(.secondarySystemBackground)
+        static let tertiaryBackground = Color(.tertiarySystemBackground)
 
         static let primaryGradient = LinearGradient(
             colors: [Color.primaryBlue, Color.primaryPurple],

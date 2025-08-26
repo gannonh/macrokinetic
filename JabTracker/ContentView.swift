@@ -108,16 +108,6 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Text("Settings")
-                            .font(DesignTokens.Typography.largeTitle)
-                            .accessibilityIdentifier("design-system-large-title")
-                        Text("App preferences and profile")
-                            .font(DesignTokens.Typography.body)
-                            .foregroundColor(.secondary)
-                    }
-
                     // User Profile Section
                     UserProfileView()
 
