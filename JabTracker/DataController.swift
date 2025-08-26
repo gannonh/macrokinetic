@@ -36,16 +36,13 @@ class DataController: ObservableObject {
         let previewDoseID = UUID(uuidString: "12345678-1234-1234-1234-123456789002") ?? UUID()
 
         let sampleUser = User(
-            id: previewUserID,
             email: "preview@example.com",
             name: "Preview User",
             weight: 70.0,
             weightUnit: "kg",
-            timezone: "UTC",
-            createdAt: Date())
+            timezone: "UTC")
 
         let sampleMedication = MedicationProfile(
-            id: previewMedicationID,
             genericName: "semaglutide",
             brandName: "Ozempic",
             currentDose: 1.0,
@@ -53,7 +50,6 @@ class DataController: ObservableObject {
         )
 
         let sampleDose = Dose(
-            id: previewDoseID,
             amount: 1.0,
             timestamp: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1 week ago
             site: "Abdomen",
@@ -84,9 +80,8 @@ class DataController: ObservableObject {
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
         
-        // TEMPORARY: Disable CloudKit to fix authentication issues
-        // TODO: Re-enable CloudKit after fixing sync conflicts
-        let shouldEnableCloudKit = false // Change to true when CloudKit sync issues are resolved
+        // CloudKit sync enabled for production
+        let shouldEnableCloudKit = true
 
         let configuration = ModelConfiguration(
             schema: schema,

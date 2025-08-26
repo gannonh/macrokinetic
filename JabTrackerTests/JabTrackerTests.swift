@@ -31,9 +31,9 @@ struct JabTrackerTests {
         let context = dataController.container.mainContext
 
         // Test that all expected models can be created
-        let user = User(id: UUID(), email: "test@example.com", weight: 70.0)
-        let medication = MedicationProfile(id: UUID(), genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0, startDate: Date())
-        let dose = Dose(id: UUID(), amount: 1.0, timestamp: Date())
+        let user = User(email: "test@example.com", weight: 70.0)
+        let medication = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0, startDate: Date())
+        let dose = Dose(amount: 1.0, timestamp: Date())
 
         context.insert(user)
         context.insert(medication)
@@ -103,7 +103,7 @@ struct JabTrackerTests {
         let context = dataController.container.mainContext
 
         // Test creating user with empty email (should not crash)
-        let userWithEmptyEmail = User(id: UUID(), email: "", weight: 70.0)
+        let userWithEmptyEmail = User(email: "", weight: 70.0)
         context.insert(userWithEmptyEmail)
 
         // This should not throw (empty email might be valid in some cases)
@@ -112,7 +112,7 @@ struct JabTrackerTests {
         #expect(userWithEmptyEmail.email == "")
 
         // Test creating dose with zero amount
-        let zeroDose = Dose(id: UUID(), amount: 0.0, timestamp: Date())
+        let zeroDose = Dose(amount: 0.0, timestamp: Date())
         context.insert(zeroDose)
 
         try context.save()
@@ -132,11 +132,11 @@ struct JabTrackerTests {
             let context = controller.container.mainContext
 
             // Create some test data
-            let user = User(id: UUID(), email: "test\(UUID())@example.com", weight: 70.0)
+            let user = User(email: "test\(UUID())@example.com", weight: 70.0)
             context.insert(user)
             try context.save()
 
-            #expect(user.email?.contains("@example.com") == true)
+            #expect(user.email.contains("@example.com"))
         }
 
         // Test creating multiple UI components

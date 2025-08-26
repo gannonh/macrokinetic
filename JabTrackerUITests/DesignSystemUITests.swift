@@ -102,22 +102,23 @@ final class DesignSystemUITests: XCTestCase {
         app.swipeUp()
 
         // Verify typography elements exist with proper styling
-        let largeTitle = app.staticTexts["design-system-large-title"]
-        XCTAssertTrue(largeTitle.waitForExistence(timeout: 5), "Large title should exist")
+        let headline = app.staticTexts["design-system-headline"]
+        XCTAssertTrue(headline.waitForExistence(timeout: 5), "Headline should exist")
 
-        let headline = app.staticTexts["Design System Demo"]
-        XCTAssertTrue(headline.exists, "Headline should exist")
-
-        let bodyText = app.staticTexts["Typography and Colors"]
+        let bodyText = app.staticTexts["design-system-body"]
         XCTAssertTrue(bodyText.exists, "Body text should exist")
 
-        let caption = app.staticTexts["Sample caption text"]
+        let caption = app.staticTexts["design-system-caption"]
         XCTAssertTrue(caption.exists, "Caption should exist")
 
         // Verify text content is readable
-        XCTAssertFalse(largeTitle.label.isEmpty, "Large title should have text content")
         XCTAssertFalse(headline.label.isEmpty, "Headline should have text content")
         XCTAssertFalse(bodyText.label.isEmpty, "Body text should have text content")
         XCTAssertFalse(caption.label.isEmpty, "Caption should have text content")
+        
+        // Verify the actual text content matches expected design system elements
+        XCTAssertEqual(headline.label, "Design System Demo", "Headline should have correct text")
+        XCTAssertEqual(bodyText.label, "Typography and Colors", "Body text should have correct text")
+        XCTAssertEqual(caption.label, "Sample caption text", "Caption should have correct text")
     }
 }

@@ -51,9 +51,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                     name: "UI Test User", 
                     weight: 70.0,
                     weightUnit: "kg",
-                    timezone: "UTC",
-                    createdAt: Date(),
-                    updatedAt: Date()
+                    timezone: "UTC"
                 )
             }
             return
@@ -68,7 +66,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             
             Self.logger.info("🔍 AuthenticationManager: Found \(users.count, privacy: .public) users in database")
             if let user = users.first {
-                Self.logger.info("🔍 AuthenticationManager: First user - ID: \(user.id, privacy: .public), Email: \(user.email ?? "nil", privacy: .public)")
+                Self.logger.info("🔍 AuthenticationManager: First user - ID: \(user.id, privacy: .public), Email: \(user.email, privacy: .public)")
             }
             
             await MainActor.run {
@@ -111,6 +109,35 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
     
     
+    // MARK: - Private Helper Methods
+    
+    private func processAppleIDCredential(_ appleIDCredential: ASAuthorizationAppleIDCredential) async throws -> User {
+        // Consolidated credential processing logic
+        let context = dataController.container.mainContext
+        
+        let user = User(
+            email: appleIDCredential.email ?? "unknown@apple.com",
+            name: appleIDCredential.fullName?.formatted()
+        )
+        
+        context.insert(user)
+        Self.logger.info("📝 AuthenticationManager: User inserted into context - ID: \(user.id, privacy: .public)")
+        
+        try context.save()
+        Self.logger.info("💾 AuthenticationManager: Context saved successfully")
+        
+        // Verify the user was actually saved
+        let fetchDescriptor = FetchDescriptor<User>()
+        let savedUsers = try context.fetch(fetchDescriptor)
+        Self.logger.info("🔍 AuthenticationManager: After save, found \(savedUsers.count, privacy: .public) users in database")
+        
+        Self.logger.info("✅ AuthenticationManager: User created successfully - ID: \(user.id, privacy: .public), Email: \(user.email, privacy: .public)")
+        
+        return user
+    }
+    
+    // MARK: - Public Methods
+    
     func signInWithApple() async throws -> User {
         // This method will implement the Sign in with Apple flow
         // For now, return a placeholder to make tests pass
@@ -128,28 +155,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             throw AuthenticationError.authorizationDenied
         }
         
-        // Create or update user in SwiftData
-        let context = dataController.container.mainContext
-        
-        let user = User(
-            email: appleIDCredential.email,
-            name: appleIDCredential.fullName?.formatted(),
-            createdAt: Date(),
-            updatedAt: Date()
-        )
-        
-        context.insert(user)
-        Self.logger.info("📝 AuthenticationManager: User inserted into context - ID: \(user.id, privacy: .public)")
-        
-        try context.save()
-        Self.logger.info("💾 AuthenticationManager: Context saved successfully")
-        
-        // Verify the user was actually saved
-        let fetchDescriptor = FetchDescriptor<User>()
-        let savedUsers = try context.fetch(fetchDescriptor)
-        Self.logger.info("🔍 AuthenticationManager: After save, found \(savedUsers.count, privacy: .public) users in database")
-        
-        Self.logger.info("✅ AuthenticationManager: User created and saved successfully - ID: \(user.id, privacy: .public), Email: \(user.email ?? "nil", privacy: .public)")
+        let user = try await processAppleIDCredential(appleIDCredential)
         
         await MainActor.run {
             currentUser = user
@@ -223,22 +229,18 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             return
         }
         
-        // Create or update user in SwiftData
-        let context = dataController.container.mainContext
-        
-        let user = User(
-            email: appleIDCredential.email,
-            name: appleIDCredential.fullName?.formatted(),
-            createdAt: Date(),
-            updatedAt: Date()
-        )
-        
-        context.insert(user)
-        try? context.save()
-        
-        await MainActor.run {
-            currentUser = user
-            authenticationState = .authenticated
+        do {
+            let user = try await processAppleIDCredential(appleIDCredential)
+            
+            await MainActor.run {
+                currentUser = user
+                authenticationState = .authenticated
+            }
+        } catch {
+            Self.logger.error("❌ AuthenticationManager: Failed to process Apple ID credential: \(error.localizedDescription, privacy: .public)")
+            await MainActor.run {
+                authenticationState = .notAuthenticated
+            }
         }
     }
 }

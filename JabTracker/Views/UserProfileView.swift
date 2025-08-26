@@ -105,7 +105,7 @@ struct UserProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             if let user = authManager.currentUser {
                 // Email (read-only)
-                ProfileField(label: "Email", value: user.email ?? "Not provided") {
+                ProfileField(label: "Email", value: user.email) {
                     EmptyView()
                 }
                 
@@ -148,7 +148,7 @@ struct UserProfileView: View {
                         }
                     }
                 } else {
-                    let weightDisplay = user.weight.map { String(format: "%.1f %@", $0, user.weightUnit ?? "kg") } ?? "Not set"
+                    let weightDisplay = String(format: "%.1f %@", user.weight, user.weightUnit)
                     ProfileField(label: "Weight", value: weightDisplay) {
                         EmptyView()
                     }
@@ -180,7 +180,7 @@ struct UserProfileView: View {
                         .accessibilityIdentifier("timezone-picker")
                     }
                 } else {
-                    ProfileField(label: "Timezone", value: user.timezone ?? TimeZone.current.identifier) {
+                    ProfileField(label: "Timezone", value: user.timezone) {
                         EmptyView()
                     }
                 }
@@ -267,9 +267,9 @@ struct UserProfileView: View {
         guard let user = authManager.currentUser else { return }
         
         editingName = user.name ?? ""
-        editingWeight = user.weight.map { String($0) } ?? ""
-        editingWeightUnit = user.weightUnit ?? "kg"
-        editingTimezone = user.timezone ?? TimeZone.current.identifier
+        editingWeight = String(user.weight)
+        editingWeightUnit = user.weightUnit
+        editingTimezone = user.timezone
         editingDateOfBirth = user.dateOfBirth ?? Date()
         
         editMode = true

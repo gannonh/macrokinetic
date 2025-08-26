@@ -9,29 +9,27 @@ import SwiftData
 @Model
 final class MedicationProfile {
     var id: UUID = UUID()
-    var genericName: String?
-    var brandName: String?
-    var currentDose: Double?
-    var startDate: Date?
-    var refillDate: Date?
+    var genericName: String // Required - must specify medication
+    var brandName: String // Required - must specify brand  
+    var currentDose: Double // Required - must specify current dose
+    var startDate: Date = Date() // Required with default
+    var refillDate: Date? // Optional - may not have refill scheduled yet
 
     @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
-    var doses: [Dose]?
+    var doses: [Dose] = [] // Non-nil empty array by default
 
     init(
-        id: UUID = UUID(),
-        genericName: String? = nil,
-        brandName: String? = nil,
-        currentDose: Double? = nil,
-        startDate: Date? = nil,
+        genericName: String,
+        brandName: String,
+        currentDose: Double,
+        startDate: Date = Date(),
         refillDate: Date? = nil)
     {
-        self.id = id
         self.genericName = genericName
         self.brandName = brandName
         self.currentDose = currentDose
         self.startDate = startDate
         self.refillDate = refillDate
-        doses = []
+        self.doses = []
     }
 }
