@@ -156,7 +156,7 @@ struct SettingsView: View {
                                     Spacer()
                                     Toggle("", isOn: .constant(true))
                                 }
-                                
+
                                 // Face ID toggle is handled in UserProfileView when user is authenticated
                             }
                         }

@@ -4,7 +4,6 @@ final class JabTrackerUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-    
 
     @MainActor
     func testAppLaunchAndTabNavigation() throws {

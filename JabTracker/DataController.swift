@@ -79,7 +79,7 @@ class DataController: ObservableObject {
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
-        
+
         // CloudKit sync enabled for production
         let shouldEnableCloudKit = true
 

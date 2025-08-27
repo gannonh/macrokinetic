@@ -1,7 +1,7 @@
 import Foundation
 import LocalAuthentication
-import SwiftUI
 import OSLog
+import SwiftUI
 
 enum BiometricType: String, CaseIterable {
     case none
@@ -21,60 +21,60 @@ enum BiometricAvailability {
 @MainActor
 class BiometricAuthManager: ObservableObject {
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "JabTracker", category: "BiometricAuthManager")
-    
+
     @Published var isBiometricEnabled: Bool {
         willSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(self.isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
             objectWillChange.send()
         }
         didSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(isBiometricEnabled, privacy: .public)")
             // In UI testing mode, just store in memory since UserDefaults can be unreliable
-            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
-                             ProcessInfo.processInfo.arguments.contains("--ui-testing")
-            
+            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
+                ProcessInfo.processInfo.arguments.contains("--ui-testing")
+
             if !isUITesting {
                 UserDefaults.standard.set(isBiometricEnabled, forKey: "biometricAuthEnabled")
             }
         }
     }
-    
+
     @Published var biometricType: BiometricType = .none
     @Published var isAvailable: Bool = false
-    
+
     init() {
         // In UI testing mode, start with a default value since UserDefaults can be unreliable
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
-                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
-        
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
+            ProcessInfo.processInfo.arguments.contains("--ui-testing")
+
         if isUITesting {
-            self.isBiometricEnabled = false // Start with disabled state for predictable testing
+            isBiometricEnabled = false // Start with disabled state for predictable testing
         } else {
-            self.isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
+            isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
         }
-        
+
         checkBiometricAvailability()
     }
-    
+
     private func checkBiometricAvailability() {
         // In UI testing mode, always make biometrics available
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
-                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
-        
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
+            ProcessInfo.processInfo.arguments.contains("--ui-testing")
+
         if isUITesting {
             self.isAvailable = true
-            self.biometricType = .faceID
+            biometricType = .faceID
             return
         }
-        
+
         let context = LAContext()
         var error: NSError?
-        
+
         let isAvailable = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
-        
+
         Task { @MainActor in
             self.isAvailable = isAvailable
-            
+
             if isAvailable {
                 switch context.biometryType {
                 case .faceID:
@@ -93,13 +93,13 @@ class BiometricAuthManager: ObservableObject {
             }
         }
     }
-    
+
     func getBiometricAvailability() -> BiometricAvailability {
         let context = LAContext()
         var error: NSError?
-        
+
         let canEvaluate = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
-        
+
         if canEvaluate {
             let type: BiometricType
             switch context.biometryType {
@@ -116,8 +116,8 @@ class BiometricAuthManager: ObservableObject {
             }
             return .available(type)
         } else {
-            guard let error = error else { return .unknown }
-            
+            guard let error else { return .unknown }
+
             switch LAError.Code(rawValue: error.code) {
             case .biometryNotAvailable:
                 return .notAvailable
@@ -130,23 +130,22 @@ class BiometricAuthManager: ObservableObject {
             }
         }
     }
-    
+
     func authenticateWithBiometrics(reason: String) async throws -> Bool {
         guard isAvailable else {
             throw BiometricError.notAvailable
         }
-        
+
         guard isBiometricEnabled else {
             throw BiometricError.disabled
         }
-        
+
         let context = LAContext()
-        
+
         do {
             let result = try await context.evaluatePolicy(
                 .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: reason
-            )
+                localizedReason: reason)
             return result
         } catch {
             if let laError = error as? LAError {
@@ -164,17 +163,17 @@ class BiometricAuthManager: ObservableObject {
             throw BiometricError.authenticationFailed
         }
     }
-    
+
     func setBiometricPreference(enabled: Bool) {
         isBiometricEnabled = enabled
     }
-    
+
     // Force objectWillChange for testing
     func toggleBiometric() {
         objectWillChange.send()
         isBiometricEnabled.toggle()
     }
-    
+
     var biometricTypeDisplayName: String {
         switch biometricType {
         case .faceID:
@@ -196,7 +195,7 @@ enum BiometricError: Error, LocalizedError {
     case userFallback
     case lockout
     case authenticationFailed
-    
+
     var errorDescription: String? {
         switch self {
         case .notAvailable:

@@ -38,8 +38,8 @@ final class User {
         self.weightUnit = weightUnit
         self.timezone = timezone
         self.appleUserId = appleUserId
-        self.createdAt = Date()
-        self.updatedAt = Date()
+        createdAt = Date()
+        updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
     }
 }

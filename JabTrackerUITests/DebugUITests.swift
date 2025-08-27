@@ -1,7 +1,6 @@
 import XCTest
 
 final class SettingsUITests: XCTestCase {
-    
     @MainActor
     func testSettingsViewElementsExist() throws {
         let app = TestUtilities.launchAppWithTestMode()

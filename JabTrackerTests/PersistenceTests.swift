@@ -67,17 +67,17 @@ struct SwiftDataModelTests {
         #expect(user.updatedAt != nil) // Should be auto-generated
         #expect(user.doses?.isEmpty ?? true) // Should be empty array or nil
     }
-    
+
     @Test("User model has correct required and optional fields")
     func userModelFieldRequirements() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        
+
         let user = User(email: "required@example.com", name: "Optional Name", weight: 80.0)
-        
+
         context.insert(user)
         try context.save()
-        
+
         // Required fields should never be nil
         #expect(user.email == "required@example.com")
         #expect(user.weight == 80.0)
@@ -85,11 +85,11 @@ struct SwiftDataModelTests {
         #expect(!user.timezone.isEmpty)
         #expect(user.createdAt != nil)
         #expect(user.updatedAt != nil)
-        #expect(user.doses?.count == 0 || user.doses == nil) // Empty array or nil
-        
+        #expect(user.doses?.isEmpty || user.doses == nil) // Empty array or nil
+
         // Optional fields can be provided
         #expect(user.name == "Optional Name")
-        
+
         // appleUserId should be available for auth linking
         user.appleUserId = "test.apple.id"
         #expect(user.appleUserId == "test.apple.id")
@@ -103,7 +103,7 @@ struct SwiftDataModelTests {
         // Test that MedicationProfile requires key fields
         let medication = MedicationProfile(
             genericName: "semaglutide",
-            brandName: "Ozempic", 
+            brandName: "Ozempic",
             currentDose: 1.0)
 
         context.insert(medication)
@@ -132,7 +132,7 @@ struct SwiftDataModelTests {
         #expect(dose.amount == 1.0)
         #expect(dose.timestamp != nil)
         #expect(dose.skipped == false) // Should have default value
-        
+
         // Optional fields should be nil initially
         #expect(dose.site == nil)
         #expect(dose.notes == nil)

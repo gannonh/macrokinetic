@@ -4,7 +4,6 @@ final class DesignSystemUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-    
 
     @MainActor
     func testDesignSystemComponents() throws {
@@ -22,7 +21,7 @@ final class DesignSystemUITests: XCTestCase {
 
         // Test actual design system components that exist in Settings
         XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 5), "Settings should show user profile section")
-        
+
         // Verify design system is working by checking for proper UI elements
         let editButton = app.buttons["edit-profile-button"]
         XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Edit button should exist")
@@ -30,17 +29,17 @@ final class DesignSystemUITests: XCTestCase {
         // Test button functionality (design system component)
         XCTAssertTrue(editButton.isEnabled, "Edit button should be enabled")
         editButton.tap()
-        
+
         // Verify edit mode shows design system components
-        let saveButton = app.buttons["save-profile-button"] 
+        let saveButton = app.buttons["save-profile-button"]
         XCTAssertTrue(saveButton.waitForExistence(timeout: 3), "Save button should appear in edit mode")
-        
+
         let cancelButton = app.buttons["cancel-edit-button"]
         XCTAssertTrue(cancelButton.exists, "Cancel button should exist in edit mode")
 
         // Test design system button interactions
         cancelButton.tap()
-        
+
         // Verify returned to view mode (design system working correctly)
         XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Edit button should reappear after cancel")
     }
@@ -60,11 +59,11 @@ final class DesignSystemUITests: XCTestCase {
 
         // Test actual UI component accessibility (no scrolling needed)
         XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 5), "Settings should show user profile section")
-        
-        let editButton = app.buttons["edit-profile-button"] 
+
+        let editButton = app.buttons["edit-profile-button"]
         XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Edit button should exist")
 
-        // Verify accessibility properties of design system components  
+        // Verify accessibility properties of design system components
         XCTAssertFalse(editButton.label.isEmpty, "Edit button should have accessibility label")
         XCTAssertTrue(editButton.exists, "Edit button should exist for accessibility")
 
@@ -106,7 +105,7 @@ final class DesignSystemUITests: XCTestCase {
         XCTAssertFalse(headline.label.isEmpty, "Headline should have text content")
         XCTAssertFalse(bodyText.label.isEmpty, "Body text should have text content")
         XCTAssertFalse(caption.label.isEmpty, "Caption should have text content")
-        
+
         // Verify the actual text content matches expected design system elements
         XCTAssertEqual(headline.label, "Design System Demo", "Headline should have correct text")
         XCTAssertEqual(bodyText.label, "Typography and Colors", "Body text should have correct text")

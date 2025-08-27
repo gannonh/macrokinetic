@@ -52,14 +52,14 @@ struct JabTrackerApp: App {
             }
         }
     }
-    
+
     private func handleScenePhaseChange(_ newPhase: ScenePhase) {
         switch newPhase {
         case .active:
             print("📱 JabTrackerApp: Scene became active")
             print("📱 JabTrackerApp: Auth state = \(authManager.authenticationState), Biometric enabled = \(biometricManager.isBiometricEnabled), Just signed in = \(hasJustSignedIn), Recent biometric = \(hasRecentBiometricAuth)")
             // Check for biometric authentication when app becomes active (but not right after sign-in or recent biometric auth)
-            if authManager.authenticationState == .authenticated && biometricManager.isBiometricEnabled && !hasJustSignedIn && !hasRecentBiometricAuth {
+            if authManager.authenticationState == .authenticated, biometricManager.isBiometricEnabled, !hasJustSignedIn, !hasRecentBiometricAuth {
                 print("📱 JabTrackerApp: Triggering biometric authentication")
                 Task {
                     await handleBiometricAuthentication()
@@ -72,12 +72,11 @@ struct JabTrackerApp: App {
         case .background, .inactive:
             // Reset biometric auth flag when app goes to background
             hasRecentBiometricAuth = false
-            break
         @unknown default:
             break
         }
     }
-    
+
     @MainActor
     private func handleBiometricAuthentication() async {
         print("🔐 JabTrackerApp: Starting biometric authentication")

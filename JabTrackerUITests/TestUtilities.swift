@@ -2,10 +2,9 @@ import XCTest
 
 /// Shared test utilities for UI testing across the JabTracker app
 /// Provides common app launch methods and helper functions
-final class TestUtilities {
-    
+enum TestUtilities {
     // MARK: - App Launch Methods
-    
+
     /// Launch app with UI testing mode enabled
     /// - Bypasses real Sign in with Apple authentication
     /// - Creates mock user data for testing
@@ -17,7 +16,7 @@ final class TestUtilities {
         app.launch()
         return app
     }
-    
+
     /// Launch app with real authentication (for testing actual Sign in with Apple flow)
     /// - Uses real Apple ID authentication
     /// - Resets app data for clean state
@@ -29,7 +28,7 @@ final class TestUtilities {
         app.launch()
         return app
     }
-    
+
     /// Launch app with custom configuration
     /// - Parameters:
     ///   - testMode: Enable UI testing mode (bypasses authentication)
@@ -40,33 +39,33 @@ final class TestUtilities {
         testMode: Bool = false,
         resetData: Bool = false,
         additionalArguments: [String] = [],
-        additionalEnvironment: [String: String] = [:]
-    ) -> XCUIApplication {
+        additionalEnvironment: [String: String] = [:]) -> XCUIApplication
+    {
         let app = XCUIApplication()
-        
+
         if testMode {
             app.launchEnvironment["UI_TESTING"] = "true"
             app.launchArguments.append("--ui-testing")
         }
-        
+
         if resetData {
             app.launchArguments.append("--reset-app-data")
         }
-        
+
         // Add additional arguments
         app.launchArguments.append(contentsOf: additionalArguments)
-        
+
         // Add additional environment variables
         for (key, value) in additionalEnvironment {
             app.launchEnvironment[key] = value
         }
-        
+
         app.launch()
         return app
     }
-    
+
     // MARK: - Navigation Helpers
-    
+
     /// Navigate to a specific tab in the tab bar
     /// - Parameters:
     ///   - app: The XCUIApplication instance
@@ -77,13 +76,13 @@ final class TestUtilities {
     static func navigateToTab(_ app: XCUIApplication, tabName: String, timeout: TimeInterval = 5) -> XCUIElement {
         let tabBar = app.tabBars.element
         XCTAssertTrue(tabBar.waitForExistence(timeout: timeout), "Tab bar should exist")
-        
+
         let tab = tabBar.buttons[tabName]
         XCTAssertTrue(tab.exists, "\(tabName) tab should exist")
         tab.tap()
         return tab
     }
-    
+
     /// Navigate to Settings tab and verify user is authenticated
     /// - Parameters:
     ///   - app: The XCUIApplication instance
@@ -91,15 +90,15 @@ final class TestUtilities {
     /// - Throws: XCTFail if user is not authenticated
     static func navigateToSettingsAndVerifyAuth(_ app: XCUIApplication, timeout: TimeInterval = 3) throws {
         navigateToTab(app, tabName: "Settings")
-        
+
         guard app.staticTexts["User Profile"].waitForExistence(timeout: timeout) else {
             XCTFail("User Profile should be visible. Please ensure user is authenticated.")
             return
         }
     }
-    
+
     // MARK: - Authentication Helpers
-    
+
     /// Wait for and verify Sign in with Apple button exists
     /// - Parameters:
     ///   - app: The XCUIApplication instance
@@ -108,11 +107,11 @@ final class TestUtilities {
     @discardableResult
     static func waitForSignInButton(_ app: XCUIApplication, timeout: TimeInterval = 5) -> XCUIElement {
         let signInButton = app.buttons["sign-in-with-apple-button"]
-        XCTAssertTrue(signInButton.waitForExistence(timeout: timeout), 
+        XCTAssertTrue(signInButton.waitForExistence(timeout: timeout),
                       "Sign in with Apple button should be visible")
         return signInButton
     }
-    
+
     /// Attempt to login if Sign in with Apple button is present
     /// - Parameter app: The XCUIApplication instance
     static func loginIfPresent(_ app: XCUIApplication) {
@@ -123,7 +122,7 @@ final class TestUtilities {
             signInWithApple(app)
         }
     }
-    
+
     /// Perform Sign in with Apple authentication with real credentials
     /// - Parameter app: The XCUIApplication instance
     /// - Note: This uses hardcoded test credentials - should only be used in test environment
@@ -147,7 +146,7 @@ final class TestUtilities {
         let settingsButton = springboard.buttons["Settings"]
         let shareMyEmailDirect = springboard.staticTexts["Share My Email"]
         let continueWithPasswordButton = springboard.buttons["Continue with Password"]
-        
+
         // Quick check for the most common case first (Continue with Password)
         if continueWithPasswordButton.waitForExistence(timeout: 2) {
             // Case 1: Direct "Continue with Password" button (most common)
@@ -155,7 +154,7 @@ final class TestUtilities {
             continueWithPasswordButton.tap()
             print("✅ Tapped Continue with Password button")
             sleep(1) // Reduced from 2 seconds
-            
+
             // After tapping Continue with Password, goes directly to password entry
             print("🔒 Looking for password field after Continue with Password...")
             let passwordField = springboard.secureTextFields.firstMatch
@@ -163,30 +162,30 @@ final class TestUtilities {
                 passwordField.tap()
                 passwordField.typeText("S3cr3t77!")
                 print("🔒 Entered password in direct Continue with Password flow")
-                
+
                 // Look for Sign In button after entering password
                 let signInButton = springboard.buttons["Sign In"]
                 if signInButton.waitForExistence(timeout: 2) { // Reduced from 3 seconds
                     signInButton.tap()
                     print("✅ Tapped Sign In button in direct password flow")
-                    
+
                     // Wait for authentication to complete
                     print("⏳ Waiting for direct password authentication to complete...")
                     sleep(5) // Reduced from 8 seconds
-                    
+
                     // Verify we're back in the main app with faster polling
                     let mainApp = XCUIApplication()
                     let tabBar = mainApp.tabBars.firstMatch
-                    
+
                     // Quick check - if TabBar exists immediately, we're done
                     if tabBar.exists {
                         print("✅ Apple ID authorization completed immediately - app loaded")
                         print("🎉 Sign in flow completed successfully - Direct Continue with Password path")
                         return
                     }
-                    
+
                     // If not immediate, do a few quick checks with shorter intervals
-                    for attempt in 1...3 {
+                    for attempt in 1 ... 3 {
                         print("🔍 Direct password auth completion check attempt \(attempt)/3")
                         if tabBar.waitForExistence(timeout: 2) {
                             print("✅ Apple ID authorization completed - app loaded")
@@ -194,7 +193,7 @@ final class TestUtilities {
                             return
                         }
                     }
-                    
+
                     print("❌ Direct password authentication failed - TabBar not found")
                     XCTFail("Apple ID authentication failed to complete - app did not return to authenticated state")
                     return
@@ -211,7 +210,7 @@ final class TestUtilities {
         } else if settingsButton.waitForExistence(timeout: 2) {
             print("⚙️ Settings dialog appeared - handling Apple ID setup flow")
             settingsButton.tap()
-            
+
             // Debug: Print all available elements in Settings screen
             print("🔍 Debugging Settings screen elements:")
             let allStaticTexts = springboard.staticTexts.allElementsBoundByIndex
@@ -222,12 +221,12 @@ final class TestUtilities {
             for (index, button) in allButtons.enumerated() {
                 print("  Button \(index): '\(button.label)' - exists: \(button.exists)")
             }
-            
+
             // The modal is likely in AuthKit UI context, not Settings or SpringBoard
             let authKitApp = XCUIApplication(bundleIdentifier: "com.apple.AuthKitUI")
             let signInManuallyText = authKitApp.staticTexts["Sign in Manually"]
             var foundSignInManually = false
-            
+
             if signInManuallyText.waitForExistence(timeout: 5) {
                 signInManuallyText.tap()
                 print("✅ Tapped Sign in Manually in AuthKit UI")
@@ -237,9 +236,9 @@ final class TestUtilities {
                 let contexts = [
                     ("Settings", XCUIApplication(bundleIdentifier: "com.apple.Preferences")),
                     ("SpringBoard", springboard),
-                    ("Main App", XCUIApplication())
+                    ("Main App", XCUIApplication()),
                 ]
-                
+
                 for (name, app) in contexts {
                     let signInText = app.staticTexts["Sign in Manually"]
                     if signInText.exists {
@@ -249,19 +248,19 @@ final class TestUtilities {
                         break
                     }
                 }
-                
+
                 if !foundSignInManually {
                     print("❌ Could not find 'Sign in Manually' in any context")
                 }
             }
-            
+
             // Wait for the sign in manually screen to load
             sleep(2)
-            
+
             if foundSignInManually {
                 // The Apple ID login screen appears in Settings context
                 let settingsApp = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
-                
+
                 // Try to find the email/username field with various identifiers
                 let possibleUsernameFields = [
                     settingsApp.textFields.element(boundBy: 0), // First text field
@@ -270,39 +269,39 @@ final class TestUtilities {
                     settingsApp.textFields["username"],
                     springboard.textFields.element(boundBy: 0), // Fallback to SpringBoard
                 ]
-                
+
                 var foundUsernameField = false
                 for usernameField in possibleUsernameFields {
                     if usernameField.waitForExistence(timeout: 2) {
                         usernameField.tap()
                         print("👤 Tapped username field: '\(usernameField.label)' or '\(usernameField.placeholderValue ?? "no placeholder")'")
-                        
+
                         // Type the phone number
                         usernameField.typeText("4158878252")
                         print("📱 Entered phone number: 4158878252")
-                        
+
                         foundUsernameField = true
                         break
                     }
                 }
-                
+
                 if !foundUsernameField {
                     print("⚠️ Could not find username field, trying to proceed anyway")
                 }
-                
+
                 // Wait a moment for the Continue button to become enabled after typing
                 sleep(1)
-                
+
                 // Check screen layout to determine approach
                 let continueButton = settingsApp.buttons["continue"]
-                
+
                 if continueButton.waitForExistence(timeout: 3) {
                     print("🔍 Continue button exists, checking screen layout...")
-                    
+
                     // Check if button is in a problematic position (off-screen/unscrollable)
                     let buttonFrame = continueButton.frame
                     print("🔍 Continue button frame: \(buttonFrame)")
-                    
+
                     // The problematic case has button at y=730, normal case is around y=300-400
                     if buttonFrame.origin.y > 700 {
                         print("🔄 Continue button appears off-screen (y=\(buttonFrame.origin.y)), trying keyboard approach...")
@@ -327,44 +326,44 @@ final class TestUtilities {
                         continueButton.tap()
                         print("⌨️ Used standard tap for on-screen continue button")
                     }
-                    
+
                     // Wait for result
                     sleep(3)
-                    
+
                     // Enter password in Settings app context
                     let passwordField = settingsApp.secureTextFields.element(boundBy: 0)
                     if passwordField.waitForExistence(timeout: 3) {
                         passwordField.tap()
                         passwordField.typeText("S3cr3t77!")
                         print("🔒 Entered password")
-                        
+
                         // Tap Done button after password entry (from your codegen)
                         let doneButton = settingsApp.buttons["Done"]
                         if doneButton.waitForExistence(timeout: 3) {
                             doneButton.tap()
                             print("✅ Tapped Done button after password entry")
-                            
+
                             // Handle "Not Now" dialog - reduced timeout
                             let notNowButton = settingsApp.buttons["Not Now"]
                             if notNowButton.waitForExistence(timeout: 2) {
                                 notNowButton.tap()
                                 print("✅ Tapped Not Now")
                             }
-                            
+
                             // Skip "Don't Merge" - handled automatically by interruption handler
-                            
+
                             // Return to app via breadcrumb
                             let breadcrumbButton = springboard.buttons["breadcrumb"]
                             if breadcrumbButton.waitForExistence(timeout: 3) {
                                 breadcrumbButton.tap()
                                 print("↩️ Tapped breadcrumb to return to app")
                             }
-                            
+
                             // Skip OK dialog - often doesn't appear
-                            
+
                             // Wait for return to app - we should be back in main app now
                             sleep(3)
-                            
+
                             // The Apple ID authorization should appear automatically
                             // Debug: Print all available elements to understand what's on screen
                             print("🔍 Debugging Apple ID authorization screen elements:")
@@ -376,33 +375,33 @@ final class TestUtilities {
                             for (index, button) in allButtons.prefix(10).enumerated() {
                                 print("  Button \(index): '\(button.label)' - exists: \(button.exists)")
                             }
-                            
+
                             // Handle "Share My Email" selection - exact codegen approach
                             let shareMyEmailText = app.staticTexts["Share My Email"]
                             if shareMyEmailText.waitForExistence(timeout: 10) {
                                 shareMyEmailText.tap()
                                 print("✅ Tapped Share My Email using exact codegen approach")
                                 sleep(2)
-                                
+
                                 // Handle final Continue button (SIWA_CONTINUE_BUTTON) - exact codegen approach
                                 let siwaResumeButton = app.buttons["SIWA_CONTINUE_BUTTON"]
                                 if siwaResumeButton.waitForExistence(timeout: 5) {
                                     siwaResumeButton.tap()
                                     print("✅ Tapped SIWA Continue button using exact codegen approach")
                                     print("⏳ Waiting for Apple ID authorization to complete and return to app...")
-                                    
+
                                     // Wait longer for Apple ID authorization to complete and return to app
                                     // The authorization process can take 5-10 seconds to complete
                                     sleep(8)
-                                    
+
                                     // Verify we're back in the main app by checking for app elements
                                     let mainApp = XCUIApplication()
                                     let appTitle = mainApp.staticTexts["JabTracker"]
                                     let tabBar = mainApp.tabBars.firstMatch
-                                    
+
                                     // Wait up to 10 more seconds for the app to fully load after authorization
                                     var authCompleted = false
-                                    for attempt in 1...5 {
+                                    for attempt in 1 ... 5 {
                                         print("🔍 Authorization completion check attempt \(attempt)/5")
                                         if tabBar.exists || appTitle.exists {
                                             print("✅ Apple ID authorization completed - app elements detected")
@@ -411,7 +410,7 @@ final class TestUtilities {
                                         }
                                         sleep(2)
                                     }
-                                    
+
                                     if !authCompleted {
                                         print("⚠️ Apple ID authorization may still be in progress - continuing anyway")
                                     } else {
@@ -423,19 +422,19 @@ final class TestUtilities {
                                 }
                             } else {
                                 print("⚠️ Share My Email not found - checking if we need to tap Sign in with Apple again")
-                                
+
                                 // Fallback: try tapping Sign in with Apple if authorization screen not shown
                                 if signInWithAppleButton.waitForExistence(timeout: 3) {
                                     signInWithAppleButton.tap()
                                     print("📱 Tapped Sign in with Apple button again")
                                     sleep(2)
-                                    
+
                                     // Try again for Share My Email
                                     if shareMyEmailText.waitForExistence(timeout: 5) {
                                         shareMyEmailText.tap()
                                         print("✅ Tapped Share My Email after Sign in with Apple retry")
                                         sleep(1)
-                                        
+
                                         let siwaResumeButton = app.buttons["SIWA_CONTINUE_BUTTON"]
                                         if siwaResumeButton.waitForExistence(timeout: 3) {
                                             siwaResumeButton.tap()
@@ -446,7 +445,7 @@ final class TestUtilities {
                                     }
                                 }
                             }
-                            
+
                         } else {
                             print("⚠️ Could not find Done button after password entry")
                         }
@@ -456,7 +455,7 @@ final class TestUtilities {
                 } else {
                     print("⚠️ Could not find continue button")
                 }
-                
+
                 // Authentication flow completed - return directly
             } else {
                 // If we can't find "Sign in Manually", the authentication flow failed
@@ -469,17 +468,17 @@ final class TestUtilities {
             shareMyEmailDirect.tap()
             print("✅ Tapped Share My Email in direct authorization flow")
             sleep(1) // Reduced from 2 seconds
-            
+
             // Handle final Continue button (SIWA_CONTINUE_BUTTON) in SpringBoard context
             let siwaDirectButton = springboard.buttons["SIWA_CONTINUE_BUTTON"]
             if siwaDirectButton.waitForExistence(timeout: 3) { // Reduced from 5 seconds
                 siwaDirectButton.tap()
                 print("✅ Tapped SIWA Continue button in direct authorization flow")
                 sleep(1) // Reduced from 2 seconds
-                
+
                 // After tapping Continue, a password prompt should appear
                 print("🔒 Looking for password prompt after SIWA Continue...")
-                
+
                 // Check for password field in SpringBoard context
                 let passwordField = springboard.secureTextFields.firstMatch
                 if passwordField.waitForExistence(timeout: 3) { // Reduced from 5 seconds
@@ -487,30 +486,30 @@ final class TestUtilities {
                     passwordField.tap()
                     passwordField.typeText("S3cr3t77!")
                     print("🔒 Entered password in direct authorization flow")
-                    
+
                     // Look for Sign In button after entering password
                     let signInButton = springboard.buttons["Sign In"]
                     if signInButton.waitForExistence(timeout: 2) { // Reduced from 3 seconds
                         signInButton.tap()
                         print("✅ Tapped Sign In button after password in direct flow")
-                        
+
                         // Wait for Apple ID authorization to complete and return to app
                         print("⏳ Waiting for Apple ID authorization to complete and return to app...")
                         sleep(5) // Reduced from 8 seconds
-                        
+
                         // Verify we're back in the main app with faster polling
                         let mainApp = XCUIApplication()
                         let tabBar = mainApp.tabBars.firstMatch
-                        
+
                         // Quick check first
                         if tabBar.exists {
                             print("✅ Apple ID authorization completed immediately - app loaded")
                             print("🎉 Sign in flow completed successfully - Direct Share My Email path")
                             return
                         }
-                        
+
                         // If not immediate, do quick checks
-                        for attempt in 1...3 {
+                        for attempt in 1 ... 3 {
                             print("🔍 Direct auth completion check attempt \(attempt)/3")
                             if tabBar.waitForExistence(timeout: 2) {
                                 print("✅ Apple ID authorization completed - app loaded")
@@ -518,7 +517,7 @@ final class TestUtilities {
                                 return
                             }
                         }
-                        
+
                         print("❌ Apple ID authorization failed - TabBar not found after Sign In")
                         XCTFail("Apple ID authorization failed to complete - app did not return to authenticated state")
                         return
@@ -540,49 +539,49 @@ final class TestUtilities {
         } else {
             // Case 3: None of the expected authentication flows found
             print("❌ No expected authentication elements found")
-            
+
             // Debug: Print available elements to see what's actually on screen
             print("🔍 Debugging available elements in SpringBoard:")
             let allStaticTexts = springboard.staticTexts.allElementsBoundByIndex
             for (index, text) in allStaticTexts.prefix(10).enumerated() {
                 print("  StaticText \(index): '\(text.label)' - exists: \(text.exists)")
             }
-            let allButtons = springboard.buttons.allElementsBoundByIndex  
+            let allButtons = springboard.buttons.allElementsBoundByIndex
             for (index, button) in allButtons.prefix(10).enumerated() {
                 print("  Button \(index): '\(button.label)' - exists: \(button.exists)")
             }
-            
+
             XCTFail("Apple ID authentication failed - no expected authentication elements found")
             return
         }
-        
+
         // If we reach here without returning early, authentication may have failed
         print("❌ Sign in flow completed with unknown result - authentication may have failed")
         XCTFail("Apple ID authentication completed but result is unknown - check logs for issues")
     }
-    
+
     /// Verify app is in authenticated state (TabView visible)
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for TabView (default: 10 seconds)
     static func verifyAuthenticatedState(_ app: XCUIApplication, timeout: TimeInterval = 10) {
         let tabBar = app.tabBars.element
-        XCTAssertTrue(tabBar.waitForExistence(timeout: timeout), 
+        XCTAssertTrue(tabBar.waitForExistence(timeout: timeout),
                       "TabView should be visible when authenticated")
     }
-    
+
     /// Verify app is in unauthenticated state (Sign in button visible)
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for sign in button (default: 5 seconds)
     static func verifyUnauthenticatedState(_ app: XCUIApplication, timeout: TimeInterval = 5) {
         waitForSignInButton(app, timeout: timeout)
-        XCTAssertTrue(app.staticTexts["Welcome to JabTracker"].exists, 
+        XCTAssertTrue(app.staticTexts["Welcome to JabTracker"].exists,
                       "Welcome message should be visible when not authenticated")
     }
-    
+
     // MARK: - Element Waiting Helpers
-    
+
     /// Wait for element to exist with custom timeout and polling
     /// - Parameters:
     ///   - element: The XCUIElement to wait for
@@ -594,7 +593,7 @@ final class TestUtilities {
                 XCTFail("Timed out waiting for element to exist")
                 return
             }
-            usleep(100_000)  // Sleep for 100ms to prevent tight spinning
+            usleep(100_000) // Sleep for 100ms to prevent tight spinning
         }
     }
 
@@ -609,12 +608,12 @@ final class TestUtilities {
                 XCTFail("Timed out waiting for element to disappear")
                 return
             }
-            usleep(100_000)  // Sleep for 100ms to prevent tight spinning
+            usleep(100_000) // Sleep for 100ms to prevent tight spinning
         }
     }
 
     // MARK: - Form Interaction Helpers
-    
+
     /// Enter edit mode for user profile
     /// - Parameters:
     ///   - app: The XCUIApplication instance
@@ -627,17 +626,17 @@ final class TestUtilities {
         editButton.tap()
         return editButton
     }
-    
+
     /// Save profile changes and exit edit mode
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for save button (default: 2 seconds)
-    static func saveProfileChanges(_ app: XCUIApplication, timeout: TimeInterval = 2) {
+    static func saveProfileChanges(_ app: XCUIApplication, timeout _: TimeInterval = 2) {
         let saveButton = app.buttons["save-profile-button"]
         XCTAssertTrue(saveButton.exists, "Save button should exist in edit mode")
         XCTAssertTrue(saveButton.isEnabled, "Save button should be enabled with valid data")
         saveButton.tap()
-        
+
         // Verify we're back in view mode
         let editButton = app.buttons["edit-profile-button"]
         XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Should return to view mode after save")
@@ -650,24 +649,24 @@ extension XCUIElement {
     /// Clear existing text and enter new text in a text field
     /// - Parameter text: The text to enter
     func clearAndEnterText(_ text: String) {
-        guard self.elementType == .textField else { return }
-        
-        self.tap()
-        self.press(forDuration: 1.0)
-        
+        guard elementType == .textField else { return }
+
+        tap()
+        press(forDuration: 1.0)
+
         let selectAll = XCUIApplication().menuItems["Select All"]
         if selectAll.exists {
             selectAll.tap()
         }
-        
-        self.typeText(text)
+
+        typeText(text)
     }
-    
+
     /// Wait for element to exist and be hittable
     /// - Parameters:
     ///   - timeout: Maximum time to wait
     /// - Returns: True if element exists and is hittable within timeout
     func waitForExistenceAndHittable(timeout: TimeInterval) -> Bool {
-        return self.waitForExistence(timeout: timeout) && self.isHittable
+        waitForExistence(timeout: timeout) && isHittable
     }
 }
