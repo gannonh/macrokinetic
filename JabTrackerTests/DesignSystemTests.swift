@@ -117,12 +117,8 @@ struct DesignSystemTests {
     func primaryGradientColors() throws {
         let gradient = DesignTokens.Colors.primaryGradient
 
-        // Test that gradient can be created and used
-        let testView = Rectangle().fill(gradient)
-
-        // Test that gradient is different from a solid color fill
-        let solidFill = Rectangle().fill(Color.blue)
-        #expect(String(describing: testView) != String(describing: solidFill))
+        // Test that gradient exists and is the expected type
+        #expect(type(of: gradient) == LinearGradient.self, "Primary gradient should be a LinearGradient")
 
         // Test that we can create gradients with the expected colors
         let manualGradient = LinearGradient(
@@ -131,7 +127,24 @@ struct DesignSystemTests {
             endPoint: .bottomTrailing)
 
         // Both gradients should be LinearGradient type
-        #expect(type(of: gradient) == type(of: manualGradient))
+        #expect(type(of: gradient) == type(of: manualGradient), 
+               "Primary gradient should be same type as manually created LinearGradient")
+        
+        // Test that the gradient can be used in SwiftUI views
+        let gradientView = Rectangle().fill(gradient)
+        let solidView = Rectangle().fill(Color.blue)
+        
+        // Different types of fills should have different types
+        #expect(type(of: gradientView) != type(of: solidView),
+               "Gradient-filled view should be different type than solid color-filled view")
+        
+        // Test that primary colors exist and can be used in gradients
+        let testGradient = LinearGradient(
+            colors: [Color.primaryBlue, Color.primaryPurple],
+            startPoint: .top,
+            endPoint: .bottom)
+        #expect(type(of: testGradient) == LinearGradient.self,
+               "Should be able to create gradient with primary colors")
     }
 
     @Test("Typography styles have correct font properties")
@@ -210,12 +223,12 @@ struct DesignComponentsTests {
     @Test("DesignCard contains expected content")
     func designCardContent() throws {
         let testText = "Test Content for Card"
-        let card = DesignCard {
+        let _ = DesignCard {
             Text(testText)
         }
 
         // Test that card can hold different content types
-        let card2 = DesignCard {
+        let _ = DesignCard {
             VStack {
                 Text("Title")
                 Text("Subtitle")
@@ -238,8 +251,8 @@ struct DesignComponentsTests {
 
         // Test that both types of cards can be created without errors
         // This validates the generic functionality without relying on string representations
-        #expect(textCard != nil)
-        #expect(vStackCard != nil)
+        #expect(type(of: textCard) == DesignCard<Text>.self)
+        #expect(type(of: vStackCard) == DesignCard<VStack<TupleView<(Text, Text)>>>.self)
 
         // Test that the cards can be used in UI contexts (they are proper Views)
         // We can verify they implement the View protocol by compiling successfully
@@ -255,14 +268,12 @@ struct DesignComponentsTests {
         // Test button properties (functional validation)
         #expect(primaryButton.title == "Primary")
         #expect(secondaryButton.title == "Secondary")
-        #expect(primaryButton.action != nil)
-        #expect(secondaryButton.action != nil)
-
+        
         // Test that buttons have different titles (behavioral validation)
         #expect(primaryButton.title != secondaryButton.title)
 
-        // Test that components can be created successfully
-        #expect(card != nil)
+        // Test that components can be created successfully and have expected types
+        #expect(type(of: card) == DesignCard<Text>.self)
 
         // All components should be usable as Views (compilation validates this)
         // This tests actual functionality rather than internal type representations

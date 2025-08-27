@@ -20,7 +20,7 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     @Published var authenticationState: AuthenticationState = .notDetermined {
         didSet {
-            Self.logger.info("🔄 AuthenticationManager: State changed from \(oldValue.rawValue, privacy: .public) to \(authenticationState.rawValue, privacy: .public)")
+            Self.logger.info("🔄 AuthenticationManager: State changed from \(oldValue.rawValue, privacy: .public) to \(self.authenticationState.rawValue, privacy: .public)")
         }
     }
 

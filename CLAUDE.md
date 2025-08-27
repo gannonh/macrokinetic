@@ -394,3 +394,4 @@ This work established a much stronger foundation for continued feature developme
 - Always test iCloud sync scenarios: available, unavailable, not signed in
 - Swift Testing framework docs: https://developer.apple.com/documentation/testing
 - XcodeBuildMCP provides a range of useful tools for working with the project.
+- Simulator name always includes OS: `iPhone 15,OS=17.5`

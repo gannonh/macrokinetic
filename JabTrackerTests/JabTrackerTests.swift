@@ -12,7 +12,7 @@ struct JabTrackerTests {
         let dataController = DataController.testContainer()
 
         // Test that the main content view can be created
-        let contentView = ContentView()
+        let _ = ContentView()
             .environment(\.modelContext, dataController.container.mainContext)
 
         // Test that the data controller has the expected schema (User, Dose, MedicationProfile)
@@ -26,7 +26,7 @@ struct JabTrackerTests {
 
         // Test that we can access the model context without error
         let context = dataController.container.mainContext
-        #expect(context != nil)
+        #expect(type(of: context) == ModelContext.self)
     }
 
     @Test("App data models are properly configured")
@@ -57,7 +57,7 @@ struct JabTrackerTests {
     func appDesignSystemIntegration() throws {
         // Test that design system components can be created with proper properties
         let primaryButton = PrimaryButton(title: "Test Action") {}
-        let designCard = DesignCard { Text("Test Content") }
+        let _ = DesignCard { Text("Test Content") }
 
         // Verify button properties
         #expect(primaryButton.title == "Test Action")
@@ -75,7 +75,7 @@ struct JabTrackerTests {
 
         // Test that gradient exists and is a LinearGradient
         // Note: LinearGradient doesn't expose stops property directly
-        #expect(gradient != nil)
+        #expect(type(of: gradient) == LinearGradient.self)
 
         // Test that button styles can be applied and are the correct type
         let buttonStyle = DesignTokens.ButtonStyles.primary
@@ -135,7 +135,7 @@ struct JabTrackerTests {
     @MainActor
     func appComponentCreationAndCleanup() throws {
         // Test creating and releasing multiple data controllers
-        for i in 0 ..< 5 { // Reduced from 10 for faster tests
+        for _ in 0 ..< 5 { // Reduced from 10 for faster tests
             let controller = DataController.testContainer()
             let context = controller.container.mainContext
 
@@ -158,12 +158,12 @@ struct JabTrackerTests {
         // Test creating multiple UI components without memory leaks
         for i in 0 ..< 5 { // Reduced from 10 for faster tests
             let button = PrimaryButton(title: "Button \(i)") {}
-            let card = DesignCard { Text("Content \(i)") }
+            let _ = DesignCard { Text("Content \(i)") }
 
             // Verify components have expected properties
             #expect(button.title == "Button \(i)")
-            // Test component functionality rather than string representation
-            #expect(button.action != nil) // Verify action closure exists
+            // Test component functionality - action is a non-optional closure
+            #expect(type(of: button.action) == (() -> Void).self)
         }
 
         // Test passes if no crashes or memory issues occur during component creation

@@ -99,33 +99,36 @@ struct AuthenticationManagerTests {
         // The fact that the manager initializes successfully validates the connection
     }
 
-    @Test("AuthenticationManager sign in with Apple interface")
+    @Test("AuthenticationManager sign in with Apple error handling")
     @MainActor
-    func signInWithAppleInterface() throws {
+    func signInWithAppleErrorHandling() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
-        // Test that the sign in method exists and is callable
-        // Note: We can't test actual Sign in with Apple in unit tests due to system dependencies
-        // This validates the interface exists and doesn't crash when called
-
-        // Test initial state
+        // Test initial state is correct
         #expect(authManager.authenticationState == .notDetermined)
+        #expect(authManager.currentUser == nil)
 
-        // Test that methods exist by attempting to call them (they won't crash on reference)
+        // Test that signInWithApple properly propagates errors in test environment
         Task {
-            // These methods exist and can be called, though they won't complete successfully in tests
+            var didThrowError = false
             do {
                 _ = try await authManager.signInWithApple()
             } catch {
-                // Expected to fail in test environment
+                didThrowError = true
+                // Should throw a specific AuthenticationError, not just any error
+                #expect(error is AuthenticationError, "Should throw AuthenticationError, got: \(type(of: error))")
+                // Authentication state should remain unchanged after error
+                #expect(authManager.authenticationState == .notDetermined)
+                #expect(authManager.currentUser == nil)
             }
+            #expect(didThrowError, "signInWithApple should throw an error in test environment")
         }
     }
 
-    @Test("AuthenticationManager state management")
+    @Test("AuthenticationManager state transitions")
     @MainActor
-    func authStateManagement() throws {
+    func authStateTransitions() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
@@ -133,16 +136,20 @@ struct AuthenticationManagerTests {
         #expect(authManager.authenticationState == .notDetermined)
         #expect(authManager.currentUser == nil)
 
-        // Test checkAuthenticationStatus method exists and can be called
-        Task {
-            await authManager.checkAuthenticationStatus()
-            // Should not crash - actual auth logic is tested in UI tests
-        }
-
-        // Test signOut method (public method)
+        // Test signOut updates state correctly
         Task {
             try await authManager.signOut()
-            #expect(authManager.currentUser == nil)
+            #expect(authManager.currentUser == nil, "currentUser should be nil after signOut")
+            #expect(authManager.authenticationState == .notAuthenticated, 
+                   "authenticationState should be .notAuthenticated after signOut")
+        }
+        
+        // Test checkAuthenticationStatus with empty database maintains notAuthenticated state
+        Task {
+            await authManager.checkAuthenticationStatus()
+            // With no users in test database, should remain notAuthenticated
+            #expect(authManager.authenticationState == .notAuthenticated,
+                   "authenticationState should remain .notAuthenticated with empty database")
         }
     }
 }
@@ -214,35 +221,50 @@ struct BiometricAuthManagerTests {
         biometricManager.toggleBiometric()
         #expect(biometricManager.isBiometricEnabled == !initialState)
 
-        // Test authenticateWithBiometrics method exists (actual auth tested in UI tests)
+        // Test authenticateWithBiometrics error handling in test environment
         Task {
-            // This would normally prompt for biometrics, but in tests just verifies interface
+            var didThrowError = false
             do {
                 _ = try await biometricManager.authenticateWithBiometrics(reason: "Test authentication")
             } catch {
-                // Expected to fail in test environment without real biometrics
-                // Error is expected, so we don't need to test it specifically
+                didThrowError = true
+                // Should fail with a specific error type (not just any error)
+                // In test environment, this should be a biometric authentication error
+                #expect(error is BiometricError,
+                       "Should fail with BiometricError in test environment, got: \(type(of: error))")
             }
+            #expect(didThrowError, "authenticateWithBiometrics should fail in test environment without biometrics")
         }
     }
 }
 
 @Suite("Authentication Edge Cases")
 struct AuthenticationEdgeCaseTests {
-    @Test("Sign in with Apple cancellation handling")
+    @Test("Sign in with Apple maintains state after failure")
     @MainActor
-    func signInWithAppleCancellation() throws {
+    func signInWithAppleStateAfterFailure() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
-        // Test that cancellation doesn't leave authentication in invalid state
+        // Test initial state
         #expect(authManager.authenticationState == .notDetermined)
         #expect(authManager.currentUser == nil)
 
-        // After cancellation, should be able to retry sign in
-        // Interface validation - methods should exist and be callable
-        let signInMethod = authManager.signInWithApple
-        #expect(signInMethod != nil)
+        // Test that failed sign in attempt leaves authentication in consistent state
+        Task {
+            var didThrowError = false
+            do {
+                _ = try await authManager.signInWithApple()
+            } catch {
+                didThrowError = true
+                // After failure, state should remain consistent
+                #expect(authManager.authenticationState == .notDetermined, 
+                       "State should remain notDetermined after failed sign in")
+                #expect(authManager.currentUser == nil, 
+                       "currentUser should remain nil after failed sign in")
+            }
+            #expect(didThrowError, "signInWithApple should fail in test environment")
+        }
     }
 
     @Test("Authentication state consistency after app restart")
@@ -385,21 +407,24 @@ extension UserModelTests {
             timezone: TimeZone.current.identifier)
     }
 
-    @Test("Authentication code consolidation")
-    func authenticationCodeConsolidation() throws {
-        // This test ensures there's no code duplication in authentication handling
-        // The AuthenticationManager should have a single method for processing Apple ID credentials
-
-        _ = AuthenticationManager(dataController: DataController.testContainer())
-
-        // Verify that there's only one way to handle Apple ID credentials
-        // We'll check this by ensuring the API is clean and consolidated
-
-        // The consolidated API should be:
-        // - signInWithApple() -> User (public method for UI to call)
-        // - handleSignInWithAppleResult(_ authorization: ASAuthorization) -> User (delegate handler)
-        // - No duplicate credential processing logic
-
-        #expect(true) // If the code compiles and builds, the consolidation worked
+    @Test("Authentication manager maintains clean initial state")
+    func authenticationManagerCleanInitialState() throws {
+        // This test verifies the AuthenticationManager initializes with expected state
+        // after consolidation work - consistent behavior across instances
+        let dataController = DataController.testContainer()
+        
+        // Create multiple instances to verify consistent initialization
+        let authManager1 = AuthenticationManager(dataController: dataController)
+        let authManager2 = AuthenticationManager(dataController: dataController)
+        
+        // Both instances should have identical initial state (consolidated behavior)
+        #expect(authManager1.authenticationState == authManager2.authenticationState,
+                "Multiple AuthenticationManager instances should have identical initial state")
+        #expect(authManager1.currentUser == nil,
+                "Initial currentUser should be nil")
+        #expect(authManager2.currentUser == nil,
+                "Initial currentUser should be nil")
+        #expect(authManager1.authenticationState == .notDetermined,
+                "Initial authentication state should be notDetermined")
     }
 }
