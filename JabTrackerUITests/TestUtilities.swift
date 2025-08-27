@@ -39,8 +39,7 @@ enum TestUtilities {
         testMode: Bool = false,
         resetData: Bool = false,
         additionalArguments: [String] = [],
-        additionalEnvironment: [String: String] = [:]) -> XCUIApplication
-    {
+        additionalEnvironment: [String: String] = [:]) -> XCUIApplication {
         let app = XCUIApplication()
 
         if testMode {

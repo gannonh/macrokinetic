@@ -12,7 +12,7 @@ struct JabTrackerTests {
         let dataController = DataController.testContainer()
 
         // Test that the main content view can be created
-        let _ = ContentView()
+        _ = ContentView()
             .environment(\.modelContext, dataController.container.mainContext)
 
         // Test that the data controller has the expected schema (User, Dose, MedicationProfile)
@@ -57,7 +57,7 @@ struct JabTrackerTests {
     func appDesignSystemIntegration() throws {
         // Test that design system components can be created with proper properties
         let primaryButton = PrimaryButton(title: "Test Action") {}
-        let _ = DesignCard { Text("Test Content") }
+        _ = DesignCard { Text("Test Content") }
 
         // Verify button properties
         #expect(primaryButton.title == "Test Action")
@@ -158,7 +158,7 @@ struct JabTrackerTests {
         // Test creating multiple UI components without memory leaks
         for i in 0 ..< 5 { // Reduced from 10 for faster tests
             let button = PrimaryButton(title: "Button \(i)") {}
-            let _ = DesignCard { Text("Content \(i)") }
+            _ = DesignCard { Text("Content \(i)") }
 
             // Verify components have expected properties
             #expect(button.title == "Button \(i)")

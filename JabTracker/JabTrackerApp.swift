@@ -64,8 +64,7 @@ struct JabTrackerApp: App {
             if authManager.authenticationState == .authenticated,
                biometricManager.isBiometricEnabled,
                !hasJustSignedIn,
-               !hasRecentBiometricAuth
-            {
+               !hasRecentBiometricAuth {
                 print("📱 JabTrackerApp: Triggering biometric authentication")
                 Task {
                     await handleBiometricAuthentication()

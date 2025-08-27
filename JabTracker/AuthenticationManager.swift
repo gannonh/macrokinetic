@@ -206,8 +206,7 @@ enum AuthenticationError: Error, LocalizedError {
 extension AuthenticationManager: ASAuthorizationControllerDelegate {
     func authorizationController(
         controller _: ASAuthorizationController,
-        didCompleteWithAuthorization authorization: ASAuthorization)
-    {
+        didCompleteWithAuthorization authorization: ASAuthorization) {
         Task {
             await handleSignInResult(authorization)
         }
@@ -215,8 +214,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
 
     func authorizationController(
         controller _: ASAuthorizationController,
-        didCompleteWithError _: Error)
-    {
+        didCompleteWithError _: Error) {
         Task { @MainActor in
             authenticationState = .notAuthenticated
         }

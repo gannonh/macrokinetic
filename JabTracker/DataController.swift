@@ -72,7 +72,7 @@ class DataController: ObservableObject {
         let schema = Schema([
             User.self,
             Dose.self,
-            MedicationProfile.self,
+            MedicationProfile.self
         ])
 
         // Configure CloudKit database for production vs in-memory/testing

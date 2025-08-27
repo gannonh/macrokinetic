@@ -356,7 +356,7 @@ struct UserProfileView: View {
             "Europe/London",
             "Europe/Paris",
             "Asia/Tokyo",
-            TimeZone.current.identifier,
+            TimeZone.current.identifier
         ].uniqued()
     }
 }

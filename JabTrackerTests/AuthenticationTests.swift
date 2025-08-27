@@ -397,8 +397,7 @@ struct AuthenticationEdgeCaseTests {
 extension UserModelTests {
     static func createTestUser(
         email: String = "test@example.com",
-        name: String = "Test User") -> User
-    {
+        name: String = "Test User") -> User {
         User(
             email: email,
             name: name,

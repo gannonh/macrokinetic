@@ -223,12 +223,12 @@ struct DesignComponentsTests {
     @Test("DesignCard contains expected content")
     func designCardContent() throws {
         let testText = "Test Content for Card"
-        let _ = DesignCard {
+        _ = DesignCard {
             Text(testText)
         }
 
         // Test that card can hold different content types
-        let _ = DesignCard {
+        _ = DesignCard {
             VStack {
                 Text("Title")
                 Text("Subtitle")
