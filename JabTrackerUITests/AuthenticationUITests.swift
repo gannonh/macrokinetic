@@ -11,6 +11,7 @@ final class AuthenticationUITests: XCTestCase {
         let app = TestUtilities.launchAppWithRealAuth()
 
         // codegen
+      
 
         // codegen end
 
