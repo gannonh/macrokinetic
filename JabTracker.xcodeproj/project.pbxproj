@@ -18,6 +18,7 @@
 		80F00B03F4A9C63A52D46AAE /* JabTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45ABB67198C53503C20D15E /* JabTrackerApp.swift */; };
 		885F734D833B8271C9413C0B /* BiometricAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39713A893FA00DB342B6E55 /* BiometricAuthManager.swift */; };
 		8C4394182B8C8AB47223C342 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D9360EE9CBE29C1BF3DE26 /* User.swift */; };
+		9AE888EF45D4062EBC4118E2 /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */; };
 		9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4068B3EB73128183393A2D3B /* ButtonComponents.swift */; };
 		A2ADF45E5278900BFDDB6302 /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD08D16B26A7F9381D85BF2 /* AuthenticationManager.swift */; };
 		A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */; };
@@ -58,6 +59,7 @@
 		31BF950267D4B8A252C4B826 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		35AB5564A077F30F857788B4 /* MedicationProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfile.swift; sourceTree = "<group>"; };
 		4068B3EB73128183393A2D3B /* ButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonComponents.swift; sourceTree = "<group>"; };
+		4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITests.swift; sourceTree = "<group>"; };
 		64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65714DDE038569FC5C471011 /* DesignSystemUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemUITests.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				65714DDE038569FC5C471011 /* DesignSystemUITests.swift */,
 				468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */,
 				93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */,
+				4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */,
 			);
 			path = JabTrackerUITests;
 			sourceTree = "<group>";
@@ -274,6 +277,7 @@
 				56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */,
 				A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */,
 				DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */,
+				9AE888EF45D4062EBC4118E2 /* TestUtilities.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

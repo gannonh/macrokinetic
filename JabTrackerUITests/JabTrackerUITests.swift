@@ -5,17 +5,10 @@ final class JabTrackerUITests: XCTestCase {
         continueAfterFailure = false
     }
     
-    private func launchAppWithTestMode() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "true"
-        app.launchArguments.append("--ui-testing")
-        app.launch()
-        return app
-    }
 
     @MainActor
     func testAppLaunchAndTabNavigation() throws {
-        let app = launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithTestMode()
 
         // Verify tab bar exists
         let tabBar = app.tabBars.element
@@ -70,12 +63,10 @@ final class JabTrackerUITests: XCTestCase {
 
     @MainActor
     func testQuickAddDoseButtonInteraction() throws {
-        let app = launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithTestMode()
 
         // Navigate to Add Dose tab
-        let tabBar = app.tabBars.element
-        let addTab = tabBar.buttons["Add"]
-        addTab.tap()
+        TestUtilities.navigateToTab(app, tabName: "Add")
 
         // Verify Quick Add button exists and is tappable
         let quickAddButton = app.buttons["quick-add-dose-button"]

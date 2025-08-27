@@ -65,7 +65,7 @@ struct SwiftDataModelTests {
         #expect(!user.timezone.isEmpty) // Should have default timezone
         #expect(user.createdAt != nil) // Should be auto-generated
         #expect(user.updatedAt != nil) // Should be auto-generated
-        #expect(user.doses.isEmpty) // Should be empty array, not nil
+        #expect(user.doses?.isEmpty ?? true) // Should be empty array or nil
     }
     
     @Test("User model has correct required and optional fields")
@@ -85,7 +85,7 @@ struct SwiftDataModelTests {
         #expect(!user.timezone.isEmpty)
         #expect(user.createdAt != nil)
         #expect(user.updatedAt != nil)
-        #expect(user.doses.count == 0) // Non-nil empty array
+        #expect(user.doses?.count == 0 || user.doses == nil) // Empty array or nil
         
         // Optional fields can be provided
         #expect(user.name == "Optional Name")
@@ -114,7 +114,7 @@ struct SwiftDataModelTests {
         #expect(medication.brandName == "Ozempic")
         #expect(medication.currentDose == 1.0)
         #expect(medication.startDate != nil) // Should have default value
-        #expect(medication.doses.isEmpty) // Should be empty array, not nil
+        #expect(medication.doses?.isEmpty ?? true) // Should be empty array or nil
     }
 
     @Test("Dose model can be created with required fields")
@@ -161,6 +161,6 @@ struct SwiftDataModelTests {
         try context.save()
 
         #expect(dose.user?.id == user.id)
-        #expect(user.doses.contains { $0.id == dose.id })
+        #expect(user.doses?.contains { $0.id == dose.id } ?? false)
     }
 }

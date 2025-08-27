@@ -9,7 +9,7 @@ import SwiftData
 @Model
 final class User {
     var id: UUID = UUID()
-    var email: String // Required - users must have email from Sign in with Apple
+    var email: String = "" // CloudKit requires default value
     var name: String? // Optional - Apple might not provide
     var dateOfBirth: Date? // Optional - user may choose not to provide
     var weight: Double = 70.0 // Required with default for medical app
@@ -20,10 +20,10 @@ final class User {
     var updatedAt: Date = Date() // Required - auto-generated
 
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
-    var doses: [Dose] = [] // Non-nil empty array by default
+    var doses: [Dose]? // CloudKit requires optional relationships
 
     init(
-        email: String,
+        email: String = "",
         name: String? = nil,
         dateOfBirth: Date? = nil,
         weight: Double = 70.0,
@@ -40,6 +40,6 @@ final class User {
         self.appleUserId = appleUserId
         self.createdAt = Date()
         self.updatedAt = Date()
-        self.doses = []
+        // Don't initialize optional relationship - let SwiftData handle it
     }
 }

@@ -5,6 +5,8 @@ argument-hint: Additional context (optional)
 
 # Open a PR
 
+**ULTRATHINK**
+
 1. Review git history for current feature branch
 2. Review GitHub issue associated with the branch
 3. Open a Pull Request with detaied description that conforms with best practices

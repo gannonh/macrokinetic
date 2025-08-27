@@ -331,6 +331,64 @@ This app handles medical data and dosing information. Ensure:
 - Always provide authentication bypass for UI testing to avoid external dependencies
 - Keychain access can fail in test scenarios - implement proper error handling
 
+## SwiftData Model Design Best Practices
+- **Avoid All-Optional Properties**: Make required fields non-optional with sensible defaults
+- **Use Proper Relationship Attributes**: Always specify `@Relationship` with appropriate `inverse` and `deleteRule`
+- **Include Apple ID Linking**: Add `appleUserId` field for Sign in with Apple authentication
+- **Provide Sensible Defaults**: Use defaults like `UUID()`, `Date()`, and reasonable values for required fields
+- **Maintain Audit Trail**: Include `createdAt` and `updatedAt` timestamps for all models
+- **Test Model Relationships**: Comprehensive testing of SwiftData relationships prevents runtime issues
+- **Use `final` Classes**: Mark SwiftData model classes as `final` for better performance
+- **Explicit Default Values**: Set explicit defaults (`= nil`, `= ""`, `= 0.0`) for clarity and consistency
+
+## Code Quality Improvement Patterns
+- **Consolidate Duplicate Code**: Look for similar methods and consolidate them (e.g., duplicate sign-in handlers)
+- **Remove Unsafe Force Unwrapping**: Replace `fatalError` with graceful error handling in production code
+- **Conditional Debug Logging**: Use `#if DEBUG` for development-only console output
+- **Model Validation**: Ensure required fields have appropriate defaults rather than optionals
+- **Authentication Flow Simplification**: Reduce complexity by consolidating authentication state handling
+- **Relationship Configuration**: Fix missing `@Relationship` attributes that cause sync and cascade issues
+
+## SwiftData Model Architecture Lessons
+- All-optional model properties create runtime uncertainty and complex nil-checking throughout the app
+- Required fields should have non-optional types with sensible defaults to prevent crashes
+- Missing authentication linking fields (`appleUserId`) cause integration issues with Sign in with Apple
+- Proper relationship configuration with `inverse` prevents cascade delete and CloudKit sync problems
+- Code quality improvements often reveal architectural inconsistencies that need addressing
+- Medical apps require especially careful data modeling - weight, doses, timestamps must be reliable
+- Audit trails (`createdAt`, `updatedAt`) are essential for debugging and data integrity
+- Default values should be meaningful - empty strings for required text, sensible numbers for medical data
+
+# Recent Major Improvements
+
+## Issue #16 Code Quality Improvements (PR #17)
+**Completed**: August 26, 2025  
+**Impact**: Foundational architecture improvements and data integrity fixes
+
+### What Was Fixed
+- ✅ **SwiftData Model Optionality**: Changed from all-optional properties to required fields with defaults
+- ✅ **Authentication Flow Consolidation**: Removed duplicate sign-in handling methods
+- ✅ **Relationship Configuration**: Added proper `@Relationship` attributes with `inverse` parameters  
+- ✅ **Apple ID Integration**: Added missing `appleUserId` field for authentication linking
+- ✅ **Error Handling**: Replaced unsafe `fatalError` patterns with graceful error handling
+- ✅ **Test Suite Updates**: Updated all tests to work with improved model structure
+
+### Architectural Lessons Learned
+- All-optional SwiftData models create unnecessary complexity and runtime uncertainty
+- Missing relationship configurations cause CloudKit sync and cascade delete issues
+- Authentication flows can accumulate duplicate code that needs regular consolidation
+- Medical apps need especially reliable data models with meaningful defaults
+- Code quality analysis reveals architectural decisions that need documentation
+
+### Files Updated
+- `Models/User.swift`, `Models/Dose.swift`, `Models/MedicationProfile.swift` - Fixed optionality
+- `AuthenticationManager.swift` - Consolidated duplicate methods, improved error handling
+- `DataController.swift` - Enhanced CloudKit configuration
+- All test files - Updated for new model structure
+- Documentation updated to reflect actual implementation patterns
+
+This work established a much stronger foundation for continued feature development.
+
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
 - Always test iCloud sync scenarios: available, unavailable, not signed in

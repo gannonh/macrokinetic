@@ -9,17 +9,9 @@ final class JabTrackerUITestsLaunchTests: XCTestCase {
         continueAfterFailure = false
     }
     
-    private func launchAppWithTestMode() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "true"
-        app.launchArguments.append("--ui-testing")
-        app.launch()
-        return app
-    }
-
     @MainActor
     func testLaunch() throws {
-        let app = launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithTestMode()
 
         // Insert steps here to perform after app launch but before taking a screenshot
         // In the screenshot, the entire app's initial launch state is captured

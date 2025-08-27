@@ -2,22 +2,12 @@ import XCTest
 
 final class SettingsUITests: XCTestCase {
     
-    private func launchAppWithTestMode() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "true"
-        app.launchArguments.append("--ui-testing")
-        app.launch()
-        return app
-    }
-    
     @MainActor
     func testSettingsViewElementsExist() throws {
-        let app = launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithTestMode()
 
         // Navigate to Settings tab
-        let tabBar = app.tabBars.element
-        let settingsTab = tabBar.buttons["Settings"]
-        settingsTab.tap()
+        TestUtilities.navigateToTab(app, tabName: "Settings")
 
         // Wait for Settings view to load
         let settingsTitle = app.navigationBars["Settings"]
@@ -50,12 +40,10 @@ final class SettingsUITests: XCTestCase {
 
     @MainActor
     func testSettingsViewAccessibility() throws {
-        let app = launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithTestMode()
 
         // Navigate to Settings tab
-        let tabBar = app.tabBars.element
-        let settingsTab = tabBar.buttons["Settings"]
-        settingsTab.tap()
+        TestUtilities.navigateToTab(app, tabName: "Settings")
 
         // Wait for Settings view to load
         let settingsTitle = app.navigationBars["Settings"]

@@ -9,8 +9,8 @@ import SwiftData
 @Model
 final class Dose {
     var id: UUID = UUID()
-    var amount: Double // Required - every dose must have an amount
-    var timestamp: Date // Required - every dose must have a timestamp
+    var amount: Double = 0.0 // CloudKit requires default value
+    var timestamp: Date = Date() // CloudKit requires default value
     var site: String? // Optional - injection site
     var notes: String? // Optional - user notes
     var imageData: Data? // Optional - photo attachment
@@ -20,7 +20,7 @@ final class Dose {
     var medication: MedicationProfile?
 
     init(
-        amount: Double,
+        amount: Double = 0.0,
         timestamp: Date = Date(),
         site: String? = nil,
         notes: String? = nil,
