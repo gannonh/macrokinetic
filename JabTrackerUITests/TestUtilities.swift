@@ -206,7 +206,67 @@ enum TestUtilities {
                 XCTFail("Apple ID authentication failed - password field not found after Continue with Password")
                 return
             }
+        } else if shareMyEmailDirect.exists && continueWithPasswordButton.exists {
+            // Case 2: Pre-filled form with "Share My Email" label and "Continue with Password" button
+            print("📋 Found pre-filled Apple ID form with Share My Email label and Continue with Password button")
+            continueWithPasswordButton.tap()
+            print("✅ Tapped Continue with Password button in pre-filled form")
+            sleep(1)
+
+            // After tapping Continue with Password, goes directly to password entry
+            print("🔒 Looking for password field after Continue with Password in pre-filled form...")
+            let passwordField = springboard.secureTextFields.firstMatch
+            if passwordField.waitForExistence(timeout: 3) {
+                passwordField.tap()
+                passwordField.typeText("S3cr3t77!")
+                print("🔒 Entered password in pre-filled form flow")
+
+                // Look for Sign In button after entering password
+                let signInButton = springboard.buttons["Sign In"]
+                if signInButton.waitForExistence(timeout: 2) {
+                    signInButton.tap()
+                    print("✅ Tapped Sign In button in pre-filled form flow")
+
+                    // Wait for authentication to complete
+                    print("⏳ Waiting for pre-filled form authentication to complete...")
+                    sleep(5)
+
+                    // Verify we're back in the main app
+                    let mainApp = XCUIApplication()
+                    let tabBar = mainApp.tabBars.firstMatch
+
+                    // Quick check - if TabBar exists immediately, we're done
+                    if tabBar.exists {
+                        print("✅ Apple ID authorization completed immediately - app loaded")
+                        print("🎉 Sign in flow completed successfully - Pre-filled form path")
+                        return
+                    }
+
+                    // If not immediate, do a few quick checks with shorter intervals
+                    for attempt in 1 ... 3 {
+                        print("🔍 Pre-filled form auth completion check attempt \(attempt)/3")
+                        if tabBar.waitForExistence(timeout: 2) {
+                            print("✅ Apple ID authorization completed - app loaded")
+                            print("🎉 Sign in flow completed successfully - Pre-filled form path")
+                            return
+                        }
+                    }
+
+                    print("❌ Pre-filled form authentication failed - TabBar not found")
+                    XCTFail("Apple ID authentication failed to complete - app did not return to authenticated state")
+                    return
+                } else {
+                    print("❌ Could not find Sign In button in pre-filled form flow")
+                    XCTFail("Apple ID authentication failed - Sign In button not found")
+                    return
+                }
+            } else {
+                print("❌ Could not find password field after Continue with Password in pre-filled form")
+                XCTFail("Apple ID authentication failed - password field not found after Continue with Password")
+                return
+            }
         } else if settingsButton.waitForExistence(timeout: 2) {
+            // Case 3: Settings dialog with "Sign in Manually" option
             print("⚙️ Settings dialog appeared - handling Apple ID setup flow")
             settingsButton.tap()
 
@@ -463,7 +523,7 @@ enum TestUtilities {
                 return
             }
         } else if shareMyEmailDirect.waitForExistence(timeout: 3) {
-            // Case 2: Direct "Share My Email" authorization (less common)
+            // Case 4: Direct "Share My Email" authorization (less common)
             shareMyEmailDirect.tap()
             print("✅ Tapped Share My Email in direct authorization flow")
             sleep(1) // Reduced from 2 seconds
@@ -536,7 +596,7 @@ enum TestUtilities {
                 return
             }
         } else {
-            // Case 3: None of the expected authentication flows found
+            // Case 5: None of the expected authentication flows found
             print("❌ No expected authentication elements found")
 
             // Debug: Print available elements to see what's actually on screen
