@@ -412,8 +412,11 @@ final class TestUtilities {
             // Wait a moment for the authorization screen to appear
             sleep(2)
             
-            // Handle direct "Share My Email" authorization
+            // Check for different direct authorization screen variants
+            let continueWithPasswordButton = springboard.buttons["Continue with Password"]
+            
             if shareMyEmailDirect.waitForExistence(timeout: 10) {
+                // Case 1: Direct "Share My Email" authorization
                 shareMyEmailDirect.tap()
                 print("✅ Tapped Share My Email in direct authorization flow")
                 sleep(2)
@@ -465,7 +468,7 @@ final class TestUtilities {
                                 XCTFail("Apple ID authorization failed to complete - app did not return to authenticated state")
                                 return
                             } else {
-                                print("🎉 Sign in flow completed successfully - Direct path")
+                                print("🎉 Sign in flow completed successfully - Direct Share My Email path")
                                 return
                             }
                         } else {
@@ -479,21 +482,84 @@ final class TestUtilities {
                         return
                     }
                 } else {
-                    // Try alternative button names in SpringBoard context
-                    let continueButton = springboard.buttons["Continue with Password"]
-                    if continueButton.waitForExistence(timeout: 3) {
-                        continueButton.tap()
-                        print("✅ Tapped Continue with Password button in direct authorization flow")
-                        sleep(2)
+                    print("❌ Could not find SIWA Continue button after Share My Email")
+                    XCTFail("Apple ID authentication failed - SIWA Continue button not found")
+                    return
+                }
+            } else if continueWithPasswordButton.waitForExistence(timeout: 5) {
+                // Case 2: Direct "Continue with Password" button (no Share My Email screen)
+                print("🔑 Found Continue with Password button - handling direct password flow")
+                continueWithPasswordButton.tap()
+                print("✅ Tapped Continue with Password button")
+                sleep(2)
+                
+                // After tapping Continue with Password, goes directly to password entry
+                // The system already knows the Apple ID (4158878252) and asks for password directly
+                print("🔒 Looking for password field after Continue with Password...")
+                let passwordField = springboard.secureTextFields.firstMatch
+                if passwordField.waitForExistence(timeout: 5) {
+                    passwordField.tap()
+                    passwordField.typeText("S3cr3t77!")
+                    print("🔒 Entered password in direct Continue with Password flow")
+                    
+                    // Look for Sign In button after entering password
+                    let signInButton = springboard.buttons["Sign In"]
+                    if signInButton.waitForExistence(timeout: 3) {
+                        signInButton.tap()
+                        print("✅ Tapped Sign In button in direct password flow")
+                        
+                        // Wait for authentication to complete
+                        print("⏳ Waiting for direct password authentication to complete...")
+                        sleep(8)
+                        
+                        // Verify we're back in the main app
+                        let mainApp = XCUIApplication()
+                        let tabBar = mainApp.tabBars.firstMatch
+                        var authCompleted = false
+                        for attempt in 1...5 {
+                            print("🔍 Direct password auth completion check attempt \(attempt)/5")
+                            if tabBar.exists {
+                                print("✅ Apple ID authorization completed - app loaded")
+                                authCompleted = true
+                                break
+                            }
+                            sleep(2)
+                        }
+                        
+                        if !authCompleted {
+                            print("❌ Direct password authentication failed - TabBar not found")
+                            XCTFail("Apple ID authentication failed to complete - app did not return to authenticated state")
+                            return
+                        } else {
+                            print("🎉 Sign in flow completed successfully - Direct Continue with Password path")
+                            return
+                        }
                     } else {
-                        print("❌ Could not find SIWA Continue button in direct authorization flow")
-                        XCTFail("Apple ID authentication failed - SIWA Continue button not found")
+                        print("❌ Could not find Sign In button in direct password flow")
+                        XCTFail("Apple ID authentication failed - Sign In button not found")
                         return
                     }
+                } else {
+                    print("❌ Could not find password field after Continue with Password")
+                    XCTFail("Apple ID authentication failed - password field not found after Continue with Password")
+                    return
                 }
             } else {
-                print("❌ No Share My Email found in direct authorization flow")
-                XCTFail("Apple ID authentication failed - Share My Email not found in direct flow")
+                // Case 3: Neither Share My Email nor Continue with Password found
+                print("❌ No Share My Email or Continue with Password found in direct authorization flow")
+                
+                // Debug: Print available elements to see what's actually on screen
+                print("🔍 Debugging available elements in SpringBoard:")
+                let allStaticTexts = springboard.staticTexts.allElementsBoundByIndex
+                for (index, text) in allStaticTexts.prefix(10).enumerated() {
+                    print("  StaticText \(index): '\(text.label)' - exists: \(text.exists)")
+                }
+                let allButtons = springboard.buttons.allElementsBoundByIndex  
+                for (index, button) in allButtons.prefix(10).enumerated() {
+                    print("  Button \(index): '\(button.label)' - exists: \(button.exists)")
+                }
+                
+                XCTFail("Apple ID authentication failed - neither Share My Email nor Continue with Password found")
                 return
             }
         }
