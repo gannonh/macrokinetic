@@ -12,25 +12,32 @@ final class SettingsUITests: XCTestCase {
         let settingsTitle = app.navigationBars["Settings"]
         XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5), "Settings navigation should exist")
 
-        // Validate that essential UI elements exist
-        let allButtons = app.buttons
-        let allStaticTexts = app.staticTexts
-        let allOtherElements = app.otherElements
-
-        // Test that we have actual UI elements (not an empty view)
-        XCTAssertGreaterThan(allButtons.count, 0, "Settings view should contain buttons")
-        XCTAssertGreaterThan(allStaticTexts.count, 0, "Settings view should contain text elements")
-
-        // Test that the Settings title text exists
+        // Test specific functional elements instead of generic counts
         XCTAssertTrue(app.staticTexts["Settings"].exists, "Settings title should be visible")
-
-        // Test that at least one interactive element exists
-        // swiftlint:disable:next empty_count
-        let interactiveElementsExist = allButtons.count > 0
-        XCTAssertTrue(interactiveElementsExist, "Settings view should have interactive elements")
-
-        // Test that design system components are accessible
-        // Look for design system card if it exists in settings
+        
+        // Test for User Profile section (key functionality)
+        let userProfileText = app.staticTexts["User Profile"]
+        XCTAssertTrue(userProfileText.waitForExistence(timeout: 3), "User Profile section should be visible")
+        
+        // Test for specific interactive elements that matter
+        let editProfileButton = app.buttons["Edit Profile"] 
+        if editProfileButton.exists {
+            XCTAssertTrue(editProfileButton.isHittable, "Edit Profile button should be interactive")
+        }
+        
+        // Test for sign out functionality
+        let signOutButton = app.buttons["sign-out-button"]
+        if signOutButton.exists {
+            XCTAssertTrue(signOutButton.isEnabled, "Sign out button should be enabled when user is authenticated")
+        }
+        
+        // Test biometric toggle if available
+        let biometricToggle = app.switches["biometric-auth-toggle"]
+        if biometricToggle.exists {
+            XCTAssertTrue(biometricToggle.isHittable, "Biometric toggle should be interactive")
+        }
+        
+        // Test design system demo section
         let designSystemCard = app.descendants(matching: .any)["design-system-card"]
         if designSystemCard.exists {
             XCTAssertTrue(designSystemCard.exists, "Design system card should be accessible when present")

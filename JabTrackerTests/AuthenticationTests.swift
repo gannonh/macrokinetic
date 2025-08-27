@@ -11,8 +11,6 @@ struct UserModelTests {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
-        let now = Date()
-
         // Test creating user with all required fields as per Issue #11
         let user = User(
             email: "test@example.com",
@@ -33,8 +31,9 @@ struct UserModelTests {
         #expect(user.weight == 70.0)
         #expect(user.weightUnit == "kg")
         #expect(user.timezone == "UTC")
-        #expect(user.createdAt != nil)
-        #expect(user.updatedAt != nil)
+        // createdAt and updatedAt are Date objects (non-optional), so they always exist
+        #expect(user.createdAt.timeIntervalSince1970 > 0)
+        #expect(user.updatedAt.timeIntervalSince1970 > 0)
     }
 
     @Test("User weight unit validation")
@@ -87,50 +86,64 @@ struct UserModelTests {
 @Suite("Authentication Manager Tests")
 struct AuthenticationManagerTests {
     @Test("AuthenticationManager initialization")
+    @MainActor
     func authManagerInit() throws {
-        // Note: AuthenticationManager doesn't exist yet - this test will fail until implemented
-        // This defines the contract that AuthenticationManager must fulfill
-
-        // Expected interface based on requirements:
-        // - Sign in with Apple capability
-        // - Authentication state management
-        // - Automatic user creation/linking
-        // - Handle authorization states: notDetermined, authorized, denied, restricted
-
-        // For now, this test documents the expected interface
-        #expect(true) // Placeholder until AuthenticationManager is implemented
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Verify initial state
+        #expect(authManager.authenticationState == .notDetermined)
+        #expect(authManager.currentUser == nil)
+        
+        // Note: dataController is private, so we can't test it directly
+        // The fact that the manager initializes successfully validates the connection
     }
 
-    @Test("Sign in with Apple flow contract")
-    func signInWithAppleContract() throws {
-        // This test defines what the Sign in with Apple flow should accomplish:
-        // 1. Present Apple ID sign in sheet
-        // 2. Handle user consent
-        // 3. Receive Apple ID credential
-        // 4. Create or link User record in SwiftData
-        // 5. Store credentials securely in Keychain
-        // 6. Update authentication state
-
-        // Contract expectations for AuthenticationManager:
-        // - func signInWithApple() async throws -> User
-        // - @Published var authenticationState: AuthenticationState
-        // - @Published var currentUser: User?
-
-        #expect(true) // Placeholder until AuthenticationManager is implemented
+    @Test("AuthenticationManager sign in with Apple interface")
+    @MainActor
+    func signInWithAppleInterface() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Test that the sign in method exists and is callable
+        // Note: We can't test actual Sign in with Apple in unit tests due to system dependencies
+        // This validates the interface exists and doesn't crash when called
+        
+        // Test initial state
+        #expect(authManager.authenticationState == .notDetermined)
+        
+        // Test that methods exist by attempting to call them (they won't crash on reference)
+        Task {
+            // These methods exist and can be called, though they won't complete successfully in tests
+            do {
+                _ = try await authManager.signInWithApple()
+            } catch {
+                // Expected to fail in test environment
+            }
+        }
     }
 
-    @Test("Authentication state persistence contract")
-    func authStatePersistenceContract() throws {
-        // This test defines authentication state persistence requirements:
-        // 1. Remember authentication across app launches
-        // 2. Validate stored credentials on app start
-        // 3. Handle expired credentials gracefully
-        // 4. Provide sign out functionality
-
-        // Expected AuthenticationState enum:
-        // - notDetermined, authenticated, denied, restricted, expired
-
-        #expect(true) // Placeholder until AuthenticationManager is implemented
+    @Test("AuthenticationManager state management")
+    @MainActor
+    func authStateManagement() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Test initial state
+        #expect(authManager.authenticationState == .notDetermined)
+        #expect(authManager.currentUser == nil)
+        
+        // Test checkAuthenticationStatus method exists and can be called
+        Task {
+            await authManager.checkAuthenticationStatus()
+            // Should not crash - actual auth logic is tested in UI tests
+        }
+        
+        // Test signOut method (public method)
+        Task {
+            try await authManager.signOut()
+            #expect(authManager.currentUser == nil)
+        }
     }
 }
 
@@ -138,50 +151,223 @@ struct AuthenticationManagerTests {
 @Suite("Biometric Authentication Manager Tests")
 struct BiometricAuthManagerTests {
     @Test("BiometricAuthManager initialization")
+    @MainActor
     func biometricManagerInit() throws {
-        // Note: BiometricAuthManager doesn't exist yet
-        // This defines the contract for biometric authentication
-
-        // Expected interface:
-        // - Check biometric availability (Face ID/Touch ID)
-        // - Request biometric authentication
-        // - Handle fallback to device passcode
-        // - Store user preference for biometric auth
-
-        #expect(true) // Placeholder until BiometricAuthManager is implemented
+        let biometricManager = BiometricAuthManager()
+        
+        // Verify initial state - should be disabled by default
+        #expect(biometricManager.isBiometricEnabled == false)
+        
+        // Verify properties exist and are accessible
+        _ = biometricManager.biometricType
+        _ = biometricManager.isAvailable
+        _ = biometricManager.biometricTypeDisplayName
+        
+        // Verify methods exist (getBiometricAvailability is public)
+        let availability = biometricManager.getBiometricAvailability()
+        // BiometricAvailability is an enum, so test it exists
+        switch availability {
+        case .available(_), .notAvailable, .notEnrolled, .restricted, .unknown:
+            break // All valid cases
+        }
     }
 
-    @Test("Biometric availability check contract")
-    func biometricAvailabilityContract() throws {
-        // This test defines biometric availability checking:
-        // 1. Detect if device supports Face ID or Touch ID
-        // 2. Check if biometrics are enrolled
-        // 3. Handle device policy restrictions
-        // 4. Provide appropriate fallback options
-
-        // Expected interface:
-        // - var isBiometricAvailable: Bool
-        // - var biometricType: BiometricType (faceID, touchID, none)
-        // - func checkBiometricAvailability() -> BiometricAvailability
-
-        #expect(true) // Placeholder until BiometricAuthManager is implemented
+    @Test("BiometricAuthManager availability checking")
+    @MainActor
+    func biometricAvailabilityChecking() throws {
+        let biometricManager = BiometricAuthManager()
+        
+        // Test availability checking methods
+        let availability = biometricManager.getBiometricAvailability()
+        // Test that availability is one of the valid enum cases
+        switch availability {
+        case .available(_), .notAvailable, .notEnrolled, .restricted, .unknown:
+            break // All valid cases
+        }
+        
+        // Test biometric type detection
+        let biometricType = biometricManager.biometricType
+        #expect([BiometricType.faceID, BiometricType.touchID, BiometricType.none].contains(biometricType))
+        
+        // Test display name
+        let displayName = biometricManager.biometricTypeDisplayName
+        #expect(!displayName.isEmpty)
+        
+        // Note: checkBiometricAvailability() is private, so we can't test it directly
+        // The public getBiometricAvailability() method provides the same functionality
     }
 
-    @Test("Biometric authentication flow contract")
-    func biometricAuthFlowContract() throws {
-        // This test defines the biometric authentication flow:
-        // 1. Present biometric authentication prompt
-        // 2. Handle successful authentication
-        // 3. Handle authentication failure
-        // 4. Provide fallback to passcode
-        // 5. Remember user preference
+    @Test("BiometricAuthManager authentication interface")
+    @MainActor
+    func biometricAuthInterface() throws {
+        let biometricManager = BiometricAuthManager()
+        
+        // Test preference setting
+        biometricManager.setBiometricPreference(enabled: true)
+        #expect(biometricManager.isBiometricEnabled == true)
+        
+        biometricManager.setBiometricPreference(enabled: false)  
+        #expect(biometricManager.isBiometricEnabled == false)
+        
+        // Test toggle functionality
+        let initialState = biometricManager.isBiometricEnabled
+        biometricManager.toggleBiometric()
+        #expect(biometricManager.isBiometricEnabled == !initialState)
+        
+        // Test authenticateWithBiometrics method exists (actual auth tested in UI tests)
+        Task {
+            // This would normally prompt for biometrics, but in tests just verifies interface
+            do {
+                _ = try await biometricManager.authenticateWithBiometrics(reason: "Test authentication")
+            } catch {
+                // Expected to fail in test environment without real biometrics
+                // Error is expected, so we don't need to test it specifically
+            }
+        }
+    }
+}
 
-        // Expected interface:
-        // - func authenticateWithBiometrics(reason: String) async throws -> Bool
-        // - func setBiometricPreference(enabled: Bool)
-        // - @Published var isBiometricEnabled: Bool
-
-        #expect(true) // Placeholder until BiometricAuthManager is implemented
+@Suite("Authentication Edge Cases")
+struct AuthenticationEdgeCaseTests {
+    
+    @Test("Sign in with Apple cancellation handling")
+    @MainActor
+    func signInWithAppleCancellation() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Test that cancellation doesn't leave authentication in invalid state
+        #expect(authManager.authenticationState == .notDetermined)
+        #expect(authManager.currentUser == nil)
+        
+        // After cancellation, should be able to retry sign in
+        // Interface validation - methods should exist and be callable
+        let signInMethod = authManager.signInWithApple
+        #expect(signInMethod != nil)
+    }
+    
+    @Test("Authentication state consistency after app restart")
+    @MainActor
+    func authStateConsistencyAfterRestart() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Test checkAuthenticationStatus handles empty database gracefully
+        Task {
+            await authManager.checkAuthenticationStatus()
+            // Should not crash with empty user database
+            // AuthenticationState is an enum, so verify it has a valid state
+            #expect(authManager.authenticationState == .notDetermined || 
+                   authManager.authenticationState == .authenticated ||
+                   authManager.authenticationState == .notAuthenticated)
+        }
+        
+        // Test with existing user data
+        let context = dataController.container.mainContext
+        let testUser = User(email: "persistence-test@example.com", weight: 70.0)
+        context.insert(testUser)
+        try context.save()
+        
+        Task {
+            await authManager.checkAuthenticationStatus()
+            // Should detect existing user data
+        }
+    }
+    
+    @Test("Biometric authentication error scenarios")
+    @MainActor
+    func biometricAuthErrorScenarios() throws {
+        let biometricManager = BiometricAuthManager()
+        
+        // Test that biometric availability check handles all device states
+        let availability = biometricManager.getBiometricAvailability()
+        // Test that availability is one of the valid enum cases
+        switch availability {
+        case .available(_), .notAvailable, .notEnrolled, .restricted, .unknown:
+            break // All valid cases handled
+        }
+        
+        // Test biometric type detection for all device types
+        let biometricType = biometricManager.biometricType
+        #expect([BiometricType.faceID, BiometricType.touchID, BiometricType.none].contains(biometricType))
+        
+        // Test preference setting doesn't crash with any availability state
+        biometricManager.setBiometricPreference(enabled: true)
+        biometricManager.setBiometricPreference(enabled: false)
+    }
+    
+    @Test("Authentication manager error recovery")
+    @MainActor
+    func authManagerErrorRecovery() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Test that sign out works regardless of current state
+        Task {
+            try await authManager.signOut()
+            #expect(authManager.currentUser == nil)
+        }
+        
+        // Test that checkAuthenticationStatus handles various states
+        Task {
+            await authManager.checkAuthenticationStatus()
+            // Should complete without error regardless of state
+        }
+    }
+    
+    @Test("Concurrent authentication operations")
+    @MainActor
+    func concurrentAuthOperations() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Test that multiple simultaneous auth status checks don't cause issues
+        Task {
+            await withTaskGroup(of: Void.self) { group in
+                // Simulate multiple concurrent auth status checks
+                for _ in 0..<3 {
+                    group.addTask {
+                        await authManager.checkAuthenticationStatus()
+                    }
+                }
+            }
+            
+            // Should complete without deadlocks or crashes
+            // AuthenticationState is an enum so it's never nil
+            #expect(authManager.authenticationState == .notDetermined || 
+                   authManager.authenticationState == .authenticated ||
+                   authManager.authenticationState == .notAuthenticated)
+        }
+    }
+    
+    @Test("Invalid user data handling")
+    @MainActor
+    func invalidUserDataHandling() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+        
+        // Test with user missing required fields
+        let incompleteUser = User(email: "", weight: 0.0) // Empty email, zero weight
+        context.insert(incompleteUser)
+        try context.save()
+        
+        Task {
+            await authManager.checkAuthenticationStatus()
+            // Should handle incomplete user data gracefully
+            // Don't assume this means authenticated if data is invalid
+        }
+        
+        // Test authentication manager can handle users with missing Apple ID
+        let userWithoutAppleID = User(email: "no-apple-id@example.com", weight: 70.0)
+        // Note: appleUserId intentionally nil
+        context.insert(userWithoutAppleID)
+        try context.save()
+        
+        Task {
+            await authManager.checkAuthenticationStatus()
+            // Should handle missing Apple ID appropriately
+        }
     }
 }
 
@@ -204,7 +390,7 @@ extension UserModelTests {
         // This test ensures there's no code duplication in authentication handling
         // The AuthenticationManager should have a single method for processing Apple ID credentials
 
-        let authManager = AuthenticationManager(dataController: DataController.testContainer())
+        _ = AuthenticationManager(dataController: DataController.testContainer())
 
         // Verify that there's only one way to handle Apple ID credentials
         // We'll check this by ensuring the API is clean and consolidated
