@@ -136,20 +136,79 @@ final class TestUtilities {
         signInWithAppleButton.tap()
         print("📱 Tapped Sign in with Apple button")
 
-        // Wait for the Apple ID authentication sheet
-        sleep(2) // Give time for system sheet to appear
+        // Wait briefly for the Apple ID authentication sheet
+        sleep(1) // Reduced from 2 seconds - give minimal time for system sheet to appear
         print("⏳ Waiting for Apple ID sheet")
 
         // Handle the Apple ID authentication sheet
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
-        // Check if Settings dialog appears first (sometimes required for Apple ID setup)
+        // Check for all possible authentication flows simultaneously with shorter timeouts
         let settingsButton = springboard.buttons["Settings"]
-        
-        // Also check if we get the direct Apple ID authorization screen in SpringBoard context
         let shareMyEmailDirect = springboard.staticTexts["Share My Email"]
+        let continueWithPasswordButton = springboard.buttons["Continue with Password"]
         
-        if settingsButton.waitForExistence(timeout: 3) {
+        // Quick check for the most common case first (Continue with Password)
+        if continueWithPasswordButton.waitForExistence(timeout: 2) {
+            // Case 1: Direct "Continue with Password" button (most common)
+            print("🔑 Found Continue with Password button - handling direct password flow")
+            continueWithPasswordButton.tap()
+            print("✅ Tapped Continue with Password button")
+            sleep(1) // Reduced from 2 seconds
+            
+            // After tapping Continue with Password, goes directly to password entry
+            print("🔒 Looking for password field after Continue with Password...")
+            let passwordField = springboard.secureTextFields.firstMatch
+            if passwordField.waitForExistence(timeout: 3) { // Reduced from 5 seconds
+                passwordField.tap()
+                passwordField.typeText("S3cr3t77!")
+                print("🔒 Entered password in direct Continue with Password flow")
+                
+                // Look for Sign In button after entering password
+                let signInButton = springboard.buttons["Sign In"]
+                if signInButton.waitForExistence(timeout: 2) { // Reduced from 3 seconds
+                    signInButton.tap()
+                    print("✅ Tapped Sign In button in direct password flow")
+                    
+                    // Wait for authentication to complete
+                    print("⏳ Waiting for direct password authentication to complete...")
+                    sleep(5) // Reduced from 8 seconds
+                    
+                    // Verify we're back in the main app with faster polling
+                    let mainApp = XCUIApplication()
+                    let tabBar = mainApp.tabBars.firstMatch
+                    
+                    // Quick check - if TabBar exists immediately, we're done
+                    if tabBar.exists {
+                        print("✅ Apple ID authorization completed immediately - app loaded")
+                        print("🎉 Sign in flow completed successfully - Direct Continue with Password path")
+                        return
+                    }
+                    
+                    // If not immediate, do a few quick checks with shorter intervals
+                    for attempt in 1...3 {
+                        print("🔍 Direct password auth completion check attempt \(attempt)/3")
+                        if tabBar.waitForExistence(timeout: 2) {
+                            print("✅ Apple ID authorization completed - app loaded")
+                            print("🎉 Sign in flow completed successfully - Direct Continue with Password path")
+                            return
+                        }
+                    }
+                    
+                    print("❌ Direct password authentication failed - TabBar not found")
+                    XCTFail("Apple ID authentication failed to complete - app did not return to authenticated state")
+                    return
+                } else {
+                    print("❌ Could not find Sign In button in direct password flow")
+                    XCTFail("Apple ID authentication failed - Sign In button not found")
+                    return
+                }
+            } else {
+                print("❌ Could not find password field after Continue with Password")
+                XCTFail("Apple ID authentication failed - password field not found after Continue with Password")
+                return
+            }
+        } else if settingsButton.waitForExistence(timeout: 2) {
             print("⚙️ Settings dialog appeared - handling Apple ID setup flow")
             settingsButton.tap()
             
@@ -405,163 +464,96 @@ final class TestUtilities {
                 XCTFail("Apple ID authentication screen did not show expected 'Sign in Manually' option")
                 return
             }
-        } else {
-            // No Settings button found - check for direct Apple ID authorization screen
-            print("⚙️ No Settings dialog - checking for direct Apple ID authorization")
+        } else if shareMyEmailDirect.waitForExistence(timeout: 3) {
+            // Case 2: Direct "Share My Email" authorization (less common)
+            shareMyEmailDirect.tap()
+            print("✅ Tapped Share My Email in direct authorization flow")
+            sleep(1) // Reduced from 2 seconds
             
-            // Wait a moment for the authorization screen to appear
-            sleep(2)
-            
-            // Check for different direct authorization screen variants
-            let continueWithPasswordButton = springboard.buttons["Continue with Password"]
-            
-            if shareMyEmailDirect.waitForExistence(timeout: 10) {
-                // Case 1: Direct "Share My Email" authorization
-                shareMyEmailDirect.tap()
-                print("✅ Tapped Share My Email in direct authorization flow")
-                sleep(2)
+            // Handle final Continue button (SIWA_CONTINUE_BUTTON) in SpringBoard context
+            let siwaDirectButton = springboard.buttons["SIWA_CONTINUE_BUTTON"]
+            if siwaDirectButton.waitForExistence(timeout: 3) { // Reduced from 5 seconds
+                siwaDirectButton.tap()
+                print("✅ Tapped SIWA Continue button in direct authorization flow")
+                sleep(1) // Reduced from 2 seconds
                 
-                // Handle final Continue button (SIWA_CONTINUE_BUTTON) in SpringBoard context
-                let siwaDirectButton = springboard.buttons["SIWA_CONTINUE_BUTTON"]
-                if siwaDirectButton.waitForExistence(timeout: 5) {
-                    siwaDirectButton.tap()
-                    print("✅ Tapped SIWA Continue button in direct authorization flow")
-                    sleep(2)
-                    
-                    // After tapping Continue, a password prompt should appear
-                    print("🔒 Looking for password prompt after SIWA Continue...")
-                    
-                    // Check for password field in SpringBoard context
-                    let passwordField = springboard.secureTextFields.firstMatch
-                    if passwordField.waitForExistence(timeout: 5) {
-                        print("🔒 Found password field in direct authorization flow")
-                        passwordField.tap()
-                        passwordField.typeText("S3cr3t77!")
-                        print("🔒 Entered password in direct authorization flow")
-                        
-                        // Look for Sign In button after entering password
-                        let signInButton = springboard.buttons["Sign In"]
-                        if signInButton.waitForExistence(timeout: 3) {
-                            signInButton.tap()
-                            print("✅ Tapped Sign In button after password in direct flow")
-                            
-                            // Wait for Apple ID authorization to complete and return to app
-                            print("⏳ Waiting for Apple ID authorization to complete and return to app...")
-                            sleep(8)
-                            
-                            // Verify we're back in the main app
-                            let mainApp = XCUIApplication()
-                            let tabBar = mainApp.tabBars.firstMatch
-                            var authCompleted = false
-                            for attempt in 1...5 {
-                                print("🔍 Direct auth completion check attempt \(attempt)/5")
-                                if tabBar.exists {
-                                    print("✅ Apple ID authorization completed - app loaded")
-                                    authCompleted = true
-                                    break
-                                }
-                                sleep(2)
-                            }
-                            
-                            if !authCompleted {
-                                print("❌ Apple ID authorization failed - TabBar not found after Sign In")
-                                XCTFail("Apple ID authorization failed to complete - app did not return to authenticated state")
-                                return
-                            } else {
-                                print("🎉 Sign in flow completed successfully - Direct Share My Email path")
-                                return
-                            }
-                        } else {
-                            print("❌ Could not find Sign In button after password")
-                            XCTFail("Apple ID authentication failed - Sign In button not found after password entry")
-                            return
-                        }
-                    } else {
-                        print("❌ No password field found after SIWA Continue in direct flow")
-                        XCTFail("Apple ID authentication failed - password field not found after SIWA Continue")
-                        return
-                    }
-                } else {
-                    print("❌ Could not find SIWA Continue button after Share My Email")
-                    XCTFail("Apple ID authentication failed - SIWA Continue button not found")
-                    return
-                }
-            } else if continueWithPasswordButton.waitForExistence(timeout: 5) {
-                // Case 2: Direct "Continue with Password" button (no Share My Email screen)
-                print("🔑 Found Continue with Password button - handling direct password flow")
-                continueWithPasswordButton.tap()
-                print("✅ Tapped Continue with Password button")
-                sleep(2)
+                // After tapping Continue, a password prompt should appear
+                print("🔒 Looking for password prompt after SIWA Continue...")
                 
-                // After tapping Continue with Password, goes directly to password entry
-                // The system already knows the Apple ID (4158878252) and asks for password directly
-                print("🔒 Looking for password field after Continue with Password...")
+                // Check for password field in SpringBoard context
                 let passwordField = springboard.secureTextFields.firstMatch
-                if passwordField.waitForExistence(timeout: 5) {
+                if passwordField.waitForExistence(timeout: 3) { // Reduced from 5 seconds
+                    print("🔒 Found password field in direct authorization flow")
                     passwordField.tap()
                     passwordField.typeText("S3cr3t77!")
-                    print("🔒 Entered password in direct Continue with Password flow")
+                    print("🔒 Entered password in direct authorization flow")
                     
                     // Look for Sign In button after entering password
                     let signInButton = springboard.buttons["Sign In"]
-                    if signInButton.waitForExistence(timeout: 3) {
+                    if signInButton.waitForExistence(timeout: 2) { // Reduced from 3 seconds
                         signInButton.tap()
-                        print("✅ Tapped Sign In button in direct password flow")
+                        print("✅ Tapped Sign In button after password in direct flow")
                         
-                        // Wait for authentication to complete
-                        print("⏳ Waiting for direct password authentication to complete...")
-                        sleep(8)
+                        // Wait for Apple ID authorization to complete and return to app
+                        print("⏳ Waiting for Apple ID authorization to complete and return to app...")
+                        sleep(5) // Reduced from 8 seconds
                         
-                        // Verify we're back in the main app
+                        // Verify we're back in the main app with faster polling
                         let mainApp = XCUIApplication()
                         let tabBar = mainApp.tabBars.firstMatch
-                        var authCompleted = false
-                        for attempt in 1...5 {
-                            print("🔍 Direct password auth completion check attempt \(attempt)/5")
-                            if tabBar.exists {
-                                print("✅ Apple ID authorization completed - app loaded")
-                                authCompleted = true
-                                break
-                            }
-                            sleep(2)
+                        
+                        // Quick check first
+                        if tabBar.exists {
+                            print("✅ Apple ID authorization completed immediately - app loaded")
+                            print("🎉 Sign in flow completed successfully - Direct Share My Email path")
+                            return
                         }
                         
-                        if !authCompleted {
-                            print("❌ Direct password authentication failed - TabBar not found")
-                            XCTFail("Apple ID authentication failed to complete - app did not return to authenticated state")
-                            return
-                        } else {
-                            print("🎉 Sign in flow completed successfully - Direct Continue with Password path")
-                            return
+                        // If not immediate, do quick checks
+                        for attempt in 1...3 {
+                            print("🔍 Direct auth completion check attempt \(attempt)/3")
+                            if tabBar.waitForExistence(timeout: 2) {
+                                print("✅ Apple ID authorization completed - app loaded")
+                                print("🎉 Sign in flow completed successfully - Direct Share My Email path")
+                                return
+                            }
                         }
+                        
+                        print("❌ Apple ID authorization failed - TabBar not found after Sign In")
+                        XCTFail("Apple ID authorization failed to complete - app did not return to authenticated state")
+                        return
                     } else {
-                        print("❌ Could not find Sign In button in direct password flow")
-                        XCTFail("Apple ID authentication failed - Sign In button not found")
+                        print("❌ Could not find Sign In button after password")
+                        XCTFail("Apple ID authentication failed - Sign In button not found after password entry")
                         return
                     }
                 } else {
-                    print("❌ Could not find password field after Continue with Password")
-                    XCTFail("Apple ID authentication failed - password field not found after Continue with Password")
+                    print("❌ No password field found after SIWA Continue in direct flow")
+                    XCTFail("Apple ID authentication failed - password field not found after SIWA Continue")
                     return
                 }
             } else {
-                // Case 3: Neither Share My Email nor Continue with Password found
-                print("❌ No Share My Email or Continue with Password found in direct authorization flow")
-                
-                // Debug: Print available elements to see what's actually on screen
-                print("🔍 Debugging available elements in SpringBoard:")
-                let allStaticTexts = springboard.staticTexts.allElementsBoundByIndex
-                for (index, text) in allStaticTexts.prefix(10).enumerated() {
-                    print("  StaticText \(index): '\(text.label)' - exists: \(text.exists)")
-                }
-                let allButtons = springboard.buttons.allElementsBoundByIndex  
-                for (index, button) in allButtons.prefix(10).enumerated() {
-                    print("  Button \(index): '\(button.label)' - exists: \(button.exists)")
-                }
-                
-                XCTFail("Apple ID authentication failed - neither Share My Email nor Continue with Password found")
+                print("❌ Could not find SIWA Continue button after Share My Email")
+                XCTFail("Apple ID authentication failed - SIWA Continue button not found")
                 return
             }
+        } else {
+            // Case 3: None of the expected authentication flows found
+            print("❌ No expected authentication elements found")
+            
+            // Debug: Print available elements to see what's actually on screen
+            print("🔍 Debugging available elements in SpringBoard:")
+            let allStaticTexts = springboard.staticTexts.allElementsBoundByIndex
+            for (index, text) in allStaticTexts.prefix(10).enumerated() {
+                print("  StaticText \(index): '\(text.label)' - exists: \(text.exists)")
+            }
+            let allButtons = springboard.buttons.allElementsBoundByIndex  
+            for (index, button) in allButtons.prefix(10).enumerated() {
+                print("  Button \(index): '\(button.label)' - exists: \(button.exists)")
+            }
+            
+            XCTFail("Apple ID authentication failed - no expected authentication elements found")
+            return
         }
         
         // If we reach here without returning early, authentication may have failed
