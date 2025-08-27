@@ -26,17 +26,17 @@ class BiometricAuthManager: ObservableObject {
 
     @Published var isBiometricEnabled: Bool {
         willSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(self.isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
             objectWillChange.send()
         }
         didSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(isBiometricEnabled, privacy: .public)")
             // In UI testing mode, just store in memory since UserDefaults can be unreliable
             let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
                 ProcessInfo.processInfo.arguments.contains("--ui-testing")
 
             if !isUITesting {
-                UserDefaults.standard.set(self.isBiometricEnabled, forKey: "biometricAuthEnabled")
+                UserDefaults.standard.set(isBiometricEnabled, forKey: "biometricAuthEnabled")
             }
         }
     }
@@ -49,7 +49,7 @@ class BiometricAuthManager: ObservableObject {
         let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
             ProcessInfo.processInfo.arguments.contains("--ui-testing")
         let isUnitTesting = NSClassFromString("XCTestCase") != nil
-        
+
         if isUITesting || isUnitTesting {
             // In testing mode, always start with disabled state for predictable behavior
             isBiometricEnabled = false
