@@ -39,8 +39,7 @@ enum TestUtilities {
         testMode: Bool = false,
         resetData: Bool = false,
         additionalArguments: [String] = [],
-        additionalEnvironment: [String: String] = [:]) -> XCUIApplication
-    {
+        additionalEnvironment: [String: String] = [:]) -> XCUIApplication {
         let app = XCUIApplication()
 
         if testMode {
@@ -236,7 +235,7 @@ enum TestUtilities {
                 let contexts = [
                     ("Settings", XCUIApplication(bundleIdentifier: "com.apple.Preferences")),
                     ("SpringBoard", springboard),
-                    ("Main App", XCUIApplication()),
+                    ("Main App", XCUIApplication())
                 ]
 
                 for (name, app) in contexts {
@@ -267,7 +266,7 @@ enum TestUtilities {
                     settingsApp.textFields["Apple ID"],
                     settingsApp.textFields["email"],
                     settingsApp.textFields["username"],
-                    springboard.textFields.element(boundBy: 0), // Fallback to SpringBoard
+                    springboard.textFields.element(boundBy: 0) // Fallback to SpringBoard
                 ]
 
                 var foundUsernameField = false

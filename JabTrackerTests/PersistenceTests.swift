@@ -85,7 +85,7 @@ struct SwiftDataModelTests {
         #expect(!user.timezone.isEmpty)
         #expect(user.createdAt != nil)
         #expect(user.updatedAt != nil)
-        #expect(user.doses?.isEmpty || user.doses == nil) // Empty array or nil
+        #expect(user.doses?.isEmpty ?? true) // Should be empty array or nil
 
         // Optional fields can be provided
         #expect(user.name == "Optional Name")

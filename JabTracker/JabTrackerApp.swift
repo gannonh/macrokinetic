@@ -57,9 +57,14 @@ struct JabTrackerApp: App {
         switch newPhase {
         case .active:
             print("📱 JabTrackerApp: Scene became active")
-            print("📱 JabTrackerApp: Auth state = \(authManager.authenticationState), Biometric enabled = \(biometricManager.isBiometricEnabled), Just signed in = \(hasJustSignedIn), Recent biometric = \(hasRecentBiometricAuth)")
+            print("📱 JabTrackerApp: Auth state = \(authManager.authenticationState), " +
+                  "Biometric enabled = \(biometricManager.isBiometricEnabled), " +
+                  "Just signed in = \(hasJustSignedIn), Recent biometric = \(hasRecentBiometricAuth)")
             // Check for biometric authentication when app becomes active (but not right after sign-in or recent biometric auth)
-            if authManager.authenticationState == .authenticated, biometricManager.isBiometricEnabled, !hasJustSignedIn, !hasRecentBiometricAuth {
+            if authManager.authenticationState == .authenticated,
+               biometricManager.isBiometricEnabled,
+               !hasJustSignedIn,
+               !hasRecentBiometricAuth {
                 print("📱 JabTrackerApp: Triggering biometric authentication")
                 Task {
                     await handleBiometricAuthentication()

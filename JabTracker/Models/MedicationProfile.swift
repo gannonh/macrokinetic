@@ -23,8 +23,7 @@ final class MedicationProfile {
         brandName: String = "",
         currentDose: Double = 0.0,
         startDate: Date = Date(),
-        refillDate: Date? = nil)
-    {
+        refillDate: Date? = nil) {
         self.genericName = genericName
         self.brandName = brandName
         self.currentDose = currentDose
