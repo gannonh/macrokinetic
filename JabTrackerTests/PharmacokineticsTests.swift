@@ -2,17 +2,16 @@
 import Testing
 
 /// Pharmacokinetics Engine Test Suite
-/// 
+///
 /// These tests are placeholders for Phase 3: Advanced Analytics & Integration (6-8 weeks)
 /// See docs/implementation-plan.md for current development phase
 /// See docs/spec.md for detailed pharmacokinetics requirements
 @Suite("Pharmacokinetics Engine Tests")
 struct PharmacokineticsTests {
-    
     @Test("Drug concentration calculations", .disabled("Scheduled for Phase 3: Advanced Analytics & Integration"))
-    func testConcentrationCalculations() throws {
+    func concentrationCalculations() throws {
         // TODO: Implement when PharmacokineticsEngine is built in Phase 3
-        // 
+        //
         // Critical requirements to test (from docs/spec.md):
         // - Exponential decay modeling using medication half-lives
         // - Real-time concentration calculations for current/peak/trough levels
@@ -27,9 +26,9 @@ struct PharmacokineticsTests {
         // let expectedAfterOneDay = 1.0 * pow(0.5, 1.0/7.0) // 7-day half-life
         // #expect(abs(concentration - expectedAfterOneDay) < 0.01)
     }
-    
+
     @Test("Steady-state calculations", .disabled("Scheduled for Phase 3: Advanced Analytics & Integration"))
-    func testSteadyStateCalculations() throws {
+    func steadyStateCalculations() throws {
         // TODO: Implement when PharmacokineticsEngine is built in Phase 3
         //
         // Requirements to test:
@@ -38,9 +37,9 @@ struct PharmacokineticsTests {
         // - Handle dose escalation scenarios
         // - Validate therapeutic range indicators
     }
-    
+
     @Test("Multiple dose scenarios", .disabled("Scheduled for Phase 3: Advanced Analytics & Integration"))
-    func testMultipleDoseScenarios() throws {
+    func multipleDoseScenarios() throws {
         // TODO: Implement when PharmacokineticsEngine is built in Phase 3
         //
         // Requirements to test:
@@ -49,22 +48,22 @@ struct PharmacokineticsTests {
         // - Dose escalation (increasing amounts over time)
         // - Real-world dosing patterns and adherence scenarios
     }
-    
+
     @Test("Medication-specific half-life modeling", .disabled("Scheduled for Phase 3: Advanced Analytics & Integration"))
-    func testMedicationHalfLifeModeling() throws {
+    func medicationHalfLifeModeling() throws {
         // TODO: Implement when PharmacokineticsEngine is built in Phase 3
         //
         // Requirements to test for each medication:
         // - Semaglutide: 7-day half-life, weekly dosing
-        // - Tirzepatide: 5-day half-life, weekly dosing  
+        // - Tirzepatide: 5-day half-life, weekly dosing
         // - Liraglutide: 0.54-day half-life, daily dosing
         // - Dulaglutide: 4.7-day half-life, weekly dosing
         //
         // Critical for medical accuracy - validate all formulas against clinical data
     }
-    
+
     @Test("Edge cases and error handling", .disabled("Scheduled for Phase 3: Advanced Analytics & Integration"))
-    func testEdgeCasesAndErrorHandling() throws {
+    func edgeCasesAndErrorHandling() throws {
         // TODO: Implement when PharmacokineticsEngine is built in Phase 3
         //
         // Requirements to test:
@@ -78,6 +77,7 @@ struct PharmacokineticsTests {
 }
 
 // MARK: - Phase 3 Implementation Notes
+
 //
 // When implementing PharmacokineticsEngine in Phase 3, ensure:
 //

@@ -90,11 +90,11 @@ struct AuthenticationManagerTests {
     func authManagerInit() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Verify initial state
         #expect(authManager.authenticationState == .notDetermined)
         #expect(authManager.currentUser == nil)
-        
+
         // Note: dataController is private, so we can't test it directly
         // The fact that the manager initializes successfully validates the connection
     }
@@ -104,14 +104,14 @@ struct AuthenticationManagerTests {
     func signInWithAppleInterface() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test that the sign in method exists and is callable
         // Note: We can't test actual Sign in with Apple in unit tests due to system dependencies
         // This validates the interface exists and doesn't crash when called
-        
+
         // Test initial state
         #expect(authManager.authenticationState == .notDetermined)
-        
+
         // Test that methods exist by attempting to call them (they won't crash on reference)
         Task {
             // These methods exist and can be called, though they won't complete successfully in tests
@@ -128,17 +128,17 @@ struct AuthenticationManagerTests {
     func authStateManagement() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test initial state
         #expect(authManager.authenticationState == .notDetermined)
         #expect(authManager.currentUser == nil)
-        
+
         // Test checkAuthenticationStatus method exists and can be called
         Task {
             await authManager.checkAuthenticationStatus()
             // Should not crash - actual auth logic is tested in UI tests
         }
-        
+
         // Test signOut method (public method)
         Task {
             try await authManager.signOut()
@@ -154,20 +154,20 @@ struct BiometricAuthManagerTests {
     @MainActor
     func biometricManagerInit() throws {
         let biometricManager = BiometricAuthManager()
-        
+
         // Verify initial state - should be disabled by default
         #expect(biometricManager.isBiometricEnabled == false)
-        
+
         // Verify properties exist and are accessible
         _ = biometricManager.biometricType
         _ = biometricManager.isAvailable
         _ = biometricManager.biometricTypeDisplayName
-        
+
         // Verify methods exist (getBiometricAvailability is public)
         let availability = biometricManager.getBiometricAvailability()
         // BiometricAvailability is an enum, so test it exists
         switch availability {
-        case .available(_), .notAvailable, .notEnrolled, .restricted, .unknown:
+        case .available, .notAvailable, .notEnrolled, .restricted, .unknown:
             break // All valid cases
         }
     }
@@ -176,23 +176,23 @@ struct BiometricAuthManagerTests {
     @MainActor
     func biometricAvailabilityChecking() throws {
         let biometricManager = BiometricAuthManager()
-        
+
         // Test availability checking methods
         let availability = biometricManager.getBiometricAvailability()
         // Test that availability is one of the valid enum cases
         switch availability {
-        case .available(_), .notAvailable, .notEnrolled, .restricted, .unknown:
+        case .available, .notAvailable, .notEnrolled, .restricted, .unknown:
             break // All valid cases
         }
-        
+
         // Test biometric type detection
         let biometricType = biometricManager.biometricType
         #expect([BiometricType.faceID, BiometricType.touchID, BiometricType.none].contains(biometricType))
-        
+
         // Test display name
         let displayName = biometricManager.biometricTypeDisplayName
         #expect(!displayName.isEmpty)
-        
+
         // Note: checkBiometricAvailability() is private, so we can't test it directly
         // The public getBiometricAvailability() method provides the same functionality
     }
@@ -201,19 +201,19 @@ struct BiometricAuthManagerTests {
     @MainActor
     func biometricAuthInterface() throws {
         let biometricManager = BiometricAuthManager()
-        
+
         // Test preference setting
         biometricManager.setBiometricPreference(enabled: true)
         #expect(biometricManager.isBiometricEnabled == true)
-        
-        biometricManager.setBiometricPreference(enabled: false)  
+
+        biometricManager.setBiometricPreference(enabled: false)
         #expect(biometricManager.isBiometricEnabled == false)
-        
+
         // Test toggle functionality
         let initialState = biometricManager.isBiometricEnabled
         biometricManager.toggleBiometric()
         #expect(biometricManager.isBiometricEnabled == !initialState)
-        
+
         // Test authenticateWithBiometrics method exists (actual auth tested in UI tests)
         Task {
             // This would normally prompt for biometrics, but in tests just verifies interface
@@ -229,141 +229,140 @@ struct BiometricAuthManagerTests {
 
 @Suite("Authentication Edge Cases")
 struct AuthenticationEdgeCaseTests {
-    
     @Test("Sign in with Apple cancellation handling")
     @MainActor
     func signInWithAppleCancellation() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test that cancellation doesn't leave authentication in invalid state
         #expect(authManager.authenticationState == .notDetermined)
         #expect(authManager.currentUser == nil)
-        
+
         // After cancellation, should be able to retry sign in
         // Interface validation - methods should exist and be callable
         let signInMethod = authManager.signInWithApple
         #expect(signInMethod != nil)
     }
-    
+
     @Test("Authentication state consistency after app restart")
     @MainActor
     func authStateConsistencyAfterRestart() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test checkAuthenticationStatus handles empty database gracefully
         Task {
             await authManager.checkAuthenticationStatus()
             // Should not crash with empty user database
             // AuthenticationState is an enum, so verify it has a valid state
-            #expect(authManager.authenticationState == .notDetermined || 
-                   authManager.authenticationState == .authenticated ||
-                   authManager.authenticationState == .notAuthenticated)
+            #expect(authManager.authenticationState == .notDetermined ||
+                authManager.authenticationState == .authenticated ||
+                authManager.authenticationState == .notAuthenticated)
         }
-        
+
         // Test with existing user data
         let context = dataController.container.mainContext
         let testUser = User(email: "persistence-test@example.com", weight: 70.0)
         context.insert(testUser)
         try context.save()
-        
+
         Task {
             await authManager.checkAuthenticationStatus()
             // Should detect existing user data
         }
     }
-    
+
     @Test("Biometric authentication error scenarios")
     @MainActor
     func biometricAuthErrorScenarios() throws {
         let biometricManager = BiometricAuthManager()
-        
+
         // Test that biometric availability check handles all device states
         let availability = biometricManager.getBiometricAvailability()
         // Test that availability is one of the valid enum cases
         switch availability {
-        case .available(_), .notAvailable, .notEnrolled, .restricted, .unknown:
+        case .available, .notAvailable, .notEnrolled, .restricted, .unknown:
             break // All valid cases handled
         }
-        
+
         // Test biometric type detection for all device types
         let biometricType = biometricManager.biometricType
         #expect([BiometricType.faceID, BiometricType.touchID, BiometricType.none].contains(biometricType))
-        
+
         // Test preference setting doesn't crash with any availability state
         biometricManager.setBiometricPreference(enabled: true)
         biometricManager.setBiometricPreference(enabled: false)
     }
-    
+
     @Test("Authentication manager error recovery")
     @MainActor
     func authManagerErrorRecovery() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test that sign out works regardless of current state
         Task {
             try await authManager.signOut()
             #expect(authManager.currentUser == nil)
         }
-        
+
         // Test that checkAuthenticationStatus handles various states
         Task {
             await authManager.checkAuthenticationStatus()
             // Should complete without error regardless of state
         }
     }
-    
+
     @Test("Concurrent authentication operations")
     @MainActor
     func concurrentAuthOperations() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test that multiple simultaneous auth status checks don't cause issues
         Task {
             await withTaskGroup(of: Void.self) { group in
                 // Simulate multiple concurrent auth status checks
-                for _ in 0..<3 {
+                for _ in 0 ..< 3 {
                     group.addTask {
                         await authManager.checkAuthenticationStatus()
                     }
                 }
             }
-            
+
             // Should complete without deadlocks or crashes
             // AuthenticationState is an enum so it's never nil
-            #expect(authManager.authenticationState == .notDetermined || 
-                   authManager.authenticationState == .authenticated ||
-                   authManager.authenticationState == .notAuthenticated)
+            #expect(authManager.authenticationState == .notDetermined ||
+                authManager.authenticationState == .authenticated ||
+                authManager.authenticationState == .notAuthenticated)
         }
     }
-    
+
     @Test("Invalid user data handling")
     @MainActor
     func invalidUserDataHandling() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
-        
+
         // Test with user missing required fields
         let incompleteUser = User(email: "", weight: 0.0) // Empty email, zero weight
         context.insert(incompleteUser)
         try context.save()
-        
+
         Task {
             await authManager.checkAuthenticationStatus()
             // Should handle incomplete user data gracefully
             // Don't assume this means authenticated if data is invalid
         }
-        
+
         // Test authentication manager can handle users with missing Apple ID
         let userWithoutAppleID = User(email: "no-apple-id@example.com", weight: 70.0)
         // Note: appleUserId intentionally nil
         context.insert(userWithoutAppleID)
         try context.save()
-        
+
         Task {
             await authManager.checkAuthenticationStatus()
             // Should handle missing Apple ID appropriately
@@ -376,7 +375,8 @@ struct AuthenticationEdgeCaseTests {
 extension UserModelTests {
     static func createTestUser(
         email: String = "test@example.com",
-        name: String = "Test User") -> User {
+        name: String = "Test User") -> User
+    {
         User(
             email: email,
             name: name,

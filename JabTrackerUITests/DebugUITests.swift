@@ -14,29 +14,29 @@ final class SettingsUITests: XCTestCase {
 
         // Test specific functional elements instead of generic counts
         XCTAssertTrue(app.staticTexts["Settings"].exists, "Settings title should be visible")
-        
+
         // Test for User Profile section (key functionality)
         let userProfileText = app.staticTexts["User Profile"]
         XCTAssertTrue(userProfileText.waitForExistence(timeout: 3), "User Profile section should be visible")
-        
+
         // Test for specific interactive elements that matter
-        let editProfileButton = app.buttons["Edit Profile"] 
+        let editProfileButton = app.buttons["Edit Profile"]
         if editProfileButton.exists {
             XCTAssertTrue(editProfileButton.isHittable, "Edit Profile button should be interactive")
         }
-        
+
         // Test for sign out functionality
         let signOutButton = app.buttons["sign-out-button"]
         if signOutButton.exists {
             XCTAssertTrue(signOutButton.isEnabled, "Sign out button should be enabled when user is authenticated")
         }
-        
+
         // Test biometric toggle if available
         let biometricToggle = app.switches["biometric-auth-toggle"]
         if biometricToggle.exists {
             XCTAssertTrue(biometricToggle.isHittable, "Biometric toggle should be interactive")
         }
-        
+
         // Test design system demo section
         let designSystemCard = app.descendants(matching: .any)["design-system-card"]
         if designSystemCard.exists {

@@ -224,23 +224,23 @@ struct DesignComponentsTests {
 
         // Test that cards are actually created and functional
         // Instead of testing internal type strings, test that they behave as expected
-        
+
         // Test that cards with Text content work
         let textCard: DesignCard<Text> = DesignCard { Text("Simple") }
-        
-        // Test that cards with VStack content work  
+
+        // Test that cards with VStack content work
         let vStackCard: DesignCard<VStack<TupleView<(Text, Text)>>> = DesignCard {
             VStack {
                 Text("Title")
                 Text("Subtitle")
             }
         }
-        
+
         // Test that both types of cards can be created without errors
         // This validates the generic functionality without relying on string representations
         #expect(textCard != nil)
         #expect(vStackCard != nil)
-        
+
         // Test that the cards can be used in UI contexts (they are proper Views)
         // We can verify they implement the View protocol by compiling successfully
     }
@@ -257,13 +257,13 @@ struct DesignComponentsTests {
         #expect(secondaryButton.title == "Secondary")
         #expect(primaryButton.action != nil)
         #expect(secondaryButton.action != nil)
-        
+
         // Test that buttons have different titles (behavioral validation)
         #expect(primaryButton.title != secondaryButton.title)
-        
+
         // Test that components can be created successfully
         #expect(card != nil)
-        
+
         // All components should be usable as Views (compilation validates this)
         // This tests actual functionality rather than internal type representations
     }

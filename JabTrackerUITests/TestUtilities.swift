@@ -39,7 +39,8 @@ enum TestUtilities {
         testMode: Bool = false,
         resetData: Bool = false,
         additionalArguments: [String] = [],
-        additionalEnvironment: [String: String] = [:]) -> XCUIApplication {
+        additionalEnvironment: [String: String] = [:]) -> XCUIApplication
+    {
         let app = XCUIApplication()
 
         if testMode {
@@ -140,7 +141,7 @@ enum TestUtilities {
 
         // Wait for Apple ID sheet to load
         sleep(2)
-        
+
         // Handle the Apple ID authentication sheet - only the contexts that actually work
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let mainApp = XCUIApplication()
@@ -148,7 +149,7 @@ enum TestUtilities {
         // Check available authentication options
         let continueWithPasswordButton = springboard.buttons["Continue with Password"]
         let siwaButton = mainApp.buttons["SIWA_CONTINUE_BUTTON"]
-        
+
         print("🔍 Checking authentication options:")
         print("  SpringBoard 'Continue with Password': \(continueWithPasswordButton.exists)")
         print("  MainApp 'SIWA_CONTINUE_BUTTON': \(siwaButton.exists)")
@@ -180,7 +181,7 @@ enum TestUtilities {
                     }
                 }
             }
-            
+
             print("❌ SpringBoard authentication flow failed")
             XCTFail("Apple ID authentication failed in SpringBoard context")
             return
@@ -189,28 +190,28 @@ enum TestUtilities {
             siwaButton.tap()
             print("✅ Tapped SIWA_CONTINUE_BUTTON")
             sleep(2)
-            
+
             // Check if authentication completed
             let tabBar = mainApp.tabBars.firstMatch
             if tabBar.waitForExistence(timeout: 10) {
                 print("🎉 Sign in flow completed successfully")
                 return
             }
-            
+
             print("❌ MainApp SIWA flow failed")
             XCTFail("Apple ID authentication failed in MainApp SIWA context")
             return
         } else {
             // No authentication elements found
             print("❌ No authentication elements found")
-            
+
             // Debug: Show what's available
             print("🔍 Available SpringBoard buttons:")
             let allButtons = springboard.buttons.allElementsBoundByIndex
             for (index, button) in allButtons.prefix(5).enumerated() {
                 print("  Button \(index): '\(button.label)' - exists: \(button.exists)")
             }
-            
+
             XCTFail("Apple ID authentication failed - no expected authentication elements found")
             return
         }

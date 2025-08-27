@@ -16,12 +16,11 @@ enum AuthenticationState: String, CaseIterable {
 class AuthenticationManager: NSObject, ObservableObject {
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
-        category: "AuthenticationManager"
-    )
+        category: "AuthenticationManager")
 
     @Published var authenticationState: AuthenticationState = .notDetermined {
         didSet {
-            Self.logger.info("🔄 AuthenticationManager: State changed from \(oldValue.rawValue, privacy: .public) to \(self.authenticationState.rawValue, privacy: .public)")
+            Self.logger.info("🔄 AuthenticationManager: State changed from \(oldValue.rawValue, privacy: .public) to \(authenticationState.rawValue, privacy: .public)")
         }
     }
 
@@ -207,7 +206,8 @@ enum AuthenticationError: Error, LocalizedError {
 extension AuthenticationManager: ASAuthorizationControllerDelegate {
     func authorizationController(
         controller _: ASAuthorizationController,
-        didCompleteWithAuthorization authorization: ASAuthorization) {
+        didCompleteWithAuthorization authorization: ASAuthorization)
+    {
         Task {
             await handleSignInResult(authorization)
         }
@@ -215,7 +215,8 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
 
     func authorizationController(
         controller _: ASAuthorizationController,
-        didCompleteWithError _: Error) {
+        didCompleteWithError _: Error)
+    {
         Task { @MainActor in
             authenticationState = .notAuthenticated
         }

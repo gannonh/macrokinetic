@@ -22,16 +22,15 @@ enum BiometricAvailability {
 class BiometricAuthManager: ObservableObject {
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
-        category: "BiometricAuthManager"
-    )
+        category: "BiometricAuthManager")
 
     @Published var isBiometricEnabled: Bool {
         willSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(self.isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
             objectWillChange.send()
         }
         didSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)")
+            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(isBiometricEnabled, privacy: .public)")
             // In UI testing mode, just store in memory since UserDefaults can be unreliable
             let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
                 ProcessInfo.processInfo.arguments.contains("--ui-testing")

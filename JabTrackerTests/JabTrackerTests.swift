@@ -1,6 +1,6 @@
 @testable import JabTracker
-import SwiftUI
 import SwiftData
+import SwiftUI
 import Testing
 
 @Suite("General App Tests")
@@ -17,13 +17,13 @@ struct JabTrackerTests {
 
         // Test that the data controller has the expected schema (User, Dose, MedicationProfile)
         #expect(dataController.container.schema.entities.count == 3)
-        
+
         // Verify schema contains expected entities
-        let entityNames = dataController.container.schema.entities.map { $0.name }
+        let entityNames = dataController.container.schema.entities.map(\.name)
         #expect(entityNames.contains("User"))
-        #expect(entityNames.contains("Dose"))  
+        #expect(entityNames.contains("Dose"))
         #expect(entityNames.contains("MedicationProfile"))
-        
+
         // Test that we can access the model context without error
         let context = dataController.container.mainContext
         #expect(context != nil)
@@ -61,7 +61,7 @@ struct JabTrackerTests {
 
         // Verify button properties
         #expect(primaryButton.title == "Test Action")
-        
+
         // Test that design tokens are accessible and have expected properties
         let primaryColor = DesignTokens.Colors.primary
         let secondaryColor = DesignTokens.Colors.secondary
@@ -72,7 +72,7 @@ struct JabTrackerTests {
         // Test that colors are different (behavioral validation)
         #expect(primaryColor != secondaryColor)
         #expect(typography != bodyTypography)
-        
+
         // Test that gradient exists and is a LinearGradient
         // Note: LinearGradient doesn't expose stops property directly
         #expect(gradient != nil)
@@ -148,7 +148,7 @@ struct JabTrackerTests {
             // Verify data was saved correctly
             #expect(user.email == uniqueEmail)
             #expect(user.weight == 70.0)
-            
+
             // Verify we can fetch the data
             let fetchRequest = FetchDescriptor<User>()
             let users = try context.fetch(fetchRequest)
@@ -165,7 +165,7 @@ struct JabTrackerTests {
             // Test component functionality rather than string representation
             #expect(button.action != nil) // Verify action closure exists
         }
-        
+
         // Test passes if no crashes or memory issues occur during component creation
     }
 }

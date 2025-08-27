@@ -29,7 +29,8 @@ final class User {
         weight: Double = 70.0,
         weightUnit: String = "kg",
         timezone: String = TimeZone.current.identifier,
-        appleUserId: String? = nil) {
+        appleUserId: String? = nil)
+    {
         self.email = email
         self.name = name
         self.dateOfBirth = dateOfBirth
