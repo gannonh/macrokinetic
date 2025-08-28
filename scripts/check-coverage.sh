@@ -7,6 +7,7 @@ set -e
 RESULT_BUNDLE="/tmp/coverage.xcresult"
 SCHEME="JabTracker"
 DESTINATION="platform=iOS Simulator,name=iPhone 15,OS=17.5"
+CONFIG_FILE="$(dirname "$0")/../coverage-config.json"
 
 echo "🔍 Running tests with coverage..."
 
@@ -28,27 +29,33 @@ fi
 echo "📊 Generating coverage report..."
 COVERAGE_JSON=$(xcrun xccov view --report --json "$RESULT_BUNDLE")
 
-# Parse coverage data for different categories
-BUSINESS_LOGIC_FILES=(
-    "AuthenticationManager.swift"
-    "BiometricAuthManager.swift" 
-    "DataController.swift"
-    "PharmacokineticsEngine.swift"
-    "User.swift"
-    "Dose.swift"
-    "MedicationProfile.swift"
-)
+# Load configuration from JSON
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "❌ Coverage configuration file not found: $CONFIG_FILE"
+    exit 1
+fi
 
-VIEW_MODEL_FILES=(
-    # Add ViewModels here when created
-)
+CONFIG_JSON=$(cat "$CONFIG_FILE")
+
+# Extract file lists and thresholds from config
+PURE_BUSINESS_LOGIC_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.pure_business_logic.files[]'))
+PURE_BUSINESS_LOGIC_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.pure_business_logic.threshold')
+
+INFRASTRUCTURE_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.infrastructure.files[]'))
+INFRASTRUCTURE_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.infrastructure.threshold')
+
+FRAMEWORK_INTEGRATION_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.framework_integration.files[]'))
+FRAMEWORK_INTEGRATION_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.framework_integration.threshold')
+
+VIEW_MODEL_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.view_models.files[]'))
+VIEW_MODEL_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.view_models.threshold')
 
 echo "🎯 Coverage Policy Results:"
 echo "================================"
 
-# Business Logic Policy: 90% minimum
-echo "📈 Business Logic Coverage (Target: 90%)"
-for file in "${BUSINESS_LOGIC_FILES[@]}"; do
+# Tier 1: Pure Business Logic
+echo "🧠 Tier 1: Pure Business Logic (Target: ${PURE_BUSINESS_LOGIC_THRESHOLD}%)"
+for file in "${PURE_BUSINESS_LOGIC_FILES[@]}"; do
     COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
         .targets[] | select(.name == "JabTracker.app") | 
         .files[] | select(.name | endswith($file)) | 
@@ -58,17 +65,57 @@ for file in "${BUSINESS_LOGIC_FILES[@]}"; do
     # Handle empty or null coverage values
     if [ "$COVERAGE" = "null" ] || [ "$COVERAGE" = "" ]; then
         echo "⚠️  $file: Not found in coverage report"
-    elif [ "$COVERAGE" -ge 90 ] 2>/dev/null; then
+    elif [ "$COVERAGE" -ge "$PURE_BUSINESS_LOGIC_THRESHOLD" ] 2>/dev/null; then
         echo "✅ $file: ${COVERAGE}%"
     else
-        echo "❌ $file: ${COVERAGE}% (below 90% threshold)"
+        echo "❌ $file: ${COVERAGE}% (below ${PURE_BUSINESS_LOGIC_THRESHOLD}% threshold)"
         POLICY_FAILED=true
     fi
 done
 
-# View Models Policy: 85% minimum
+# Tier 2: Infrastructure & Data
 echo ""
-echo "📊 View Models Coverage (Target: 85%)"
+echo "🏗️ Tier 2: Infrastructure & Data (Target: ${INFRASTRUCTURE_THRESHOLD}%)"
+for file in "${INFRASTRUCTURE_FILES[@]}"; do
+    COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
+        .targets[] | select(.name == "JabTracker.app") | 
+        .files[] | select(.name | endswith($file)) | 
+        .lineCoverage * 100 | round
+    ')
+    
+    if [ "$COVERAGE" = "null" ] || [ "$COVERAGE" = "" ]; then
+        echo "⚠️  $file: Not found in coverage report"
+    elif [ "$COVERAGE" -ge "$INFRASTRUCTURE_THRESHOLD" ] 2>/dev/null; then
+        echo "✅ $file: ${COVERAGE}%"
+    else
+        echo "❌ $file: ${COVERAGE}% (below ${INFRASTRUCTURE_THRESHOLD}% threshold)"
+        POLICY_FAILED=true
+    fi
+done
+
+# Tier 3: Framework Integration
+echo ""
+echo "🔗 Tier 3: Framework Integration (Target: ${FRAMEWORK_INTEGRATION_THRESHOLD}%)"
+for file in "${FRAMEWORK_INTEGRATION_FILES[@]}"; do
+    COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
+        .targets[] | select(.name == "JabTracker.app") | 
+        .files[] | select(.name | endswith($file)) | 
+        .lineCoverage * 100 | round
+    ')
+    
+    if [ "$COVERAGE" = "null" ] || [ "$COVERAGE" = "" ]; then
+        echo "⚠️  $file: Not found in coverage report"
+    elif [ "$COVERAGE" -ge "$FRAMEWORK_INTEGRATION_THRESHOLD" ] 2>/dev/null; then
+        echo "✅ $file: ${COVERAGE}%"
+    else
+        echo "❌ $file: ${COVERAGE}% (below ${FRAMEWORK_INTEGRATION_THRESHOLD}% threshold)"
+        POLICY_FAILED=true
+    fi
+done
+
+# Tier 4: View Models
+echo ""
+echo "📊 Tier 4: View Models (Target: ${VIEW_MODEL_THRESHOLD}%)"
 if [ ${#VIEW_MODEL_FILES[@]} -eq 0 ]; then
     echo "ℹ️  No ViewModels defined yet"
 else
@@ -82,10 +129,10 @@ else
         # Handle empty or null coverage values
         if [ "$COVERAGE" = "null" ] || [ "$COVERAGE" = "" ]; then
             echo "⚠️  $file: Not found in coverage report"
-        elif [ "$COVERAGE" -ge 85 ] 2>/dev/null; then
+        elif [ "$COVERAGE" -ge "$VIEW_MODEL_THRESHOLD" ] 2>/dev/null; then
             echo "✅ $file: ${COVERAGE}%"
         else
-            echo "❌ $file: ${COVERAGE}% (below 85% threshold)"
+            echo "❌ $file: ${COVERAGE}% (below ${VIEW_MODEL_THRESHOLD}% threshold)"
             POLICY_FAILED=true
         fi
     done

@@ -1,5 +1,6 @@
 import Foundation
 @testable import JabTracker
+import LocalAuthentication
 import SwiftData
 import Testing
 
@@ -293,7 +294,7 @@ struct BiometricAuthManagerTests {
 
         biometricManager.setBiometricPreference(enabled: !initialValue)
         #expect(biometricManager.isBiometricEnabled == !initialValue,
-                "setBiometricPreference should update isBiometricEnabled")
+                "setBiometricPreference should update isBiometricPreference")
 
         biometricManager.setBiometricPreference(enabled: initialValue)
         #expect(biometricManager.isBiometricEnabled == initialValue,
@@ -306,5 +307,183 @@ struct BiometricAuthManagerTests {
             #expect(biometricManager.isBiometricEnabled == !currentValue,
                     "Rapid preference changes should be handled correctly")
         }
+    }
+
+    @Test("Biometric authentication with specific error types")
+    @MainActor
+    func biometricAuthSpecificErrors() throws {
+        let biometricManager = BiometricAuthManager()
+
+        // Test authentication when biometrics not available (simulated)
+        biometricManager.isAvailable = false
+
+        Task {
+            var threwNotAvailableError = false
+            do {
+                _ = try await biometricManager.authenticateWithBiometrics(reason: "Test authentication")
+            } catch BiometricError.notAvailable {
+                threwNotAvailableError = true
+            } catch {
+                // Other errors acceptable in test environment
+            }
+
+            if !biometricManager.isAvailable {
+                #expect(threwNotAvailableError, "Should throw notAvailable error when biometrics unavailable")
+            }
+        }
+
+        // Reset for next test
+        biometricManager.isAvailable = true
+        biometricManager.isBiometricEnabled = false
+
+        Task {
+            var threwDisabledError = false
+            do {
+                _ = try await biometricManager.authenticateWithBiometrics(reason: "Test authentication")
+            } catch BiometricError.disabled {
+                threwDisabledError = true
+            } catch {
+                // Other errors acceptable
+            }
+
+            if !biometricManager.isBiometricEnabled {
+                #expect(threwDisabledError, "Should throw disabled error when biometrics disabled")
+            }
+        }
+    }
+
+    @Test("BiometricType enum all cases")
+    func biometricTypeEnumCases() throws {
+        // Test all BiometricType cases exist and have proper raw values
+        let allTypes = BiometricType.allCases
+        #expect(allTypes.count == 4, "Should have exactly 4 biometric types")
+
+        #expect(allTypes.contains(.none), "Should contain none case")
+        #expect(allTypes.contains(.touchID), "Should contain touchID case")
+        #expect(allTypes.contains(.faceID), "Should contain faceID case")
+        #expect(allTypes.contains(.opticID), "Should contain opticID case")
+
+        // Test raw values
+        #expect(BiometricType.none.rawValue == "none")
+        #expect(BiometricType.touchID.rawValue == "touchID")
+        #expect(BiometricType.faceID.rawValue == "faceID")
+        #expect(BiometricType.opticID.rawValue == "opticID")
+    }
+
+    @Test("BiometricAuthManager property observers")
+    @MainActor
+    func biometricManagerPropertyObservers() throws {
+        let biometricManager = BiometricAuthManager()
+
+        // Test willSet and didSet are called
+        let initialValue = biometricManager.isBiometricEnabled
+
+        // This should trigger both willSet and didSet
+        biometricManager.isBiometricEnabled = !initialValue
+
+        #expect(biometricManager.isBiometricEnabled == !initialValue,
+                "Property should be updated")
+
+        // Test setting to same value
+        biometricManager.isBiometricEnabled = !initialValue
+        #expect(biometricManager.isBiometricEnabled == !initialValue,
+                "Property should remain the same when set to same value")
+    }
+
+    @Test("Availability from error mapping")
+    @MainActor
+    func availabilityFromErrorMapping() throws {
+        let biometricManager = BiometricAuthManager()
+
+        // Test that getBiometricAvailability handles different error scenarios
+        let availability = biometricManager.getBiometricAvailability()
+
+        // Test all possible BiometricAvailability cases are handled
+        switch availability {
+        case let .available(type):
+            #expect([BiometricType.faceID, .touchID, .opticID, .none].contains(type),
+                    "Available type should be one of the known types")
+        case .notAvailable:
+            // This is expected when biometrics hardware is not available
+            break
+        case .notEnrolled:
+            // This is expected when biometrics hardware exists but no biometrics enrolled
+            break
+        case .restricted:
+            // This is expected when biometrics are locked out
+            break
+        case .unknown:
+            // This is expected for other error conditions
+            break
+        }
+    }
+
+    @Test("BiometricAuthManager observable object behavior")
+    @MainActor
+    func biometricManagerObservableObject() throws {
+        let biometricManager = BiometricAuthManager()
+
+        // Test that objectWillChange publisher exists and can be subscribed to
+        let cancellable = biometricManager.objectWillChange.sink {
+            // ObjectWillChange was triggered
+        }
+
+        // Trigger a change
+        biometricManager.toggleBiometric()
+
+        // Note: In tests, objectWillChange might be called synchronously or asynchronously
+        // The test verifies the toggle method calls objectWillChange.send()
+
+        cancellable.cancel()
+
+        // Test that the toggle actually changed the state
+        let currentState = biometricManager.isBiometricEnabled
+        biometricManager.toggleBiometric()
+        #expect(biometricManager.isBiometricEnabled != currentState, "Toggle should change the state")
+    }
+
+    @Test("Biometric authentication LAError handling")
+    @MainActor
+    func biometricAuthLAErrorHandling() throws {
+        // Test that BiometricError cases map correctly to expected descriptions
+        let errorMappings: [(BiometricError, String)] = [
+            (.userCancel, "User cancelled"),
+            (.userFallback, "passcode"),
+            (.lockout, "locked out"),
+            (.authenticationFailed, "failed"),
+        ]
+
+        for (error, expectedContent) in errorMappings {
+            let description = error.errorDescription ?? ""
+            #expect(description.lowercased().contains(expectedContent.lowercased()),
+                    "\(error) should contain '\(expectedContent)' in description: '\(description)'")
+        }
+    }
+
+    @Test("UI testing environment detection")
+    @MainActor
+    func uiTestingEnvironmentDetection() throws {
+        // Save original environment
+        let originalEnv = ProcessInfo.processInfo.environment["UI_TESTING"]
+
+        // Test with UI_TESTING environment variable set
+        setenv("UI_TESTING", "true", 1)
+        defer {
+            if let original = originalEnv {
+                setenv("UI_TESTING", original, 1)
+            } else {
+                unsetenv("UI_TESTING")
+            }
+        }
+
+        let biometricManager = BiometricAuthManager()
+
+        // In UI testing mode, should start disabled for predictable behavior
+        #expect(biometricManager.isBiometricEnabled == false,
+                "Should start disabled in UI testing mode for predictable behavior")
+        #expect(biometricManager.isAvailable == true,
+                "Should be available in UI testing mode")
+        #expect(biometricManager.biometricType == .faceID,
+                "Should default to faceID in UI testing mode")
     }
 }

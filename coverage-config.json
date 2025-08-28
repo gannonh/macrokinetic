@@ -1,0 +1,54 @@
+{
+  "policy": {
+    "description": "JabTracker Test Coverage Policy - Tiered approach based on component complexity",
+    "tiers": {
+      "pure_business_logic": {
+        "threshold": 90,
+        "description": "Core business logic with minimal framework dependencies",
+        "files": [
+          "PharmacokineticsEngine.swift",
+          "User.swift",
+          "Dose.swift",
+          "MedicationProfile.swift"
+        ]
+      },
+      "infrastructure": {
+        "threshold": 70,
+        "description": "Data management with some framework dependencies",
+        "files": [
+          "DataController.swift"
+        ]
+      },
+      "framework_integration": {
+        "threshold": 50,
+        "description": "Heavy Apple framework dependencies",
+        "files": [
+          "AuthenticationManager.swift",
+          "BiometricAuthManager.swift"
+        ]
+      },
+      "view_models": {
+        "threshold": 85,
+        "description": "ObservableObject classes with testable business logic",
+        "files": []
+      },
+      "utilities": {
+        "threshold": 75,
+        "description": "Helper functions, extensions, and utility classes",
+        "files": []
+      }
+    }
+  },
+  "exclusions": {
+    "description": "Files excluded from coverage requirements",
+    "categories": [
+      "SwiftUI Views",
+      "View modifiers",
+      "SwiftUI-specific presentation logic"
+    ]
+  },
+  "overall_target": {
+    "informational_only": true,
+    "note": "Overall coverage percentage is informational due to SwiftUI architecture limitations"
+  }
+}

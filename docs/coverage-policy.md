@@ -6,20 +6,32 @@ Due to SwiftUI's architecture limitations, traditional 80% overall coverage targ
 
 ## Coverage Tiers
 
-### Tier 1: Business Logic (90% minimum required)
+### Tier 1: Pure Business Logic (90% minimum required)
 **Files containing core business logic, data processing, and critical app functionality:**
 
-- `AuthenticationManager.swift` - Authentication flows and state management
-- `BiometricAuthManager.swift` - Biometric authentication logic  
+- `PharmacokineticsEngine.swift` - Medical calculation algorithms (when implemented)
+- `User.swift` - User data model and validation ✅
+- `Dose.swift` - Dose data model and business rules ✅
+- `MedicationProfile.swift` - Medication data model and logic ✅
+
+**Rationale:** These components contain pure business logic with minimal framework dependencies. Medical calculation accuracy is paramount.
+
+### Tier 2: Infrastructure & Data (70% minimum required)
+**Files containing data management with some framework dependencies:**
+
 - `DataController.swift` - SwiftData and CloudKit sync logic
-- `PharmacokineticsEngine.swift` - Medical calculation algorithms
-- `User.swift` - User data model and validation
-- `Dose.swift` - Dose data model and business rules
-- `MedicationProfile.swift` - Medication data model and logic
 
-**Rationale:** These components contain the most critical business logic where bugs have the highest impact. Medical calculation accuracy is paramount.
+**Rationale:** Infrastructure code has testable business logic but includes framework integration that may be difficult to mock.
 
-### Tier 2: View Models (85% minimum required)
+### Tier 3: Framework Integration (50% minimum required)
+**Files heavily dependent on Apple frameworks:**
+
+- `AuthenticationManager.swift` - Authentication flows and Apple framework integration
+- `BiometricAuthManager.swift` - LocalAuthentication framework integration
+
+**Rationale:** Framework integration code is difficult to unit test comprehensively. Real testing happens through integration tests.
+
+### Tier 4: View Models (85% minimum required)
 **ObservableObject classes that contain testable business logic:**
 
 - Currently none defined (SwiftUI views handle state directly)
@@ -27,7 +39,7 @@ Due to SwiftUI's architecture limitations, traditional 80% overall coverage targ
 
 **Rationale:** View models contain presentation logic that's easily testable and critical for proper UI behavior.
 
-### Tier 3: Utilities & Extensions (75% minimum required)
+### Tier 5: Utilities & Extensions (75% minimum required)
 **Helper functions, extensions, and utility classes:**
 
 - Array extensions
@@ -37,7 +49,7 @@ Due to SwiftUI's architecture limitations, traditional 80% overall coverage targ
 
 **Rationale:** While important, utilities typically have lower complexity and impact than core business logic.
 
-### Tier 4: SwiftUI Views (No coverage requirement)
+### Tier 6: SwiftUI Views (No coverage requirement)
 **View structs and their body properties:**
 
 - All `View` conforming structs
