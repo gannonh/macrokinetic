@@ -390,6 +390,100 @@ struct AuthenticationEdgeCaseTests {
             // Should handle missing Apple ID appropriately
         }
     }
+
+    @Test("Authentication error handling scenarios")
+    @MainActor
+    func authenticationErrorHandlingScenarios() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        
+        // Test that signOut works even when no user is signed in
+        Task {
+            try await authManager.signOut()
+            #expect(authManager.authenticationState == .notAuthenticated,
+                   "signOut should succeed even when no user is signed in")
+            #expect(authManager.currentUser == nil,
+                   "currentUser should be nil after signOut")
+        }
+        
+        // Test multiple consecutive signOut calls don't cause issues
+        Task {
+            try await authManager.signOut()
+            try await authManager.signOut()
+            try await authManager.signOut()
+            #expect(authManager.authenticationState == .notAuthenticated,
+                   "Multiple signOut calls should be handled gracefully")
+        }
+    }
+    
+    @Test("Biometric authentication disabled state handling")
+    @MainActor
+    func biometricAuthDisabledStateHandling() throws {
+        let biometricManager = BiometricAuthManager()
+        
+        // Test enabling biometrics when not available
+        biometricManager.setBiometricPreference(enabled: true)
+        #expect(biometricManager.isBiometricEnabled == true,
+               "Should be able to set preference even if biometrics unavailable")
+        
+        // Test authentication when biometrics are disabled
+        biometricManager.setBiometricPreference(enabled: false)
+        Task {
+            var threwDisabledError = false
+            do {
+                _ = try await biometricManager.authenticateWithBiometrics(reason: "Test")
+            } catch BiometricError.disabled {
+                threwDisabledError = true
+            } catch {
+                // Other errors are also acceptable in test environment
+            }
+            // In test environment, should throw disabled error since we set enabled = false
+            if biometricManager.isBiometricEnabled == false {
+                #expect(threwDisabledError, "Should throw BiometricError.disabled when biometrics are disabled")
+            }
+        }
+        
+        // Test availability check returns valid enum case
+        let availability = biometricManager.getBiometricAvailability()
+        let validCases: [BiometricAvailability] = [.available(.faceID), .available(.touchID), .available(.opticID), .available(.none), .notAvailable, .notEnrolled, .restricted, .unknown]
+        
+        var isValidCase = false
+        for validCase in validCases {
+            switch (availability, validCase) {
+            case (.available(let a), .available(let b)) where a == b:
+                isValidCase = true
+            case (.notAvailable, .notAvailable), (.notEnrolled, .notEnrolled), (.restricted, .restricted), (.unknown, .unknown):
+                isValidCase = true
+            default:
+                continue
+            }
+            if isValidCase { break }
+        }
+        #expect(isValidCase, "getBiometricAvailability should return a valid enum case")
+    }
+    
+    @Test("Authentication state persistence edge cases")
+    @MainActor
+    func authStatePersistenceEdgeCases() throws {
+        let dataController = DataController.testContainer()
+        
+        // Test creating multiple authentication managers with same data controller
+        let authManager1 = AuthenticationManager(dataController: dataController)
+        let authManager2 = AuthenticationManager(dataController: dataController)
+        
+        // Both should start in same initial state
+        #expect(authManager1.authenticationState == authManager2.authenticationState,
+               "Multiple AuthenticationManager instances should have consistent initial state")
+        
+        // Test state changes don't affect each other (they're independent instances)
+        Task {
+            try await authManager1.signOut()
+            #expect(authManager1.authenticationState == .notAuthenticated,
+                   "First manager should be not authenticated after signOut")
+            #expect(authManager2.authenticationState == .notDetermined,
+                   "Second manager should remain in initial state")
+        }
+    }
 }
 
 // MARK: - Test Data Factories

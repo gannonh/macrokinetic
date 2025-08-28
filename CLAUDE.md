@@ -99,6 +99,39 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 ./scripts/docs.sh
 ```
 
+### Coverage Reports
+```bash
+# Enable coverage in Xcode scheme (already configured)
+# codeCoverageEnabled = "YES" in JabTracker.xcscheme
+
+# Run tests with coverage (automatically enabled)
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
+
+# View coverage in Xcode UI:
+# 1. Run tests with coverage enabled
+# 2. Open Report Navigator (⌘9) 
+# 3. Select test result -> Coverage tab
+
+# Generate code coverage reports (EASY WAY - use test script)
+./scripts/test.sh unit 1 --coverage     # Unit tests with coverage
+./scripts/test.sh all --coverage        # All tests with coverage
+
+# Manual coverage generation (if needed)
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -enableCodeCoverage YES -resultBundlePath /tmp/coverage.xcresult -only-testing:JabTrackerTests
+xcrun xccov view --report /tmp/coverage.xcresult
+
+# Generate JSON coverage report with summary
+xcrun xccov view --report --json /tmp/coverage.xcresult | jq
+
+# View detailed file-by-file coverage
+xcrun xccov view --file-list /tmp/coverage.xcresult
+```
+
+**Coverage Results Interpretation:**
+- **JabTracker.app**: Main application code coverage (target: >80%)
+- **JabTrackerTests.xctest**: Unit test coverage (should be high ~90%+)
+- **JabTrackerUITests.xctest**: UI tests don't contribute to app coverage (always 0%)
+
 ### Convenience Scripts
 ```bash
 # Build project
@@ -395,3 +428,7 @@ This work established a much stronger foundation for continued feature developme
 - Swift Testing framework docs: https://developer.apple.com/documentation/testing
 - XcodeBuildMCP provides a range of useful tools for working with the project.
 - Simulator name always includes OS: `iPhone 15,OS=17.5`
+- Easiest way to run tests is using the convenience script:
+  - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
+  - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`
+  - `./scripts/test.sh all 1    # All tests on iPhone 15`

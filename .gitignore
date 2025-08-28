@@ -16,3 +16,5 @@ Package.resolved
 # misc
 .serena/cache/
 test-snapshots/
+test-results.xcresult/
+
