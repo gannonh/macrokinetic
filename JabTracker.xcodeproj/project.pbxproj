@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0EFED00438D0C1F93B7353FB /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312D5856F546A9FB635D52F1 /* DataController.swift */; };
 		25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = E302221806254B729984868B /* DesignTokens.swift */; };
+		262246FDE3CBB6D16B9371A7 /* AuthenticationEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */; };
 		3CF9D98330F58C68EEE51B53 /* PharmacokineticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74561A6393FDC6200F4C41E6 /* PharmacokineticsTests.swift */; };
 		45A5E4209720B7BF84E43977 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8C09A0577005D7848EAB16 /* ContentView.swift */; };
 		4667532FC92891E871E29355 /* DebugUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */; };
@@ -27,13 +28,15 @@
 		A2ADF45E5278900BFDDB6302 /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD08D16B26A7F9381D85BF2 /* AuthenticationManager.swift */; };
 		A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */; };
 		B000368714C479D72A1E41B7 /* JabTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */; };
-		B3D9C0B54381A9A84242042F /* AuthenticationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE541A06B5C0B2215BCCC895 /* AuthenticationTests.swift */; };
 		BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92209045E4347373E0C9BCAB /* Colors+Extensions.swift */; };
 		BFF5E7E70314E00D22E10A9B /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AE7A45FA75867366A66399 /* AuthenticationView.swift */; };
+		C7419800434CC97BEED1D32B /* AuthenticationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AB7BD2389E9A41F9D445D4 /* AuthenticationManagerTests.swift */; };
 		D620D4D470F1A3912620A111 /* DesignSystemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */; };
 		DA47B7A4D8F4B33B2DC1B668 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7227717A4996106B834D8852 /* UserProfileView.swift */; };
 		DB2729859B9AB311F4A8120D /* CardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE66B10C09A23B18DE262674 /* CardComponents.swift */; };
 		DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */; };
+		E0B8A4E2309A4EC632D8B030 /* UserModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */; };
+		E2E5403250F1EEB33B3B6B34 /* BiometricAuthManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657D5CB9F6DB3863E93A5927 /* BiometricAuthManagerTests.swift */; };
 		E4E2E302D5AC11A67F4A584B /* Dose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78475804BE3FA10B539F70D5 /* Dose.swift */; };
 		F55D33FC517BE359F05C333C /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */; };
 		FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7150A995B6D4936C3556044A /* PersistenceTests.swift */; };
@@ -65,8 +68,10 @@
 		4068B3EB73128183393A2D3B /* ButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonComponents.swift; sourceTree = "<group>"; };
 		4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITests.swift; sourceTree = "<group>"; };
+		5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModelTests.swift; sourceTree = "<group>"; };
 		64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65714DDE038569FC5C471011 /* DesignSystemUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemUITests.swift; sourceTree = "<group>"; };
+		657D5CB9F6DB3863E93A5927 /* BiometricAuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManagerTests.swift; sourceTree = "<group>"; };
 		67D9360EE9CBE29C1BF3DE26 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		7150A995B6D4936C3556044A /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
 		7227717A4996106B834D8852 /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
@@ -79,16 +84,17 @@
 		93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemTests.swift; sourceTree = "<group>"; };
+		B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationEdgeCaseTests.swift; sourceTree = "<group>"; };
 		B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeGen.swift; sourceTree = "<group>"; };
 		C39713A893FA00DB342B6E55 /* BiometricAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManager.swift; sourceTree = "<group>"; };
 		C69716C0F961F4C16B0D08D6 /* JabTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JabTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDC07DC6AC9A3098F3CF677D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerTests.swift; sourceTree = "<group>"; };
-		DE541A06B5C0B2215BCCC895 /* AuthenticationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationTests.swift; sourceTree = "<group>"; };
 		E27D5ACAC4996BC70713166E /* JabTrackerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E302221806254B729984868B /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		E45ABB67198C53503C20D15E /* JabTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerApp.swift; sourceTree = "<group>"; };
 		EE66B10C09A23B18DE262674 /* CardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardComponents.swift; sourceTree = "<group>"; };
+		F0AB7BD2389E9A41F9D445D4 /* AuthenticationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManagerTests.swift; sourceTree = "<group>"; };
 		F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewTests.swift; sourceTree = "<group>"; };
 		F34F27A0FE76AB78F5C77DB6 /* JabTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JabTracker.entitlements; sourceTree = "<group>"; };
 		FE8C09A0577005D7848EAB16 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -130,12 +136,15 @@
 		7EDF9808D9D9424A7F56EEEA /* JabTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
-				DE541A06B5C0B2215BCCC895 /* AuthenticationTests.swift */,
+				B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */,
+				F0AB7BD2389E9A41F9D445D4 /* AuthenticationManagerTests.swift */,
+				657D5CB9F6DB3863E93A5927 /* BiometricAuthManagerTests.swift */,
 				8CCE8855C807D9F0241E8E43 /* ButtonStyleTests.swift */,
 				AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */,
 				CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */,
 				7150A995B6D4936C3556044A /* PersistenceTests.swift */,
 				74561A6393FDC6200F4C41E6 /* PharmacokineticsTests.swift */,
+				5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */,
 				F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */,
 			);
 			path = JabTrackerTests;
@@ -298,12 +307,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B3D9C0B54381A9A84242042F /* AuthenticationTests.swift in Sources */,
+				262246FDE3CBB6D16B9371A7 /* AuthenticationEdgeCaseTests.swift in Sources */,
+				C7419800434CC97BEED1D32B /* AuthenticationManagerTests.swift in Sources */,
+				E2E5403250F1EEB33B3B6B34 /* BiometricAuthManagerTests.swift in Sources */,
 				90660CC05AD50E39F853A144 /* ButtonStyleTests.swift in Sources */,
 				D620D4D470F1A3912620A111 /* DesignSystemTests.swift in Sources */,
 				B000368714C479D72A1E41B7 /* JabTrackerTests.swift in Sources */,
 				FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */,
 				3CF9D98330F58C68EEE51B53 /* PharmacokineticsTests.swift in Sources */,
+				E0B8A4E2309A4EC632D8B030 /* UserModelTests.swift in Sources */,
 				6D1110D677A82B0FDC706888 /* UserProfileViewTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

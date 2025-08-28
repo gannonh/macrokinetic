@@ -20,7 +20,12 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     @Published var authenticationState: AuthenticationState = .notDetermined {
         didSet {
-            Self.logger.info("🔄 AuthenticationManager: State changed from \(oldValue.rawValue, privacy: .public) to \(self.authenticationState.rawValue, privacy: .public)")
+            Self.logger.info(
+                """
+                🔄 AuthenticationManager: State changed from \
+                \(oldValue.rawValue, privacy: .public) to \(self.authenticationState.rawValue, privacy: .public)
+                """
+            )
         }
     }
 
@@ -131,7 +136,9 @@ class AuthenticationManager: NSObject, ObservableObject {
         let savedUsers = try context.fetch(fetchDescriptor)
         Self.logger.info("🔍 AuthenticationManager: After save, found \(savedUsers.count, privacy: .public) users in database")
 
-        Self.logger.info("✅ AuthenticationManager: User created successfully - ID: \(user.id, privacy: .public), Email: \(user.email, privacy: .public)")
+        Self.logger.info(
+            "✅ AuthenticationManager: User created successfully - ID: \(user.id, privacy: .public), Email: \(user.email, privacy: .public)"
+        )
 
         return user
     }
