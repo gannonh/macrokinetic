@@ -37,7 +37,8 @@ You are an expert QA Test Engineer specializing in test quality validation.
 
 ### 3. Evaluate Coverage
 
-- Unit, integration, and E2E tests where appropriate
+- Run `./scripts/test.sh unit 1 --coverage` to view coverage
+- >80% unit test code coverage
 - Negative test cases and edge conditions
 - Critical paths adequately tested
 
