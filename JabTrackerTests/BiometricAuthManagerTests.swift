@@ -145,9 +145,10 @@ struct BiometricAuthManagerTests {
         var isValidCase = false
         for validCase in validCases {
             switch (availability, validCase) {
-            case let (.available(a), .available(b)) where a == b:
+            case let (.available(availableType), .available(expectedType)) where availableType == expectedType:
                 isValidCase = true
-            case (.notAvailable, .notAvailable), (.notEnrolled, .notEnrolled), (.restricted, .restricted), (.unknown, .unknown):
+            case (.notAvailable, .notAvailable), (.notEnrolled, .notEnrolled),
+                 (.restricted, .restricted), (.unknown, .unknown):
                 isValidCase = true
             default:
                 continue
@@ -173,22 +174,26 @@ struct BiometricAuthManagerTests {
         for error in errorCases {
             let description = error.errorDescription
             #expect(description != nil, "BiometricError.\(error) should have error description")
-            #expect(!description!.isEmpty, "BiometricError.\(error) description should not be empty")
+            guard let description else {
+                #expect(Bool(false), "BiometricError.\(error) should have error description")
+                continue
+            }
+            #expect(!description.isEmpty, "BiometricError.\(error) description should not be empty")
 
             // Test specific expected content
             switch error {
             case .notAvailable:
-                #expect(description!.contains("not available"), "notAvailable error should mention availability")
+                #expect(description.contains("not available"), "notAvailable error should mention availability")
             case .disabled:
-                #expect(description!.contains("disabled"), "disabled error should mention disabled state")
+                #expect(description.contains("disabled"), "disabled error should mention disabled state")
             case .userCancel:
-                #expect(description!.contains("cancel"), "userCancel error should mention cancellation")
+                #expect(description.contains("cancel"), "userCancel error should mention cancellation")
             case .userFallback:
-                #expect(description!.contains("passcode"), "userFallback error should mention passcode")
+                #expect(description.contains("passcode"), "userFallback error should mention passcode")
             case .lockout:
-                #expect(description!.contains("locked out"), "lockout error should mention lockout")
+                #expect(description.contains("locked out"), "lockout error should mention lockout")
             case .authenticationFailed:
-                #expect(description!.contains("failed"), "authenticationFailed error should mention failure")
+                #expect(description.contains("failed"), "authenticationFailed error should mention failure")
             }
         }
     }

@@ -11,28 +11,36 @@ struct ButtonStyleTests {
     func primaryButtonStyleInstantiation() throws {
         let primaryStyle = PrimaryButtonStyle()
 
-        // Test that the style can be created
-        #expect(primaryStyle is PrimaryButtonStyle, "Should create PrimaryButtonStyle instance")
-        #expect(primaryStyle is any ButtonStyle, "PrimaryButtonStyle should conform to ButtonStyle")
+        // Test that the style can be created and used
+        _ = primaryStyle
+        #expect(type(of: primaryStyle) == PrimaryButtonStyle.self, "Should create PrimaryButtonStyle instance")
+
+        // Test that it can be used as a ButtonStyle
+        let buttonStyleInstance: any ButtonStyle = primaryStyle
+        _ = buttonStyleInstance
+        #expect(true, "PrimaryButtonStyle should conform to ButtonStyle")
     }
 
     @Test("SecondaryButtonStyle instantiation")
     func secondaryButtonStyleInstantiation() throws {
         let secondaryStyle = SecondaryButtonStyle()
 
-        // Test that the style can be created
-        #expect(secondaryStyle is SecondaryButtonStyle, "Should create SecondaryButtonStyle instance")
-        #expect(secondaryStyle is any ButtonStyle, "SecondaryButtonStyle should conform to ButtonStyle")
+        // Test that the style can be created and used
+        _ = secondaryStyle
+        #expect(type(of: secondaryStyle) == SecondaryButtonStyle.self, "Should create SecondaryButtonStyle instance")
+
+        // Test that it can be used as a ButtonStyle
+        let buttonStyleInstance: any ButtonStyle = secondaryStyle
+        _ = buttonStyleInstance
+        #expect(true, "SecondaryButtonStyle should conform to ButtonStyle")
     }
 
     // MARK: - Button Component Integration Tests
 
     @Test("PrimaryButton component creation")
     func primaryButtonComponentCreation() throws {
-        var actionCalled = false
-
         let primaryButton = PrimaryButton(title: "Test Primary") {
-            actionCalled = true
+            // Test action - no need to track if called in component creation test
         }
 
         // Verify the button can be created
@@ -56,10 +64,8 @@ struct ButtonStyleTests {
 
     @Test("SecondaryButton component creation")
     func secondaryButtonComponentCreation() throws {
-        var actionCalled = false
-
         let secondaryButton = SecondaryButton(title: "Test Secondary") {
-            actionCalled = true
+            // Test action - no need to track if called in component creation test
         }
 
         // Verify the button can be created
@@ -106,16 +112,13 @@ struct ButtonStyleTests {
 
     @Test("Button components use correct styles")
     func buttonComponentsUseCorrectStyles() throws {
-        // Create buttons with actions to test complete integration
-        var primaryActionCalled = false
-        var secondaryActionCalled = false
-
+        // Create buttons to test complete integration
         let primaryButton = PrimaryButton(title: "Primary Test") {
-            primaryActionCalled = true
+            // Integration test action
         }
 
         let secondaryButton = SecondaryButton(title: "Secondary Test") {
-            secondaryActionCalled = true
+            // Integration test action
         }
 
         // Test button creation and verify they're different components
@@ -267,9 +270,9 @@ struct ButtonStyleTests {
         var primaryButtons: [PrimaryButton] = []
         var secondaryButtons: [SecondaryButton] = []
 
-        for i in 0 ..< 50 {
-            primaryButtons.append(PrimaryButton(title: "Button \(i)") {})
-            secondaryButtons.append(SecondaryButton(title: "Button \(i)") {})
+        for index in 0 ..< 50 {
+            primaryButtons.append(PrimaryButton(title: "Button \(index)") {})
+            secondaryButtons.append(SecondaryButton(title: "Button \(index)") {})
         }
 
         #expect(primaryButtons.count == 50, "Should create 50 PrimaryButtons")

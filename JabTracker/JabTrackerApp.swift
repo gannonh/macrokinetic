@@ -60,7 +60,8 @@ struct JabTrackerApp: App {
             print("📱 JabTrackerApp: Auth state = \(self.authManager.authenticationState), " +
                 "Biometric enabled = \(self.biometricManager.isBiometricEnabled), " +
                 "Just signed in = \(self.hasJustSignedIn), Recent biometric = \(self.hasRecentBiometricAuth)")
-            // Check for biometric authentication when app becomes active (but not right after sign-in or recent biometric auth)
+            // Check for biometric authentication when app becomes active
+            // (but not right after sign-in or recent biometric auth)
             if self.authManager.authenticationState == .authenticated,
                self.biometricManager.isBiometricEnabled,
                !self.hasJustSignedIn,

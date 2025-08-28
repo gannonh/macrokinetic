@@ -30,9 +30,13 @@ struct UserProfileView: View {
                             .font(DesignTokens.Typography.headline)
                             .accessibilityIdentifier("user-profile-header")
 
-                        Text(self.authManager.authenticationState == .authenticated ? "Profile information" : "Sign in to save your data")
-                            .font(DesignTokens.Typography.body)
-                            .foregroundColor(.secondary)
+                        Text(
+                            self.authManager.authenticationState == .authenticated
+                                ? "Profile information"
+                                : "Sign in to save your data"
+                        )
+                        .font(DesignTokens.Typography.body)
+                        .foregroundColor(.secondary)
                     }
 
                     Spacer()
@@ -358,45 +362,6 @@ struct UserProfileView: View {
             "Asia/Tokyo",
             TimeZone.current.identifier,
         ].uniqued()
-    }
-}
-
-// MARK: - ProfileField Component
-
-struct ProfileField<Content: View>: View {
-    let label: String
-    let value: String?
-    let content: Content
-
-    init(label: String, value: String? = nil, @ViewBuilder content: () -> Content) {
-        self.label = label
-        self.value = value
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(self.label)
-                .font(DesignTokens.Typography.caption)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-
-            if let value {
-                Text(value)
-                    .font(DesignTokens.Typography.body)
-            } else {
-                self.content
-            }
-        }
-    }
-}
-
-// MARK: - Array Extension
-
-extension Array where Element: Hashable {
-    func uniqued() -> [Element] {
-        var seen = Set<Element>()
-        return filter { seen.insert($0).inserted }
     }
 }
 

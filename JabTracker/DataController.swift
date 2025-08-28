@@ -86,7 +86,9 @@ class DataController: ObservableObject {
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: inMemory,
-            cloudKitDatabase: (inMemory || isTestEnvironment || !shouldEnableCloudKit) ? .none : .private(cloudKitContainerIdentifier))
+            cloudKitDatabase: (inMemory || isTestEnvironment || !shouldEnableCloudKit)
+                ? .none
+                : .private(cloudKitContainerIdentifier))
 
         do {
             self.container = try ModelContainer(for: schema, configurations: [configuration])

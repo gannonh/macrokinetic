@@ -37,7 +37,11 @@ struct JabTrackerTests {
 
         // Test that all expected models can be created
         let user = User(email: "test@example.com", weight: 70.0)
-        let medication = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0, startDate: Date())
+        let medication = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 1.0,
+            startDate: Date())
         let dose = Dose(amount: 1.0, timestamp: Date())
 
         context.insert(user)
@@ -96,9 +100,10 @@ struct JabTrackerTests {
         #expect(tabViews.count == 5)
 
         // Test that each view is unique
-        for i in 0 ..< tabViews.count {
-            for j in (i + 1) ..< tabViews.count {
-                #expect(String(describing: tabViews[i]) != String(describing: tabViews[j]), "Tab views should be different")
+        for firstIndex in 0 ..< tabViews.count {
+            for secondIndex in (firstIndex + 1) ..< tabViews.count {
+                #expect(String(describing: tabViews[firstIndex]) != String(describing: tabViews[secondIndex]),
+                        "Tab views should be different")
             }
         }
     }
@@ -156,12 +161,12 @@ struct JabTrackerTests {
         }
 
         // Test creating multiple UI components without memory leaks
-        for i in 0 ..< 5 { // Reduced from 10 for faster tests
-            let button = PrimaryButton(title: "Button \(i)") {}
-            _ = DesignCard { Text("Content \(i)") }
+        for index in 0 ..< 5 { // Reduced from 10 for faster tests
+            let button = PrimaryButton(title: "Button \(index)") {}
+            _ = DesignCard { Text("Content \(index)") }
 
             // Verify components have expected properties
-            #expect(button.title == "Button \(i)")
+            #expect(button.title == "Button \(index)")
             // Test component functionality - action is a non-optional closure
             #expect(type(of: button.action) == (() -> Void).self)
         }

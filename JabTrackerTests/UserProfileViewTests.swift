@@ -52,7 +52,8 @@ struct UserProfileViewTests {
         let view = UserProfileView()
 
         // Test profile validation logic by testing the components separately
-        // The validation logic is: !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && isValidWeight(editingWeight)
+        // The validation logic is: !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        //                          isValidWeight(editingWeight)
 
         let validName = "Test User"
         let validWeight = "70.5"
@@ -68,9 +69,12 @@ struct UserProfileViewTests {
         #expect(!view.isValidWeight(invalidWeight), "Invalid weight should fail weight validation")
 
         // Test combined validation logic (replicating isValidProfile logic)
-        let validProfile = !validName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && view.isValidWeight(validWeight)
-        let invalidProfileBadWeight = !validName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && view.isValidWeight(invalidWeight)
-        let invalidProfileNoName = !emptyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && view.isValidWeight(validWeight)
+        let validProfile = !validName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            view.isValidWeight(validWeight)
+        let invalidProfileBadWeight = !validName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            view.isValidWeight(invalidWeight)
+        let invalidProfileNoName = !emptyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            view.isValidWeight(validWeight)
 
         #expect(validProfile == true, "Valid name and weight should result in valid profile")
         #expect(invalidProfileBadWeight == false, "Invalid weight should result in invalid profile")
@@ -234,11 +238,17 @@ struct UserProfileViewTests {
     @Test("Weight conversion display format")
     func weightConversionDisplayFormat() throws {
         // Test the weight display format logic used in the view
-        let testCases: [(weight: Double, unit: String, expected: String)] = [
-            (70.5, "kg", "70.5 kg"),
-            (154.3, "lbs", "154.3 lbs"),
-            (75.0, "kg", "75.0 kg"),
-            (200.25, "lbs", "200.2 lbs"), // Tests rounding to 1 decimal (rounds down)
+        struct WeightDisplayTest {
+            let weight: Double
+            let unit: String
+            let expected: String
+        }
+
+        let testCases = [
+            WeightDisplayTest(weight: 70.5, unit: "kg", expected: "70.5 kg"),
+            WeightDisplayTest(weight: 154.3, unit: "lbs", expected: "154.3 lbs"),
+            WeightDisplayTest(weight: 75.0, unit: "kg", expected: "75.0 kg"),
+            WeightDisplayTest(weight: 200.25, unit: "lbs", expected: "200.2 lbs"), // Tests rounding to 1 decimal
         ]
 
         for testCase in testCases {
@@ -255,18 +265,24 @@ struct UserProfileViewTests {
         let view = UserProfileView()
 
         // Test weight validation with various edge cases
-        let edgeCases: [(input: String, expected: Bool, description: String)] = [
-            ("10.0", true, "Exact minimum boundary"),
-            ("500.0", true, "Exact maximum boundary"),
-            ("9.999999", false, "Just below minimum"),
-            ("500.000001", false, "Just above maximum"),
-            (".", false, "Just decimal point"),
-            ("10.", true, "Number with trailing decimal"),
-            (".5", false, "Decimal without leading zero (0.5, below minimum 10)"),
-            ("12.34567890", true, "High precision decimal"),
-            ("100,5", false, "Comma as decimal separator"),
-            ("∞", false, "Infinity symbol"),
-            ("NaN", false, "NaN string"),
+        struct WeightValidationTest {
+            let input: String
+            let expected: Bool
+            let description: String
+        }
+
+        let edgeCases = [
+            WeightValidationTest(input: "10.0", expected: true, description: "Exact minimum boundary"),
+            WeightValidationTest(input: "500.0", expected: true, description: "Exact maximum boundary"),
+            WeightValidationTest(input: "9.999999", expected: false, description: "Just below minimum"),
+            WeightValidationTest(input: "500.000001", expected: false, description: "Just above maximum"),
+            WeightValidationTest(input: ".", expected: false, description: "Just decimal point"),
+            WeightValidationTest(input: "10.", expected: true, description: "Number with trailing decimal"),
+            WeightValidationTest(input: ".5", expected: false, description: "Decimal without leading zero"),
+            WeightValidationTest(input: "12.34567890", expected: true, description: "High precision decimal"),
+            WeightValidationTest(input: "100,5", expected: false, description: "Comma as decimal separator"),
+            WeightValidationTest(input: "∞", expected: false, description: "Infinity symbol"),
+            WeightValidationTest(input: "NaN", expected: false, description: "NaN string"),
         ]
 
         for testCase in edgeCases {

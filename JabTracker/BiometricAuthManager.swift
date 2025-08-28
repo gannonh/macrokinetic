@@ -115,33 +115,40 @@ class BiometricAuthManager: ObservableObject {
         let canEvaluate = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
 
         if canEvaluate {
-            let type: BiometricType
-            switch context.biometryType {
-            case .faceID:
-                type = .faceID
-            case .touchID:
-                type = .touchID
-            case .opticID:
-                type = .opticID
-            case .none:
-                type = .none
-            @unknown default:
-                type = .none
-            }
+            let type = self.biometricTypeFrom(context: context)
             return .available(type)
         } else {
-            guard let error else { return .unknown }
+            return self.availabilityFromError(error)
+        }
+    }
 
-            switch LAError.Code(rawValue: error.code) {
-            case .biometryNotAvailable:
-                return .notAvailable
-            case .biometryNotEnrolled:
-                return .notEnrolled
-            case .biometryLockout:
-                return .restricted
-            default:
-                return .unknown
-            }
+    private func biometricTypeFrom(context: LAContext) -> BiometricType {
+        switch context.biometryType {
+        case .faceID:
+            return .faceID
+        case .touchID:
+            return .touchID
+        case .opticID:
+            return .opticID
+        case .none:
+            return .none
+        @unknown default:
+            return .none
+        }
+    }
+
+    private func availabilityFromError(_ error: NSError?) -> BiometricAvailability {
+        guard let error else { return .unknown }
+
+        switch LAError.Code(rawValue: error.code) {
+        case .biometryNotAvailable:
+            return .notAvailable
+        case .biometryNotEnrolled:
+            return .notEnrolled
+        case .biometryLockout:
+            return .restricted
+        default:
+            return .unknown
         }
     }
 

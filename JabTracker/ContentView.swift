@@ -200,7 +200,9 @@ struct SyncStatusCard: View {
                         }
                         .font(DesignTokens.Typography.body)
                         .buttonStyle(.bordered)
-                    } else if self.dataController.syncStatus == .noNetwork || self.dataController.syncStatus == .unknown {
+                    } else if self.dataController.syncStatus == .noNetwork ||
+                        self.dataController.syncStatus == .unknown
+                    {
                         Button("Retry") {
                             self.dataController.retryCloudKitSetup()
                         }

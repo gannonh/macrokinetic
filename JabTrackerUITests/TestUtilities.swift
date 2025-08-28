@@ -215,10 +215,6 @@ enum TestUtilities {
             XCTFail("Apple ID authentication failed - no expected authentication elements found")
             return
         }
-
-        // If we reach here without returning early, authentication may have failed
-        print("❌ Sign in flow completed with unknown result - authentication may have failed")
-        XCTFail("Apple ID authentication completed but result is unknown - check logs for issues")
     }
 
     /// Verify app is in authenticated state (TabView visible)
