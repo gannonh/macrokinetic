@@ -54,7 +54,8 @@ final class AuthenticationUITests: XCTestCase {
 
         // Verify biometric section exists (in test mode, biometrics are mocked as available)
         let biometricToggle = app.switches["biometric-auth-toggle"]
-        XCTAssertTrue(biometricToggle.waitForExistence(timeout: 3), "Biometric toggle should exist for authenticated users in test mode")
+        XCTAssertTrue(biometricToggle.waitForExistence(timeout: 3),
+                      "Biometric toggle should exist for authenticated users in test mode")
 
         // Verify Face ID label is present
         XCTAssertTrue(app.staticTexts["Face ID"].exists, "Face ID label should be visible")

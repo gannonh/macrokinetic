@@ -9,7 +9,8 @@ extension Color {
         UIColor(self)
     }
 
-    func rgbComponents() -> (red: Double, green: Double, blue: Double, alpha: Double)? { // swiftlint:disable:this large_tuple
+    // swiftlint:disable:next large_tuple
+    func rgbComponents() -> (red: Double, green: Double, blue: Double, alpha: Double)? {
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0
@@ -317,7 +318,10 @@ struct DesignSystemAccessibilityTests {
         for firstIndex in 0 ..< typographyStyles.count {
             for secondIndex in (firstIndex + 1) ..< typographyStyles.count {
                 #expect(typographyStyles[firstIndex] != typographyStyles[secondIndex],
-                        "Typography style at index \(firstIndex) should be different from style at index \(secondIndex)")
+                        """
+                        Typography style at index \(firstIndex) should be different from \
+                        style at index \(secondIndex)
+                        """)
             }
         }
 
@@ -349,7 +353,8 @@ struct DesignSystemAccessibilityTests {
         // Gradient should be different from solid color when applied
         let gradientRect = Rectangle().fill(gradient)
         let solidRect = Rectangle().fill(solidColor)
-        #expect(String(describing: gradientRect) != String(describing: solidRect), "Gradient should create different view than solid color")
+        #expect(String(describing: gradientRect) != String(describing: solidRect),
+                "Gradient should create different view than solid color")
 
         // Test that design tokens maintain consistency
         #expect(DesignTokens.Colors.primary == Color.primaryBlue)

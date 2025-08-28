@@ -49,7 +49,8 @@ struct PharmacokineticsTests {
         // - Real-world dosing patterns and adherence scenarios
     }
 
-    @Test("Medication-specific half-life modeling", .disabled("Scheduled for Phase 3: Advanced Analytics & Integration"))
+    @Test("Medication-specific half-life modeling",
+          .disabled("Scheduled for Phase 3: Advanced Analytics & Integration"))
     func medicationHalfLifeModeling() throws {
         // TODO: Implement when PharmacokineticsEngine is built in Phase 3
         //

@@ -20,7 +20,8 @@ final class DesignSystemUITests: XCTestCase {
         app.swipeUp()
 
         // Test actual design system components that exist in Settings
-        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 5), "Settings should show user profile section")
+        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 5),
+                      "Settings should show user profile section")
 
         // Verify design system is working by checking for proper UI elements
         let editButton = app.buttons["edit-profile-button"]
@@ -58,7 +59,8 @@ final class DesignSystemUITests: XCTestCase {
         XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5), "Settings navigation should exist")
 
         // Test actual UI component accessibility (no scrolling needed)
-        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 5), "Settings should show user profile section")
+        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 5),
+                      "Settings should show user profile section")
 
         let editButton = app.buttons["edit-profile-button"]
         XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Edit button should exist")

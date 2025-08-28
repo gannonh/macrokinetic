@@ -126,7 +126,7 @@ enum TestUtilities {
     /// Perform Sign in with Apple authentication with real credentials
     /// - Parameter app: The XCUIApplication instance
     /// - Note: This uses hardcoded test credentials - should only be used in test environment
-    static func signInWithApple(_ app: XCUIApplication) {
+    static func signInWithApple(_ app: XCUIApplication) { // swiftlint:disable:this function_body_length
         print("🔐 Starting Sign in with Apple flow")
 
         // Wait for the sign in screen to appear

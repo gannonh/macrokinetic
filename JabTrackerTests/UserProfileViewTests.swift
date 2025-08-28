@@ -288,7 +288,10 @@ struct UserProfileViewTests {
         for testCase in edgeCases {
             let result = view.isValidWeight(testCase.input)
             #expect(result == testCase.expected,
-                    "Weight validation failed for '\(testCase.input)' (\(testCase.description)). Expected: \(testCase.expected), Got: \(result)")
+                    """
+                    Weight validation failed for '\(testCase.input)' (\(testCase.description)). \
+                    Expected: \(testCase.expected), Got: \(result)
+                    """)
         }
     }
 }

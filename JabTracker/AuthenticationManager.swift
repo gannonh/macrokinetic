@@ -74,7 +74,10 @@ class AuthenticationManager: NSObject, ObservableObject {
             Self.logger.info("🔍 AuthenticationManager: Found \(users.count, privacy: .public) users in database")
             if let user = users.first {
                 Self.logger.info(
-                    "🔍 AuthenticationManager: First user - ID: \(user.id, privacy: .public), Email: \(user.email, privacy: .public)"
+                    """
+                    🔍 AuthenticationManager: First user - ID: \(user.id, privacy: .public), \
+                    Email: \(user.email, privacy: .public)
+                    """
                 )
             }
 
@@ -137,11 +140,16 @@ class AuthenticationManager: NSObject, ObservableObject {
         let fetchDescriptor = FetchDescriptor<User>()
         let savedUsers = try context.fetch(fetchDescriptor)
         Self.logger.info(
-            "🔍 AuthenticationManager: After save, found \(savedUsers.count, privacy: .public) users in database"
+            """
+            🔍 AuthenticationManager: After save, found \(savedUsers.count, privacy: .public) users in database
+            """
         )
 
         Self.logger.info(
-            "✅ AuthenticationManager: User created successfully - ID: \(user.id, privacy: .public), Email: \(user.email, privacy: .public)"
+            """
+            ✅ AuthenticationManager: User created successfully - ID: \(user.id, privacy: .public), \
+            Email: \(user.email, privacy: .public)
+            """
         )
 
         return user
@@ -250,7 +258,10 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             }
         } catch {
             Self.logger.error(
-                "❌ AuthenticationManager: Failed to process Apple ID credential: \(error.localizedDescription, privacy: .public)"
+                """
+                ❌ AuthenticationManager: Failed to process Apple ID credential: \
+                \(error.localizedDescription, privacy: .public)
+                """
             )
             await MainActor.run {
                 self.authenticationState = .notAuthenticated

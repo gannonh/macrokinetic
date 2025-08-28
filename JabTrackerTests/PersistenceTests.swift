@@ -52,7 +52,10 @@ struct CloudKitSyncTests {
 
         // Test sync status property is accessible
         let syncStatus = dataController.syncStatus
-        #expect([SyncStatus.unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork].contains(syncStatus))
+        let validStatuses: [SyncStatus] = [
+            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
+        ]
+        #expect(validStatuses.contains(syncStatus))
 
         // Test CloudKit enabled flag
         let isCloudKitEnabled = dataController.isCloudKitEnabled
