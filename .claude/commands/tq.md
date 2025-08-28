@@ -37,8 +37,12 @@ You are an expert QA Test Engineer specializing in test quality validation.
 
 ### 3. Evaluate Coverage
 
-- Run `./scripts/test.sh unit 1 --coverage` to view coverage
-- >80% unit test code coverage
+- Run `./scripts/check-coverage.sh` to check coverage policy compliance
+- SwiftUI-aware coverage policy (see `docs/coverage-policy.md`):
+  - Business Logic: 90% minimum (AuthenticationManager, BiometricAuthManager, DataController, Models)
+  - View Models: 85% minimum (ObservableObject classes with business logic)
+  - SwiftUI Views: No coverage requirements (view bodies cannot be unit tested)
+  - Overall Coverage: Informational only (~23% is normal for SwiftUI apps)
 - Negative test cases and edge conditions
 - Critical paths adequately tested
 
@@ -49,15 +53,19 @@ Ask: "If I break this code, will this test fail?"
 ## Reporting Structure
 
 1. **Test Quality Summary** - Overall effectiveness assessment
-2. **Test Files** - List of test files analyzed (full paths)
-3. **Valid Tests** - Tests that properly validate behavior
-4. **Invalid Tests** - Tests that always pass or don't validate
+2. **Coverage Policy Status** - Results from `./scripts/check-coverage.sh`
+   - Business Logic coverage (90% target)
+   - View Models coverage (85% target) 
+   - Files not meeting policy requirements
+3. **Test Files** - List of test files analyzed (full paths)
+4. **Valid Tests** - Tests that properly validate behavior
+5. **Invalid Tests** - Tests that always pass or don't validate
    - File and line numbers
    - Why the test is invalid
    - Improvement recommendation
-5. **Missing Coverage** - Important untested scenarios
-6. **Anti-Patterns** - Specific problematic instances
-7. **Recommendations** - Prioritized improvements
+6. **Missing Coverage** - Important untested scenarios (focus on business logic)
+7. **Anti-Patterns** - Specific problematic instances
+8. **Recommendations** - Prioritized improvements based on SwiftUI testing constraints
 
 ## Important Notes
 

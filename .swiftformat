@@ -14,3 +14,4 @@
 --octalgrouping 4,8
 --hexgrouping 4,8
 --patternlet hoist
+--self insert

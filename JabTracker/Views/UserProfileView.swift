@@ -30,16 +30,16 @@ struct UserProfileView: View {
                             .font(DesignTokens.Typography.headline)
                             .accessibilityIdentifier("user-profile-header")
 
-                        Text(authManager.authenticationState == .authenticated ? "Profile information" : "Sign in to save your data")
+                        Text(self.authManager.authenticationState == .authenticated ? "Profile information" : "Sign in to save your data")
                             .font(DesignTokens.Typography.body)
                             .foregroundColor(.secondary)
                     }
 
                     Spacer()
 
-                    if authManager.authenticationState == .authenticated, !editMode {
+                    if self.authManager.authenticationState == .authenticated, !self.editMode {
                         Button("Edit") {
-                            startEditing()
+                            self.startEditing()
                         }
                         .font(DesignTokens.Typography.body)
                         .buttonStyle(.bordered)
@@ -48,7 +48,7 @@ struct UserProfileView: View {
                 }
 
                 // Authentication Section
-                if authManager.authenticationState != .authenticated {
+                if self.authManager.authenticationState != .authenticated {
                     VStack(spacing: 12) {
                         SignInWithAppleButton(
                             onRequest: { request in
@@ -56,7 +56,7 @@ struct UserProfileView: View {
                             },
                             onCompletion: { result in
                                 Task {
-                                    await handleSignInResult(result)
+                                    await self.handleSignInResult(result)
                                 }
                             })
                             .signInWithAppleButtonStyle(.black)
@@ -70,32 +70,32 @@ struct UserProfileView: View {
                     }
                 } else {
                     // Profile Information Section
-                    profileInformationSection
+                    self.profileInformationSection
                 }
 
                 // Biometric Authentication Section
-                if authManager.authenticationState == .authenticated, biometricManager.isAvailable {
+                if self.authManager.authenticationState == .authenticated, self.biometricManager.isAvailable {
                     Divider()
-                    biometricAuthSection
+                    self.biometricAuthSection
                 }
 
                 // Sign Out Section
-                if authManager.authenticationState == .authenticated, !editMode {
+                if self.authManager.authenticationState == .authenticated, !self.editMode {
                     Divider()
-                    signOutSection
+                    self.signOutSection
                 }
 
                 // Edit Mode Actions
-                if editMode {
+                if self.editMode {
                     Divider()
-                    editModeActions
+                    self.editModeActions
                 }
             }
         }
-        .alert("Error", isPresented: $showingError) {
+        .alert("Error", isPresented: self.$showingError) {
             Button("OK") {}
         } message: {
-            Text(errorMessage)
+            Text(self.errorMessage)
         }
     }
 
@@ -109,9 +109,9 @@ struct UserProfileView: View {
                 }
 
                 // Name
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Name") {
-                        TextField("Enter your name", text: $editingName)
+                        TextField("Enter your name", text: self.$editingName)
                             .textFieldStyle(.roundedBorder)
                             .accessibilityIdentifier("name-input")
                     }
@@ -122,15 +122,15 @@ struct UserProfileView: View {
                 }
 
                 // Weight
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Weight") {
                         HStack {
-                            TextField("Weight", text: $editingWeight)
+                            TextField("Weight", text: self.$editingWeight)
                                 .textFieldStyle(.roundedBorder)
                                 .keyboardType(.decimalPad)
                                 .accessibilityIdentifier("weight-input")
 
-                            Picker("Unit", selection: $editingWeightUnit) {
+                            Picker("Unit", selection: self.$editingWeightUnit) {
                                 Text("kg").tag("kg")
                                 Text("lbs").tag("lbs")
                             }
@@ -139,7 +139,7 @@ struct UserProfileView: View {
                             .accessibilityIdentifier("weight-unit-picker")
                         }
 
-                        if !isValidWeight(editingWeight) {
+                        if !self.isValidWeight(self.editingWeight) {
                             Text("Please enter a valid weight (10-500)")
                                 .font(DesignTokens.Typography.caption)
                                 .foregroundColor(DesignTokens.Colors.danger)
@@ -154,9 +154,9 @@ struct UserProfileView: View {
                 }
 
                 // Date of Birth
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Date of Birth") {
-                        DatePicker("", selection: $editingDateOfBirth, displayedComponents: .date)
+                        DatePicker("", selection: self.$editingDateOfBirth, displayedComponents: .date)
                             .datePickerStyle(.compact)
                             .accessibilityIdentifier("date-of-birth-picker")
                     }
@@ -168,10 +168,10 @@ struct UserProfileView: View {
                 }
 
                 // Timezone
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Timezone") {
-                        Picker("Timezone", selection: $editingTimezone) {
-                            ForEach(commonTimezones, id: \.self) { timezone in
+                        Picker("Timezone", selection: self.$editingTimezone) {
+                            ForEach(self.commonTimezones, id: \.self) { timezone in
                                 Text(timezone).tag(timezone)
                             }
                         }
@@ -191,11 +191,11 @@ struct UserProfileView: View {
     private var biometricAuthSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: biometricIconName)
+                Image(systemName: self.biometricIconName)
                     .foregroundColor(DesignTokens.Colors.info)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(biometricManager.biometricTypeDisplayName)
+                    Text(self.biometricManager.biometricTypeDisplayName)
                         .font(DesignTokens.Typography.body)
 
                     Text("Secure app access")
@@ -205,7 +205,7 @@ struct UserProfileView: View {
 
                 Spacer()
 
-                Toggle("", isOn: $biometricManager.isBiometricEnabled)
+                Toggle("", isOn: self.$biometricManager.isBiometricEnabled)
                     .accessibilityIdentifier("biometric-auth-toggle")
             }
         }
@@ -231,7 +231,7 @@ struct UserProfileView: View {
 
                 Button("Sign Out") {
                     Task {
-                        await signOut()
+                        await self.signOut()
                     }
                 }
                 .font(DesignTokens.Typography.body)
@@ -246,16 +246,16 @@ struct UserProfileView: View {
     private var editModeActions: some View {
         HStack(spacing: 12) {
             SecondaryButton(title: "Cancel") {
-                cancelEditing()
+                self.cancelEditing()
             }
             .accessibilityIdentifier("cancel-edit-button")
 
             PrimaryButton(title: "Save") {
                 Task {
-                    await saveProfile()
+                    await self.saveProfile()
                 }
             }
-            .disabled(!isValidProfile)
+            .disabled(!self.isValidProfile)
             .accessibilityIdentifier("save-profile-button")
         }
     }
@@ -265,25 +265,25 @@ struct UserProfileView: View {
     private func startEditing() {
         guard let user = authManager.currentUser else { return }
 
-        editingName = user.name ?? ""
-        editingWeight = String(user.weight)
-        editingWeightUnit = user.weightUnit
-        editingTimezone = user.timezone
-        editingDateOfBirth = user.dateOfBirth ?? Date()
+        self.editingName = user.name ?? ""
+        self.editingWeight = String(user.weight)
+        self.editingWeightUnit = user.weightUnit
+        self.editingTimezone = user.timezone
+        self.editingDateOfBirth = user.dateOfBirth ?? Date()
 
-        editMode = true
+        self.editMode = true
     }
 
     private func cancelEditing() {
-        editMode = false
+        self.editMode = false
     }
 
     private var isValidProfile: Bool {
-        !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            isValidWeight(editingWeight)
+        !self.editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            self.isValidWeight(self.editingWeight)
     }
 
-    private func isValidWeight(_ weight: String) -> Bool {
+    func isValidWeight(_ weight: String) -> Bool {
         guard let weightValue = Double(weight) else { return false }
         return weightValue >= 10 && weightValue <= 500
     }
@@ -293,19 +293,19 @@ struct UserProfileView: View {
               let weight = Double(editingWeight) else { return }
 
         // Update user properties
-        user.name = editingName.trimmingCharacters(in: .whitespacesAndNewlines)
+        user.name = self.editingName.trimmingCharacters(in: .whitespacesAndNewlines)
         user.weight = weight
-        user.weightUnit = editingWeightUnit
-        user.timezone = editingTimezone
-        user.dateOfBirth = editingDateOfBirth
+        user.weightUnit = self.editingWeightUnit
+        user.timezone = self.editingTimezone
+        user.dateOfBirth = self.editingDateOfBirth
         user.updatedAt = Date()
 
         do {
-            try modelContext.save()
-            editMode = false
+            try self.modelContext.save()
+            self.editMode = false
         } catch {
-            errorMessage = "Failed to save profile: \(error.localizedDescription)"
-            showingError = true
+            self.errorMessage = "Failed to save profile: \(error.localizedDescription)"
+            self.showingError = true
         }
     }
 
@@ -313,33 +313,33 @@ struct UserProfileView: View {
         switch result {
         case let .success(authorization):
             do {
-                _ = try await authManager.handleSignInWithAppleResult(authorization)
+                _ = try await self.authManager.handleSignInWithAppleResult(authorization)
             } catch {
                 await MainActor.run {
-                    errorMessage = "Sign in failed: \(error.localizedDescription)"
-                    showingError = true
+                    self.errorMessage = "Sign in failed: \(error.localizedDescription)"
+                    self.showingError = true
                 }
             }
 
         case let .failure(error):
             await MainActor.run {
-                errorMessage = "Sign in failed: \(error.localizedDescription)"
-                showingError = true
+                self.errorMessage = "Sign in failed: \(error.localizedDescription)"
+                self.showingError = true
             }
         }
     }
 
     private func signOut() async {
         do {
-            try await authManager.signOut()
+            try await self.authManager.signOut()
         } catch {
-            errorMessage = "Sign out failed: \(error.localizedDescription)"
-            showingError = true
+            self.errorMessage = "Sign out failed: \(error.localizedDescription)"
+            self.showingError = true
         }
     }
 
     private var biometricIconName: String {
-        switch biometricManager.biometricType {
+        switch self.biometricManager.biometricType {
         case .faceID: return "faceid"
         case .touchID: return "touchid"
         case .opticID: return "opticid"
@@ -356,7 +356,7 @@ struct UserProfileView: View {
             "Europe/London",
             "Europe/Paris",
             "Asia/Tokyo",
-            TimeZone.current.identifier
+            TimeZone.current.identifier,
         ].uniqued()
     }
 }
@@ -376,7 +376,7 @@ struct ProfileField<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label)
+            Text(self.label)
                 .font(DesignTokens.Typography.caption)
                 .foregroundColor(.secondary)
                 .textCase(.uppercase)
@@ -385,7 +385,7 @@ struct ProfileField<Content: View>: View {
                 Text(value)
                     .font(DesignTokens.Typography.body)
             } else {
-                content
+                self.content
             }
         }
     }

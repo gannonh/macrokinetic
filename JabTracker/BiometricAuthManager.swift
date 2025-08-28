@@ -52,13 +52,13 @@ class BiometricAuthManager: ObservableObject {
 
         if isUITesting || isUnitTesting {
             // In testing mode, always start with disabled state for predictable behavior
-            isBiometricEnabled = false
+            self.isBiometricEnabled = false
         } else {
             // In production, load from UserDefaults (defaults to false if key doesn't exist)
-            isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
+            self.isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
         }
 
-        checkBiometricAvailability()
+        self.checkBiometricAvailability()
     }
 
     private func checkBiometricAvailability() {
@@ -70,7 +70,7 @@ class BiometricAuthManager: ObservableObject {
         if isUITesting || isUnitTesting {
             // Make biometrics available in testing for testing scenarios
             self.isAvailable = true
-            biometricType = .faceID
+            self.biometricType = .faceID
             return
         }
 
@@ -139,11 +139,11 @@ class BiometricAuthManager: ObservableObject {
     }
 
     func authenticateWithBiometrics(reason: String) async throws -> Bool {
-        guard isAvailable else {
+        guard self.isAvailable else {
             throw BiometricError.notAvailable
         }
 
-        guard isBiometricEnabled else {
+        guard self.isBiometricEnabled else {
             throw BiometricError.disabled
         }
 
@@ -172,17 +172,17 @@ class BiometricAuthManager: ObservableObject {
     }
 
     func setBiometricPreference(enabled: Bool) {
-        isBiometricEnabled = enabled
+        self.isBiometricEnabled = enabled
     }
 
     // Force objectWillChange for testing
     func toggleBiometric() {
         objectWillChange.send()
-        isBiometricEnabled.toggle()
+        self.isBiometricEnabled.toggle()
     }
 
     var biometricTypeDisplayName: String {
-        switch biometricType {
+        switch self.biometricType {
         case .faceID:
             return "Face ID"
         case .touchID:

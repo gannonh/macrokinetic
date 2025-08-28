@@ -72,7 +72,7 @@ class DataController: ObservableObject {
         let schema = Schema([
             User.self,
             Dose.self,
-            MedicationProfile.self
+            MedicationProfile.self,
         ])
 
         // Configure CloudKit database for production vs in-memory/testing
@@ -89,13 +89,13 @@ class DataController: ObservableObject {
             cloudKitDatabase: (inMemory || isTestEnvironment || !shouldEnableCloudKit) ? .none : .private(cloudKitContainerIdentifier))
 
         do {
-            container = try ModelContainer(for: schema, configurations: [configuration])
+            self.container = try ModelContainer(for: schema, configurations: [configuration])
             if !inMemory, !isTestEnvironment, shouldEnableCloudKit {
-                isCloudKitEnabled = true
-                checkCloudKitStatus()
+                self.isCloudKitEnabled = true
+                self.checkCloudKitStatus()
             } else {
-                isCloudKitEnabled = false
-                syncStatus = .unavailable
+                self.isCloudKitEnabled = false
+                self.syncStatus = .unavailable
             }
         } catch {
             // If CloudKit setup fails, try without CloudKit as fallback
@@ -105,9 +105,9 @@ class DataController: ObservableObject {
                 isStoredInMemoryOnly: inMemory,
                 cloudKitDatabase: .none)
             do {
-                container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
-                isCloudKitEnabled = false
-                syncStatus = .unavailable
+                self.container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
+                self.isCloudKitEnabled = false
+                self.syncStatus = .unavailable
             } catch {
                 fatalError("Failed to create ModelContainer even without CloudKit: \(error)")
             }
@@ -122,15 +122,15 @@ class DataController: ObservableObject {
     /// Check CloudKit availability status
     private func checkCloudKitStatus() {
         Task {
-            await checkiCloudStatus()
+            await self.checkiCloudStatus()
         }
     }
 
     /// Check if iCloud is available and user is signed in
     @MainActor
     private func checkiCloudStatus() async {
-        guard isCloudKitEnabled else {
-            syncStatus = .unavailable
+        guard self.isCloudKitEnabled else {
+            self.syncStatus = .unavailable
             return
         }
 
@@ -141,33 +141,33 @@ class DataController: ObservableObject {
 
             switch accountStatus {
             case .available:
-                syncStatus = .available
+                self.syncStatus = .available
             case .noAccount:
-                syncStatus = .accountNotSignedIn
+                self.syncStatus = .accountNotSignedIn
             case .restricted:
-                syncStatus = .restricted
+                self.syncStatus = .restricted
             case .couldNotDetermine:
-                syncStatus = .unknown
+                self.syncStatus = .unknown
             case .temporarilyUnavailable:
-                syncStatus = .noNetwork
+                self.syncStatus = .noNetwork
             @unknown default:
-                syncStatus = .unknown
+                self.syncStatus = .unknown
             }
         } catch {
             print("Error checking CloudKit status: \(error)")
-            syncStatus = .unavailable
+            self.syncStatus = .unavailable
         }
     }
 
     /// Retry CloudKit setup - useful when user fixes iCloud issues
     func retryCloudKitSetup() {
-        guard isCloudKitEnabled else { return }
-        checkCloudKitStatus()
+        guard self.isCloudKitEnabled else { return }
+        self.checkCloudKitStatus()
     }
 
     /// Get user-friendly sync status message
     var syncStatusMessage: String {
-        switch syncStatus {
+        switch self.syncStatus {
         case .unknown:
             return "Checking sync status..."
         case .available:
@@ -185,6 +185,6 @@ class DataController: ObservableObject {
 
     /// Check if data will sync across devices
     var willSyncAcrossDevices: Bool {
-        syncStatus == .available
+        self.syncStatus == .available
     }
 }

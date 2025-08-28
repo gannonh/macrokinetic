@@ -141,7 +141,7 @@ struct SettingsView: View {
                     }
 
                     // Sync Status Section
-                    SyncStatusCard(dataController: dataController)
+                    SyncStatusCard(dataController: self.dataController)
 
                     // Settings Options
                     DesignCard {
@@ -176,22 +176,22 @@ struct SyncStatusCard: View {
         DesignCard {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Image(systemName: syncStatusIcon)
-                        .foregroundColor(syncStatusColor)
+                    Image(systemName: self.syncStatusIcon)
+                        .foregroundColor(self.syncStatusColor)
                         .font(.title2)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Sync Status")
                             .font(DesignTokens.Typography.headline)
 
-                        Text(dataController.syncStatusMessage)
+                        Text(self.dataController.syncStatusMessage)
                             .font(DesignTokens.Typography.body)
                             .foregroundColor(.secondary)
                     }
 
                     Spacer()
 
-                    if dataController.syncStatus == .accountNotSignedIn {
+                    if self.dataController.syncStatus == .accountNotSignedIn {
                         Button("Settings") {
                             // Open iOS Settings app
                             if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
@@ -200,16 +200,16 @@ struct SyncStatusCard: View {
                         }
                         .font(DesignTokens.Typography.body)
                         .buttonStyle(.bordered)
-                    } else if dataController.syncStatus == .noNetwork || dataController.syncStatus == .unknown {
+                    } else if self.dataController.syncStatus == .noNetwork || self.dataController.syncStatus == .unknown {
                         Button("Retry") {
-                            dataController.retryCloudKitSetup()
+                            self.dataController.retryCloudKitSetup()
                         }
                         .font(DesignTokens.Typography.body)
                         .buttonStyle(.bordered)
                     }
                 }
 
-                if !dataController.willSyncAcrossDevices {
+                if !self.dataController.willSyncAcrossDevices {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
@@ -231,7 +231,7 @@ struct SyncStatusCard: View {
     }
 
     private var syncStatusIcon: String {
-        switch dataController.syncStatus {
+        switch self.dataController.syncStatus {
         case .available:
             return "icloud.fill"
         case .accountNotSignedIn:
@@ -248,7 +248,7 @@ struct SyncStatusCard: View {
     }
 
     private var syncStatusColor: Color {
-        switch dataController.syncStatus {
+        switch self.dataController.syncStatus {
         case .available:
             return DesignTokens.Colors.success
         case .accountNotSignedIn, .noNetwork:

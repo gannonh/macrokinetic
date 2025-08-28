@@ -9,7 +9,7 @@ struct DesignCard<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            content
+            self.content
         }
         .padding(20)
         .background(

@@ -99,10 +99,13 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 ./scripts/docs.sh
 ```
 
-### Coverage Reports
+### Coverage Policy & Reporting
 ```bash
 # Enable coverage in Xcode scheme (already configured)
 # codeCoverageEnabled = "YES" in JabTracker.xcscheme
+
+# Check coverage policy compliance (RECOMMENDED)
+./scripts/check-coverage.sh
 
 # Run tests with coverage (automatically enabled)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
@@ -127,10 +130,13 @@ xcrun xccov view --report --json /tmp/coverage.xcresult | jq
 xcrun xccov view --file-list /tmp/coverage.xcresult
 ```
 
-**Coverage Results Interpretation:**
-- **JabTracker.app**: Main application code coverage (target: >80%)
-- **JabTrackerTests.xctest**: Unit test coverage (should be high ~90%+)
-- **JabTrackerUITests.xctest**: UI tests don't contribute to app coverage (always 0%)
+**Coverage Policy (SwiftUI-Aware):**
+- **Business Logic (90% minimum)**: AuthenticationManager, BiometricAuthManager, DataController, Models
+- **View Models (85% minimum)**: ObservableObject classes with business logic (none defined yet)
+- **SwiftUI Views**: No coverage requirements (view bodies cannot be unit tested)
+- **Overall Coverage**: ~23% (informational only, not a requirement)
+
+See `docs/coverage-policy.md` for detailed requirements and rationale.
 
 ### Convenience Scripts
 ```bash

@@ -29,7 +29,8 @@ final class User {
         weight: Double = 70.0,
         weightUnit: String = "kg",
         timezone: String = TimeZone.current.identifier,
-        appleUserId: String? = nil) {
+        appleUserId: String? = nil)
+    {
         self.email = email
         self.name = name
         self.dateOfBirth = dateOfBirth
@@ -37,8 +38,8 @@ final class User {
         self.weightUnit = weightUnit
         self.timezone = timezone
         self.appleUserId = appleUserId
-        createdAt = Date()
-        updatedAt = Date()
+        self.createdAt = Date()
+        self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
     }
 }

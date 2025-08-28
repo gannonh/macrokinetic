@@ -47,7 +47,7 @@ struct AuthenticationView: View {
                     },
                     onCompletion: { result in
                         Task {
-                            await handleSignInResult(result)
+                            await self.handleSignInResult(result)
                         }
                     })
                     .signInWithAppleButtonStyle(.black)
@@ -69,10 +69,10 @@ struct AuthenticationView: View {
 
             Spacer()
         }
-        .alert("Sign In Error", isPresented: $showingError) {
+        .alert("Sign In Error", isPresented: self.$showingError) {
             Button("OK") {}
         } message: {
-            Text(errorMessage)
+            Text(self.errorMessage)
         }
     }
 
@@ -80,21 +80,21 @@ struct AuthenticationView: View {
         switch result {
         case let .success(authorization):
             do {
-                _ = try await authManager.handleSignInWithAppleResult(authorization)
+                _ = try await self.authManager.handleSignInWithAppleResult(authorization)
                 await MainActor.run {
                     // Authentication successful, AuthenticationManager will update state
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Sign in failed: \(error.localizedDescription)"
-                    showingError = true
+                    self.errorMessage = "Sign in failed: \(error.localizedDescription)"
+                    self.showingError = true
                 }
             }
 
         case let .failure(error):
             await MainActor.run {
-                errorMessage = "Sign in failed: \(error.localizedDescription)"
-                showingError = true
+                self.errorMessage = "Sign in failed: \(error.localizedDescription)"
+                self.showingError = true
             }
         }
     }

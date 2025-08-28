@@ -38,7 +38,7 @@ class AuthenticationManager: NSObject, ObservableObject {
 
         // Reset app data if requested (for UI testing)
         if ProcessInfo.processInfo.arguments.contains("--reset-app-data") {
-            await resetAppData()
+            await self.resetAppData()
         }
 
         // Check if we're in UI testing mode - environment is available after app launch
@@ -47,9 +47,9 @@ class AuthenticationManager: NSObject, ObservableObject {
 
         if isUITesting {
             await MainActor.run {
-                authenticationState = .authenticated
+                self.authenticationState = .authenticated
                 // Create a simple test user
-                currentUser = User(
+                self.currentUser = User(
                     email: "test@uitesting.com",
                     name: "UI Test User",
                     weight: 70.0,
@@ -60,7 +60,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
 
         // Check if user is already authenticated by looking for existing user data
-        let context = dataController.container.mainContext
+        let context = self.dataController.container.mainContext
 
         do {
             let fetchDescriptor = FetchDescriptor<User>()
@@ -73,24 +73,24 @@ class AuthenticationManager: NSObject, ObservableObject {
 
             await MainActor.run {
                 if let user = users.first {
-                    currentUser = user
-                    authenticationState = .authenticated
+                    self.currentUser = user
+                    self.authenticationState = .authenticated
                     Self.logger.info("✅ AuthenticationManager: Set state to authenticated")
                 } else {
-                    authenticationState = .notAuthenticated
+                    self.authenticationState = .notAuthenticated
                     Self.logger.info("❌ AuthenticationManager: Set state to notAuthenticated - no users found")
                 }
             }
         } catch {
             Self.logger.error("❌ AuthenticationManager: Fetch error: \(error, privacy: .public)")
             await MainActor.run {
-                authenticationState = .notAuthenticated
+                self.authenticationState = .notAuthenticated
             }
         }
     }
 
     private func resetAppData() async {
-        let context = dataController.container.mainContext
+        let context = self.dataController.container.mainContext
 
         // Clear all existing users
         do {
@@ -105,8 +105,8 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
 
         await MainActor.run {
-            currentUser = nil
-            authenticationState = .notAuthenticated
+            self.currentUser = nil
+            self.authenticationState = .notAuthenticated
         }
     }
 
@@ -114,7 +114,7 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     private func processAppleIDCredential(_ appleIDCredential: ASAuthorizationAppleIDCredential) async throws -> User {
         // Consolidated credential processing logic
-        let context = dataController.container.mainContext
+        let context = self.dataController.container.mainContext
 
         let user = User(
             email: appleIDCredential.email ?? "unknown@apple.com",
@@ -158,8 +158,8 @@ class AuthenticationManager: NSObject, ObservableObject {
         let user = try await processAppleIDCredential(appleIDCredential)
 
         await MainActor.run {
-            currentUser = user
-            authenticationState = .authenticated
+            self.currentUser = user
+            self.authenticationState = .authenticated
         }
 
         return user
@@ -167,7 +167,7 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     func signOut() async throws {
         // Clear user data from SwiftData
-        let context = dataController.container.mainContext
+        let context = self.dataController.container.mainContext
 
         if let user = currentUser {
             context.delete(user)
@@ -175,8 +175,8 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
 
         await MainActor.run {
-            authenticationState = .notAuthenticated
-            currentUser = nil
+            self.authenticationState = .notAuthenticated
+            self.currentUser = nil
         }
     }
 }
@@ -206,24 +206,26 @@ enum AuthenticationError: Error, LocalizedError {
 extension AuthenticationManager: ASAuthorizationControllerDelegate {
     func authorizationController(
         controller _: ASAuthorizationController,
-        didCompleteWithAuthorization authorization: ASAuthorization) {
+        didCompleteWithAuthorization authorization: ASAuthorization)
+    {
         Task {
-            await handleSignInResult(authorization)
+            await self.handleSignInResult(authorization)
         }
     }
 
     func authorizationController(
         controller _: ASAuthorizationController,
-        didCompleteWithError _: Error) {
+        didCompleteWithError _: Error)
+    {
         Task { @MainActor in
-            authenticationState = .notAuthenticated
+            self.authenticationState = .notAuthenticated
         }
     }
 
     private func handleSignInResult(_ authorization: ASAuthorization) async {
         guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
             await MainActor.run {
-                authenticationState = .notAuthenticated
+                self.authenticationState = .notAuthenticated
             }
             return
         }
@@ -232,13 +234,13 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             let user = try await processAppleIDCredential(appleIDCredential)
 
             await MainActor.run {
-                currentUser = user
-                authenticationState = .authenticated
+                self.currentUser = user
+                self.authenticationState = .authenticated
             }
         } catch {
             Self.logger.error("❌ AuthenticationManager: Failed to process Apple ID credential: \(error.localizedDescription, privacy: .public)")
             await MainActor.run {
-                authenticationState = .notAuthenticated
+                self.authenticationState = .notAuthenticated
             }
         }
     }

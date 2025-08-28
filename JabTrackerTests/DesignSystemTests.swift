@@ -15,7 +15,7 @@ extension Color {
         var blue: CGFloat = 0
         var alpha: CGFloat = 0
 
-        guard uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+        guard self.uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
             return nil
         }
 
@@ -127,24 +127,24 @@ struct DesignSystemTests {
             endPoint: .bottomTrailing)
 
         // Both gradients should be LinearGradient type
-        #expect(type(of: gradient) == type(of: manualGradient), 
-               "Primary gradient should be same type as manually created LinearGradient")
-        
+        #expect(type(of: gradient) == type(of: manualGradient),
+                "Primary gradient should be same type as manually created LinearGradient")
+
         // Test that the gradient can be used in SwiftUI views
         let gradientView = Rectangle().fill(gradient)
         let solidView = Rectangle().fill(Color.blue)
-        
+
         // Different types of fills should have different types
         #expect(type(of: gradientView) != type(of: solidView),
-               "Gradient-filled view should be different type than solid color-filled view")
-        
+                "Gradient-filled view should be different type than solid color-filled view")
+
         // Test that primary colors exist and can be used in gradients
         let testGradient = LinearGradient(
             colors: [Color.primaryBlue, Color.primaryPurple],
             startPoint: .top,
             endPoint: .bottom)
         #expect(type(of: testGradient) == LinearGradient.self,
-               "Should be able to create gradient with primary colors")
+                "Should be able to create gradient with primary colors")
     }
 
     @Test("Typography styles have correct font properties")
@@ -268,7 +268,7 @@ struct DesignComponentsTests {
         // Test button properties (functional validation)
         #expect(primaryButton.title == "Primary")
         #expect(secondaryButton.title == "Secondary")
-        
+
         // Test that buttons have different titles (behavioral validation)
         #expect(primaryButton.title != secondaryButton.title)
 

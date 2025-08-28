@@ -39,7 +39,8 @@ enum TestUtilities {
         testMode: Bool = false,
         resetData: Bool = false,
         additionalArguments: [String] = [],
-        additionalEnvironment: [String: String] = [:]) -> XCUIApplication {
+        additionalEnvironment: [String: String] = [:]) -> XCUIApplication
+    {
         let app = XCUIApplication()
 
         if testMode {
@@ -88,7 +89,7 @@ enum TestUtilities {
     ///   - timeout: Maximum time to wait for profile to appear
     /// - Throws: XCTFail if user is not authenticated
     static func navigateToSettingsAndVerifyAuth(_ app: XCUIApplication, timeout: TimeInterval = 3) throws {
-        navigateToTab(app, tabName: "Settings")
+        self.navigateToTab(app, tabName: "Settings")
 
         guard app.staticTexts["User Profile"].waitForExistence(timeout: timeout) else {
             XCTFail("User Profile should be visible. Please ensure user is authenticated.")
@@ -118,7 +119,7 @@ enum TestUtilities {
             .firstMatch
 
         if signInWithAppleButton.exists {
-            signInWithApple(app)
+            self.signInWithApple(app)
         }
     }
 
@@ -130,7 +131,7 @@ enum TestUtilities {
 
         // Wait for the sign in screen to appear
         let signInWithAppleButton = app.buttons["sign-in-with-apple-button"]
-        waitForElement(signInWithAppleButton)
+        self.waitForElement(signInWithAppleButton)
         signInWithAppleButton.tap()
         print("📱 Tapped Sign in with Apple button")
 
@@ -235,7 +236,7 @@ enum TestUtilities {
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for sign in button (default: 5 seconds)
     static func verifyUnauthenticatedState(_ app: XCUIApplication, timeout: TimeInterval = 5) {
-        waitForSignInButton(app, timeout: timeout)
+        self.waitForSignInButton(app, timeout: timeout)
         XCTAssertTrue(app.staticTexts["Welcome to JabTracker"].exists,
                       "Welcome message should be visible when not authenticated")
     }
