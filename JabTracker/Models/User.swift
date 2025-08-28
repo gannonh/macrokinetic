@@ -9,7 +9,7 @@ import SwiftData
 @Model
 final class User {
     var id: UUID = UUID()
-    var email: String = "" // CloudKit requires default value
+    var email: String? // Optional - genuinely no email vs empty string ambiguity resolved
     var name: String? // Optional - Apple might not provide
     var dateOfBirth: Date? // Optional - user may choose not to provide
     var weight: Double = 70.0 // Required with default for medical app
@@ -23,7 +23,7 @@ final class User {
     var doses: [Dose]? // CloudKit requires optional relationships
 
     init(
-        email: String = "",
+        email: String? = nil,
         name: String? = nil,
         dateOfBirth: Date? = nil,
         weight: Double = 70.0,
@@ -41,5 +41,25 @@ final class User {
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
+    }
+}
+
+// MARK: - Computed Properties
+
+extension User {
+    /// Formatted weight display for UI presentation
+    var weightDisplay: String {
+        String(format: "%.1f %@", self.weight, self.weightUnit)
+    }
+
+    /// CloudKit-compatible email field - returns empty string if email is nil
+    /// This handles CloudKit's requirement for non-nil values while preserving semantic meaning
+    var emailForCloudKit: String {
+        self.email ?? ""
+    }
+
+    /// Display email - handles nil email gracefully for UI presentation
+    var displayEmail: String {
+        self.email ?? "No email"
     }
 }

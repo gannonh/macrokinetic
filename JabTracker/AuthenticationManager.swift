@@ -76,7 +76,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 Self.logger.info(
                     """
                     🔍 AuthenticationManager: First user - ID: \(user.id, privacy: .public), \
-                    Email: \(user.email, privacy: .public)
+                    Email: \(user.displayEmail, privacy: .public)
                     """
                 )
             }
@@ -127,7 +127,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         let context = self.dataController.container.mainContext
 
         let user = User(
-            email: appleIDCredential.email ?? "unknown@apple.com",
+            email: appleIDCredential.email, // Pass nil if Apple doesn't provide email
             name: appleIDCredential.fullName?.formatted())
 
         context.insert(user)
@@ -148,7 +148,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         Self.logger.info(
             """
             ✅ AuthenticationManager: User created successfully - ID: \(user.id, privacy: .public), \
-            Email: \(user.email, privacy: .public)
+            Email: \(user.displayEmail, privacy: .public)
             """
         )
 

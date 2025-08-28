@@ -6,80 +6,7 @@ import Testing
 @MainActor
 @Suite("UserProfileView Tests")
 struct UserProfileViewTests {
-    // MARK: - Form Validation Tests
-
-    @Test("Weight validation accepts valid ranges")
-    func weightValidationValidRanges() throws {
-        let view = UserProfileView()
-
-        // Test valid weights
-        #expect(view.isValidWeight("70.5") == true, "Valid decimal weight should be accepted")
-        #expect(view.isValidWeight("10") == true, "Minimum valid weight should be accepted")
-        #expect(view.isValidWeight("500") == true, "Maximum valid weight should be accepted")
-        #expect(view.isValidWeight("100") == true, "Typical weight should be accepted")
-        #expect(view.isValidWeight("75.0") == true, "Weight with .0 should be accepted")
-    }
-
-    @Test("Weight validation rejects invalid inputs")
-    func weightValidationInvalidInputs() throws {
-        let view = UserProfileView()
-
-        // Test invalid weights
-        #expect(view.isValidWeight("9.9") == false, "Weight below minimum should be rejected")
-        #expect(view.isValidWeight("500.1") == false, "Weight above maximum should be rejected")
-        #expect(view.isValidWeight("") == false, "Empty string should be rejected")
-        #expect(view.isValidWeight("abc") == false, "Non-numeric string should be rejected")
-        #expect(view.isValidWeight("-50") == false, "Negative weight should be rejected")
-        #expect(view.isValidWeight("0") == false, "Zero weight should be rejected")
-    }
-
-    @Test("Weight validation edge cases")
-    func weightValidationEdgeCases() throws {
-        let view = UserProfileView()
-
-        // Test edge cases
-        #expect(view.isValidWeight("10.0") == true, "Exact minimum with decimal should be accepted")
-        #expect(view.isValidWeight("500.0") == true, "Exact maximum with decimal should be accepted")
-        #expect(view.isValidWeight("50.123456") == true, "High precision decimal should be accepted")
-        #expect(view.isValidWeight("  75  ") == false, "Weight with spaces should be rejected (no trimming)")
-        #expect(view.isValidWeight("1e2") == true, "Scientific notation (100.0) should be accepted as valid")
-    }
-
-    // MARK: - Profile Validation Tests
-
-    @Test("Profile validation requires valid name and weight")
-    func profileValidationRequirements() throws {
-        let view = UserProfileView()
-
-        // Test profile validation logic by testing the components separately
-        // The validation logic is: !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        //                          isValidWeight(editingWeight)
-
-        let validName = "Test User"
-        let validWeight = "70.5"
-        let invalidWeight = "abc"
-        let emptyName = ""
-
-        // Test individual validation components
-        #expect(!validName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                "Valid name should pass name validation")
-        #expect(emptyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                "Empty name should fail name validation")
-        #expect(view.isValidWeight(validWeight), "Valid weight should pass weight validation")
-        #expect(!view.isValidWeight(invalidWeight), "Invalid weight should fail weight validation")
-
-        // Test combined validation logic (replicating isValidProfile logic)
-        let validProfile = !validName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            view.isValidWeight(validWeight)
-        let invalidProfileBadWeight = !validName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            view.isValidWeight(invalidWeight)
-        let invalidProfileNoName = !emptyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            view.isValidWeight(validWeight)
-
-        #expect(validProfile == true, "Valid name and weight should result in valid profile")
-        #expect(invalidProfileBadWeight == false, "Invalid weight should result in invalid profile")
-        #expect(invalidProfileNoName == false, "Empty name should result in invalid profile")
-    }
+    // MARK: - UI Component Tests
 
     @Test("Name validation handles whitespace correctly")
     func nameValidationWhitespace() throws {
@@ -237,7 +164,7 @@ struct UserProfileViewTests {
 
     @Test("Weight conversion display format")
     func weightConversionDisplayFormat() throws {
-        // Test the weight display format logic used in the view
+        // Test the weight display format using the User model's computed property
         struct WeightDisplayTest {
             let weight: Double
             let unit: String
@@ -252,7 +179,9 @@ struct UserProfileViewTests {
         ]
 
         for testCase in testCases {
-            let formatted = String(format: "%.1f %@", testCase.weight, testCase.unit)
+            // Create a User with the test weight and unit
+            let user = User(weight: testCase.weight, weightUnit: testCase.unit)
+            let formatted = user.weightDisplay
             #expect(formatted == testCase.expected,
                     "Weight display format failed. Expected: '\(testCase.expected)', Got: '\(formatted)'")
         }
@@ -260,40 +189,8 @@ struct UserProfileViewTests {
 
     // MARK: - Error Handling Tests
 
-    @Test("Profile validation handles edge cases gracefully")
-    func profileValidationEdgeCases() throws {
-        let view = UserProfileView()
-
-        // Test weight validation with various edge cases
-        struct WeightValidationTest {
-            let input: String
-            let expected: Bool
-            let description: String
-        }
-
-        let edgeCases = [
-            WeightValidationTest(input: "10.0", expected: true, description: "Exact minimum boundary"),
-            WeightValidationTest(input: "500.0", expected: true, description: "Exact maximum boundary"),
-            WeightValidationTest(input: "9.999999", expected: false, description: "Just below minimum"),
-            WeightValidationTest(input: "500.000001", expected: false, description: "Just above maximum"),
-            WeightValidationTest(input: ".", expected: false, description: "Just decimal point"),
-            WeightValidationTest(input: "10.", expected: true, description: "Number with trailing decimal"),
-            WeightValidationTest(input: ".5", expected: false, description: "Decimal without leading zero"),
-            WeightValidationTest(input: "12.34567890", expected: true, description: "High precision decimal"),
-            WeightValidationTest(input: "100,5", expected: false, description: "Comma as decimal separator"),
-            WeightValidationTest(input: "∞", expected: false, description: "Infinity symbol"),
-            WeightValidationTest(input: "NaN", expected: false, description: "NaN string"),
-        ]
-
-        for testCase in edgeCases {
-            let result = view.isValidWeight(testCase.input)
-            #expect(result == testCase.expected,
-                    """
-                    Weight validation failed for '\(testCase.input)' (\(testCase.description)). \
-                    Expected: \(testCase.expected), Got: \(result)
-                    """)
-        }
-    }
+    // Note: Profile validation tests have been moved to ProfileValidationTests
+    // to follow single responsibility principle
 }
 
 // MARK: - Test Helpers

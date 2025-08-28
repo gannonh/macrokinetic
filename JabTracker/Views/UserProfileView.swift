@@ -108,7 +108,7 @@ struct UserProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             if let user = authManager.currentUser {
                 // Email (read-only)
-                ProfileField(label: "Email", value: user.email) {
+                ProfileField(label: "Email", value: user.displayEmail) {
                     EmptyView()
                 }
 
@@ -143,7 +143,7 @@ struct UserProfileView: View {
                             .accessibilityIdentifier("weight-unit-picker")
                         }
 
-                        if !self.isValidWeight(self.editingWeight) {
+                        if !ProfileValidation.isValidWeight(self.editingWeight) {
                             Text("Please enter a valid weight (10-500)")
                                 .font(DesignTokens.Typography.caption)
                                 .foregroundColor(DesignTokens.Colors.danger)
@@ -151,8 +151,7 @@ struct UserProfileView: View {
                         }
                     }
                 } else {
-                    let weightDisplay = String(format: "%.1f %@", user.weight, user.weightUnit)
-                    ProfileField(label: "Weight", value: weightDisplay) {
+                    ProfileField(label: "Weight", value: user.weightDisplay) {
                         EmptyView()
                     }
                 }
@@ -283,13 +282,7 @@ struct UserProfileView: View {
     }
 
     private var isValidProfile: Bool {
-        !self.editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            self.isValidWeight(self.editingWeight)
-    }
-
-    func isValidWeight(_ weight: String) -> Bool {
-        guard let weightValue = Double(weight) else { return false }
-        return weightValue >= 10 && weightValue <= 500
+        ProfileValidation.isValidProfile(name: self.editingName, weight: self.editingWeight)
     }
 
     private func saveProfile() async {
