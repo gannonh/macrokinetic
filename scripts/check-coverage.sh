@@ -3,22 +3,35 @@ set -e
 
 # JabTracker Coverage Policy Enforcement
 # This script enforces our tiered coverage policy after running tests
+#
+# Usage: 
+#   ./check-coverage.sh                    # Run tests and check coverage
+#   ./check-coverage.sh --use-existing     # Use existing coverage data
 
-RESULT_BUNDLE="/tmp/coverage.xcresult"
+USE_EXISTING=false
+if [[ "$1" == "--use-existing" ]]; then
+    USE_EXISTING=true
+fi
+
+RESULT_BUNDLE="${RESULT_BUNDLE:-/tmp/coverage.xcresult}"
 SCHEME="JabTracker"
 DESTINATION="platform=iOS Simulator,name=iPhone 15,OS=17.5"
 CONFIG_FILE="$(dirname "$0")/../coverage-config.json"
 
-echo "🔍 Running tests with coverage..."
-
-# Clean up any existing result bundle
-rm -rf "$RESULT_BUNDLE"
-
-# Run tests with coverage enabled
-xcodebuild test -scheme "$SCHEME" -destination "$DESTINATION" \
-    -enableCodeCoverage YES \
-    -resultBundlePath "$RESULT_BUNDLE" \
-    -only-testing:JabTrackerTests | xcbeautify
+if [ "$USE_EXISTING" = false ]; then
+    echo "🔍 Running tests with coverage..."
+    
+    # Clean up any existing result bundle
+    rm -rf "$RESULT_BUNDLE"
+    
+    # Run tests with coverage enabled
+    xcodebuild test -scheme "$SCHEME" -destination "$DESTINATION" \
+        -enableCodeCoverage YES \
+        -resultBundlePath "$RESULT_BUNDLE" \
+        -only-testing:JabTrackerTests | xcbeautify
+else
+    echo "📊 Using existing coverage data from $RESULT_BUNDLE"
+fi
 
 # Check if result bundle was created
 if [ ! -d "$RESULT_BUNDLE" ]; then

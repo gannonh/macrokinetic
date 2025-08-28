@@ -119,9 +119,11 @@ if ! run_check "Build" "set -o pipefail && xcodebuild build -scheme JabTracker -
     ((FAILED_CHECKS++))
 fi
 
-# 3. Unit tests
-print_header "3️⃣ Unit Tests"
-if ! run_check "Unit Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests | xcbeautify"; then
+# 3. Unit tests with coverage
+print_header "3️⃣ Unit Tests with Coverage"
+RESULT_BUNDLE="/tmp/coverage.xcresult"
+rm -rf "$RESULT_BUNDLE"
+if ! run_check "Unit Tests with Coverage" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests -enableCodeCoverage YES -resultBundlePath '$RESULT_BUNDLE' | xcbeautify"; then
     ((FAILED_CHECKS++))
 fi
 
@@ -150,10 +152,14 @@ fi
 
 # 6. Coverage Policy Check
 print_header "6️⃣ Coverage Policy Check"
-if ! run_check "Coverage Policy" "./scripts/check-coverage.sh"; then
-    ((FAILED_CHECKS++))
-    print_warning "Some files don't meet coverage requirements"
-    print_warning "See docs/coverage-policy.md for requirements"
+if [ -d "$RESULT_BUNDLE" ]; then
+    if ! run_check "Coverage Policy" "RESULT_BUNDLE='$RESULT_BUNDLE' ./scripts/check-coverage.sh --use-existing"; then
+        ((FAILED_CHECKS++))
+        print_warning "Some files don't meet coverage requirements"
+        print_warning "See docs/coverage-policy.md for requirements"
+    fi
+else
+    print_warning "No coverage data available - skipping coverage policy check"
 fi
 
 # Final results
