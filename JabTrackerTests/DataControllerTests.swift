@@ -55,7 +55,9 @@ struct DataControllerTests {
         #expect(productionStyleController.container.schema.entities.count == 3, "Should have 3 entities")
 
         // CloudKit status should be set
-        let validStatuses: [SyncStatus] = [.unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork]
+        let validStatuses: [SyncStatus] = [
+            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
+        ]
         #expect(validStatuses.contains(productionStyleController.syncStatus), "Should have valid sync status")
     }
 
@@ -169,7 +171,9 @@ struct DataControllerTests {
         cloudKitController.retryCloudKitSetup()
 
         // Status might change but should remain valid
-        let validStatuses: [SyncStatus] = [.unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork]
+        let validStatuses: [SyncStatus] = [
+            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
+        ]
         #expect(validStatuses.contains(cloudKitController.syncStatus), "Status should remain valid after retry")
     }
 
