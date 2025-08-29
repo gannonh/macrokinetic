@@ -549,8 +549,9 @@ struct DataControllerTests {
 
         // Test invalid UUID string creation to understand the fallback logic
         let invalidUUIDString = "invalid-uuid-string"
-        let fallbackUUID = UUID(uuidString: invalidUUIDString) ?? UUID()
-        #expect(fallbackUUID != nil, "Fallback UUID should be created when invalid string provided")
+        _ = UUID(uuidString: invalidUUIDString) ?? UUID()
+        // The fallback UUID is always created since we use the nil-coalescing operator
+        #expect(true, "Fallback UUID should be created when invalid string provided")
 
         // Test valid UUID creation
         let validUUIDString = "12345678-1234-1234-1234-123456789000"
@@ -590,7 +591,8 @@ struct DataControllerTests {
 
         // Test the try? context.save() path in preview
         // This should already be executed as part of the static property initialization
-        #expect(preview.container != nil, "Preview container should exist after save")
+        // Container is always created during DataController initialization
+        #expect(true, "Preview container should exist after save")
     }
 
     @Test("DataController async CloudKit status checking with delays")

@@ -209,7 +209,7 @@ struct AuthenticationDelegateIntegrationTests {
         // Create a mock authorization controller
         let appleIDProvider = ASAuthorizationAppleIDProvider()
         let request = appleIDProvider.createRequest()
-        let controller = ASAuthorizationController(authorizationRequests: [request])
+        _ = ASAuthorizationController(authorizationRequests: [request])
 
         // Test the presentation anchor method
         // Note: This will fail in test environment because UIApplication.shared.connectedScenes is empty
@@ -316,7 +316,7 @@ struct AuthenticationDelegateIntegrationTests {
             // Test the success path by calling handleSignInWithAppleResult with a valid credential
             // Since we can't mock ASAuthorizationAppleIDCredential easily, we test the error case
 
-            let mockError = AuthenticationError.authorizationDenied
+            _ = AuthenticationError.authorizationDenied
             var caughtError: Error?
 
             do {
