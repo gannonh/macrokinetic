@@ -1,0 +1,201 @@
+import SwiftUI
+
+struct InitialDoseSetupView: View {
+    @ObservedObject var viewModel: OnboardingViewModel
+    @State private var showingDatePicker = false
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 32) {
+                // Header
+                VStack(spacing: 16) {
+                    Text("Set Up Your First Dose")
+                        .font(DesignTokens.Typography.largeTitle)
+                        .multilineTextAlignment(.center)
+                        .accessibilityAddTraits(.isHeader)
+                    
+                    if let medication = viewModel.selectedMedication {
+                        Text("Configure your starting dose for \(medication.displayName)")
+                            .font(DesignTokens.Typography.body)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 32)
+                
+                // Dose configuration
+                VStack(spacing: 24) {
+                    // Dose amount
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Dose Amount")
+                                .font(DesignTokens.Typography.headline)
+                            
+                            if let medication = viewModel.selectedMedication {
+                                DoseSelector(
+                                    selectedDose: $viewModel.selectedDose,
+                                    availableDoses: medication.availableDoses,
+                                    unit: medication.unit
+                                )
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("dose-amount-card")
+                    
+                    // Starting date
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Starting Date")
+                                .font(DesignTokens.Typography.headline)
+                            
+                            Button(action: { showingDatePicker = true }) {
+                                HStack {
+                                    Text(viewModel.selectedStartDate, style: .date)
+                                        .font(DesignTokens.Typography.body)
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "calendar")
+                                        .foregroundColor(DesignTokens.Colors.primary)
+                                }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                            }
+                            .accessibilityIdentifier("starting-date-button")
+                            .accessibilityLabel("Set starting date")
+                            .accessibilityValue(viewModel.selectedStartDate.formatted(date: .complete, time: .omitted))
+                        }
+                    }
+                    
+                    // Injection site
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Preferred Injection Site")
+                                .font(DesignTokens.Typography.headline)
+                            
+                            InjectionSiteSelector(selectedSite: $viewModel.selectedSite)
+                        }
+                    }
+                    .accessibilityIdentifier("injection-site-card")
+                }
+                .padding(.horizontal, 24)
+                
+                Spacer(minLength: 100) // Space for navigation buttons
+            }
+        }
+        .background(DesignTokens.Colors.background)
+        .sheet(isPresented: $showingDatePicker) {
+            DatePickerView(selectedDate: $viewModel.selectedStartDate, isPresented: $showingDatePicker)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("initial-dose-setup-view")
+    }
+}
+
+struct DoseSelector: View {
+    @Binding var selectedDose: Double
+    let availableDoses: [Double]
+    let unit: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                ForEach(availableDoses.prefix(3), id: \.self) { dose in
+                    DoseButton(dose: dose, unit: unit, isSelected: selectedDose == dose) {
+                        selectedDose = dose
+                    }
+                }
+            }
+            
+            if availableDoses.count > 3 {
+                HStack {
+                    ForEach(Array(availableDoses.dropFirst(3)), id: \.self) { dose in
+                        DoseButton(dose: dose, unit: unit, isSelected: selectedDose == dose) {
+                            selectedDose = dose
+                        }
+                    }
+                    Spacer()
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dose-selector")
+    }
+}
+
+struct DoseButton: View {
+    let dose: Double
+    let unit: String
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            Text("\(dose, specifier: "%.1f") \(unit)")
+                .font(DesignTokens.Typography.body)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(isSelected ? DesignTokens.Colors.primary : Color(.systemGray6))
+                .foregroundColor(isSelected ? .white : .primary)
+                .cornerRadius(8)
+        }
+        .accessibilityIdentifier("dose-button-\(dose)")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+    }
+}
+
+struct InjectionSiteSelector: View {
+    @Binding var selectedSite: String
+    private let sites = ["Thigh", "Stomach", "Arm", "Other"]
+    
+    var body: some View {
+        HStack {
+            ForEach(sites, id: \.self) { site in
+                Button(site) {
+                    selectedSite = site
+                }
+                .font(DesignTokens.Typography.body)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(selectedSite == site ? DesignTokens.Colors.primary : Color(.systemGray6))
+                .foregroundColor(selectedSite == site ? .white : .primary)
+                .cornerRadius(8)
+                .accessibilityIdentifier("injection-site-\(site.lowercased())")
+                .accessibilityValue(selectedSite == site ? "Selected" : "Not selected")
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Injection site selection")
+    }
+}
+
+struct DatePickerView: View {
+    @Binding var selectedDate: Date
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        NavigationStack {
+            VStack {
+                DatePicker("Starting Date", selection: $selectedDate, displayedComponents: .date)
+                    .datePickerStyle(GraphicalDatePickerStyle())
+                    .accessibilityIdentifier("date-picker")
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Starting Date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                    .accessibilityIdentifier("date-picker-done")
+                }
+            }
+        }
+    }
+}

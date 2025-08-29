@@ -458,12 +458,70 @@ This app handles medical data and dosing information. Ensure:
 
 This work established a much stronger foundation for continued feature development.
 
+## XcodeBuildMCP UI Testing & Accessibility
+
+### describe_ui Tool for Precise Element Location
+**CRITICAL**: Always use `describe_ui` to get precise coordinates for UI interactions instead of guessing from screenshots.
+
+```bash
+# Get complete accessibility hierarchy with precise coordinates
+describe_ui({ simulatorUuid: "SIMULATOR_UUID" })
+
+# Returns JSON with AXFrame data for every accessible element
+# Use frame coordinates for interactions: center = (x + width/2, y + height/2)
+```
+
+**Key Benefits:**
+- **Precise Coordinates**: Exact pixel locations for tap, swipe, and gesture actions
+- **Accessibility Identifiers**: Find elements by their `AXUniqueId` for reliable test selectors
+- **Element State**: See if elements are enabled, selected, or have specific values
+- **Element Types**: Distinguish between Button, TextField, Group, StaticText, etc.
+
+### Accessibility Configuration Requirements
+For `describe_ui` to work properly, the simulator must have accessibility enabled:
+
+**Common Issue**: `describe_ui` returns empty JSON hierarchy
+- **Cause**: Accessibility not properly configured in simulator
+- **Solution**: Enable accessibility via command line:
+```bash
+xcrun simctl spawn 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB defaults write com.apple.Accessibility VoiceOverTouchEnabled -bool true
+
+# Then restart the app:
+stop_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker" })
+launch_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker", args: ["--ui-testing", "--force-onboarding"] })
+```
+
+After this, `describe_ui` will return proper accessibility hierarchy with full coordinates and element data.
+
+### UI Testing Element Selector Patterns
+Based on onboarding flow implementation analysis:
+
+**Dose Selection Components:**
+- Dose buttons use pattern: `dose-button-{amount}` (e.g., `dose-button-1.0`, `dose-button-0.25`)
+- NOT TextField with `dose-amount-input` - use individual dose buttons instead
+- Each dose button shows selected state in `AXValue` field
+
+**Medication Selection:**
+- Medication buttons use pattern: `medication-{medication}` (e.g., `medication-semaglutide`)
+- Selection state indicated in `AXValue`: "Selected" or "Not selected"
+
+**Navigation Elements:**
+- Continue button: `onboarding-continue-button`
+- Back button: `onboarding-back-button`
+- Progress indicator: `onboarding-progress`
+
+**Common UI Testing Mistakes:**
+- Looking for TextField when implementation uses Button components
+- Assuming element visibility without checking if scrolling is required
+- Using screenshots for coordinates instead of `describe_ui` data
+
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
 - Always test iCloud sync scenarios: available, unavailable, not signed in
 - Swift Testing framework docs: https://developer.apple.com/documentation/testing
 - XcodeBuildMCP provides a range of useful tools for working with the project.
 - Simulator name always includes OS: `iPhone 15,OS=17.5`
+- **ALWAYS use `describe_ui` for precise coordinates** - never guess from screenshots
 - Easiest way to run tests is using the convenience script:
   - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
   - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`
