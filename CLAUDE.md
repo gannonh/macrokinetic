@@ -100,6 +100,10 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 ```
 
 ### Coverage Policy & Reporting
+
+- Coverage config: `coverage-config.json`
+- Coverage policy: `coverage-policy.md`
+
 ```bash
 # Enable coverage in Xcode scheme (already configured)
 # codeCoverageEnabled = "YES" in JabTracker.xcscheme

@@ -204,33 +204,32 @@ struct AuthenticationManagerCoreTests {
         }
     }
 
-    
     @Test("Authentication manager reset app data functionality")
     @MainActor
     func authManagerResetAppData() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
-        
+
         // Create test user data
         let testUser = User(email: "reset-test@example.com", weight: 70.0)
         context.insert(testUser)
         try context.save()
-        
+
         // Verify user exists
         let fetchBefore = FetchDescriptor<User>()
         let usersBefore = try context.fetch(fetchBefore)
         #expect(!usersBefore.isEmpty, "Should have user before reset")
-        
+
         // Test reset through checkAuthenticationStatus with reset flag
         // This indirectly tests the resetAppData method
         Task {
             // Simulate UI testing environment with reset flag
             await authManager.checkAuthenticationStatus()
-            
+
             // Authentication state should be properly set
             let validStates: [AuthenticationState] = [.notDetermined, .authenticated, .notAuthenticated]
-            #expect(validStates.contains(authManager.authenticationState), 
+            #expect(validStates.contains(authManager.authenticationState),
                     "Should have valid authentication state after check")
         }
     }
@@ -240,7 +239,7 @@ struct AuthenticationManagerCoreTests {
     func authManagerProcessAppleIDCredentialErrorScenarios() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test that sign in handles authorization denial
         Task {
             var didThrowExpectedError = false
@@ -260,23 +259,23 @@ struct AuthenticationManagerCoreTests {
     func authManagerStateLoggingTransitions() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        
+
         // Test initial state
-        #expect(authManager.authenticationState == .notDetermined, 
+        #expect(authManager.authenticationState == .notDetermined,
                 "Should start in notDetermined state")
         #expect(authManager.currentUser == nil, "Should have no user initially")
-        
+
         // Test state can be observed and changed
         _ = authManager.authenticationState
-        
+
         // Test checkAuthenticationStatus completes
         Task {
             await authManager.checkAuthenticationStatus()
-            
+
             // State should be determined after check
             #expect(authManager.authenticationState != .notDetermined ||
-                    authManager.authenticationState == .notAuthenticated,
-                    "State should be determined after authentication check")
+                authManager.authenticationState == .notAuthenticated,
+                "State should be determined after authentication check")
         }
     }
 
@@ -286,17 +285,17 @@ struct AuthenticationManagerCoreTests {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
-        
+
         // Create existing user in database
         let existingUser = User(email: "existing@example.com", weight: 75.0)
         context.insert(existingUser)
         try context.save()
-        
+
         Task {
             await authManager.checkAuthenticationStatus()
-            
+
             // Should detect existing user and set authenticated state
-            #expect(authManager.currentUser != nil, 
+            #expect(authManager.currentUser != nil,
                     "Should set current user when existing user found")
             #expect(authManager.authenticationState == .authenticated,
                     "Should be authenticated when user data exists")

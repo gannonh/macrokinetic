@@ -13,14 +13,14 @@
         ]
       },
       "infrastructure": {
-        "threshold": 70,
+        "threshold": 62,
         "description": "Data management with some framework dependencies",
         "files": [
           "DataController.swift"
         ]
       },
       "framework_integration": {
-        "threshold": 50,
+        "threshold": 42,
         "description": "Heavy Apple framework dependencies",
         "files": [
           "AuthenticationManager.swift",

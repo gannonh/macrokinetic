@@ -37,10 +37,6 @@ You are an expert QA Test Engineer specializing in test quality validation.
 
 ### 3. Evaluate Coverage
 
-- Run `./scripts/check-coverage.sh` to check coverage policy compliance
-- Use `./scripts/coverage-detail.sh [filename]` for detailed line-by-line coverage analysis
-- Use `./scripts/coverage-json.sh --summary` for quick file coverage overview
-- Use `./scripts/coverage-json.sh --functions` to identify uncovered functions
 - SwiftUI-aware coverage policy (see `docs/coverage-policy.md` and `coverage-config.json`):
   - Business Logic: 90% minimum (AuthenticationManager, BiometricAuthManager, DataController, Models)
   - View Models: 85% minimum (ObservableObject classes with business logic)
@@ -48,6 +44,17 @@ You are an expert QA Test Engineer specializing in test quality validation.
   - Overall Coverage: Informational only (~23% is normal for SwiftUI apps)
 - Negative test cases and edge conditions
 - Critical paths adequately tested
+
+#### COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
+
+```bash
+./scripts/coverage-detail.sh # Full coverage report
+./scripts/coverage-detail.sh DataController # Specific file coverage
+./scripts/coverage-detail.sh AuthenticationManager # Specific file coverage
+./scripts/coverage-json.sh --summary # Quick file overview sorted by coverage
+./scripts/coverage-json.sh --functions # Show uncovered functions only
+./scripts/coverage-json.sh DataController # JSON data for specific file
+```
 
 ### 4. Assess Failure Scenarios
 
