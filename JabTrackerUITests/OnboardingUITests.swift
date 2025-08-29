@@ -150,7 +150,14 @@ final class OnboardingUITests: XCTestCase {
         
         if grant {
             app.buttons["Enable Notifications"].tap()
-            // In UI testing, this will be handled automatically
+            
+            // Handle notification permission dialog - check both app and SpringBoard
+            let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            if app.buttons["Allow"].waitForExistence(timeout: 3) {
+                app.buttons["Allow"].tap()
+            } else if springboard.buttons["Allow"].waitForExistence(timeout: 3) {
+                springboard.buttons["Allow"].tap()
+            }
         } else {
             app.buttons["Not Now"].tap()
         }
@@ -163,20 +170,19 @@ final class OnboardingUITests: XCTestCase {
         if grant {
             app.buttons["Connect Health Data"].tap()
             
-            // Handle HealthKit permission dialog using recorded element locators
-            // Tap "Turn On All" button (it's a staticText element in a specific cell)
-            XCTAssertTrue(app.staticTexts["Turn On All"].waitForExistence(timeout: 5),
-                         "Turn On All button should appear in HealthKit dialog")
-            app.staticTexts["Turn On All"].tap()
+            // Handle HealthKit permission dialog - it may not appear if already granted
+            if app.staticTexts["Turn On All"].waitForExistence(timeout: 3) {
+                // Fresh permissions - handle dialog
+                app.staticTexts["Turn On All"].tap()
+                
+                XCTAssertTrue(app.buttons["UIA.Health.AuthSheet.DoneButton"].waitForExistence(timeout: 5),
+                             "Allow button should appear after Turn On All")
+                app.buttons["UIA.Health.AuthSheet.DoneButton"].tap()
+            }
             
-            // Tap the final "Allow" button to complete permission flow
-            XCTAssertTrue(app.buttons["UIA.Health.AuthSheet.DoneButton"].waitForExistence(timeout: 5),
-                         "Allow button should appear after Turn On All")
-            app.buttons["UIA.Health.AuthSheet.DoneButton"].tap()
-            
-            // Wait for permission flow to complete and return to app
+            // Wait for app to continue (either after permission dialog or immediate if already granted)
             XCTAssertTrue(app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 10),
-                         "Should return to app and show subscription screen after HealthKit permission")
+                         "Should show subscription screen after HealthKit permission handling")
         } else {
             app.buttons["Skip for Now"].tap()
         }
