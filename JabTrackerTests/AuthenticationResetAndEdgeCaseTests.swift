@@ -33,7 +33,7 @@ struct AuthenticationResetAndEdgeCaseTests {
         Task {
             // Simulate resetAppData by clearing database and auth state
             // (testing the expected behavior since resetAppData is private)
-            
+
             // Clear all users from database
             for user in initialUsers {
                 context.delete(user)
@@ -49,7 +49,7 @@ struct AuthenticationResetAndEdgeCaseTests {
             let remainingUsers = try context.fetch(postResetDescriptor)
             #expect(remainingUsers.isEmpty, "All users should be deleted after reset simulation")
             #expect(authManager.currentUser == nil, "Current user should be nil after reset")
-            #expect(authManager.authenticationState == .notAuthenticated, 
+            #expect(authManager.authenticationState == .notAuthenticated,
                     "State should be notAuthenticated after reset")
         }
     }
@@ -225,7 +225,7 @@ struct AuthenticationResetAndEdgeCaseTests {
         Task {
             // Test the path that would call processAppleIDCredential
             // by attempting sign in (which will fail but exercise the code path)
-            
+
             var caughtError: Error?
             do {
                 _ = try await authManager.signInWithApple()
@@ -235,11 +235,11 @@ struct AuthenticationResetAndEdgeCaseTests {
 
             #expect(caughtError is AuthenticationError,
                     "Should catch AuthenticationError from private method path")
-            
+
             // Test the path that would call resetAppData
             // by testing checkAuthenticationStatus
             await authManager.checkAuthenticationStatus()
-            
+
             #expect(authManager.authenticationState != .notDetermined,
                     "Should complete authentication check")
         }
