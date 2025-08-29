@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0EFED00438D0C1F93B7353FB /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312D5856F546A9FB635D52F1 /* DataController.swift */; };
+		1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */; };
 		248733A6DBB8A6A34C2875AE /* ProfileValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23B2CB25BA56529BBA6E7DB /* ProfileValidationTests.swift */; };
 		25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = E302221806254B729984868B /* DesignTokens.swift */; };
 		262246FDE3CBB6D16B9371A7 /* AuthenticationEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */; };
@@ -74,6 +75,7 @@
 		1B7F23B9040185766D116EAD /* BiometricTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricTestingTests.swift; sourceTree = "<group>"; };
 		2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationUITests.swift; sourceTree = "<group>"; };
 		26AE7A45FA75867366A66399 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
+		2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDelegateIntegrationTests.swift; sourceTree = "<group>"; };
 		312D5856F546A9FB635D52F1 /* DataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataController.swift; sourceTree = "<group>"; };
 		31BF950267D4B8A252C4B826 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		35AB5564A077F30F857788B4 /* MedicationProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfile.swift; sourceTree = "<group>"; };
@@ -164,6 +166,7 @@
 		7EDF9808D9D9424A7F56EEEA /* JabTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
+				2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */,
 				522C00B809256C4EDA8C764C /* AuthenticationDelegateTests.swift */,
 				B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */,
 				C09E1878495CFF7D03ED9ADE /* AuthenticationEnumTests.swift */,
@@ -361,6 +364,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */,
 				8038A462D8BEB601FEDD28B2 /* AuthenticationDelegateTests.swift in Sources */,
 				262246FDE3CBB6D16B9371A7 /* AuthenticationEdgeCaseTests.swift in Sources */,
 				DBF413DA0454E3B040DE18CF /* AuthenticationEnumTests.swift in Sources */,

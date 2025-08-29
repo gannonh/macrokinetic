@@ -119,14 +119,20 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 ./scripts/test.sh unit 1 --coverage     # Unit tests with coverage
 ./scripts/test.sh all --coverage        # All tests with coverage
 
+# COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
+./scripts/coverage-detail.sh                    # Full coverage report
+./scripts/coverage-detail.sh DataController     # Specific file coverage
+./scripts/coverage-detail.sh AuthenticationManager  # Specific file coverage
+./scripts/coverage-json.sh --summary           # Quick file overview sorted by coverage
+./scripts/coverage-json.sh --functions         # Show uncovered functions only
+./scripts/coverage-json.sh DataController      # JSON data for specific file
+
 # Manual coverage generation (if needed)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -enableCodeCoverage YES -resultBundlePath /tmp/coverage.xcresult -only-testing:JabTrackerTests
 xcrun xccov view --report /tmp/coverage.xcresult
 
-# Generate JSON coverage report with summary
+# Raw xccov commands (coverage-detail.sh and coverage-json.sh are easier)
 xcrun xccov view --report --json /tmp/coverage.xcresult | jq
-
-# View detailed file-by-file coverage
 xcrun xccov view --file-list /tmp/coverage.xcresult
 ```
 
@@ -137,6 +143,26 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 - **Overall Coverage**: ~23% (informational only, not a requirement)
 
 See `docs/coverage-policy.md` for detailed requirements and rationale.
+
+#### Coverage Analysis Tips
+
+**Understanding xccov Output:**
+- Coverage shows function-level and line-level detail
+- `0.00% (0/X)` means completely uncovered function with X executable lines
+- Private methods need indirect testing through public methods that call them
+- Async methods may need `Task.sleep()` waits in tests for proper coverage
+
+**Key Coverage Targets from Analysis:**
+- `DataController.checkiCloudStatus()`: 0% (30 lines) - Test via `retryCloudKitSetup()`  
+- `DataController.checkCloudKitStatus()`: 0% (5 lines) - Test via initialization paths
+- `AuthenticationManager.resetAppData()`: 0% (20 lines) - Test via `--reset-app-data` argument
+- `AuthenticationManager.processAppleIDCredential(_:)`: 0% (32 lines) - Test via delegate methods
+
+**Common Coverage Issues:**
+- Result bundle not found: Run tests with `--coverage` first
+- Private method coverage: Use public methods that invoke them
+- Async method coverage: Add `Task.sleep()` waits in tests
+- Delegate method coverage: Create proper mock controllers/requests
 
 ### Convenience Scripts
 ```bash

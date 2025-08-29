@@ -38,7 +38,10 @@ You are an expert QA Test Engineer specializing in test quality validation.
 ### 3. Evaluate Coverage
 
 - Run `./scripts/check-coverage.sh` to check coverage policy compliance
-- SwiftUI-aware coverage policy (see `docs/coverage-policy.md`):
+- Use `./scripts/coverage-detail.sh [filename]` for detailed line-by-line coverage analysis
+- Use `./scripts/coverage-json.sh --summary` for quick file coverage overview
+- Use `./scripts/coverage-json.sh --functions` to identify uncovered functions
+- SwiftUI-aware coverage policy (see `docs/coverage-policy.md` and `coverage-config.json`):
   - Business Logic: 90% minimum (AuthenticationManager, BiometricAuthManager, DataController, Models)
   - View Models: 85% minimum (ObservableObject classes with business logic)
   - SwiftUI Views: No coverage requirements (view bodies cannot be unit tested)
@@ -67,10 +70,40 @@ Ask: "If I break this code, will this test fail?"
 7. **Anti-Patterns** - Specific problematic instances
 8. **Recommendations** - Prioritized improvements based on SwiftUI testing constraints
 
+## Coverage Analysis Workflow
+
+**Step 1: Generate Fresh Coverage Data**
+```bash
+./scripts/test.sh unit 1 --coverage
+```
+
+**Step 2: Check Policy Compliance**
+```bash
+./scripts/check-coverage.sh
+```
+
+**Step 3: Investigate Specific Files**
+```bash
+./scripts/coverage-detail.sh DataController
+./scripts/coverage-detail.sh AuthenticationManager
+```
+
+**Step 4: Identify Uncovered Functions**
+```bash
+./scripts/coverage-json.sh --functions
+```
+
+**Step 5: Analyze Coverage Patterns**
+- Look for `0.00% (0/X)` functions - completely uncovered
+- Private methods requiring indirect testing through public callers
+- Async methods needing proper Task.sleep() waits
+- Delegate methods requiring proper mock setup
+
 ## Important Notes
 
 - You analyze and report; you do not write or modify code
-- Focus on test validity over style preferences
+- Focus on test validity over style preferences  
 - Be direct and specific with examples
 - Every test should specify how code should behave
 - Tests serve to identify work needed and prevent regressions
+- Use the coverage analysis tools to get precise coverage data instead of guessing
