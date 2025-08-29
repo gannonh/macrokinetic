@@ -2,9 +2,28 @@
 
 # Comprehensive check script for local CI testing
 # Runs all tests, SwiftLint, and build verification
+#
+# Usage: ./scripts/check-all.sh [--skip-ui]
+#   --skip-ui: Skip UI tests (faster for development)
 
 set -e  # Exit on any error
 set -o pipefail  # Ensure pipeline failures are detected
+
+# Parse command line arguments
+SKIP_UI_TESTS=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --skip-ui)
+            SKIP_UI_TESTS=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--skip-ui]"
+            exit 1
+            ;;
+    esac
+done
 
 # Colors for output
 RED='\033[0;31m'
@@ -57,6 +76,34 @@ run_check() {
 # Start checks
 print_header "🚀 JabTracker - Full CI Check Suite"
 
+# Auto-fix common issues before running checks
+print_header "🔧 Auto-fixing Code Style Issues"
+
+if command -v swiftlint &> /dev/null; then
+    echo -e "${BLUE}Running SwiftLint auto-fix...${NC}"
+    swiftlint --fix
+    print_success "SwiftLint auto-fix completed"
+else
+    print_warning "SwiftLint not installed - skipping auto-fix"
+fi
+
+if command -v swiftformat &> /dev/null; then
+    echo -e "${BLUE}Running SwiftFormat auto-fix...${NC}"
+    swiftformat .
+    print_success "SwiftFormat auto-fix completed"
+else
+    print_warning "SwiftFormat not installed - skipping auto-fix"
+fi
+
+# Quick build check after auto-fix to catch any issues early
+echo -e "${BLUE}Verifying build after auto-fix...${NC}"
+if xcodebuild build -scheme JabTracker -destination "$SIMULATOR" > /dev/null 2>&1; then
+    print_success "Build verification passed"
+else
+    print_warning "Build issues detected after auto-fix - continuing with checks"
+    print_warning "You may need to manually fix Swift compiler errors"
+fi
+
 FAILED_CHECKS=0
 
 # 1. SwiftLint check
@@ -72,16 +119,23 @@ if ! run_check "Build" "set -o pipefail && xcodebuild build -scheme JabTracker -
     ((FAILED_CHECKS++))
 fi
 
-# 3. Unit tests
-print_header "3️⃣ Unit Tests"
-if ! run_check "Unit Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests | xcbeautify"; then
+# 3. Unit tests with coverage
+print_header "3️⃣ Unit Tests with Coverage"
+RESULT_BUNDLE="/tmp/coverage.xcresult"
+rm -rf "$RESULT_BUNDLE"
+if ! run_check "Unit Tests with Coverage" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests -enableCodeCoverage YES -resultBundlePath '$RESULT_BUNDLE' | xcbeautify"; then
     ((FAILED_CHECKS++))
 fi
 
-# 4. UI tests
-print_header "4️⃣ UI Tests"
-if ! run_check "UI Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests | xcbeautify"; then
-    ((FAILED_CHECKS++))
+# 4. UI tests (conditional)
+if [ "$SKIP_UI_TESTS" = false ]; then
+    print_header "4️⃣ UI Tests"
+    if ! run_check "UI Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests | xcbeautify"; then
+        ((FAILED_CHECKS++))
+    fi
+else
+    print_header "4️⃣ UI Tests (SKIPPED)"
+    print_warning "UI tests skipped with --skip-ui flag"
 fi
 
 # 5. SwiftFormat check (if available)
@@ -94,6 +148,18 @@ if command -v swiftformat &> /dev/null; then
 else
     print_warning "SwiftFormat not installed - skipping format check"
     print_warning "Install with: brew install swiftformat"
+fi
+
+# 6. Coverage Policy Check
+print_header "6️⃣ Coverage Policy Check"
+if [ -d "$RESULT_BUNDLE" ]; then
+    if ! run_check "Coverage Policy" "RESULT_BUNDLE='$RESULT_BUNDLE' ./scripts/check-coverage.sh --use-existing"; then
+        ((FAILED_CHECKS++))
+        print_warning "Some files don't meet coverage requirements"
+        print_warning "See docs/coverage-policy.md for requirements"
+    fi
+else
+    print_warning "No coverage data available - skipping coverage policy check"
 fi
 
 # Final results
@@ -114,6 +180,7 @@ else
     echo "• SwiftLint issues: swiftlint --fix"
     echo "• Format issues: swiftformat ."
     echo "• Re-run: ./scripts/check-all.sh"
+    echo "• Skip slow UI tests: ./scripts/check-all.sh --skip-ui"
     echo ""
     exit 1
 fi

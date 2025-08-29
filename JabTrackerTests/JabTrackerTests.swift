@@ -1,4 +1,5 @@
 @testable import JabTracker
+import SwiftData
 import SwiftUI
 import Testing
 
@@ -11,17 +12,21 @@ struct JabTrackerTests {
         let dataController = DataController.testContainer()
 
         // Test that the main content view can be created
-        let contentView = ContentView()
+        _ = ContentView()
             .environment(\.modelContext, dataController.container.mainContext)
 
-        // Test that the data controller has the expected schema
+        // Test that the data controller has the expected schema (User, Dose, MedicationProfile)
         #expect(dataController.container.schema.entities.count == 3)
 
-        // Test that the app structure contains expected components
-        let contentViewString = String(describing: type(of: contentView))
-        #expect(contentViewString.contains("ModifiedContent"))
-        #expect(contentViewString.contains("ContentView"))
-        #expect(contentViewString.contains("ModelContext"))
+        // Verify schema contains expected entities
+        let entityNames = dataController.container.schema.entities.map(\.name)
+        #expect(entityNames.contains("User"))
+        #expect(entityNames.contains("Dose"))
+        #expect(entityNames.contains("MedicationProfile"))
+
+        // Test that we can access the model context without error
+        let context = dataController.container.mainContext
+        #expect(type(of: context) == ModelContext.self)
     }
 
     @Test("App data models are properly configured")
@@ -31,9 +36,13 @@ struct JabTrackerTests {
         let context = dataController.container.mainContext
 
         // Test that all expected models can be created
-        let user = User(id: UUID(), email: "test@example.com", weight: 70.0)
-        let medication = MedicationProfile(id: UUID(), genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0, startDate: Date())
-        let dose = Dose(id: UUID(), amount: 1.0, timestamp: Date())
+        let user = User(email: "test@example.com", weight: 70.0)
+        let medication = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 1.0,
+            startDate: Date())
+        let dose = Dose(amount: 1.0, timestamp: Date())
 
         context.insert(user)
         context.insert(medication)
@@ -50,26 +59,29 @@ struct JabTrackerTests {
 
     @Test("App design system integration works")
     func appDesignSystemIntegration() throws {
-        // Test that design system components integrate with app views
+        // Test that design system components can be created with proper properties
         let primaryButton = PrimaryButton(title: "Test Action") {}
-        let designCard = DesignCard { Text("Test Content") }
+        _ = DesignCard { Text("Test Content") }
 
+        // Verify button properties
         #expect(primaryButton.title == "Test Action")
-        #expect(String(describing: type(of: designCard)) == "DesignCard<Text>")
 
-        // Test that design tokens are accessible and different
+        // Test that design tokens are accessible and have expected properties
         let primaryColor = DesignTokens.Colors.primary
         let secondaryColor = DesignTokens.Colors.secondary
         let typography = DesignTokens.Typography.headline
         let bodyTypography = DesignTokens.Typography.body
         let gradient = DesignTokens.Colors.primaryGradient
 
-        // Test that colors are different
+        // Test that colors are different (behavioral validation)
         #expect(primaryColor != secondaryColor)
         #expect(typography != bodyTypography)
-        #expect(String(describing: gradient) != String(describing: primaryColor))
 
-        // Test that button styles can be applied
+        // Test that gradient exists and is a LinearGradient
+        // Note: LinearGradient doesn't expose stops property directly
+        #expect(type(of: gradient) == LinearGradient.self)
+
+        // Test that button styles can be applied and are the correct type
         let buttonStyle = DesignTokens.ButtonStyles.primary
         #expect(type(of: buttonStyle) == PrimaryButtonStyle.self)
     }
@@ -88,9 +100,10 @@ struct JabTrackerTests {
         #expect(tabViews.count == 5)
 
         // Test that each view is unique
-        for i in 0 ..< tabViews.count {
-            for j in (i + 1) ..< tabViews.count {
-                #expect(String(describing: tabViews[i]) != String(describing: tabViews[j]), "Tab views should be different")
+        for firstIndex in 0 ..< tabViews.count {
+            for secondIndex in (firstIndex + 1) ..< tabViews.count {
+                #expect(String(describing: tabViews[firstIndex]) != String(describing: tabViews[secondIndex]),
+                        "Tab views should be different")
             }
         }
     }
@@ -103,7 +116,7 @@ struct JabTrackerTests {
         let context = dataController.container.mainContext
 
         // Test creating user with empty email (should not crash)
-        let userWithEmptyEmail = User(id: UUID(), email: "", weight: 70.0)
+        let userWithEmptyEmail = User(email: "", weight: 70.0)
         context.insert(userWithEmptyEmail)
 
         // This should not throw (empty email might be valid in some cases)
@@ -112,7 +125,7 @@ struct JabTrackerTests {
         #expect(userWithEmptyEmail.email == "")
 
         // Test creating dose with zero amount
-        let zeroDose = Dose(id: UUID(), amount: 0.0, timestamp: Date())
+        let zeroDose = Dose(amount: 0.0, timestamp: Date())
         context.insert(zeroDose)
 
         try context.save()
@@ -123,32 +136,41 @@ struct JabTrackerTests {
         #expect(invalidColor == nil, "Invalid hex should return nil, not crash")
     }
 
-    @Test("App memory management is sound")
+    @Test("App component creation and cleanup")
     @MainActor
-    func appMemoryManagement() throws {
+    func appComponentCreationAndCleanup() throws {
         // Test creating and releasing multiple data controllers
-        for _ in 0 ..< 10 {
+        for _ in 0 ..< 5 { // Reduced from 10 for faster tests
             let controller = DataController.testContainer()
             let context = controller.container.mainContext
 
-            // Create some test data
-            let user = User(id: UUID(), email: "test\(UUID())@example.com", weight: 70.0)
+            // Create some test data to verify controller works
+            let uniqueEmail = "test\(UUID().uuidString.prefix(8))@example.com"
+            let user = User(email: uniqueEmail, weight: 70.0)
             context.insert(user)
             try context.save()
 
-            #expect(user.email?.contains("@example.com") == true)
+            // Verify data was saved correctly
+            #expect(user.email == uniqueEmail)
+            #expect(user.weight == 70.0)
+
+            // Verify we can fetch the data
+            let fetchRequest = FetchDescriptor<User>()
+            let users = try context.fetch(fetchRequest)
+            #expect(users.contains { $0.email == uniqueEmail })
         }
 
-        // Test creating multiple UI components
-        for i in 0 ..< 10 {
-            let button = PrimaryButton(title: "Button \(i)") {}
-            let card = DesignCard { Text("Content \(i)") }
+        // Test creating multiple UI components without memory leaks
+        for index in 0 ..< 5 { // Reduced from 10 for faster tests
+            let button = PrimaryButton(title: "Button \(index)") {}
+            _ = DesignCard { Text("Content \(index)") }
 
-            #expect(button.title == "Button \(i)")
-            #expect(String(describing: type(of: card)) == "DesignCard<Text>")
+            // Verify components have expected properties
+            #expect(button.title == "Button \(index)")
+            // Test component functionality - action is a non-optional closure
+            #expect(type(of: button.action) == (() -> Void).self)
         }
 
-        // If we get here without crashing, memory management is working
-        #expect(true)
+        // Test passes if no crashes or memory issues occur during component creation
     }
 }

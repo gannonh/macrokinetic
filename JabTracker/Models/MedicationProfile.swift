@@ -9,29 +9,27 @@ import SwiftData
 @Model
 final class MedicationProfile {
     var id: UUID = UUID()
-    var genericName: String?
-    var brandName: String?
-    var currentDose: Double?
-    var startDate: Date?
-    var refillDate: Date?
+    var genericName: String = "" // CloudKit requires default value
+    var brandName: String = "" // CloudKit requires default value
+    var currentDose: Double = 0.0 // CloudKit requires default value
+    var startDate: Date = Date() // Required with default
+    var refillDate: Date? // Optional - may not have refill scheduled yet
 
     @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
-    var doses: [Dose]?
+    var doses: [Dose]? // CloudKit requires optional relationships
 
     init(
-        id: UUID = UUID(),
-        genericName: String? = nil,
-        brandName: String? = nil,
-        currentDose: Double? = nil,
-        startDate: Date? = nil,
+        genericName: String = "",
+        brandName: String = "",
+        currentDose: Double = 0.0,
+        startDate: Date = Date(),
         refillDate: Date? = nil)
     {
-        self.id = id
         self.genericName = genericName
         self.brandName = brandName
         self.currentDose = currentDose
         self.startDate = startDate
         self.refillDate = refillDate
-        doses = []
+        // Don't initialize optional relationship - let SwiftData handle it
     }
 }

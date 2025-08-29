@@ -1,22 +1,22 @@
-import SwiftUI
 import AuthenticationServices
 import LocalAuthentication
+import SwiftUI
 
 struct UserProfileView: View {
     @EnvironmentObject private var authManager: AuthenticationManager
     @EnvironmentObject private var biometricManager: BiometricAuthManager
     @Environment(\.modelContext) private var modelContext
-    
+
     @State private var showingSignInSheet = false
     @State private var editMode = false
-    
+
     // Profile editing states
     @State private var editingName = ""
     @State private var editingWeight = ""
     @State private var editingWeightUnit = "kg"
     @State private var editingTimezone = TimeZone.current.identifier
     @State private var editingDateOfBirth = Date()
-    
+
     @State private var showingError = false
     @State private var errorMessage = ""
 
@@ -29,26 +29,30 @@ struct UserProfileView: View {
                         Text("User Profile")
                             .font(DesignTokens.Typography.headline)
                             .accessibilityIdentifier("user-profile-header")
-                        
-                        Text(authManager.authenticationState == .authenticated ? "Profile information" : "Sign in to save your data")
-                            .font(DesignTokens.Typography.body)
-                            .foregroundColor(.secondary)
+
+                        Text(
+                            self.authManager.authenticationState == .authenticated
+                                ? "Profile information"
+                                : "Sign in to save your data"
+                        )
+                        .font(DesignTokens.Typography.body)
+                        .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
-                    if authManager.authenticationState == .authenticated && !editMode {
+
+                    if self.authManager.authenticationState == .authenticated, !self.editMode {
                         Button("Edit") {
-                            startEditing()
+                            self.startEditing()
                         }
                         .font(DesignTokens.Typography.body)
                         .buttonStyle(.bordered)
                         .accessibilityIdentifier("edit-profile-button")
                     }
                 }
-                
+
                 // Authentication Section
-                if authManager.authenticationState != .authenticated {
+                if self.authManager.authenticationState != .authenticated {
                     VStack(spacing: 12) {
                         SignInWithAppleButton(
                             onRequest: { request in
@@ -56,14 +60,13 @@ struct UserProfileView: View {
                             },
                             onCompletion: { result in
                                 Task {
-                                    await handleSignInResult(result)
+                                    await self.handleSignInResult(result)
                                 }
-                            }
-                        )
-                        .signInWithAppleButtonStyle(.black)
-                        .frame(height: 45)
-                        .accessibilityIdentifier("sign-in-with-apple-button")
-                        
+                            })
+                            .signInWithAppleButtonStyle(.black)
+                            .frame(height: 45)
+                            .accessibilityIdentifier("sign-in-with-apple-button")
+
                         Text("Your data will be synced securely across your devices")
                             .font(DesignTokens.Typography.caption)
                             .foregroundColor(.secondary)
@@ -71,48 +74,48 @@ struct UserProfileView: View {
                     }
                 } else {
                     // Profile Information Section
-                    profileInformationSection
+                    self.profileInformationSection
                 }
-                
+
                 // Biometric Authentication Section
-                if authManager.authenticationState == .authenticated && biometricManager.isAvailable {
+                if self.authManager.authenticationState == .authenticated, self.biometricManager.isAvailable {
                     Divider()
-                    biometricAuthSection
+                    self.biometricAuthSection
                 }
-                
+
                 // Sign Out Section
-                if authManager.authenticationState == .authenticated && !editMode {
+                if self.authManager.authenticationState == .authenticated, !self.editMode {
                     Divider()
-                    signOutSection
+                    self.signOutSection
                 }
-                
+
                 // Edit Mode Actions
-                if editMode {
+                if self.editMode {
                     Divider()
-                    editModeActions
+                    self.editModeActions
                 }
             }
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
+        .alert("Error", isPresented: self.$showingError) {
+            Button("OK") {}
         } message: {
-            Text(errorMessage)
+            Text(self.errorMessage)
         }
     }
-    
+
     @ViewBuilder
     private var profileInformationSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let user = authManager.currentUser {
                 // Email (read-only)
-                ProfileField(label: "Email", value: user.email ?? "Not provided") {
+                ProfileField(label: "Email", value: user.displayEmail) {
                     EmptyView()
                 }
-                
+
                 // Name
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Name") {
-                        TextField("Enter your name", text: $editingName)
+                        TextField("Enter your name", text: self.$editingName)
                             .textFieldStyle(.roundedBorder)
                             .accessibilityIdentifier("name-input")
                     }
@@ -121,17 +124,17 @@ struct UserProfileView: View {
                         EmptyView()
                     }
                 }
-                
+
                 // Weight
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Weight") {
                         HStack {
-                            TextField("Weight", text: $editingWeight)
+                            TextField("Weight", text: self.$editingWeight)
                                 .textFieldStyle(.roundedBorder)
                                 .keyboardType(.decimalPad)
                                 .accessibilityIdentifier("weight-input")
-                            
-                            Picker("Unit", selection: $editingWeightUnit) {
+
+                            Picker("Unit", selection: self.$editingWeightUnit) {
                                 Text("kg").tag("kg")
                                 Text("lbs").tag("lbs")
                             }
@@ -139,8 +142,8 @@ struct UserProfileView: View {
                             .frame(width: 100)
                             .accessibilityIdentifier("weight-unit-picker")
                         }
-                        
-                        if !isValidWeight(editingWeight) {
+
+                        if !ProfileValidation.isValidWeight(self.editingWeight) {
                             Text("Please enter a valid weight (10-500)")
                                 .font(DesignTokens.Typography.caption)
                                 .foregroundColor(DesignTokens.Colors.danger)
@@ -148,16 +151,15 @@ struct UserProfileView: View {
                         }
                     }
                 } else {
-                    let weightDisplay = user.weight.map { String(format: "%.1f %@", $0, user.weightUnit ?? "kg") } ?? "Not set"
-                    ProfileField(label: "Weight", value: weightDisplay) {
+                    ProfileField(label: "Weight", value: user.weightDisplay) {
                         EmptyView()
                     }
                 }
-                
+
                 // Date of Birth
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Date of Birth") {
-                        DatePicker("", selection: $editingDateOfBirth, displayedComponents: .date)
+                        DatePicker("", selection: self.$editingDateOfBirth, displayedComponents: .date)
                             .datePickerStyle(.compact)
                             .accessibilityIdentifier("date-of-birth-picker")
                     }
@@ -167,12 +169,12 @@ struct UserProfileView: View {
                         EmptyView()
                     }
                 }
-                
+
                 // Timezone
-                if editMode {
+                if self.editMode {
                     ProfileField(label: "Timezone") {
-                        Picker("Timezone", selection: $editingTimezone) {
-                            ForEach(commonTimezones, id: \.self) { timezone in
+                        Picker("Timezone", selection: self.$editingTimezone) {
+                            ForEach(self.commonTimezones, id: \.self) { timezone in
                                 Text(timezone).tag(timezone)
                             }
                         }
@@ -180,59 +182,59 @@ struct UserProfileView: View {
                         .accessibilityIdentifier("timezone-picker")
                     }
                 } else {
-                    ProfileField(label: "Timezone", value: user.timezone ?? TimeZone.current.identifier) {
+                    ProfileField(label: "Timezone", value: user.timezone) {
                         EmptyView()
                     }
                 }
             }
         }
     }
-    
+
     @ViewBuilder
     private var biometricAuthSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: biometricIconName)
+                Image(systemName: self.biometricIconName)
                     .foregroundColor(DesignTokens.Colors.info)
-                
+
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(biometricManager.biometricTypeDisplayName)
+                    Text(self.biometricManager.biometricTypeDisplayName)
                         .font(DesignTokens.Typography.body)
-                    
+
                     Text("Secure app access")
                         .font(DesignTokens.Typography.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
-                Toggle("", isOn: $biometricManager.isBiometricEnabled)
+
+                Toggle("", isOn: self.$biometricManager.isBiometricEnabled)
                     .accessibilityIdentifier("biometric-auth-toggle")
             }
         }
     }
-    
+
     @ViewBuilder
     private var signOutSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
                     .foregroundColor(DesignTokens.Colors.danger)
-                
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Sign Out")
                         .font(DesignTokens.Typography.body)
-                    
+
                     Text("Data will remain on this device")
                         .font(DesignTokens.Typography.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button("Sign Out") {
                     Task {
-                        await signOut()
+                        await self.signOut()
                     }
                 }
                 .font(DesignTokens.Typography.body)
@@ -242,160 +244,117 @@ struct UserProfileView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var editModeActions: some View {
         HStack(spacing: 12) {
             SecondaryButton(title: "Cancel") {
-                cancelEditing()
+                self.cancelEditing()
             }
             .accessibilityIdentifier("cancel-edit-button")
-            
+
             PrimaryButton(title: "Save") {
                 Task {
-                    await saveProfile()
+                    await self.saveProfile()
                 }
             }
-            .disabled(!isValidProfile)
+            .disabled(!self.isValidProfile)
             .accessibilityIdentifier("save-profile-button")
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func startEditing() {
         guard let user = authManager.currentUser else { return }
-        
-        editingName = user.name ?? ""
-        editingWeight = user.weight.map { String($0) } ?? ""
-        editingWeightUnit = user.weightUnit ?? "kg"
-        editingTimezone = user.timezone ?? TimeZone.current.identifier
-        editingDateOfBirth = user.dateOfBirth ?? Date()
-        
-        editMode = true
+
+        self.editingName = user.name ?? ""
+        self.editingWeight = String(user.weight)
+        self.editingWeightUnit = user.weightUnit
+        self.editingTimezone = user.timezone
+        self.editingDateOfBirth = user.dateOfBirth ?? Date()
+
+        self.editMode = true
     }
-    
+
     private func cancelEditing() {
-        editMode = false
+        self.editMode = false
     }
-    
+
     private var isValidProfile: Bool {
-        !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        isValidWeight(editingWeight)
+        ProfileValidation.isValidProfile(name: self.editingName, weight: self.editingWeight)
     }
-    
-    private func isValidWeight(_ weight: String) -> Bool {
-        guard let weightValue = Double(weight) else { return false }
-        return weightValue >= 10 && weightValue <= 500
-    }
-    
+
     private func saveProfile() async {
         guard let user = authManager.currentUser,
               let weight = Double(editingWeight) else { return }
-        
+
         // Update user properties
-        user.name = editingName.trimmingCharacters(in: .whitespacesAndNewlines)
+        user.name = self.editingName.trimmingCharacters(in: .whitespacesAndNewlines)
         user.weight = weight
-        user.weightUnit = editingWeightUnit
-        user.timezone = editingTimezone
-        user.dateOfBirth = editingDateOfBirth
+        user.weightUnit = self.editingWeightUnit
+        user.timezone = self.editingTimezone
+        user.dateOfBirth = self.editingDateOfBirth
         user.updatedAt = Date()
-        
+
         do {
-            try modelContext.save()
-            editMode = false
+            try self.modelContext.save()
+            self.editMode = false
         } catch {
-            errorMessage = "Failed to save profile: \(error.localizedDescription)"
-            showingError = true
+            self.errorMessage = "Failed to save profile: \(error.localizedDescription)"
+            self.showingError = true
         }
     }
-    
+
     private func handleSignInResult(_ result: Result<ASAuthorization, Error>) async {
         switch result {
-        case .success(let authorization):
+        case let .success(authorization):
             do {
-                _ = try await authManager.handleSignInWithAppleResult(authorization)
+                _ = try await self.authManager.handleSignInWithAppleResult(authorization)
             } catch {
                 await MainActor.run {
-                    errorMessage = "Sign in failed: \(error.localizedDescription)"
-                    showingError = true
+                    self.errorMessage = "Sign in failed: \(error.localizedDescription)"
+                    self.showingError = true
                 }
             }
-            
-        case .failure(let error):
+
+        case let .failure(error):
             await MainActor.run {
-                errorMessage = "Sign in failed: \(error.localizedDescription)"
-                showingError = true
+                self.errorMessage = "Sign in failed: \(error.localizedDescription)"
+                self.showingError = true
             }
         }
     }
-    
+
     private func signOut() async {
         do {
-            try await authManager.signOut()
+            try await self.authManager.signOut()
         } catch {
-            errorMessage = "Sign out failed: \(error.localizedDescription)"
-            showingError = true
+            self.errorMessage = "Sign out failed: \(error.localizedDescription)"
+            self.showingError = true
         }
     }
-    
+
     private var biometricIconName: String {
-        switch biometricManager.biometricType {
+        switch self.biometricManager.biometricType {
         case .faceID: return "faceid"
         case .touchID: return "touchid"
         case .opticID: return "opticid"
         case .none: return "lock.shield"
         }
     }
-    
+
     private var commonTimezones: [String] {
         [
             "America/New_York",
-            "America/Chicago", 
+            "America/Chicago",
             "America/Denver",
             "America/Los_Angeles",
             "Europe/London",
             "Europe/Paris",
             "Asia/Tokyo",
-            TimeZone.current.identifier
+            TimeZone.current.identifier,
         ].uniqued()
-    }
-}
-
-// MARK: - ProfileField Component
-struct ProfileField<Content: View>: View {
-    let label: String
-    let value: String?
-    let content: Content
-    
-    init(label: String, value: String? = nil, @ViewBuilder content: () -> Content) {
-        self.label = label
-        self.value = value
-        self.content = content()
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(DesignTokens.Typography.caption)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-            
-            if let value = value {
-                Text(value)
-                    .font(DesignTokens.Typography.body)
-            } else {
-                content
-            }
-        }
-    }
-}
-
-// MARK: - Array Extension
-extension Array where Element: Hashable {
-    func uniqued() -> [Element] {
-        var seen = Set<Element>()
-        return filter { seen.insert($0).inserted }
     }
 }
 

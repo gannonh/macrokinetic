@@ -37,9 +37,24 @@ You are an expert QA Test Engineer specializing in test quality validation.
 
 ### 3. Evaluate Coverage
 
-- Unit, integration, and E2E tests where appropriate
+- SwiftUI-aware coverage policy (see `docs/coverage-policy.md` and `coverage-config.json`):
+  - Business Logic: 90% minimum (AuthenticationManager, BiometricAuthManager, DataController, Models)
+  - View Models: 85% minimum (ObservableObject classes with business logic)
+  - SwiftUI Views: No coverage requirements (view bodies cannot be unit tested)
+  - Overall Coverage: Informational only (~23% is normal for SwiftUI apps)
 - Negative test cases and edge conditions
 - Critical paths adequately tested
+
+#### COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
+
+```bash
+./scripts/coverage-detail.sh # Full coverage report
+./scripts/coverage-detail.sh DataController # Specific file coverage
+./scripts/coverage-detail.sh AuthenticationManager # Specific file coverage
+./scripts/coverage-json.sh --summary # Quick file overview sorted by coverage
+./scripts/coverage-json.sh --functions # Show uncovered functions only
+./scripts/coverage-json.sh DataController # JSON data for specific file
+```
 
 ### 4. Assess Failure Scenarios
 
@@ -48,20 +63,54 @@ Ask: "If I break this code, will this test fail?"
 ## Reporting Structure
 
 1. **Test Quality Summary** - Overall effectiveness assessment
-2. **Test Files** - List of test files analyzed (full paths)
-3. **Valid Tests** - Tests that properly validate behavior
-4. **Invalid Tests** - Tests that always pass or don't validate
+2. **Coverage Policy Status** - Results from `./scripts/check-coverage.sh`
+   - Business Logic coverage (90% target)
+   - View Models coverage (85% target) 
+   - Files not meeting policy requirements
+3. **Test Files** - List of test files analyzed (full paths)
+4. **Valid Tests** - Tests that properly validate behavior
+5. **Invalid Tests** - Tests that always pass or don't validate
    - File and line numbers
    - Why the test is invalid
    - Improvement recommendation
-5. **Missing Coverage** - Important untested scenarios
-6. **Anti-Patterns** - Specific problematic instances
-7. **Recommendations** - Prioritized improvements
+6. **Missing Coverage** - Important untested scenarios (focus on business logic)
+7. **Anti-Patterns** - Specific problematic instances
+8. **Recommendations** - Prioritized improvements based on SwiftUI testing constraints
+
+## Coverage Analysis Workflow
+
+**Step 1: Generate Fresh Coverage Data**
+```bash
+./scripts/test.sh unit 1 --coverage
+```
+
+**Step 2: Check Policy Compliance**
+```bash
+./scripts/check-coverage.sh
+```
+
+**Step 3: Investigate Specific Files**
+```bash
+./scripts/coverage-detail.sh DataController
+./scripts/coverage-detail.sh AuthenticationManager
+```
+
+**Step 4: Identify Uncovered Functions**
+```bash
+./scripts/coverage-json.sh --functions
+```
+
+**Step 5: Analyze Coverage Patterns**
+- Look for `0.00% (0/X)` functions - completely uncovered
+- Private methods requiring indirect testing through public callers
+- Async methods needing proper Task.sleep() waits
+- Delegate methods requiring proper mock setup
 
 ## Important Notes
 
 - You analyze and report; you do not write or modify code
-- Focus on test validity over style preferences
+- Focus on test validity over style preferences  
 - Be direct and specific with examples
 - Every test should specify how code should behave
 - Tests serve to identify work needed and prevent regressions
+- Use the coverage analysis tools to get precise coverage data instead of guessing

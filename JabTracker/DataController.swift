@@ -36,16 +36,13 @@ class DataController: ObservableObject {
         let previewDoseID = UUID(uuidString: "12345678-1234-1234-1234-123456789002") ?? UUID()
 
         let sampleUser = User(
-            id: previewUserID,
             email: "preview@example.com",
             name: "Preview User",
             weight: 70.0,
             weightUnit: "kg",
-            timezone: "UTC",
-            createdAt: Date())
+            timezone: "UTC")
 
         let sampleMedication = MedicationProfile(
-            id: previewMedicationID,
             genericName: "semaglutide",
             brandName: "Ozempic",
             currentDose: 1.0,
@@ -53,7 +50,6 @@ class DataController: ObservableObject {
         )
 
         let sampleDose = Dose(
-            id: previewDoseID,
             amount: 1.0,
             timestamp: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1 week ago
             site: "Abdomen",
@@ -83,24 +79,25 @@ class DataController: ObservableObject {
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
-        
-        // TEMPORARY: Disable CloudKit to fix authentication issues
-        // TODO: Re-enable CloudKit after fixing sync conflicts
-        let shouldEnableCloudKit = false // Change to true when CloudKit sync issues are resolved
+
+        // CloudKit sync enabled for production
+        let shouldEnableCloudKit = true
 
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: inMemory,
-            cloudKitDatabase: (inMemory || isTestEnvironment || !shouldEnableCloudKit) ? .none : .private(cloudKitContainerIdentifier))
+            cloudKitDatabase: (inMemory || isTestEnvironment || !shouldEnableCloudKit)
+                ? .none
+                : .private(cloudKitContainerIdentifier))
 
         do {
-            container = try ModelContainer(for: schema, configurations: [configuration])
+            self.container = try ModelContainer(for: schema, configurations: [configuration])
             if !inMemory, !isTestEnvironment, shouldEnableCloudKit {
-                isCloudKitEnabled = true
-                checkCloudKitStatus()
+                self.isCloudKitEnabled = true
+                self.checkCloudKitStatus()
             } else {
-                isCloudKitEnabled = false
-                syncStatus = .unavailable
+                self.isCloudKitEnabled = false
+                self.syncStatus = .unavailable
             }
         } catch {
             // If CloudKit setup fails, try without CloudKit as fallback
@@ -110,9 +107,9 @@ class DataController: ObservableObject {
                 isStoredInMemoryOnly: inMemory,
                 cloudKitDatabase: .none)
             do {
-                container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
-                isCloudKitEnabled = false
-                syncStatus = .unavailable
+                self.container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
+                self.isCloudKitEnabled = false
+                self.syncStatus = .unavailable
             } catch {
                 fatalError("Failed to create ModelContainer even without CloudKit: \(error)")
             }
@@ -127,15 +124,15 @@ class DataController: ObservableObject {
     /// Check CloudKit availability status
     private func checkCloudKitStatus() {
         Task {
-            await checkiCloudStatus()
+            await self.checkiCloudStatus()
         }
     }
 
     /// Check if iCloud is available and user is signed in
     @MainActor
     private func checkiCloudStatus() async {
-        guard isCloudKitEnabled else {
-            syncStatus = .unavailable
+        guard self.isCloudKitEnabled else {
+            self.syncStatus = .unavailable
             return
         }
 
@@ -146,33 +143,33 @@ class DataController: ObservableObject {
 
             switch accountStatus {
             case .available:
-                syncStatus = .available
+                self.syncStatus = .available
             case .noAccount:
-                syncStatus = .accountNotSignedIn
+                self.syncStatus = .accountNotSignedIn
             case .restricted:
-                syncStatus = .restricted
+                self.syncStatus = .restricted
             case .couldNotDetermine:
-                syncStatus = .unknown
+                self.syncStatus = .unknown
             case .temporarilyUnavailable:
-                syncStatus = .noNetwork
+                self.syncStatus = .noNetwork
             @unknown default:
-                syncStatus = .unknown
+                self.syncStatus = .unknown
             }
         } catch {
             print("Error checking CloudKit status: \(error)")
-            syncStatus = .unavailable
+            self.syncStatus = .unavailable
         }
     }
 
     /// Retry CloudKit setup - useful when user fixes iCloud issues
     func retryCloudKitSetup() {
-        guard isCloudKitEnabled else { return }
-        checkCloudKitStatus()
+        guard self.isCloudKitEnabled else { return }
+        self.checkCloudKitStatus()
     }
 
     /// Get user-friendly sync status message
     var syncStatusMessage: String {
-        switch syncStatus {
+        switch self.syncStatus {
         case .unknown:
             return "Checking sync status..."
         case .available:
@@ -190,6 +187,6 @@ class DataController: ObservableObject {
 
     /// Check if data will sync across devices
     var willSyncAcrossDevices: Bool {
-        syncStatus == .available
+        self.syncStatus == .available
     }
 }

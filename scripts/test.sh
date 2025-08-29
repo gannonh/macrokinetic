@@ -12,9 +12,10 @@ DEVICES=(
 )
 
 DEFAULT_DEVICE="iPhone 15,OS=17.5"
+ENABLE_COVERAGE=false
 
 show_usage() {
-    echo "Usage: $0 {unit|ui|all} [device] [test_file]"
+    echo "Usage: $0 {unit|ui|all} [device] [test_file] [--coverage]"
     echo ""
     echo "Test types:"
     echo "  unit - Run unit tests only"
@@ -25,6 +26,9 @@ show_usage() {
     for i in "${!DEVICES[@]}"; do
         echo "  $((i+1)). ${DEVICES[$i]}"
     done
+    echo ""
+    echo "Options:"
+    echo "  --coverage  Generate code coverage report and display results"
     echo ""
     echo "Available unit test files (file-based organization):"
     echo "  PersistenceTests      - Core Data and persistence functionality"
@@ -37,6 +41,8 @@ show_usage() {
     echo "  $0 ui 1 DesignSystemUITests/testDesignSystemComponents  # Run specific UI test method"
     echo "  $0 unit 1 PersistenceTests                              # Run all persistence-related unit tests"
     echo "  $0 unit 1 DesignSystemTests                             # Run all design system unit tests"
+    echo "  $0 unit 1 --coverage                                    # Run unit tests with coverage report"
+    echo "  $0 all --coverage                                       # Run all tests with coverage report"
     echo ""
     echo "Note: Unit tests use file-based organization for Swift Testing compatibility."
     echo "      Each test file focuses on a specific feature area for efficient development workflow."
@@ -47,10 +53,29 @@ if [ $# -eq 0 ]; then
     show_usage
 fi
 
-# Parse arguments
+# Parse arguments (handle --coverage flag anywhere in args)
 TEST_TYPE="$1"
-DEVICE_NUM="$2"
-TEST_FILE="$3"
+DEVICE_NUM=""
+TEST_FILE=""
+
+# Parse remaining arguments
+shift
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --coverage)
+            ENABLE_COVERAGE=true
+            shift
+            ;;
+        *)
+            if [[ -z "$DEVICE_NUM" && "$1" =~ ^[0-9]+$ ]]; then
+                DEVICE_NUM="$1"
+            elif [[ -z "$TEST_FILE" && ! "$1" =~ ^[0-9]+$ ]]; then
+                TEST_FILE="$1"
+            fi
+            shift
+            ;;
+    esac
+done
 
 # Select device
 if [ -n "$DEVICE_NUM" ]; then
@@ -100,6 +125,16 @@ build_test_target() {
 
 TEST_TARGET=$(build_test_target "$TEST_TYPE" "$TEST_FILE")
 
+# Build coverage options
+COVERAGE_OPTIONS=""
+RESULT_BUNDLE_PATH=""
+if [ "$ENABLE_COVERAGE" = true ]; then
+    # Clean up any existing result bundle
+    rm -rf /tmp/jab-tracker-coverage.xcresult
+    COVERAGE_OPTIONS="-enableCodeCoverage YES"
+    RESULT_BUNDLE_PATH="-resultBundlePath /tmp/jab-tracker-coverage.xcresult"
+fi
+
 if [ -n "$TEST_FILE" ]; then
     case "$TEST_TYPE" in
         "unit")
@@ -110,23 +145,40 @@ if [ -n "$TEST_FILE" ]; then
             ;;
     esac
 else
-    echo ""
+    if [ "$ENABLE_COVERAGE" = true ]; then
+        echo "📊 Coverage report will be generated after test completion"
+    fi
 fi
 
 case "$TEST_TYPE" in
   "unit")
     echo "🧪 Running unit tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcbeautify
+    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
     ;;
   "ui")
     echo "🖱️  Running UI tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcbeautify
+    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
     ;;
   "all")
     echo "🎯 Running all tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET | xcbeautify
+    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
     ;;
   *)
     show_usage
     ;;
 esac
+
+# Show coverage report if requested
+if [ "$ENABLE_COVERAGE" = true ] && [ -d "/tmp/jab-tracker-coverage.xcresult" ]; then
+    echo ""
+    echo "📊 Code Coverage Report:"
+    echo "=========================="
+    xcrun xccov view --report /tmp/jab-tracker-coverage.xcresult
+    echo ""
+    echo "💡 Coverage data saved to: /tmp/jab-tracker-coverage.xcresult"
+    echo "💡 To view detailed coverage: xcrun xccov view --file-list /tmp/jab-tracker-coverage.xcresult"
+elif [ "$ENABLE_COVERAGE" = true ]; then
+    echo ""
+    echo "⚠️  Coverage report requested but result bundle not found."
+    echo "💡 This may happen if tests fail to complete."
+fi

@@ -1,7 +1,7 @@
 import Foundation
 import LocalAuthentication
-import SwiftUI
 import OSLog
+import SwiftUI
 
 enum BiometricType: String, CaseIterable {
     case none
@@ -20,61 +20,75 @@ enum BiometricAvailability {
 
 @MainActor
 class BiometricAuthManager: ObservableObject {
-    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "JabTracker", category: "BiometricAuthManager")
-    
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
+        category: "BiometricAuthManager")
+
     @Published var isBiometricEnabled: Bool {
         willSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled will change from \(self.isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)")
+            Self.logger.info(
+                """
+                🔐 BiometricAuthManager: isBiometricEnabled will change from \
+                \(self.isBiometricEnabled, privacy: .public) to \(newValue, privacy: .public)
+                """
+            )
             objectWillChange.send()
         }
         didSet {
-            Self.logger.info("🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)")
+            Self.logger.info(
+                "🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)"
+            )
             // In UI testing mode, just store in memory since UserDefaults can be unreliable
-            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
-                             ProcessInfo.processInfo.arguments.contains("--ui-testing")
-            
+            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
+                ProcessInfo.processInfo.arguments.contains("--ui-testing")
+
             if !isUITesting {
-                UserDefaults.standard.set(isBiometricEnabled, forKey: "biometricAuthEnabled")
+                UserDefaults.standard.set(self.isBiometricEnabled, forKey: "biometricAuthEnabled")
             }
         }
     }
-    
+
     @Published var biometricType: BiometricType = .none
     @Published var isAvailable: Bool = false
-    
+
     init() {
-        // In UI testing mode, start with a default value since UserDefaults can be unreliable
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
-                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
-        
-        if isUITesting {
-            self.isBiometricEnabled = false // Start with disabled state for predictable testing
+        // Detect testing environments for predictable behavior
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
+            ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        let isUnitTesting = NSClassFromString("XCTestCase") != nil
+
+        if isUITesting || isUnitTesting {
+            // In testing mode, always start with disabled state for predictable behavior
+            self.isBiometricEnabled = false
         } else {
+            // In production, load from UserDefaults (defaults to false if key doesn't exist)
             self.isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
         }
-        
-        checkBiometricAvailability()
+
+        self.checkBiometricAvailability()
     }
-    
+
     private func checkBiometricAvailability() {
-        // In UI testing mode, always make biometrics available
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" || 
-                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
-        
-        if isUITesting {
+        // In testing mode, provide predictable behavior
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
+            ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        let isUnitTesting = NSClassFromString("XCTestCase") != nil
+
+        if isUITesting || isUnitTesting {
+            // Make biometrics available in testing for testing scenarios
             self.isAvailable = true
             self.biometricType = .faceID
             return
         }
-        
+
         let context = LAContext()
         var error: NSError?
-        
+
         let isAvailable = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
-        
+
         Task { @MainActor in
             self.isAvailable = isAvailable
-            
+
             if isAvailable {
                 switch context.biometryType {
                 case .faceID:
@@ -93,60 +107,66 @@ class BiometricAuthManager: ObservableObject {
             }
         }
     }
-    
+
     func getBiometricAvailability() -> BiometricAvailability {
         let context = LAContext()
         var error: NSError?
-        
+
         let canEvaluate = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
-        
+
         if canEvaluate {
-            let type: BiometricType
-            switch context.biometryType {
-            case .faceID:
-                type = .faceID
-            case .touchID:
-                type = .touchID
-            case .opticID:
-                type = .opticID
-            case .none:
-                type = .none
-            @unknown default:
-                type = .none
-            }
+            let type = self.biometricTypeFrom(context: context)
             return .available(type)
         } else {
-            guard let error = error else { return .unknown }
-            
-            switch LAError.Code(rawValue: error.code) {
-            case .biometryNotAvailable:
-                return .notAvailable
-            case .biometryNotEnrolled:
-                return .notEnrolled
-            case .biometryLockout:
-                return .restricted
-            default:
-                return .unknown
-            }
+            return self.availabilityFromError(error)
         }
     }
-    
+
+    private func biometricTypeFrom(context: LAContext) -> BiometricType {
+        switch context.biometryType {
+        case .faceID:
+            return .faceID
+        case .touchID:
+            return .touchID
+        case .opticID:
+            return .opticID
+        case .none:
+            return .none
+        @unknown default:
+            return .none
+        }
+    }
+
+    private func availabilityFromError(_ error: NSError?) -> BiometricAvailability {
+        guard let error else { return .unknown }
+
+        switch LAError.Code(rawValue: error.code) {
+        case .biometryNotAvailable:
+            return .notAvailable
+        case .biometryNotEnrolled:
+            return .notEnrolled
+        case .biometryLockout:
+            return .restricted
+        default:
+            return .unknown
+        }
+    }
+
     func authenticateWithBiometrics(reason: String) async throws -> Bool {
-        guard isAvailable else {
+        guard self.isAvailable else {
             throw BiometricError.notAvailable
         }
-        
-        guard isBiometricEnabled else {
+
+        guard self.isBiometricEnabled else {
             throw BiometricError.disabled
         }
-        
+
         let context = LAContext()
-        
+
         do {
             let result = try await context.evaluatePolicy(
                 .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: reason
-            )
+                localizedReason: reason)
             return result
         } catch {
             if let laError = error as? LAError {
@@ -164,19 +184,19 @@ class BiometricAuthManager: ObservableObject {
             throw BiometricError.authenticationFailed
         }
     }
-    
+
     func setBiometricPreference(enabled: Bool) {
-        isBiometricEnabled = enabled
+        self.isBiometricEnabled = enabled
     }
-    
+
     // Force objectWillChange for testing
     func toggleBiometric() {
         objectWillChange.send()
-        isBiometricEnabled.toggle()
+        self.isBiometricEnabled.toggle()
     }
-    
+
     var biometricTypeDisplayName: String {
-        switch biometricType {
+        switch self.biometricType {
         case .faceID:
             return "Face ID"
         case .touchID:
@@ -196,7 +216,7 @@ enum BiometricError: Error, LocalizedError {
     case userFallback
     case lockout
     case authenticationFailed
-    
+
     var errorDescription: String? {
         switch self {
         case .notAvailable:

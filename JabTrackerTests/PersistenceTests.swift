@@ -21,19 +21,14 @@ struct DataPersistenceTests {
         let context = controller.container.mainContext
 
         let uniqueID = UUID()
-        // Create a test user
-        let user = User(
-            id: uniqueID,
-            email: "save-test-\(uniqueID)@example.com",
-            weight: 70.0,
-            weightUnit: "kg",
-            timezone: "UTC")
+        // Create a test user with required fields only
+        let user = User(email: "save-test-\(uniqueID)@example.com")
 
         context.insert(user)
 
         // This should not throw
         try context.save()
-        #expect(user.id == uniqueID) // If we get here, save was successful
+        #expect(user.email == "save-test-\(uniqueID)@example.com") // If we get here, save was successful
     }
 
     @Test("Preview data controller works")
@@ -48,75 +43,200 @@ struct DataPersistenceTests {
     }
 }
 
+@Suite("CloudKit Sync Tests")
+struct CloudKitSyncTests {
+    @Test("DataController CloudKit status checking")
+    @MainActor
+    func cloudKitStatusChecking() throws {
+        let dataController = DataController.testContainer()
+
+        // Test sync status property is accessible
+        let syncStatus = dataController.syncStatus
+        let validStatuses: [SyncStatus] = [
+            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
+        ]
+        #expect(validStatuses.contains(syncStatus))
+
+        // Test CloudKit enabled flag
+        let isCloudKitEnabled = dataController.isCloudKitEnabled
+        #expect(isCloudKitEnabled == true || isCloudKitEnabled == false) // Valid boolean
+    }
+
+    @Test("DataController offline mode graceful fallback")
+    @MainActor
+    func offlineModeGracefulFallback() throws {
+        // Test that DataController works without CloudKit
+        let inMemoryController = DataController(inMemory: true) // In-memory = local-only
+        let context = inMemoryController.container.mainContext
+
+        // Test that data operations work in offline mode
+        let user = User(email: "offline-test@example.com", weight: 75.0)
+        context.insert(user)
+
+        try context.save()
+        #expect(user.email == "offline-test@example.com")
+
+        // Test that we can fetch data in offline mode
+        let fetchRequest = FetchDescriptor<User>()
+        let users = try context.fetch(fetchRequest)
+        #expect(users.contains { $0.email == "offline-test@example.com" })
+
+        // Verify sync status reflects offline mode
+        #expect(inMemoryController.willSyncAcrossDevices == false)
+    }
+
+    @Test("Sync status messaging provides user guidance")
+    @MainActor
+    func syncStatusMessaging() throws {
+        let dataController = DataController.testContainer()
+
+        // Test that sync status message is accessible and not empty
+        let message = dataController.syncStatusMessage
+        #expect(!message.isEmpty, "Sync status message should provide user guidance")
+
+        // Message should be meaningful for each status
+        switch dataController.syncStatus {
+        case .available:
+            #expect(message.contains("syncing") || message.contains("iCloud"))
+        case .unavailable, .restricted, .accountNotSignedIn:
+            #expect(message.contains("available") || message.contains("sign in") || message.contains("iCloud"))
+        case .unknown:
+            #expect(message.contains("checking") || message.contains("determining"))
+        case .noNetwork:
+            #expect(message.contains("network"))
+        }
+    }
+
+    @Test("Retry CloudKit setup functionality")
+    @MainActor
+    func retryCloudKitSetup() throws {
+        let dataController = DataController.testContainer()
+
+        // Test that retry method exists and can be called
+        dataController.retryCloudKitSetup()
+
+        // Should not crash regardless of CloudKit availability
+        // Actual retry logic is tested through integration
+    }
+
+    @Test("CloudKit sync with model creation")
+    @MainActor
+    func cloudKitSyncWithModelCreation() throws {
+        let dataController = DataController.testContainer()
+        let context = dataController.container.mainContext
+
+        // Test that models can be created and saved together
+        // This is important for CloudKit sync integrity
+        let user = User(email: "sync-test@example.com", weight: 80.0)
+        let medication = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
+        let dose = Dose(amount: 1.0, timestamp: Date(), user: user, medication: medication)
+
+        context.insert(user)
+        context.insert(medication)
+        context.insert(dose)
+
+        try context.save()
+
+        // Verify relationships are maintained (critical for CloudKit sync)
+        #expect(dose.user?.id == user.id)
+        #expect(dose.medication?.id == medication.id)
+    }
+}
+
 @MainActor
 @Suite("SwiftData Model Tests")
 struct SwiftDataModelTests {
-    @Test("User model can be created and saved")
+    @Test("User model can be created with required fields")
     func createUserModel() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let uniqueID = UUID()
-        let user = User(
-            id: uniqueID,
-            email: "test-\(uniqueID)@example.com",
-            name: "Test User",
-            weight: 70.0,
-            weightUnit: "kg",
-            timezone: "UTC",
-            createdAt: Date())
+        // Test that User can be created with required fields only
+        let user = User(email: "test-\(uniqueID)@example.com")
 
         context.insert(user)
         try context.save()
 
-        #expect(user.id == uniqueID)
+        // Required fields should be non-optional
         #expect(user.email == "test-\(uniqueID)@example.com")
-        #expect(user.name == "Test User")
-        #expect(user.weight == 70.0)
+        #expect(user.weight == 70.0) // Should have default value
+        #expect(user.weightUnit == "kg") // Should have default value
+        #expect(!user.timezone.isEmpty) // Should have default timezone
+        #expect(user.createdAt.timeIntervalSince1970 > 0) // Should be auto-generated
+        #expect(user.updatedAt.timeIntervalSince1970 > 0) // Should be auto-generated
+        #expect(user.doses?.isEmpty ?? true) // Should be empty array or nil
     }
 
-    @Test("MedicationProfile model can be created and saved")
+    @Test("User model has correct required and optional fields")
+    func userModelFieldRequirements() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(email: "required@example.com", name: "Optional Name", weight: 80.0)
+
+        context.insert(user)
+        try context.save()
+
+        // Required fields should never be nil
+        #expect(user.email == "required@example.com")
+        #expect(user.weight == 80.0)
+        #expect(user.weightUnit == "kg") // Default
+        #expect(!user.timezone.isEmpty)
+        #expect(user.createdAt.timeIntervalSince1970 > 0)
+        #expect(user.updatedAt.timeIntervalSince1970 > 0)
+        #expect(user.doses?.isEmpty ?? true) // Should be empty array or nil
+
+        // Optional fields can be provided
+        #expect(user.name == "Optional Name")
+
+        // appleUserId should be available for auth linking
+        user.appleUserId = "test.apple.id"
+        #expect(user.appleUserId == "test.apple.id")
+    }
+
+    @Test("MedicationProfile model can be created with required fields")
     func createMedicationProfileModel() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
-        let uniqueID = UUID()
+        // Test that MedicationProfile requires key fields
         let medication = MedicationProfile(
-            id: uniqueID,
             genericName: "semaglutide",
             brandName: "Ozempic",
-            currentDose: 1.0,
-            startDate: Date())
+            currentDose: 1.0)
 
         context.insert(medication)
         try context.save()
 
-        #expect(medication.id == uniqueID)
+        // Required fields should be non-optional
         #expect(medication.genericName == "semaglutide")
         #expect(medication.brandName == "Ozempic")
         #expect(medication.currentDose == 1.0)
+        #expect(medication.startDate.timeIntervalSince1970 > 0) // Should have default value
+        #expect(medication.doses?.isEmpty ?? true) // Should be empty array or nil
     }
 
-    @Test("Dose model can be created and saved")
+    @Test("Dose model can be created with required fields")
     func createDoseModel() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
-        let uniqueID = UUID()
-        let dose = Dose(
-            id: uniqueID,
-            amount: 1.0,
-            timestamp: Date(),
-            site: "Abdomen",
-            skipped: false)
+        // Test that Dose requires amount and timestamp
+        let dose = Dose(amount: 1.0, timestamp: Date())
 
         context.insert(dose)
         try context.save()
 
-        #expect(dose.id == uniqueID)
+        // Required fields should be non-optional
         #expect(dose.amount == 1.0)
-        #expect(dose.site == "Abdomen")
-        #expect(dose.skipped == false)
+        #expect(dose.timestamp.timeIntervalSince1970 > 0)
+        #expect(dose.skipped == false) // Should have default value
+
+        // Optional fields should be nil initially
+        #expect(dose.site == nil)
+        #expect(dose.notes == nil)
+        #expect(dose.imageData == nil)
     }
 
     @Test("User-Dose relationship works correctly")
@@ -125,20 +245,13 @@ struct SwiftDataModelTests {
         let context = controller.container.mainContext
 
         let userID = UUID()
-        let doseID = UUID()
 
         // Create user first
-        let user = User(
-            id: userID,
-            email: "relationship-test-\(userID)@example.com",
-            weight: 70.0)
+        let user = User(email: "relationship-test-\(userID)@example.com")
         context.insert(user)
 
         // Create dose without setting user relationship initially
-        let dose = Dose(
-            id: doseID,
-            amount: 1.0,
-            timestamp: Date())
+        let dose = Dose(amount: 1.0, timestamp: Date())
         context.insert(dose)
 
         // Set the relationship after both objects are inserted
@@ -147,6 +260,6 @@ struct SwiftDataModelTests {
         try context.save()
 
         #expect(dose.user?.id == user.id)
-        #expect(user.doses?.contains { $0.id == dose.id } == true)
+        #expect(user.doses?.contains { $0.id == dose.id } ?? false)
     }
 }

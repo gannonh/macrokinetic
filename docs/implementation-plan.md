@@ -57,10 +57,15 @@
 - Implement initial dose entry setup
 - Request notification permissions with clear value proposition
 - Request HealthKit permissions for weight/health data integration
-- Add optional dose history import functionality
+- 4.99/month subscription with 2 week trial placeholder (implement next phase)
 - Create smooth transition to main app after onboarding completion
 
-## 📋 Upcoming Work
+### Pricing & Packaging 📦
+**Subscription Model & In-App Purchases**
+- Implement subscription model with monthly/annual plans
+- Create in-app purchase options for premium features
+- Design pricing page with clear value propositions
+- Integrate App Store Connect for subscription management
 
 ### Medication Profile Management 📋
 **Medication Enum & Profile System**

@@ -5,10 +5,10 @@ struct PrimaryButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(title, action: action)
+        Button(self.title, action: self.action)
             .buttonStyle(PrimaryButtonStyle())
             .accessibilityIdentifier("design-system-primary-button")
-            .accessibilityLabel(title)
+            .accessibilityLabel(self.title)
             .accessibilityHint("Primary action button")
     }
 }
@@ -18,10 +18,10 @@ struct SecondaryButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(title, action: action)
+        Button(self.title, action: self.action)
             .buttonStyle(SecondaryButtonStyle())
             .accessibilityIdentifier("design-system-secondary-button")
-            .accessibilityLabel(title)
+            .accessibilityLabel(self.title)
             .accessibilityHint("Secondary action button")
     }
 }

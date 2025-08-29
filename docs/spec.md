@@ -384,27 +384,27 @@ struct ContentView: View {
 #### 5.1.1 SwiftData Models ✅
 
 ```swift
-// ✅ User Model (Implemented)
+// ✅ User Model (Implemented with Code Quality Improvements)
 @Model
-class User {
-    @Attribute(.unique) var id = UUID()
-    var email: String
-    var name: String?
-    var dateOfBirth: Date?
-    var weight: Double
-    var weightUnit: String // "kg" or "lbs"
-    var timezone: String
-    var createdAt: Date
-    var updatedAt: Date
-    var appleUserId: String? // For authentication linking
+final class User {
+    var id: UUID = UUID()
+    var email: String = ""  // Required with default - prevents runtime nil issues
+    var name: String? = nil  // Optional - Apple might not provide
+    var dateOfBirth: Date? = nil  // Optional user input
+    var weight: Double = 70.0  // Required with sensible default for medical calculations
+    var weightUnit: String = "kg"  // Required with default
+    var timezone: String = TimeZone.current.identifier  // Required with system default
+    var createdAt: Date = Date()  // Audit trail
+    var updatedAt: Date = Date()  // Audit trail
+    var appleUserId: String? = nil  // For Sign in with Apple linking
     
-    @Relationship(deleteRule: .cascade) 
+    @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose] = []
     
-    @Relationship(deleteRule: .cascade) 
+    @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user) 
     var medicationProfiles: [MedicationProfile] = []
     
-    init(email: String, name: String? = nil, weight: Double = 70.0, weightUnit: String = "kg") {
+    init(email: String = "", name: String? = nil, weight: Double = 70.0, weightUnit: String = "kg") {
         self.email = email
         self.name = name
         self.weight = weight
@@ -415,49 +415,49 @@ class User {
     }
 }
 
-// Dose Model (Ready for implementation)
+// Dose Model (Improved with Code Quality Updates)
 @Model
-class Dose {
-    @Attribute(.unique) var id = UUID()
-    var amount: Double
-    var timestamp: Date
-    var site: String?
-    var notes: String?
-    var imageData: Data?
-    var skipped: Bool = false
-    var createdAt: Date
+final class Dose {
+    var id: UUID = UUID()
+    var amount: Double = 0.0  // Required with default - medical dosing data
+    var timestamp: Date = Date()  // Required with default - when dose was taken
+    var site: String? = nil  // Optional - injection site tracking
+    var notes: String? = nil  // Optional - user notes
+    var imageData: Data? = nil  // Optional - photo attachment
+    var skipped: Bool = false  // Default false - dose completion status
+    var createdAt: Date = Date()  // Audit trail
     
     @Relationship(inverse: \User.doses) 
-    var user: User?
+    var user: User? = nil  // Parent user relationship
     
-    @Relationship 
-    var medicationProfile: MedicationProfile?
+    @Relationship(inverse: \MedicationProfile.doses)
+    var medicationProfile: MedicationProfile? = nil  // Associated medication
     
-    init(amount: Double, timestamp: Date = Date()) {
+    init(amount: Double = 0.0, timestamp: Date = Date()) {
         self.amount = amount
         self.timestamp = timestamp
         self.createdAt = Date()
     }
 }
 
-// Medication Profile Model (Ready for implementation)
+// Medication Profile Model (Improved with Code Quality Updates)
 @Model
-class MedicationProfile {
-    @Attribute(.unique) var id = UUID()
-    var genericName: String
-    var brandName: String
-    var currentDose: Double
-    var startDate: Date
-    var refillDate: Date?
-    var createdAt: Date
+final class MedicationProfile {
+    var id: UUID = UUID()
+    var genericName: String = ""  // Required with default - medication type
+    var brandName: String = ""  // Required with default - specific brand
+    var currentDose: Double = 0.0  // Required with default - current dosing amount
+    var startDate: Date = Date()  // Required with default - when medication started
+    var refillDate: Date? = nil  // Optional - next refill date
+    var createdAt: Date = Date()  // Audit trail
     
     @Relationship(inverse: \User.medicationProfiles) 
-    var user: User?
+    var user: User? = nil  // Parent user relationship
     
-    @Relationship(deleteRule: .cascade) 
-    var doses: [Dose] = []
+    @Relationship(deleteRule: .cascade, inverse: \Dose.medicationProfile) 
+    var doses: [Dose] = []  // Associated doses
     
-    init(genericName: String, brandName: String, currentDose: Double) {
+    init(genericName: String = "", brandName: String = "", currentDose: Double = 0.0) {
         self.genericName = genericName
         self.brandName = brandName
         self.currentDose = currentDose
