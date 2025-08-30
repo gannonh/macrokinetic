@@ -7,7 +7,10 @@ struct OnboardingView: View {
 
     init(isPresented: Binding<Bool>, authManager: AuthenticationManager) {
         self._isPresented = isPresented
-        self._viewModel = StateObject(wrappedValue: OnboardingViewModel(dataController: DataController.shared, authManager: authManager))
+        self._viewModel = StateObject(wrappedValue: OnboardingViewModel(
+            dataController: DataController.shared,
+            authManager: authManager
+        ))
     }
 
     var body: some View {

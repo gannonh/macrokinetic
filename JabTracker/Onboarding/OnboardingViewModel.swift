@@ -96,7 +96,9 @@ class OnboardingViewModel: ObservableObject {
         do {
             let settings = await UNUserNotificationCenter.current().notificationSettings()
             if settings.authorizationStatus == .notDetermined {
-                let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
+                let granted = try await UNUserNotificationCenter.current().requestAuthorization(
+                    options: [.alert, .badge, .sound]
+                )
                 self.notificationsGranted = granted
             } else {
                 self.notificationsGranted = settings.authorizationStatus == .authorized
@@ -117,10 +119,14 @@ class OnboardingViewModel: ObservableObject {
         }
 
         let healthStore = HKHealthStore()
-        let typesToRead: Set<HKObjectType> = [
-            HKObjectType.quantityType(forIdentifier: .bodyMass)!,
-            HKObjectType.quantityType(forIdentifier: .bodyMassIndex)!,
-        ]
+        guard let bodyMassType = HKObjectType.quantityType(forIdentifier: .bodyMass),
+              let bodyMassIndexType = HKObjectType.quantityType(forIdentifier: .bodyMassIndex) else {
+            self.errorMessage = "Failed to create HealthKit types"
+            self.healthKitGranted = false
+            return
+        }
+        
+        let typesToRead: Set<HKObjectType> = [bodyMassType, bodyMassIndexType]
 
         do {
             try await healthStore.requestAuthorization(toShare: [], read: typesToRead)

@@ -17,7 +17,10 @@ struct JabTrackerApp: App {
         let dataController = DataController.shared
         self._authManager = StateObject(wrappedValue: authManager)
         self._biometricManager = StateObject(wrappedValue: BiometricAuthManager())
-        self._onboardingCoordinator = StateObject(wrappedValue: OnboardingCoordinator(authManager: authManager, dataController: dataController))
+        self._onboardingCoordinator = StateObject(wrappedValue: OnboardingCoordinator(
+            authManager: authManager,
+            dataController: dataController
+        ))
     }
 
     var body: some Scene {

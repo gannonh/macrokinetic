@@ -51,28 +51,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             ProcessInfo.processInfo.arguments.contains("--ui-testing")
 
         if isUITesting {
-            // Create and persist mock user for UI testing
-            let context = self.dataController.container.mainContext
-            let mockUser = User(
-                email: "test@uitesting.com",
-                name: "UI Test User",
-                weight: 70.0,
-                weightUnit: "kg")
-
-            context.insert(mockUser)
-            do {
-                try context.save()
-                await MainActor.run {
-                    self.currentUser = mockUser
-                    self.authenticationState = .authenticated
-                }
-                Self.logger.info("✅ AuthenticationManager: UI testing mock user created and persisted")
-            } catch {
-                Self.logger.error("❌ AuthenticationManager: Failed to persist UI testing user: \(error)")
-                await MainActor.run {
-                    self.authenticationState = .notAuthenticated
-                }
-            }
+            await setupUITestingUser()
             return
         }
 
@@ -133,6 +112,30 @@ class AuthenticationManager: NSObject, ObservableObject {
         await MainActor.run {
             self.currentUser = nil
             self.authenticationState = .notAuthenticated
+        }
+    }
+
+    private func setupUITestingUser() async {
+        let context = self.dataController.container.mainContext
+        let mockUser = User(
+            email: "test@uitesting.com",
+            name: "UI Test User",
+            weight: 70.0,
+            weightUnit: "kg")
+
+        context.insert(mockUser)
+        do {
+            try context.save()
+            await MainActor.run {
+                self.currentUser = mockUser
+                self.authenticationState = .authenticated
+            }
+            Self.logger.info("✅ AuthenticationManager: UI testing mock user created and persisted")
+        } catch {
+            Self.logger.error("❌ AuthenticationManager: Failed to persist UI testing user: \(error)")
+            await MainActor.run {
+                self.authenticationState = .notAuthenticated
+            }
         }
     }
 

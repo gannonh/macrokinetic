@@ -165,7 +165,7 @@ struct MedicationTests {
             
             // Check each character is a valid hex digit
             let isValidHex = colorHex.allSatisfy { char in
-                return ("0"..."9").contains(char) || ("a"..."f").contains(char) || ("A"..."F").contains(char)
+                ("0"..."9").contains(char) || ("a"..."f").contains(char) || ("A"..."F").contains(char)
             }
             #expect(isValidHex, "Color hex should only contain hex digits for \(medication.rawValue)")
             
