@@ -25,6 +25,12 @@ class OnboardingCoordinator: ObservableObject {
             return true
         }
         
+        // Check if we're bypassing onboarding (for real auth testing)
+        if ProcessInfo.processInfo.arguments.contains("--bypass-onboarding") {
+            print("🔍 OnboardingCoordinator: Bypass onboarding enabled - skipping onboarding")
+            return false
+        }
+        
         // Check if we're in UI testing mode - should bypass onboarding unless forcing
         let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
                          ProcessInfo.processInfo.arguments.contains("--ui-testing")

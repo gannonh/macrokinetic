@@ -20,11 +20,14 @@ enum TestUtilities {
     /// Launch app with real authentication (for testing actual Sign in with Apple flow)
     /// - Uses real Apple ID authentication
     /// - Resets app data for clean state
+    /// - Bypasses onboarding after successful authentication
     /// - Suitable for testing authentication UI only (cannot complete without real credentials)
     static func launchAppWithRealAuth() -> XCUIApplication {
         let app = XCUIApplication()
         // Reset app data to ensure clean state for authentication testing
         app.launchArguments.append("--reset-app-data")
+        // Bypass onboarding after authentication succeeds (for real auth testing)
+        app.launchArguments.append("--bypass-onboarding")
         app.launch()
         return app
     }
