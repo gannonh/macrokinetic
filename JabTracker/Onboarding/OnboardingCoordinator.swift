@@ -25,6 +25,14 @@ class OnboardingCoordinator: ObservableObject {
             return true
         }
         
+        // Check if we're in UI testing mode - should bypass onboarding unless forcing
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
+                         ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        if isUITesting {
+            print("🔍 OnboardingCoordinator: UI testing mode detected - bypassing onboarding")
+            return false
+        }
+        
         // Check if user exists and has completed onboarding
         guard let user = authManager.currentUser else {
             print("🔍 OnboardingCoordinator: No current user found - not showing onboarding")
