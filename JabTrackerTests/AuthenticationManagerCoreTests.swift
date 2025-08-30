@@ -301,34 +301,33 @@ struct AuthenticationManagerCoreTests {
                     "Should be authenticated when user data exists")
         }
     }
-    
+
     @Test("Reset app data functionality through launch argument")
     @MainActor
     func resetAppDataWithLaunchArgument() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
-        
+
         // Create user data first
         let user = User(email: "test@reset.com", weight: 70.0)
         context.insert(user)
         try context.save()
-        
+
         // Verify user exists
         let beforeFetch = FetchDescriptor<User>()
         let usersBefore = try context.fetch(beforeFetch)
         #expect(!usersBefore.isEmpty, "Should have user before reset")
-        
+
         // Add reset argument to ProcessInfo for testing
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
-        
+
         // Note: We can't actually modify ProcessInfo.arguments, but we can test the path
         // by calling checkAuthenticationStatus and verifying reset behavior
-        
+
         await authManager.checkAuthenticationStatus()
-        
+
         // The method should still work even without the reset flag
         // The actual reset functionality is tested through the launch argument scenario
     }
-    
 }

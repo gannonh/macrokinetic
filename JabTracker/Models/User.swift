@@ -18,7 +18,7 @@ final class User {
     var appleUserId: String? // For Sign in with Apple linking
     var createdAt: Date = Date() // Required - auto-generated
     var updatedAt: Date = Date() // Required - auto-generated
-    
+
     // Onboarding tracking
     var hasCompletedOnboarding: Bool = false // Track onboarding completion
     var onboardingCompletedAt: Date? // When onboarding was completed

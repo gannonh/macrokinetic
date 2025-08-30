@@ -1,191 +1,193 @@
 import Foundation
+import HealthKit
 import SwiftData
 import UserNotifications
-import HealthKit
 
 @MainActor
 class OnboardingViewModel: ObservableObject {
     @Published var currentStep: OnboardingStep = .welcome {
         didSet {
-            updateProgress()
+            self.updateProgress()
         }
     }
+
     @Published var progress: Double = 0.0
     @Published var selectedMedication: Medication?
     @Published var selectedDose: Double = 0.0
-    @Published var selectedStartDate: Date = Date()
+    @Published var selectedStartDate: Date = .init()
     @Published var selectedSites: Set<String> = ["Thigh"] // Changed to Set for multiple sites
     @Published var notificationsGranted: Bool = false
     @Published var healthKitGranted: Bool = false
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-    
+
     private let dataController: DataController
     private let authManager: AuthenticationManager
-    
+
     init(dataController: DataController = DataController.shared, authManager: AuthenticationManager) {
         self.dataController = dataController
         self.authManager = authManager
         self.updateProgress()
     }
-    
+
     var totalSteps: Int {
         OnboardingStep.allCases.count
     }
-    
+
     var currentStepIndex: Int {
-        OnboardingStep.allCases.firstIndex(of: currentStep) ?? 0
+        OnboardingStep.allCases.firstIndex(of: self.currentStep) ?? 0
     }
-    
+
     var isLastStep: Bool {
-        currentStep == OnboardingStep.allCases.last
+        self.currentStep == OnboardingStep.allCases.last
     }
-    
+
     var canProceedToNext: Bool {
-        switch currentStep {
+        switch self.currentStep {
         case .welcome:
             return true
         case .medicationSelection:
-            return selectedMedication != nil
+            return self.selectedMedication != nil
         case .doseSetup:
-            return selectedDose > 0 && !selectedSites.isEmpty // Require at least one site
+            return self.selectedDose > 0 && !self.selectedSites.isEmpty // Require at least one site
         case .notifications, .healthKit, .subscription:
             return true
         }
     }
-    
+
     func moveToNextStep() {
-        guard !isLastStep, canProceedToNext else { return }
-        
+        guard !self.isLastStep, self.canProceedToNext else { return }
+
         if let currentIndex = OnboardingStep.allCases.firstIndex(of: currentStep),
-           currentIndex + 1 < OnboardingStep.allCases.count {
-            currentStep = OnboardingStep.allCases[currentIndex + 1]
+           currentIndex + 1 < OnboardingStep.allCases.count
+        {
+            self.currentStep = OnboardingStep.allCases[currentIndex + 1]
         }
     }
-    
+
     func moveToPreviousStep() {
         if let currentIndex = OnboardingStep.allCases.firstIndex(of: currentStep),
-           currentIndex > 0 {
-            currentStep = OnboardingStep.allCases[currentIndex - 1]
+           currentIndex > 0
+        {
+            self.currentStep = OnboardingStep.allCases[currentIndex - 1]
         }
     }
-    
+
     func selectMedication(_ medication: Medication) {
-        selectedMedication = medication
+        self.selectedMedication = medication
         // Set default dose for selected medication
         if let firstDose = medication.availableDoses.first {
-            selectedDose = firstDose
+            self.selectedDose = firstDose
         }
     }
-    
+
     func toggleInjectionSite(_ site: String) {
-        if selectedSites.contains(site) {
-            selectedSites.remove(site)
+        if self.selectedSites.contains(site) {
+            self.selectedSites.remove(site)
         } else {
-            selectedSites.insert(site)
+            self.selectedSites.insert(site)
         }
     }
-    
+
     func requestNotificationPermissions() async {
-        isLoading = true
+        self.isLoading = true
         defer { isLoading = false }
-        
+
         do {
             let settings = await UNUserNotificationCenter.current().notificationSettings()
             if settings.authorizationStatus == .notDetermined {
                 let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
-                notificationsGranted = granted
+                self.notificationsGranted = granted
             } else {
-                notificationsGranted = settings.authorizationStatus == .authorized
+                self.notificationsGranted = settings.authorizationStatus == .authorized
             }
         } catch {
-            errorMessage = "Failed to request notification permissions: \(error.localizedDescription)"
-            notificationsGranted = false
+            self.errorMessage = "Failed to request notification permissions: \(error.localizedDescription)"
+            self.notificationsGranted = false
         }
     }
-    
+
     func requestHealthKitPermissions() async {
-        isLoading = true
+        self.isLoading = true
         defer { isLoading = false }
-        
+
         guard HKHealthStore.isHealthDataAvailable() else {
-            healthKitGranted = false
+            self.healthKitGranted = false
             return
         }
-        
+
         let healthStore = HKHealthStore()
         let typesToRead: Set<HKObjectType> = [
             HKObjectType.quantityType(forIdentifier: .bodyMass)!,
-            HKObjectType.quantityType(forIdentifier: .bodyMassIndex)!
+            HKObjectType.quantityType(forIdentifier: .bodyMassIndex)!,
         ]
-        
+
         do {
             try await healthStore.requestAuthorization(toShare: [], read: typesToRead)
-            healthKitGranted = true
+            self.healthKitGranted = true
         } catch {
-            errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
-            healthKitGranted = false
+            self.errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
+            self.healthKitGranted = false
         }
     }
-    
+
     func completeOnboarding() async throws {
         guard let user = authManager.currentUser,
-              let selectedMedication = selectedMedication else {
+              let selectedMedication
+        else {
             throw OnboardingError.missingRequiredData
         }
-        
-        isLoading = true
+
+        self.isLoading = true
         defer { isLoading = false }
-        
-        let context = dataController.container.mainContext
-        
+
+        let context = self.dataController.container.mainContext
+
         // Create medication profile
         let medicationProfile = MedicationProfile(
             genericName: selectedMedication.displayName,
             brandName: selectedMedication.brands.first ?? "",
-            currentDose: selectedDose,
-            startDate: selectedStartDate,
-            medicationType: selectedMedication.rawValue
-        )
+            currentDose: self.selectedDose,
+            startDate: self.selectedStartDate,
+            medicationType: selectedMedication.rawValue)
         context.insert(medicationProfile)
-        
+
         // Create initial dose record with first selected site
-        let primarySite = selectedSites.first ?? "Thigh"
+        let primarySite = self.selectedSites.first ?? "Thigh"
         let initialDose = Dose(
             amount: selectedDose,
             timestamp: selectedStartDate,
             site: primarySite,
             notes: "Initial dose - onboarding",
             user: user,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
         context.insert(initialDose)
-        
+
         // Mark user onboarding as complete
         user.hasCompletedOnboarding = true
         user.onboardingCompletedAt = Date()
         user.updatedAt = Date()
-        
+
         try context.save()
-        
+
         // Store completion in UserDefaults as backup
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
     }
-    
+
     private func updateProgress() {
-        progress = Double(currentStepIndex) / Double(totalSteps - 1)
+        self.progress = Double(self.currentStepIndex) / Double(self.totalSteps - 1)
     }
 }
 
 enum OnboardingStep: String, CaseIterable {
-    case welcome = "welcome"
+    case welcome
     case medicationSelection = "medication"
     case doseSetup = "dose"
-    case notifications = "notifications"
+    case notifications
     case healthKit = "health"
-    case subscription = "subscription"
-    
+    case subscription
+
     var title: String {
         switch self {
         case .welcome:
@@ -208,7 +210,7 @@ enum OnboardingError: LocalizedError {
     case missingRequiredData
     case permissionsDenied
     case dataCreationFailed
-    
+
     var errorDescription: String? {
         switch self {
         case .missingRequiredData:

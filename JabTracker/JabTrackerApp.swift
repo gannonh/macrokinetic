@@ -11,7 +11,7 @@ struct JabTrackerApp: App {
     @State private var hasJustSignedIn = false
     @State private var hasRecentBiometricAuth = false
     @State private var showingOnboarding = false
-    
+
     init() {
         let authManager = AuthenticationManager()
         let dataController = DataController.shared
@@ -29,8 +29,8 @@ struct JabTrackerApp: App {
                         .modelContainer(self.dataController.container)
                         .environmentObject(self.authManager)
                         .environmentObject(self.biometricManager)
-                        .sheet(isPresented: $showingOnboarding) {
-                            OnboardingView(isPresented: $showingOnboarding, authManager: authManager)
+                        .sheet(isPresented: self.$showingOnboarding) {
+                            OnboardingView(isPresented: self.$showingOnboarding, authManager: self.authManager)
                                 .environmentObject(self.authManager)
                         }
                 case .notAuthenticated:
@@ -53,9 +53,9 @@ struct JabTrackerApp: App {
                 if newState == .authenticated {
                     self.hasJustSignedIn = true
                     // Check if user needs onboarding
-                    onboardingCoordinator.checkOnboardingStatus()
-                    showingOnboarding = onboardingCoordinator.shouldShowOnboarding
-                    
+                    self.onboardingCoordinator.checkOnboardingStatus()
+                    self.showingOnboarding = self.onboardingCoordinator.shouldShowOnboarding
+
                     // Reset the flag after a short delay
                     Task {
                         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
@@ -67,9 +67,9 @@ struct JabTrackerApp: App {
                 Task {
                     await self.authManager.checkAuthenticationStatus()
                     // Check onboarding status after auth check
-                    if authManager.authenticationState == .authenticated {
-                        onboardingCoordinator.checkOnboardingStatus()
-                        showingOnboarding = onboardingCoordinator.shouldShowOnboarding
+                    if self.authManager.authenticationState == .authenticated {
+                        self.onboardingCoordinator.checkOnboardingStatus()
+                        self.showingOnboarding = self.onboardingCoordinator.shouldShowOnboarding
                     }
                 }
             }

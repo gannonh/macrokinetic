@@ -4,74 +4,72 @@ struct OnboardingView: View {
     @StateObject private var viewModel: OnboardingViewModel
     @EnvironmentObject private var authManager: AuthenticationManager
     @Binding var isPresented: Bool
-    
+
     init(isPresented: Binding<Bool>, authManager: AuthenticationManager) {
         self._isPresented = isPresented
         self._viewModel = StateObject(wrappedValue: OnboardingViewModel(authManager: authManager))
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Progress indicator
                 OnboardingProgressIndicator(
-                    currentStep: viewModel.currentStepIndex + 1,
-                    totalSteps: viewModel.totalSteps
-                )
-                .padding(.top, 16)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Step \(viewModel.currentStepIndex + 1) of \(viewModel.totalSteps)")
-                
+                    currentStep: self.viewModel.currentStepIndex + 1,
+                    totalSteps: self.viewModel.totalSteps)
+                    .padding(.top, 16)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Step \(self.viewModel.currentStepIndex + 1) of \(self.viewModel.totalSteps)")
+
                 // Content area
                 Group {
-                    switch viewModel.currentStep {
+                    switch self.viewModel.currentStep {
                     case .welcome:
-                        WelcomeScreensView(viewModel: viewModel)
+                        WelcomeScreensView(viewModel: self.viewModel)
                     case .medicationSelection:
-                        MedicationSelectionView(viewModel: viewModel)
+                        MedicationSelectionView(viewModel: self.viewModel)
                     case .doseSetup:
-                        InitialDoseSetupView(viewModel: viewModel)
+                        InitialDoseSetupView(viewModel: self.viewModel)
                     case .notifications:
-                        PermissionsRequestView(viewModel: viewModel, type: .notifications)
+                        PermissionsRequestView(viewModel: self.viewModel, type: .notifications)
                     case .healthKit:
-                        PermissionsRequestView(viewModel: viewModel, type: .healthKit)
+                        PermissionsRequestView(viewModel: self.viewModel, type: .healthKit)
                     case .subscription:
-                        SubscriptionPlaceholderView(viewModel: viewModel)
+                        SubscriptionPlaceholderView(viewModel: self.viewModel)
                     }
                 }
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
-                    removal: .move(edge: .leading).combined(with: .opacity)
-                ))
-                
+                    removal: .move(edge: .leading).combined(with: .opacity)))
+
                 // Navigation buttons
                 HStack {
-                    if viewModel.currentStepIndex > 0 {
+                    if self.viewModel.currentStepIndex > 0 {
                         SecondaryButton(title: "Back") {
                             withAnimation(.spring()) {
-                                viewModel.moveToPreviousStep()
+                                self.viewModel.moveToPreviousStep()
                             }
                         }
                         .accessibilityIdentifier("onboarding-back-button")
                     }
-                    
+
                     Spacer()
-                    
-                    if viewModel.isLastStep {
-                        PrimaryButton(title: viewModel.isLoading ? "Setting Up..." : "Get Started") {
+
+                    if self.viewModel.isLastStep {
+                        PrimaryButton(title: self.viewModel.isLoading ? "Setting Up..." : "Get Started") {
                             Task {
-                                await completeOnboarding()
+                                await self.completeOnboarding()
                             }
                         }
-                        .disabled(viewModel.isLoading || !viewModel.canProceedToNext)
+                        .disabled(self.viewModel.isLoading || !self.viewModel.canProceedToNext)
                         .accessibilityIdentifier("onboarding-complete-button")
                     } else {
                         PrimaryButton(title: "Continue") {
                             withAnimation(.spring()) {
-                                viewModel.moveToNextStep()
+                                self.viewModel.moveToNextStep()
                             }
                         }
-                        .disabled(!viewModel.canProceedToNext)
+                        .disabled(!self.viewModel.canProceedToNext)
                         .accessibilityIdentifier("onboarding-continue-button")
                     }
                 }
@@ -80,9 +78,9 @@ struct OnboardingView: View {
             }
             .background(DesignTokens.Colors.background)
             .navigationBarHidden(true)
-            .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            .alert("Error", isPresented: .constant(self.viewModel.errorMessage != nil)) {
                 Button("OK") {
-                    viewModel.errorMessage = nil
+                    self.viewModel.errorMessage = nil
                 }
             } message: {
                 if let errorMessage = viewModel.errorMessage {
@@ -93,15 +91,15 @@ struct OnboardingView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("onboarding-view")
     }
-    
+
     private func completeOnboarding() async {
         do {
-            try await viewModel.completeOnboarding()
+            try await self.viewModel.completeOnboarding()
             withAnimation(.spring()) {
-                isPresented = false
+                self.isPresented = false
             }
         } catch {
-            viewModel.errorMessage = "Failed to complete onboarding: \(error.localizedDescription)"
+            self.viewModel.errorMessage = "Failed to complete onboarding: \(error.localizedDescription)"
         }
     }
 }

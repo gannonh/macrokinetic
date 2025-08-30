@@ -1,9 +1,9 @@
 import Foundation
 
 enum DoseFrequency: String, CaseIterable, Codable {
-    case daily = "daily"
-    case weekly = "weekly"
-    
+    case daily
+    case weekly
+
     var displayName: String {
         switch self {
         case .daily: return "Daily"
@@ -13,13 +13,13 @@ enum DoseFrequency: String, CaseIterable, Codable {
 }
 
 enum Medication: String, CaseIterable, Codable, Identifiable {
-    case semaglutide = "semaglutide"
-    case tirzepatide = "tirzepatide"
-    case liraglutide = "liraglutide"
-    case dulaglutide = "dulaglutide"
-    
+    case semaglutide
+    case tirzepatide
+    case liraglutide
+    case dulaglutide
+
     var id: String { self.rawValue }
-    
+
     var displayName: String {
         switch self {
         case .semaglutide: return "Semaglutide"
@@ -28,7 +28,7 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
         case .dulaglutide: return "Dulaglutide"
         }
     }
-    
+
     var brands: [String] {
         switch self {
         case .semaglutide: return ["Ozempic", "Wegovy", "Rybelsus (oral)"]
@@ -37,7 +37,7 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
         case .dulaglutide: return ["Trulicity"]
         }
     }
-    
+
     var halfLifeDays: Double {
         switch self {
         case .semaglutide: return 7.0
@@ -46,7 +46,7 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
         case .dulaglutide: return 4.7
         }
     }
-    
+
     var availableDoses: [Double] {
         switch self {
         case .semaglutide: return [0.25, 0.5, 1.0, 1.7, 2.0, 2.4]
@@ -55,18 +55,18 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
         case .dulaglutide: return [0.75, 1.5, 3.0, 4.5]
         }
     }
-    
+
     var frequency: DoseFrequency {
         switch self {
         case .liraglutide: return .daily
         default: return .weekly
         }
     }
-    
+
     var unit: String {
-        return "mg"
+        "mg"
     }
-    
+
     var description: String {
         switch self {
         case .semaglutide:
@@ -79,7 +79,7 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
             return "A weekly GLP-1 receptor agonist for type 2 diabetes management."
         }
     }
-    
+
     var colorHex: String {
         switch self {
         case .semaglutide: return "667eea"

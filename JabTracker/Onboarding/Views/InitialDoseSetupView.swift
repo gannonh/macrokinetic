@@ -3,7 +3,7 @@ import SwiftUI
 struct InitialDoseSetupView: View {
     @ObservedObject var viewModel: OnboardingViewModel
     @State private var showingDatePicker = false
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -13,7 +13,7 @@ struct InitialDoseSetupView: View {
                         .font(DesignTokens.Typography.largeTitle)
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
-                    
+
                     if let medication = viewModel.selectedMedication {
                         Text("Configure your starting dose for \(medication.displayName)")
                             .font(DesignTokens.Typography.body)
@@ -23,7 +23,7 @@ struct InitialDoseSetupView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 32)
-                
+
                 // Dose configuration
                 VStack(spacing: 24) {
                     // Dose amount with frequency indication
@@ -33,31 +33,30 @@ struct InitialDoseSetupView: View {
                                 let frequencyText = medication.frequency == .daily ? "Daily" : "Weekly"
                                 Text("\(frequencyText) Dose Amount")
                                     .font(DesignTokens.Typography.headline)
-                                
+
                                 DoseSelector(
-                                    selectedDose: $viewModel.selectedDose,
+                                    selectedDose: self.$viewModel.selectedDose,
                                     availableDoses: medication.availableDoses,
-                                    unit: medication.unit
-                                )
+                                    unit: medication.unit)
                             }
                         }
                     }
                     .accessibilityIdentifier("dose-amount-card")
-                    
+
                     // Starting date
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Starting Date")
                                 .font(DesignTokens.Typography.headline)
-                            
-                            Button(action: { showingDatePicker = true }) {
+
+                            Button(action: { self.showingDatePicker = true }) {
                                 HStack {
-                                    Text(viewModel.selectedStartDate, style: .date)
+                                    Text(self.viewModel.selectedStartDate, style: .date)
                                         .font(DesignTokens.Typography.body)
                                         .foregroundColor(.primary)
-                                    
+
                                     Spacer()
-                                    
+
                                     Image(systemName: "calendar")
                                         .foregroundColor(DesignTokens.Colors.primary)
                                 }
@@ -67,29 +66,29 @@ struct InitialDoseSetupView: View {
                             }
                             .accessibilityIdentifier("starting-date-button")
                             .accessibilityLabel("Set starting date")
-                            .accessibilityValue(viewModel.selectedStartDate.formatted(date: .complete, time: .omitted))
+                            .accessibilityValue(self.viewModel.selectedStartDate.formatted(date: .complete, time: .omitted))
                         }
                     }
-                    
+
                     // Injection sites (plural)
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Preferred Injection Sites")
                                 .font(DesignTokens.Typography.headline)
-                            
-                            InjectionSiteSelector(selectedSites: $viewModel.selectedSites, onToggleSite: viewModel.toggleInjectionSite)
+
+                            InjectionSiteSelector(selectedSites: self.$viewModel.selectedSites, onToggleSite: self.viewModel.toggleInjectionSite)
                         }
                     }
                     .accessibilityIdentifier("injection-sites-card")
                 }
                 .padding(.horizontal, 24)
-                
+
                 Spacer(minLength: 100) // Space for navigation buttons
             }
         }
         .background(DesignTokens.Colors.background)
-        .sheet(isPresented: $showingDatePicker) {
-            DatePickerView(selectedDate: $viewModel.selectedStartDate, isPresented: $showingDatePicker)
+        .sheet(isPresented: self.$showingDatePicker) {
+            DatePickerView(selectedDate: self.$viewModel.selectedStartDate, isPresented: self.$showingDatePicker)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("initial-dose-setup-view")
@@ -100,22 +99,22 @@ struct DoseSelector: View {
     @Binding var selectedDose: Double
     let availableDoses: [Double]
     let unit: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                ForEach(availableDoses.prefix(3), id: \.self) { dose in
-                    DoseButton(dose: dose, unit: unit, isSelected: selectedDose == dose) {
-                        selectedDose = dose
+                ForEach(self.availableDoses.prefix(3), id: \.self) { dose in
+                    DoseButton(dose: dose, unit: self.unit, isSelected: self.selectedDose == dose) {
+                        self.selectedDose = dose
                     }
                 }
             }
-            
-            if availableDoses.count > 3 {
+
+            if self.availableDoses.count > 3 {
                 HStack {
-                    ForEach(Array(availableDoses.dropFirst(3)), id: \.self) { dose in
-                        DoseButton(dose: dose, unit: unit, isSelected: selectedDose == dose) {
-                            selectedDose = dose
+                    ForEach(Array(self.availableDoses.dropFirst(3)), id: \.self) { dose in
+                        DoseButton(dose: dose, unit: self.unit, isSelected: self.selectedDose == dose) {
+                            self.selectedDose = dose
                         }
                     }
                     Spacer()
@@ -132,28 +131,28 @@ struct DoseButton: View {
     let unit: String
     let isSelected: Bool
     let onTap: () -> Void
-    
+
     private var formattedDose: String {
         // Format to remove unnecessary trailing zeros
-        if dose.truncatingRemainder(dividingBy: 1) == 0 {
-            return String(format: "%.0f", dose)
+        if self.dose.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", self.dose)
         } else {
-            return String(format: "%.2f", dose).replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
+            return String(format: "%.2f", self.dose).replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
         }
     }
-    
+
     var body: some View {
-        Button(action: onTap) {
-            Text("\(formattedDose) \(unit)")
+        Button(action: self.onTap) {
+            Text("\(self.formattedDose) \(self.unit)")
                 .font(DesignTokens.Typography.body)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(isSelected ? DesignTokens.Colors.primary : Color(.systemGray6))
-                .foregroundColor(isSelected ? .white : .primary)
+                .background(self.isSelected ? DesignTokens.Colors.primary : Color(.systemGray6))
+                .foregroundColor(self.isSelected ? .white : .primary)
                 .cornerRadius(8)
         }
-        .accessibilityIdentifier("dose-button-\(dose)")
-        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityIdentifier("dose-button-\(self.dose)")
+        .accessibilityValue(self.isSelected ? "Selected" : "Not selected")
     }
 }
 
@@ -161,19 +160,19 @@ struct InjectionSiteSelector: View {
     @Binding var selectedSites: Set<String>
     let onToggleSite: (String) -> Void
     private let sites = ["Thigh", "Abdomen", "Arm", "Other"]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Select one or more sites for rotation")
                 .font(DesignTokens.Typography.caption)
                 .foregroundColor(.secondary)
-            
+
             LazyVGrid(columns: [
                 GridItem(.flexible(), spacing: 8),
-                GridItem(.flexible(), spacing: 8)
+                GridItem(.flexible(), spacing: 8),
             ], spacing: 12) {
-                ForEach(sites, id: \.self) { site in
-                    Button(action: { onToggleSite(site) }) {
+                ForEach(self.sites, id: \.self) { site in
+                    Button(action: { self.onToggleSite(site) }) {
                         Text(site)
                             .font(DesignTokens.Typography.body)
                             .lineLimit(1)
@@ -182,11 +181,11 @@ struct InjectionSiteSelector: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 12)
                     }
-                    .background(selectedSites.contains(site) ? DesignTokens.Colors.primary : Color(.systemGray6))
-                    .foregroundColor(selectedSites.contains(site) ? .white : .primary)
+                    .background(self.selectedSites.contains(site) ? DesignTokens.Colors.primary : Color(.systemGray6))
+                    .foregroundColor(self.selectedSites.contains(site) ? .white : .primary)
                     .cornerRadius(8)
                     .accessibilityIdentifier("injection-site-\(site.lowercased())")
-                    .accessibilityValue(selectedSites.contains(site) ? "Selected" : "Not selected")
+                    .accessibilityValue(self.selectedSites.contains(site) ? "Selected" : "Not selected")
                 }
             }
         }
@@ -198,14 +197,14 @@ struct InjectionSiteSelector: View {
 struct DatePickerView: View {
     @Binding var selectedDate: Date
     @Binding var isPresented: Bool
-    
+
     var body: some View {
         NavigationStack {
             VStack {
-                DatePicker("Starting Date", selection: $selectedDate, displayedComponents: .date)
+                DatePicker("Starting Date", selection: self.$selectedDate, displayedComponents: .date)
                     .datePickerStyle(GraphicalDatePickerStyle())
                     .accessibilityIdentifier("date-picker")
-                
+
                 Spacer()
             }
             .padding()
@@ -214,7 +213,7 @@ struct DatePickerView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        isPresented = false
+                        self.isPresented = false
                     }
                     .accessibilityIdentifier("date-picker-done")
                 }

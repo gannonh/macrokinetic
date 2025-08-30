@@ -35,9 +35,9 @@ final class MedicationProfile {
         self.medicationType = medicationType
         // Don't initialize optional relationship - let SwiftData handle it
     }
-    
+
     // MARK: - Computed Properties
-    
+
     var medication: Medication? {
         get {
             Medication(rawValue: self.medicationType)

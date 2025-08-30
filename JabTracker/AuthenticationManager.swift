@@ -58,7 +58,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 name: "UI Test User",
                 weight: 70.0,
                 weightUnit: "kg")
-            
+
             context.insert(mockUser)
             do {
                 try context.save()
