@@ -90,6 +90,65 @@ build_run_sim({
 })
 ```
 
+### Launch Arguments for Testing
+
+The app supports several launch arguments for testing and development:
+
+**`--ui-testing`**:
+- Bypasses real Sign in with Apple authentication
+- Creates mock user (`test@uitesting.com`, "UI Test User")
+- Used by XCUITest for reliable automated testing
+- Can be enabled in Xcode scheme for manual testing without authentication
+
+**`--reset-app-data`**:
+- Clears all SwiftData users from database on launch
+- Clears onboarding completion status from UserDefaults
+- Resets to fresh app state (like first-time install)
+- Useful for testing onboarding and first-run experiences
+
+**`--force-onboarding`**:
+- Forces onboarding flow to show even if user has completed it
+- Useful for repeatedly testing onboarding flow during development
+- Overrides normal onboarding completion logic
+
+**Usage Patterns:**
+
+**In XCUITest:**
+```swift
+app.launchArguments = ["--ui-testing", "--reset-app-data"]
+// Bypasses auth + gives fresh state for each test
+```
+
+**In Xcode Scheme (for Manual Testing):**
+- Edit Scheme → Run → Arguments → Arguments Passed On Launch
+- Enable flags as needed for different testing scenarios
+- `--ui-testing`: Skip authentication during development
+- `--reset-app-data`: Test first-run experience
+- `--force-onboarding`: Test onboarding flow repeatedly
+
+**Production:**
+- All flags should be disabled for normal user experience
+
+### XcodeBuildMCP Simulator Usage
+
+**IMPORTANT**: When using XcodeBuildMCP tools, prefer `simulatorId` over `simulatorName` to avoid OS version parsing issues:
+
+```bash
+# ❌ This can cause "option 'OS' may only be provided once" errors
+build_run_sim({ simulatorName: "iPhone 15,OS=17.5" })
+
+# ✅ Use UUID instead (get from list_sims)
+build_run_sim({ simulatorId: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB" })
+
+# Get available simulator UUIDs
+list_sims()
+```
+
+**Simulator UUID vs Name:**
+- `simulatorName`: "iPhone 15" (without OS version) - can be unreliable
+- `simulatorId`: Full UUID from `list_sims()` - always works correctly
+- OS version is automatically detected when using UUID
+
 ### Documentation
 ```bash
 # Generate Swift documentation (if using DocC)
@@ -391,7 +450,6 @@ This app handles medical data and dosing information. Ensure:
 - Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
 
 ## Authentication Implementation Gotchas
-- UI testing with real Sign in with Apple is not feasible - use mock authentication
 - Biometric authentication simulator limitations - test on real devices for accuracy
 - UserDefaults can be unreliable in UI tests - use in-memory storage when needed
 - Authentication state must be checked on app launch for proper flow control
@@ -428,35 +486,12 @@ This app handles medical data and dosing information. Ensure:
 - Audit trails (`createdAt`, `updatedAt`) are essential for debugging and data integrity
 - Default values should be meaningful - empty strings for required text, sensible numbers for medical data
 
-# Recent Major Improvements
-
-## Issue #16 Code Quality Improvements (PR #17)
-**Completed**: August 26, 2025  
-**Impact**: Foundational architecture improvements and data integrity fixes
-
-### What Was Fixed
-- ✅ **SwiftData Model Optionality**: Changed from all-optional properties to required fields with defaults
-- ✅ **Authentication Flow Consolidation**: Removed duplicate sign-in handling methods
-- ✅ **Relationship Configuration**: Added proper `@Relationship` attributes with `inverse` parameters  
-- ✅ **Apple ID Integration**: Added missing `appleUserId` field for authentication linking
-- ✅ **Error Handling**: Replaced unsafe `fatalError` patterns with graceful error handling
-- ✅ **Test Suite Updates**: Updated all tests to work with improved model structure
-
-### Architectural Lessons Learned
+## Architectural Lessons Learned
 - All-optional SwiftData models create unnecessary complexity and runtime uncertainty
 - Missing relationship configurations cause CloudKit sync and cascade delete issues
 - Authentication flows can accumulate duplicate code that needs regular consolidation
 - Medical apps need especially reliable data models with meaningful defaults
 - Code quality analysis reveals architectural decisions that need documentation
-
-### Files Updated
-- `Models/User.swift`, `Models/Dose.swift`, `Models/MedicationProfile.swift` - Fixed optionality
-- `AuthenticationManager.swift` - Consolidated duplicate methods, improved error handling
-- `DataController.swift` - Enhanced CloudKit configuration
-- All test files - Updated for new model structure
-- Documentation updated to reflect actual implementation patterns
-
-This work established a much stronger foundation for continued feature development.
 
 ## XcodeBuildMCP UI Testing & Accessibility
 

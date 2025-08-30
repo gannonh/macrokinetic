@@ -126,6 +126,10 @@ class AuthenticationManager: NSObject, ObservableObject {
             Self.logger.error("Failed to reset app data: \(error, privacy: .public)")
         }
 
+        // Clear onboarding status from UserDefaults
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
+
         await MainActor.run {
             self.currentUser = nil
             self.authenticationState = .notAuthenticated
