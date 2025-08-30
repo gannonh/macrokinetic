@@ -132,9 +132,18 @@ struct DoseButton: View {
     let isSelected: Bool
     let onTap: () -> Void
     
+    private var formattedDose: String {
+        // Format to remove unnecessary trailing zeros
+        if dose.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", dose)
+        } else {
+            return String(format: "%.2f", dose).replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
+        }
+    }
+    
     var body: some View {
         Button(action: onTap) {
-            Text("\(dose, specifier: "%.1f") \(unit)")
+            Text("\(formattedDose) \(unit)")
                 .font(DesignTokens.Typography.body)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
