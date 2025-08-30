@@ -14,7 +14,7 @@ class OnboardingViewModel: ObservableObject {
     @Published var selectedMedication: Medication?
     @Published var selectedDose: Double = 0.0
     @Published var selectedStartDate: Date = Date()
-    @Published var selectedSite: String = "Thigh"
+    @Published var selectedSites: Set<String> = ["Thigh"] // Changed to Set for multiple sites
     @Published var notificationsGranted: Bool = false
     @Published var healthKitGranted: Bool = false
     @Published var isLoading: Bool = false
@@ -48,7 +48,7 @@ class OnboardingViewModel: ObservableObject {
         case .medicationSelection:
             return selectedMedication != nil
         case .doseSetup:
-            return selectedDose > 0
+            return selectedDose > 0 && !selectedSites.isEmpty // Require at least one site
         case .notifications, .healthKit, .subscription:
             return true
         }
@@ -75,6 +75,14 @@ class OnboardingViewModel: ObservableObject {
         // Set default dose for selected medication
         if let firstDose = medication.availableDoses.first {
             selectedDose = firstDose
+        }
+    }
+    
+    func toggleInjectionSite(_ site: String) {
+        if selectedSites.contains(site) {
+            selectedSites.remove(site)
+        } else {
+            selectedSites.insert(site)
         }
     }
     
@@ -141,11 +149,12 @@ class OnboardingViewModel: ObservableObject {
         )
         context.insert(medicationProfile)
         
-        // Create initial dose record
+        // Create initial dose record with first selected site
+        let primarySite = selectedSites.first ?? "Thigh"
         let initialDose = Dose(
             amount: selectedDose,
             timestamp: selectedStartDate,
-            site: selectedSite,
+            site: primarySite,
             notes: "Initial dose - onboarding",
             user: user,
             medication: medicationProfile

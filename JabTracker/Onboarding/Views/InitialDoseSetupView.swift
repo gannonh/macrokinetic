@@ -26,13 +26,14 @@ struct InitialDoseSetupView: View {
                 
                 // Dose configuration
                 VStack(spacing: 24) {
-                    // Dose amount
+                    // Dose amount with frequency indication
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Dose Amount")
-                                .font(DesignTokens.Typography.headline)
-                            
                             if let medication = viewModel.selectedMedication {
+                                let frequencyText = medication.frequency == .daily ? "Daily" : "Weekly"
+                                Text("\(frequencyText) Dose Amount")
+                                    .font(DesignTokens.Typography.headline)
+                                
                                 DoseSelector(
                                     selectedDose: $viewModel.selectedDose,
                                     availableDoses: medication.availableDoses,
@@ -70,16 +71,16 @@ struct InitialDoseSetupView: View {
                         }
                     }
                     
-                    // Injection site
+                    // Injection sites (plural)
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Preferred Injection Site")
+                            Text("Preferred Injection Sites")
                                 .font(DesignTokens.Typography.headline)
                             
-                            InjectionSiteSelector(selectedSite: $viewModel.selectedSite)
+                            InjectionSiteSelector(selectedSites: $viewModel.selectedSites, onToggleSite: viewModel.toggleInjectionSite)
                         }
                     }
-                    .accessibilityIdentifier("injection-site-card")
+                    .accessibilityIdentifier("injection-sites-card")
                 }
                 .padding(.horizontal, 24)
                 
@@ -157,27 +158,40 @@ struct DoseButton: View {
 }
 
 struct InjectionSiteSelector: View {
-    @Binding var selectedSite: String
-    private let sites = ["Thigh", "Stomach", "Arm", "Other"]
+    @Binding var selectedSites: Set<String>
+    let onToggleSite: (String) -> Void
+    private let sites = ["Thigh", "Abdomen", "Arm", "Other"]
     
     var body: some View {
-        HStack {
-            ForEach(sites, id: \.self) { site in
-                Button(site) {
-                    selectedSite = site
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Select one or more sites for rotation")
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8)
+            ], spacing: 12) {
+                ForEach(sites, id: \.self) { site in
+                    Button(action: { onToggleSite(site) }) {
+                        Text(site)
+                            .font(DesignTokens.Typography.body)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                    }
+                    .background(selectedSites.contains(site) ? DesignTokens.Colors.primary : Color(.systemGray6))
+                    .foregroundColor(selectedSites.contains(site) ? .white : .primary)
+                    .cornerRadius(8)
+                    .accessibilityIdentifier("injection-site-\(site.lowercased())")
+                    .accessibilityValue(selectedSites.contains(site) ? "Selected" : "Not selected")
                 }
-                .font(DesignTokens.Typography.body)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(selectedSite == site ? DesignTokens.Colors.primary : Color(.systemGray6))
-                .foregroundColor(selectedSite == site ? .white : .primary)
-                .cornerRadius(8)
-                .accessibilityIdentifier("injection-site-\(site.lowercased())")
-                .accessibilityValue(selectedSite == site ? "Selected" : "Not selected")
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Injection site selection")
+        .accessibilityLabel("Injection sites selection - multiple sites can be selected")
     }
 }
 
