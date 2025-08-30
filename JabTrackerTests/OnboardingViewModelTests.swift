@@ -97,7 +97,7 @@ struct OnboardingViewModelTests {
         viewModel.selectMedication(.semaglutide)
         viewModel.selectedDose = 1.0
         viewModel.selectedStartDate = Date()
-        viewModel.selectedSite = "Thigh"
+        viewModel.selectedSites = ["Thigh"]
         
         // Complete onboarding
         try await viewModel.completeOnboarding()
