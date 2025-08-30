@@ -29,7 +29,9 @@
 		55D4B2F20F400995B8CA7DD8 /* DataControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636E8EEE1932A0793EB3D786 /* DataControllerTests.swift */; };
 		56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65714DDE038569FC5C471011 /* DesignSystemUITests.swift */; };
 		58DCBA4F2D6BBF36722DF807 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07231EC776BF08698D0A862E /* OnboardingViewModel.swift */; };
+		5BA3888CBFC9AA1A20CD5A47 /* MedicationCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 635BC9949259E918CE8EC8C7 /* MedicationCoverageTests.swift */; };
 		5C6CD87C388E04E6C94391C2 /* SubscriptionPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083F077D2768D73779F00D23 /* SubscriptionPlaceholderView.swift */; };
+		5CE07BEE514FC9B1C700823C /* MedicationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8686B61DCDA3746CC692F9F3 /* MedicationTests.swift */; };
 		5F5B4392A98D2A1D90CFE5F7 /* MedicationProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AB5564A077F30F857788B4 /* MedicationProfile.swift */; };
 		682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */; };
 		6D1110D677A82B0FDC706888 /* UserProfileViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */; };
@@ -42,6 +44,7 @@
 		885F734D833B8271C9413C0B /* BiometricAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39713A893FA00DB342B6E55 /* BiometricAuthManager.swift */; };
 		8C4394182B8C8AB47223C342 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D9360EE9CBE29C1BF3DE26 /* User.swift */; };
 		90660CC05AD50E39F853A144 /* ButtonStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCE8855C807D9F0241E8E43 /* ButtonStyleTests.swift */; };
+		97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */; };
 		9AE888EF45D4062EBC4118E2 /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */; };
 		9E27575CFDF53DA45781E258 /* InitialDoseSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD8766844D8A02928C9250E8 /* InitialDoseSetupView.swift */; };
 		9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4068B3EB73128183393A2D3B /* ButtonComponents.swift */; };
@@ -105,6 +108,7 @@
 		31BF950267D4B8A252C4B826 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		345FCEAEFAE46B98B3CD4E7B /* Medication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Medication.swift; sourceTree = "<group>"; };
 		35AB5564A077F30F857788B4 /* MedicationProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfile.swift; sourceTree = "<group>"; };
+		3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitIntegrationUITests.swift; sourceTree = "<group>"; };
 		4068B3EB73128183393A2D3B /* ButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonComponents.swift; sourceTree = "<group>"; };
 		4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITests.swift; sourceTree = "<group>"; };
@@ -113,6 +117,7 @@
 		522C00B809256C4EDA8C764C /* AuthenticationDelegateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDelegateTests.swift; sourceTree = "<group>"; };
 		57F6A02DB3F9C27E8AFE1140 /* PermissionsRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsRequestView.swift; sourceTree = "<group>"; };
 		5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModelTests.swift; sourceTree = "<group>"; };
+		635BC9949259E918CE8EC8C7 /* MedicationCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationCoverageTests.swift; sourceTree = "<group>"; };
 		636E8EEE1932A0793EB3D786 /* DataControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerTests.swift; sourceTree = "<group>"; };
 		63B10446D868275C35DDCC8E /* AuthenticationDelegateMethodTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDelegateMethodTests.swift; sourceTree = "<group>"; };
 		64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -126,6 +131,7 @@
 		78475804BE3FA10B539F70D5 /* Dose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dose.swift; sourceTree = "<group>"; };
 		7AB602E699FA04416237C321 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugUITests.swift; sourceTree = "<group>"; };
+		8686B61DCDA3746CC692F9F3 /* MedicationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationTests.swift; sourceTree = "<group>"; };
 		8CCE8855C807D9F0241E8E43 /* ButtonStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyleTests.swift; sourceTree = "<group>"; };
 		8FD08D16B26A7F9381D85BF2 /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
 		92209045E4347373E0C9BCAB /* Colors+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Colors+Extensions.swift"; sourceTree = "<group>"; };
@@ -239,6 +245,8 @@
 				636E8EEE1932A0793EB3D786 /* DataControllerTests.swift */,
 				AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */,
 				CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */,
+				635BC9949259E918CE8EC8C7 /* MedicationCoverageTests.swift */,
+				8686B61DCDA3746CC692F9F3 /* MedicationTests.swift */,
 				19090A1FF0084878E8E5E150 /* OnboardingViewModelTests.swift */,
 				7150A995B6D4936C3556044A /* PersistenceTests.swift */,
 				74561A6393FDC6200F4C41E6 /* PharmacokineticsTests.swift */,
@@ -311,6 +319,7 @@
 			isa = PBXGroup;
 			children = (
 				2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */,
+				3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */,
 				B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */,
 				7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */,
 				65714DDE038569FC5C471011 /* DesignSystemUITests.swift */,
@@ -435,6 +444,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */,
+				97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */,
 				747C6E49FE3A1CF40CBB6F5D /* CodeGen.swift in Sources */,
 				4667532FC92891E871E29355 /* DebugUITests.swift in Sources */,
 				56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */,
@@ -470,6 +480,8 @@
 				55D4B2F20F400995B8CA7DD8 /* DataControllerTests.swift in Sources */,
 				D620D4D470F1A3912620A111 /* DesignSystemTests.swift in Sources */,
 				B000368714C479D72A1E41B7 /* JabTrackerTests.swift in Sources */,
+				5BA3888CBFC9AA1A20CD5A47 /* MedicationCoverageTests.swift in Sources */,
+				5CE07BEE514FC9B1C700823C /* MedicationTests.swift in Sources */,
 				02F2C52197FFBD349FC6D4F1 /* OnboardingViewModelTests.swift in Sources */,
 				FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */,
 				3CF9D98330F58C68EEE51B53 /* PharmacokineticsTests.swift in Sources */,
