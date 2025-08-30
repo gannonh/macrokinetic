@@ -24,7 +24,7 @@ class OnboardingViewModel: ObservableObject {
     private let dataController: DataController
     private let authManager: AuthenticationManager
 
-    init(dataController: DataController = DataController.shared, authManager: AuthenticationManager) {
+    init(dataController: DataController, authManager: AuthenticationManager) {
         self.dataController = dataController
         self.authManager = authManager
         self.updateProgress()
