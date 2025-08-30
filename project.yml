@@ -56,3 +56,8 @@ schemes:
       targets:
         - JabTrackerTests
         - JabTrackerUITests
+    run:
+      commandLineArguments:
+        "--force-onboarding": true
+        "--reset-app-data": false
+        "--ui-testing": false
