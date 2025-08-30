@@ -9,7 +9,8 @@
           "PharmacokineticsEngine.swift",
           "User.swift",
           "Dose.swift",
-          "MedicationProfile.swift"
+          "MedicationProfile.swift",
+          "Medication.swift"
         ]
       },
       "infrastructure": {
@@ -30,12 +31,17 @@
       "view_models": {
         "threshold": 85,
         "description": "ObservableObject classes with testable business logic",
-        "files": []
+        "files": [
+          "OnboardingViewModel.swift"
+        ]
       },
       "utilities": {
         "threshold": 75,
         "description": "Helper functions, extensions, and utility classes",
-        "files": []
+        "files": [
+          "ProfileValidation.swift",
+          "Array+Unique.swift"
+        ]
       }
     }
   },
