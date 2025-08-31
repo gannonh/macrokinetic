@@ -6,9 +6,21 @@ struct JabTrackerApp: App {
     let dataController = DataController.shared
     @StateObject private var authManager = AuthenticationManager()
     @StateObject private var biometricManager = BiometricAuthManager()
+    @StateObject private var onboardingCoordinator: OnboardingCoordinator
     @Environment(\.scenePhase) var scenePhase
     @State private var hasJustSignedIn = false
     @State private var hasRecentBiometricAuth = false
+    @State private var showingOnboarding = false
+
+    init() {
+        let authManager = AuthenticationManager()
+        let dataController = DataController.shared
+        self._authManager = StateObject(wrappedValue: authManager)
+        self._biometricManager = StateObject(wrappedValue: BiometricAuthManager())
+        self._onboardingCoordinator = StateObject(wrappedValue: OnboardingCoordinator(
+            authManager: authManager,
+            dataController: dataController))
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -19,6 +31,10 @@ struct JabTrackerApp: App {
                         .modelContainer(self.dataController.container)
                         .environmentObject(self.authManager)
                         .environmentObject(self.biometricManager)
+                        .sheet(isPresented: self.$showingOnboarding) {
+                            OnboardingView(isPresented: self.$showingOnboarding, authManager: self.authManager)
+                                .environmentObject(self.authManager)
+                        }
                 case .notAuthenticated:
                     AuthenticationView()
                         .environmentObject(self.authManager)
@@ -38,6 +54,10 @@ struct JabTrackerApp: App {
             .onChange(of: self.authManager.authenticationState) { _, newState in
                 if newState == .authenticated {
                     self.hasJustSignedIn = true
+                    // Check if user needs onboarding
+                    self.onboardingCoordinator.checkOnboardingStatus()
+                    self.showingOnboarding = self.onboardingCoordinator.shouldShowOnboarding
+
                     // Reset the flag after a short delay
                     Task {
                         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
@@ -48,6 +68,11 @@ struct JabTrackerApp: App {
             .onAppear {
                 Task {
                     await self.authManager.checkAuthenticationStatus()
+                    // Check onboarding status after auth check
+                    if self.authManager.authenticationState == .authenticated {
+                        self.onboardingCoordinator.checkOnboardingStatus()
+                        self.showingOnboarding = self.onboardingCoordinator.shouldShowOnboarding
+                    }
                 }
             }
         }

@@ -51,16 +51,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             ProcessInfo.processInfo.arguments.contains("--ui-testing")
 
         if isUITesting {
-            await MainActor.run {
-                self.authenticationState = .authenticated
-                // Create a simple test user
-                self.currentUser = User(
-                    email: "test@uitesting.com",
-                    name: "UI Test User",
-                    weight: 70.0,
-                    weightUnit: "kg",
-                    timezone: "UTC")
-            }
+            await self.setupUITestingUser()
             return
         }
 
@@ -114,9 +105,37 @@ class AuthenticationManager: NSObject, ObservableObject {
             Self.logger.error("Failed to reset app data: \(error, privacy: .public)")
         }
 
+        // Clear onboarding status from UserDefaults
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
+
         await MainActor.run {
             self.currentUser = nil
             self.authenticationState = .notAuthenticated
+        }
+    }
+
+    private func setupUITestingUser() async {
+        let context = self.dataController.container.mainContext
+        let mockUser = User(
+            email: "test@uitesting.com",
+            name: "UI Test User",
+            weight: 70.0,
+            weightUnit: "kg")
+
+        context.insert(mockUser)
+        do {
+            try context.save()
+            await MainActor.run {
+                self.currentUser = mockUser
+                self.authenticationState = .authenticated
+            }
+            Self.logger.info("✅ AuthenticationManager: UI testing mock user created and persisted")
+        } catch {
+            Self.logger.error("❌ AuthenticationManager: Failed to persist UI testing user: \(error)")
+            await MainActor.run {
+                self.authenticationState = .notAuthenticated
+            }
         }
     }
 

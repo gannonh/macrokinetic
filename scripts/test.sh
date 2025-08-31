@@ -13,9 +13,10 @@ DEVICES=(
 
 DEFAULT_DEVICE="iPhone 15,OS=17.5"
 ENABLE_COVERAGE=false
+RESET_DEVICE=false
 
 show_usage() {
-    echo "Usage: $0 {unit|ui|all} [device] [test_file] [--coverage]"
+    echo "Usage: $0 {unit|ui|all} [device] [test_file] [--coverage] [--reset]"
     echo ""
     echo "Test types:"
     echo "  unit - Run unit tests only"
@@ -29,6 +30,7 @@ show_usage() {
     echo ""
     echo "Options:"
     echo "  --coverage  Generate code coverage report and display results"
+    echo "  --reset     Reset simulator before running tests (clears all permissions)"
     echo ""
     echo "Available unit test files (file-based organization):"
     echo "  PersistenceTests      - Core Data and persistence functionality"
@@ -42,6 +44,7 @@ show_usage() {
     echo "  $0 unit 1 PersistenceTests                              # Run all persistence-related unit tests"
     echo "  $0 unit 1 DesignSystemTests                             # Run all design system unit tests"
     echo "  $0 unit 1 --coverage                                    # Run unit tests with coverage report"
+    echo "  $0 ui 1 --reset                                         # Run UI tests with fresh simulator state"
     echo "  $0 all --coverage                                       # Run all tests with coverage report"
     echo ""
     echo "Note: Unit tests use file-based organization for Swift Testing compatibility."
@@ -64,6 +67,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --coverage)
             ENABLE_COVERAGE=true
+            shift
+            ;;
+        --reset)
+            RESET_DEVICE=true
             shift
             ;;
         *)
@@ -92,6 +99,24 @@ fi
 SIMULATOR="platform=iOS Simulator,name=${SELECTED_DEVICE}"
 
 echo "📱 Using simulator: $SELECTED_DEVICE"
+
+# Reset simulator if requested
+if [ "$RESET_DEVICE" = true ]; then
+    echo "🔄 Resetting simulator to clear permissions..."
+    # Extract device name without OS version for UUID lookup
+    DEVICE_NAME="${SELECTED_DEVICE%,*}"
+    SIMULATOR_UUID=$(xcrun simctl list devices | grep "$DEVICE_NAME" | grep -v "unavailable" | head -1 | grep -o '[A-F0-9-]\{36\}')
+    
+    if [ -n "$SIMULATOR_UUID" ]; then
+        echo "🎯 Found simulator UUID: $SIMULATOR_UUID for $DEVICE_NAME"
+        xcrun simctl shutdown "$SIMULATOR_UUID" 2>/dev/null || true
+        xcrun simctl erase "$SIMULATOR_UUID"
+        xcrun simctl boot "$SIMULATOR_UUID"
+        echo "✅ Simulator reset complete"
+    else
+        echo "⚠️  Could not find simulator UUID for $DEVICE_NAME - continuing without reset"
+    fi
+fi
 
 # Build test target based on type and test file
 build_test_target() {

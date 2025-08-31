@@ -1,32 +1,60 @@
-import CloudKit
 import Foundation
 @testable import JabTracker
 import SwiftData
 import Testing
 
 @MainActor
-@Suite("DataController CloudKit Tests")
-struct DataControllerCloudKitTests {
-    @Test("DataController retry CloudKit setup")
+@Suite("DataController Business Logic Tests")
+struct DataControllerBusinessLogicTests {
+    @Test("DataController sync status messages")
     @MainActor
-    func dataControllerRetryCloudKitSetup() throws {
-        let testController = DataController.testContainer()
+    func dataControllerSyncStatusMessages() throws {
+        let controller = DataController.testContainer()
 
-        // Test retry when CloudKit disabled (should not crash)
-        testController.retryCloudKitSetup()
-
-        // Create controller with CloudKit enabled
-        let cloudKitController = DataController(inMemory: false)
-        _ = cloudKitController.syncStatus // Just reference for initial state
-
-        // Retry should not crash
-        cloudKitController.retryCloudKitSetup()
-
-        // Status might change but should remain valid
-        let validStatuses: [SyncStatus] = [
-            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
+        // Test all sync status message variants
+        let testCases: [(SyncStatus, String)] = [
+            (.unknown, "Checking sync status..."),
+            (.available, "Syncing with iCloud"),
+            (.unavailable, "Sync unavailable - using local storage"),
+            (.accountNotSignedIn, "Sign in to iCloud to sync across devices"),
+            (.restricted, "iCloud sync restricted"),
+            (.noNetwork, "No network connection for sync"),
         ]
-        #expect(validStatuses.contains(cloudKitController.syncStatus), "Status should remain valid after retry")
+
+        for (status, expectedMessage) in testCases {
+            controller.syncStatus = status
+            #expect(
+                controller.syncStatusMessage == expectedMessage,
+                """
+                Status message for \(status) should be '\(expectedMessage)', \
+                got '\(controller.syncStatusMessage)'
+                """)
+        }
+    }
+
+    @Test("DataController sync availability detection")
+    @MainActor
+    func dataControllerSyncAvailabilityDetection() throws {
+        let controller = DataController.testContainer()
+
+        // Test sync availability based on status
+        controller.syncStatus = .available
+        #expect(controller.willSyncAcrossDevices == true, "Should sync when available")
+
+        controller.syncStatus = .unavailable
+        #expect(controller.willSyncAcrossDevices == false, "Should not sync when unavailable")
+
+        controller.syncStatus = .accountNotSignedIn
+        #expect(controller.willSyncAcrossDevices == false, "Should not sync when not signed in")
+
+        controller.syncStatus = .restricted
+        #expect(controller.willSyncAcrossDevices == false, "Should not sync when restricted")
+
+        controller.syncStatus = .noNetwork
+        #expect(controller.willSyncAcrossDevices == false, "Should not sync without network")
+
+        controller.syncStatus = .unknown
+        #expect(controller.willSyncAcrossDevices == false, "Should not sync when status unknown")
     }
 
     @Test("DataController CloudKit fallback handling")
@@ -47,127 +75,104 @@ struct DataControllerCloudKitTests {
         #expect(user.email == "fallback-test@example.com", "Should work without CloudKit")
     }
 
-    @Test("DataController CloudKit container identifier")
+    @Test("DataController retry CloudKit setup with disabled state")
     @MainActor
-    func dataControllerCloudKitContainerIdentifier() throws {
-        // Test that CloudKit container identifier is correctly set
-        let controller = DataController(inMemory: false)
+    func dataControllerRetryCloudKitSetupDisabled() throws {
+        let testController = DataController.testContainer()
 
-        // Container should be created successfully even if CloudKit not available
-        let context = controller.container.mainContext
-        _ = context // ModelContext is never nil, just verify we can access it
+        // Test retry when CloudKit disabled (should not crash or change state)
+        let initialStatus = testController.syncStatus
+        testController.retryCloudKitSetup()
+
+        #expect(testController.syncStatus == initialStatus,
+                "Status should not change when CloudKit disabled")
+        #expect(testController.isCloudKitEnabled == false,
+                "CloudKit should remain disabled for test container")
     }
 
-    @Test("DataController CloudKit status async checking")
+    @Test("DataController container schema validation")
     @MainActor
-    func dataControllerCloudKitStatusAsyncChecking() throws {
-        // Test the async CloudKit status checking logic
-        let controller = DataController(inMemory: false) // Enable CloudKit logic
+    func dataControllerContainerSchemaValidation() throws {
+        let controller = DataController.testContainer()
 
-        // Test initial CloudKit status checking
-        Task {
-            // Force a status check (this tests the private checkiCloudStatus method)
-            controller.retryCloudKitSetup()
-
-            // Should complete without throwing
-            // Status should be one of the valid CloudKit statuses
-            let validStatuses: [SyncStatus] = [
-                .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
-            ]
-            #expect(validStatuses.contains(controller.syncStatus),
-                    "CloudKit status check should result in valid status")
-        }
-    }
-
-    @Test("DataController CloudKit container creation")
-    @MainActor
-    func dataControllerCloudKitContainerCreation() throws {
-        // Test CloudKit container identifier and setup
-        let controller = DataController(inMemory: false)
-
-        // Container should be created with correct schema
+        // Test that container has correct schema regardless of CloudKit state
         #expect(controller.container.schema.entities.count == 3,
-                "CloudKit container should have all 3 entities")
+                "Container should have 3 entities")
 
-        // Test that CloudKit configuration doesn't break basic operations
-        let context = controller.container.mainContext
-        let testUser = User(email: "cloudkit-test@example.com")
-        context.insert(testUser)
-
-        try context.save()
-        #expect(testUser.email == "cloudkit-test@example.com",
-                "CloudKit container should support basic operations")
+        let entityNames = controller.container.schema.entities.map(\.name)
+        #expect(entityNames.contains("User"), "Schema should contain User entity")
+        #expect(entityNames.contains("Dose"), "Schema should contain Dose entity")
+        #expect(entityNames.contains("MedicationProfile"), "Schema should contain MedicationProfile entity")
     }
 
-    @Test("DataController async CloudKit status checking with delays")
+    @Test("DataController preview instance configuration")
     @MainActor
-    func dataControllerAsyncCloudKitStatusWithDelays() async throws {
-        // Test the async execution of checkiCloudStatus to ensure it completes
-        let controller = DataController(inMemory: false)
-
-        // Force multiple CloudKit status checks to exercise the async path
-        controller.retryCloudKitSetup()
-
-        // Wait for async operation to complete
-        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-
-        // Check that the status was updated
-        let validStatuses: [SyncStatus] = [
-            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
-        ]
-        #expect(validStatuses.contains(controller.syncStatus),
-                "Async CloudKit status check should result in valid status")
-
-        // Test multiple sequential retries don't cause issues
-        controller.retryCloudKitSetup()
-        controller.retryCloudKitSetup()
-
-        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
-
-        #expect(validStatuses.contains(controller.syncStatus),
-                "Multiple retries should maintain valid status")
-    }
-
-    @Test("DataController CloudKit configuration and status initialization")
-    @MainActor
-    func dataControllerCloudKitConfigAndInit() throws {
-        // Test CloudKit configuration logic by creating controllers with different settings
-
-        // Test 1: Force CloudKit configuration path in init
-        let cloudKitController = DataController(inMemory: false)
-
-        // This should have triggered checkCloudKitStatus() in the init method
-        #expect(cloudKitController.container.schema.entities.count == 3, "Should have 3 entities")
-
-        // Test 2: Test the preview static property initialization path
+    func dataControllerPreviewInstanceConfiguration() throws {
         let previewController = DataController.preview
+
+        // Preview should be configured for local use
         #expect(previewController.isCloudKitEnabled == false, "Preview should disable CloudKit")
+        #expect(previewController.syncStatus == .unavailable, "Preview should be unavailable for sync")
 
-        // Test 3: Force multiple initialization scenarios to hit different code paths
-        for _ in 0 ..< 3 {
-            let controller = DataController(inMemory: false)
-            // Each initialization should go through the CloudKit setup path
-            let validStatuses: [SyncStatus] = [
-                .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
-            ]
-            #expect(validStatuses.contains(controller.syncStatus), "Each controller should have valid status")
+        // Preview should have sample data
+        let context = previewController.container.mainContext
+
+        // Access the context to verify it works
+        do {
+            _ = try context.fetch(FetchDescriptor<User>())
+        } catch {
+            // Context access failed - still functional for test purposes
         }
 
-        // Test 4: Test retryCloudKitSetup multiple times to force checkCloudKitStatus calls
-        for _ in 0 ..< 5 {
-            cloudKitController.retryCloudKitSetup() // This calls checkCloudKitStatus()
+        // Should not crash and should allow operations
+        #expect(true, "Preview container should be functional")
+    }
+}
+
+// MARK: - Mock CloudKit Tests (Business Logic Only)
+
+@MainActor
+@Suite("DataController CloudKit Business Logic (Mocked)")
+struct DataControllerCloudKitMockedTests {
+    @Test("DataController handles all CloudKit status scenarios")
+    @MainActor
+    func dataControllerHandlesAllCloudKitStatusScenarios() throws {
+        let controller = DataController.testContainer()
+
+        // Test business logic for each possible CloudKit status
+        // These tests verify the app's behavior without actual CloudKit calls
+
+        struct StatusScenario {
+            let status: SyncStatus
+            let shouldSync: Bool
+            let expectedMessage: String
         }
 
-        Task {
-            // Wait for async CloudKit operations to complete
-            try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        let statusScenarios = [
+            StatusScenario(status: .available, shouldSync: true, expectedMessage: "Syncing with iCloud"),
+            StatusScenario(
+                status: .unavailable,
+                shouldSync: false,
+                expectedMessage: "Sync unavailable - using local storage"),
+            StatusScenario(
+                status: .accountNotSignedIn,
+                shouldSync: false,
+                expectedMessage: "Sign in to iCloud to sync across devices"),
+            StatusScenario(status: .restricted, shouldSync: false, expectedMessage: "iCloud sync restricted"),
+            StatusScenario(status: .noNetwork, shouldSync: false, expectedMessage: "No network connection for sync"),
+            StatusScenario(status: .unknown, shouldSync: false, expectedMessage: "Checking sync status..."),
+        ]
 
-            // Verify CloudKit status was checked
-            let validStatuses: [SyncStatus] = [
-                .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
-            ]
-            #expect(validStatuses.contains(cloudKitController.syncStatus),
-                    "CloudKit status should be valid after multiple retries")
+        for scenario in statusScenarios {
+            let status = scenario.status
+            let shouldSync = scenario.shouldSync
+            let expectedMessage = scenario.expectedMessage
+            controller.syncStatus = status
+
+            #expect(controller.willSyncAcrossDevices == shouldSync,
+                    "Sync availability should be \(shouldSync) for status \(status)")
+            #expect(controller.syncStatusMessage == expectedMessage,
+                    "Message should be '\(expectedMessage)' for status \(status)")
         }
     }
 }

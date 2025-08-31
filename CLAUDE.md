@@ -90,6 +90,65 @@ build_run_sim({
 })
 ```
 
+### Launch Arguments for Testing
+
+The app supports several launch arguments for testing and development:
+
+**`--ui-testing`**:
+- Bypasses real Sign in with Apple authentication
+- Creates mock user (`test@uitesting.com`, "UI Test User")
+- Used by XCUITest for reliable automated testing
+- Can be enabled in Xcode scheme for manual testing without authentication
+
+**`--reset-app-data`**:
+- Clears all SwiftData users from database on launch
+- Clears onboarding completion status from UserDefaults
+- Resets to fresh app state (like first-time install)
+- Useful for testing onboarding and first-run experiences
+
+**`--force-onboarding`**:
+- Forces onboarding flow to show even if user has completed it
+- Useful for repeatedly testing onboarding flow during development
+- Overrides normal onboarding completion logic
+
+**Usage Patterns:**
+
+**In XCUITest:**
+```swift
+app.launchArguments = ["--ui-testing", "--reset-app-data"]
+// Bypasses auth + gives fresh state for each test
+```
+
+**In Xcode Scheme (for Manual Testing):**
+- Edit Scheme → Run → Arguments → Arguments Passed On Launch
+- Enable flags as needed for different testing scenarios
+- `--ui-testing`: Skip authentication during development
+- `--reset-app-data`: Test first-run experience
+- `--force-onboarding`: Test onboarding flow repeatedly
+
+**Production:**
+- All flags should be disabled for normal user experience
+
+### XcodeBuildMCP Simulator Usage
+
+**IMPORTANT**: When using XcodeBuildMCP tools, prefer `simulatorId` over `simulatorName` to avoid OS version parsing issues:
+
+```bash
+# ❌ This can cause "option 'OS' may only be provided once" errors
+build_run_sim({ simulatorName: "iPhone 15,OS=17.5" })
+
+# ✅ Use UUID instead (get from list_sims)
+build_run_sim({ simulatorId: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB" })
+
+# Get available simulator UUIDs
+list_sims()
+```
+
+**Simulator UUID vs Name:**
+- `simulatorName`: "iPhone 15" (without OS version) - can be unreliable
+- `simulatorId`: Full UUID from `list_sims()` - always works correctly
+- OS version is automatically detected when using UUID
+
 ### Documentation
 ```bash
 # Generate Swift documentation (if using DocC)
@@ -391,7 +450,6 @@ This app handles medical data and dosing information. Ensure:
 - Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
 
 ## Authentication Implementation Gotchas
-- UI testing with real Sign in with Apple is not feasible - use mock authentication
 - Biometric authentication simulator limitations - test on real devices for accuracy
 - UserDefaults can be unreliable in UI tests - use in-memory storage when needed
 - Authentication state must be checked on app launch for proper flow control
@@ -428,35 +486,77 @@ This app handles medical data and dosing information. Ensure:
 - Audit trails (`createdAt`, `updatedAt`) are essential for debugging and data integrity
 - Default values should be meaningful - empty strings for required text, sensible numbers for medical data
 
-# Recent Major Improvements
-
-## Issue #16 Code Quality Improvements (PR #17)
-**Completed**: August 26, 2025  
-**Impact**: Foundational architecture improvements and data integrity fixes
-
-### What Was Fixed
-- ✅ **SwiftData Model Optionality**: Changed from all-optional properties to required fields with defaults
-- ✅ **Authentication Flow Consolidation**: Removed duplicate sign-in handling methods
-- ✅ **Relationship Configuration**: Added proper `@Relationship` attributes with `inverse` parameters  
-- ✅ **Apple ID Integration**: Added missing `appleUserId` field for authentication linking
-- ✅ **Error Handling**: Replaced unsafe `fatalError` patterns with graceful error handling
-- ✅ **Test Suite Updates**: Updated all tests to work with improved model structure
-
-### Architectural Lessons Learned
+## Architectural Lessons Learned
 - All-optional SwiftData models create unnecessary complexity and runtime uncertainty
 - Missing relationship configurations cause CloudKit sync and cascade delete issues
 - Authentication flows can accumulate duplicate code that needs regular consolidation
 - Medical apps need especially reliable data models with meaningful defaults
 - Code quality analysis reveals architectural decisions that need documentation
 
-### Files Updated
-- `Models/User.swift`, `Models/Dose.swift`, `Models/MedicationProfile.swift` - Fixed optionality
-- `AuthenticationManager.swift` - Consolidated duplicate methods, improved error handling
-- `DataController.swift` - Enhanced CloudKit configuration
-- All test files - Updated for new model structure
-- Documentation updated to reflect actual implementation patterns
+## User Onboarding Implementation Patterns
+- **Step-Based Navigation**: Use enum-driven state machines for multi-step flows (OnboardingStep enum with computed properties)
+- **Coordinator Pattern**: Separate navigation logic (OnboardingCoordinator) from business logic (OnboardingViewModel)
+- **Testing Arguments**: Command-line arguments are essential for reliable UI testing (`--force-onboarding`, `--ui-testing`)
+- **Permission Flow**: Always explain value proposition before requesting permissions (notifications, HealthKit)
+- **State Persistence**: Use UserDefaults for completion tracking, SwiftData for user-generated content
+- **Medical Data Modeling**: Enum-based medication system with computed properties ensures data consistency and medical accuracy
 
-This work established a much stronger foundation for continued feature development.
+## XcodeBuildMCP UI Testing & Accessibility
+
+### describe_ui Tool for Precise Element Location
+**CRITICAL**: Always use `describe_ui` to get precise coordinates for UI interactions instead of guessing from screenshots.
+
+```bash
+# Get complete accessibility hierarchy with precise coordinates
+describe_ui({ simulatorUuid: "SIMULATOR_UUID" })
+
+# Returns JSON with AXFrame data for every accessible element
+# Use frame coordinates for interactions: center = (x + width/2, y + height/2)
+```
+
+**Key Benefits:**
+- **Precise Coordinates**: Exact pixel locations for tap, swipe, and gesture actions
+- **Accessibility Identifiers**: Find elements by their `AXUniqueId` for reliable test selectors
+- **Element State**: See if elements are enabled, selected, or have specific values
+- **Element Types**: Distinguish between Button, TextField, Group, StaticText, etc.
+
+### Accessibility Configuration Requirements
+For `describe_ui` to work properly, the simulator must have accessibility enabled:
+
+**Common Issue**: `describe_ui` returns empty JSON hierarchy
+- **Cause**: Accessibility not properly configured in simulator
+- **Solution**: Enable accessibility via command line:
+```bash
+xcrun simctl spawn 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB defaults write com.apple.Accessibility VoiceOverTouchEnabled -bool true
+
+# Then restart the app:
+stop_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker" })
+launch_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker", args: ["--ui-testing", "--force-onboarding"] })
+```
+
+After this, `describe_ui` will return proper accessibility hierarchy with full coordinates and element data.
+
+### UI Testing Element Selector Patterns
+Based on onboarding flow implementation analysis:
+
+**Dose Selection Components:**
+- Dose buttons use pattern: `dose-button-{amount}` (e.g., `dose-button-1.0`, `dose-button-0.25`)
+- NOT TextField with `dose-amount-input` - use individual dose buttons instead
+- Each dose button shows selected state in `AXValue` field
+
+**Medication Selection:**
+- Medication buttons use pattern: `medication-{medication}` (e.g., `medication-semaglutide`)
+- Selection state indicated in `AXValue`: "Selected" or "Not selected"
+
+**Navigation Elements:**
+- Continue button: `onboarding-continue-button`
+- Back button: `onboarding-back-button`
+- Progress indicator: `onboarding-progress`
+
+**Common UI Testing Mistakes:**
+- Looking for TextField when implementation uses Button components
+- Assuming element visibility without checking if scrolling is required
+- Using screenshots for coordinates instead of `describe_ui` data
 
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
@@ -464,6 +564,7 @@ This work established a much stronger foundation for continued feature developme
 - Swift Testing framework docs: https://developer.apple.com/documentation/testing
 - XcodeBuildMCP provides a range of useful tools for working with the project.
 - Simulator name always includes OS: `iPhone 15,OS=17.5`
+- **ALWAYS use `describe_ui` for precise coordinates** - never guess from screenshots
 - Easiest way to run tests is using the convenience script:
   - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
   - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`

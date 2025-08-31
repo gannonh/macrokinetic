@@ -19,6 +19,10 @@ final class User {
     var createdAt: Date = Date() // Required - auto-generated
     var updatedAt: Date = Date() // Required - auto-generated
 
+    // Onboarding tracking
+    var hasCompletedOnboarding: Bool = false // Track onboarding completion
+    var onboardingCompletedAt: Date? // When onboarding was completed
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]? // CloudKit requires optional relationships
 
@@ -29,7 +33,8 @@ final class User {
         weight: Double = 70.0,
         weightUnit: String = "kg",
         timezone: String = TimeZone.current.identifier,
-        appleUserId: String? = nil)
+        appleUserId: String? = nil,
+        hasCompletedOnboarding: Bool = false)
     {
         self.email = email
         self.name = name
@@ -38,6 +43,7 @@ final class User {
         self.weightUnit = weightUnit
         self.timezone = timezone
         self.appleUserId = appleUserId
+        self.hasCompletedOnboarding = hasCompletedOnboarding
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it

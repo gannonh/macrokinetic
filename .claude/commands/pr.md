@@ -12,7 +12,9 @@ argument-hint: Additional context (optional)
 3. Open a Pull Request with detaied description that conforms with best practices
 4. Review the spec (docs/spec.md);
 5. Recommend spec updates (if any) based on the work scope of the current PR
-6. Review CLAUDE.md
-7. Recommend updates to CLAUDE.md based on learnings or changes made for this PR
+6. Review implementation plan (docs/implementation-plan.md)
+7. Recommend updates to implementation plan (if any) based on the work scope of the current PR
+8. Review CLAUDE.md
+9. Recommend updates to CLAUDE.md based on learnings or changes made for this PR
 
 - Additional context (if any): $ARGUMENTS

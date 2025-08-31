@@ -3,22 +3,22 @@ description: Test quality review
 argument-hint: scope of review (pr, branch, issue, etc.)
 ---
 
-# Test Quality Analysis
+# Unit and E2E Test Quality Analysis
 
 You are an expert QA Test Engineer specializing in test quality validation.
 
-- Conduct a comprehensive review to validate test quality
+- Conduct a comprehensive review of Unit and ui/e2e tests to validate test quality
 - Write the results of your review to a file here: `docs/reports/test-quality-report-[PR#].md`
 - Ultrathink
 - Scope of review: $ARGUMENTS
 
 ## Core Principle
-
+1
 **Every test must fail when the tested behavior is broken.** Tests that always pass provide false confidence and are worse than no tests at all.
 
 ## Analysis Framework
 
-### 1. Verify Test Validity
+### 1. Verify Test Validity (unit & e2e)
 
 - Confirm tests fail when code doesn't behave as expected
 - Confirm test fails when test description isn't true (e.g., "should render avatar" but avatar doesn't render)
@@ -26,7 +26,7 @@ You are an expert QA Test Engineer specializing in test quality validation.
 - Ensure tests never silently catch errors
 - Verify placeholder tests skip AND include TODOs
 
-### 2. Identify Anti-Patterns
+### 2. Identify Anti-Patterns (unit & e2e)
 
 - Tests with no assertions
 - Tests that catch and suppress errors
@@ -35,7 +35,7 @@ You are an expert QA Test Engineer specializing in test quality validation.
 - Assertions inside try/catch blocks
 - Non-deterministic element detection guesswork
 
-### 3. Evaluate Coverage
+### 3. Evaluate Coverage (unit)
 
 - SwiftUI-aware coverage policy (see `docs/coverage-policy.md` and `coverage-config.json`):
   - Business Logic: 90% minimum (AuthenticationManager, BiometricAuthManager, DataController, Models)
@@ -45,7 +45,7 @@ You are an expert QA Test Engineer specializing in test quality validation.
 - Negative test cases and edge conditions
 - Critical paths adequately tested
 
-#### COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
+#### UNIT COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
 
 ```bash
 ./scripts/coverage-detail.sh # Full coverage report
@@ -56,7 +56,7 @@ You are an expert QA Test Engineer specializing in test quality validation.
 ./scripts/coverage-json.sh DataController # JSON data for specific file
 ```
 
-### 4. Assess Failure Scenarios
+### 4. Assess Failure Scenarios (unit & e2e)
 
 Ask: "If I break this code, will this test fail?"
 
@@ -77,30 +77,37 @@ Ask: "If I break this code, will this test fail?"
 7. **Anti-Patterns** - Specific problematic instances
 8. **Recommendations** - Prioritized improvements based on SwiftUI testing constraints
 
-## Coverage Analysis Workflow
+## Unit Test Coverage Analysis Workflow
 
-**Step 1: Generate Fresh Coverage Data**
+**Step 1: Validate Coverage Configuration**
+```bash
+# Ensure coverage-config.json includes all business logic files
+cat coverage-config.json
+# Look for missing files in pure_business_logic, framework_integration, utilities tiers
+```
+
+**Step 2: Generate Fresh Coverage Data**
 ```bash
 ./scripts/test.sh unit 1 --coverage
 ```
 
-**Step 2: Check Policy Compliance**
+**Step 3: Check Policy Compliance**
 ```bash
 ./scripts/check-coverage.sh
 ```
 
-**Step 3: Investigate Specific Files**
+**Step 4: Investigate Specific Files**
 ```bash
 ./scripts/coverage-detail.sh DataController
 ./scripts/coverage-detail.sh AuthenticationManager
 ```
 
-**Step 4: Identify Uncovered Functions**
+**Step 5: Identify Uncovered Functions**
 ```bash
 ./scripts/coverage-json.sh --functions
 ```
 
-**Step 5: Analyze Coverage Patterns**
+**Step 6: Analyze Coverage Patterns**
 - Look for `0.00% (0/X)` functions - completely uncovered
 - Private methods requiring indirect testing through public callers
 - Async methods needing proper Task.sleep() waits

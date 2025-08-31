@@ -217,6 +217,44 @@ struct SwiftDataModelTests {
         #expect(medication.doses?.isEmpty ?? true) // Should be empty array or nil
     }
 
+    @Test("MedicationProfile medication computed property getter and setter")
+    func medicationProfileComputedProperty() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        // Create medication profile with medicationType string
+        let profile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 1.0,
+            medicationType: "semaglutide")
+
+        context.insert(profile)
+        try context.save()
+
+        // Test getter - should convert medicationType string to Medication enum
+        let retrievedMedication = profile.medication
+        #expect(
+            retrievedMedication == .semaglutide,
+            "Getter should convert 'semaglutide' string to Medication.semaglutide")
+
+        // Test setter - should store enum rawValue as medicationType string
+        profile.medication = .tirzepatide
+        #expect(profile.medicationType == "tirzepatide", "Setter should store enum rawValue as medicationType string")
+
+        // Test getter after setter
+        #expect(profile.medication == .tirzepatide, "Getter should return updated medication after setter")
+
+        // Test setter with nil
+        profile.medication = nil
+        #expect(profile.medicationType == "", "Setter with nil should set medicationType to empty string")
+        #expect(profile.medication == nil, "Getter should return nil when medicationType is empty")
+
+        // Test getter with invalid medicationType
+        profile.medicationType = "invalid_medication"
+        #expect(profile.medication == nil, "Getter should return nil for invalid medicationType")
+    }
+
     @Test("Dose model can be created with required fields")
     func createDoseModel() throws {
         let controller = DataController.testContainer()
