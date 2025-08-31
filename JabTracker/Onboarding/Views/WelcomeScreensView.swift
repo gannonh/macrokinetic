@@ -9,17 +9,24 @@ struct WelcomeScreensView: View {
             icon: "chart.line.uptrend.xyaxis",
             title: "Track Your Progress",
             subtitle: "Monitor your medication levels, track doses, and see your progress over time",
-            description: "Get insights into your medication adherence and concentration levels with easy-to-understand charts and analytics."),
+            description: """
+            Get insights into your medication adherence and concentration levels with \
+            easy-to-understand charts and analytics.
+            """),
         WelcomeScreen(
             icon: "brain.head.profile",
             title: "Smart Calculations",
             subtitle: "Advanced pharmacokinetics modeling shows your real-time drug concentration",
-            description: "Based on proven medical research, see exactly how much medication is in your system at any time."),
+            description: """
+            Based on proven medical research, see exactly how much medication is in your system at any time.
+            """),
         WelcomeScreen(
             icon: "lock.shield",
             title: "Private & Secure",
             subtitle: "Your health data stays private with end-to-end encryption",
-            description: "All data is encrypted and stored securely on your device and iCloud. We never share your information."),
+            description: """
+            All data is encrypted and stored securely on your device and iCloud. We never share your information.
+            """),
     ]
 
     var body: some View {

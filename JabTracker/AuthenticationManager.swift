@@ -51,7 +51,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             ProcessInfo.processInfo.arguments.contains("--ui-testing")
 
         if isUITesting {
-            await setupUITestingUser()
+            await self.setupUITestingUser()
             return
         }
 

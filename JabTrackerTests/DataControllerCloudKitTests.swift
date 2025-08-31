@@ -23,8 +23,12 @@ struct DataControllerBusinessLogicTests {
 
         for (status, expectedMessage) in testCases {
             controller.syncStatus = status
-            #expect(controller.syncStatusMessage == expectedMessage,
-                    "Status message for \(status) should be '\(expectedMessage)', got '\(controller.syncStatusMessage)'")
+            #expect(
+                controller.syncStatusMessage == expectedMessage,
+                """
+                Status message for \(status) should be '\(expectedMessage)', \
+                got '\(controller.syncStatusMessage)'
+                """)
         }
     }
 
@@ -138,16 +142,33 @@ struct DataControllerCloudKitMockedTests {
         // Test business logic for each possible CloudKit status
         // These tests verify the app's behavior without actual CloudKit calls
 
-        let statusScenarios: [(SyncStatus, Bool, String)] = [
-            (.available, true, "Syncing with iCloud"),
-            (.unavailable, false, "Sync unavailable - using local storage"),
-            (.accountNotSignedIn, false, "Sign in to iCloud to sync across devices"),
-            (.restricted, false, "iCloud sync restricted"),
-            (.noNetwork, false, "No network connection for sync"),
-            (.unknown, false, "Checking sync status..."),
+        struct StatusScenario {
+            let status: SyncStatus
+            let shouldSync: Bool
+            let expectedMessage: String
+        }
+        
+        let statusScenarios = [
+            StatusScenario(status: .available, shouldSync: true, expectedMessage: "Syncing with iCloud"),
+            StatusScenario(
+                status: .unavailable,
+                shouldSync: false,
+                expectedMessage: "Sync unavailable - using local storage"
+            ),
+            StatusScenario(
+                status: .accountNotSignedIn,
+                shouldSync: false,
+                expectedMessage: "Sign in to iCloud to sync across devices"
+            ),
+            StatusScenario(status: .restricted, shouldSync: false, expectedMessage: "iCloud sync restricted"),
+            StatusScenario(status: .noNetwork, shouldSync: false, expectedMessage: "No network connection for sync"),
+            StatusScenario(status: .unknown, shouldSync: false, expectedMessage: "Checking sync status..."),
         ]
 
-        for (status, shouldSync, expectedMessage) in statusScenarios {
+        for scenario in statusScenarios {
+            let status = scenario.status
+            let shouldSync = scenario.shouldSync
+            let expectedMessage = scenario.expectedMessage
             controller.syncStatus = status
 
             #expect(controller.willSyncAcrossDevices == shouldSync,

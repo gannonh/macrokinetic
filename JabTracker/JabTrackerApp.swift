@@ -19,8 +19,7 @@ struct JabTrackerApp: App {
         self._biometricManager = StateObject(wrappedValue: BiometricAuthManager())
         self._onboardingCoordinator = StateObject(wrappedValue: OnboardingCoordinator(
             authManager: authManager,
-            dataController: dataController
-        ))
+            dataController: dataController))
     }
 
     var body: some Scene {

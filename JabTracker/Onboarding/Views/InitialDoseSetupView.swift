@@ -49,7 +49,7 @@ struct InitialDoseSetupView: View {
                             Text("Starting Date")
                                 .font(DesignTokens.Typography.headline)
 
-                            Button(action: { self.showingDatePicker = true }) {
+                            Button(action: { self.showingDatePicker = true }, label: {
                                 HStack {
                                     Text(self.viewModel.selectedStartDate, style: .date)
                                         .font(DesignTokens.Typography.body)
@@ -63,10 +63,12 @@ struct InitialDoseSetupView: View {
                                 .padding()
                                 .background(Color(.systemGray6))
                                 .cornerRadius(8)
-                            }
+                            })
                             .accessibilityIdentifier("starting-date-button")
                             .accessibilityLabel("Set starting date")
-                            .accessibilityValue(self.viewModel.selectedStartDate.formatted(date: .complete, time: .omitted))
+                            .accessibilityValue(
+                                self.viewModel.selectedStartDate.formatted(date: .complete, time: .omitted)
+                            )
                         }
                     }
 
@@ -76,7 +78,9 @@ struct InitialDoseSetupView: View {
                             Text("Preferred Injection Sites")
                                 .font(DesignTokens.Typography.headline)
 
-                            InjectionSiteSelector(selectedSites: self.$viewModel.selectedSites, onToggleSite: self.viewModel.toggleInjectionSite)
+                            InjectionSiteSelector(
+                                selectedSites: self.$viewModel.selectedSites,
+                                onToggleSite: self.viewModel.toggleInjectionSite)
                         }
                     }
                     .accessibilityIdentifier("injection-sites-card")
@@ -137,7 +141,10 @@ struct DoseButton: View {
         if self.dose.truncatingRemainder(dividingBy: 1) == 0 {
             return String(format: "%.0f", self.dose)
         } else {
-            return String(format: "%.2f", self.dose).replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
+            return String(format: "%.2f", self.dose).replacingOccurrences(
+                of: #"\.?0+$"#,
+                with: "",
+                options: .regularExpression)
         }
     }
 
@@ -172,7 +179,7 @@ struct InjectionSiteSelector: View {
                 GridItem(.flexible(), spacing: 8),
             ], spacing: 12) {
                 ForEach(self.sites, id: \.self) { site in
-                    Button(action: { self.onToggleSite(site) }) {
+                    Button(action: { self.onToggleSite(site) }, label: {
                         Text(site)
                             .font(DesignTokens.Typography.body)
                             .lineLimit(1)
@@ -180,7 +187,7 @@ struct InjectionSiteSelector: View {
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 12)
-                    }
+                    })
                     .background(self.selectedSites.contains(site) ? DesignTokens.Colors.primary : Color(.systemGray6))
                     .foregroundColor(self.selectedSites.contains(site) ? .white : .primary)
                     .cornerRadius(8)

@@ -120,12 +120,13 @@ class OnboardingViewModel: ObservableObject {
 
         let healthStore = HKHealthStore()
         guard let bodyMassType = HKObjectType.quantityType(forIdentifier: .bodyMass),
-              let bodyMassIndexType = HKObjectType.quantityType(forIdentifier: .bodyMassIndex) else {
+              let bodyMassIndexType = HKObjectType.quantityType(forIdentifier: .bodyMassIndex)
+        else {
             self.errorMessage = "Failed to create HealthKit types"
             self.healthKitGranted = false
             return
         }
-        
+
         let typesToRead: Set<HKObjectType> = [bodyMassType, bodyMassIndexType]
 
         do {

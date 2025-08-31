@@ -9,8 +9,7 @@ struct OnboardingView: View {
         self._isPresented = isPresented
         self._viewModel = StateObject(wrappedValue: OnboardingViewModel(
             dataController: DataController.shared,
-            authManager: authManager
-        ))
+            authManager: authManager))
     }
 
     var body: some View {

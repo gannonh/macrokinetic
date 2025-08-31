@@ -129,7 +129,7 @@ final class OnboardingUITests: XCTestCase {
 
         doseButton.tap()
 
-        // Select injection site (required to proceed) 
+        // Select injection site (required to proceed)
         let abdomentSiteButton = app.buttons["injection-site-abdomen"]
         XCTAssertTrue(abdomentSiteButton.waitForExistence(timeout: 3),
                       "Abdomen injection site button should exist")

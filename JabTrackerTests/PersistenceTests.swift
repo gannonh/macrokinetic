@@ -234,7 +234,9 @@ struct SwiftDataModelTests {
 
         // Test getter - should convert medicationType string to Medication enum
         let retrievedMedication = profile.medication
-        #expect(retrievedMedication == .semaglutide, "Getter should convert 'semaglutide' string to Medication.semaglutide")
+        #expect(
+            retrievedMedication == .semaglutide,
+            "Getter should convert 'semaglutide' string to Medication.semaglutide")
 
         // Test setter - should store enum rawValue as medicationType string
         profile.medication = .tirzepatide

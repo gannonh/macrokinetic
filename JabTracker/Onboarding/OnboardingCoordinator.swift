@@ -61,7 +61,9 @@ class OnboardingCoordinator: ObservableObject {
             print("🔍 OnboardingCoordinator: UserDefaults says completed - syncing to model")
             // Sync the model if UserDefaults says completed but model doesn't
             user.hasCompletedOnboarding = true
-            user.onboardingCompletedAt = UserDefaults.standard.object(forKey: "onboardingCompletedAt") as? Date ?? Date()
+            user.onboardingCompletedAt = UserDefaults.standard.object(
+                forKey: "onboardingCompletedAt"
+            ) as? Date ?? Date()
             try? self.dataController.container.mainContext.save()
             return false
         }

@@ -96,7 +96,9 @@ struct MedicationTests {
         for medication in Medication.allCases {
             let displayName = medication.displayName
             #expect(!displayName.isEmpty, "Display name should not be empty for \(medication.rawValue)")
-            #expect(displayName.first?.isUppercase == true, "Display name should be capitalized for \(medication.rawValue)")
+            #expect(
+                displayName.first?.isUppercase == true,
+                "Display name should be capitalized for \(medication.rawValue)")
         }
     }
 
@@ -162,13 +164,13 @@ struct MedicationTests {
         for medication in Medication.allCases {
             let colorHex = medication.colorHex
             #expect(colorHex.count == 6, "Color hex should be 6 characters for \(medication.rawValue)")
-            
+
             // Check each character is a valid hex digit
             let isValidHex = colorHex.allSatisfy { char in
-                ("0"..."9").contains(char) || ("a"..."f").contains(char) || ("A"..."F").contains(char)
+                ("0" ... "9").contains(char) || ("a" ... "f").contains(char) || ("A" ... "F").contains(char)
             }
             #expect(isValidHex, "Color hex should only contain hex digits for \(medication.rawValue)")
-            
+
             #expect(!seenColors.contains(colorHex), "Color hex should be unique for \(medication.rawValue)")
             seenColors.insert(colorHex)
         }
