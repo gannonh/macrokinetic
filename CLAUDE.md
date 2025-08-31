@@ -493,6 +493,14 @@ This app handles medical data and dosing information. Ensure:
 - Medical apps need especially reliable data models with meaningful defaults
 - Code quality analysis reveals architectural decisions that need documentation
 
+## User Onboarding Implementation Patterns
+- **Step-Based Navigation**: Use enum-driven state machines for multi-step flows (OnboardingStep enum with computed properties)
+- **Coordinator Pattern**: Separate navigation logic (OnboardingCoordinator) from business logic (OnboardingViewModel)
+- **Testing Arguments**: Command-line arguments are essential for reliable UI testing (`--force-onboarding`, `--ui-testing`)
+- **Permission Flow**: Always explain value proposition before requesting permissions (notifications, HealthKit)
+- **State Persistence**: Use UserDefaults for completion tracking, SwiftData for user-generated content
+- **Medical Data Modeling**: Enum-based medication system with computed properties ensures data consistency and medical accuracy
+
 ## XcodeBuildMCP UI Testing & Accessibility
 
 ### describe_ui Tool for Precise Element Location
