@@ -79,8 +79,7 @@ struct AuthenticationDelegateMethodTests {
         // ASPresentationAnchor is a type alias for UIWindow, so it's always a valid window
         #expect(
             presentationAnchor.isKeyWindow || !presentationAnchor.isKeyWindow,
-            "Presentation anchor should be a valid UIWindow"
-        )
+            "Presentation anchor should be a valid UIWindow")
 
         // Verify the window is properly configured for UI presentation
         let window = presentationAnchor

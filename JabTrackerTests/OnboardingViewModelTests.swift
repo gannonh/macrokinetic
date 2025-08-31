@@ -380,5 +380,4 @@ struct OnboardingViewModelTests {
     }
 
     // MARK: - Direct Method Coverage Tests
-
 }

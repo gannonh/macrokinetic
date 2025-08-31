@@ -90,16 +90,16 @@ struct OnboardingViewModelCoverageTests {
     @MainActor
     func onboardingStepEnumTitleCoverage() throws {
         // Test all OnboardingStep title properties for coverage
-        #expect(OnboardingStep.welcome.title == "Welcome", "Welcome step should have correct title")
-        #expect(OnboardingStep.medicationSelection.title == "Select Medication",
+        #expect(OnboardingStep.welcome.title == "Welcome to JabTracker", "Welcome step should have correct title")
+        #expect(OnboardingStep.medicationSelection.title == "Select Your Medication",
                 "Medication selection step should have correct title")
-        #expect(OnboardingStep.doseSetup.title == "Initial Dose",
+        #expect(OnboardingStep.doseSetup.title == "Set Up Your First Dose",
                 "Dose setup step should have correct title")
-        #expect(OnboardingStep.notifications.title == "Notifications",
+        #expect(OnboardingStep.notifications.title == "Enable Notifications",
                 "Notifications step should have correct title")
-        #expect(OnboardingStep.healthKit.title == "Health Integration",
+        #expect(OnboardingStep.healthKit.title == "Connect Health Data",
                 "HealthKit step should have correct title")
-        #expect(OnboardingStep.subscription.title == "Get Started",
+        #expect(OnboardingStep.subscription.title == "JabTracker Premium",
                 "Subscription step should have correct title")
 
         // Test allCases

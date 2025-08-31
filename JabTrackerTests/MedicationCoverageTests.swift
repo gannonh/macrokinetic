@@ -20,8 +20,7 @@ struct MedicationCoverageTests {
             let frequency = medication.frequency
             #expect(
                 frequency == .daily || frequency == .weekly,
-                "Frequency should be daily or weekly for \(medication)"
-            )
+                "Frequency should be daily or weekly for \(medication)")
 
             // Test unit property (currently 0% covered)
             let unit = medication.unit

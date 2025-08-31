@@ -147,19 +147,17 @@ struct DataControllerCloudKitMockedTests {
             let shouldSync: Bool
             let expectedMessage: String
         }
-        
+
         let statusScenarios = [
             StatusScenario(status: .available, shouldSync: true, expectedMessage: "Syncing with iCloud"),
             StatusScenario(
                 status: .unavailable,
                 shouldSync: false,
-                expectedMessage: "Sync unavailable - using local storage"
-            ),
+                expectedMessage: "Sync unavailable - using local storage"),
             StatusScenario(
                 status: .accountNotSignedIn,
                 shouldSync: false,
-                expectedMessage: "Sign in to iCloud to sync across devices"
-            ),
+                expectedMessage: "Sign in to iCloud to sync across devices"),
             StatusScenario(status: .restricted, shouldSync: false, expectedMessage: "iCloud sync restricted"),
             StatusScenario(status: .noNetwork, shouldSync: false, expectedMessage: "No network connection for sync"),
             StatusScenario(status: .unknown, shouldSync: false, expectedMessage: "Checking sync status..."),
