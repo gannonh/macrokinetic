@@ -1,0 +1,364 @@
+# gh-sub-issue
+
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/yahsan2/gh-sub-issue)](https://github.com/yahsan2/gh-sub-issue/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yahsan2/gh-sub-issue)](https://goreportcard.com/report/github.com/yahsan2/gh-sub-issue)
+
+A GitHub CLI extension for managing sub-issues (child issues). Create hierarchical task structures by linking issues as parent-child relationships.
+
+## ✨ Features
+
+- 🔗 **Link existing issues** - Connect existing issues as sub-issues to a parent issue
+- ➕ **Create sub-issues** - Create new issues directly linked to a parent
+- 📋 **List sub-issues** - View all sub-issues connected to a parent issue
+- ❌ **Remove sub-issues** - Unlink sub-issues from their parent without deleting them
+- 🎨 **Multiple output formats** - Support for TTY (colored), plain text, and JSON output
+- 🔄 **Cross-repository support** - Work with issues across different repositories
+
+## 📦 Installation
+
+```bash
+gh extension install yahsan2/gh-sub-issue
+```
+
+### Update
+
+To update the extension to the latest version:
+
+```bash
+gh extension upgrade sub-issue
+```
+
+### Requirements
+
+- [GitHub CLI](https://github.com/cli/cli) 2.0.0 or later
+- GitHub account with appropriate repository permissions
+
+## 🚀 Usage
+
+### Add existing issue as sub-issue
+
+Link an existing issue to a parent issue:
+
+```bash
+# Using issue numbers (add existing issue 456 as sub-issue of parent 123)
+gh sub-issue add 123 456
+
+# Using URLs (parent issue URL, existing issue number)
+gh sub-issue add https://github.com/owner/repo/issues/123 456
+
+# Cross-repository (add existing issue 456 as sub-issue of parent 123)
+gh sub-issue add 123 456 --repo owner/repo
+```
+
+### Create a new sub-issue
+
+Create a new issue directly linked to a parent:
+
+```bash
+# Basic usage
+gh sub-issue create --parent 123 --title "Implement user authentication"
+
+# With description and labels
+gh sub-issue create --parent 123 \
+  --title "Add login endpoint" \
+  --body "Implement POST /api/login endpoint" \
+  --label "backend,api" \
+  --assignee "@me"
+
+# With project assignment
+gh sub-issue create --parent 123 \
+  --title "QA Testing Task" \
+  --project "QA Sprint" \
+  --assignee "qa-team"
+
+# Multiple projects (GitHub CLI compatible)
+gh sub-issue create --parent 123 \
+  --title "Cross-functional task" \
+  --project "Dev Sprint" --project "QA Board"
+
+# Using parent issue URL
+gh sub-issue create \
+  --parent https://github.com/owner/repo/issues/123 \
+  --title "Write API tests"
+```
+
+### List sub-issues
+
+View all sub-issues linked to a parent issue:
+
+```bash
+# Basic listing
+gh sub-issue list 123
+
+# Show all states (open, closed)
+gh sub-issue list 123 --state all
+
+# JSON output with selected fields (required)
+gh sub-issue list 123 --json number,title,state
+
+# JSON output with parent and meta information
+gh sub-issue list 123 --json parent.number,parent.title,total,openCount
+
+# Using URL
+gh sub-issue list https://github.com/owner/repo/issues/123
+```
+
+### Remove sub-issues
+
+Unlink sub-issues from a parent issue:
+
+```bash
+# Remove a single sub-issue
+gh sub-issue remove 123 456
+
+# Remove multiple sub-issues
+gh sub-issue remove 123 456 457 458
+
+# Skip confirmation prompt
+gh sub-issue remove 123 456 --force
+
+# Using URLs
+gh sub-issue remove https://github.com/owner/repo/issues/123 456
+
+# Cross-repository
+gh sub-issue remove 123 456 --repo owner/repo
+```
+
+## 📋 Command Reference
+
+### `gh sub-issue add`
+
+Add an existing issue as a sub-issue to a parent issue.
+
+```
+Usage:
+  gh sub-issue add <parent-issue> <sub-issue> [flags]
+
+Arguments:
+  parent-issue    Parent issue number or URL
+  sub-issue       Sub-issue number or URL to be added
+
+Flags:
+  -R, --repo      Repository in OWNER/REPO format
+  -h, --help      Show help for command
+```
+
+### `gh sub-issue create`
+
+Create a new sub-issue linked to a parent issue.
+
+```
+Usage:
+  gh sub-issue create [flags]
+
+Flags:
+  -p, --parent       Parent issue number or URL (required)
+  -t, --title        Title for the new sub-issue (required)
+  -b, --body         Body text for the sub-issue
+  -l, --label        Comma-separated labels to add
+  -a, --assignee     Comma-separated usernames to assign
+  -m, --milestone    Milestone name or number
+      --project      Projects to add (can specify multiple times)
+  -R, --repo         Repository in OWNER/REPO format
+  -h, --help         Show help for command
+```
+
+### `gh sub-issue list`
+
+List all sub-issues for a parent issue.
+
+```
+Usage:
+  gh sub-issue list <parent-issue> [flags]
+
+Arguments:
+  parent-issue    Parent issue number or URL
+
+Flags:
+  -s, --state     Filter by state: {open|closed|all} (default: open)
+  -L, --limit     Maximum number of sub-issues to display (default: 30)
+  --json fields   Output JSON with the specified fields
+  -w, --web       Open in web browser
+  -R, --repo      Repository in OWNER/REPO format
+  -h, --help      Show help for command
+```
+
+**Field Selection Examples:**
+```bash
+# All fields (default)
+gh sub-issue list 123 --json
+
+# Select specific sub-issue fields
+gh sub-issue list 123 --json number,title,state
+
+# Include parent and meta information
+gh sub-issue list 123 --json parent.number,parent.title,total,openCount
+
+# Mixed field selection
+gh sub-issue list 123 --json number,state,assignees,parent.title
+```
+
+### `gh sub-issue remove`
+
+Remove sub-issues from a parent issue.
+
+```
+Usage:
+  gh sub-issue remove <parent-issue> <sub-issue> [sub-issue...] [flags]
+
+Arguments:
+  parent-issue    Parent issue number or URL
+  sub-issue       Sub-issue number(s) or URL(s) to remove
+
+Flags:
+  -f, --force     Skip confirmation prompt
+  -R, --repo      Repository in OWNER/REPO format
+  -h, --help      Show help for command
+```
+
+## 🎯 Examples
+
+### Real-world workflow
+
+```bash
+# 1. Create a parent issue for a feature
+gh issue create --title "Feature: User Authentication System" --body "Implement complete auth system"
+# Created issue #100
+
+# 2. Create sub-issues for implementation tasks
+gh sub-issue create --parent 100 --title "Design database schema" --label "database"
+gh sub-issue create --parent 100 --title "Implement JWT tokens" --label "backend"
+gh sub-issue create --parent 100 --title "Create login UI" --label "frontend"
+
+# 3. Link an existing issue as a sub-issue
+gh sub-issue add 100 95  # Add existing issue #95 as sub-issue
+
+# 4. View progress
+gh sub-issue list 100 --state all
+
+# 5. Remove a sub-issue if needed
+gh sub-issue remove 100 95  # Unlink issue #95 from parent
+```
+
+### Output example
+
+```
+$ gh sub-issue list 100
+
+Parent: #100 - Feature: User Authentication System
+
+SUB-ISSUES (4 total, 2 open)
+─────────────────────────────
+✅ #101  Design database schema           [closed]
+✅ #95   Security audit checklist         [closed]
+🔵 #102  Implement JWT tokens             [open]   @alice
+🔵 #103  Create login UI                  [open]   @bob
+```
+
+## 🔧 Configuration
+
+The extension uses your existing GitHub CLI authentication and configuration:
+
+```bash
+# Check current authentication status
+gh auth status
+
+# Login if needed
+gh auth login
+
+# Set default repository
+gh repo set-default owner/repo
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Development
+
+```bash
+# Clone the repository
+git clone https://github.com/yahsan2/gh-sub-issue.git
+cd gh-sub-issue
+
+# Install dependencies
+go mod download
+
+# Run tests
+go test ./...
+
+# Build locally
+go build -o gh-sub-issue
+
+# Install locally for testing
+gh extension install .
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+| Problem                   | Solution                                                       |
+| ------------------------- | -------------------------------------------------------------- |
+| `command not found`       | Run `gh extension install yahsan2/gh-sub-issue`                |
+| `authentication required` | Run `gh auth login`                                            |
+| `parent issue not found`  | Check issue number/URL and repository                          |
+| `permission denied`       | Ensure you have write access to the repository                 |
+| `rate limit exceeded`     | Wait for rate limit reset or authenticate with `gh auth login` |
+
+### Debug Mode
+
+Enable debug output for troubleshooting:
+
+```bash
+GH_DEBUG=1 gh sub-issue list 123
+```
+
+## 📝 Notes
+
+- Sub-issues are managed using GitHub's native issue tracking features
+- The parent-child relationship is maintained through GitHub's issue references
+- All standard GitHub issue features (labels, assignees, milestones) are supported
+- Works with both public and private repositories (with appropriate permissions)
+
+## 🏗️ Architecture
+
+This extension uses:
+- GitHub GraphQL API for efficient data fetching
+- Native GitHub issue relationships for parent-child linking
+- GitHub CLI's built-in authentication and API client
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [GitHub CLI](https://github.com/cli/cli)
+- Inspired by the need for better hierarchical task management in GitHub
+- Thanks to all contributors and users
+
+## 🔗 Related Projects
+
+- [GitHub CLI](https://github.com/cli/cli) - The official GitHub command-line tool
+
+## 📮 Support
+
+- 🐛 [Report a bug](https://github.com/yahsan2/gh-sub-issue/issues/new?labels=bug)
+- 💡 [Request a feature](https://github.com/yahsan2/gh-sub-issue/issues/new?labels=enhancement)
+- 💬 [Ask a question](https://github.com/yahsan2/gh-sub-issue/discussions)
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yahsan2/gh-sub-issue&type=Date)](https://star-history.com/#yahsan2/gh-sub-issue&Date)
+
+---
+
+**Made with ❤️ by [@yahsan2](https://github.com/yahsan2)**
