@@ -40,7 +40,8 @@
         "description": "Helper functions, extensions, and utility classes",
         "files": [
           "ProfileValidation.swift",
-          "Array+Unique.swift"
+          "Array+Unique.swift",
+          "SubscriptionProducts.swift"
         ]
       }
     }

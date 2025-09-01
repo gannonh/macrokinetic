@@ -103,6 +103,9 @@ echo "Epic progress: $((total-open))/$total complete ($open open)"
 - [ ] **Confirm test PASSES**
 - [ ] Repeat steps 3-4 for each unit **required by E2E test**
 - [ ] Commit working code
+- [ ] **configure coverage thresholds for new files**
+- [ ] Update `coverage-config.json`
+- [ ] Check coverage: `./scripts/coverage-json.sh <file-name>`
 
 ### Step 5: Integration & E2E Verification
 - [ ] Wire components together to **fulfill E2E acceptance criteria**
@@ -112,8 +115,7 @@ echo "Epic progress: $((total-open))/$total complete ($open open)"
 - [ ] Fix any integration issues
 
 ### Step 6: Final Verification & Ship
-- [ ] Build project: `./scripts/build.sh`
-- [ ] Run all checks (unit, e2e, swiftlint): `./scripts/check-all.sh`
+- [ ] Run all checks (unit, e2e, build, swiftlint): `./scripts/check-all.sh`
 - [ ] **All checks must PASS & and ALL swiftlint violations (not just critical) MUST be addressed**
 - [ ] Update relevant documentation
 - [ ] Commit final changes
