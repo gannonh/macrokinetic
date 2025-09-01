@@ -84,7 +84,7 @@ echo "Epic progress: $((total-open))/$total complete ($open open)"
 - [ ] Analyze existing XCUITest files to understand patterns
 - [ ] Write E2E test in `JabTrackerUITests/[Feature]UITests.swift` that defines **ACCEPTANCE CRITERIA**
 - [ ] **E2E test represents user success** - What does "done" look like to the user?
-- [ ] Run test: `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerUITests/[TestClass]`
+- [ ] Run test: `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerUITests/[TestClass]`
 - [ ] **Confirm test FAILS for right reason**
 - [ ] Commit failing E2E test
 
@@ -93,32 +93,33 @@ echo "Epic progress: $((total-open))/$total complete ($open open)"
 - [ ] Break down E2E scenario into required units
 - [ ] Analyze existing Swift Testing files to understand patterns
 - [ ] Write failing unit test for first component/service **to fulfill E2E contract**
-- [ ] Run test: `swift test --filter [TestName]` or `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests/[TestClass]`
+- [ ] Run test: `swift test --filter [TestName]` or `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests/[TestClass]`
 - [ ] **Confirm test FAILS**
 - [ ] Commit failing unit test
 
 ### Step 4: Implementation
 - [ ] Write **minimal** code to pass the unit test
-- [ ] Run unit test: `swift test --filter [TestName]`
+- [ ] Run unit test: `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests/[TestClass]`
 - [ ] **Confirm test PASSES**
 - [ ] Repeat steps 3-4 for each unit **required by E2E test**
 - [ ] Commit working code
+- [ ] **configure coverage thresholds for new files**
+- [ ] Update `coverage-config.json`
+- [ ] Check coverage: `./scripts/coverage-json.sh <file-name>`
 
 ### Step 5: Integration & E2E Verification
 - [ ] Wire components together to **fulfill E2E acceptance criteria**
-- [ ] Run E2E test: `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerUITests/[TestClass]`
+- [ ] Run E2E test: `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerUITests/[TestClass]`
 - [ ] **E2E test should now PASS** - User success criteria met
 - [ ] Add E2E edge case tests if critical
 - [ ] Fix any integration issues
 
 ### Step 6: Final Verification & Ship
-- [ ] Run all tests: `xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'`
-- [ ] Build project: `xcodebuild build -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'`
-- [ ] **All checks must PASS**
-- [ ] Run accessibility tests: Open Accessibility Inspector and verify VoiceOver support
+- [ ] Run all checks (unit, e2e, build, swiftlint): `./scripts/check-all.sh`
+- [ ] **All checks must PASS & and ALL swiftlint violations (not just critical) MUST be addressed**
 - [ ] Update relevant documentation
 - [ ] Commit final changes
-- [ ] Create pull request with clear description
+- [ ] Create pull request with clear description and wait for further instruction
 
 ## When to Use E2E Tests
 
@@ -139,15 +140,13 @@ echo "Epic progress: $((total-open))/$total complete ($open open)"
 cd /Users/gannonhall/dev/jab-tracker-ios
 
 # Testing
-swift test                                                    # Run Swift Testing tests
-swift test --filter [TestName]                              # Run specific Swift test
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'  # All tests
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests/[TestClass]  # Specific unit test
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerUITests/[TestClass]  # Specific UI test
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'  # All tests
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests/[TestClass]  # Specific unit test
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerUITests/[TestClass]  # Specific UI test
 
 # Build & Quality
-xcodebuild build -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'  # Build project
-xcodebuild analyze -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15'  # Static analysis
+xcodebuild build -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'  # Build project
+xcodebuild analyze -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'  # Static analysis
 
 # Performance Testing
 instruments -t "Time Profiler" -D /tmp/profile.trace [app_path]  # Profile performance
