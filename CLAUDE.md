@@ -492,13 +492,13 @@ Automation script can:
 - Large epics: paginate manually with `--limit` if output > default (30); run multiple list calls if needed.
 
 ### Minimal Decision Heuristics (for Claude Automation)
-| Situation | Action |
-|-----------|--------|
-| Need to track new chunk of work | `sub-issue create` under appropriate epic |
-| Existing issue logically part of epic | `sub-issue add` |
-| Epic progress update needed | `sub-issue list --json` → recompute checklist |
-| Child out of scope now | `sub-issue remove` (keep issue open) |
-| Epic has 0 openCount | Propose closing epic |
+| Situation                             | Action                                        |
+| ------------------------------------- | --------------------------------------------- |
+| Need to track new chunk of work       | `sub-issue create` under appropriate epic     |
+| Existing issue logically part of epic | `sub-issue add`                               |
+| Epic progress update needed           | `sub-issue list --json` → recompute checklist |
+| Child out of scope now                | `sub-issue remove` (keep issue open)          |
+| Epic has 0 openCount                  | Propose closing epic                          |
 
 ### Quick Sanity Check Command
 ```bash
@@ -506,12 +506,12 @@ gh sub-issue list <PARENT> --json total,openCount || echo "Sub-issue extension o
 ```
 
 ### Troubleshooting Cheatsheet
-| Symptom | Likely Cause | Resolution |
-|---------|--------------|------------|
-| `gh: Could not find extension` | Extension not installed | Re-run install command |
-| Empty JSON fields | Missing `--json` args | Supply explicit field list |
-| `parent issue not found` | Wrong number / private repo | Verify number & permissions |
-| `rate limit exceeded` | Heavy automation loop | Add delays / ensure auth |
+| Symptom                        | Likely Cause                | Resolution                  |
+| ------------------------------ | --------------------------- | --------------------------- |
+| `gh: Could not find extension` | Extension not installed     | Re-run install command      |
+| Empty JSON fields              | Missing `--json` args       | Supply explicit field list  |
+| `parent issue not found`       | Wrong number / private repo | Verify number & permissions |
+| `rate limit exceeded`          | Heavy automation loop       | Add delays / ensure auth    |
 
 ### Future Automation Opportunities
 - Auto-close epic when all children complete
