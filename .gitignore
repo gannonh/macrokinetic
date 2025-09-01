@@ -18,3 +18,5 @@ Package.resolved
 test-snapshots/
 test-results.xcresult/
 
+.claude-bak/
+

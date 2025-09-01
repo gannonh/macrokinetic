@@ -16,6 +16,44 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 ## Active Context
 
 - GitHub Issue: $ARGUMENTS
+- If this number refers to an EPIC (parent issue) it should have label `epic` OR title prefix `Epic:` / `Feature:`. Child tasks (sub-issues) are linked via `gh sub-issue`.
+- Always resolve hierarchical context BEFORE writing tests or code:
+    1. Identify: Is current issue parent (epic) or child? (Use: `gh issue view $ARGUMENTS --json number,title,labels` and `gh sub-issue list $ARGUMENTS --json total,openCount 2>/dev/null`.)
+    2. For epics: Enumerate children + progress. For children: fetch parent epic reference (present in its body or via manual note) – if missing, escalate (ask user or create epic first).
+    3. Never implement broad scope work in a child; split into separate sub-issues if acceptance criteria diverge.
+
+### Hierarchical Task Rules
+- Single level only (Epic → Sub-Issues). No nesting of sub-issues.
+- Sub-issue titles are imperative and focused (one outcome).
+- Keep epics outcome-oriented; implementation details live in children.
+- When uncovering new work not represented: create new sub-issue under epic (do NOT silently expand scope in code).
+- Close epics only when `openCount == 0`.
+
+### Rapid Hierarchy Commands (Reference)
+```bash
+# List children & progress (human)
+gh sub-issue list <EPIC>
+
+# List (JSON) for automation
+gh sub-issue list <EPIC> --json number,title,state,total,openCount
+
+# Create new child task under epic
+gh sub-issue create --parent <EPIC> --title "Implement dose export CSV" --label persistence
+
+# Link existing issue as child
+gh sub-issue add <EPIC> <ISSUE>
+
+# Remove linkage (keep issue)
+gh sub-issue remove <EPIC> <ISSUE> --force
+```
+
+### Progress Snippet
+```bash
+prog=$(gh sub-issue list <EPIC> --json total,openCount 2>/dev/null)
+total=$(echo "$prog" | jq -r '.total // 0')
+open=$(echo "$prog" | jq -r '.openCount // 0')
+echo "Epic progress: $((total-open))/$total complete ($open open)"
+```
 
 ## Core Principles
 
@@ -34,6 +72,11 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 - [ ] Check git status: `git status`
 - [ ] Create feature branch: `git checkout -b feat/issue-XX-description`
 - [ ] Read issue requirements thoroughly
+- [ ] Determine hierarchy role:
+    * Epic? (`label:epic` OR title prefix `Epic:`/`Feature:`) → list children & progress
+    * Child? → ensure parent epic exists & linked; if missing, pause & clarify
+- [ ] For epics: ensure each acceptance criterion maps to (or becomes) a sub-issue (create with `gh sub-issue create` as needed BEFORE coding)
+- [ ] For children: confirm acceptance criteria are confined to this scope (if broader, split into additional sub-issues first)
 - [ ] **Decide E2E Test Needed**: User-facing features = YES, Internal utilities = NO
 - [ ] Check dependencies are met
 
