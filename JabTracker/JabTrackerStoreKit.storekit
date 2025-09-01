@@ -32,7 +32,7 @@
           "introductoryOffer" : {
             "internalID" : "E4567890",
             "paymentMode" : "free",
-            "subscriptionPeriod" : "P1M"
+            "subscriptionPeriod" : "P4W"
           },
           "localizations" : [
             {
@@ -60,7 +60,7 @@
           "introductoryOffer" : {
             "internalID" : "G6789012",
             "paymentMode" : "free",
-            "subscriptionPeriod" : "P1M"
+            "subscriptionPeriod" : "P4W"
           },
           "localizations" : [
             {
