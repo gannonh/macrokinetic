@@ -139,8 +139,7 @@ struct SubscriptionManagerMoreTests {
         let item = SubscriptionManager._EvalInput(
             productType: .nonConsumable,
             purchaseDate: now,
-            expirationDate: nil
-        )
+            expirationDate: nil)
         let status = SubscriptionManager._evaluateStatusForTests(from: [item], now: now)
         #expect(status == .notSubscribed)
     }
