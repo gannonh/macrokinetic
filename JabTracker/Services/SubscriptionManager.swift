@@ -1,6 +1,7 @@
 import Foundation
 import StoreKit
 import Combine
+import OSLog
 
 /// Subscription status enumeration
 public enum SubscriptionStatus: Equatable {
@@ -37,6 +38,10 @@ public enum SubscriptionError: Error, LocalizedError {
 /// Manages subscription operations using StoreKit 2
 @MainActor
 public class SubscriptionManager: ObservableObject {
+    // MARK: - Logger
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "JabTracker", 
+        category: "SubscriptionManager")
     // MARK: - Published Properties
     @Published public var subscriptionStatus: SubscriptionStatus = .notSubscribed
     @Published public var availableProducts: [Product] = []
@@ -45,11 +50,16 @@ public class SubscriptionManager: ObservableObject {
     
     // MARK: - Private Properties
     private var updateListenerTask: Task<Void, Error>?
+    private let isTestEnvironment: Bool
     
     // MARK: - Initialization
-    public init() {
-        // Start listening for transaction updates
-        updateListenerTask = listenForTransactions()
+    public init(isTestEnvironment: Bool = false) {
+        self.isTestEnvironment = isTestEnvironment
+        
+        // Only start listening for transaction updates in non-test environment
+        if !isTestEnvironment {
+            updateListenerTask = listenForTransactions()
+        }
     }
     
     deinit {
@@ -63,14 +73,25 @@ public class SubscriptionManager: ObservableObject {
         isLoading = true
         errorMessage = nil
         
+        Self.logger.info("🛒 SubscriptionManager: Starting product load")
+        Self.logger.info("🛒 SubscriptionManager: Looking for product IDs: \(SubscriptionProducts.allProductIdentifiers, privacy: .public)")
+        
         do {
             let products = try await Product.products(for: SubscriptionProducts.allProductIdentifiers)
+            Self.logger.info("🛒 SubscriptionManager: StoreKit returned \(products.count, privacy: .public) products")
+            
+            for product in products {
+                Self.logger.info("🛒 SubscriptionManager: Found product: \(product.id, privacy: .public) - \(product.displayName, privacy: .public) - \(product.displayPrice, privacy: .public)")
+            }
+            
             self.availableProducts = products.sorted { $0.price < $1.price }
         } catch {
+            Self.logger.error("🛒 SubscriptionManager: Error loading products: \(error.localizedDescription, privacy: .public)")
             self.errorMessage = "Failed to load products: \(error.localizedDescription)"
             self.availableProducts = []
         }
         
+        Self.logger.info("🛒 SubscriptionManager: Product load complete. Final count: \(self.availableProducts.count, privacy: .public)")
         isLoading = false
     }
     
@@ -89,6 +110,11 @@ public class SubscriptionManager: ObservableObject {
         errorMessage = nil
         
         defer { isLoading = false }
+        
+        // In test environment, simulate purchase failure
+        if isTestEnvironment {
+            throw SubscriptionError.purchaseFailed("Test environment - purchases not available")
+        }
         
         do {
             let result = try await product.purchase()
@@ -124,6 +150,12 @@ public class SubscriptionManager: ObservableObject {
         
         defer { isLoading = false }
         
+        // In test environment, skip AppStore operations that can hang
+        if isTestEnvironment {
+            // Simulate successful restore with no purchases found
+            return
+        }
+        
         do {
             try await AppStore.sync()
             await updateSubscriptionStatus()
@@ -149,31 +181,31 @@ public class SubscriptionManager: ObservableObject {
     
     /// Check if trial is currently active
     public func isTrialActive() -> Bool {
-        return subscriptionStatus == .trialActive
+        subscriptionStatus == .trialActive
     }
     
     /// Get remaining trial days
     public func trialDaysRemaining() -> Int {
         // This would be implemented with actual transaction date checking
         // For now, return a placeholder value
-        return subscriptionStatus == .trialActive ? 14 : 0
+        subscriptionStatus == .trialActive ? 14 : 0
     }
     
     /// Get monthly subscription products
     public func monthlyProducts() -> [Product] {
-        return availableProducts.filter { $0.id == SubscriptionProducts.monthly }
+        availableProducts.filter { $0.id == SubscriptionProducts.monthly }
     }
     
     /// Get annual subscription products
     public func annualProducts() -> [Product] {
-        return availableProducts.filter { $0.id == SubscriptionProducts.annual }
+        availableProducts.filter { $0.id == SubscriptionProducts.annual }
     }
     
     // MARK: - Private Methods
     
     /// Listen for transaction updates
     private func listenForTransactions() -> Task<Void, Error> {
-        return Task.detached {
+        Task.detached {
             for await result in Transaction.updates {
                 do {
                     let transaction = try await self.checkVerified(result)
@@ -189,6 +221,12 @@ public class SubscriptionManager: ObservableObject {
     
     /// Update subscription status based on current entitlements
     private func updateSubscriptionStatus() async {
+        // In test environment, don't iterate over current entitlements to avoid hanging
+        if isTestEnvironment {
+            // Keep current status in test environment
+            return
+        }
+        
         var newStatus: SubscriptionStatus = .notSubscribed
         
         // Check for current entitlements

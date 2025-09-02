@@ -37,7 +37,7 @@ struct OnboardingView: View {
                     case .healthKit:
                         PermissionsRequestView(viewModel: self.viewModel, type: .healthKit)
                     case .subscription:
-                        SubscriptionPlaceholderView(viewModel: self.viewModel)
+                        SubscriptionView(viewModel: self.viewModel)
                     }
                 }
                 .transition(.asymmetric(

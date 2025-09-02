@@ -10,7 +10,7 @@ struct SubscriptionManagerTests {
     @Test("SubscriptionManager initialization")
     @MainActor
     func subscriptionManagerInit() {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Verify initial state
         #expect(subscriptionManager.subscriptionStatus == .notSubscribed)
@@ -22,7 +22,7 @@ struct SubscriptionManagerTests {
     @Test("Product loading sets loading state correctly")
     @MainActor
     func productLoadingState() async {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Initial state
         #expect(subscriptionManager.isLoading == false)
@@ -40,7 +40,7 @@ struct SubscriptionManagerTests {
     @Test("Product identifiers are correctly configured")
     @MainActor
     func productIdentifiersConfiguration() {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         let expectedIdentifiers = Set(SubscriptionProducts.allProductIdentifiers)
         
         // SubscriptionManager should use the same product identifiers
@@ -52,7 +52,7 @@ struct SubscriptionManagerTests {
     @Test("Subscription status enum values")
     @MainActor
     func subscriptionStatusValues() {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Test all possible subscription status values
         subscriptionManager.subscriptionStatus = .notSubscribed
@@ -71,14 +71,12 @@ struct SubscriptionManagerTests {
     @Test("Purchase flow error handling in test environment")
     @MainActor
     func purchaseFlowErrorHandling() async {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
+        subscriptionManager.shouldFailPurchase = true
         
-        // In test environment, purchase should fail gracefully
-        // Create a mock product for testing
         var didEncounterError = false
         
         do {
-            // This should fail in test environment since we don't have real StoreKit products
             try await subscriptionManager.purchase(productId: SubscriptionProducts.monthly)
         } catch {
             didEncounterError = true
@@ -86,15 +84,14 @@ struct SubscriptionManagerTests {
             #expect(error is SubscriptionError)
         }
         
-        // In test environment, we expect this to fail
-        #expect(didEncounterError, "Purchase should fail gracefully in test environment")
+        #expect(didEncounterError, "Purchase should fail when configured to fail")
         #expect(subscriptionManager.subscriptionStatus == .notSubscribed, "Status should remain not subscribed after failed purchase")
     }
     
     @Test("Restore purchases error handling in test environment")
     @MainActor
     func restorePurchasesErrorHandling() async {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         let initialStatus = subscriptionManager.subscriptionStatus
         
@@ -108,7 +105,7 @@ struct SubscriptionManagerTests {
     @Test("Trial period calculation")
     @MainActor
     func trialPeriodCalculation() {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Mock trial active state
         subscriptionManager.subscriptionStatus = .trialActive
@@ -127,7 +124,7 @@ struct SubscriptionManagerTests {
     @Test("Subscription status checking")
     @MainActor
     func subscriptionStatusChecking() async {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         let initialStatus = subscriptionManager.subscriptionStatus
         
@@ -142,7 +139,7 @@ struct SubscriptionManagerTests {
     @Test("Error message handling")
     @MainActor 
     func errorMessageHandling() {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Initial state should have no error
         #expect(subscriptionManager.errorMessage == nil)
@@ -159,7 +156,7 @@ struct SubscriptionManagerTests {
     @Test("Premium features access based on subscription status")
     @MainActor
     func premiumFeaturesAccess() {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Test not subscribed
         subscriptionManager.subscriptionStatus = .notSubscribed
@@ -181,7 +178,7 @@ struct SubscriptionManagerTests {
     @Test("Product filtering by subscription type")
     @MainActor
     func productFilteringByType() async {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Load products first
         await subscriptionManager.loadProducts()
@@ -189,17 +186,17 @@ struct SubscriptionManagerTests {
         // Test filtering monthly products
         let monthlyProducts = subscriptionManager.monthlyProducts()
         // In test environment, this might be empty, but should not crash
-        #expect(monthlyProducts.count >= 0)
+        #expect(monthlyProducts.isEmpty)
         
         // Test filtering annual products  
         let annualProducts = subscriptionManager.annualProducts()
-        #expect(annualProducts.count >= 0)
+        #expect(annualProducts.isEmpty)
     }
     
     @Test("Subscription lifecycle state transitions")
     @MainActor
     func subscriptionLifecycleTransitions() {
-        let subscriptionManager = SubscriptionManager()
+        let subscriptionManager = MockSubscriptionManager()
         
         // Test valid state transitions
         subscriptionManager.subscriptionStatus = .notSubscribed

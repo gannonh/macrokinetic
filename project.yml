@@ -17,6 +17,7 @@ targets:
           - "*.xcassets"
     resources:
       - path: JabTracker/Assets.xcassets
+      - path: JabTrackerStoreKit.storekit
     settings:
       CURRENT_PROJECT_VERSION: "1"
       MARKETING_VERSION: "1.0"
@@ -61,3 +62,4 @@ schemes:
         "--force-onboarding": true
         "--reset-app-data": false
         "--ui-testing": false
+      storeKitConfiguration: JabTrackerStoreKit.storekit
