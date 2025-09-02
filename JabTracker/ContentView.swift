@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftData
 import SwiftUI
 
@@ -103,6 +104,7 @@ struct AnalyticsView: View {
 
 struct SettingsView: View {
     @ObservedObject private var dataController = DataController.shared
+    @StateObject private var subscriptionManager = SubscriptionManager(isTestEnvironment: ProcessInfo.processInfo.arguments.contains("--ui-testing") || ProcessInfo.processInfo.environment["UI_TESTING"] == "true")
 
     var body: some View {
         NavigationStack {
@@ -110,6 +112,39 @@ struct SettingsView: View {
                 VStack(spacing: 24) {
                     // User Profile Section
                     UserProfileView()
+
+                    // Subscription Status Section (added to support UI tests)
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Subscription")
+                                .font(DesignTokens.Typography.headline)
+                                .accessibilityIdentifier("subscription-section-header")
+
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("Status:")
+                                    .font(DesignTokens.Typography.body)
+                                    .foregroundColor(.secondary)
+
+                                Text(self.subscriptionStatusDisplay)
+                                    .font(DesignTokens.Typography.body)
+                                    .accessibilityIdentifier("subscription-status")
+
+                                Spacer()
+                            }
+
+                            if case .trialActive = self.subscriptionManager.subscriptionStatus {
+                                // Provide trial days remaining element (optional for tests)
+                                Text("\(self.subscriptionManager.trialDaysRemaining()) days remaining")
+                                    .font(DesignTokens.Typography.caption)
+                                    .foregroundColor(.secondary)
+                                    .accessibilityIdentifier("trial-days-remaining")
+                            }
+                        }
+                        .task {
+                            // Load products only outside test env to avoid hangs; safe call either way.
+                            await self.subscriptionManager.loadProducts()
+                        }
+                    }
 
                     // Design System Demo Section
                     DesignCard {
@@ -165,6 +200,17 @@ struct SettingsView: View {
                 .padding(.horizontal, 16)
             }
             .navigationTitle("Settings")
+            .environmentObject(self.subscriptionManager)
+        }
+    }
+}
+
+private extension SettingsView {
+    var subscriptionStatusDisplay: String {
+        switch self.subscriptionManager.subscriptionStatus {
+        case .trialActive: return "Trial Active"
+        case .premiumActive: return "Premium Active"
+        case .notSubscribed, .expired: return "Not Subscribed"
         }
     }
 }
