@@ -64,4 +64,28 @@ struct SubscriptionManagerMoreTests {
             }
         }
     }
+
+    @Test("SubscriptionError descriptions are user-friendly")
+    func subscriptionErrorDescriptions() {
+        #expect(SubscriptionError.productNotFound.errorDescription == "Subscription product not found")
+        #expect(SubscriptionError.purchaseFailed("X").errorDescription == "Purchase failed: X")
+        #expect(SubscriptionError.restoreFailed("Y").errorDescription == "Restore failed: Y")
+        #expect(SubscriptionError.verificationFailed.errorDescription == "Purchase verification failed")
+        #expect(SubscriptionError.networkError.errorDescription == "Network error occurred")
+    }
+
+    @Test("trialDaysRemaining returns 0 when past trial end date")
+    func trialDaysRemainingExpired() {
+        let manager = SubscriptionManager(isTestEnvironment: true)
+        manager.subscriptionStatus = .trialActive
+        let purchase = Date().addingTimeInterval(-40 * 24 * 60 * 60)
+        let remaining = manager.trialDaysRemaining(purchaseDate: purchase, asOf: Date())
+        #expect(remaining == 0)
+    }
+
+    @Test("evaluateStatus empty array -> notSubscribed")
+    func evaluateStatusEmpty() {
+        let status = SubscriptionManager.evaluateStatus(from: [], now: Date())
+        #expect(status == .notSubscribed)
+    }
 }
