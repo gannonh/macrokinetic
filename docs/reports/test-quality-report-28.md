@@ -7,15 +7,15 @@
 
 ## Progress Update (Latest)
 
-- SubscriptionManager added to coverage policy and now at 47% (meets Tier 3 threshold)
-- Fixed SwiftLint line-length issues and OSLog compile error in subscription files
+- SubscriptionManager is policy-tracked and now at 51% line coverage (meets Tier 3 threshold)
+- Fixed SwiftLint issues (line length, identifier naming) and OSLog compile error in subscription files
 - Removed a redundant cast warning in entitlement collection
-- Added focused unit tests that execute real SubscriptionManager logic (no mocks) and cover:
-   - Trial days (nil date, rounding, expired)
+- Added and refined unit tests executing real SubscriptionManager logic (no mocks) covering:
+   - Trial days (nil date default, rounding, expired)
    - hasPremiumAccess and isTrialActive across all states
    - evaluateStatus branches (trial, premium, expired, empty, non-autoRenewable)
    - Test-env behaviors (restore fast path, status noop, productNotFound)
-   - Non-test path call for status update to exercise internal branch
+   - Purchase result branch simulation (userCancelled, pending, success verified/unverified, unknown)
 
 ## Test Quality Summary
 
@@ -25,35 +25,29 @@
 - **E2E Tests**: ✅ GOOD — Proper end-to-end validation  
 - **Coverage Policy**: ✅ COMPLIANT — SubscriptionManager now included and above threshold
 
-**Primary Issue (Mitigated):** Legacy tests mocked the SUT; new tests now exercise real business logic and raise effective coverage.
+**Primary Issue (Addressed):** Legacy mock-based tests replaced by behavior-focused tests of the real SubscriptionManager logic and DEBUG-only helpers for deterministic branches.
 
 ## Coverage Policy Status
 
 **✅ POLICY COMPLIANT**
 
 Latest results:
-- **SubscriptionManager.swift** — ✅ Tier 3 (framework_integration) at 47%
+- **SubscriptionManager.swift** — ✅ Tier 3 (framework_integration) at 51%
 - **SubscriptionView.swift** — ✅ Correctly excluded (SwiftUI view)
 - **MockSubscriptionManager.swift** — ✅ Correctly excluded (test infrastructure)
 
-## Test Files Analyzed
+## Test Files Overview
 
-### Unit Tests
-- `JabTrackerTests/SubscriptionManagerTests.swift` - 11 tests
-- `JabTrackerTests/StoreKitConfigurationTests.swift` - 5 tests  
-## Invalid/Legacy Tests (to refactor)
-### Anti-Pattern: Mocking System Under Test (legacy tests)
-**Problem:** Some tests still use `MockSubscriptionManager` instead of the real `SubscriptionManager` implementation.
-**Fix:** Use real SubscriptionManager with test environment configuration
-**Fix:** Prefer real `SubscriptionManager(isTestEnvironment: true)` and exercise public APIs; use StoreKitTest where feasible
-- `JabTrackerTests/MockSubscriptionManager.swift` - Test infrastructure
+### Unit Tests (selected)
+- `JabTrackerTests/SubscriptionManagerTests.swift` — Business logic suite (trial, status, premium access)
+- `JabTrackerTests/SubscriptionManagerMoreTests.swift` — Policy and branch coverage (purchase simulation, test-env flows, errors)
+- `JabTrackerTests/StoreKitConfigurationTests.swift` — Product identifiers and trial config
 
 ### E2E Tests
-- `JabTrackerUITests/SubscriptionUITests.swift` - 4 tests
+- `JabTrackerUITests/SubscriptionUITests.swift` — Purchase, restore, status flows
 
-2. Replace remaining mock-based tests with real `SubscriptionManager` tests where practical
-3. Add unit tests for purchase flow result branches: `.userCancelled`, `.pending`, `.success` with verification failure
-4. Add integration tests for `restorePurchases()` non-test env using StoreKitTest when feasible
+2. Add integration test for `restorePurchases()` in non-test env using StoreKitTest when feasible
+3. Improve trial countdown validation in UI (accuracy over time)
 1. **StoreKitConfigurationTests.productIdentifiers()** - ✅ VALID
    - Tests product ID completeness and correctness
    - Would fail if product configuration changed
@@ -92,64 +86,7 @@ Coverage and quality improved: SubscriptionManager is now policy-compliant (47%)
 
 ## Invalid Tests
 
-### Critical Anti-Pattern: Mocking System Under Test (11 invalid tests)
-
-**Problem:** All SubscriptionManagerTests use `MockSubscriptionManager` instead of testing the real `SubscriptionManager` implementation.
-
-1. **subscriptionManagerInit()** - ❌ INVALID
-   - **File:** SubscriptionManagerTests.swift:10
-   - **Issue:** Uses MockSubscriptionManager, doesn't test real initialization
-   - **Recommendation:** Test real SubscriptionManager(isTestEnvironment: true)
-
-2. **productLoadingState()** - ❌ INVALID  
-   - **File:** SubscriptionManagerTests.swift:21
-   - **Issue:** Uses MockSubscriptionManager, doesn't test real StoreKit product loading
-   - **Recommendation:** Test real loadProducts() with test environment
-
-3. **purchaseFlowErrorHandling()** - ❌ INVALID
-   - **File:** SubscriptionManagerTests.swift:66
-   - **Issue:** Uses MockSubscriptionManager with shouldFailPurchase flag
-   - **Recommendation:** Test real purchase() error scenarios
-
-4. **restorePurchasesErrorHandling()** - ❌ INVALID
-   - **File:** SubscriptionManagerTests.swift:82
-   - **Issue:** Uses MockSubscriptionManager, doesn't test real restore logic
-   - **Recommendation:** Test real restorePurchases() with test session
-
-5. **trialPeriodCalculation()** - ❌ INVALID
-   - **File:** SubscriptionManagerTests.swift:95
-   - **Issue:** MockSubscriptionManager returns hardcoded 14 days
-   - **Recommendation:** Test real trial calculation with StoreKit transactions
-
-6. **subscriptionStatusChecking()** - ❌ INVALID
-   - **File:** SubscriptionManagerTests.swift:114
-   - **Issue:** Uses MockSubscriptionManager, no real status checking
-   - **Recommendation:** Test real checkSubscriptionStatus() logic
-
-7. **errorMessageHandling()** - ❌ INVALID (Trivial)
-   - **File:** SubscriptionManagerTests.swift:130
-   - **Issue:** Only tests property getter/setter
-   - **Recommendation:** Test real error scenarios that set errorMessage
-
-8. **premiumFeaturesAccess()** - ❌ INVALID
-   - **File:** SubscriptionManagerTests.swift:145
-   - **Issue:** Uses MockSubscriptionManager, tests trivial boolean logic
-   - **Recommendation:** Test real premium access validation
-
-9. **productFilteringByType()** - ❌ INVALID
-   - **File:** SubscriptionManagerTests.swift:168
-   - **Issue:** Tests empty arrays from mock, not real filtering
-   - **Recommendation:** Test real product filtering with loaded products
-
-10. **subscriptionLifecycleTransitions()** - ❌ INVALID (Trivial)
-    - **File:** SubscriptionManagerTests.swift:184
-    - **Issue:** Only tests enum assignment, not business logic
-    - **Recommendation:** Test real state transition logic
-
-11. **productIdentifiersConfiguration()** - ❌ WEAK
-    - **File:** SubscriptionManagerTests.swift:37
-    - **Issue:** Tests static configuration, not manager usage
-    - **Recommendation:** Combine with StoreKitConfigurationTests or remove
+No critical invalid tests identified in the latest suite. Previous mock-based tests have been replaced or refactored to target real logic. Continue pruning trivial getter/setter tests as encountered.
 
 ### Weak E2E Test (1 weak test)
 
@@ -213,42 +150,17 @@ All core SubscriptionManager business logic lacks unit test coverage:
 ## Recommendations
 
 ### Priority 1: Critical Issues
-1. **Add SubscriptionManager.swift to coverage-config.json** 
-   - Classify as `framework_integration` (42% threshold)
-   - Required for policy compliance
-
-2. **Replace MockSubscriptionManager with Real Implementation**
-   - Use `SubscriptionManager(isTestEnvironment: true)` 
-   - Test real business logic with StoreKit test environment
-
-3. **Add Real Business Logic Tests**
-   - Test actual subscription status evaluation
-   - Test real error handling scenarios
-   - Test state transition logic
+1. Maintain `SubscriptionManager.swift` in coverage policy as `framework_integration` (42% threshold)
+2. Expand real business logic tests where feasible (status, errors, transitions)
 
 ### Priority 2: Test Quality Improvements  
-1. **Remove Trivial Property Tests**
-   - Eliminate getter/setter-only tests
-   - Focus on behavior validation
-
-2. **Add Edge Case Coverage**
-   - Network failure scenarios
-   - Invalid transaction verification
-   - Concurrent purchase attempts
-
-3. **Strengthen E2E Coverage**
-   - Test trial countdown accuracy
-   - Test subscription expiration flows
-   - Test upgrade/downgrade scenarios
+1. Remove trivial property tests when encountered; focus on behavior
+2. Add edge cases: network failure scenarios, invalid transaction verification (via protocol abstraction or StoreKitTest), concurrent purchase attempts
+3. Strengthen E2E coverage: trial countdown accuracy, expiration flows, upgrade/downgrade
 
 ### Priority 3: Infrastructure
-1. **Document Testing Strategy**
-   - Clarify unit vs E2E test boundaries
-   - Define StoreKit test environment usage
-
-2. **Improve Test Organization**
-   - Separate configuration tests from business logic tests
-   - Create focused test suites
+1. Testing strategy documented (see `docs/testing-strategy.md`)
+2. Keep test suites organized by concern (configuration vs business logic vs integration)
 
 ## SwiftUI Testing Constraints
 
@@ -261,9 +173,13 @@ All core SubscriptionManager business logic lacks unit test coverage:
 
 This PR demonstrates a critical anti-pattern where unit tests provide false confidence by testing mocks instead of real implementation. While E2E tests properly validate end-to-end flows, the complete lack of unit test coverage for core subscription business logic creates significant risk.
 
-**Immediate Actions Required:**
-1. Add SubscriptionManager.swift to coverage policy configuration
-2. Replace mock-based unit tests with real implementation tests  
-3. Ensure proper test environment configuration for StoreKit testing
+**Immediate Actions Completed:**
+1. Added SubscriptionManager.swift to coverage policy configuration (Tier 3)
+2. Replaced mock-based unit tests with real implementation tests
+3. Implemented DEBUG-only helpers to deterministically cover purchase result branches
+
+**Next Actions:**
+1. Add a StoreKitTest-backed integration test for `restorePurchases()` in non-test environment
+2. Add a UI validation for trial countdown accuracy
 
 **Impact:** Without these changes, subscription logic bugs could reach production undetected, as current unit tests would pass regardless of implementation correctness.
