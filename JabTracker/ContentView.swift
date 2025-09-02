@@ -104,10 +104,8 @@ struct AnalyticsView: View {
 
 struct SettingsView: View {
     @ObservedObject private var dataController = DataController.shared
-    @StateObject private var subscriptionManager = SubscriptionManager(
-        isTestEnvironment: ProcessInfo.processInfo.arguments.contains("--ui-testing") ||
-            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
-    )
+    // Use real environment for Settings so status reflects actual entitlements during UI tests
+    @StateObject private var subscriptionManager = SubscriptionManager(isTestEnvironment: false)
 
     var body: some View {
         NavigationStack {
@@ -144,8 +142,10 @@ struct SettingsView: View {
                             }
                         }
                         .task {
-                            // Load products only outside test env to avoid hangs; safe call either way.
+                            // Load products (safe either way) and refresh entitlement status
+                            // so UI reflects latest state.
                             await self.subscriptionManager.loadProducts()
+                            await self.subscriptionManager.checkSubscriptionStatus()
                         }
                     }
 

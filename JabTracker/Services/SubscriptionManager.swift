@@ -57,6 +57,14 @@ public class SubscriptionManager: ObservableObject {
     private var updateListenerTask: Task<Void, Error>?
     private let isTestEnvironment: Bool
 
+    #if DEBUG
+        /// Optional override for test mode detection to make unit/UI tests deterministic.
+        /// Set from tests to force behavior without relying on environment heuristics.
+        public static var testModeOverride: TestMode?
+
+        public enum TestMode { case unit, ui }
+    #endif
+
     // MARK: - Initialization
 
     public init(isTestEnvironment: Bool = false) {
@@ -183,6 +191,43 @@ public class SubscriptionManager: ObservableObject {
             // Simulate a successful restore (no purchases found) quickly in UI tests
             // to provide deterministic feedback
             self.restoreMessage = "No purchases to restore"
+            return
+        }
+
+        // Decide whether to bypass AppStore.sync in headless unit tests.
+        #if DEBUG
+            if let override = Self.testModeOverride {
+                switch override {
+                case .unit:
+                    await self.updateSubscriptionStatus()
+                    switch self.subscriptionStatus {
+                    case .premiumActive, .trialActive:
+                        self.restoreMessage = "Purchases restored"
+                    case .notSubscribed, .expired:
+                        self.restoreMessage = "No purchases to restore"
+                    }
+                    return
+                case .ui:
+                    break // allow real flow
+                }
+            }
+        #endif
+
+        // Heuristic fallback: unit test process (Swift Testing/XCTest) without UI-testing args.
+        let isUnitTestProcess =
+            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+            ProcessInfo.processInfo.environment["SWIFT_TESTING"] == "1"
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing") ||
+            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+        if isUnitTestProcess, !isUITesting {
+            // Provide deterministic feedback without touching App Store in unit tests
+            await self.updateSubscriptionStatus()
+            switch self.subscriptionStatus {
+            case .premiumActive, .trialActive:
+                self.restoreMessage = "Purchases restored"
+            case .notSubscribed, .expired:
+                self.restoreMessage = "No purchases to restore"
+            }
             return
         }
 
