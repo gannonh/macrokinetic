@@ -114,6 +114,15 @@ struct SubscriptionManagerBusinessLogicTests {
         #expect(remaining == 0)
     }
 
+    @Test("Trial days remaining with nil purchaseDate uses default when in trial")
+    func trialDaysRemainingNilDateInTrial() {
+        let manager = SubscriptionManager(isTestEnvironment: true)
+        manager.subscriptionStatus = .trialActive
+        // When no purchase date is provided and status is trial, we expect the default configured trial days
+        let remaining = manager.trialDaysRemaining(purchaseDate: nil, asOf: Date())
+        #expect(remaining == SubscriptionProducts.trialPeriodDays)
+    }
+
     @Test("Has premium access for trial and premium, not for others")
     func premiumAccessLogic() {
         let manager = SubscriptionManager(isTestEnvironment: true)
