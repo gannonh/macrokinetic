@@ -104,7 +104,10 @@ struct AnalyticsView: View {
 
 struct SettingsView: View {
     @ObservedObject private var dataController = DataController.shared
-    @StateObject private var subscriptionManager = SubscriptionManager(isTestEnvironment: ProcessInfo.processInfo.arguments.contains("--ui-testing") || ProcessInfo.processInfo.environment["UI_TESTING"] == "true")
+    @StateObject private var subscriptionManager = SubscriptionManager(
+        isTestEnvironment: ProcessInfo.processInfo.arguments.contains("--ui-testing") ||
+            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+    )
 
     var body: some View {
         NavigationStack {

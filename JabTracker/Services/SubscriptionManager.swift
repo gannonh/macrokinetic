@@ -4,7 +4,7 @@ import OSLog
 import StoreKit
 
 /// Subscription status enumeration
-public enum SubscriptionStatus: Equatable {
+public enum AppSubscriptionStatus: Equatable {
     case notSubscribed
     case trialActive
     case premiumActive
@@ -46,7 +46,7 @@ public class SubscriptionManager: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published public var subscriptionStatus: SubscriptionStatus = .notSubscribed
+    @Published public var subscriptionStatus: AppSubscriptionStatus = .notSubscribed
     @Published public var availableProducts: [Product] = []
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String?
@@ -80,14 +80,18 @@ public class SubscriptionManager: ObservableObject {
         self.errorMessage = nil
 
         Self.logger.info("🛒 SubscriptionManager: Starting product load")
-        Self.logger.info("🛒 SubscriptionManager: Looking for product IDs: \(SubscriptionProducts.allProductIdentifiers, privacy: .public)")
+        Self.logger.info(
+            "🛒 SubscriptionManager: Looking for product IDs: \(SubscriptionProducts.allProductIdentifiers, privacy: .public)"
+        )
 
         do {
             let products = try await Product.products(for: SubscriptionProducts.allProductIdentifiers)
             Self.logger.info("🛒 SubscriptionManager: StoreKit returned \(products.count, privacy: .public) products")
 
             for product in products {
-                Self.logger.info("🛒 SubscriptionManager: Found product: \(product.id, privacy: .public) - \(product.displayName, privacy: .public) - \(product.displayPrice, privacy: .public)")
+                Self.logger.info(
+                    "🛒 SubscriptionManager: Found product: \(product.id, privacy: .public) - \(product.displayName, privacy: .public) - \(product.displayPrice, privacy: .public)"
+                )
             }
 
             self.availableProducts = products.sorted { $0.price < $1.price }
@@ -97,7 +101,9 @@ public class SubscriptionManager: ObservableObject {
             self.availableProducts = []
         }
 
-        Self.logger.info("🛒 SubscriptionManager: Product load complete. Final count: \(self.availableProducts.count, privacy: .public)")
+        Self.logger.info(
+            "🛒 SubscriptionManager: Product load complete. Final count: \(self.availableProducts.count, privacy: .public)"
+        )
         self.isLoading = false
     }
 
@@ -117,9 +123,13 @@ public class SubscriptionManager: ObservableObject {
 
         defer { isLoading = false }
 
-        // In test environment, simulate purchase failure
-        if self.isTestEnvironment {
-            throw SubscriptionError.purchaseFailed("Test environment - purchases not available")
+        // In unit test environments we bypass real StoreKit. For UI tests (which also pass --ui-testing)
+        // we want the real StoreKit sheet to appear for end-to-end validation, so only bypass when
+        // the ui-testing launch argument is NOT present.
+          if self.isTestEnvironment,
+              !ProcessInfo.processInfo.arguments.contains("--ui-testing")
+          {
+            throw SubscriptionError.purchaseFailed("Test environment (unit) - purchases disabled")
         }
 
         do {
@@ -187,10 +197,8 @@ public class SubscriptionManager: ObservableObject {
     /// Check if user has premium access (trial or active subscription)
     public func hasPremiumAccess() -> Bool {
         switch self.subscriptionStatus {
-        case .trialActive, .premiumActive:
-            return true
-        case .notSubscribed, .expired:
-            return false
+        case .trialActive, .premiumActive: return true
+        case .notSubscribed, .expired: return false
         }
     }
 
@@ -199,11 +207,22 @@ public class SubscriptionManager: ObservableObject {
         self.subscriptionStatus == .trialActive
     }
 
-    /// Get remaining trial days
-    public func trialDaysRemaining() -> Int {
-        // This would be implemented with actual transaction date checking
-        // For now, return a placeholder value
-        self.subscriptionStatus == .trialActive ? 14 : 0
+    /// Get remaining trial days based on provided purchase date (optional) so business logic can be unit tested.
+    /// - Parameter purchaseDate: The original purchase date of the subscription trial. If not provided, returns 0 unless status already set to trial.
+    /// - Returns: Integer number of days remaining in trial (0 if expired or not in trial).
+    public func trialDaysRemaining(purchaseDate: Date? = nil, asOf date: Date = Date()) -> Int {
+        // If we aren't in a trial state, immediately return 0
+        guard self.subscriptionStatus == .trialActive else { return 0 }
+
+        // If no purchase date provided (e.g. legacy placeholder) fall back to previous behavior (non-zero constant) for backward compatibility
+        guard let purchaseDate else { return SubscriptionProducts.trialPeriodDays }
+
+        let trialSeconds = Double(SubscriptionProducts.trialPeriodDays) * 24 * 60 * 60
+        let trialEnd = purchaseDate.addingTimeInterval(trialSeconds)
+        if date >= trialEnd { return 0 }
+        let remaining = trialEnd.timeIntervalSince(date)
+        // Round up partial days to provide user-friendly countdown
+        return Int(ceil(remaining / (24 * 60 * 60)))
     }
 
     /// Get monthly subscription products
@@ -242,40 +261,9 @@ public class SubscriptionManager: ObservableObject {
             return
         }
 
-        var newStatus: SubscriptionStatus = .notSubscribed
-
-        // Check for current entitlements
-        for await result in Transaction.currentEntitlements {
-            do {
-                let transaction = try await checkVerified(result)
-
-                // Check if subscription is still valid
-                if transaction.productType == .autoRenewable {
-                    // Simple subscription status check based on transaction
-                    if transaction.expirationDate == nil ||
-                        transaction.expirationDate! > Date()
-                    {
-                        // Check if in trial period based on purchase date
-                        // If purchased recently (within 4 weeks), consider it trial
-                        let trialPeriod: TimeInterval = Double(SubscriptionProducts.trialPeriodDays) * 24 * 60 * 60
-                        let trialEndDate = transaction.purchaseDate.addingTimeInterval(trialPeriod)
-
-                        if Date() < trialEndDate {
-                            newStatus = .trialActive
-                        } else {
-                            newStatus = .premiumActive
-                        }
-                    } else {
-                        newStatus = .expired
-                    }
-                }
-            } catch {
-                // Handle verification error
-                continue
-            }
-        }
-
-        self.subscriptionStatus = newStatus
+        let now = Date()
+        let transactions: [Transaction] = await collectCurrentEntitlementTransactions()
+        self.subscriptionStatus = Self.evaluateStatus(from: transactions, now: now)
     }
 
     /// Check transaction verification
@@ -286,5 +274,35 @@ public class SubscriptionManager: ObservableObject {
         case let .verified(safe):
             return safe
         }
+    }
+
+    // MARK: - Testability Helpers
+
+    /// Collect current entitlement transactions (extracted for easier overriding/mocking in tests if needed)
+    fileprivate func collectCurrentEntitlementTransactions() async -> [Transaction] {
+        var collected: [Transaction] = []
+        for await result in Transaction.currentEntitlements {
+            if let transaction = try? await checkVerified(result) as? Transaction { // Verification ensures authenticity
+                collected.append(transaction)
+            }
+        }
+        return collected
+    }
+}
+
+// MARK: - Pure Logic Helpers
+
+extension SubscriptionManager {
+    /// Evaluates subscription status from transactions and current time (pure, testable).
+    static func evaluateStatus(from transactions: [Transaction], now: Date) -> AppSubscriptionStatus {
+        let autoRenewables = transactions.filter { $0.productType == .autoRenewable }
+        guard !autoRenewables.isEmpty else { return .notSubscribed }
+        guard let latest = autoRenewables.max(by: { $0.purchaseDate < $1.purchaseDate }) else {
+            return .notSubscribed
+        }
+        if let exp = latest.expirationDate, exp <= now { return .expired }
+        let trialSeconds = Double(SubscriptionProducts.trialPeriodDays) * 24 * 60 * 60
+        let trialEnd = latest.purchaseDate.addingTimeInterval(trialSeconds)
+        return now < trialEnd ? .trialActive : .premiumActive
     }
 }

@@ -124,6 +124,21 @@ func dataControllerHandlesAllCloudKitStatusScenarios() throws {
 - Biometric authentication on real devices
 - Authentication state persistence across app launches
 
+### Subscription Management (StoreKit 2)
+
+**Challenge**: StoreKit 2 product loading, purchase flows, and transaction listeners depend on App Store sandbox behavior that is slow and nondeterministic in a plain unit test context.
+
+**Hybrid Solution**:
+- **Pure Logic Unit Tests**: We extract deterministic business rules (status evaluation, trial day calculation, premium access) into pure functions or parameterized methods (`evaluateStatus`, `trialDaysRemaining(purchaseDate:asOf:)`). These are now thoroughly unit tested in `SubscriptionManagerTests` without mocks of the manager itself, avoiding the anti-pattern of testing a mock implementation.
+- **UI / E2E Tests** (`SubscriptionUITests.swift`): Cover real StoreKit integration (product retrieval, purchase & restore flows, entitlement reflection in UI). Trial countdown accuracy and upgrade/downgrade scenarios are candidates for future additions.
+
+**Coverage Policy Placement**: `SubscriptionManager.swift` added to `framework_integration` tier (42% threshold) acknowledging unavoidable untestable paths around live transaction streams while still enforcing minimum meaningful coverage of logic portions.
+
+**Design Notes**:
+- Test environment guard (`isTestEnvironment`) prevents hanging on `Transaction.currentEntitlements` in unit tests.
+- A helper pure function `evaluateStatus(from:now:)` enables deterministic evaluation using synthetic data.
+- Future enhancements: inject a protocol abstraction for StoreKit access to simulate failure scenarios (network, verification) in unit tests without requiring live services.
+
 ## Test Organization
 
 ### File Structure

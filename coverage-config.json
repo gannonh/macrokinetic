@@ -25,7 +25,8 @@
         "description": "Heavy Apple framework dependencies",
         "files": [
           "AuthenticationManager.swift",
-          "BiometricAuthManager.swift"
+          "BiometricAuthManager.swift",
+          "SubscriptionManager.swift"
         ]
       },
       "view_models": {
@@ -50,7 +51,7 @@
     "description": "Files excluded from coverage requirements",
     "categories": [
       "SwiftUI Views",
-      "View modifiers", 
+      "View modifiers",
       "SwiftUI-specific presentation logic"
     ]
   },

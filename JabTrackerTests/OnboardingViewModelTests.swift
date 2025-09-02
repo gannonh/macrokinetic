@@ -264,11 +264,24 @@ struct OnboardingViewModelTests {
         // Initial state
         #expect(viewModel.healthKitGranted == false)
 
-        // Request permissions (will be denied/not available in test environment)
+        // Request permissions without providing test overrides triggers default early-exit path
         await viewModel.requestHealthKitPermissions()
+        #expect(viewModel.healthKitGranted == false, "Default test path should early-exit with false")
+    }
 
-        // Method should complete without error
-        // Note: HealthKit is not available in simulator, but method should handle this gracefully
+    @Test("HealthKit permission success simulation with test hooks")
+    @MainActor
+    func healthKitPermissionSuccessSimulation() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Provide deterministic test overrides to simulate available HealthKit and granted auth
+    viewModel.testIsHealthDataAvailable = true
+    viewModel.testForcedHealthAuthResult = true
+
+        await viewModel.requestHealthKitPermissions()
+        #expect(viewModel.healthKitGranted == true, "Forced success path should mark granted true")
     }
 
     // MARK: - State Management Tests
