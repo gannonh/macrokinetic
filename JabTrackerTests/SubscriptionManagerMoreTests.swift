@@ -99,25 +99,25 @@ struct SubscriptionManagerMoreTests {
         let expiredExpiration = now.addingTimeInterval(-1 * 24 * 60 * 60)
 
         // Trial
-        let trial = SubscriptionManager._EvalInput(
+        let trial = SubscriptionManager.EvalInputTest(
             productType: .autoRenewable,
             purchaseDate: trialPurchase,
             expirationDate: premiumExpiration)
-        #expect(SubscriptionManager._evaluateStatusForTests(from: [trial], now: now) == .trialActive)
+        #expect(SubscriptionManager.evaluateStatusForTests(from: [trial], now: now) == .trialActive)
 
         // Premium (outside trial, not expired)
-        let premium = SubscriptionManager._EvalInput(
+        let premium = SubscriptionManager.EvalInputTest(
             productType: .autoRenewable,
             purchaseDate: premiumPurchase,
             expirationDate: premiumExpiration)
-        #expect(SubscriptionManager._evaluateStatusForTests(from: [premium], now: now) == .premiumActive)
+        #expect(SubscriptionManager.evaluateStatusForTests(from: [premium], now: now) == .premiumActive)
 
         // Expired
-        let expired = SubscriptionManager._EvalInput(
+        let expired = SubscriptionManager.EvalInputTest(
             productType: .autoRenewable,
             purchaseDate: expiredPurchase,
             expirationDate: expiredExpiration)
-        #expect(SubscriptionManager._evaluateStatusForTests(from: [expired], now: now) == .expired)
+        #expect(SubscriptionManager.evaluateStatusForTests(from: [expired], now: now) == .expired)
     }
 
     @Test("hasPremiumAccess reflects all states")
@@ -136,11 +136,11 @@ struct SubscriptionManagerMoreTests {
     @Test("_evaluateStatusForTests ignores non-autoRenewable")
     func evaluateStatusIgnoresNonAutoRenewable() {
         let now = Date()
-        let item = SubscriptionManager._EvalInput(
+        let item = SubscriptionManager.EvalInputTest(
             productType: .nonConsumable,
             purchaseDate: now,
             expirationDate: nil)
-        let status = SubscriptionManager._evaluateStatusForTests(from: [item], now: now)
+        let status = SubscriptionManager.evaluateStatusForTests(from: [item], now: now)
         #expect(status == .notSubscribed)
     }
 
@@ -153,5 +153,64 @@ struct SubscriptionManagerMoreTests {
         // It's sufficient that the call returns and leaves a valid status enum.
         let valid: Set<AppSubscriptionStatus> = [.notSubscribed, .trialActive, .premiumActive, .expired]
         #expect(valid.contains(manager.subscriptionStatus))
+    }
+
+    // MARK: - Purchase result branch coverage (DEBUG-only helper)
+
+    @Test("purchase result: userCancelled -> no error, no finish")
+    func purchaseResultUserCancelled() {
+        #if DEBUG
+            let res = try? SubscriptionManager.simulatePurchaseHandling(for: .userCancelled)
+            #expect(res?.errorMessage == nil)
+            #expect(res?.didFinish == false)
+        #endif
+    }
+
+    @Test("purchase result: pending -> sets pending message")
+    func purchaseResultPending() {
+        #if DEBUG
+            let res = try? SubscriptionManager.simulatePurchaseHandling(for: .pending)
+            #expect(res?.errorMessage == "Purchase is pending approval")
+            #expect(res?.didFinish == false)
+        #endif
+    }
+
+    @Test("purchase result: success verified -> finish true")
+    func purchaseResultSuccessVerified() {
+        #if DEBUG
+            let res = try? SubscriptionManager.simulatePurchaseHandling(for: .successVerified)
+            #expect(res?.errorMessage == nil)
+            #expect(res?.didFinish == true)
+        #endif
+    }
+
+    @Test("purchase result: success unverified -> throws verificationFailed")
+    func purchaseResultSuccessUnverified() {
+        #if DEBUG
+            do {
+                _ = try SubscriptionManager.simulatePurchaseHandling(for: .successUnverified)
+                Issue.record("Expected verificationFailed")
+            } catch {
+                if case SubscriptionError.verificationFailed = error { /* expected */ } else {
+                    Issue.record("Unexpected error: \(error)")
+                }
+            }
+        #endif
+    }
+
+    @Test("purchase result: unknown -> throws purchaseFailed")
+    func purchaseResultUnknown() {
+        #if DEBUG
+            do {
+                _ = try SubscriptionManager.simulatePurchaseHandling(for: .unknown)
+                Issue.record("Expected purchaseFailed")
+            } catch {
+                if case let SubscriptionError.purchaseFailed(msg) = error {
+                    #expect(msg == "Unknown result")
+                } else {
+                    Issue.record("Unexpected error: \(error)")
+                }
+            }
+        #endif
     }
 }

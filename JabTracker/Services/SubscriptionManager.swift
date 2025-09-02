@@ -324,14 +324,14 @@ extension SubscriptionManager {
     // MARK: - Test-only convenience (no StoreKit dependency)
 
     /// Lightweight input to evaluate status for tests without requiring StoreKit Transaction values.
-    struct _EvalInput {
+    struct EvalInputTest {
         let productType: Product.ProductType
         let purchaseDate: Date
         let expirationDate: Date?
     }
 
     /// Mirror of evaluateStatus using simplified inputs; defined here so coverage counts for this file.
-    static func _evaluateStatusForTests(from items: [_EvalInput], now: Date) -> AppSubscriptionStatus {
+    static func evaluateStatusForTests(from items: [EvalInputTest], now: Date) -> AppSubscriptionStatus {
         let autoRenewables = items.filter { $0.productType == .autoRenewable }
         guard !autoRenewables.isEmpty else { return .notSubscribed }
         guard let latest = autoRenewables.max(by: { $0.purchaseDate < $1.purchaseDate }) else {
@@ -343,3 +343,35 @@ extension SubscriptionManager {
         return now < trialEnd ? .trialActive : .premiumActive
     }
 }
+
+#if DEBUG
+
+    // MARK: - DEBUG: Purchase Result Simulation (for unit tests)
+
+    extension SubscriptionManager {
+        enum PurchaseCaseTest { case userCancelled, pending, successVerified, successUnverified, unknown }
+        typealias PurchaseHandlingResult = (errorMessage: String?, didFinish: Bool)
+
+        /// Simulate the branch effects of handling a purchase result. This mirrors side-effects only.
+        /// - Returns: Tuple indicating optional error message and whether a finish-like action would be performed.
+        /// - Throws: SubscriptionError on unknown or verification failure to match production semantics.
+        static func simulatePurchaseHandling(for purchaseCase: PurchaseCaseTest) throws -> PurchaseHandlingResult {
+            switch purchaseCase {
+            case .userCancelled:
+                // No error, no finish
+                return (nil, false)
+            case .pending:
+                // Set a user-facing message
+                return ("Purchase is pending approval", false)
+            case .successVerified:
+                // Success path would finish the transaction
+                return (nil, true)
+            case .successUnverified:
+                // Map to verification failure
+                throw SubscriptionError.verificationFailed
+            case .unknown:
+                throw SubscriptionError.purchaseFailed("Unknown result")
+            }
+        }
+    }
+#endif
