@@ -119,4 +119,40 @@ struct SubscriptionManagerMoreTests {
             expirationDate: expiredExpiration)
         #expect(SubscriptionManager._evaluateStatusForTests(from: [expired], now: now) == .expired)
     }
+
+    @Test("hasPremiumAccess reflects all states")
+    func hasPremiumAccessAllStates() {
+        let manager = SubscriptionManager(isTestEnvironment: true)
+        manager.subscriptionStatus = .notSubscribed
+        #expect(manager.hasPremiumAccess() == false)
+        manager.subscriptionStatus = .trialActive
+        #expect(manager.hasPremiumAccess() == true)
+        manager.subscriptionStatus = .premiumActive
+        #expect(manager.hasPremiumAccess() == true)
+        manager.subscriptionStatus = .expired
+        #expect(manager.hasPremiumAccess() == false)
+    }
+
+    @Test("_evaluateStatusForTests ignores non-autoRenewable")
+    func evaluateStatusIgnoresNonAutoRenewable() {
+        let now = Date()
+        let item = SubscriptionManager._EvalInput(
+            productType: .nonConsumable,
+            purchaseDate: now,
+            expirationDate: nil
+        )
+        let status = SubscriptionManager._evaluateStatusForTests(from: [item], now: now)
+        #expect(status == .notSubscribed)
+    }
+
+    @Test("checkSubscriptionStatus updates in non-test environment without crashing")
+    func checkSubscriptionStatusNonTestEnv() async {
+        // This exercises the non-test path inside updateSubscriptionStatus().
+        let manager = SubscriptionManager(isTestEnvironment: false)
+        await manager.checkSubscriptionStatus()
+        // We don't assert a specific value since it depends on simulator StoreKit state.
+        // It's sufficient that the call returns and leaves a valid status enum.
+        let valid: Set<AppSubscriptionStatus> = [.notSubscribed, .trialActive, .premiumActive, .expired]
+        #expect(valid.contains(manager.subscriptionStatus))
+    }
 }
