@@ -23,7 +23,9 @@ final class SubscriptionUITests: XCTestCase {
         session.disableDialogs = false
         session.clearTransactions()
         self.testSession = session
-        print("✅ StoreKitTest session loaded from absolute path (disableDialogs=\(session.disableDialogs))")
+        print(
+            "✅ StoreKitTest session loaded from absolute path (disableDialogs=\(session.disableDialogs))"
+        )
     }
 
     override func tearDown() {
@@ -50,8 +52,9 @@ final class SubscriptionUITests: XCTestCase {
         // ACCEPTANCE CRITERIA: Available subscription products are loaded and displayed.
         // Optimize by waiting ONCE for an anchor (purchase button) then performing zero-wait assertions.
         let purchaseButton = app.buttons["purchase-subscription-button"]
-        XCTAssertTrue(purchaseButton.waitForExistence(timeout: 8),
-                      "Purchase button (anchor for subscription screen) should appear")
+        XCTAssertTrue(
+            purchaseButton.waitForExistence(timeout: 8),
+            "Purchase button (anchor for subscription screen) should appear")
 
         // Immediate assertions (no additional waits) – if these fail they'll provide fast feedback.
         XCTAssertTrue(app.staticTexts["JabTracker Premium"].exists, "Title should be present")
@@ -61,19 +64,26 @@ final class SubscriptionUITests: XCTestCase {
         // Wait for button enabled but with a shorter timeout now that screen is visible.
         if !purchaseButton.isEnabled {
             let buttonEnabledPredicate = NSPredicate(format: "isEnabled == true")
-            let enabledExpectation = XCTNSPredicateExpectation(predicate: buttonEnabledPredicate, object: purchaseButton)
+            let enabledExpectation = XCTNSPredicateExpectation(
+                predicate: buttonEnabledPredicate,
+                object: purchaseButton)
             let enabledResult = XCTWaiter().wait(for: [enabledExpectation], timeout: 5)
             XCTAssertEqual(enabledResult, .completed, "Purchase button should enable after products load")
         }
 
         // Tap purchase button to initiate subscription flow
-        print("🛒 Tapping purchase button (disableDialogs=\(self.testSession?.disableDialogs.description ?? "nil"))")
+        print(
+            "🛒 Tapping purchase button (disableDialogs=\(self.testSession?.disableDialogs.description ?? "nil"))"
+        )
         purchaseButton.tap()
 
         // Deterministic path observed for this test environment:
         // StoreKit subscription sheet appears as a system sheet (SpringBoard process)
         // containing a "Subscribe" button.
-        XCTAssertEqual(self.testSession?.disableDialogs, false, "StoreKit dialogs must be enabled for deterministic UI validation")
+        XCTAssertEqual(
+            self.testSession?.disableDialogs,
+            false,
+            "StoreKit dialogs must be enabled for deterministic UI validation")
 
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let subscribeButtonSB = springboard.buttons["Subscribe"]
@@ -84,8 +94,9 @@ final class SubscriptionUITests: XCTestCase {
         print("✅ Tapped system 'Subscribe' button")
 
         // ACCEPTANCE CRITERIA: After successful purchase, user proceeds to main app
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 10),
-                      "Should navigate to main app after successful subscription")
+        XCTAssertTrue(
+            app.tabBars.buttons["Home"].waitForExistence(timeout: 10),
+            "Should navigate to main app after successful subscription")
     }
 
     @MainActor
@@ -168,7 +179,9 @@ final class SubscriptionUITests: XCTestCase {
                 options: .caseInsensitive)
             let range = NSRange(location: 0, length: trialText.utf16.count)
             let matches = pattern?.numberOfMatches(in: trialText, options: [], range: range) ?? 0
-            XCTAssertTrue(matches == 1, "Trial info should show numeric countdown or 'Trial Active' – got: \(trialText)")
+            XCTAssertTrue(
+                matches == 1,
+                "Trial info should show numeric countdown or 'Trial Active' – got: \(trialText)")
         }
     }
 
@@ -216,8 +229,9 @@ final class SubscriptionUITests: XCTestCase {
         }
 
         // Should now be on subscription screen
-        XCTAssertTrue(app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 5),
-                      "Should reach subscription screen after completing onboarding flow")
+        XCTAssertTrue(
+            app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 5),
+            "Should reach subscription screen after completing onboarding flow")
     }
 
     // MARK: - Transient System UI Handling
@@ -227,7 +241,11 @@ final class SubscriptionUITests: XCTestCase {
         // taps on subscription actions (purchase / restore). Title observed: "Sign in with Apple ID".
         let signInAlert = app.alerts["Sign in with Apple ID"]
         if signInAlert.waitForExistence(timeout: timeout) {
-            if let okButton = [signInAlert.buttons["OK"], signInAlert.buttons["Continue"], signInAlert.buttons["Allow"]].first(where: { $0.exists }) {
+            if let okButton = [
+                signInAlert.buttons["OK"],
+                signInAlert.buttons["Continue"],
+                signInAlert.buttons["Allow"],
+            ].first(where: { $0.exists }) {
                 okButton.tap()
             } else if signInAlert.buttons.firstMatch.exists {
                 signInAlert.buttons.firstMatch.tap()

@@ -80,29 +80,40 @@ public class SubscriptionManager: ObservableObject {
         self.errorMessage = nil
 
         Self.logger.info("🛒 SubscriptionManager: Starting product load")
+        let ids = SubscriptionProducts.allProductIdentifiers
         Self.logger.info(
-            "🛒 SubscriptionManager: Looking for product IDs: \(SubscriptionProducts.allProductIdentifiers, privacy: .public)"
+            "🛒 SubscriptionManager: Looking for product IDs: \(ids, privacy: .public)"
         )
 
         do {
-            let products = try await Product.products(for: SubscriptionProducts.allProductIdentifiers)
-            Self.logger.info("🛒 SubscriptionManager: StoreKit returned \(products.count, privacy: .public) products")
+            let products = try await Product.products(
+                for: SubscriptionProducts.allProductIdentifiers
+            )
+            Self.logger.info(
+                "🛒 SubscriptionManager: StoreKit returned \(products.count, privacy: .public) products"
+            )
 
             for product in products {
+                let pid = product.id
+                let name = product.displayName
+                let price = product.displayPrice
                 Self.logger.info(
-                    "🛒 SubscriptionManager: Found product: \(product.id, privacy: .public) - \(product.displayName, privacy: .public) - \(product.displayPrice, privacy: .public)"
+                    "Found product: \(pid, privacy: .public) - \(name, privacy: .public) - \(price, privacy: .public)"
                 )
             }
 
             self.availableProducts = products.sorted { $0.price < $1.price }
         } catch {
-            Self.logger.error("🛒 SubscriptionManager: Error loading products: \(error.localizedDescription, privacy: .public)")
+            Self.logger.error(
+                "🛒 SubscriptionManager: Error loading products: \(error.localizedDescription, privacy: .public)"
+            )
             self.errorMessage = "Failed to load products: \(error.localizedDescription)"
             self.availableProducts = []
         }
 
+        let count = self.availableProducts.count
         Self.logger.info(
-            "🛒 SubscriptionManager: Product load complete. Final count: \(self.availableProducts.count, privacy: .public)"
+            "🛒 SubscriptionManager: Product load complete. Final count: \(count, privacy: .public)"
         )
         self.isLoading = false
     }
@@ -123,9 +134,9 @@ public class SubscriptionManager: ObservableObject {
 
         defer { isLoading = false }
 
-        // In unit test environments we bypass real StoreKit. For UI tests (which also pass --ui-testing)
-        // we want the real StoreKit sheet to appear for end-to-end validation, so only bypass when
-        // the ui-testing launch argument is NOT present.
+        // In unit test environments we bypass real StoreKit. For UI tests (which also pass
+        // --ui-testing) we want the real StoreKit sheet to appear for end-to-end validation,
+        // so only bypass when the ui-testing launch argument is NOT present.
         if self.isTestEnvironment,
            !ProcessInfo.processInfo.arguments.contains("--ui-testing")
         {
@@ -169,7 +180,8 @@ public class SubscriptionManager: ObservableObject {
 
         // In test environment, skip AppStore operations that can hang
         if self.isTestEnvironment {
-            // Simulate a successful restore (no purchases found) quickly in UI tests to provide deterministic feedback
+            // Simulate a successful restore (no purchases found) quickly in UI tests
+            // to provide deterministic feedback
             self.restoreMessage = "No purchases to restore"
             return
         }
@@ -207,14 +219,17 @@ public class SubscriptionManager: ObservableObject {
         self.subscriptionStatus == .trialActive
     }
 
-    /// Get remaining trial days based on provided purchase date (optional) so business logic can be unit tested.
-    /// - Parameter purchaseDate: The original purchase date of the subscription trial. If not provided, returns 0 unless status already set to trial.
+    /// Get remaining trial days based on provided purchase date (optional)
+    /// so business logic can be unit tested.
+    /// - Parameter purchaseDate: The original purchase date of the subscription trial.
+    /// If not provided, returns 0 unless status already set to trial.
     /// - Returns: Integer number of days remaining in trial (0 if expired or not in trial).
     public func trialDaysRemaining(purchaseDate: Date? = nil, asOf date: Date = Date()) -> Int {
         // If we aren't in a trial state, immediately return 0
         guard self.subscriptionStatus == .trialActive else { return 0 }
 
-        // If no purchase date provided (e.g. legacy placeholder) fall back to previous behavior (non-zero constant) for backward compatibility
+        // If no purchase date provided (e.g. legacy placeholder) fall back to
+        // previous behavior (non-zero constant) for backward compatibility
         guard let purchaseDate else { return SubscriptionProducts.trialPeriodDays }
 
         let trialSeconds = Double(SubscriptionProducts.trialPeriodDays) * 24 * 60 * 60
@@ -282,7 +297,7 @@ public class SubscriptionManager: ObservableObject {
     fileprivate func collectCurrentEntitlementTransactions() async -> [Transaction] {
         var collected: [Transaction] = []
         for await result in Transaction.currentEntitlements {
-            if let transaction = try? await checkVerified(result) as? Transaction { // Verification ensures authenticity
+            if let transaction: Transaction = try? await checkVerified(result) { // Verified transaction
                 collected.append(transaction)
             }
         }

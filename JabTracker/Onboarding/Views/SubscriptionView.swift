@@ -20,7 +20,9 @@ struct SubscriptionView: View {
         self._viewModel = ObservedObject(initialValue: viewModel)
         let isTest = ProcessInfo.processInfo.arguments.contains("--ui-testing") ||
             ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
-        _subscriptionManager = StateObject(wrappedValue: SubscriptionManager(isTestEnvironment: isTest))
+        _subscriptionManager = StateObject(
+            wrappedValue: SubscriptionManager(isTestEnvironment: isTest)
+        )
     }
 
     private let premiumFeatures = [
@@ -81,12 +83,17 @@ struct SubscriptionView: View {
                     .accessibilityLabel("Subscription pricing: $4.99 per month with 2-week free trial")
 
                     // Purchase button
-                    PrimaryButton(title: self.subscriptionManager.isLoading ? "Loading..." : "Start Free Trial") {
+                    PrimaryButton(
+                        title: self.subscriptionManager.isLoading ? "Loading..." : "Start Free Trial"
+                    ) {
                         Task {
                             await self.purchaseSubscription()
                         }
                     }
-                    .disabled(self.subscriptionManager.isLoading || (!self.isTestEnvironment && self.subscriptionManager.availableProducts.isEmpty))
+                    .disabled(
+                        self.subscriptionManager.isLoading ||
+                            (!self.isTestEnvironment && self.subscriptionManager.availableProducts.isEmpty)
+                    )
                     .accessibilityIdentifier("purchase-subscription-button")
 
                     // Restore button
@@ -136,23 +143,41 @@ struct SubscriptionView: View {
             Task {
                 Self.logger.info("🛒 SubscriptionView: Loading subscription products...")
                 await self.subscriptionManager.loadProducts()
-                Self.logger.info("🛒 SubscriptionView: Products loaded: \(self.subscriptionManager.availableProducts.count, privacy: .public)")
+                let productCount = self.subscriptionManager.availableProducts.count
+                Self.logger.info(
+                    "🛒 SubscriptionView: Products loaded: \(productCount, privacy: .public)"
+                )
                 if !self.subscriptionManager.availableProducts.isEmpty {
-                    Self.logger.info("🛒 SubscriptionView: Product IDs: \(self.subscriptionManager.availableProducts.map(\.id), privacy: .public)")
+                    let ids = self.subscriptionManager.availableProducts.map(\.id)
+                    Self.logger.info(
+                        "🛒 SubscriptionView: Product IDs: \(ids, privacy: .public)"
+                    )
                 }
                 if let error = subscriptionManager.errorMessage {
-                    Self.logger.error("🛒 SubscriptionView: Error: \(error, privacy: .public)")
+                    Self.logger.error(
+                        "🛒 SubscriptionView: Error: \(error, privacy: .public)"
+                    )
                 } else {
                     Self.logger.info("🛒 SubscriptionView: No errors")
                 }
             }
         }
-        .alert("Subscription Error", isPresented: .constant(self.subscriptionManager.errorMessage != nil)) {
+        .alert(
+            "Subscription Error",
+            isPresented: .constant(self.subscriptionManager.errorMessage != nil))
+        {
             Button("OK") { self.subscriptionManager.errorMessage = nil }
-        } message: { Text(self.subscriptionManager.errorMessage ?? "") }
-        .alert("Restore Purchases", isPresented: .constant(self.subscriptionManager.restoreMessage != nil)) {
+        } message: {
+            Text(self.subscriptionManager.errorMessage ?? "")
+        }
+        .alert(
+            "Restore Purchases",
+            isPresented: .constant(self.subscriptionManager.restoreMessage != nil))
+        {
             Button("OK") { self.subscriptionManager.restoreMessage = nil }
-        } message: { Text(self.subscriptionManager.restoreMessage ?? "") }
+        } message: {
+            Text(self.subscriptionManager.restoreMessage ?? "")
+        }
     }
 
     private func purchaseSubscription() async {

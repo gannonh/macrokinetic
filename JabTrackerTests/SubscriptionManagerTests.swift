@@ -27,7 +27,9 @@ struct SubscriptionManagerBusinessLogicTests {
         // Mirror logic from SubscriptionManager.evaluateStatus (kept in sync intentionally)
         let autoRenewables = txs.filter { $0.productType == .autoRenewable }
         guard !autoRenewables.isEmpty else { return .notSubscribed }
-        let latest = autoRenewables.max(by: { $0.purchaseDate < $1.purchaseDate })!
+        guard let latest = autoRenewables.max(by: { $0.purchaseDate < $1.purchaseDate }) else {
+            return .notSubscribed
+        }
         if let exp = latest.expirationDate, exp <= now { return .expired }
         let trialSeconds = Double(SubscriptionProducts.trialPeriodDays) * 24 * 60 * 60
         let trialEnd = latest.purchaseDate.addingTimeInterval(trialSeconds)
@@ -44,7 +46,10 @@ struct SubscriptionManagerBusinessLogicTests {
     func activeTrialWithinWindow() {
         let now = Date()
         let purchase = now.addingTimeInterval(-3 * 24 * 60 * 60) // 3 days ago
-        let tx = TestTransaction(productType: .autoRenewable, purchaseDate: purchase, expirationDate: now.addingTimeInterval(40 * 24 * 60 * 60))
+        let tx = TestTransaction(
+            productType: .autoRenewable,
+            purchaseDate: purchase,
+            expirationDate: now.addingTimeInterval(40 * 24 * 60 * 60))
         #expect(self.status(from: [tx], now: now) == .trialActive)
     }
 
@@ -53,7 +58,10 @@ struct SubscriptionManagerBusinessLogicTests {
         let now = Date()
         let purchase = now.addingTimeInterval(-35 * 24 * 60 * 60) // 35 days ago (> 28 day trial)
         let exp = now.addingTimeInterval(10 * 24 * 60 * 60) // still active
-        let tx = TestTransaction(productType: .autoRenewable, purchaseDate: purchase, expirationDate: exp)
+        let tx = TestTransaction(
+            productType: .autoRenewable,
+            purchaseDate: purchase,
+            expirationDate: exp)
         #expect(self.status(from: [tx], now: now) == .premiumActive)
     }
 
@@ -62,7 +70,10 @@ struct SubscriptionManagerBusinessLogicTests {
         let now = Date()
         let purchase = now.addingTimeInterval(-40 * 24 * 60 * 60)
         let exp = now.addingTimeInterval(-1 * 24 * 60 * 60) // expired yesterday
-        let tx = TestTransaction(productType: .autoRenewable, purchaseDate: purchase, expirationDate: exp)
+        let tx = TestTransaction(
+            productType: .autoRenewable,
+            purchaseDate: purchase,
+            expirationDate: exp)
         #expect(self.status(from: [tx], now: now) == .expired)
     }
 
@@ -70,9 +81,15 @@ struct SubscriptionManagerBusinessLogicTests {
     func latestTransactionDeterminesStatus() {
         let now = Date()
         let oldPurchase = now.addingTimeInterval(-60 * 24 * 60 * 60)
-        let oldTx = TestTransaction(productType: .autoRenewable, purchaseDate: oldPurchase, expirationDate: now.addingTimeInterval(10 * 24 * 60 * 60))
+        let oldTx = TestTransaction(
+            productType: .autoRenewable,
+            purchaseDate: oldPurchase,
+            expirationDate: now.addingTimeInterval(10 * 24 * 60 * 60))
         let newPurchase = now.addingTimeInterval(-2 * 24 * 60 * 60)
-        let newTx = TestTransaction(productType: .autoRenewable, purchaseDate: newPurchase, expirationDate: now.addingTimeInterval(50 * 24 * 60 * 60))
+        let newTx = TestTransaction(
+            productType: .autoRenewable,
+            purchaseDate: newPurchase,
+            expirationDate: now.addingTimeInterval(50 * 24 * 60 * 60))
         // Within trial for the new purchase
         #expect(self.status(from: [oldTx, newTx], now: now) == .trialActive)
     }
@@ -82,7 +99,9 @@ struct SubscriptionManagerBusinessLogicTests {
         let manager = SubscriptionManager(isTestEnvironment: true)
         manager.subscriptionStatus = .trialActive
         let purchaseDate = Date().addingTimeInterval(-5 * 24 * 60 * 60) // 5 days ago
-        let remaining = manager.trialDaysRemaining(purchaseDate: purchaseDate, asOf: Date().addingTimeInterval(2 * 60 * 60)) // 2 hours later
+        let remaining = manager.trialDaysRemaining(
+            purchaseDate: purchaseDate,
+            asOf: Date().addingTimeInterval(2 * 60 * 60)) // 2 hours later
         // Expect 28 - 5 = 23 (approx). Allow small boundary variations due to hour offset but should be >=22
         #expect(remaining >= 22 && remaining <= 23)
     }
