@@ -41,7 +41,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "premium_monthly",
+          "productID" : "com.gannonhall.jabtracker.premium.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "20F8EC61",
@@ -69,7 +69,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "premium_annual",
+          "productID" : "com.gannonhall.jabtracker.premium.annual",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Annual",
           "subscriptionGroupID" : "20F8EC61",

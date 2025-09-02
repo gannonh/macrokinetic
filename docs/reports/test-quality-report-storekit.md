@@ -56,7 +56,7 @@ All 5 tests are **VALID** and properly validate behavior:
 ### 1. `productIdentifiers()` - Lines 7-17
 **Validates**: Product identifier completeness and correctness
 ```swift
-let expectedProductIds = Set(["premium_monthly", "premium_annual"])
+let expectedProductIds = Set(["com.gannonhall.jabtracker.premium.monthly", "com.gannonhall.jabtracker.premium.annual"])
 let actualProductIds = Set(SubscriptionProducts.allProductIdentifiers)
 #expect(actualProductIds == expectedProductIds)
 ```
@@ -70,7 +70,7 @@ let actualProductIds = Set(SubscriptionProducts.allProductIdentifiers)
 **Validates**: Monthly subscription product identifier
 ```swift
 let monthlyId = SubscriptionProducts.monthly
-#expect(monthlyId == "premium_monthly")
+#expect(monthlyId == "com.gannonhall.jabtracker.premium.monthly")
 ```
 **Test Quality**: ✅ **GOOD**
 - **Fails when**: Monthly product ID changes or becomes nil
@@ -81,7 +81,7 @@ let monthlyId = SubscriptionProducts.monthly
 **Validates**: Annual subscription product identifier
 ```swift
 let annualId = SubscriptionProducts.annual
-#expect(annualId == "premium_annual")
+#expect(annualId == "com.gannonhall.jabtracker.premium.annual")
 ```
 **Test Quality**: ✅ **GOOD**
 - **Fails when**: Annual product ID changes or becomes nil
