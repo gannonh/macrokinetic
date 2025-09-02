@@ -113,6 +113,9 @@ echo "Epic progress: $((total-open))/$total complete ($open open)"
 - [ ] **E2E test should now PASS** - User success criteria met
 - [ ] Add E2E edge case tests if critical
 - [ ] Fix any integration issues
+- [ ] Ensure new files have been added to `coverage-config.json`
+- [ ] Run coverage analysis: `./scripts/coverage-json.sh`
+- [ ] **Coverage thresholds must be met**
 
 ### Step 6: Final Verification & Ship
 - [ ] Run all checks (unit, e2e, build, swiftlint): `./scripts/check-all.sh`

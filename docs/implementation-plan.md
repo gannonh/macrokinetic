@@ -60,7 +60,7 @@
 - ✅ 4.99/month subscription with 2 week trial placeholder (implement next phase)
 - ✅ Create smooth transition to main app after onboarding completion
 
-### Pricing & Packaging 📦
+### Pricing & Packaging 📦 (epic [#21](https://github.com/gannonh/jab-tracker-ios/issues/21))
 **Subscription Model & In-App Purchases**
 - Implement subscription model with monthly/annual plans
 - Create in-app purchase options for premium features
