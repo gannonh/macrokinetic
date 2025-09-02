@@ -41,6 +41,8 @@ targets:
     type: bundle.ui-testing
     platform: iOS
     sources: [JabTrackerUITests]
+    resources:
+      - path: JabTrackerStoreKit.storekit
     settings:
       GENERATE_INFOPLIST_FILE: YES
     dependencies:
