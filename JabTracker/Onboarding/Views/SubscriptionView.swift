@@ -4,7 +4,7 @@ import SwiftUI
 
 struct SubscriptionView: View {
     @ObservedObject var viewModel: OnboardingViewModel
-    @StateObject private var subscriptionManager = SubscriptionManager()
+    @StateObject private var subscriptionManager: SubscriptionManager
 
     // MARK: - Logger
 
@@ -14,6 +14,13 @@ struct SubscriptionView: View {
 
     private var isTestEnvironment: Bool {
         ProcessInfo.processInfo.arguments.contains("--ui-testing")
+    }
+
+    init(viewModel: OnboardingViewModel) {
+        self._viewModel = ObservedObject(initialValue: viewModel)
+        let isTest = ProcessInfo.processInfo.arguments.contains("--ui-testing") ||
+            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+        _subscriptionManager = StateObject(wrappedValue: SubscriptionManager(isTestEnvironment: isTest))
     }
 
     private let premiumFeatures = [
@@ -141,14 +148,11 @@ struct SubscriptionView: View {
             }
         }
         .alert("Subscription Error", isPresented: .constant(self.subscriptionManager.errorMessage != nil)) {
-            Button("OK") {
-                self.subscriptionManager.errorMessage = nil
-            }
-        } message: {
-            if let errorMessage = subscriptionManager.errorMessage {
-                Text(errorMessage)
-            }
-        }
+            Button("OK") { self.subscriptionManager.errorMessage = nil }
+        } message: { Text(self.subscriptionManager.errorMessage ?? "") }
+        .alert("Restore Purchases", isPresented: .constant(self.subscriptionManager.restoreMessage != nil)) {
+            Button("OK") { self.subscriptionManager.restoreMessage = nil }
+        } message: { Text(self.subscriptionManager.restoreMessage ?? "") }
     }
 
     private func purchaseSubscription() async {

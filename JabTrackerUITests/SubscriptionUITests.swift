@@ -42,6 +42,11 @@ final class SubscriptionUITests: XCTestCase {
         // Navigate through onboarding to reach subscription screen
         self.completeOnboardingToSubscriptionScreen(app)
 
+        // Some simulators present a simulated Apple ID sign-in alert the first time we hit the
+        // subscription screen with StoreKit dialogs enabled. Dismiss it proactively so the
+        // purchase button can enable and be tappable.
+        self.dismissSignInSimulationIfPresent(app)
+
         // ACCEPTANCE CRITERIA: Available subscription products are loaded and displayed.
         // Optimize by waiting ONCE for an anchor (purchase button) then performing zero-wait assertions.
         let purchaseButton = app.buttons["purchase-subscription-button"]
@@ -94,6 +99,10 @@ final class SubscriptionUITests: XCTestCase {
         // Navigate to subscription screen
         self.completeOnboardingToSubscriptionScreen(app)
 
+        // If the simulated Apple ID sign-in alert is shown on first entry, restore will be
+        // blocked until it's accepted. Dismiss it if present.
+        self.dismissSignInSimulationIfPresent(app)
+
         // ACCEPTANCE CRITERIA: Restore purchases button is available
         let restoreButton = app.buttons["restore-purchases-button"]
         XCTAssertTrue(restoreButton.waitForExistence(timeout: 3),
@@ -105,9 +114,9 @@ final class SubscriptionUITests: XCTestCase {
         restoreButton.tap()
 
         // ACCEPTANCE CRITERIA: Restore process provides user feedback
-        let restoreAlert = app.alerts.firstMatch
-        XCTAssertTrue(restoreAlert.waitForExistence(timeout: 5),
-                      "Should show restore purchases result alert")
+        let restoreAlert = app.alerts["Restore Purchases"]
+        XCTAssertTrue(restoreAlert.waitForExistence(timeout: 6),
+                      "Should show restore purchases result alert (title: Restore Purchases)")
 
         // Dismiss alert and continue
         if restoreAlert.buttons["OK"].exists {
@@ -203,5 +212,22 @@ final class SubscriptionUITests: XCTestCase {
         // Should now be on subscription screen
         XCTAssertTrue(app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 5),
                       "Should reach subscription screen after completing onboarding flow")
+    }
+
+    // MARK: - Transient System UI Handling
+
+    private func dismissSignInSimulationIfPresent(_ app: XCUIApplication, timeout: TimeInterval = 2.5) {
+        // The simulated Apple ID authentication alert (Xcode environment) can appear and block
+        // taps on subscription actions (purchase / restore). Title observed: "Sign in with Apple ID".
+        let signInAlert = app.alerts["Sign in with Apple ID"]
+        if signInAlert.waitForExistence(timeout: timeout) {
+            if let okButton = [signInAlert.buttons["OK"], signInAlert.buttons["Continue"], signInAlert.buttons["Allow"]].first(where: { $0.exists }) {
+                okButton.tap()
+            } else if signInAlert.buttons.firstMatch.exists {
+                signInAlert.buttons.firstMatch.tap()
+            }
+            // Give the UI a brief moment to settle after dismissal (non-blocking)
+            _ = signInAlert.waitForExistence(timeout: 0.2) // will return false once gone
+        }
     }
 }

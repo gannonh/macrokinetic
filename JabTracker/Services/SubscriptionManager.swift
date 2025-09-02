@@ -50,6 +50,7 @@ public class SubscriptionManager: ObservableObject {
     @Published public var availableProducts: [Product] = []
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String?
+    @Published public var restoreMessage: String? // User-facing feedback after restore
 
     // MARK: - Private Properties
 
@@ -152,18 +153,27 @@ public class SubscriptionManager: ObservableObject {
     public func restorePurchases() async {
         self.isLoading = true
         self.errorMessage = nil
+        self.restoreMessage = nil
 
         defer { isLoading = false }
 
         // In test environment, skip AppStore operations that can hang
         if self.isTestEnvironment {
-            // Simulate successful restore with no purchases found
+            // Simulate a successful restore (no purchases found) quickly in UI tests to provide deterministic feedback
+            self.restoreMessage = "No purchases to restore"
             return
         }
 
         do {
             try await AppStore.sync()
             await self.updateSubscriptionStatus()
+            // Provide positive feedback depending on status
+            switch self.subscriptionStatus {
+            case .premiumActive, .trialActive:
+                self.restoreMessage = "Purchases restored"
+            case .notSubscribed, .expired:
+                self.restoreMessage = "No purchases to restore"
+            }
         } catch {
             self.errorMessage = "Failed to restore purchases: \(error.localizedDescription)"
         }
