@@ -1,16 +1,17 @@
-import SwiftUI
-import StoreKit
 import OSLog
+import StoreKit
+import SwiftUI
 
 struct SubscriptionView: View {
     @ObservedObject var viewModel: OnboardingViewModel
     @StateObject private var subscriptionManager = SubscriptionManager()
-    
+
     // MARK: - Logger
+
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "JabTracker", 
+        subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
         category: "SubscriptionView")
-    
+
     private var isTestEnvironment: Bool {
         ProcessInfo.processInfo.arguments.contains("--ui-testing")
     }
@@ -71,25 +72,25 @@ struct SubscriptionView: View {
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Subscription pricing: $4.99 per month with 2-week free trial")
-                    
+
                     // Purchase button
-                    PrimaryButton(title: subscriptionManager.isLoading ? "Loading..." : "Start Free Trial") {
+                    PrimaryButton(title: self.subscriptionManager.isLoading ? "Loading..." : "Start Free Trial") {
                         Task {
-                            await purchaseSubscription()
+                            await self.purchaseSubscription()
                         }
                     }
-                    .disabled(subscriptionManager.isLoading || (!isTestEnvironment && subscriptionManager.availableProducts.isEmpty))
+                    .disabled(self.subscriptionManager.isLoading || (!self.isTestEnvironment && self.subscriptionManager.availableProducts.isEmpty))
                     .accessibilityIdentifier("purchase-subscription-button")
-                    
+
                     // Restore button
                     Button("Restore Purchases") {
                         Task {
-                            await subscriptionManager.restorePurchases()
+                            await self.subscriptionManager.restorePurchases()
                         }
                     }
                     .font(DesignTokens.Typography.body)
                     .foregroundColor(DesignTokens.Colors.primary)
-                    .disabled(subscriptionManager.isLoading)
+                    .disabled(self.subscriptionManager.isLoading)
                     .accessibilityIdentifier("restore-purchases-button")
                 }
                 .padding(.horizontal, 24)
@@ -127,10 +128,10 @@ struct SubscriptionView: View {
         .onAppear {
             Task {
                 Self.logger.info("🛒 SubscriptionView: Loading subscription products...")
-                await subscriptionManager.loadProducts()
-                Self.logger.info("🛒 SubscriptionView: Products loaded: \(subscriptionManager.availableProducts.count, privacy: .public)")
-                if !subscriptionManager.availableProducts.isEmpty {
-                    Self.logger.info("🛒 SubscriptionView: Product IDs: \(subscriptionManager.availableProducts.map { $0.id }, privacy: .public)")
+                await self.subscriptionManager.loadProducts()
+                Self.logger.info("🛒 SubscriptionView: Products loaded: \(self.subscriptionManager.availableProducts.count, privacy: .public)")
+                if !self.subscriptionManager.availableProducts.isEmpty {
+                    Self.logger.info("🛒 SubscriptionView: Product IDs: \(self.subscriptionManager.availableProducts.map(\.id), privacy: .public)")
                 }
                 if let error = subscriptionManager.errorMessage {
                     Self.logger.error("🛒 SubscriptionView: Error: \(error, privacy: .public)")
@@ -139,9 +140,9 @@ struct SubscriptionView: View {
                 }
             }
         }
-        .alert("Subscription Error", isPresented: .constant(subscriptionManager.errorMessage != nil)) {
+        .alert("Subscription Error", isPresented: .constant(self.subscriptionManager.errorMessage != nil)) {
             Button("OK") {
-                subscriptionManager.errorMessage = nil
+                self.subscriptionManager.errorMessage = nil
             }
         } message: {
             if let errorMessage = subscriptionManager.errorMessage {
@@ -149,26 +150,26 @@ struct SubscriptionView: View {
             }
         }
     }
-    
+
     private func purchaseSubscription() async {
         do {
             // Always attempt the real StoreKit purchase flow
             // This allows UI tests to interact with the StoreKit testing configuration
-            try await subscriptionManager.purchase(productId: SubscriptionProducts.monthly)
-            
+            try await self.subscriptionManager.purchase(productId: SubscriptionProducts.monthly)
+
             // If purchase succeeds, complete onboarding
-            try await viewModel.completeOnboarding()
+            try await self.viewModel.completeOnboarding()
         } catch {
             Self.logger.error("🛒 SubscriptionView: Purchase failed: \(error.localizedDescription, privacy: .public)")
-            
-            if isTestEnvironment {
+
+            if self.isTestEnvironment {
                 // In test environment, if StoreKit purchase fails, simulate successful completion
                 // This ensures UI tests can complete the flow even if StoreKit isn't working properly
                 Self.logger.info("🛒 SubscriptionView: Test environment - simulating successful purchase")
-                try? await viewModel.completeOnboarding()
+                try? await self.viewModel.completeOnboarding()
             } else {
                 // In production, show the actual error to the user
-                subscriptionManager.errorMessage = "Purchase failed: \(error.localizedDescription)"
+                self.subscriptionManager.errorMessage = "Purchase failed: \(error.localizedDescription)"
             }
         }
     }
