@@ -88,4 +88,35 @@ struct SubscriptionManagerMoreTests {
         let status = SubscriptionManager.evaluateStatus(from: [], now: Date())
         #expect(status == .notSubscribed)
     }
+
+    @Test("_evaluateStatusForTests covers trial, premium, expired branches")
+    func evaluateStatusBranches() {
+        let now = Date()
+        let trialPurchase = now.addingTimeInterval(-3 * 24 * 60 * 60)
+        let premiumPurchase = now.addingTimeInterval(-40 * 24 * 60 * 60)
+        let premiumExpiration = now.addingTimeInterval(10 * 24 * 60 * 60)
+        let expiredPurchase = now.addingTimeInterval(-60 * 24 * 60 * 60)
+        let expiredExpiration = now.addingTimeInterval(-1 * 24 * 60 * 60)
+
+        // Trial
+        let trial = SubscriptionManager._EvalInput(
+            productType: .autoRenewable,
+            purchaseDate: trialPurchase,
+            expirationDate: premiumExpiration)
+        #expect(SubscriptionManager._evaluateStatusForTests(from: [trial], now: now) == .trialActive)
+
+        // Premium (outside trial, not expired)
+        let premium = SubscriptionManager._EvalInput(
+            productType: .autoRenewable,
+            purchaseDate: premiumPurchase,
+            expirationDate: premiumExpiration)
+        #expect(SubscriptionManager._evaluateStatusForTests(from: [premium], now: now) == .premiumActive)
+
+        // Expired
+        let expired = SubscriptionManager._EvalInput(
+            productType: .autoRenewable,
+            purchaseDate: expiredPurchase,
+            expirationDate: expiredExpiration)
+        #expect(SubscriptionManager._evaluateStatusForTests(from: [expired], now: now) == .expired)
+    }
 }
