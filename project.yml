@@ -5,6 +5,10 @@ options:
     iOS: "17.0"
   defaultConfig: Debug
   createIntermediateGroups: true
+settings:
+  base:
+    ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
   
 targets:
   JabTracker:
