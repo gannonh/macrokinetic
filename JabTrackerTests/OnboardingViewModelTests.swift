@@ -277,8 +277,8 @@ struct OnboardingViewModelTests {
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Provide deterministic test overrides to simulate available HealthKit and granted auth
-    viewModel.testIsHealthDataAvailable = true
-    viewModel.testForcedHealthAuthResult = true
+        viewModel.testIsHealthDataAvailable = true
+        viewModel.testForcedHealthAuthResult = true
 
         await viewModel.requestHealthKitPermissions()
         #expect(viewModel.healthKitGranted == true, "Forced success path should mark granted true")

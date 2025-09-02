@@ -165,8 +165,7 @@ final class SubscriptionUITests: XCTestCase {
             let regexPattern = "^\\d+ \\bday(s)? remaining$|^Trial Active$"
             let pattern = try? NSRegularExpression(
                 pattern: regexPattern,
-                options: .caseInsensitive
-            )
+                options: .caseInsensitive)
             let range = NSRange(location: 0, length: trialText.utf16.count)
             let matches = pattern?.numberOfMatches(in: trialText, options: [], range: range) ?? 0
             XCTAssertTrue(matches == 1, "Trial info should show numeric countdown or 'Trial Active' – got: \(trialText)")

@@ -124,15 +124,15 @@ class OnboardingViewModel: ObservableObject {
         // non-UI test environments). We detect a test context via the presence of the
         // XCTest configuration environment variable. This keeps the production code path
         // untouched while allowing fast, deterministic tests.
-    if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil,
-       self.testIsHealthDataAvailable == nil, self.testForcedHealthAuthResult == nil
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil,
+           self.testIsHealthDataAvailable == nil, self.testForcedHealthAuthResult == nil
         {
             // Default early-exit path (legacy behavior) when no explicit test override supplied.
             self.healthKitGranted = false
             return
         }
 
-    let isAvailable = self.testIsHealthDataAvailable ?? HKHealthStore.isHealthDataAvailable()
+        let isAvailable = self.testIsHealthDataAvailable ?? HKHealthStore.isHealthDataAvailable()
         guard isAvailable else {
             self.healthKitGranted = false
             return
@@ -149,7 +149,7 @@ class OnboardingViewModel: ObservableObject {
 
         let typesToRead: Set<HKObjectType> = [bodyMassType, bodyMassIndexType]
 
-    if let forced = testForcedHealthAuthResult {
+        if let forced = testForcedHealthAuthResult {
             self.healthKitGranted = forced
         } else {
             do {

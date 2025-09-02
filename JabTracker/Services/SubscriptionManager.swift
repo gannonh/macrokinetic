@@ -126,9 +126,9 @@ public class SubscriptionManager: ObservableObject {
         // In unit test environments we bypass real StoreKit. For UI tests (which also pass --ui-testing)
         // we want the real StoreKit sheet to appear for end-to-end validation, so only bypass when
         // the ui-testing launch argument is NOT present.
-          if self.isTestEnvironment,
-              !ProcessInfo.processInfo.arguments.contains("--ui-testing")
-          {
+        if self.isTestEnvironment,
+           !ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        {
             throw SubscriptionError.purchaseFailed("Test environment (unit) - purchases disabled")
         }
 
