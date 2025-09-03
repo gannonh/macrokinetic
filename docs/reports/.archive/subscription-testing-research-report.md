@@ -18,10 +18,7 @@ The TestFlight environment provides production-equivalent testing with real Appl
 
 ### Renewal and expiration testing
 
-Sandbox renewals follow accelerated timelines with subscriptions auto-renewing up to 12 times randomly, typically stopping after 6 renewals. Testing renewal scenarios requires closing and reopening the app to trigger transaction queue processing. For a monthly subscription test, purchase in sandbox, wait 20 minutes (4 renewal cycles), then verify continued subscription status. After 40 minutes total, the subscription should expire and revert to unsubscribed state.
-
-**Critical finding**: Sandbox subscriptions require manual app restarts to process renewal transactions, as they don't automatically update in the background like production subscriptions. Implement proper receipt refresh logic to capture all renewal transactions and validate the complete renewal chain.
-
+Sandbox renewals follow the tester’s configured Subscription Renewal Rate; subscriptions auto-renew up to 12 times and auto-renew turns off on the 13th attempt. Use StoreKit 2 listeners (Transaction.updates / Transaction.currentEntitlements) and provide a “Restore Purchases” button that calls AppStore.sync() to fetch renewals—no manual restart required. Adjust your timing examples to the chosen renewal rate and verify entitlement changes via Transaction updates.
 ### Grace periods and billing retry
 
 Grace period testing presents unique challenges as **sandbox environments cannot fully simulate billing failures**. While App Store Connect allows configuration of 3, 16, or 28-day grace periods, testing requires workarounds. Implement entitlement extension logic that continues service during the grace period even after technical expiration, using the `is_in_billing_retry` field from receipt validation to detect billing issues.
