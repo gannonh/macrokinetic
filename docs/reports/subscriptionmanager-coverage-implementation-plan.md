@@ -1,79 +1,66 @@
 # SubscriptionManager Coverage & Test Quality Implementation Plan
 
-## Priority 1: Critical Business Logic Coverage ✅ COMPLETED
-1. **✅ Implement Real StoreKit Integration Tests** - COMPLETED
-   - ✅ Test `loadProducts() async` with real product loading and error scenarios
-   - ✅ Test `purchase(_ product: Product) async throws` with real purchase flow, including error handling  
-   - ✅ Test `restorePurchases() async` with AppStore.sync() integration and error cases
+## Priority 1: Critical Business Logic Coverage
 
-**Implementation Summary:**
-- Created `SubscriptionManagerStoreKitIntegrationTests.swift` with comprehensive StoreKit testing
-- Uses SKTestSession for real StoreKit configuration without triggering UI in unit tests
-- Covers loadProducts() success/error paths, purchase result handling, and testModeOverride paths
-- Made `collectCurrentEntitlementTransactions()` internal for testability
-- All async StoreKit integration methods now have direct test coverage
-  
-1. **Subscription Status Logic Coverage**
-   - Test `updateSubscriptionStatus() private async` for entitlement evaluation and state transitions
-   - Test `checkVerified<T>(_ result:) async throws` for transaction verification, including failure scenarios
-   - Test trial period calculations using actual transaction dates
-2. **Error Handling Coverage**
-   - Simulate StoreKit error scenarios: network failures, payment failures, cancellations
-   - Test transaction verification failures and product not found cases
-3. **State Management Coverage**
-   - Test subscription state transitions (trial → premium → expired)
-   - Test concurrent purchase attempt handling
-   - Test transaction listener implementation and edge cases
+### ✅ P1.1 - Transaction Security Testing (COMPLETED - SECURITY CRITICAL)
+- ✅ Test `checkVerified<T>(_ result:) async throws` for transaction verification failures **[SECURITY CRITICAL]**
+- ✅ Test handling of invalid/fraudulent transaction signatures
+- ✅ Test verification result error handling and proper error propagation
 
-## Priority 2: Test Quality Improvements
-1. **Eliminate Anti-Patterns in Tests**
-   - Refactor `SubscriptionManagerTests.swift` to use real SubscriptionManager with test environment configuration
-   - Remove trivial property tests (errorMessageHandling, subscriptionStatusValues)
-   - Replace hardcoded mock returns in trialPeriodCalculation with real logic
-   - Replace empty assertion tests in productFilteringByType with meaningful logic validation
-2. **Expand Edge Case Coverage**
-   - Add tests for network failure scenarios
-   - Add tests for invalid transaction verification (using protocol abstraction or StoreKitTest)
-   - Add tests for concurrent purchase attempts
-3. **Strengthen E2E Coverage**
-   - Test trial countdown accuracy in UI
-   - Test expiration flows, upgrade/downgrade scenarios
+### ❌ P1.2 - Core Subscription Logic (MISSING - HIGH PRIORITY)
+- ❌ Test `updateSubscriptionStatus() private async` for entitlement evaluation and state transitions
+- ❌ Test subscription state transitions (trial → premium → expired → resubscribe)
+- ❌ Test entitlement collection and processing logic
 
-## Priority 3: Infrastructure & Documentation
-1. **Maintain Coverage Policy**
-   - Keep `SubscriptionManager.swift` in coverage policy as `framework_integration` (threshold met)
-2. **Testing Strategy Documentation**
-   - Ensure `docs/testing-strategy.md` is up to date with new test patterns and edge cases
-3. **Test Suite Organization**
-   - Keep test suites organized by concern: configuration, business logic, integration
-   - Document test suite structure in `docs/testing-strategy.md`
+### ❌ P1.3 - StoreKit Error Handling (USER EXPERIENCE - HIGH PRIORITY) 
+- ❌ Test StoreKit network failure scenarios (timeouts, connection errors)
+- ❌ Test purchase cancellation and payment method failures
+- ❌ Test product loading failures and recovery
 
-## Implementation Steps
-1. Audit current tests for anti-patterns and missing coverage
-2. Design and implement real integration tests for StoreKit flows
-3. Refactor existing tests to remove mocks and trivial assertions
-4. Add edge case and E2E tests for all critical flows
-5. Update documentation and coverage policy as new tests are added
-6. Review and maintain test suite organization
+### ✅ P1.4 - StoreKit Integration Methods (COMPLETED)
+- ✅ Test `loadProducts() async` with real product loading and error scenarios
+- ✅ Test `purchase(_ product: Product) async throws` with real purchase flow, including error handling  
+- ✅ Test `restorePurchases() async` with AppStore.sync() integration and error cases
 
-## Success Criteria
-- ✅ All critical business logic methods in `SubscriptionManager.swift` have direct test coverage
-- ✅ StoreKit integration tests use real StoreKit without UI dependencies
-- 🔄 Some tests still rely on simplified mocks for business logic validation (Priority 2)
-- 🔄 Edge cases and E2E flows need expansion (Priority 2-3)
-- ✅ Documentation and coverage policy are up to date
+## Priority 2: Test Quality & Reliability
 
-## Coverage Improvements Achieved
-**Before:** `loadProducts()`: 0% (42 lines), `purchase(_:)`: 0% (41 lines), `checkVerified()`: 0% (8 lines)
-**After:** Comprehensive coverage of all async StoreKit integration methods with real StoreKit testing
+### ✅ P2.1 - Eliminate Test Anti-Patterns (COMPLETED)
+- ✅ Replace hardcoded TestTransaction mock with real SubscriptionManager.evaluateStatusForTests
+- ✅ Remove trivial property tests and duplicate test coverage
+- ✅ Improve weak assertions ("doesn't crash") to meaningful business logic validation
 
-**New Test Coverage:**
-- ✅ `loadProducts()` async method - product loading, sorting, error handling
-- ✅ `purchase(_:)` async method - result handling, error scenarios, test environment paths  
-- ✅ `collectCurrentEntitlementTransactions()` - transaction collection and verification
-- ✅ `evaluateStatus()` comprehensive scenarios - trial, premium, expired states
-- ✅ `restorePurchases()` testModeOverride paths - unit test bypass logic
-- ✅ Product filtering methods - monthly/annual product separation
+### ❌ P2.2 - Advanced Edge Cases (MISSING)
+- ❌ Test concurrent purchase attempts and race conditions
+- ❌ Test transaction listener lifecycle and cleanup edge cases  
+- ❌ Test trial period boundary conditions (exactly at expiration, clock changes)
+
+## Priority 3: Enhanced Coverage & Documentation
+
+### ❌ P3.1 - E2E Integration Testing
+- ❌ Test complete subscription lifecycle flows (trial → premium → expiration → renewal)
+- ❌ Test upgrade/downgrade scenarios between subscription tiers
+- ❌ Test restore purchases across multiple devices/app reinstalls
+
+### ❌ P3.2 - Documentation & Infrastructure
+- ❌ Update testing strategy documentation with new patterns
+- ❌ Maintain coverage policy compliance
+- ❌ Organize test suite structure documentation
+
+## Current Status Summary
+- **P1.1 Transaction Security**: ✅ COMPLETED - Security-critical transaction verification
+- **P1.2 Core Logic**: ❌ MISSING - Subscription state management and transitions [NEXT PRIORITY]
+- **P1.3 Error Handling**: ❌ MISSING - StoreKit failure scenarios
+- **P1.4 StoreKit Integration**: ✅ COMPLETED
+- **P2.1 Test Anti-patterns**: ✅ COMPLETED (done out of priority order)
+- **All other priorities**: ❌ PENDING
+
+## Next Recommended Action
+Start with **P1.2 - Core Subscription Logic** (high priority), specifically:
+1. Test `updateSubscriptionStatus() private async` for entitlement evaluation and state transitions
+2. Test subscription state transitions (trial → premium → expired → resubscribe)
+3. Test entitlement collection and processing logic
+
+**Business Rationale**: Core subscription logic determines user access rights and billing state, making it critical for both user experience and business operations.
 
 ---
-Updated on 2025-09-03 after implementing Priority 1 StoreKit integration tests.
+Updated on 2025-09-03. **P1.1 Transaction Security Testing completed** - comprehensive `checkVerified()` coverage implemented with 6 security-critical tests covering unverified transaction handling, error propagation, security guarantees, entitlement verification, transaction listener behavior, and unauthorized access prevention. Ready to proceed with P1.2 Core Subscription Logic.
