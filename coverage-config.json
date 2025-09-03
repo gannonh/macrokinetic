@@ -72,6 +72,30 @@
       "test_approach": "Hybrid - E2E for real authentication flows, unit tests for error handling and state management"
     }
   },
+  "test_files": {
+    "description": "Test files that contribute to coverage for the corresponding source files",
+    "subscription_manager_tests": [
+      "SubscriptionManagerTests.swift",
+      "SubscriptionManagerMoreTests.swift", 
+      "SubscriptionManagerStoreKitIntegrationTests.swift",
+      "SubscriptionManagerRestoreIntegrationTests.swift",
+      "SubscriptionManagerCoreLogicTests.swift"
+    ],
+    "authentication_tests": [
+      "AuthenticationTests.swift",
+      "AuthenticationDelegateTests.swift",
+      "AuthenticationResetAndEdgeCaseTests.swift",
+      "AuthenticationUITestingTests.swift",
+      "AuthenticationDelegateMethodTests.swift",
+      "AuthenticationDelegateIntegrationTests.swift",
+      "AuthenticationDatabaseIntegrationTests.swift"
+    ],
+    "data_controller_tests": [
+      "DataControllerBasicTests.swift",
+      "DataControllerInitializationTests.swift",
+      "DataControllerSyncTests.swift"
+    ]
+  },
   "overall_target": {
     "informational_only": true,
     "note": "Overall coverage percentage is informational due to SwiftUI architecture limitations"
