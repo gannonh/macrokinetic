@@ -339,7 +339,7 @@ public class SubscriptionManager: ObservableObject {
     // MARK: - Testability Helpers
 
     /// Collect current entitlement transactions (extracted for easier overriding/mocking in tests if needed)
-    fileprivate func collectCurrentEntitlementTransactions() async -> [Transaction] {
+    internal func collectCurrentEntitlementTransactions() async -> [Transaction] {
         var collected: [Transaction] = []
         for await result in Transaction.currentEntitlements {
             if let transaction: Transaction = try? await checkVerified(result) { // Verified transaction

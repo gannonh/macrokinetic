@@ -71,6 +71,7 @@
 		DA0D619F46F9C28B62D22627 /* BiometricEnumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72C377F30F091F203828A17 /* BiometricEnumTests.swift */; };
 		DA3B864C22E15DF6EE91CB83 /* DataControllerSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263A861237894E446E233B24 /* DataControllerSyncTests.swift */; };
 		DA47B7A4D8F4B33B2DC1B668 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7227717A4996106B834D8852 /* UserProfileView.swift */; };
+		DB0476FF50124EF3F5CDBD67 /* SubscriptionManagerStoreKitIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 366DAD35498255B7F8392DE4 /* SubscriptionManagerStoreKitIntegrationTests.swift */; };
 		DB2729859B9AB311F4A8120D /* CardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE66B10C09A23B18DE262674 /* CardComponents.swift */; };
 		DBF413DA0454E3B040DE18CF /* AuthenticationEnumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C09E1878495CFF7D03ED9ADE /* AuthenticationEnumTests.swift */; };
 		DDE09BFBD5C283B9D7E220FD /* MedicationSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDAA0E6A2199F895649643B /* MedicationSelectionView.swift */; };
@@ -119,6 +120,7 @@
 		31BF950267D4B8A252C4B826 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		345FCEAEFAE46B98B3CD4E7B /* Medication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Medication.swift; sourceTree = "<group>"; };
 		35AB5564A077F30F857788B4 /* MedicationProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfile.swift; sourceTree = "<group>"; };
+		366DAD35498255B7F8392DE4 /* SubscriptionManagerStoreKitIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerStoreKitIntegrationTests.swift; sourceTree = "<group>"; };
 		37ACF21E9EFEA5E217BE6385 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
 		3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitIntegrationUITests.swift; sourceTree = "<group>"; };
 		4068B3EB73128183393A2D3B /* ButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonComponents.swift; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				5E2EF906ADB897D77E416C9B /* StoreKitConfigurationTests.swift */,
 				982BEC8C7EF1C6A76703D2FF /* SubscriptionManagerMoreTests.swift */,
 				424211E18A1C53CD1D5791D8 /* SubscriptionManagerRestoreIntegrationTests.swift */,
+				366DAD35498255B7F8392DE4 /* SubscriptionManagerStoreKitIntegrationTests.swift */,
 				D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */,
 				5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */,
 				F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */,
@@ -542,6 +545,7 @@
 				99ED058D57A5C6D08F3AE6B3 /* StoreKitConfigurationTests.swift in Sources */,
 				82281993EB5BEFB11F06233C /* SubscriptionManagerMoreTests.swift in Sources */,
 				630623555F0BB76E631F82C0 /* SubscriptionManagerRestoreIntegrationTests.swift in Sources */,
+				DB0476FF50124EF3F5CDBD67 /* SubscriptionManagerStoreKitIntegrationTests.swift in Sources */,
 				14AEF2C8BC0EED167F0DFFB9 /* SubscriptionManagerTests.swift in Sources */,
 				E0B8A4E2309A4EC632D8B030 /* UserModelTests.swift in Sources */,
 				6D1110D677A82B0FDC706888 /* UserProfileViewTests.swift in Sources */,
