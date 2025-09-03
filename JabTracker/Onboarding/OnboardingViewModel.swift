@@ -154,7 +154,14 @@ class OnboardingViewModel: ObservableObject {
         } else {
             do {
                 try await healthStore.requestAuthorization(toShare: [], read: typesToRead)
-                self.healthKitGranted = true
+                // Check authorization status for the weight type
+                let authStatus = healthStore.authorizationStatus(for: bodyMassType)
+                self.healthKitGranted = authStatus == .sharingAuthorized
+                if !self.healthKitGranted {
+                    self.errorMessage = "HealthKit permissions were denied. You can enable them later in Settings."
+                } else {
+                    self.errorMessage = nil
+                }
             } catch {
                 self.errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
                 self.healthKitGranted = false
