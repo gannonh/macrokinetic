@@ -7,10 +7,10 @@
 - ✅ Test handling of invalid/fraudulent transaction signatures
 - ✅ Test verification result error handling and proper error propagation
 
-### ❌ P1.2 - Core Subscription Logic (MISSING - HIGH PRIORITY)
-- ❌ Test `updateSubscriptionStatus() private async` for entitlement evaluation and state transitions
-- ❌ Test subscription state transitions (trial → premium → expired → resubscribe)
-- ❌ Test entitlement collection and processing logic
+### ✅ P1.2 - Core Subscription Logic (COMPLETED - HIGH PRIORITY)
+- ✅ Test `updateSubscriptionStatus() private async` for entitlement evaluation and state transitions
+- ✅ Test subscription state transitions (trial → premium → expired → resubscribe)
+- ✅ Test entitlement collection and processing logic
 
 ### ❌ P1.3 - StoreKit Error Handling (USER EXPERIENCE - HIGH PRIORITY) 
 - ❌ Test StoreKit network failure scenarios (timeouts, connection errors)
@@ -48,19 +48,33 @@
 
 ## Current Status Summary
 - **P1.1 Transaction Security**: ✅ COMPLETED - Security-critical transaction verification
-- **P1.2 Core Logic**: ❌ MISSING - Subscription state management and transitions [NEXT PRIORITY]
-- **P1.3 Error Handling**: ❌ MISSING - StoreKit failure scenarios
+- **P1.2 Core Logic**: ✅ COMPLETED - Subscription state management and transitions
+- **P1.3 Error Handling**: ❌ MISSING - StoreKit failure scenarios [NEXT PRIORITY]
 - **P1.4 StoreKit Integration**: ✅ COMPLETED
 - **P2.1 Test Anti-patterns**: ✅ COMPLETED (done out of priority order)
 - **All other priorities**: ❌ PENDING
 
 ## Next Recommended Action
-Start with **P1.2 - Core Subscription Logic** (high priority), specifically:
-1. Test `updateSubscriptionStatus() private async` for entitlement evaluation and state transitions
-2. Test subscription state transitions (trial → premium → expired → resubscribe)
-3. Test entitlement collection and processing logic
+Start with **P1.3 - StoreKit Error Handling** (next high priority), specifically:
+1. Test StoreKit network failure scenarios (timeouts, connection errors)
+2. Test purchase cancellation and payment method failures
+3. Test product loading failures and recovery
 
-**Business Rationale**: Core subscription logic determines user access rights and billing state, making it critical for both user experience and business operations.
+**Business Rationale**: StoreKit error handling ensures reliable purchase experiences and proper fallback behavior when Apple's services are unavailable or payments fail.
 
 ---
-Updated on 2025-09-03. **P1.1 Transaction Security Testing completed** - comprehensive `checkVerified()` coverage implemented with 6 security-critical tests covering unverified transaction handling, error propagation, security guarantees, entitlement verification, transaction listener behavior, and unauthorized access prevention. Ready to proceed with P1.2 Core Subscription Logic.
+**Latest Update:** 2025-09-03
+
+**P1.2 - Core Subscription Logic COMPLETED** ✅ - Implemented comprehensive test coverage in `SubscriptionManagerCoreLogicTests.swift`:
+- 13 new comprehensive tests covering all P1.2 requirements
+- `updateSubscriptionStatus()` integration testing with entitlement processing
+- Complete subscription lifecycle state transitions (trial → premium → expired → resubscribe)  
+- Entitlement collection and processing logic with edge cases
+- Multiple overlapping subscriptions and transaction filtering
+- Boundary conditions (same-day expiration/renewal)
+- **Coverage improved from 49% to 63%** (exceeds 42% framework integration target)
+- All 260 tests pass ✅
+
+**P1.1 Transaction Security Testing completed** - comprehensive `checkVerified()` coverage with 6 security-critical tests. 
+
+**Next Priority: P1.3 - StoreKit Error Handling** for reliable purchase experiences and error recovery.
