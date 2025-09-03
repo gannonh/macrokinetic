@@ -115,7 +115,5 @@ final class SubscriptionUITests: XCTestCase {
         self.verifyTrialOrPremiumInSettings(app: app)
     }
 
-
-
     // Helpers moved to SubscriptionUITests+Helpers.swift
 }
