@@ -38,7 +38,8 @@ struct SubscriptionManagerCoreLogicTests {
         // Verify the method executed without error
         // The actual entitlement processing is tested separately
         // AppSubscriptionStatus has a valid state after checkSubscriptionStatus
-        #expect(manager.subscriptionStatus == .notSubscribed || manager.subscriptionStatus == .trialActive || manager.subscriptionStatus == .premiumActive || manager.subscriptionStatus == .expired)
+        let validStates: [AppSubscriptionStatus] = [.notSubscribed, .trialActive, .premiumActive, .expired]
+        #expect(validStates.contains(manager.subscriptionStatus))
     }
 
     // MARK: - Subscription State Transitions Testing

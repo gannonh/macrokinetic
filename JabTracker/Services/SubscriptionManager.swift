@@ -58,10 +58,7 @@ public class SubscriptionManager: ObservableObject {
     private let isTestEnvironment: Bool
 
     #if DEBUG
-        /// Optional override for test mode detection to make unit/UI tests deterministic.
-        /// Set from tests to force behavior without relying on environment heuristics.
         public static var testModeOverride: TestMode?
-
         public enum TestMode { case unit, ui }
     #endif
 
@@ -142,9 +139,7 @@ public class SubscriptionManager: ObservableObject {
 
         defer { isLoading = false }
 
-        // In unit test environments we bypass real StoreKit. For UI tests (which also pass
-        // --ui-testing) we want the real StoreKit sheet to appear for end-to-end validation,
-        // so only bypass when the ui-testing launch argument is NOT present.
+        // Bypass StoreKit in unit tests but allow real StoreKit for UI tests
         if self.isTestEnvironment,
            !ProcessInfo.processInfo.arguments.contains("--ui-testing")
         {
@@ -186,61 +181,17 @@ public class SubscriptionManager: ObservableObject {
 
         defer { isLoading = false }
 
-        // In test environment, skip AppStore operations that can hang
-        if self.isTestEnvironment {
-            // Simulate a successful restore (no purchases found) quickly in UI tests
-            // to provide deterministic feedback
-            self.restoreMessage = "No purchases to restore"
+        // Check if we should bypass actual restore operations
+        if self.shouldBypassRestore() {
+            await self.handleTestModeRestore()
             return
         }
 
-        // Decide whether to bypass AppStore.sync in headless unit tests.
-        #if DEBUG
-            if let override = Self.testModeOverride {
-                switch override {
-                case .unit:
-                    await self.updateSubscriptionStatus()
-                    switch self.subscriptionStatus {
-                    case .premiumActive, .trialActive:
-                        self.restoreMessage = "Purchases restored"
-                    case .notSubscribed, .expired:
-                        self.restoreMessage = "No purchases to restore"
-                    }
-                    return
-                case .ui:
-                    break // allow real flow
-                }
-            }
-        #endif
-
-        // Heuristic fallback: unit test process (Swift Testing/XCTest) without UI-testing args.
-        let isUnitTestProcess =
-            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
-            ProcessInfo.processInfo.environment["SWIFT_TESTING"] == "1"
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing") ||
-            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
-        if isUnitTestProcess, !isUITesting {
-            // Provide deterministic feedback without touching App Store in unit tests
-            await self.updateSubscriptionStatus()
-            switch self.subscriptionStatus {
-            case .premiumActive, .trialActive:
-                self.restoreMessage = "Purchases restored"
-            case .notSubscribed, .expired:
-                self.restoreMessage = "No purchases to restore"
-            }
-            return
-        }
-
+        // Perform actual restore operation
         do {
             try await AppStore.sync()
             await self.updateSubscriptionStatus()
-            // Provide positive feedback depending on status
-            switch self.subscriptionStatus {
-            case .premiumActive, .trialActive:
-                self.restoreMessage = "Purchases restored"
-            case .notSubscribed, .expired:
-                self.restoreMessage = "No purchases to restore"
-            }
+            self.setRestoreMessage()
         } catch {
             self.errorMessage = "Failed to restore purchases: \(error.localizedDescription)"
         }
@@ -264,24 +215,15 @@ public class SubscriptionManager: ObservableObject {
         self.subscriptionStatus == .trialActive
     }
 
-    /// Get remaining trial days based on provided purchase date (optional)
-    /// so business logic can be unit tested.
-    /// - Parameter purchaseDate: The original purchase date of the subscription trial.
-    /// If not provided, returns 0 unless status already set to trial.
-    /// - Returns: Integer number of days remaining in trial (0 if expired or not in trial).
+    /// Get remaining trial days
     public func trialDaysRemaining(purchaseDate: Date? = nil, asOf date: Date = Date()) -> Int {
-        // If we aren't in a trial state, immediately return 0
         guard self.subscriptionStatus == .trialActive else { return 0 }
-
-        // If no purchase date provided (e.g. legacy placeholder) fall back to
-        // previous behavior (non-zero constant) for backward compatibility
         guard let purchaseDate else { return SubscriptionProducts.trialPeriodDays }
 
         let trialSeconds = Double(SubscriptionProducts.trialPeriodDays) * 24 * 60 * 60
         let trialEnd = purchaseDate.addingTimeInterval(trialSeconds)
         if date >= trialEnd { return 0 }
         let remaining = trialEnd.timeIntervalSince(date)
-        // Round up partial days to provide user-friendly countdown
         return Int(ceil(remaining / (24 * 60 * 60)))
     }
 
@@ -293,6 +235,64 @@ public class SubscriptionManager: ObservableObject {
     /// Get annual subscription products
     public func annualProducts() -> [Product] {
         self.availableProducts.filter { $0.id == SubscriptionProducts.annual }
+    }
+
+    // MARK: - Private Helper Methods
+
+    /// Check if restore should be bypassed for testing
+    private func shouldBypassRestore() -> Bool {
+        // Test environment always bypasses
+        if self.isTestEnvironment {
+            return true
+        }
+
+        #if DEBUG
+            // Check test mode override
+            if let override = Self.testModeOverride {
+                return override == .unit
+            }
+        #endif
+
+        // Check for unit test environment
+        let isUnitTestProcess = self.isRunningUnitTests()
+        let isUITesting = self.isRunningUITests()
+        return isUnitTestProcess && !isUITesting
+    }
+
+    /// Handle restore in test mode
+    private func handleTestModeRestore() async {
+        #if DEBUG
+            if let override = Self.testModeOverride, override == .unit {
+                await self.updateSubscriptionStatus()
+                self.setRestoreMessage()
+                return
+            }
+        #endif
+
+        // Default test environment behavior
+        self.restoreMessage = "No purchases to restore"
+    }
+
+    /// Set appropriate restore message based on current status
+    private func setRestoreMessage() {
+        switch self.subscriptionStatus {
+        case .premiumActive, .trialActive:
+            self.restoreMessage = "Purchases restored"
+        case .notSubscribed, .expired:
+            self.restoreMessage = "No purchases to restore"
+        }
+    }
+
+    /// Check if running in unit test environment
+    private func isRunningUnitTests() -> Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+            ProcessInfo.processInfo.environment["SWIFT_TESTING"] == "1"
+    }
+
+    /// Check if running in UI test mode
+    private func isRunningUITests() -> Bool {
+        ProcessInfo.processInfo.arguments.contains("--ui-testing") ||
+            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
     }
 
     // MARK: - Private Methods
@@ -315,11 +315,7 @@ public class SubscriptionManager: ObservableObject {
 
     /// Update subscription status based on current entitlements
     private func updateSubscriptionStatus() async {
-        // In test environment, don't iterate over current entitlements to avoid hanging
-        if self.isTestEnvironment {
-            // Keep current status in test environment
-            return
-        }
+        if self.isTestEnvironment { return }
 
         let now = Date()
         let transactions: [Transaction] = await collectCurrentEntitlementTransactions()
@@ -338,7 +334,7 @@ public class SubscriptionManager: ObservableObject {
 
     // MARK: - Testability Helpers
 
-    /// Collect current entitlement transactions (extracted for easier overriding/mocking in tests if needed)
+    /// Collect current entitlement transactions
     func collectCurrentEntitlementTransactions() async -> [Transaction] {
         var collected: [Transaction] = []
         for await result in Transaction.currentEntitlements {
@@ -388,35 +384,3 @@ extension SubscriptionManager {
         return now < trialEnd ? .trialActive : .premiumActive
     }
 }
-
-#if DEBUG
-
-    // MARK: - DEBUG: Purchase Result Simulation (for unit tests)
-
-    extension SubscriptionManager {
-        enum PurchaseCaseTest { case userCancelled, pending, successVerified, successUnverified, unknown }
-        typealias PurchaseHandlingResult = (errorMessage: String?, didFinish: Bool)
-
-        /// Simulate the branch effects of handling a purchase result. This mirrors side-effects only.
-        /// - Returns: Tuple indicating optional error message and whether a finish-like action would be performed.
-        /// - Throws: SubscriptionError on unknown or verification failure to match production semantics.
-        static func simulatePurchaseHandling(for purchaseCase: PurchaseCaseTest) throws -> PurchaseHandlingResult {
-            switch purchaseCase {
-            case .userCancelled:
-                // No error, no finish
-                return (nil, false)
-            case .pending:
-                // Set a user-facing message
-                return ("Purchase is pending approval", false)
-            case .successVerified:
-                // Success path would finish the transaction
-                return (nil, true)
-            case .successUnverified:
-                // Map to verification failure
-                throw SubscriptionError.verificationFailed
-            case .unknown:
-                throw SubscriptionError.purchaseFailed("Unknown result")
-            }
-        }
-    }
-#endif
