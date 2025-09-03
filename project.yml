@@ -64,7 +64,8 @@ schemes:
     test:
       targets:
         - JabTrackerTests
-        - JabTrackerUITests
+        - name: JabTrackerUITests
+          parallelizable: true
     run:
       commandLineArguments:
         "--force-onboarding": true
