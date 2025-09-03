@@ -68,7 +68,6 @@ struct SubscriptionManagerMoreTests {
         #expect(status == .notSubscribed)
     }
 
-
     @Test("checkSubscriptionStatus executes updateSubscriptionStatus path")
     func checkSubscriptionStatusNonTestEnv() async {
         // This exercises the non-test path inside updateSubscriptionStatus()
