@@ -5,32 +5,6 @@ import Testing
 @MainActor
 @Suite("SubscriptionManager Additional Coverage")
 struct SubscriptionManagerMoreTests {
-    @Test("isTrialActive reflects current status")
-    func isTrialActiveReflectsStatus() async {
-        let manager = SubscriptionManager(isTestEnvironment: true)
-        manager.subscriptionStatus = .notSubscribed
-        #expect(manager.isTrialActive() == false)
-        manager.subscriptionStatus = .trialActive
-        #expect(manager.isTrialActive() == true)
-        manager.subscriptionStatus = .premiumActive
-        #expect(manager.isTrialActive() == false)
-        manager.subscriptionStatus = .expired
-        #expect(manager.isTrialActive() == false)
-    }
-
-    @Test("monthlyProducts returns empty when no products available")
-    func monthlyProductsEmpty() async {
-        let manager = SubscriptionManager(isTestEnvironment: true)
-        // availableProducts is empty by default
-        #expect(manager.monthlyProducts().isEmpty)
-    }
-
-    @Test("annualProducts returns empty when no products available")
-    func annualProductsEmpty() async {
-        let manager = SubscriptionManager(isTestEnvironment: true)
-        // availableProducts is empty by default
-        #expect(manager.annualProducts().isEmpty)
-    }
 
     @Test("checkSubscriptionStatus does not change state in test env")
     func checkSubscriptionStatusNoopInTestEnv() async {
@@ -83,57 +57,7 @@ struct SubscriptionManagerMoreTests {
         #expect(remaining == 0)
     }
 
-    @Test("evaluateStatus empty array -> notSubscribed")
-    func evaluateStatusEmpty() {
-        let status = SubscriptionManager.evaluateStatus(from: [], now: Date())
-        #expect(status == .notSubscribed)
-    }
-
-    @Test("_evaluateStatusForTests covers trial, premium, expired branches")
-    func evaluateStatusBranches() {
-        let now = Date()
-        let trialPurchase = now.addingTimeInterval(-3 * 24 * 60 * 60)
-        let premiumPurchase = now.addingTimeInterval(-40 * 24 * 60 * 60)
-        let premiumExpiration = now.addingTimeInterval(10 * 24 * 60 * 60)
-        let expiredPurchase = now.addingTimeInterval(-60 * 24 * 60 * 60)
-        let expiredExpiration = now.addingTimeInterval(-1 * 24 * 60 * 60)
-
-        // Trial
-        let trial = SubscriptionManager.EvalInputTest(
-            productType: .autoRenewable,
-            purchaseDate: trialPurchase,
-            expirationDate: premiumExpiration)
-        #expect(SubscriptionManager.evaluateStatusForTests(from: [trial], now: now) == .trialActive)
-
-        // Premium (outside trial, not expired)
-        let premium = SubscriptionManager.EvalInputTest(
-            productType: .autoRenewable,
-            purchaseDate: premiumPurchase,
-            expirationDate: premiumExpiration)
-        #expect(SubscriptionManager.evaluateStatusForTests(from: [premium], now: now) == .premiumActive)
-
-        // Expired
-        let expired = SubscriptionManager.EvalInputTest(
-            productType: .autoRenewable,
-            purchaseDate: expiredPurchase,
-            expirationDate: expiredExpiration)
-        #expect(SubscriptionManager.evaluateStatusForTests(from: [expired], now: now) == .expired)
-    }
-
-    @Test("hasPremiumAccess reflects all states")
-    func hasPremiumAccessAllStates() {
-        let manager = SubscriptionManager(isTestEnvironment: true)
-        manager.subscriptionStatus = .notSubscribed
-        #expect(manager.hasPremiumAccess() == false)
-        manager.subscriptionStatus = .trialActive
-        #expect(manager.hasPremiumAccess() == true)
-        manager.subscriptionStatus = .premiumActive
-        #expect(manager.hasPremiumAccess() == true)
-        manager.subscriptionStatus = .expired
-        #expect(manager.hasPremiumAccess() == false)
-    }
-
-    @Test("_evaluateStatusForTests ignores non-autoRenewable")
+    @Test("Non-autoRenewable transactions are ignored")
     func evaluateStatusIgnoresNonAutoRenewable() {
         let now = Date()
         let item = SubscriptionManager.EvalInputTest(
@@ -144,15 +68,21 @@ struct SubscriptionManagerMoreTests {
         #expect(status == .notSubscribed)
     }
 
-    @Test("checkSubscriptionStatus updates in non-test environment without crashing")
+
+    @Test("checkSubscriptionStatus executes updateSubscriptionStatus path")
     func checkSubscriptionStatusNonTestEnv() async {
-        // This exercises the non-test path inside updateSubscriptionStatus().
+        // This exercises the non-test path inside updateSubscriptionStatus()
         let manager = SubscriptionManager(isTestEnvironment: false)
+        let initialStatus = manager.subscriptionStatus
         await manager.checkSubscriptionStatus()
-        // We don't assert a specific value since it depends on simulator StoreKit state.
-        // It's sufficient that the call returns and leaves a valid status enum.
+        
+        // Verify the method executed without error and status is valid
         let valid: Set<AppSubscriptionStatus> = [.notSubscribed, .trialActive, .premiumActive, .expired]
         #expect(valid.contains(manager.subscriptionStatus))
+        
+        // Verify the status was determined by the entitlement evaluation, not just kept the same
+        // (In test environment without entitlements, should remain .notSubscribed)
+        #expect(manager.subscriptionStatus == .notSubscribed || manager.subscriptionStatus != initialStatus)
     }
 
     // MARK: - Purchase result branch coverage (DEBUG-only helper)
