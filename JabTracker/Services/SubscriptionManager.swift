@@ -307,13 +307,16 @@ public class SubscriptionManager: ObservableObject {
                     await transaction.finish()
                 } catch {
                     // Handle verification failure
-                    print("Transaction verification failed: \(error)")
+                    Self.logger.error(
+                        "Transaction verification failed: \(error.localizedDescription, privacy: .public)"
+                    )
                 }
             }
         }
     }
 
     /// Update subscription status based on current entitlements
+    @MainActor
     private func updateSubscriptionStatus() async {
         if self.isTestEnvironment { return }
 
@@ -338,7 +341,7 @@ public class SubscriptionManager: ObservableObject {
     func collectCurrentEntitlementTransactions() async -> [Transaction] {
         var collected: [Transaction] = []
         for await result in Transaction.currentEntitlements {
-            if let transaction: Transaction = try? await checkVerified(result) { // Verified transaction
+            if let transaction = try? await checkVerified(result) { // Verified transaction
                 collected.append(transaction)
             }
         }
