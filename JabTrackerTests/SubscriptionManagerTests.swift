@@ -9,7 +9,6 @@ import Testing
 @MainActor
 @Suite("SubscriptionManager Business Logic")
 struct SubscriptionManagerBusinessLogicTests {
-
     @Test("No transactions -> not subscribed")
     func noTransactionsNotSubscribed() {
         let status = SubscriptionManager.evaluateStatusForTests(from: [], now: Date())

@@ -5,7 +5,6 @@ import Testing
 @MainActor
 @Suite("SubscriptionManager Additional Coverage")
 struct SubscriptionManagerMoreTests {
-
     @Test("checkSubscriptionStatus does not change state in test env")
     func checkSubscriptionStatusNoopInTestEnv() async {
         let manager = SubscriptionManager(isTestEnvironment: true)
@@ -74,11 +73,11 @@ struct SubscriptionManagerMoreTests {
         let manager = SubscriptionManager(isTestEnvironment: false)
         let initialStatus = manager.subscriptionStatus
         await manager.checkSubscriptionStatus()
-        
+
         // Verify the method executed without error and status is valid
         let valid: Set<AppSubscriptionStatus> = [.notSubscribed, .trialActive, .premiumActive, .expired]
         #expect(valid.contains(manager.subscriptionStatus))
-        
+
         // Verify the status was determined by the entitlement evaluation, not just kept the same
         // (In test environment without entitlements, should remain .notSubscribed)
         #expect(manager.subscriptionStatus == .notSubscribed || manager.subscriptionStatus != initialStatus)
