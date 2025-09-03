@@ -84,7 +84,7 @@
             "internalID" : "20480000",
             "numberOfPeriods" : 1,
             "paymentMode" : "free",
-            "subscriptionPeriod" : "P2W"
+            "subscriptionPeriod" : "P4W"
           },
           "localizations" : [
             {
@@ -114,7 +114,7 @@
             "internalID" : "20480001",
             "numberOfPeriods" : 1,
             "paymentMode" : "free",
-            "subscriptionPeriod" : "P2W"
+            "subscriptionPeriod" : "P4W"
           },
           "localizations" : [
             {
