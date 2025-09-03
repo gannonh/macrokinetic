@@ -138,12 +138,8 @@ build_test_target() {
                 echo "-only-testing:JabTrackerTests"
                 ;;
             "ui")
-                # Allow manual tests only if explicitly requested
-                if [[ "$test_file" == "ManualAuthenticationUITests"* ]]; then
-                    echo "-only-testing:JabTrackerUITests/$test_file"
-                else
-                    echo "-only-testing:JabTrackerUITests/$test_file"
-                fi
+                # Run specific UI test file
+                echo "-only-testing:JabTrackerUITests/$test_file"
                 ;;
         esac
     else
