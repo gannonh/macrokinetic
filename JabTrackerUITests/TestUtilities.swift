@@ -17,6 +17,23 @@ enum TestUtilities {
         return app
     }
 
+    /// Launch app for manual UI testing (shows auth UI but mocks Apple ID response)
+    /// - Shows real AuthenticationView for manual interaction
+    /// - Allows manual testing of UI flows
+    /// - Mocks Apple ID authentication response after user interaction
+    /// - Perfect for manual testing without requiring real Apple ID credentials
+    static func launchAppForManualUITesting() -> XCUIApplication {
+        let app = XCUIApplication()
+        // Reset app data for clean state
+        app.launchArguments.append("--reset-app-data")
+        // Special flag for manual UI testing mode
+        app.launchArguments.append("--manual-ui-testing")
+        // Bypass onboarding for cleaner manual testing flow
+        app.launchArguments.append("--bypass-onboarding")
+        app.launch()
+        return app
+    }
+
     /// Launch app with real authentication (for testing actual Sign in with Apple flow)
     /// - Uses real Apple ID authentication
     /// - Resets app data for clean state

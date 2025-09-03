@@ -32,20 +32,28 @@ show_usage() {
     echo "  --coverage  Generate code coverage report and display results"
     echo "  --reset     Reset simulator before running tests (clears all permissions)"
     echo ""
-    echo "Available unit test files (file-based organization):"
-    echo "  PersistenceTests      - Core Data and persistence functionality"
-    echo "  DesignSystemTests     - UI design system and styling components"
+    echo "Available test files:"
+    echo "  Unit tests (file-based organization):"
+    echo "    PersistenceTests      - Core Data and persistence functionality"  
+    echo "    DesignSystemTests     - UI design system and styling components"
+    echo ""
+    echo "  UI tests:"
+    echo "    AuthenticationUITests       - Automated authentication flow tests (using --ui-testing mode)"
+    echo "    ManualAuthenticationUITests - Manual Apple ID tests (excluded from CI, run in Xcode manually)"
+    echo "    OnboardingUITests           - User onboarding flow tests"
+    echo "    DesignSystemUITests         - Design system component tests"
     echo ""
     echo "Examples:"
     echo "  $0 ui                                                    # Run all UI tests on default device"
     echo "  $0 ui 1                                                  # Run all UI tests on iPhone 15"
     echo "  $0 ui 1 DesignSystemUITests                             # Run specific UI test class"
     echo "  $0 ui 1 DesignSystemUITests/testDesignSystemComponents  # Run specific UI test method"
+    echo "  $0 ui 1 ManualAuthenticationUITests                     # Run manual Apple ID tests (requires manual interaction)"
     echo "  $0 unit 1 PersistenceTests                              # Run all persistence-related unit tests"
     echo "  $0 unit 1 DesignSystemTests                             # Run all design system unit tests"
     echo "  $0 unit 1 --coverage                                    # Run unit tests with coverage report"
     echo "  $0 ui 1 --reset                                         # Run UI tests with fresh simulator state"
-    echo "  $0 all --coverage                                       # Run all tests with coverage report"
+    echo "  $0 all --coverage                                       # Run all tests with coverage report (excludes manual tests)"
     echo ""
     echo "Note: Unit tests use file-based organization for Swift Testing compatibility."
     echo "      Each test file focuses on a specific feature area for efficient development workflow."
@@ -130,7 +138,12 @@ build_test_target() {
                 echo "-only-testing:JabTrackerTests"
                 ;;
             "ui")
-                echo "-only-testing:JabTrackerUITests/$test_file"
+                # Allow manual tests only if explicitly requested
+                if [[ "$test_file" == "ManualAuthenticationUITests"* ]]; then
+                    echo "-only-testing:JabTrackerUITests/$test_file"
+                else
+                    echo "-only-testing:JabTrackerUITests/$test_file"
+                fi
                 ;;
         esac
     else
@@ -139,10 +152,12 @@ build_test_target() {
                 echo "-only-testing:JabTrackerTests"
                 ;;
             "ui")
-                echo "-only-testing:JabTrackerUITests"
+                # Exclude manual tests from automated runs
+                echo "-only-testing:JabTrackerUITests -skip-testing:JabTrackerUITests/ManualAuthenticationUITests"
                 ;;
             "all")
-                echo ""
+                # Exclude manual tests from automated runs
+                echo "-skip-testing:JabTrackerUITests/ManualAuthenticationUITests"
                 ;;
         esac
     fi
