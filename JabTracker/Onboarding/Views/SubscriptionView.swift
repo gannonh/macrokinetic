@@ -164,7 +164,9 @@ struct SubscriptionView: View {
         }
         .alert(
             "Subscription Error",
-            isPresented: .constant(self.subscriptionManager.errorMessage != nil))
+            isPresented: Binding(
+                get: { self.subscriptionManager.errorMessage != nil },
+                set: { if !$0 { self.subscriptionManager.errorMessage = nil } }))
         {
             Button("OK") { self.subscriptionManager.errorMessage = nil }
         } message: {
@@ -172,7 +174,9 @@ struct SubscriptionView: View {
         }
         .alert(
             "Restore Purchases",
-            isPresented: .constant(self.subscriptionManager.restoreMessage != nil))
+            isPresented: Binding(
+                get: { self.subscriptionManager.restoreMessage != nil },
+                set: { if !$0 { self.subscriptionManager.restoreMessage = nil } }))
         {
             Button("OK") { self.subscriptionManager.restoreMessage = nil }
         } message: {
