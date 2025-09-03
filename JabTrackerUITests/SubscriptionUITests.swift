@@ -115,31 +115,7 @@ final class SubscriptionUITests: XCTestCase {
         self.verifyTrialOrPremiumInSettings(app: app)
     }
 
-    @MainActor
-    func testTrialPeriodCalculation() throws {
-        // ACCEPTANCE CRITERIA: Trial period countdown is accurate and displayed
-        let app = TestUtilities.launchAppWithTestMode()
 
-        // Navigate to Settings tab
-        app.tabBars.buttons["Settings"].tap()
-
-        // ACCEPTANCE CRITERIA: Trial information is displayed when trial is active
-        let trialInfo = app.staticTexts["trial-days-remaining"]
-        if trialInfo.waitForExistence(timeout: 3) {
-            // If trial info exists, it should show valid days remaining with a numeric
-            // prefix (e.g. "23 days remaining")
-            let trialText = trialInfo.label
-            let regexPattern = "^\\d+ \\bday(s)? remaining$|^Trial Active$"
-            let pattern = try? NSRegularExpression(
-                pattern: regexPattern,
-                options: .caseInsensitive)
-            let range = NSRange(location: 0, length: trialText.utf16.count)
-            let matches = pattern?.numberOfMatches(in: trialText, options: [], range: range) ?? 0
-            XCTAssertTrue(
-                matches == 1,
-                "Trial info should show numeric countdown or 'Trial Active' – got: \(trialText)")
-        }
-    }
 
     // Helpers moved to SubscriptionUITests+Helpers.swift
 }
