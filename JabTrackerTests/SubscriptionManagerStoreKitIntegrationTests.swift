@@ -366,15 +366,20 @@ struct SubscriptionManagerStoreKitTests {
             #expect(manager1.restoreMessage == "No purchases to restore")
             #expect(manager1.errorMessage == nil)
 
-            // Test with isTestEnvironment: true for consistent behavior
+            // Test with isTestEnvironment: true and explicit testModeOverride control
             let manager2 = SubscriptionManager(isTestEnvironment: true)
             manager2.subscriptionStatus = .premiumActive
-            await manager2.restorePurchases()
-            // In test environment, it returns immediately with "No purchases to restore"
-            #expect(manager2.restoreMessage == "No purchases to restore")
 
-            // Test the actual testModeOverride path more directly
+            // Ensure testModeOverride is set for this specific test
+            SubscriptionManager.testModeOverride = .unit
+            await manager2.restorePurchases()
+            // With testModeOverride = .unit, it calls setRestoreMessage() based on current status
+            #expect(manager2.restoreMessage == "Purchases restored")
+
+            // Clear testModeOverride for the next test
             SubscriptionManager.testModeOverride = nil
+
+            // Test the default test environment behavior (no testModeOverride)
             let manager3 = SubscriptionManager(isTestEnvironment: true)
             await manager3.restorePurchases()
             #expect(manager3.restoreMessage == "No purchases to restore")
