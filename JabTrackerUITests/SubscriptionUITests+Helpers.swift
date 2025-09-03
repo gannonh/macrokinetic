@@ -75,7 +75,6 @@ extension SubscriptionUITests {
             } else if signInAlert.buttons.firstMatch.exists {
                 signInAlert.buttons.firstMatch.tap()
             }
-            _ = signInAlert.waitForExistence(timeout: 0.2)
         }
     }
 
