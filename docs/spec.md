@@ -564,8 +564,17 @@ struct CKField {
 - ✅ Initial dose entry setup (with injection site selection and scheduling)
 - ✅ Notification permissions request (with clear value proposition)
 - ✅ HealthKit permissions integration (weight and health data)
-- ✅ Subscription placeholder screen (2-week trial, $4.99/month pricing)
+- ✅ Complete subscription pricing UI (4-week trial, dual pricing: monthly $4.99/annual $39.99)
 - ✅ Comprehensive testing (203 unit tests + complete UI test coverage)
+
+**✅ Epic #21: Subscription Model & In-App Purchases (COMPLETED in PR #33):**
+- ✅ Dual pricing cards (monthly/annual) with selection states and visual distinction
+- ✅ "Most Popular" badge with 33% savings calculation using PricingCalculator utility
+- ✅ Terms of Service and Privacy Policy integration with functional links
+- ✅ Settings subscription management with Apple App Store guidance and real-time status
+- ✅ PricingCalculator utility with comprehensive edge case handling and 97% test coverage
+- ✅ Enhanced StoreKit error handling with graceful degradation for UI testing
+- ✅ Complete E2E testing across 5 specialized test suites covering accessibility, edge cases, and error scenarios
 
 **Medication Management:**
 - Single medication support (starting with Semaglutide)

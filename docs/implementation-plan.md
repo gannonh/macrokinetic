@@ -60,12 +60,16 @@
 - ✅ 4.99/month subscription with 2 week trial placeholder (implement next phase)
 - ✅ Create smooth transition to main app after onboarding completion
 
-### Pricing & Packaging 📦 (epic [#21](https://github.com/gannonh/jab-tracker-ios/issues/21))
-**Subscription Model & In-App Purchases**
-- Implement subscription model with monthly/annual plans
-- Create in-app purchase options for premium features
-- Design pricing page with clear value propositions
-- Integrate App Store Connect for subscription management
+### Pricing & Packaging ✅ (epic [#21](https://github.com/gannonh/jab-tracker-ios/issues/21))
+**✅ Subscription Model & In-App Purchases (COMPLETED in PR #33)**
+- ✅ Implement subscription model with monthly ($4.99) and annual ($39.99) plans
+- ✅ Create comprehensive in-app purchase UI with StoreKit integration
+- ✅ Design dual pricing cards with savings calculation and "Most Popular" badge
+- ✅ Integrate Settings subscription management with Apple App Store guidance
+- ✅ Build PricingCalculator utility with 97% test coverage and mathematical precision
+- ✅ Implement comprehensive E2E testing across 5 specialized test suites (203 tests)
+- ✅ Add real-time subscription status display with trial countdown functionality
+- ✅ Create Terms of Service and Privacy Policy integration with functional links
 
 ### Medication Profile Management 📋
 **Medication Enum & Profile System**

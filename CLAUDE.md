@@ -543,6 +543,27 @@ This section is the authoritative minimal contract for hierarchical issue manage
 - Use environment variables to differentiate test behavior
 - UserDefaults can be unreliable in UI tests - use in-memory storage when needed
 
+## StoreKit Subscription Testing Patterns
+- Use `SKTestSession` for reliable subscription UI testing with proper configuration files
+- Skip product loading in UI testing with `isTestEnvironment` checks to prevent StoreKit errors
+- Implement graceful fallback for purchase failures in test environment (simulate success)
+- Separate test behavior from production using launch arguments and environment variables
+- Test subscription state persistence across app launches and plan switching scenarios
+- Use accessibility identifiers for subscription UI elements (`monthly-pricing-card`, `annual-pricing-card`)
+- Test comprehensive edge cases: network failures, StoreKit errors, rapid plan switching, purchase cancellation
+- Validate trial countdown accuracy and subscription status display in Settings with real-time updates
+- Test Terms of Service and Privacy Policy link functionality
+- Verify "Most Popular" badge display and savings calculation accuracy
+
+## Pricing Calculation Patterns
+- Extract pricing logic into dedicated utilities for testability (PricingCalculator pattern)
+- Use proper floating-point comparison with tolerance for savings calculations (`abs(result - expected) < 0.01`)
+- Handle edge cases systematically: zero prices, negative savings (annual more expensive than monthly)
+- Provide formatted display strings for consistent UI presentation across subscription flows
+- Test mathematical precision with behavioral validation, not just execution paths
+- Implement comprehensive test coverage (97%+) for business-critical pricing calculations
+- Use clear test structure with GIVEN/WHEN/THEN comments for complex mathematical scenarios
+
 ## CloudKit + SwiftData Integration
 - Always implement graceful fallback when CloudKit is unavailable
 - Check for test environment before enabling CloudKit to avoid test conflicts
@@ -670,6 +691,13 @@ Based on onboarding flow implementation analysis:
 - Medication buttons use pattern: `medication-{medication}` (e.g., `medication-semaglutide`)
 - Selection state indicated in `AXValue`: "Selected" or "Not selected"
 
+**Subscription Pricing Components:**
+- Pricing cards use pattern: `{plan}-pricing-card` (e.g., `monthly-pricing-card`, `annual-pricing-card`)
+- Purchase buttons adapt identifier based on selected plan: `purchase-monthly-button` / `purchase-annual-button`
+- Subscription status display: `subscription-status` with trial countdown `trial-days-remaining`
+- Management links: `manage-subscription-link`, `terms-of-service-link`, `privacy-policy-link`
+- Restore purchases: `restore-purchases-button`
+
 **Navigation Elements:**
 - Continue button: `onboarding-continue-button`
 - Back button: `onboarding-back-button`
@@ -679,6 +707,8 @@ Based on onboarding flow implementation analysis:
 - Looking for TextField when implementation uses Button components
 - Assuming element visibility without checking if scrolling is required
 - Using screenshots for coordinates instead of `describe_ui` data
+- Not accounting for dynamic button identifiers based on subscription plan selection
+- Forgetting to test subscription state persistence across app launches
 
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
