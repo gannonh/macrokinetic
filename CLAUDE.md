@@ -361,6 +361,7 @@ For product vision and feature specifications, see `docs/spec.md`.
 - ✅ Biometric authentication testing with mock scenarios
 - ✅ Keychain integration security testing
 - xcbeautify for enhanced test output formatting with Swift Testing support
+- Details: `docs/testing-strategy.md`
 
 ### Privacy & Security
 - SwiftData encryption enabled

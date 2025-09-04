@@ -24,6 +24,12 @@ class OnboardingViewModel: ObservableObject {
     private let dataController: DataController
     private let authManager: AuthenticationManager
 
+    // Test hooks (internal so testable with @testable import). In production these remain nil.
+    // They allow unit tests to simulate HealthKit availability and forced authorization result
+    // without invoking real HKHealthStore UI.
+    var testIsHealthDataAvailable: Bool?
+    var testForcedHealthAuthResult: Bool?
+
     init(dataController: DataController, authManager: AuthenticationManager) {
         self.dataController = dataController
         self.authManager = authManager
@@ -113,7 +119,21 @@ class OnboardingViewModel: ObservableObject {
         self.isLoading = true
         defer { isLoading = false }
 
-        guard HKHealthStore.isHealthDataAvailable() else {
+        // Short-circuit during unit / snapshot / Swift Testing runs to avoid hanging on real
+        // HealthKit permission UI (which requires user interaction that's not available in
+        // non-UI test environments). We detect a test context via the presence of the
+        // XCTest configuration environment variable. This keeps the production code path
+        // untouched while allowing fast, deterministic tests.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil,
+           self.testIsHealthDataAvailable == nil, self.testForcedHealthAuthResult == nil
+        {
+            // Default early-exit path (legacy behavior) when no explicit test override supplied.
+            self.healthKitGranted = false
+            return
+        }
+
+        let isAvailable = self.testIsHealthDataAvailable ?? HKHealthStore.isHealthDataAvailable()
+        guard isAvailable else {
             self.healthKitGranted = false
             return
         }
@@ -129,12 +149,23 @@ class OnboardingViewModel: ObservableObject {
 
         let typesToRead: Set<HKObjectType> = [bodyMassType, bodyMassIndexType]
 
-        do {
-            try await healthStore.requestAuthorization(toShare: [], read: typesToRead)
-            self.healthKitGranted = true
-        } catch {
-            self.errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
-            self.healthKitGranted = false
+        if let forced = testForcedHealthAuthResult {
+            self.healthKitGranted = forced
+        } else {
+            do {
+                try await healthStore.requestAuthorization(toShare: [], read: typesToRead)
+                // Check authorization status for the weight type
+                let authStatus = healthStore.authorizationStatus(for: bodyMassType)
+                self.healthKitGranted = authStatus == .sharingAuthorized
+                if !self.healthKitGranted {
+                    self.errorMessage = "HealthKit permissions were denied. You can enable them later in Settings."
+                } else {
+                    self.errorMessage = nil
+                }
+            } catch {
+                self.errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
+                self.healthKitGranted = false
+            }
         }
     }
 

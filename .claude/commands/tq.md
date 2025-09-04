@@ -13,7 +13,7 @@ You are an expert QA Test Engineer specializing in test quality validation.
 - Scope of review: $ARGUMENTS
 
 ## Core Principle
-1
+
 **Every test must fail when the tested behavior is broken.** Tests that always pass provide false confidence and are worse than no tests at all.
 
 ## Analysis Framework
@@ -37,13 +37,14 @@ You are an expert QA Test Engineer specializing in test quality validation.
 
 ### 3. Evaluate Coverage (unit)
 
-- SwiftUI-aware coverage policy (see `docs/coverage-policy.md` and `coverage-config.json`):
+- SwiftUI-aware coverage policy (see `coverage-config.json`):
   - Business Logic: 90% minimum (AuthenticationManager, BiometricAuthManager, DataController, Models)
   - View Models: 85% minimum (ObservableObject classes with business logic)
   - SwiftUI Views: No coverage requirements (view bodies cannot be unit tested)
   - Overall Coverage: Informational only (~23% is normal for SwiftUI apps)
 - Negative test cases and edge conditions
 - Critical paths adequately tested
+- Ensure new files have been added to `coverage-config.json`; if missing, add them.
 
 #### UNIT COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
 

@@ -50,9 +50,20 @@ class AuthenticationManager: NSObject, ObservableObject {
         let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
             ProcessInfo.processInfo.arguments.contains("--ui-testing")
 
+        // Check if we're in manual UI testing mode (shows auth UI but mocks Apple ID response)
+        let isManualUITesting = ProcessInfo.processInfo.arguments.contains("--manual-ui-testing")
+
         if isUITesting {
             await self.setupUITestingUser()
             return
+        }
+
+        // For manual UI testing, we don't setup a user immediately - let the auth UI show
+        // But when signInWithApple() is called, we'll mock the response
+        if isManualUITesting {
+            Self.logger.info(
+                "🎭 AuthenticationManager: Manual UI testing mode - showing auth UI with mocked Apple ID response"
+            )
         }
 
         // Check if user is already authenticated by looking for existing user data
@@ -177,9 +188,40 @@ class AuthenticationManager: NSObject, ObservableObject {
     // MARK: - Public Methods
 
     func signInWithApple() async throws -> User {
-        // This method will implement the Sign in with Apple flow
-        // For now, return a placeholder to make tests pass
+        // Check if we're in manual UI testing mode
+        let isManualUITesting = ProcessInfo.processInfo.arguments.contains("--manual-ui-testing")
 
+        if isManualUITesting {
+            Self.logger.info("🎭 AuthenticationManager: Manual UI testing - mocking Apple ID response after delay")
+
+            // Add a small delay to simulate the Apple ID flow (gives user time to see the Apple ID sheet)
+            try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+
+            // Create mock user for manual testing
+            let context = self.dataController.container.mainContext
+            let mockUser = User(
+                email: "manual@uitesting.com",
+                name: "Manual UI Test User",
+                weight: 75.0,
+                weightUnit: "kg")
+
+            context.insert(mockUser)
+
+            do {
+                try context.save()
+                await MainActor.run {
+                    self.currentUser = mockUser
+                    self.authenticationState = .authenticated
+                }
+                Self.logger.info("✅ AuthenticationManager: Manual UI testing user created successfully")
+                return mockUser
+            } catch {
+                Self.logger.error("❌ AuthenticationManager: Failed to create manual UI testing user: \(error)")
+                throw AuthenticationError.authorizationDenied
+            }
+        }
+
+        // Regular Apple ID flow (not yet fully implemented)
         let request = ASAuthorizationAppleIDProvider().createRequest()
         request.requestedScopes = [.fullName, .email]
 

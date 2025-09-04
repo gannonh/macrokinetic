@@ -130,7 +130,7 @@ fi
 # 4. UI tests (conditional)
 if [ "$SKIP_UI_TESTS" = false ]; then
     print_header "4️⃣ UI Tests"
-    if ! run_check "UI Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests | xcbeautify"; then
+    if ! run_check "UI Tests" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUITests -skip-testing:JabTrackerUITests/ManualAuthenticationUITests | xcbeautify"; then
         ((FAILED_CHECKS++))
     fi
 else

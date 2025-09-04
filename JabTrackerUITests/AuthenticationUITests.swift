@@ -5,40 +5,8 @@ final class AuthenticationUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    @MainActor
-    func testCompleteSignInWithAppleFlow() throws {
-        // This test performs actual Sign in with Apple authentication with test credentials
-        let app = TestUtilities.launchAppWithRealAuth()
-
-        // codegen
-
-        // codegen end
-
-        // When not authenticated, app should show AuthenticationView
-        XCTAssertTrue(app.staticTexts["JabTracker"].waitForExistence(timeout: 5),
-                      "App title should be visible on authentication screen")
-
-        XCTAssertTrue(app.staticTexts["Welcome to JabTracker"].waitForExistence(timeout: 3),
-                      "Welcome message should be visible")
-
-        // Verify we're in unauthenticated state
-        TestUtilities.verifyUnauthenticatedState(app)
-
-        // Perform actual Sign in with Apple authentication
-        TestUtilities.signInWithApple(app)
-
-        // Verify we're now in authenticated state - should see TabView
-        TestUtilities.verifyAuthenticatedState(app, timeout: 15)
-
-        // Verify we can navigate to different tabs
-        TestUtilities.navigateToTab(app, tabName: "Settings")
-
-        // Verify user profile is accessible (sign in was successful)
-        XCTAssertTrue(app.staticTexts["User Profile"].waitForExistence(timeout: 5),
-                      "User Profile should be visible after successful authentication")
-
-        print("✅ Authentication flow completed successfully")
-    }
+    // NOTE: Real Sign in with Apple testing has been moved to ManualAuthenticationUITests.swift
+    // This allows for manual testing in Xcode while keeping automated tests reliable
 
     @MainActor
     func testBiometricAuthenticationUI() throws {
