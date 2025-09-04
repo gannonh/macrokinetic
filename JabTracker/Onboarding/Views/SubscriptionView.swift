@@ -76,26 +76,26 @@ struct SubscriptionView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     // Monthly pricing card
-                    Button(action: { self.selectedPlan = .monthly }) {
+                    Button(action: { self.selectedPlan = .monthly }, label: {
                         self.pricingCard(
                             title: "Monthly",
                             price: "$4.99/month",
                             savings: nil,
                             isSelected: self.selectedPlan == .monthly,
                             badge: nil)
-                    }
+                    })
                     .buttonStyle(PlainButtonStyle())
                     .accessibilityIdentifier("monthly-pricing-card")
 
                     // Annual pricing card with "Most Popular" badge
-                    Button(action: { self.selectedPlan = .annual }) {
+                    Button(action: { self.selectedPlan = .annual }, label: {
                         self.pricingCard(
                             title: "Annual",
                             price: "$39.99/year",
                             savings: self.calculateAnnualSavings(),
                             isSelected: self.selectedPlan == .annual,
                             badge: "Most Popular")
-                    }
+                    })
                     .buttonStyle(PlainButtonStyle())
                     .accessibilityIdentifier("annual-pricing-card")
 
@@ -121,7 +121,9 @@ struct SubscriptionView: View {
                     self.subscriptionManager.isLoading ||
                         (!self.isTestEnvironment && self.subscriptionManager.availableProducts.isEmpty)
                 )
-                .accessibilityIdentifier(self.selectedPlan == .monthly ? "purchase-monthly-button" : "purchase-annual-button")
+                .accessibilityIdentifier(
+                    self.selectedPlan == .monthly ? "purchase-monthly-button" : "purchase-annual-button"
+                )
 
                 // Restore button
                 Button("Restore Purchases") {
