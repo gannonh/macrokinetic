@@ -318,7 +318,7 @@ struct SubscriptionView: View {
                     }
 
                     if title == "Annual" {
-                        Text("$3.33/month")
+                        Text(PricingCalculator.formatMonthlyPrice(PricingCalculator.calculateMonthlyEquivalent(annualPrice: 39.99)))
                             .font(DesignTokens.Typography.caption)
                             .foregroundColor(.secondary)
                     }

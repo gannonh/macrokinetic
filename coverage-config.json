@@ -42,7 +42,8 @@
         "files": [
           "ProfileValidation.swift",
           "Array+Unique.swift",
-          "PricingCalculator.swift"
+          "PricingCalculator.swift",
+          "SubscriptionProducts.swift"
         ]
       }
     }
