@@ -50,7 +50,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         let purchaseButton = app.buttons["purchase-annual-button"]
         XCTAssertTrue(purchaseButton.waitForExistence(timeout: 5),
                       "Purchase button should exist even with product load failures")
-        
+
         // In test environment, purchase button may be enabled for fallback behavior
         // In production, it should be disabled when products unavailable
         if !purchaseButton.isEnabled {
@@ -73,7 +73,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         // Pricing should be displayed even in test environment
         let monthlyPrice = app.staticTexts["$4.99/month"]
         let annualPrice = app.staticTexts["$39.99/year"]
-        
+
         XCTAssertTrue(monthlyPrice.exists || annualPrice.exists,
                       "At least one pricing option should be visible")
     }
@@ -99,10 +99,10 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
                       "Annual pricing card should exist")
 
         // Test rapid switching
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             monthlyCard.tap()
             Thread.sleep(forTimeInterval: 0.1)
-            
+
             // Verify monthly purchase button appears
             let monthlyPurchaseButton = app.buttons["purchase-monthly-button"]
             XCTAssertTrue(monthlyPurchaseButton.waitForExistence(timeout: 1),
@@ -110,7 +110,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
 
             annualCard.tap()
             Thread.sleep(forTimeInterval: 0.1)
-            
+
             // Verify annual purchase button appears
             let annualPurchaseButton = app.buttons["purchase-annual-button"]
             XCTAssertTrue(annualPurchaseButton.waitForExistence(timeout: 1),
@@ -163,10 +163,10 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         // Test that the app handles cancellation gracefully
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let cancelButton = springboard.buttons["Cancel"]
-        
+
         if cancelButton.waitForExistence(timeout: 3) {
             cancelButton.tap()
-            
+
             // App should return to subscription screen
             XCTAssertTrue(
                 app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 3),
@@ -193,7 +193,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
 
         let purchaseButton = app.buttons["purchase-annual-button"]
         XCTAssertTrue(purchaseButton.waitForExistence(timeout: 5))
-        
+
         // Purchase button should be functional
         XCTAssertTrue(purchaseButton.isEnabled,
                       "Purchase button should be enabled for pending state test")
@@ -218,7 +218,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         let restoreButton = app.buttons["restore-purchases-button"]
         XCTAssertTrue(restoreButton.waitForExistence(timeout: 3),
                       "Restore purchases button should be available")
-        
+
         restoreButton.tap()
 
         // Should show alert indicating no purchases to restore
@@ -252,16 +252,16 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         XCTAssertTrue(restoreButton.waitForExistence(timeout: 3))
 
         // Attempt multiple restores rapidly
-        for attempt in 1...3 {
+        for attempt in 1 ... 3 {
             print("🔄 Restore attempt \(attempt)")
-            
+
             if !restoreButton.isEnabled {
                 // Wait for restore button to become enabled again
                 let enabled = XCTNSPredicateExpectation(
                     predicate: NSPredicate(format: "isEnabled == true"),
                     object: restoreButton)
                 XCTAssertEqual(XCTWaiter().wait(for: [enabled], timeout: 3), .completed,
-                              "Restore button should become enabled between attempts")
+                               "Restore button should become enabled between attempts")
             }
 
             restoreButton.tap()
@@ -296,7 +296,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         // Test that pricing cards are still interactive even without products
         let monthlyCard = app.buttons["monthly-pricing-card"]
         let annualCard = app.buttons["annual-pricing-card"]
-        
+
         XCTAssertTrue(monthlyCard.exists && monthlyCard.isEnabled,
                       "Monthly pricing card should be interactive")
         XCTAssertTrue(annualCard.exists && annualCard.isEnabled,
@@ -305,7 +305,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         // Test plan switching still works
         monthlyCard.tap()
         annualCard.tap()
-        
+
         // UI should respond to interactions
         XCTAssertTrue(true, "UI should remain responsive during plan switching")
     }
@@ -324,16 +324,16 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         let backButton = app.buttons["onboarding-back-button"]
         if backButton.exists {
             print("✅ Back button available during subscription screen")
-            
+
             // Test back navigation
             backButton.tap()
-            
+
             // Should navigate to previous onboarding step
             let continueButton = app.buttons["onboarding-continue-button"]
             if continueButton.waitForExistence(timeout: 2) {
                 // Navigate forward again to test state consistency
                 continueButton.tap()
-                
+
                 XCTAssertTrue(
                     app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 3),
                     "Should return to subscription screen after back/forward navigation")
@@ -402,7 +402,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
 
         // Terminate and relaunch app
         app.terminate()
-        
+
         app = TestUtilities.launchAppWithConfiguration(
             testMode: true,
             resetData: false,
@@ -410,12 +410,12 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
 
         // Check status after relaunch
         app.tabBars.buttons["Settings"].tap()
-        
+
         let relaunchStatus = app.staticTexts["subscription-status"]
         if relaunchStatus.waitForExistence(timeout: 5) {
             let relaunchStatusText = relaunchStatus.label
             print("🔍 Status after relaunch: \(relaunchStatusText)")
-            
+
             // Status should be consistent (or at least valid)
             let validStatuses = ["Trial Active", "Premium Active", "Not Subscribed"]
             XCTAssertTrue(validStatuses.contains(relaunchStatusText),
@@ -448,14 +448,14 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
         // Test that links don't crash the app when tapped
         // Note: In test environment, these might not actually open URLs
         termsLink.tap()
-        
+
         // App should remain stable
         XCTAssertTrue(
             app.staticTexts["JabTracker Premium"].exists,
             "App should remain stable after Terms link interaction")
 
         privacyLink.tap()
-        
+
         // App should remain stable
         XCTAssertTrue(
             app.staticTexts["JabTracker Premium"].exists,
@@ -474,7 +474,7 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
     }
 
     private func advanceWelcome(_ app: XCUIApplication) {
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             let continueButton = app.buttons["onboarding-continue-button"]
             if continueButton.waitForExistence(timeout: 3) {
                 continueButton.tap()
