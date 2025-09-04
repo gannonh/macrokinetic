@@ -46,14 +46,20 @@ final class OnboardingUITests: XCTestCase {
 
         self.handleHealthKitPermissions(app, grant: true)
 
-        // ACCEPTANCE CRITERIA: Subscription placeholder shows pricing
+        // ACCEPTANCE CRITERIA: Subscription pricing shows dual pricing and 4-week trial
         XCTAssertTrue(app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 3),
-                      "Should show subscription placeholder screen")
+                      "Should show subscription pricing screen")
 
-        XCTAssertTrue(app.staticTexts["Subscription pricing: $4.99 per month with 2-week free trial"].exists,
-                      "Should show pricing and trial information")
+        XCTAssertTrue(app.staticTexts["4-week free trial"].waitForExistence(timeout: 3),
+                      "Should show updated 4-week trial period")
+        
+        XCTAssertTrue(app.staticTexts["$4.99/month"].exists,
+                      "Should show monthly pricing")
+                      
+        XCTAssertTrue(app.staticTexts["$39.99/year"].exists,
+                      "Should show annual pricing")
 
-        app.buttons["onboarding-complete-button"].tap()
+        app.buttons["purchase-annual-button"].tap()
 
         // ACCEPTANCE CRITERIA: Smooth transition to main app after completion
         XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 5),
