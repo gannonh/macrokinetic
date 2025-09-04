@@ -157,7 +157,7 @@ struct SettingsView: View {
                                 .accessibilityIdentifier("subscription-management-header")
 
                             Text("Your subscription is managed through the Apple App Store. " +
-                                 "You can cancel, upgrade, or modify your subscription at any time.")
+                                "You can cancel, upgrade, or modify your subscription at any time.")
                                 .font(DesignTokens.Typography.body)
                                 .foregroundColor(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)

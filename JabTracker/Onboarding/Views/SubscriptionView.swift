@@ -206,7 +206,7 @@ struct SubscriptionView: View {
                 Self.logger.info("🛒 SubscriptionView: Skipping product load in UI test environment")
                 return
             }
-            
+
             Task {
                 Self.logger.info("🛒 SubscriptionView: Loading subscription products...")
                 await self.subscriptionManager.loadProducts()
