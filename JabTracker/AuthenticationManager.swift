@@ -61,7 +61,9 @@ class AuthenticationManager: NSObject, ObservableObject {
         // For manual UI testing, we don't setup a user immediately - let the auth UI show
         // But when signInWithApple() is called, we'll mock the response
         if isManualUITesting {
-            Self.logger.info("🎭 AuthenticationManager: Manual UI testing mode - showing auth UI with mocked Apple ID response")
+            Self.logger.info(
+                "🎭 AuthenticationManager: Manual UI testing mode - showing auth UI with mocked Apple ID response"
+            )
         }
 
         // Check if user is already authenticated by looking for existing user data
