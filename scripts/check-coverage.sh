@@ -63,6 +63,9 @@ FRAMEWORK_INTEGRATION_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.fra
 VIEW_MODEL_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.view_models.files[]'))
 VIEW_MODEL_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.view_models.threshold')
 
+UTILITIES_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.utilities.files[]'))
+UTILITIES_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.utilities.threshold')
+
 echo "🎯 Coverage Policy Results:"
 echo "================================"
 
@@ -146,6 +149,31 @@ else
             echo "✅ $file: ${COVERAGE}%"
         else
             echo "❌ $file: ${COVERAGE}% (below ${VIEW_MODEL_THRESHOLD}% threshold)"
+            POLICY_FAILED=true
+        fi
+    done
+fi
+
+# Tier 5: Utilities
+echo ""
+echo "🔧 Tier 5: Utilities (Target: ${UTILITIES_THRESHOLD}%)"
+if [ ${#UTILITIES_FILES[@]} -eq 0 ]; then
+    echo "ℹ️  No utilities defined yet"
+else
+    for file in "${UTILITIES_FILES[@]}"; do
+        COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
+            .targets[] | select(.name == "JabTracker.app") | 
+            .files[] | select(.name | endswith($file)) | 
+            .lineCoverage * 100 | round
+        ')
+        
+        # Handle empty or null coverage values
+        if [ "$COVERAGE" = "null" ] || [ "$COVERAGE" = "" ]; then
+            echo "⚠️  $file: Not found in coverage report"
+        elif [ "$COVERAGE" -ge "$UTILITIES_THRESHOLD" ] 2>/dev/null; then
+            echo "✅ $file: ${COVERAGE}%"
+        else
+            echo "❌ $file: ${COVERAGE}% (below ${UTILITIES_THRESHOLD}% threshold)"
             POLICY_FAILED=true
         fi
     done

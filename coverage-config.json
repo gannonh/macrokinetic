@@ -42,7 +42,7 @@
         "files": [
           "ProfileValidation.swift",
           "Array+Unique.swift",
-          "SubscriptionProducts.swift"
+          "PricingCalculator.swift"
         ]
       }
     }
@@ -94,6 +94,14 @@
       "DataControllerBasicTests.swift",
       "DataControllerInitializationTests.swift",
       "DataControllerSyncTests.swift"
+    ],
+    "subscription_ui_edge_case_tests": [
+      "SubscriptionUIEdgeCaseTests.swift",
+      "SubscriptionUINetworkEdgeCaseTests.swift",
+      "SubscriptionUIPlanSwitchingTests.swift",
+      "SubscriptionUIStoreKitEdgeCaseTests.swift",
+      "SubscriptionUIRestoreTests.swift",
+      "SubscriptionUIAccessibilityTests.swift"
     ]
   },
   "overall_target": {
