@@ -112,7 +112,17 @@ public class SubscriptionManager: ObservableObject {
             Self.logger.error(
                 "🛒 SubscriptionManager: Error loading products: \(error.localizedDescription, privacy: .public)"
             )
-            self.errorMessage = "Failed to load products: \(error.localizedDescription)"
+            
+            // Handle specific StoreKit sandbox errors
+            if let nsError = error as NSError?,
+               nsError.domain == "ASDErrorDomain",
+               nsError.code == 500 {
+                Self.logger.error("🛒 SubscriptionManager: Detected ASDErrorDomain Code=500 - Apple sandbox server issue")
+                self.errorMessage = "Unable to connect to App Store. This is a temporary issue with Apple's servers. Please try again later."
+            } else {
+                self.errorMessage = "Failed to load products: \(error.localizedDescription)"
+            }
+            
             self.availableProducts = []
         }
 
