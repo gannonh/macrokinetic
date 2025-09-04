@@ -201,9 +201,11 @@ struct SubscriptionView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("subscription-view")
         .onAppear {
-            // Skip product loading in UI testing to prevent StoreKit errors
-            guard !self.isTestEnvironment else {
-                Self.logger.info("🛒 SubscriptionView: Skipping product load in UI test environment")
+            // Only skip product loading for unit tests, not UI tests or manual simulator runs
+            let isUnitTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+                ProcessInfo.processInfo.environment["SWIFT_TESTING"] == "1"
+            guard !isUnitTest else {
+                Self.logger.info("🛒 SubscriptionView: Skipping product load in unit test environment")
                 return
             }
 

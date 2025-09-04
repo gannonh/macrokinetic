@@ -4,8 +4,8 @@ import Foundation
 public enum SubscriptionProducts {
     // MARK: - Product Identifiers
 
-    public static let monthly = "com.gannonhall.jabtracker.premium.monthly"
-    public static let annual = "com.gannonhall.jabtracker.premium.annual"
+    public static let monthly = "com.gannonhall.JabTracker.premium.monthly"
+    public static let annual = "com.gannonhall.JabTracker.premium.annual"
 
     public static let allProductIdentifiers = [monthly, annual]
 
