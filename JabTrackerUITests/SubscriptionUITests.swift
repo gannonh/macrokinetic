@@ -102,7 +102,7 @@ final class SubscriptionUITests: XCTestCase {
     }
 
     @MainActor
-    func testTrialCountdownAccuracyAfterPurchase() throws { 
+    func testTrialCountdownAccuracyAfterPurchase() throws {
         XCTAssertEqual(self.testSession?.disableDialogs, false,
                        "StoreKit dialogs must be enabled for deterministic purchase UI")
         let app = TestUtilities.launchAppWithConfiguration(
