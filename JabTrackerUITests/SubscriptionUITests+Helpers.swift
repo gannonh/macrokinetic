@@ -81,7 +81,7 @@ extension SubscriptionUITests {
     // MARK: - Purchase + Verify Helpers
 
     func performPurchaseFlow(app: XCUIApplication) {
-        let purchaseButton = app.buttons["purchase-subscription-button"]
+        let purchaseButton = app.buttons["purchase-annual-button"]
         XCTAssertTrue(purchaseButton.waitForExistence(timeout: 8))
         if !purchaseButton.isEnabled {
             let enabled = XCTNSPredicateExpectation(

@@ -149,6 +149,31 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Subscription Management Section
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Manage Subscription")
+                                .font(DesignTokens.Typography.headline)
+                                .accessibilityIdentifier("subscription-management-header")
+
+                            Text("Your subscription is managed through the Apple App Store. You can cancel, upgrade, or modify your subscription at any time.")
+                                .font(DesignTokens.Typography.body)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("subscription-management-description")
+
+                            Button("Manage Subscription") {
+                                // Open App Store subscription management
+                                if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
+                            .font(DesignTokens.Typography.body)
+                            .foregroundColor(DesignTokens.Colors.primary)
+                            .accessibilityIdentifier("manage-subscription-link")
+                        }
+                    }
+
                     // Design System Demo Section
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {

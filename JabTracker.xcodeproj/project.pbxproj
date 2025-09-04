@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -433,6 +433,8 @@
 				AE85F17BC2141AFF0721B0F1 /* PBXTargetDependency */,
 			);
 			name = JabTrackerUITests;
+			packageProductDependencies = (
+			);
 			productName = JabTrackerUITests;
 			productReference = E27D5ACAC4996BC70713166E /* JabTrackerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -449,6 +451,8 @@
 				3C18E58255FA62F5415BF4E3 /* PBXTargetDependency */,
 			);
 			name = JabTrackerTests;
+			packageProductDependencies = (
+			);
 			productName = JabTrackerTests;
 			productReference = 64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -465,6 +469,8 @@
 			dependencies = (
 			);
 			name = JabTracker;
+			packageProductDependencies = (
+			);
 			productName = JabTracker;
 			productReference = C69716C0F961F4C16B0D08D6 /* JabTracker.app */;
 			productType = "com.apple.product-type.application";
@@ -496,6 +502,8 @@
 				en,
 			);
 			mainGroup = 15AC0FC3C5A25C9AA3E198F8;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (

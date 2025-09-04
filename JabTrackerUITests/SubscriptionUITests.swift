@@ -102,7 +102,7 @@ final class SubscriptionUITests: XCTestCase {
     }
 
     @MainActor
-    func testTrialCountdownAccuracyAfterPurchase() throws {
+    func testTrialCountdownAccuracyAfterPurchase() throws { 
         XCTAssertEqual(self.testSession?.disableDialogs, false,
                        "StoreKit dialogs must be enabled for deterministic purchase UI")
         let app = TestUtilities.launchAppWithConfiguration(
@@ -125,18 +125,18 @@ final class SubscriptionUITests: XCTestCase {
 
         // Navigate to subscription screen
         self.completeOnboardingToSubscriptionScreen(app)
-        
+
         // ACCEPTANCE CRITERIA: Trial period shows "4-week" not "2-week"
         let trialText = app.staticTexts["4-week free trial"]
         XCTAssertTrue(trialText.waitForExistence(timeout: 3),
                       "Should display '4-week free trial' text")
 
         // ACCEPTANCE CRITERIA: Both monthly and annual pricing options are displayed
-        let monthlyCard = app.otherElements["monthly-pricing-card"]
+        let monthlyCard = app.buttons["monthly-pricing-card"]
         XCTAssertTrue(monthlyCard.waitForExistence(timeout: 3),
                       "Should show monthly pricing card")
-                      
-        let annualCard = app.otherElements["annual-pricing-card"] 
+
+        let annualCard = app.buttons["annual-pricing-card"]
         XCTAssertTrue(annualCard.waitForExistence(timeout: 3),
                       "Should show annual pricing card")
 
@@ -149,7 +149,7 @@ final class SubscriptionUITests: XCTestCase {
         let annualPrice = app.staticTexts["$39.99/year"]
         XCTAssertTrue(annualPrice.exists,
                       "Should display annual price as $39.99/year")
-                      
+
         let savingsText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Save'"))
         XCTAssertTrue(savingsText.firstMatch.exists,
                       "Should display savings information for annual plan")
@@ -163,43 +163,47 @@ final class SubscriptionUITests: XCTestCase {
         let termsLink = app.buttons["terms-of-service-link"]
         XCTAssertTrue(termsLink.exists,
                       "Should show Terms of Service link")
-                      
+
         let privacyLink = app.buttons["privacy-policy-link"]
         XCTAssertTrue(privacyLink.exists,
                       "Should show Privacy Policy link")
 
         // ACCEPTANCE CRITERIA: Purchase buttons work for both subscription types
-        let monthlyPurchaseButton = app.buttons["purchase-monthly-button"]
-        XCTAssertTrue(monthlyPurchaseButton.exists,
-                      "Should show monthly purchase button")
-        XCTAssertTrue(monthlyPurchaseButton.isEnabled,
-                      "Monthly purchase button should be enabled")
-                      
+        // First test annual button (selected by default)
         let annualPurchaseButton = app.buttons["purchase-annual-button"]
         XCTAssertTrue(annualPurchaseButton.exists,
-                      "Should show annual purchase button")
+                      "Should show annual purchase button when annual plan selected")
         XCTAssertTrue(annualPurchaseButton.isEnabled,
                       "Annual purchase button should be enabled")
+
+        // Select monthly plan to test monthly button
+        monthlyCard.tap()
+
+        let monthlyPurchaseButton = app.buttons["purchase-monthly-button"]
+        XCTAssertTrue(monthlyPurchaseButton.waitForExistence(timeout: 2),
+                      "Should show monthly purchase button when monthly plan selected")
+        XCTAssertTrue(monthlyPurchaseButton.isEnabled,
+                      "Monthly purchase button should be enabled")
     }
 
     @MainActor
     func testSubscriptionManagementInSettings() throws {
         // ACCEPTANCE CRITERIA: Settings includes subscription management guidance
         let app = TestUtilities.launchAppWithTestMode()
-        
+
         // Navigate to Settings tab
         app.tabBars.buttons["Settings"].tap()
-        
+
         // ACCEPTANCE CRITERIA: Subscription management section exists
         let managementSection = app.staticTexts["Manage Subscription"]
         XCTAssertTrue(managementSection.waitForExistence(timeout: 3),
                       "Should show 'Manage Subscription' section")
-                      
+
         // ACCEPTANCE CRITERIA: Explanatory text about App Store subscription management
         let explanationText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Apple App Store'"))
         XCTAssertTrue(explanationText.firstMatch.waitForExistence(timeout: 3),
                       "Should show explanation about managing subscription via Apple App Store")
-                      
+
         // ACCEPTANCE CRITERIA: Link to manage subscription is functional
         let manageLink = app.buttons["manage-subscription-link"]
         XCTAssertTrue(manageLink.exists,
