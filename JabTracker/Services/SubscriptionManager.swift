@@ -307,9 +307,10 @@ public class SubscriptionManager: ObservableObject {
                     await transaction.finish()
                 } catch {
                     // Handle verification failure
-                    Self.logger.error(
-                        "Transaction verification failed: \(error.localizedDescription, privacy: .public)"
-                    )
+                    Task { @MainActor in
+                        let errorMessage = error.localizedDescription
+                        Self.logger.error("Transaction verification failed: \(errorMessage, privacy: .public)")
+                    }
                 }
             }
         }
