@@ -201,12 +201,6 @@ struct SubscriptionView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("subscription-view")
         .onAppear {
-            // Skip product loading in UI testing to prevent StoreKit errors
-            guard !self.isTestEnvironment else {
-                Self.logger.info("🛒 SubscriptionView: Skipping product load in UI test environment")
-                return
-            }
-
             Task {
                 Self.logger.info("🛒 SubscriptionView: Loading subscription products...")
                 await self.subscriptionManager.loadProducts()
