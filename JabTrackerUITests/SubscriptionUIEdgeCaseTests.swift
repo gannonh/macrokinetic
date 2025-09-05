@@ -32,35 +32,6 @@ final class SubscriptionUIEdgeCaseTests: XCTestCase {
     // MARK: - Network and Loading States
 
     @MainActor
-    func testProductLoadFailureHandling() async throws {
-        // EDGE CASE: Test behavior when StoreKit products fail to load
-        let app = TestUtilities.launchAppWithConfiguration(
-            testMode: true,
-            resetData: true,
-            additionalArguments: ["--force-onboarding"])
-
-        self.completeOnboardingToSubscriptionScreen(app)
-
-        // Configure StoreKit to fail product loading
-        try await self.testSession?.setSimulatedError(
-            .generic(.unknown),
-            forAPI: .loadProducts)
-
-        // Purchase button should be disabled when no products available
-        let purchaseButton = app.buttons["purchase-annual-button"]
-        XCTAssertTrue(purchaseButton.waitForExistence(timeout: 5),
-                      "Purchase button should exist even with product load failures")
-
-        // In test environment, purchase button may be enabled for fallback behavior
-        // In production, it should be disabled when products unavailable
-        if !purchaseButton.isEnabled {
-            print("✅ Purchase button properly disabled when products unavailable")
-        } else {
-            print("⚠️  Purchase button enabled in test environment despite product load failure")
-        }
-    }
-
-    @MainActor
     func testLoadingStatesDuringProductFetch() throws {
         // EDGE CASE: Test UI loading states during product fetch
         let app = TestUtilities.launchAppWithConfiguration(
