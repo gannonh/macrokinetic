@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,18 +14,21 @@
 		1165999CC86E5304AEDFBF10 /* OnboardingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC5025DB7552ECF121A4C89 /* OnboardingUITests.swift */; };
 		14AEF2C8BC0EED167F0DFFB9 /* SubscriptionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */; };
 		15DA362CB7875DA9908CBF18 /* DataControllerCloudKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */; };
+		18134AAF5320335697314C57 /* SubscriptionUIRestorePurchaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93FC477C176865E6E955E0F /* SubscriptionUIRestorePurchaseTests.swift */; };
 		1AC6C09C2605C2A2717A9416 /* SubscriptionManagerSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4405BED1AC09DED9184CE132 /* SubscriptionManagerSecurityTests.swift */; };
 		1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */; };
 		248733A6DBB8A6A34C2875AE /* ProfileValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23B2CB25BA56529BBA6E7DB /* ProfileValidationTests.swift */; };
 		25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = E302221806254B729984868B /* DesignTokens.swift */; };
 		262246FDE3CBB6D16B9371A7 /* AuthenticationEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */; };
 		28C344FA71FC43E28013B3C7 /* OnboardingViewModelCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E94E4AE5BAB59EDF35956F6 /* OnboardingViewModelCoverageTests.swift */; };
+		30E3D554DD4EC8DE207F0952 /* SubscriptionUIPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D4CD208036F05441373690 /* SubscriptionUIPersistenceTests.swift */; };
 		30FCE02FD9B05DE4F6B2FDC5 /* DataControllerPreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A5D10958F733EFFFF528C2B /* DataControllerPreviewTests.swift */; };
 		3BACAC6358628D191F57BFB9 /* Array+Unique.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB10B25CD15222C7CBB758BF /* Array+Unique.swift */; };
 		3CF9D98330F58C68EEE51B53 /* PharmacokineticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74561A6393FDC6200F4C41E6 /* PharmacokineticsTests.swift */; };
 		4365D3381E33E03DA31E9B1F /* PermissionsRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F6A02DB3F9C27E8AFE1140 /* PermissionsRequestView.swift */; };
 		45A5E4209720B7BF84E43977 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8C09A0577005D7848EAB16 /* ContentView.swift */; };
 		4667532FC92891E871E29355 /* DebugUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */; };
+		4C09CC983724E0BCC09B392A /* SubscriptionUIStateConsistencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EC9A418E69173C7ABC304C /* SubscriptionUIStateConsistencyTests.swift */; };
 		4DCCEBCCBD61A49CFCEFE78B /* DataControllerBasicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982A546060F21F198D83B193 /* DataControllerBasicTests.swift */; };
 		523BC8DEDB62685FF5C39917 /* BiometricTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B7F23B9040185766D116EAD /* BiometricTestingTests.swift */; };
 		524862241D084CCCAD2844C2 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31BF950267D4B8A252C4B826 /* SplashView.swift */; };
@@ -37,10 +40,13 @@
 		5F5B4392A98D2A1D90CFE5F7 /* MedicationProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AB5564A077F30F857788B4 /* MedicationProfile.swift */; };
 		630623555F0BB76E631F82C0 /* SubscriptionManagerRestoreIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424211E18A1C53CD1D5791D8 /* SubscriptionManagerRestoreIntegrationTests.swift */; };
 		682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */; };
+		68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */; };
 		6D1110D677A82B0FDC706888 /* UserProfileViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */; };
 		704AEE9061F5B9D23CBC19D8 /* SubscriptionProducts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E2AEB8B2D7270CBDA42825 /* SubscriptionProducts.swift */; };
 		72A9BEB2AE70FDDEE0272DD2 /* AuthenticationDatabaseIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8D1209E3EB9E079E0C5416 /* AuthenticationDatabaseIntegrationTests.swift */; };
 		747C6E49FE3A1CF40CBB6F5D /* CodeGen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */; };
+		74BA276E629DE270BEFB3122 /* SubscriptionUIStoreKitErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CCD45469CD615C737CB6C8 /* SubscriptionUIStoreKitErrorTests.swift */; };
+		760C54ED700B1A0A473B593F /* PricingCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B3D664292BAEEAE6B7308C /* PricingCalculatorTests.swift */; };
 		8028FC4C576731EA49792A87 /* Medication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 345FCEAEFAE46B98B3CD4E7B /* Medication.swift */; };
 		8038A462D8BEB601FEDD28B2 /* AuthenticationDelegateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 522C00B809256C4EDA8C764C /* AuthenticationDelegateTests.swift */; };
 		80F00B03F4A9C63A52D46AAE /* JabTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45ABB67198C53503C20D15E /* JabTrackerApp.swift */; };
@@ -52,9 +58,11 @@
 		97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */; };
 		99ED058D57A5C6D08F3AE6B3 /* StoreKitConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E2EF906ADB897D77E416C9B /* StoreKitConfigurationTests.swift */; };
 		9AE888EF45D4062EBC4118E2 /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */; };
+		9D2587AF3DB6CC19C1FD2D17 /* PricingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103BC0C5A928D9F16AE014D8 /* PricingCalculator.swift */; };
 		9E27575CFDF53DA45781E258 /* InitialDoseSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD8766844D8A02928C9250E8 /* InitialDoseSetupView.swift */; };
 		9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4068B3EB73128183393A2D3B /* ButtonComponents.swift */; };
 		9FF4DFB3D52C64E7D28BF863 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F334A740DD8D72EDF1289 /* OnboardingCoordinator.swift */; };
+		A0C3ED42659EB9205C6E6747 /* SubscriptionUIBaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618AD6B4A0CBE4E64571B984 /* SubscriptionUIBaseTests.swift */; };
 		A2ADF45E5278900BFDDB6302 /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD08D16B26A7F9381D85BF2 /* AuthenticationManager.swift */; };
 		A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */; };
 		AA281B0FB3CB49E08C78FA6F /* AuthenticationUITestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067AD5EAC7C8406273E0DBE6 /* AuthenticationUITestingTests.swift */; };
@@ -67,6 +75,7 @@
 		BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92209045E4347373E0C9BCAB /* Colors+Extensions.swift */; };
 		BFF5E7E70314E00D22E10A9B /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AE7A45FA75867366A66399 /* AuthenticationView.swift */; };
 		C24A8A61EAB23384FC48562D /* SubscriptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D30809BE84F01DA83E83F4C /* SubscriptionUITests.swift */; };
+		C58F9C3E622882A3CAB09EC5 /* SubscriptionUINetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */; };
 		CB0812C52EDE841D631C81B9 /* BiometricAuthManagerCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C046C9CE67D30EEA5AF3C0 /* BiometricAuthManagerCoreTests.swift */; };
 		D620D4D470F1A3912620A111 /* DesignSystemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */; };
 		D7ADFE126C5A8EAAA10BA4A3 /* SubscriptionUITests+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2637EC9BBAF683E18CB1F8F2 /* SubscriptionUITests+Helpers.swift */; };
@@ -78,11 +87,13 @@
 		DB2729859B9AB311F4A8120D /* CardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE66B10C09A23B18DE262674 /* CardComponents.swift */; };
 		DBF413DA0454E3B040DE18CF /* AuthenticationEnumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C09E1878495CFF7D03ED9ADE /* AuthenticationEnumTests.swift */; };
 		DDE09BFBD5C283B9D7E220FD /* MedicationSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDAA0E6A2199F895649643B /* MedicationSelectionView.swift */; };
+		DE3A390860BC5E820720939E /* SubscriptionUIPlanSwitchingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C9AD909F79531B7470B5BD /* SubscriptionUIPlanSwitchingTests.swift */; };
 		DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */; };
 		E0B8A4E2309A4EC632D8B030 /* UserModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */; };
 		E4E2E302D5AC11A67F4A584B /* Dose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78475804BE3FA10B539F70D5 /* Dose.swift */; };
 		E5615B081A4A0B884E9DC64F /* AuthenticationResetAndEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994456F6ED1ED79F5C45296F /* AuthenticationResetAndEdgeCaseTests.swift */; };
 		E80350DFF681490AF7CEDAA8 /* ProfileField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDFE82FAF62F35CF78943E0 /* ProfileField.swift */; };
+		EBC736A79E9EF990422F7BEB /* SubscriptionUITermsPrivacyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98447312C9BA4AA09459C90B /* SubscriptionUITermsPrivacyTests.swift */; };
 		F3F1A0DAA25894393C218D7C /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DB90AD3E5FB7CDFB201CC6 /* SubscriptionView.swift */; };
 		F455402E5301668AB4CCCDA4 /* AuthenticationManagerCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C674E4765D92902550F3421B /* AuthenticationManagerCoreTests.swift */; };
 		F55D33FC517BE359F05C333C /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */; };
@@ -111,6 +122,8 @@
 /* Begin PBXFileReference section */
 		067AD5EAC7C8406273E0DBE6 /* AuthenticationUITestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationUITestingTests.swift; sourceTree = "<group>"; };
 		07231EC776BF08698D0A862E /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		103BC0C5A928D9F16AE014D8 /* PricingCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingCalculator.swift; sourceTree = "<group>"; };
+		12EC9A418E69173C7ABC304C /* SubscriptionUIStateConsistencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIStateConsistencyTests.swift; sourceTree = "<group>"; };
 		19090A1FF0084878E8E5E150 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
 		1B7F23B9040185766D116EAD /* BiometricTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricTestingTests.swift; sourceTree = "<group>"; };
 		1CDAA0E6A2199F895649643B /* MedicationSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationSelectionView.swift; sourceTree = "<group>"; };
@@ -139,12 +152,14 @@
 		57F6A02DB3F9C27E8AFE1140 /* PermissionsRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsRequestView.swift; sourceTree = "<group>"; };
 		5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModelTests.swift; sourceTree = "<group>"; };
 		5E2EF906ADB897D77E416C9B /* StoreKitConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitConfigurationTests.swift; sourceTree = "<group>"; };
+		618AD6B4A0CBE4E64571B984 /* SubscriptionUIBaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIBaseTests.swift; sourceTree = "<group>"; };
 		635BC9949259E918CE8EC8C7 /* MedicationCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationCoverageTests.swift; sourceTree = "<group>"; };
 		636E8EEE1932A0793EB3D786 /* DataControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerTests.swift; sourceTree = "<group>"; };
 		63B10446D868275C35DDCC8E /* AuthenticationDelegateMethodTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDelegateMethodTests.swift; sourceTree = "<group>"; };
 		64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65714DDE038569FC5C471011 /* DesignSystemUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemUITests.swift; sourceTree = "<group>"; };
 		67D9360EE9CBE29C1BF3DE26 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		68B3D664292BAEEAE6B7308C /* PricingCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingCalculatorTests.swift; sourceTree = "<group>"; };
 		6A5D10958F733EFFFF528C2B /* DataControllerPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerPreviewTests.swift; sourceTree = "<group>"; };
 		6E8F25682AB8F7F1EEDB80C2 /* JabTrackerStoreKit.storekit */ = {isa = PBXFileReference; path = JabTrackerStoreKit.storekit; sourceTree = "<group>"; };
 		7150A995B6D4936C3556044A /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
@@ -163,25 +178,31 @@
 		92209045E4347373E0C9BCAB /* Colors+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Colors+Extensions.swift"; sourceTree = "<group>"; };
 		92A804E466621A27A71962A4 /* WelcomeScreensView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreensView.swift; sourceTree = "<group>"; };
 		93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIAccessibilityTests.swift; sourceTree = "<group>"; };
 		94C046C9CE67D30EEA5AF3C0 /* BiometricAuthManagerCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManagerCoreTests.swift; sourceTree = "<group>"; };
 		982A546060F21F198D83B193 /* DataControllerBasicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerBasicTests.swift; sourceTree = "<group>"; };
 		982BEC8C7EF1C6A76703D2FF /* SubscriptionManagerMoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerMoreTests.swift; sourceTree = "<group>"; };
+		98447312C9BA4AA09459C90B /* SubscriptionUITermsPrivacyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUITermsPrivacyTests.swift; sourceTree = "<group>"; };
 		994456F6ED1ED79F5C45296F /* AuthenticationResetAndEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationResetAndEdgeCaseTests.swift; sourceTree = "<group>"; };
 		A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		A7DB90AD3E5FB7CDFB201CC6 /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
 		AB10B25CD15222C7CBB758BF /* Array+Unique.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Unique.swift"; sourceTree = "<group>"; };
 		AD8766844D8A02928C9250E8 /* InitialDoseSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialDoseSetupView.swift; sourceTree = "<group>"; };
+		AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUINetworkTests.swift; sourceTree = "<group>"; };
 		AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemTests.swift; sourceTree = "<group>"; };
 		B235104E7844F74CD62FC895 /* SubscriptionManagerCoreLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerCoreLogicTests.swift; sourceTree = "<group>"; };
+		B2CCD45469CD615C737CB6C8 /* SubscriptionUIStoreKitErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIStoreKitErrorTests.swift; sourceTree = "<group>"; };
 		B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationEdgeCaseTests.swift; sourceTree = "<group>"; };
 		B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeGen.swift; sourceTree = "<group>"; };
 		C09E1878495CFF7D03ED9ADE /* AuthenticationEnumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationEnumTests.swift; sourceTree = "<group>"; };
 		C39713A893FA00DB342B6E55 /* BiometricAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManager.swift; sourceTree = "<group>"; };
+		C4D4CD208036F05441373690 /* SubscriptionUIPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIPersistenceTests.swift; sourceTree = "<group>"; };
 		C674E4765D92902550F3421B /* AuthenticationManagerCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManagerCoreTests.swift; sourceTree = "<group>"; };
 		C69716C0F961F4C16B0D08D6 /* JabTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JabTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDC07DC6AC9A3098F3CF677D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerTests.swift; sourceTree = "<group>"; };
 		D23B2CB25BA56529BBA6E7DB /* ProfileValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileValidationTests.swift; sourceTree = "<group>"; };
+		D3C9AD909F79531B7470B5BD /* SubscriptionUIPlanSwitchingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIPlanSwitchingTests.swift; sourceTree = "<group>"; };
 		D72C377F30F091F203828A17 /* BiometricEnumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricEnumTests.swift; sourceTree = "<group>"; };
 		D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerTests.swift; sourceTree = "<group>"; };
 		DD8D1209E3EB9E079E0C5416 /* AuthenticationDatabaseIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDatabaseIntegrationTests.swift; sourceTree = "<group>"; };
@@ -189,6 +210,7 @@
 		E27D5ACAC4996BC70713166E /* JabTrackerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E302221806254B729984868B /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		E45ABB67198C53503C20D15E /* JabTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerApp.swift; sourceTree = "<group>"; };
+		E93FC477C176865E6E955E0F /* SubscriptionUIRestorePurchaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIRestorePurchaseTests.swift; sourceTree = "<group>"; };
 		EA7F334A740DD8D72EDF1289 /* OnboardingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCoordinator.swift; sourceTree = "<group>"; };
 		EE66B10C09A23B18DE262674 /* CardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardComponents.swift; sourceTree = "<group>"; };
 		F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewTests.swift; sourceTree = "<group>"; };
@@ -260,6 +282,14 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
+		7A2A4E3AC1B44137B797A7E3 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				103BC0C5A928D9F16AE014D8 /* PricingCalculator.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 		7EDF9808D9D9424A7F56EEEA /* JabTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -290,6 +320,7 @@
 				19090A1FF0084878E8E5E150 /* OnboardingViewModelTests.swift */,
 				7150A995B6D4936C3556044A /* PersistenceTests.swift */,
 				74561A6393FDC6200F4C41E6 /* PharmacokineticsTests.swift */,
+				68B3D664292BAEEAE6B7308C /* PricingCalculatorTests.swift */,
 				D23B2CB25BA56529BBA6E7DB /* ProfileValidationTests.swift */,
 				5E2EF906ADB897D77E416C9B /* StoreKitConfigurationTests.swift */,
 				B235104E7844F74CD62FC895 /* SubscriptionManagerCoreLogicTests.swift */,
@@ -375,6 +406,15 @@
 				93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */,
 				45CA19BCF65A3BA0D292D435 /* ManualAuthenticationUITests.swift */,
 				FAC5025DB7552ECF121A4C89 /* OnboardingUITests.swift */,
+				94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */,
+				618AD6B4A0CBE4E64571B984 /* SubscriptionUIBaseTests.swift */,
+				AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */,
+				C4D4CD208036F05441373690 /* SubscriptionUIPersistenceTests.swift */,
+				D3C9AD909F79531B7470B5BD /* SubscriptionUIPlanSwitchingTests.swift */,
+				E93FC477C176865E6E955E0F /* SubscriptionUIRestorePurchaseTests.swift */,
+				12EC9A418E69173C7ABC304C /* SubscriptionUIStateConsistencyTests.swift */,
+				B2CCD45469CD615C737CB6C8 /* SubscriptionUIStoreKitErrorTests.swift */,
+				98447312C9BA4AA09459C90B /* SubscriptionUITermsPrivacyTests.swift */,
 				7D30809BE84F01DA83E83F4C /* SubscriptionUITests.swift */,
 				2637EC9BBAF683E18CB1F8F2 /* SubscriptionUITests+Helpers.swift */,
 				4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */,
@@ -398,6 +438,7 @@
 				92297A72E18EC457BD9DDB0C /* Models */,
 				D403E44CE1798EB538E62166 /* Onboarding */,
 				5EE7526B96AE972EC9462251 /* Services */,
+				7A2A4E3AC1B44137B797A7E3 /* Utilities */,
 				D14BE4DAB49C0084D3B7C2B3 /* Utils */,
 				95BD5645D9FD18EC6CA381DB /* Views */,
 			);
@@ -419,6 +460,8 @@
 				AE85F17BC2141AFF0721B0F1 /* PBXTargetDependency */,
 			);
 			name = JabTrackerUITests;
+			packageProductDependencies = (
+			);
 			productName = JabTrackerUITests;
 			productReference = E27D5ACAC4996BC70713166E /* JabTrackerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -435,6 +478,8 @@
 				3C18E58255FA62F5415BF4E3 /* PBXTargetDependency */,
 			);
 			name = JabTrackerTests;
+			packageProductDependencies = (
+			);
 			productName = JabTrackerTests;
 			productReference = 64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -451,6 +496,8 @@
 			dependencies = (
 			);
 			name = JabTracker;
+			packageProductDependencies = (
+			);
 			productName = JabTracker;
 			productReference = C69716C0F961F4C16B0D08D6 /* JabTracker.app */;
 			productType = "com.apple.product-type.application";
@@ -482,6 +529,8 @@
 				en,
 			);
 			mainGroup = 15AC0FC3C5A25C9AA3E198F8;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -517,6 +566,15 @@
 				DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */,
 				FEC4842A548B2AAD5A4625A2 /* ManualAuthenticationUITests.swift in Sources */,
 				1165999CC86E5304AEDFBF10 /* OnboardingUITests.swift in Sources */,
+				68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */,
+				A0C3ED42659EB9205C6E6747 /* SubscriptionUIBaseTests.swift in Sources */,
+				C58F9C3E622882A3CAB09EC5 /* SubscriptionUINetworkTests.swift in Sources */,
+				30E3D554DD4EC8DE207F0952 /* SubscriptionUIPersistenceTests.swift in Sources */,
+				DE3A390860BC5E820720939E /* SubscriptionUIPlanSwitchingTests.swift in Sources */,
+				18134AAF5320335697314C57 /* SubscriptionUIRestorePurchaseTests.swift in Sources */,
+				4C09CC983724E0BCC09B392A /* SubscriptionUIStateConsistencyTests.swift in Sources */,
+				74BA276E629DE270BEFB3122 /* SubscriptionUIStoreKitErrorTests.swift in Sources */,
+				EBC736A79E9EF990422F7BEB /* SubscriptionUITermsPrivacyTests.swift in Sources */,
 				D7ADFE126C5A8EAAA10BA4A3 /* SubscriptionUITests+Helpers.swift in Sources */,
 				C24A8A61EAB23384FC48562D /* SubscriptionUITests.swift in Sources */,
 				9AE888EF45D4062EBC4118E2 /* TestUtilities.swift in Sources */,
@@ -554,6 +612,7 @@
 				02F2C52197FFBD349FC6D4F1 /* OnboardingViewModelTests.swift in Sources */,
 				FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */,
 				3CF9D98330F58C68EEE51B53 /* PharmacokineticsTests.swift in Sources */,
+				760C54ED700B1A0A473B593F /* PricingCalculatorTests.swift in Sources */,
 				248733A6DBB8A6A34C2875AE /* ProfileValidationTests.swift in Sources */,
 				99ED058D57A5C6D08F3AE6B3 /* StoreKitConfigurationTests.swift in Sources */,
 				DAB31EB38AD2943D9925A094 /* SubscriptionManagerCoreLogicTests.swift in Sources */,
@@ -593,6 +652,7 @@
 				0DC257D2890D53FBB5C8FBC1 /* OnboardingView.swift in Sources */,
 				58DCBA4F2D6BBF36722DF807 /* OnboardingViewModel.swift in Sources */,
 				4365D3381E33E03DA31E9B1F /* PermissionsRequestView.swift in Sources */,
+				9D2587AF3DB6CC19C1FD2D17 /* PricingCalculator.swift in Sources */,
 				E80350DFF681490AF7CEDAA8 /* ProfileField.swift in Sources */,
 				86BFBEB2E2BE5AEC1807DE71 /* ProfileValidation.swift in Sources */,
 				524862241D084CCCAD2844C2 /* SplashView.swift in Sources */,

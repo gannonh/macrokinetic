@@ -32,6 +32,20 @@ struct SubscriptionView: View {
         "Priority customer support",
     ]
 
+    @State private var selectedPlan: SubscriptionPlan = .annual
+
+    private enum SubscriptionPlan {
+        case monthly
+        case annual
+
+        var productId: String {
+            switch self {
+            case .monthly: return SubscriptionProducts.monthly
+            case .annual: return SubscriptionProducts.annual
+            }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -55,59 +69,106 @@ struct SubscriptionView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 32)
 
-                // Pricing and purchase section
-                VStack(spacing: 20) {
-                    // Pricing card
-                    DesignCard {
-                        VStack(spacing: 20) {
-                            VStack(spacing: 8) {
-                                Text("$4.99/month")
-                                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                                    .foregroundColor(DesignTokens.Colors.primary)
+                // Dual pricing cards section
+                VStack(spacing: 16) {
+                    Text("Choose Your Plan")
+                        .font(DesignTokens.Typography.headline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                                Text("2-week free trial")
-                                    .font(DesignTokens.Typography.headline)
-                                    .foregroundColor(DesignTokens.Colors.success)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 6)
-                                    .background(DesignTokens.Colors.success.opacity(0.1))
-                                    .cornerRadius(16)
-                            }
+                    // Monthly pricing card
+                    Button(action: { self.selectedPlan = .monthly }, label: {
+                        self.pricingCard(
+                            title: "Monthly",
+                            price: "$4.99/month",
+                            savings: nil,
+                            isSelected: self.selectedPlan == .monthly,
+                            badge: nil)
+                    })
+                    .buttonStyle(PlainButtonStyle())
+                    .accessibilityIdentifier("monthly-pricing-card")
 
-                            Text("Cancel anytime • No commitment")
-                                .font(DesignTokens.Typography.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Subscription pricing: $4.99 per month with 2-week free trial")
+                    // Annual pricing card with "Most Popular" badge
+                    Button(action: { self.selectedPlan = .annual }, label: {
+                        self.pricingCard(
+                            title: "Annual",
+                            price: "$39.99/year",
+                            savings: self.calculateAnnualSavings(),
+                            isSelected: self.selectedPlan == .annual,
+                            badge: "Most Popular")
+                    })
+                    .buttonStyle(PlainButtonStyle())
+                    .accessibilityIdentifier("annual-pricing-card")
 
-                    // Purchase button
-                    PrimaryButton(
-                        title: self.subscriptionManager.isLoading ? "Loading..." : "Start Free Trial"
-                    ) {
-                        Task {
-                            await self.purchaseSubscription()
-                        }
-                    }
-                    .disabled(
-                        self.subscriptionManager.isLoading ||
-                            (!self.isTestEnvironment && self.subscriptionManager.availableProducts.isEmpty)
-                    )
-                    .accessibilityIdentifier("purchase-subscription-button")
-
-                    // Restore button
-                    Button("Restore Purchases") {
-                        Task {
-                            await self.subscriptionManager.restorePurchases()
-                        }
-                    }
-                    .font(DesignTokens.Typography.body)
-                    .foregroundColor(DesignTokens.Colors.primary)
-                    .disabled(self.subscriptionManager.isLoading)
-                    .accessibilityIdentifier("restore-purchases-button")
+                    // Trial period display
+                    Text("4-week free trial")
+                        .font(DesignTokens.Typography.headline)
+                        .foregroundColor(DesignTokens.Colors.success)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(DesignTokens.Colors.success.opacity(0.1))
+                        .cornerRadius(16)
                 }
-                .padding(.horizontal, 24)
+
+                // Purchase button (dynamically updates based on selected plan)
+                PrimaryButton(
+                    title: self.subscriptionManager.isLoading ? "Loading..." : "Start Free Trial"
+                ) {
+                    Task {
+                        await self.purchaseSubscription()
+                    }
+                }
+                .disabled(
+                    self.subscriptionManager.isLoading ||
+                        (!self.isTestEnvironment && self.subscriptionManager.availableProducts.isEmpty)
+                )
+                .accessibilityIdentifier(
+                    self.selectedPlan == .monthly ? "purchase-monthly-button" : "purchase-annual-button"
+                )
+
+                // Restore button
+                Button("Restore Purchases") {
+                    Task {
+                        await self.subscriptionManager.restorePurchases()
+                    }
+                }
+                .font(DesignTokens.Typography.body)
+                .foregroundColor(DesignTokens.Colors.primary)
+                .disabled(self.subscriptionManager.isLoading)
+                .accessibilityIdentifier("restore-purchases-button")
+
+                // Terms and Privacy links
+                HStack(spacing: 8) {
+                    Button("Terms of Service") {
+                        // Open Terms of Service
+                        if let url = URL(string: "https://jabtracker.app/terms") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(DesignTokens.Colors.primary)
+                    .accessibilityIdentifier("terms-of-service-link")
+
+                    Text("•")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundColor(.secondary)
+
+                    Button("Privacy Policy") {
+                        // Open Privacy Policy
+                        if let url = URL(string: "https://jabtracker.app/privacy") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(DesignTokens.Colors.primary)
+                    .accessibilityIdentifier("privacy-policy-link")
+                }
+                .frame(maxWidth: .infinity)
+
+                Text("Cancel anytime • No commitment")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
                 // Features list
                 VStack(spacing: 16) {
@@ -186,9 +247,9 @@ struct SubscriptionView: View {
 
     private func purchaseSubscription() async {
         do {
-            // Always attempt the real StoreKit purchase flow
-            // This allows UI tests to interact with the StoreKit testing configuration
-            try await self.subscriptionManager.purchase(productId: SubscriptionProducts.monthly)
+            // Purchase the selected plan
+            let productId = self.selectedPlan.productId
+            try await self.subscriptionManager.purchase(productId: productId)
 
             // If purchase succeeds, complete onboarding
             try await self.viewModel.completeOnboarding()
@@ -205,5 +266,71 @@ struct SubscriptionView: View {
                 self.subscriptionManager.errorMessage = "Purchase failed: \(error.localizedDescription)"
             }
         }
+    }
+
+    // MARK: - Helper Views
+
+    @ViewBuilder
+    private func pricingCard(
+        title: String,
+        price: String,
+        savings: String?,
+        isSelected: Bool,
+        badge: String?) -> some View
+    {
+        DesignCard {
+            VStack(spacing: 16) {
+                // Badge (if present)
+                if let badge {
+                    HStack {
+                        Spacer()
+                        Text(badge)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(DesignTokens.Colors.primary)
+                            .cornerRadius(12)
+                        Spacer()
+                    }
+                    .padding(.top, -8)
+                }
+
+                VStack(spacing: 8) {
+                    Text(title)
+                        .font(DesignTokens.Typography.headline)
+                        .foregroundColor(.primary)
+
+                    Text(price)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(DesignTokens.Colors.primary)
+
+                    if let savings {
+                        Text(savings)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(DesignTokens.Colors.success)
+                    }
+
+                    if title == "Annual" {
+                        Text("$3.33/month")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(
+                    isSelected ? DesignTokens.Colors.primary : Color.clear,
+                    lineWidth: 2)
+        )
+    }
+
+    private func calculateAnnualSavings() -> String {
+        let savings = PricingCalculator.calculateAnnualSavings(
+            monthlyPrice: 4.99,
+            annualPrice: 39.99)
+        return PricingCalculator.formatSavingsDisplay(savings: savings)
     }
 }
