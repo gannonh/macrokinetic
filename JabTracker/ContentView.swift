@@ -175,6 +175,11 @@ struct SettingsView: View {
                         }
                     }
 
+                    // StoreKit Test Section (temporary)
+                    DesignCard {
+                        MinimalSubscriptionTestView()
+                    }
+
                     // Design System Demo Section
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {

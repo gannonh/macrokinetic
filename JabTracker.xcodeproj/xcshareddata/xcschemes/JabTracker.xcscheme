@@ -128,7 +128,7 @@
          </CommandLineArgument>
       </CommandLineArguments>
       <StoreKitConfigurationFileReference
-         identifier = "../JabTracker/Resources/JabTrackerStoreKit.storekit">
+         identifier = "../MinimalStoreKit.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
