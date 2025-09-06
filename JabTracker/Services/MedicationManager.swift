@@ -20,7 +20,7 @@ class MedicationManager: ObservableObject {
     }
     
     /// Error types for medication management
-    enum MedicationError: LocalizedError {
+    enum MedicationError: LocalizedError, Equatable {
         case invalidDose
         case doseOutOfRange(medication: Medication, currentDose: Double)
         case profileNotFound

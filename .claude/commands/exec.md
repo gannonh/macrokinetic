@@ -49,7 +49,7 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 - [ ] Run E2E test to verify it FAILS (RED phase)
 - [ ] Commit failing E2E test with message: `test: add failing E2E test for [feature]`
 
-### Step 3: Test Implementation (Tasks T005-T013)
+### Step 3: Test Implementation (Unit tests)
 **For test tasks marked "MUST FAIL":**
 - [ ] Write test according to contract/quickstart scenario
 - [ ] Run test to verify it FAILS (RED phase)
@@ -66,7 +66,7 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests/[TestClass]
 ```
 
-### Step 4: Core Implementation (Tasks T014+)
+### Step 4: Core Implementation
 **Only after tests are failing:**
 - [ ] Write minimal code to pass the test
 - [ ] Run test to verify it PASSES (GREEN phase)
@@ -83,20 +83,20 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 ### Step 6: Verification Gates
 
 **After each implementation:**
-- [ ] Run relevant tests
+- [ ] Run relevant tests (unit, integration, E2E)
 - [ ] Check coverage: `./scripts/coverage-json.sh [file]`
 - [ ] Verify medical accuracy for calculations
 - [ ] Performance: <50ms for calculations
 
 **Before moving to next phase:**
-- [ ] All tests in current phase passing
+- [ ] All tests (unit, integration, E2E) in current phase passing
 - [ ] Coverage thresholds met
 - [ ] SwiftLint clean: `swiftlint`
 - [ ] Run: `./scripts/check-all.sh`
 
 ## Task Types Quick Reference
 
-### Model Tasks (T014-T018)
+### Model Tasks
 ```swift
 // JabTracker/Models/Medication.swift
 enum Medication: String, CaseIterable, Codable {
@@ -106,7 +106,7 @@ enum Medication: String, CaseIterable, Codable {
 }
 ```
 
-### Service Tasks (T019-T021)
+### Service Tasks 
 ```swift
 // JabTracker/Services/MedicationManager.swift
 class MedicationManager: MedicationManagerProtocol {
@@ -114,7 +114,7 @@ class MedicationManager: MedicationManagerProtocol {
 }
 ```
 
-### UI Tasks (T025-T032)
+### UI Tasks
 ```swift
 // JabTracker/Views/Settings/MedicationProfileSettingsView.swift
 struct MedicationProfileSettingsView: View {

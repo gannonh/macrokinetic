@@ -86,7 +86,7 @@ struct MedicationManagerTests {
         let invalidDose = 5.0 // Exceeds maximum for semaglutide
         
         // When/Then
-        #expect(throws: MedicationManager.MedicationError.doseOutOfRange) {
+        #expect(throws: MedicationManager.MedicationError.doseOutOfRange(medication: medication, currentDose: invalidDose)) {
             try manager.createProfile(
                 medication: medication,
                 brandName: "Ozempic",
@@ -144,10 +144,11 @@ struct MedicationManagerTests {
             brandName: "Ozempic",
             currentDose: 0.25
         )
+        let invalidDose = 10.0
         
         // When/Then
-        #expect(throws: MedicationManager.MedicationError.doseOutOfRange) {
-            try manager.updateProfile(profile, currentDose: 10.0)
+        #expect(throws: MedicationManager.MedicationError.doseOutOfRange(medication: .semaglutide, currentDose: invalidDose)) {
+            try manager.updateProfile(profile, currentDose: invalidDose)
         }
     }
     
