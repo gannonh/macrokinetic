@@ -301,7 +301,7 @@ struct AddMedicationProfileView: View {
 
     private func saveMedicationProfile() {
         do {
-            let profile = try medicationManager.createProfile(
+            _ = try self.medicationManager.createProfile(
                 for: self.currentUser,
                 medication: self.selectedMedication,
                 brandName: self.selectedBrand,

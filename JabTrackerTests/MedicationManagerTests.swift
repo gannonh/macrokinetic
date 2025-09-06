@@ -95,7 +95,7 @@ struct MedicationManagerTests {
         // When/Then
         #expect(throws: MedicationManager.MedicationError.doseOutOfRange(medication: medication, currentDose: invalidDose)) {
             let testUser = try createTestUser()
-            try manager.createProfile(
+            _ = try manager.createProfile(
                 for: testUser,
                 medication: medication,
                 brandName: "Ozempic",
@@ -113,7 +113,7 @@ struct MedicationManagerTests {
         // When/Then: Vial strength less than target dose
         #expect(throws: MedicationManager.MedicationError.invalidCompoundingSettings) {
             let testUser = try createTestUser()
-            try manager.createProfile(
+            _ = try manager.createProfile(
                 for: testUser,
                 medication: medication,
                 brandName: "Compounded",
