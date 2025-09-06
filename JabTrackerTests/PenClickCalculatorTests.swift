@@ -137,7 +137,8 @@ struct PenClickCalculatorTests {
         // Then: Verify doses
         #expect(doses.count == 100) // 0.01 to 1.0 in 0.01 increments
         #expect(doses.first == 0.01)
-        #expect(doses.last == 1.0)
+        // Use tolerance for floating point comparison
+        #expect(abs((doses.last ?? 0) - 1.0) < 0.001)
     }
     
     @Test("Get available doses for fixed-dose pen")
