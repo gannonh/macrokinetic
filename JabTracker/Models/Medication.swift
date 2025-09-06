@@ -31,10 +31,10 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
 
     var brands: [String] {
         switch self {
-        case .semaglutide: return ["Ozempic", "Wegovy", "Rybelsus (oral)"]
-        case .tirzepatide: return ["Mounjaro", "Zepbound"]
-        case .liraglutide: return ["Victoza", "Saxenda"]
-        case .dulaglutide: return ["Trulicity"]
+        case .semaglutide: return ["Ozempic", "Wegovy", "Rybelsus (oral)", "Generic"]
+        case .tirzepatide: return ["Mounjaro", "Zepbound", "Generic"]
+        case .liraglutide: return ["Victoza", "Saxenda", "Generic"]
+        case .dulaglutide: return ["Trulicity", "Generic"]
         }
     }
 

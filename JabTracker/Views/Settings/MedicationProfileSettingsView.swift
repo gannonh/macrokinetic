@@ -276,6 +276,12 @@ struct AddMedicationProfileView: View {
 
 struct MedicationProfileDetailView: View {
     let profile: MedicationProfile
+    @State private var showingEditSheet = false
+    @Environment(\.modelContext) private var modelContext
+    
+    private var medicationManager: MedicationManager {
+        MedicationManager(modelContext: modelContext)
+    }
     
     var body: some View {
         ScrollView {
@@ -329,10 +335,13 @@ struct MedicationProfileDetailView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Edit") {
-                    // TODO: Implement edit functionality
+                    showingEditSheet = true
                 }
                 .accessibilityIdentifier("edit-medication-profile")
             }
+        }
+        .sheet(isPresented: $showingEditSheet) {
+            EditMedicationProfileView(profile: profile, medicationManager: medicationManager)
         }
     }
 }
@@ -384,6 +393,146 @@ struct CalculatorCard: View {
                     .foregroundColor(.secondary)
                     .font(.caption)
             }
+        }
+    }
+}
+
+struct EditMedicationProfileView: View {
+    @Environment(\.dismiss) private var dismiss
+    let profile: MedicationProfile
+    let medicationManager: MedicationManager
+    
+    @State private var selectedMedication: Medication
+    @State private var selectedBrand: String
+    @State private var selectedDose: Double
+    @State private var isCompounded: Bool
+    @State private var notes: String
+    @State private var vialStrength: Double
+    @State private var reconstitutionVolume: Double
+    
+    @State private var showingError = false
+    @State private var errorMessage = ""
+    
+    init(profile: MedicationProfile, medicationManager: MedicationManager) {
+        self.profile = profile
+        self.medicationManager = medicationManager
+        self._selectedMedication = State(initialValue: Medication(rawValue: profile.medicationType) ?? .semaglutide)
+        self._selectedBrand = State(initialValue: profile.brandName)
+        self._selectedDose = State(initialValue: profile.currentDose)
+        self._isCompounded = State(initialValue: profile.isCompounded)
+        self._notes = State(initialValue: profile.notes)
+        self._vialStrength = State(initialValue: profile.vialStrength ?? 10.0)
+        self._reconstitutionVolume = State(initialValue: profile.reconstitutionVolume ?? 10.0)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Medication Information") {
+                    Picker("Medication", selection: $selectedMedication) {
+                        ForEach(Medication.allCases, id: \.self) { medication in
+                            Text(medication.displayName)
+                                .tag(medication)
+                        }
+                    }
+                    .accessibilityIdentifier("edit-medication-picker")
+                    .onChange(of: selectedMedication) { _, newValue in
+                        selectedBrand = newValue.brands.first ?? ""
+                        selectedDose = newValue.availableDoses.first ?? 0.0
+                    }
+                    
+                    Picker("Brand", selection: $selectedBrand) {
+                        ForEach(selectedMedication.brands, id: \.self) { brand in
+                            Text(brand)
+                                .tag(brand)
+                        }
+                    }
+                    .accessibilityIdentifier("edit-brand-picker")
+                    
+                    Toggle("Compounded Medication", isOn: $isCompounded)
+                        .accessibilityIdentifier("edit-compounded-toggle")
+                }
+                
+                Section("Dosing") {
+                    if isCompounded {
+                        HStack {
+                            Text("Vial Strength (mg)")
+                            Spacer()
+                            TextField("10.0", value: $vialStrength, format: .number)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 80)
+                                .accessibilityIdentifier("edit-vial-strength-input")
+                        }
+                        
+                        HStack {
+                            Text("Target Dose (mg)")
+                            Spacer()
+                            TextField("1.0", value: $selectedDose, format: .number)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 80)
+                                .accessibilityIdentifier("edit-target-dose-input")
+                        }
+                    } else {
+                        Picker("Current Dose", selection: $selectedDose) {
+                            ForEach(selectedMedication.availableDoses, id: \.self) { dose in
+                                Text("\(String(format: "%.2f", dose)) mg")
+                                    .tag(dose)
+                            }
+                        }
+                        .accessibilityIdentifier("edit-dose-picker")
+                    }
+                }
+                
+                Section("Notes") {
+                    TextField("Optional notes about your medication...", text: $notes, axis: .vertical)
+                        .lineLimit(3...6)
+                        .accessibilityIdentifier("edit-notes-field")
+                }
+            }
+            .navigationTitle("Edit Medication")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .accessibilityIdentifier("edit-cancel-button")
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        updateMedicationProfile()
+                    }
+                    .accessibilityIdentifier("edit-save-button")
+                }
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+    
+    private func updateMedicationProfile() {
+        do {
+            try medicationManager.updateProfile(
+                profile,
+                medication: selectedMedication,
+                brandName: selectedBrand,
+                currentDose: selectedDose,
+                isCompounded: isCompounded,
+                vialStrength: isCompounded ? vialStrength : nil,
+                reconstitutionVolume: isCompounded ? reconstitutionVolume : nil,
+                notes: notes.isEmpty ? "" : notes
+            )
+            
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+            showingError = true
         }
     }
 }

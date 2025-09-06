@@ -22,7 +22,7 @@ class MedicationManager: ObservableObject {
     /// Error types for medication management
     enum MedicationError: LocalizedError {
         case invalidDose
-        case doseOutOfRange
+        case doseOutOfRange(medication: Medication, currentDose: Double)
         case profileNotFound
         case invalidCompoundingSettings
         case saveFailed
@@ -31,8 +31,10 @@ class MedicationManager: ObservableObject {
             switch self {
             case .invalidDose:
                 return "Invalid dose amount"
-            case .doseOutOfRange:
-                return "Dose is outside the available range for this medication"
+            case .doseOutOfRange(let medication, let currentDose):
+                let minDose = medication.availableDoses.min() ?? 0.0
+                let maxDose = medication.availableDoses.max() ?? 0.0
+                return "Dose \(String(format: "%.2f", currentDose)) mg is outside the available range for \(medication.displayName). Valid range: \(String(format: "%.2f", minDose)) - \(String(format: "%.2f", maxDose)) mg."
             case .profileNotFound:
                 return "Medication profile not found"
             case .invalidCompoundingSettings:
@@ -77,7 +79,7 @@ class MedicationManager: ObservableObject {
         
         // Validate dose is within medication range
         guard medication.availableDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
-            throw MedicationError.doseOutOfRange
+            throw MedicationError.doseOutOfRange(medication: medication, currentDose: currentDose)
         }
         
         // Validate compounding settings if applicable
@@ -118,6 +120,8 @@ class MedicationManager: ObservableObject {
     /// Update an existing medication profile
     func updateProfile(
         _ profile: MedicationProfile,
+        medication: Medication? = nil,
+        brandName: String? = nil,
         currentDose: Double? = nil,
         refillDate: Date? = nil,
         isCompounded: Bool? = nil,
@@ -127,11 +131,24 @@ class MedicationManager: ObservableObject {
         notes: String? = nil
     ) throws {
         
+        // Update medication type if provided
+        if let medication = medication {
+            profile.medicationType = medication.rawValue
+        }
+        
+        // Update brand name if provided
+        if let brandName = brandName {
+            profile.brandName = brandName
+        }
+        
+        // Determine the medication to use for dose validation
+        let medicationForValidation = medication ?? profile.medication
+        
         // Validate dose if provided
         if let currentDose = currentDose,
-           let medication = profile.medication {
-            guard medication.availableDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
-                throw MedicationError.doseOutOfRange
+           let medicationForValidation = medicationForValidation {
+            guard medicationForValidation.availableDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
+                throw MedicationError.doseOutOfRange(medication: medicationForValidation, currentDose: currentDose)
             }
             profile.currentDose = currentDose
         }
