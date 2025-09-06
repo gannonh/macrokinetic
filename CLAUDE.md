@@ -680,6 +680,31 @@ Based on onboarding flow implementation analysis:
 - Assuming element visibility without checking if scrolling is required
 - Using screenshots for coordinates instead of `describe_ui` data
 
+## Medication Profile Management
+
+### Core Medication Types
+The app supports exactly 4 GLP-1 medications with medically accurate properties:
+- **Semaglutide** (Ozempic/Wegovy): 7-day half-life, 0.25-2.4mg doses, weekly
+- **Tirzepatide** (Mounjaro/Zepbound): 5-day half-life, 2.5-15mg doses, weekly
+- **Liraglutide** (Victoza/Saxenda): 0.54-day half-life, 0.6-3.0mg doses, daily
+- **Dulaglutide** (Trulicity): 4.7-day half-life, 0.75-4.5mg doses, weekly
+
+### Calculation Services
+- **ReconstitutionCalculator**: For compounded medications - calculates water volume and units per dose
+- **PenClickCalculator**: For branded pens - calculates clicks needed for dose adjustments
+- **MedicationManager**: CRUD operations for medication profiles with validation
+
+### SwiftData Model Enhancements
+- Enhanced `MedicationProfile` with compounding support and pen settings
+- `Medication` enum with computed medical properties
+- Integrated with existing CloudKit sync and User relationships
+
+### Testing Patterns
+- Medical accuracy requires comprehensive test coverage
+- TDD approach: Model tests → Service tests → UI tests → Integration tests
+- Real medical scenarios tested (common doses, reconstitution values)
+- Performance targets: <50ms calculation updates, medical precision validation
+
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
 - Always test iCloud sync scenarios: available, unavailable, not signed in
@@ -687,6 +712,7 @@ Based on onboarding flow implementation analysis:
 - XcodeBuildMCP provides a range of useful tools for working with the project.
 - Simulator name always includes OS: `iPhone 15,OS=17.5`
 - **ALWAYS use `describe_ui` for precise coordinates** - never guess from screenshots
+- **Medical accuracy is critical** - validate all calculations and dose ranges
 - Easiest way to run tests is using the convenience script:
   - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
   - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`

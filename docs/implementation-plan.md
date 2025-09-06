@@ -62,10 +62,10 @@
 
 ### Pricing & Packaging 📦 (epic [#21](https://github.com/gannonh/jab-tracker-ios/issues/21))
 **Subscription Model & In-App Purchases**
-- Implement subscription model with monthly/annual plans
-- Create in-app purchase options for premium features
-- Design pricing page with clear value propositions
-- Integrate App Store Connect for subscription management
+-  ✅  Implement subscription model with monthly/annual plans
+-  ✅  Create in-app purchase options for premium features
+-  ✅  Design pricing page with clear value propositions
+-  ✅  Integrate App Store Connect for subscription management
 
 ### Medication Profile Management 📋
 **Medication Enum & Profile System**

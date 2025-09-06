@@ -1,127 +1,37 @@
-# Planning Mode Instructions
 
-You are operating in PLANNING MODE. **DO NOT WRITE ANY CODE** in this mode. Engage **ULTRATHINK**.
+Plan how to implement the specified feature.
 
-## Project
+This is the second step in the Spec-Driven Development lifecycle.
 
-$ARGUMENTS
+Given the implementation details provided as an argument, do this:
 
-## Your Role
+1. Run `scripts/setup-plan.sh --json` from the repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. All future file paths must be absolute.
+2. Read and analyze the feature specification to understand:
+   - The feature requirements and user stories
+   - Functional and non-functional requirements
+   - Success criteria and acceptance criteria
+   - Any technical constraints or dependencies mentioned
 
-You function as a strategic technical advisor combining the perspectives of:
+3. Read the constitution at `/memory/constitution.md` to understand constitutional requirements.
 
-- **Systems Architect**: Analyzing technical architecture, dependencies, and system design
-- **Product Designer**: Considering user experience, workflows, and interface design
-- **Product Manager**: Prioritizing features, defining scope, and managing technical debt
+4. Execute the implementation plan template:
+   - Load `/templates/plan-template.md` (already copied to IMPL_PLAN path)
+   - Set Input path to FEATURE_SPEC
+   - Run the Execution Flow (main) function steps 1-10
+   - The template is self-contained and executable
+   - Follow error handling and gate checks as specified
+   - Let the template guide artifact generation in $SPECS_DIR:
+     * Phase 0 generates research.md
+     * Phase 1 generates data-model.md, contracts/, quickstart.md
+     * Phase 2 generates tasks.md
+   - Incorporate user-provided details from arguments into Technical Context: $ARGUMENTS
+   - Update Progress Tracking as you complete each phase
 
-## Core Objectives
+5. Verify execution completed:
+   - Check Progress Tracking shows all phases complete
+   - Ensure all required artifacts were generated
+   - Confirm no ERROR states in execution
 
-1. **Assess** the current situation thoroughly
-2. **Gather** all necessary information and context
-3. **Analyze** technical constraints and opportunities
-4. **Design** comprehensive solutions and approaches
-5. **Deliver** actionable plans and task lists
+6. Report results with branch name, file paths, and generated artifacts.
 
-## Planning Process
-
-### 1. Information Gathering
-
-- Review existing codebase structure and patterns
-- Document current state vs. desired state
-- Note technical constraints and requirements
-- Research best practices and similar implementations
-
-### 2. Analysis & Design
-
-- Break down complex problems into manageable components
-- Consider multiple implementation approaches
-- Evaluate trade-offs (performance, maintainability, time)
-- Identify risks and mitigation strategies
-
-### 3. Task Decomposition
-
-- Create atomic, testable work units
-- Establish clear dependencies between tasks
-- Provide estimates as t-shirt sizes, not time duration
-- Define clear acceptance criteria for each task
-- Prioritize tasks based on value and dependencies
-
-## Deliverables
-
-### 1. Product Requirements Doc (PRD)
-
-- File should be saved to: `/Users/gannonhall/dev/agentis/docs/ACTIVE`
-
-### Required Sections:
-
-1. **Executive Summary**
-
-   - Problem statement
-   - Proposed solution
-   - Key benefits and risks
-
-2. **Technical Analysis**
-
-   - Current architecture assessment
-   - Proposed changes
-   - Dependency mapping
-   - Performance considerations
-
-3. **Implementation Plan**
-
-   - Phased approach with milestones
-   - Resource requirements
-
-4. **Risk Assessment**
-
-   - Technical risks
-   - Timeline risks
-   - Mitigation strategies
-
-5. **Task List**
-   - Numbered, actionable items
-   - Clear scope boundaries
-   - Testability criteria
-   - Dependencies noted
-
-### 2. GitHub Issues
-
-- Iterate through the PRD task list, creating a Github Issue for each
-- Update the PRD with links to the corresponding issues in Github
-
-## Planning Guidelines
-
-- **Be Specific**: Avoid vague tasks like "improve performance" - instead "implement Redis caching for user sessions"
-- **Be Comprehensive**: Think through edge cases and error scenarios
-- **Be Pragmatic**: Balance ideal solutions with practical constraints
-- **Be Clear**: Write for developers who may not have full context
-
-## Example Task Format
-
-```markdown
-### Task #1: Implement Authentication Middleware
-
-**Priority**: High  
-**Estimated Effort**: 4 hours  
-**Dependencies**: None  
-**Acceptance Criteria**:
-
-- [ ] Middleware validates tokens on protected routes
-- [ ] Returns 401 for invalid/expired tokens
-- [ ] Refreshes tokens approaching expiration
-- [ ] Unit tests achieve 90% coverage
-- [ ] Integration tests pass for all auth flows
-```
-
-## Questions to Always Consider
-
-1. What problem are we solving and why?
-2. Who are the users/stakeholders?
-3. What are the technical constraints?
-4. What's the minimal viable solution?
-5. How will we test and validate?
-6. What could go wrong?
-7. How does this fit into the larger system?
-8. What documentation is needed?
-
-Remember: Your plans guide the implementation phase. The more thorough and clear your planning, the smoother the execution.
+Use absolute paths with the repository root for all file operations to avoid path issues.
