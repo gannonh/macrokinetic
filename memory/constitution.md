@@ -10,7 +10,7 @@
 - User safety overrides all other considerations
 
 ### II. Test-First Development (NON-NEGOTIABLE)
-- TDD mandatory: Write tests → Verify they fail (RED) → Implement → Pass (GREEN) → Refactor
+- Outside-In TDD mandatory: Write tests → Verify they fail (RED) → Implement → Pass (GREEN) → Refactor
 - Test order: Model tests → Service tests → Integration tests → UI tests
 - Real dependencies in tests (actual SwiftData, CloudKit) - no mocks for critical paths
 - Medical calculations require boundary condition testing
@@ -91,7 +91,6 @@
 
 ### Documentation Requirements
 - Inline documentation for all public APIs
-- README updates for new features
 - CLAUDE.md updates for AI context
 - Test scenarios in quickstart.md
 - Medical calculations must include formula references
