@@ -23,17 +23,26 @@ struct MedicationManagerTests {
         context = ModelContext(container)
     }
     
+    private func createTestUser() throws -> User {
+        let testUser = User(email: "test@example.com", name: "Test User")
+        context.insert(testUser)
+        try context.save()
+        return testUser
+    }
+    
     @Test("Create medication profile with valid data")
     @MainActor
     func testCreateValidProfile() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let medication = Medication.semaglutide
         let brandName = "Ozempic"
         let currentDose = 0.5
         
         // When
         let profile = try manager.createProfile(
+            for: testUser,
             medication: medication,
             brandName: brandName,
             currentDose: currentDose,
@@ -55,6 +64,7 @@ struct MedicationManagerTests {
     func testCreateCompoundedProfile() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let medication = Medication.tirzepatide
         let vialStrength = 10.0
         let reconstitutionVolume = 2.0
@@ -62,6 +72,7 @@ struct MedicationManagerTests {
         
         // When
         let profile = try manager.createProfile(
+            for: testUser,
             medication: medication,
             brandName: "Compounded",
             currentDose: currentDose,
@@ -87,7 +98,9 @@ struct MedicationManagerTests {
         
         // When/Then
         #expect(throws: MedicationManager.MedicationError.doseOutOfRange(medication: medication, currentDose: invalidDose)) {
+            let testUser = try createTestUser()
             try manager.createProfile(
+                for: testUser,
                 medication: medication,
                 brandName: "Ozempic",
                 currentDose: invalidDose
@@ -104,7 +117,9 @@ struct MedicationManagerTests {
         
         // When/Then: Vial strength less than target dose
         #expect(throws: MedicationManager.MedicationError.invalidCompoundingSettings) {
+            let testUser = try createTestUser()
             try manager.createProfile(
+                for: testUser,
                 medication: medication,
                 brandName: "Compounded",
                 currentDose: 2.0,
@@ -120,7 +135,9 @@ struct MedicationManagerTests {
     func testUpdateProfileDose() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 0.25
@@ -139,7 +156,9 @@ struct MedicationManagerTests {
     func testUpdateProfileWithInvalidDose() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 0.25
@@ -157,7 +176,9 @@ struct MedicationManagerTests {
     func testDeleteProfile() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 0.5
@@ -222,7 +243,9 @@ struct MedicationManagerTests {
     func testNextEscalationDose() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 0.25
@@ -240,7 +263,9 @@ struct MedicationManagerTests {
     func testNextEscalationDoseAtMaximum() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 2.4 // Maximum dose
@@ -258,8 +283,10 @@ struct MedicationManagerTests {
     func testDaysUntilRefill() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let futureDate = Date().addingTimeInterval(7 * 86400) // 7 days from now
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 0.5
@@ -279,7 +306,9 @@ struct MedicationManagerTests {
     func testCalculateReconstitution() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Compounded",
             currentDose: 0.5,
@@ -302,7 +331,9 @@ struct MedicationManagerTests {
     func testCalculatePenClicks() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
         let profile = try manager.createProfile(
+            for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 0.5,

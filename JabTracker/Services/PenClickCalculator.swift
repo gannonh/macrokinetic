@@ -42,7 +42,7 @@ struct PenClickCalculator {
     
     /// Supported pen types with their click-to-dose ratios
     enum PenType: String, CaseIterable {
-        case ozempic025_05 = "Ozempic 0.25/0.5mg pen"
+        case ozempicQuarterHalf = "Ozempic 0.25/0.5mg pen"
         case ozempic1mg = "Ozempic 1mg pen"
         case ozempic2mg = "Ozempic 2mg pen"
         case wegovy025mg = "Wegovy 0.25mg pen"
@@ -66,7 +66,7 @@ struct PenClickCalculator {
         /// Dose per click in mg
         var dosePerClick: Double {
             switch self {
-            case .ozempic025_05, .ozempic1mg:
+            case .ozempicQuarterHalf, .ozempic1mg:
                 return 0.01 // 0.01mg per click
             case .ozempic2mg:
                 return 0.02 // 0.02mg per click
@@ -84,7 +84,7 @@ struct PenClickCalculator {
         /// Maximum dose for this pen type
         var maximumDose: Double {
             switch self {
-            case .ozempic025_05:
+            case .ozempicQuarterHalf:
                 return 0.5
             case .ozempic1mg:
                 return 1.0
@@ -130,9 +130,12 @@ struct PenClickCalculator {
         /// Whether this pen supports click adjustments
         var isAdjustable: Bool {
             switch self {
-            case .ozempic025_05, .ozempic1mg, .ozempic2mg, .victoza, .saxenda, .mounjaro25mg, .mounjaro5mg, .mounjaro75mg, .mounjaro10mg, .mounjaro125mg, .mounjaro15mg:
+            case .ozempicQuarterHalf, .ozempic1mg, .ozempic2mg, .victoza, .saxenda,
+                 .mounjaro25mg, .mounjaro5mg, .mounjaro75mg, .mounjaro10mg,
+                 .mounjaro125mg, .mounjaro15mg:
                 return true
-            case .wegovy025mg, .wegovy05mg, .wegovy1mg, .wegovy17mg, .wegovy24mg, .trulicity075mg, .trulicity15mg, .trulicity3mg, .trulicity45mg:
+            case .wegovy025mg, .wegovy05mg, .wegovy1mg, .wegovy17mg, .wegovy24mg,
+                 .trulicity075mg, .trulicity15mg, .trulicity3mg, .trulicity45mg:
                 return false // Fixed-dose pens
             }
         }
@@ -217,7 +220,7 @@ struct PenClickCalculator {
         switch medication {
         case .semaglutide:
             return [
-                .ozempic025_05, .ozempic1mg, .ozempic2mg,
+                .ozempicQuarterHalf, .ozempic1mg, .ozempic2mg,
                 .wegovy025mg, .wegovy05mg, .wegovy1mg, .wegovy17mg, .wegovy24mg
             ]
         case .tirzepatide:

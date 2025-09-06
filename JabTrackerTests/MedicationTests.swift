@@ -104,11 +104,11 @@ struct MedicationTests {
 
     @Test("Brand names are complete and accurate")
     func brandNames() throws {
-        // Test exact brand arrays - these are FDA-approved brand names
-        #expect(Medication.semaglutide.brands == ["Ozempic", "Wegovy", "Rybelsus (oral)"])
-        #expect(Medication.tirzepatide.brands == ["Mounjaro", "Zepbound"])
-        #expect(Medication.liraglutide.brands == ["Victoza", "Saxenda"])
-        #expect(Medication.dulaglutide.brands == ["Trulicity"])
+        // Test exact brand arrays - these are FDA-approved brand names plus Generic option
+        #expect(Medication.semaglutide.brands == ["Ozempic", "Wegovy", "Rybelsus (oral)", "Generic"])
+        #expect(Medication.tirzepatide.brands == ["Mounjaro", "Zepbound", "Generic"])
+        #expect(Medication.liraglutide.brands == ["Victoza", "Saxenda", "Generic"])
+        #expect(Medication.dulaglutide.brands == ["Trulicity", "Generic"])
 
         // Verify all medications have at least one brand
         for medication in Medication.allCases {

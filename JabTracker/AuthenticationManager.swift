@@ -104,14 +104,23 @@ class AuthenticationManager: NSObject, ObservableObject {
     private func resetAppData() async {
         let context = self.dataController.container.mainContext
 
-        // Clear all existing users
         do {
-            let fetchDescriptor = FetchDescriptor<User>()
-            let users = try context.fetch(fetchDescriptor)
+            // Clear all existing users (cascade delete will handle associated profiles)
+            let userFetchDescriptor = FetchDescriptor<User>()
+            let users = try context.fetch(userFetchDescriptor)
             for user in users {
                 context.delete(user)
             }
+            
+            // Also explicitly clean up any orphaned medication profiles (from before relationship was added)
+            let profileFetchDescriptor = FetchDescriptor<MedicationProfile>()
+            let profiles = try context.fetch(profileFetchDescriptor)
+            for profile in profiles {
+                context.delete(profile)
+            }
+            
             try context.save()
+            Self.logger.info("✅ AuthenticationManager: App data reset successfully")
         } catch {
             Self.logger.error("Failed to reset app data: \(error, privacy: .public)")
         }

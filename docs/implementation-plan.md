@@ -67,13 +67,16 @@
 -  ✅  Design pricing page with clear value propositions
 -  ✅  Integrate App Store Connect for subscription management
 
-### Medication Profile Management 📋
+### Medication Profile Management 🔄 (In Progress - issue #001)
 **Medication Enum & Profile System**
-- Implement Medication enum with properties (half-life, available doses, frequency)
-- Support for Semaglutide, Tirzepatide, Liraglutide, Dulaglutide
-- Create medication selection wizard for onboarding
-- Build medication profile CRUD operations with SwiftData
-- Add dose escalation schedule tracking
+- ✅ Implement Medication enum with properties (half-life, available doses, frequency)
+- ✅ Support for Semaglutide, Tirzepatide, Liraglutide, Dulaglutide
+- ✅ Build medication profile CRUD operations with SwiftData
+- ✅ Create basic UI for medication profile management
+- ⏳ Create medication selection wizard for onboarding
+- ⏳ Add dose escalation schedule tracking
+- ⏳ Implement reconstitution calculator UI
+- ⏳ Implement pen click calculator UI
 
 ### Dose Entry and Tracking UI 📋
 **Core Dose Management Features**

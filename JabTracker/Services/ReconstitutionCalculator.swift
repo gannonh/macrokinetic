@@ -16,7 +16,9 @@ struct ReconstitutionCalculator {
         let totalUnits: Double      // total units in reconstituted vial
         
         var displayText: String {
-            "Add \(waterVolume.formatted(.number.precision(.fractionLength(1)))) ml water. Your dose is \(unitsPerDose.formatted(.number.precision(.fractionLength(1)))) units"
+            let water = waterVolume.formatted(.number.precision(.fractionLength(1)))
+            let units = unitsPerDose.formatted(.number.precision(.fractionLength(1)))
+            return "Add \(water) ml water. Your dose is \(units) units"
         }
     }
     

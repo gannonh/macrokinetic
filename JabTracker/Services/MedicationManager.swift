@@ -34,7 +34,10 @@ class MedicationManager: ObservableObject {
             case .doseOutOfRange(let medication, let currentDose):
                 let minDose = medication.availableDoses.min() ?? 0.0
                 let maxDose = medication.availableDoses.max() ?? 0.0
-                return "Dose \(String(format: "%.2f", currentDose)) mg is outside the available range for \(medication.displayName). Valid range: \(String(format: "%.2f", minDose)) - \(String(format: "%.2f", maxDose)) mg."
+                let dose = String(format: "%.2f", currentDose)
+                let min = String(format: "%.2f", minDose)
+                let max = String(format: "%.2f", maxDose)
+                return "Dose \(dose) mg is outside the available range for \(medication.displayName). Valid range: \(min) - \(max) mg."
             case .profileNotFound:
                 return "Medication profile not found"
             case .invalidCompoundingSettings:
@@ -48,25 +51,49 @@ class MedicationManager: ObservableObject {
     // MARK: - CRUD Operations
     
     /// Fetch all medication profiles for the current user
-    func fetchProfiles() {
-        let descriptor = FetchDescriptor<MedicationProfile>(
-            sortBy: [SortDescriptor(\.startDate, order: .reverse)]
-        )
-        
-        do {
-            profiles = try modelContext.fetch(descriptor)
-            activeProfile = profiles.first { profile in
-                // Most recent profile is considered active
-                profile.startDate <= Date()
+    func fetchProfiles(for user: User? = nil) {
+        if let user = user {
+            // Filter profiles by user relationship using the user's ID
+            let userId = user.id
+            let descriptor = FetchDescriptor<MedicationProfile>(
+                predicate: #Predicate<MedicationProfile> { profile in
+                    profile.user?.id == userId
+                },
+                sortBy: [SortDescriptor(\.startDate, order: .reverse)]
+            )
+            
+            do {
+                profiles = try modelContext.fetch(descriptor)
+                activeProfile = profiles.first { profile in
+                    // Most recent profile is considered active
+                    profile.startDate <= Date()
+                }
+            } catch {
+                print("Failed to fetch medication profiles for user: \(error)")
+                profiles = []
             }
-        } catch {
-            print("Failed to fetch medication profiles: \(error)")
-            profiles = []
+        } else {
+            // Fetch all profiles (for backward compatibility)
+            let descriptor = FetchDescriptor<MedicationProfile>(
+                sortBy: [SortDescriptor(\.startDate, order: .reverse)]
+            )
+            
+            do {
+                profiles = try modelContext.fetch(descriptor)
+                activeProfile = profiles.first { profile in
+                    // Most recent profile is considered active
+                    profile.startDate <= Date()
+                }
+            } catch {
+                print("Failed to fetch medication profiles: \(error)")
+                profiles = []
+            }
         }
     }
     
     /// Create a new medication profile
     func createProfile(
+        for user: User,
         medication: Medication,
         brandName: String,
         currentDose: Double,
@@ -106,11 +133,14 @@ class MedicationManager: ObservableObject {
             notes: notes
         )
         
+        // Link profile to user
+        profile.user = user
+        
         modelContext.insert(profile)
         
         do {
             try modelContext.save()
-            fetchProfiles()
+            fetchProfiles(for: user)
             return profile
         } catch {
             throw MedicationError.saveFailed
@@ -227,10 +257,8 @@ class MedicationManager: ObservableObject {
         let availableDoses = medication.availableDoses.sorted()
         
         // Find the next higher dose
-        for dose in availableDoses {
-            if dose > currentDose {
-                return dose
-            }
+        for dose in availableDoses where dose > currentDose {
+            return dose
         }
         
         return nil // Already at maximum dose
