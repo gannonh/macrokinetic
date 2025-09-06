@@ -144,7 +144,7 @@ struct ReconstitutionCalculatorTests {
         let scenarios = ReconstitutionCalculator.commonScenarios()
         
         // Then: Verify we have scenarios
-        #expect(scenarios.count > 0)
+        #expect(!scenarios.isEmpty)
         
         // Verify each scenario has valid results
         for (label, result) in scenarios {
