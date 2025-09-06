@@ -202,4 +202,13 @@ struct ReconstitutionCalculatorTests {
         #expect(result.unitsPerDose == 100.0) // 10mg / 10mg/ml * 100 = 100 units
         #expect(result.totalUnits == 100.0) // 1ml * 100 = 100 units
     }
+
+    @Test("Error description coverage")
+    func testErrorDescriptions() {
+        // Test all error description cases to achieve full coverage
+        #expect(ReconstitutionCalculator.ReconstitutionError.invalidVialStrength.errorDescription == "Vial strength must be greater than 0")
+        #expect(ReconstitutionCalculator.ReconstitutionError.invalidTargetDose.errorDescription == "Target dose must be greater than 0")
+        #expect(ReconstitutionCalculator.ReconstitutionError.targetDoseExceedsVialStrength.errorDescription == "Target dose cannot exceed vial strength")
+        #expect(ReconstitutionCalculator.ReconstitutionError.invalidWaterVolume.errorDescription == "Water volume must be greater than 0")
+    }
 }

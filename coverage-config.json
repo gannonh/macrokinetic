@@ -10,14 +10,17 @@
           "User.swift",
           "Dose.swift",
           "MedicationProfile.swift",
-          "Medication.swift"
+          "Medication.swift",
+          "ReconstitutionCalculator.swift",
+          "PenClickCalculator.swift"
         ]
       },
       "infrastructure": {
         "threshold": 62,
         "description": "Data management with some framework dependencies",
         "files": [
-          "DataController.swift"
+          "DataController.swift",
+          "MedicationManager.swift"
         ]
       },
       "framework_integration": {
@@ -94,6 +97,13 @@
       "DataControllerBasicTests.swift",
       "DataControllerInitializationTests.swift",
       "DataControllerSyncTests.swift"
+    ],
+    "medication_calculator_tests": [
+      "ReconstitutionCalculatorTests.swift",
+      "PenClickCalculatorTests.swift"
+    ],
+    "medication_manager_tests": [
+      "MedicationManagerTests.swift"
     ]
   },
   "overall_target": {

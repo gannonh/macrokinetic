@@ -241,4 +241,40 @@ struct PenClickCalculatorTests {
         #expect(displayText.contains("0.5"))
         #expect(displayText.contains("mg"))
     }
+
+    @Test("Error description coverage")
+    func testErrorDescriptions() {
+        // Test all error description cases to achieve full coverage
+        #expect(PenClickCalculator.PenClickError.unknownPenType.errorDescription == "Unknown pen type. Please select a supported pen model")
+        #expect(PenClickCalculator.PenClickError.invalidDose.errorDescription == "Dose must be greater than 0")
+        #expect(PenClickCalculator.PenClickError.doseExceedsMaximum.errorDescription == "Dose exceeds maximum for this pen")
+        #expect(PenClickCalculator.PenClickError.doseRequiresPartialClick.errorDescription == "This dose would require a partial click. Please adjust to the nearest available dose")
+    }
+
+    @Test("Maximum dose coverage for all pen types")
+    func testMaximumDoseCoverage() {
+        // Test Wegovy pen maximum doses to improve coverage
+        #expect(PenClickCalculator.PenType.wegovy025mg.maximumDose == 0.25)
+        #expect(PenClickCalculator.PenType.wegovy05mg.maximumDose == 0.5)
+        #expect(PenClickCalculator.PenType.wegovy1mg.maximumDose == 1.0)
+        #expect(PenClickCalculator.PenType.wegovy17mg.maximumDose == 1.7)
+        #expect(PenClickCalculator.PenType.wegovy24mg.maximumDose == 2.4)
+
+        // Test all Mounjaro pen maximum doses
+        #expect(PenClickCalculator.PenType.mounjaro25mg.maximumDose == 2.5)
+        #expect(PenClickCalculator.PenType.mounjaro5mg.maximumDose == 5.0)
+        #expect(PenClickCalculator.PenType.mounjaro75mg.maximumDose == 7.5)
+        #expect(PenClickCalculator.PenType.mounjaro10mg.maximumDose == 10.0)
+        #expect(PenClickCalculator.PenType.mounjaro125mg.maximumDose == 12.5)
+        #expect(PenClickCalculator.PenType.mounjaro15mg.maximumDose == 15.0)
+
+        // Test all Trulicity pen maximum doses
+        #expect(PenClickCalculator.PenType.trulicity075mg.maximumDose == 0.75)
+        #expect(PenClickCalculator.PenType.trulicity15mg.maximumDose == 1.5)
+        #expect(PenClickCalculator.PenType.trulicity3mg.maximumDose == 3.0)
+        #expect(PenClickCalculator.PenType.trulicity45mg.maximumDose == 4.5)
+
+        // Test Saxenda pen maximum dose (not tested elsewhere)
+        #expect(PenClickCalculator.PenType.saxenda.maximumDose == 3.0)
+    }
 }
