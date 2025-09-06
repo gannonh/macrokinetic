@@ -156,7 +156,7 @@ struct PenClickCalculatorTests {
 
         // Then: Verify Ozempic and Wegovy pens
         #expect(pens.count == 8)
-        #expect(pens.contains(.ozempic025_05))
+        #expect(pens.contains(.ozempicQuarterHalf))
         #expect(pens.contains(.ozempic1mg))
         #expect(pens.contains(.ozempic2mg))
         #expect(pens.contains(.wegovy24mg))
