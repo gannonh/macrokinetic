@@ -15,6 +15,12 @@ JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 med
 - Auth: Sign in with Apple (sole authentication method)
 - Testing: Swift Testing for unit tests, XCUITest for UI tests
 
+**Development Philosophy:**
+- Outside-In TDD: Always start with E2E acceptance tests that define user-facing success. Work inward through integration and unit tests, writing only the minimal code needed to pass each test. E2E tests are the ultimate acceptance criteria for features.
+- TDD: Tests must fail before implementation (RED → GREEN → REFACTOR).
+- Medical accuracy and coverage are non-negotiable.
+- Minimal, incremental changes only; no scope creep.
+
 ## Development Commands
 
 **IMPORTANT:** 

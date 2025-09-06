@@ -19,11 +19,12 @@ You are operating in EXECUTION MODE. **FOLLOW THE TASKS.MD PRECISELY** using Tes
 ## Core Principles
 
 1. **Tasks.md is Truth** - Execute tasks in exact order specified
-2. **TDD Mandatory** - Tests MUST fail before implementation (RED → GREEN → REFACTOR)
-3. **Medical Accuracy** - All calculations must match medical literature
-4. **Minimal Implementation** - Write only enough code to pass tests
-5. **No Improvisation** - Don't add features not in the spec
-6. **Verify Continuously** - Run tests after every change
+2. **Outside-In TDD** - Start with E2E acceptance tests that define user-facing success, then work inward through integration and unit tests before implementation. E2E tests are the ultimate acceptance criteria.
+3. **TDD Mandatory** - Tests MUST fail before implementation (RED → GREEN → REFACTOR)
+4. **Medical Accuracy** - All calculations must match medical literature
+5. **Minimal Implementation** - Write only enough code to pass tests
+6. **No Improvisation** - Don't add features not in the spec
+7. **Verify Continuously** - Run tests after every change
 
 ## THE PROCESS
 
@@ -34,24 +35,29 @@ You are operating in EXECUTION MODE. **FOLLOW THE TASKS.MD PRECISELY** using Tes
 - [ ] Read task dependencies and parallel execution notes
 - [ ] Ask user: "Executing Task #X: [Description]. Proceed?" → WAIT for confirmation
 
-### Step 2: Test Implementation (Tasks T005-T013)
+### Step 2: E2E Acceptance Test (Outside-In TDD)
+- [ ] For user-facing features, write an E2E acceptance test in JabTrackerUITests that defines what "done" looks like for the user. This test must fail before implementation begins.
+- [ ] Run E2E test to verify it FAILS (RED phase)
+- [ ] Commit failing E2E test with message: `test: add failing E2E test for [feature]`
+
+### Step 3: Test Implementation (Tasks T005-T013)
 **For test tasks marked "MUST FAIL":**
 - [ ] Write test according to contract/quickstart scenario
 - [ ] Run test to verify it FAILS (RED phase)
 - [ ] Commit failing test with message: `test: add failing test for [feature]`
 
 ```bash
+# E2E/UI tests
+./scripts/test.sh ui 1
+
 # Unit tests
 ./scripts/test.sh unit 1
-
-# UI tests  
-./scripts/test.sh ui 1
 
 # Specific test file
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests/[TestClass]
 ```
 
-### Step 3: Core Implementation (Tasks T014+)
+### Step 4: Core Implementation (Tasks T014+)
 **Only after tests are failing:**
 - [ ] Write minimal code to pass the test
 - [ ] Run test to verify it PASSES (GREEN phase)
@@ -59,13 +65,13 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 - [ ] Update `coverage-config.json` for new files
 - [ ] Commit with message: `feat: implement [feature]`
 
-### Step 4: Parallel Execution
+### Step 5: Parallel Execution
 **For tasks marked [P]:**
 - Can be executed simultaneously with other [P] tasks
 - Different files = no conflicts
 - Example from tasks.md shows groupings
 
-### Step 5: Verification Gates
+### Step 6: Verification Gates
 
 **After each implementation:**
 - [ ] Run relevant tests
