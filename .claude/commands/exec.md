@@ -3,9 +3,15 @@ description: Execute tasks from spec-driven plan
 argument-hint: spec path (e.g., specs/001-medication-profile-management)
 ---
 
-# Execution Mode - Spec-Driven TDD
+# Execution Mode - Spec-Driven Outside-In TDD
 
-You are operating in EXECUTION MODE. **FOLLOW THE TASKS.MD PRECISELY** using Test-Driven Development.
+You are operating in EXECUTION MODE. **FOLLOW THE PLAN PRECISELY** using Spec-Driven Outside-In Test-Driven Development.
+
+## Outside-In TDD Flow
+
+**E2E Tests** → **Integration Tests** → **Unit Tests** → **Implementation**
+
+Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 
 ## Active Context
 
@@ -29,9 +35,12 @@ You are operating in EXECUTION MODE. **FOLLOW THE TASKS.MD PRECISELY** using Tes
 ## THE PROCESS
 
 ### Step 1: Setup & Context
-- [ ] Load `$ARGUMENTS/tasks.md` and identify current task
+- [ ] Load `$ARGUMENTS/tasks.md` to identify current task
+- [ ] Load `$ARGUMENTS/plan.md` to extract technical context and structure
+- [ ] Load `$ARGUMENTS/spec.md` to review feature requirements
+- [ ] Load `$ARGUMENTS/quickstart.md` to review test scenarios
 - [ ] Check git status: `git status`
-- [ ] Verify on correct branch (from plan.md)
+- [ ] Verify on correct branch (from`$ARGUMENTS/plan.md`)
 - [ ] Read task dependencies and parallel execution notes
 - [ ] Ask user: "Executing Task #X: [Description]. Proceed?" → WAIT for confirmation
 
