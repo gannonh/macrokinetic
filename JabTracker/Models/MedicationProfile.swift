@@ -15,6 +15,15 @@ final class MedicationProfile {
     var startDate: Date = Date() // Required with default
     var refillDate: Date? // Optional - may not have refill scheduled yet
     var medicationType: String = "" // Store Medication enum rawValue for CloudKit compatibility
+    
+    // Enhanced fields for compounding and pen support
+    var isCompounded: Bool = false // Compounded vs branded medication
+    var vialStrength: Double? // For compounded: mg in vial
+    var reconstitutionVolume: Double? // For compounded: ml of water to add
+    var penType: String? // For branded: specific pen model
+    var notes: String = "" // User notes about medication
+    var updatedAt: Date = Date() // Track modifications
+    var createdAt: Date = Date() // Track creation
 
     @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
     var doses: [Dose]? // CloudKit requires optional relationships
@@ -25,7 +34,12 @@ final class MedicationProfile {
         currentDose: Double = 0.0,
         startDate: Date = Date(),
         refillDate: Date? = nil,
-        medicationType: String = "")
+        medicationType: String = "",
+        isCompounded: Bool = false,
+        vialStrength: Double? = nil,
+        reconstitutionVolume: Double? = nil,
+        penType: String? = nil,
+        notes: String = "")
     {
         self.genericName = genericName
         self.brandName = brandName
@@ -33,6 +47,13 @@ final class MedicationProfile {
         self.startDate = startDate
         self.refillDate = refillDate
         self.medicationType = medicationType
+        self.isCompounded = isCompounded
+        self.vialStrength = vialStrength
+        self.reconstitutionVolume = reconstitutionVolume
+        self.penType = penType
+        self.notes = notes
+        self.createdAt = Date()
+        self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
     }
 
