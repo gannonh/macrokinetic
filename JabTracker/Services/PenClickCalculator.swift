@@ -6,26 +6,25 @@
 import Foundation
 
 /// Calculates pen clicks for branded GLP-1 medication pens
-struct PenClickCalculator {
-    
+enum PenClickCalculator {
     /// Represents the result of a pen click calculation
     struct PenClickResult {
-        let clicks: Int             // number of clicks to dial
-        let actualDose: Double      // actual dose delivered (may differ slightly)
-        let penType: String         // pen model used for calculation
-        
+        let clicks: Int // number of clicks to dial
+        let actualDose: Double // actual dose delivered (may differ slightly)
+        let penType: String // pen model used for calculation
+
         var displayText: String {
-            "Dial to \(clicks) clicks for your \(actualDose.formatted(.number.precision(.fractionLength(2)))) mg dose"
+            "Dial to \(self.clicks) clicks for your \(self.actualDose.formatted(.number.precision(.fractionLength(2)))) mg dose"
         }
     }
-    
+
     /// Error types for pen click calculations
     enum PenClickError: LocalizedError {
         case unknownPenType
         case invalidDose
         case doseExceedsMaximum
         case doseRequiresPartialClick
-        
+
         var errorDescription: String? {
             switch self {
             case .unknownPenType:
@@ -39,7 +38,7 @@ struct PenClickCalculator {
             }
         }
     }
-    
+
     /// Supported pen types with their click-to-dose ratios
     enum PenType: String, CaseIterable {
         case ozempicQuarterHalf = "Ozempic 0.25/0.5mg pen"
@@ -62,7 +61,7 @@ struct PenClickCalculator {
         case trulicity45mg = "Trulicity 4.5mg pen"
         case victoza = "Victoza pen"
         case saxenda = "Saxenda pen"
-        
+
         /// Dose per click in mg
         var dosePerClick: Double {
             switch self {
@@ -80,7 +79,7 @@ struct PenClickCalculator {
                 return 0.01 // 0.01mg per click for liraglutide pens
             }
         }
-        
+
         /// Maximum dose for this pen type
         var maximumDose: Double {
             switch self {
@@ -126,7 +125,7 @@ struct PenClickCalculator {
                 return 3.0
             }
         }
-        
+
         /// Whether this pen supports click adjustments
         var isAdjustable: Bool {
             switch self {
@@ -140,7 +139,7 @@ struct PenClickCalculator {
             }
         }
     }
-    
+
     /// Calculate pen clicks for a target dose
     /// - Parameters:
     ///   - penType: Type of pen being used
@@ -149,47 +148,44 @@ struct PenClickCalculator {
     /// - Throws: PenClickError for invalid inputs
     static func calculate(
         penType: PenType,
-        targetDose: Double
-    ) throws -> PenClickResult {
-        
+        targetDose: Double) throws -> PenClickResult
+    {
         // Validate dose
         guard targetDose > 0 else {
             throw PenClickError.invalidDose
         }
-        
+
         guard targetDose <= penType.maximumDose else {
             throw PenClickError.doseExceedsMaximum
         }
-        
+
         // Check if pen is adjustable
         guard penType.isAdjustable else {
             // Fixed-dose pen - no clicks needed
             return PenClickResult(
                 clicks: 0,
                 actualDose: penType.maximumDose,
-                penType: penType.rawValue
-            )
+                penType: penType.rawValue)
         }
-        
+
         // Calculate clicks needed
         let clicksNeeded = targetDose / penType.dosePerClick
         let roundedClicks = Int(round(clicksNeeded))
-        
+
         // Check if dose requires partial click
         let actualDose = Double(roundedClicks) * penType.dosePerClick
         let tolerance = penType.dosePerClick * 0.1 // 10% tolerance
-        
+
         if abs(actualDose - targetDose) > tolerance {
             throw PenClickError.doseRequiresPartialClick
         }
-        
+
         return PenClickResult(
             clicks: roundedClicks,
             actualDose: actualDose,
-            penType: penType.rawValue
-        )
+            penType: penType.rawValue)
     }
-    
+
     /// Get available doses for a pen type
     /// - Parameter penType: Type of pen
     /// - Returns: Array of available doses in mg
@@ -198,21 +194,21 @@ struct PenClickCalculator {
             // Fixed-dose pen has only one dose
             return [penType.maximumDose]
         }
-        
+
         var doses: [Double] = []
         let increment = penType.dosePerClick
         var currentDose = increment
-        
+
         // Use small epsilon for floating point comparison
         let epsilon = 0.0001
         while currentDose <= penType.maximumDose + epsilon {
             doses.append(currentDose)
             currentDose += increment
         }
-        
+
         return doses
     }
-    
+
     /// Get pen types suitable for a medication
     /// - Parameter medication: The medication type
     /// - Returns: Array of compatible pen types
@@ -221,12 +217,12 @@ struct PenClickCalculator {
         case .semaglutide:
             return [
                 .ozempicQuarterHalf, .ozempic1mg, .ozempic2mg,
-                .wegovy025mg, .wegovy05mg, .wegovy1mg, .wegovy17mg, .wegovy24mg
+                .wegovy025mg, .wegovy05mg, .wegovy1mg, .wegovy17mg, .wegovy24mg,
             ]
         case .tirzepatide:
             return [
                 .mounjaro25mg, .mounjaro5mg, .mounjaro75mg,
-                .mounjaro10mg, .mounjaro125mg, .mounjaro15mg
+                .mounjaro10mg, .mounjaro125mg, .mounjaro15mg,
             ]
         case .liraglutide:
             return [.victoza, .saxenda]

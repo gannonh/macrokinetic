@@ -27,14 +27,14 @@ struct SettingsView: View {
                                         Text("Medication Profiles")
                                             .font(DesignTokens.Typography.body)
                                             .foregroundColor(.primary)
-                                        
+
                                         Text("Manage your medications and calculations")
                                             .font(DesignTokens.Typography.caption)
                                             .foregroundColor(.secondary)
                                     }
-                                    
+
                                     Spacer()
-                                    
+
                                     Image(systemName: "chevron.right")
                                         .foregroundColor(.secondary)
                                         .font(.caption)

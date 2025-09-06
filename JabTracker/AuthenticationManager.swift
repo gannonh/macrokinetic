@@ -111,14 +111,14 @@ class AuthenticationManager: NSObject, ObservableObject {
             for user in users {
                 context.delete(user)
             }
-            
+
             // Also explicitly clean up any orphaned medication profiles (from before relationship was added)
             let profileFetchDescriptor = FetchDescriptor<MedicationProfile>()
             let profiles = try context.fetch(profileFetchDescriptor)
             for profile in profiles {
                 context.delete(profile)
             }
-            
+
             try context.save()
             Self.logger.info("✅ AuthenticationManager: App data reset successfully")
         } catch {

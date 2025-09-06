@@ -33,7 +33,7 @@ struct MedicationProfileSettingsView: View {
                                 .foregroundColor(.secondary)
 
                             Text("Add your first medication profile to get started with " +
-                                 "dose tracking and calculations.")
+                                "dose tracking and calculations.")
                                 .font(DesignTokens.Typography.body)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -49,7 +49,7 @@ struct MedicationProfileSettingsView: View {
                             MedicationProfileRow(profile: profile)
                                 .accessibilityIdentifier(
                                     "medication-profile-\(profile.medicationType.lowercased())-" +
-                                    "\(profile.brandName.lowercased())-\(String(format: "%.2f", profile.currentDose))mg"
+                                        "\(profile.brandName.lowercased())-\(String(format: "%.2f", profile.currentDose))mg"
                                 )
                         }
                         .onDelete(perform: self.deleteProfiles)

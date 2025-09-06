@@ -4,30 +4,28 @@
 //
 
 import Foundation
-import Testing
-import SwiftData
 @testable import JabTracker
+import SwiftData
+import Testing
 
 @Suite("MedicationProfile Enhancement Tests")
 struct MedicationProfileEnhancementTests {
-    
     let container: ModelContainer
     let context: ModelContext
-    
+
     init() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        container = try ModelContainer(
+        self.container = try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self,
-            configurations: config
-        )
-        context = ModelContext(container)
+            configurations: config)
+        self.context = ModelContext(self.container)
     }
-    
+
     @Test("MedicationProfile has all new fields")
-    func testNewFieldsExist() {
+    func newFieldsExist() {
         // Given
         let profile = MedicationProfile()
-        
+
         // Then: Verify all new fields exist with defaults
         #expect(profile.isCompounded == false)
         #expect(profile.vialStrength == nil)
@@ -37,13 +35,13 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.updatedAt != Date.distantPast)
         #expect(profile.createdAt != Date.distantPast)
     }
-    
+
     @Test("Create compounded medication profile")
-    func testCreateCompoundedProfile() {
+    func createCompoundedProfile() {
         // Given
         let vialStrength = 10.0
         let reconstitutionVolume = 3.0
-        
+
         // When
         let profile = MedicationProfile(
             genericName: "Semaglutide",
@@ -53,9 +51,8 @@ struct MedicationProfileEnhancementTests {
             isCompounded: true,
             vialStrength: vialStrength,
             reconstitutionVolume: reconstitutionVolume,
-            notes: "From specialty pharmacy"
-        )
-        
+            notes: "From specialty pharmacy")
+
         // Then
         #expect(profile.isCompounded == true)
         #expect(profile.vialStrength == vialStrength)
@@ -63,12 +60,12 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.penType == nil)
         #expect(profile.notes == "From specialty pharmacy")
     }
-    
+
     @Test("Create branded medication profile")
-    func testCreateBrandedProfile() {
+    func createBrandedProfile() {
         // Given
         let penType = "Ozempic 1mg pen"
-        
+
         // When
         let profile = MedicationProfile(
             genericName: "Semaglutide",
@@ -77,9 +74,8 @@ struct MedicationProfileEnhancementTests {
             medicationType: Medication.semaglutide.rawValue,
             isCompounded: false,
             penType: penType,
-            notes: "Insurance covered"
-        )
-        
+            notes: "Insurance covered")
+
         // Then
         #expect(profile.isCompounded == false)
         #expect(profile.vialStrength == nil)
@@ -87,13 +83,13 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.penType == penType)
         #expect(profile.notes == "Insurance covered")
     }
-    
+
     @Test("MedicationProfile preserves existing fields")
-    func testExistingFieldsPreserved() {
+    func existingFieldsPreserved() {
         // Given
         let startDate = Date()
         let refillDate = Date().addingTimeInterval(30 * 86400)
-        
+
         // When
         let profile = MedicationProfile(
             genericName: "Tirzepatide",
@@ -101,9 +97,8 @@ struct MedicationProfileEnhancementTests {
             currentDose: 5.0,
             startDate: startDate,
             refillDate: refillDate,
-            medicationType: Medication.tirzepatide.rawValue
-        )
-        
+            medicationType: Medication.tirzepatide.rawValue)
+
         // Then: Verify existing fields still work
         #expect(profile.genericName == "Tirzepatide")
         #expect(profile.brandName == "Mounjaro")
@@ -112,29 +107,29 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.refillDate == refillDate)
         #expect(profile.medicationType == Medication.tirzepatide.rawValue)
     }
-    
+
     @Test("Medication computed property works")
-    func testMedicationComputedProperty() {
+    func medicationComputedProperty() {
         // Given
         let profile = MedicationProfile()
-        
+
         // When: Set via computed property
         profile.medication = .semaglutide
-        
+
         // Then
         #expect(profile.medicationType == "semaglutide")
         #expect(profile.medication == .semaglutide)
-        
+
         // When: Set to nil
         profile.medication = nil
-        
+
         // Then
         #expect(profile.medicationType == "")
         #expect(profile.medication == nil)
     }
-    
+
     @Test("Persist and fetch enhanced profile")
-    func testPersistAndFetchEnhancedProfile() throws {
+    func persistAndFetchEnhancedProfile() throws {
         // Given
         let profile = MedicationProfile(
             genericName: "Semaglutide",
@@ -144,17 +139,16 @@ struct MedicationProfileEnhancementTests {
             isCompounded: true,
             vialStrength: 5.0,
             reconstitutionVolume: 2.0,
-            notes: "Test notes"
-        )
-        
+            notes: "Test notes")
+
         // When
-        context.insert(profile)
-        try context.save()
-        
+        self.context.insert(profile)
+        try self.context.save()
+
         // Fetch
         let descriptor = FetchDescriptor<MedicationProfile>()
         let fetched = try context.fetch(descriptor)
-        
+
         // Then
         #expect(fetched.count == 1)
         let fetchedProfile = fetched.first!
@@ -163,27 +157,27 @@ struct MedicationProfileEnhancementTests {
         #expect(fetchedProfile.reconstitutionVolume == 2.0)
         #expect(fetchedProfile.notes == "Test notes")
     }
-    
+
     @Test("Update timestamps on modification")
-    func testUpdateTimestamps() async throws {
+    func updateTimestamps() async throws {
         // Given
         let profile = MedicationProfile()
         let originalUpdatedAt = profile.updatedAt
-        
+
         // When: Wait and modify
         try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
         profile.currentDose = 1.0
         profile.updatedAt = Date()
-        
+
         // Then
         #expect(profile.updatedAt > originalUpdatedAt)
     }
-    
+
     @Test("CloudKit compatibility with new fields")
-    func testCloudKitCompatibility() {
+    func cloudKitCompatibility() {
         // Given: All new fields should have default values for CloudKit
         let profile = MedicationProfile()
-        
+
         // Then: Verify CloudKit-compatible defaults
         #expect(profile.isCompounded == false) // Bool with default
         #expect(profile.vialStrength == nil) // Optional is OK
@@ -193,54 +187,52 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.updatedAt != Date.distantPast) // Date with default
         #expect(profile.createdAt != Date.distantPast) // Date with default
     }
-    
+
     @Test("Validation: Compounded profile requires vial data")
-    func testCompoundedValidation() {
+    func compoundedValidation() {
         // Given
         let profile = MedicationProfile(
             genericName: "Semaglutide",
             brandName: "Compounded",
             currentDose: 1.0,
-            isCompounded: true
-        )
-        
+            isCompounded: true)
+
         // Then: Should have nil vial data if not provided
         #expect(profile.vialStrength == nil)
         #expect(profile.reconstitutionVolume == nil)
-        
+
         // When: Add vial data
         profile.vialStrength = 5.0
         profile.reconstitutionVolume = 2.0
-        
+
         // Then
         #expect(profile.vialStrength == 5.0)
         #expect(profile.reconstitutionVolume == 2.0)
     }
-    
+
     @Test("Validation: Branded profile uses pen type")
-    func testBrandedValidation() {
+    func brandedValidation() {
         // Given
         let profile = MedicationProfile(
             genericName: "Semaglutide",
             brandName: "Ozempic",
             currentDose: 0.5,
-            isCompounded: false
-        )
-        
+            isCompounded: false)
+
         // Then: Should have nil pen type if not provided
         #expect(profile.penType == nil)
-        
+
         // When: Add pen type
         profile.penType = "Ozempic 1mg pen"
-        
+
         // Then
         #expect(profile.penType == "Ozempic 1mg pen")
         #expect(profile.vialStrength == nil) // Should not have vial data
         #expect(profile.reconstitutionVolume == nil)
     }
-    
+
     @Test("Edge case: Switch from compounded to branded")
-    func testSwitchCompoundedToBranded() {
+    func switchCompoundedToBranded() {
         // Given: Start with compounded
         let profile = MedicationProfile(
             genericName: "Semaglutide",
@@ -248,36 +240,34 @@ struct MedicationProfileEnhancementTests {
             currentDose: 1.0,
             isCompounded: true,
             vialStrength: 5.0,
-            reconstitutionVolume: 2.0
-        )
-        
+            reconstitutionVolume: 2.0)
+
         // When: Switch to branded
         profile.isCompounded = false
         profile.brandName = "Ozempic"
         profile.penType = "Ozempic 1mg pen"
         profile.vialStrength = nil
         profile.reconstitutionVolume = nil
-        
+
         // Then
         #expect(profile.isCompounded == false)
         #expect(profile.penType == "Ozempic 1mg pen")
         #expect(profile.vialStrength == nil)
         #expect(profile.reconstitutionVolume == nil)
     }
-    
+
     @Test("Notes field handles long text")
-    func testNotesFieldLongText() {
+    func notesFieldLongText() {
         // Given
         let longNotes = String(repeating: "This is a long note. ", count: 100)
-        
+
         // When
         let profile = MedicationProfile(
             genericName: "Semaglutide",
             brandName: "Ozempic",
             currentDose: 0.5,
-            notes: longNotes
-        )
-        
+            notes: longNotes)
+
         // Then
         #expect(profile.notes == longNotes)
         #expect(profile.notes.count > 2000)

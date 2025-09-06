@@ -9,16 +9,15 @@ import SwiftData
 /// Manages CRUD operations for medication profiles with validation
 @MainActor
 class MedicationManager: ObservableObject {
-    
     private let modelContext: ModelContext
     @Published var profiles: [MedicationProfile] = []
     @Published var activeProfile: MedicationProfile?
-    
+
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        fetchProfiles()
+        self.fetchProfiles()
     }
-    
+
     /// Error types for medication management
     enum MedicationError: LocalizedError, Equatable {
         case invalidDose
@@ -26,12 +25,12 @@ class MedicationManager: ObservableObject {
         case profileNotFound
         case invalidCompoundingSettings
         case saveFailed
-        
+
         var errorDescription: String? {
             switch self {
             case .invalidDose:
                 return "Invalid dose amount"
-            case .doseOutOfRange(let medication, let currentDose):
+            case let .doseOutOfRange(medication, currentDose):
                 let minDose = medication.availableDoses.min() ?? 0.0
                 let maxDose = medication.availableDoses.max() ?? 0.0
                 let dose = String(format: "%.2f", currentDose)
@@ -47,50 +46,49 @@ class MedicationManager: ObservableObject {
             }
         }
     }
-    
+
     // MARK: - CRUD Operations
-    
+
     /// Fetch all medication profiles for the current user
     func fetchProfiles(for user: User? = nil) {
-        if let user = user {
+        if let user {
             // Filter profiles by user relationship using the user's ID
             let userId = user.id
             let descriptor = FetchDescriptor<MedicationProfile>(
                 predicate: #Predicate<MedicationProfile> { profile in
                     profile.user?.id == userId
                 },
-                sortBy: [SortDescriptor(\.startDate, order: .reverse)]
-            )
-            
+                sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+
             do {
-                profiles = try modelContext.fetch(descriptor)
-                activeProfile = profiles.first { profile in
+                self.profiles = try self.modelContext.fetch(descriptor)
+                self.activeProfile = self.profiles.first { profile in
                     // Most recent profile is considered active
                     profile.startDate <= Date()
                 }
             } catch {
                 print("Failed to fetch medication profiles for user: \(error)")
-                profiles = []
+                self.profiles = []
             }
         } else {
             // Fetch all profiles (for backward compatibility)
             let descriptor = FetchDescriptor<MedicationProfile>(
                 sortBy: [SortDescriptor(\.startDate, order: .reverse)]
             )
-            
+
             do {
-                profiles = try modelContext.fetch(descriptor)
-                activeProfile = profiles.first { profile in
+                self.profiles = try self.modelContext.fetch(descriptor)
+                self.activeProfile = self.profiles.first { profile in
                     // Most recent profile is considered active
                     profile.startDate <= Date()
                 }
             } catch {
                 print("Failed to fetch medication profiles: \(error)")
-                profiles = []
+                self.profiles = []
             }
         }
     }
-    
+
     /// Create a new medication profile
     func createProfile(
         for user: User,
@@ -101,24 +99,24 @@ class MedicationManager: ObservableObject {
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
         penType: String? = nil,
-        notes: String = ""
-    ) throws -> MedicationProfile {
-        
+        notes: String = "") throws -> MedicationProfile
+    {
         // Validate dose is within medication range
         guard medication.availableDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
             throw MedicationError.doseOutOfRange(medication: medication, currentDose: currentDose)
         }
-        
+
         // Validate compounding settings if applicable
         if isCompounded {
-            guard let vialStrength = vialStrength,
-                  let reconstitutionVolume = reconstitutionVolume,
+            guard let vialStrength,
+                  let reconstitutionVolume,
                   vialStrength >= currentDose,
-                  reconstitutionVolume > 0 else {
+                  reconstitutionVolume > 0
+            else {
                 throw MedicationError.invalidCompoundingSettings
             }
         }
-        
+
         let profile = MedicationProfile(
             genericName: medication.displayName,
             brandName: brandName,
@@ -130,23 +128,22 @@ class MedicationManager: ObservableObject {
             vialStrength: vialStrength,
             reconstitutionVolume: reconstitutionVolume,
             penType: penType,
-            notes: notes
-        )
-        
+            notes: notes)
+
         // Link profile to user
         profile.user = user
-        
-        modelContext.insert(profile)
-        
+
+        self.modelContext.insert(profile)
+
         do {
-            try modelContext.save()
-            fetchProfiles(for: user)
+            try self.modelContext.save()
+            self.fetchProfiles(for: user)
             return profile
         } catch {
             throw MedicationError.saveFailed
         }
     }
-    
+
     /// Update an existing medication profile
     func updateProfile(
         _ profile: MedicationProfile,
@@ -158,151 +155,152 @@ class MedicationManager: ObservableObject {
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
         penType: String? = nil,
-        notes: String? = nil
-    ) throws {
-        
+        notes: String? = nil) throws
+    {
         // Update medication type if provided
-        if let medication = medication {
+        if let medication {
             profile.medicationType = medication.rawValue
         }
-        
+
         // Update brand name if provided
-        if let brandName = brandName {
+        if let brandName {
             profile.brandName = brandName
         }
-        
+
         // Determine the medication to use for dose validation
         let medicationForValidation = medication ?? profile.medication
-        
+
         // Validate dose if provided
-        if let currentDose = currentDose,
-           let medicationForValidation = medicationForValidation {
+        if let currentDose,
+           let medicationForValidation
+        {
             guard medicationForValidation.availableDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
                 throw MedicationError.doseOutOfRange(medication: medicationForValidation, currentDose: currentDose)
             }
             profile.currentDose = currentDose
         }
-        
+
         // Update other fields if provided
-        if let refillDate = refillDate {
+        if let refillDate {
             profile.refillDate = refillDate
         }
-        
-        if let isCompounded = isCompounded {
+
+        if let isCompounded {
             profile.isCompounded = isCompounded
         }
-        
-        if let vialStrength = vialStrength {
+
+        if let vialStrength {
             profile.vialStrength = vialStrength
         }
-        
-        if let reconstitutionVolume = reconstitutionVolume {
+
+        if let reconstitutionVolume {
             profile.reconstitutionVolume = reconstitutionVolume
         }
-        
-        if let penType = penType {
+
+        if let penType {
             profile.penType = penType
         }
-        
-        if let notes = notes {
+
+        if let notes {
             profile.notes = notes
         }
-        
+
         // Validate compounding settings if compounded
         if profile.isCompounded {
             guard let vialStrength = profile.vialStrength,
                   let reconstitutionVolume = profile.reconstitutionVolume,
                   vialStrength >= profile.currentDose,
-                  reconstitutionVolume > 0 else {
+                  reconstitutionVolume > 0
+            else {
                 throw MedicationError.invalidCompoundingSettings
             }
         }
-        
+
         profile.updatedAt = Date()
-        
+
         do {
-            try modelContext.save()
-            fetchProfiles()
+            try self.modelContext.save()
+            self.fetchProfiles()
         } catch {
             throw MedicationError.saveFailed
         }
     }
-    
+
     /// Delete a medication profile
     func deleteProfile(_ profile: MedicationProfile) throws {
-        modelContext.delete(profile)
-        
+        self.modelContext.delete(profile)
+
         do {
-            try modelContext.save()
-            fetchProfiles()
+            try self.modelContext.save()
+            self.fetchProfiles()
         } catch {
             throw MedicationError.saveFailed
         }
     }
-    
+
     // MARK: - Validation Helpers
-    
+
     /// Check if a dose is valid for a medication
     func isValidDose(_ dose: Double, for medication: Medication) -> Bool {
         medication.availableDoses.contains { availableDose in
             abs(availableDose - dose) < 0.01
         }
     }
-    
+
     /// Get the next recommended dose for escalation
     func nextEscalationDose(for profile: MedicationProfile) -> Double? {
         guard let medication = profile.medication else { return nil }
-        
+
         let currentDose = profile.currentDose
         let availableDoses = medication.availableDoses.sorted()
-        
+
         // Find the next higher dose
         for dose in availableDoses where dose > currentDose {
             return dose
         }
-        
+
         return nil // Already at maximum dose
     }
-    
+
     /// Calculate days until refill needed
     func daysUntilRefill(for profile: MedicationProfile) -> Int? {
         guard let refillDate = profile.refillDate else { return nil }
-        
+
         let calendar = Calendar.current
         let components = calendar.dateComponents([.day], from: Date(), to: refillDate)
         return components.day
     }
-    
+
     // MARK: - Reconstitution Helpers
-    
+
     /// Calculate reconstitution for a compounded profile
     func calculateReconstitution(for profile: MedicationProfile) throws -> ReconstitutionCalculator.ReconstitutionResult? {
         guard profile.isCompounded,
               let vialStrength = profile.vialStrength,
-              let reconstitutionVolume = profile.reconstitutionVolume else {
+              let reconstitutionVolume = profile.reconstitutionVolume
+        else {
             return nil
         }
-        
+
         return try ReconstitutionCalculator.calculate(
             vialStrength: vialStrength,
             targetDose: profile.currentDose,
-            waterVolume: reconstitutionVolume
-        )
+            waterVolume: reconstitutionVolume)
     }
-    
+
     // MARK: - Pen Click Helpers
-    
+
     /// Calculate pen clicks for a branded profile
     func calculatePenClicks(for profile: MedicationProfile) throws -> PenClickCalculator.PenClickResult? {
         guard !profile.isCompounded,
               let penTypeString = profile.penType,
-              let penType = PenClickCalculator.PenType(rawValue: penTypeString) else {
+              let penType = PenClickCalculator.PenType(rawValue: penTypeString)
+        else {
             return nil
         }
-        
+
         return try PenClickCalculator.calculate(
             penType: penType,
-            targetDose: profile.currentDose
-        )
+            targetDose: profile.currentDose)
     }
 }

@@ -15,7 +15,7 @@ final class MedicationProfile {
     var startDate: Date = Date() // Required with default
     var refillDate: Date? // Optional - may not have refill scheduled yet
     var medicationType: String = "" // Store Medication enum rawValue for CloudKit compatibility
-    
+
     // Enhanced fields for compounding and pen support
     var isCompounded: Bool = false // Compounded vs branded medication
     var vialStrength: Double? // For compounded: mg in vial
@@ -27,7 +27,7 @@ final class MedicationProfile {
 
     @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
     var doses: [Dose]? // CloudKit requires optional relationships
-    
+
     @Relationship(inverse: \User.medicationProfiles)
     var user: User? // Parent user relationship
 
