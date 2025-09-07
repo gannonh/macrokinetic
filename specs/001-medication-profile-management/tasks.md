@@ -41,12 +41,22 @@
 4. ✅ Fixed SwiftLint issues and committed all work
 5. All 42 new tests are passing
 
-**Session 3 - What Was Done (2025-09-06)**:
+**Session 3 - What Was Done (2025-09-06 Part 1)**:
 1. ✅ Implemented basic `MedicationProfileSettingsView.swift` with CRUD operations (T025 partial)
 2. ✅ Fixed E2E UI test `testMedicationProfileCRUDFlow` - now passing
 3. ⏳ Skipped unimplemented features in tests (compounded medication, pen clicks)
 4. ✅ Identified that reconstitution/pen click calculators need UI implementation
 5. ✅ All existing tests passing, unimplemented tests properly skipped
+
+**Session 4 - What Was Done (2025-09-06 Part 2)**:
+1. ✅ Added new calculator files to coverage-config.json policy
+2. ✅ Improved test coverage with error description and edge case tests:
+   - ReconstitutionCalculator: 84% → 96% (exceeds 90% target)
+   - PenClickCalculator: 82% → 98% (exceeds 90% target)
+   - MedicationManager: 79% (exceeds 62% target)
+3. ✅ Created comprehensive draft PR #35 for medication profile CRUD
+4. ✅ Fixed all SwiftLint violations across codebase
+5. ✅ All unit tests passing (325+ tests), coverage requirements met
 
 **Current Status**:
 - ✅ All backend services implemented and tested
@@ -57,20 +67,37 @@
 - ⏳ Compounded medication UI toggle exists but needs calculator integration
 - ⏳ Integration tests partially done (CRUD passing, calculators skipped)
 
-**Critical Next Steps for New Session**:
-1. **COMPLETE UI CALCULATOR VIEWS** (T026-T027):
-   - Implement `ReconstitutionCalculatorView.swift` (T026) - hook up to existing button
-   - Implement `PenClickCalculatorView.swift` (T027) - add to profile detail view
-   - Wire up calculators to the existing UI infrastructure
+**PRIORITY WORK FOR NEXT SESSION**:
 
-2. **FIX COMPOUNDED MEDICATION FLOW**:
-   - The toggle UI exists but calculator button does nothing
-   - Need to integrate ReconstitutionCalculator service with UI
-   - Update tests once implementation is complete
+**PRIORITY 1: CALCULATOR UI IMPLEMENTATION** (Immediate)
+1. **ReconstitutionCalculatorView.swift** (T026):
+   - Create SwiftUI view in `JabTracker/Views/MedicationProfile/`
+   - Wire to existing "Calculate" button in MedicationProfileSettingsView
+   - Input fields: vial strength, target dose, water volume
+   - Display ReconstitutionResult using existing service
+   - Handle validation errors gracefully
 
-3. **COMPLETE E2E TESTS**:
-   - Uncomment and fix `testCompoundedMedicationSetup` once calculator UI is done
-   - Uncomment and fix `testPenClickCalculator` once pen click UI is done
+2. **PenClickCalculatorView.swift** (T027):
+   - Create SwiftUI view in `JabTracker/Views/MedicationProfile/`
+   - Add navigation from profile detail/edit view
+   - Pen type selection based on medication
+   - Target dose input with validation
+   - Display PenClickResult using existing service
+
+3. **Integration Testing**:
+   - Remove XCTSkip from `testCompoundedMedicationSetup` test
+   - Remove XCTSkip from `testPenClickCalculator` test
+   - Update E2E tests to cover full calculator flows
+
+**PRIORITY 2: UPDATE FUNCTIONALITY** (Secondary)
+1. Connect edit button in profile list to actual update logic
+2. Wire MedicationManager.updateProfile() to the existing form UI  
+3. Test profile updates preserve dose history and CloudKit sync
+
+**PRIORITY 3: POLISH** (Final)
+1. Add dose escalation schedule tracking (T028)
+2. Enhance medication selection wizard in onboarding (T029-T030)
+3. Performance and accessibility validation
 
 **Technical Notes for Handoff**:
 - The `Medication` enum and `DoseFrequency` enum already existed in the codebase
@@ -80,11 +107,14 @@
 - Remember to run `xcodegen generate` after adding new files
 - SwiftLint is configured and should be run before commits
 
-**Key Technical Learnings from Session 3**:
-- SwiftUI Form toggles need coordinate-based tapping in UI tests (dx: 0.9, dy: 0.5)
-- Picker selections in Forms require static accessibility identifiers (not dynamic)
-- Profile list items render as Buttons not Cells in SwiftUI Lists
-- XCTSkip is the proper way to handle unimplemented test features
+**Key Technical Learnings from Sessions 3-4**:
+- **SwiftUI Form Testing**: Toggles need coordinate-based tapping (dx: 0.9, dy: 0.5) to actually change state
+- **Accessibility IDs**: Use static identifiers like `medication-picker` not dynamic ones based on selection  
+- **List Rendering**: SwiftUI profile lists render items as Buttons, not Cells in UI automation
+- **Test Management**: XCTSkip is the proper way to handle unimplemented features in tests
+- **Coverage Requirements**: Pure business logic (calculators) must meet 90% coverage minimum
+- **File Structure**: Calculator views belong in `JabTracker/Views/MedicationProfile/` directory
+- **Service Integration**: Existing services (ReconstitutionCalculator, PenClickCalculator) are fully tested and ready for UI
 
 **Files Modified/Created (Complete List)**:
 - Modified: `JabTracker/Models/MedicationProfile.swift` - Enhanced with new fields
@@ -102,9 +132,11 @@
 - Updated: `docs/implementation-plan.md` with current feature status
 
 **Git Status**:
-- Branch: `001-medication-profile-management`
-- Working tree has uncommitted changes (UI implementation and test fixes)
-- CRUD E2E test passing, calculator tests properly skipped
+- Branch: `001-medication-profile-management` (up to date with origin)
+- Working tree clean (all work committed)
+- Draft PR #35: "feat: medication profile CRUD UI with basic Create, Read, Delete" 
+- CRUD E2E tests passing, calculator tests properly skipped with XCTSkip
+- Coverage config updated and requirements met for all new files
 - Ready for calculator UI implementation in next session
 
 ## Execution Flow (main)

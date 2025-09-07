@@ -686,7 +686,42 @@ Based on onboarding flow implementation analysis:
 - Assuming element visibility without checking if scrolling is required
 - Using screenshots for coordinates instead of `describe_ui` data
 
-## Medication Profile Management ✅
+### SwiftUI Form Testing Patterns (Session 4 Learnings)
+**Critical for medication profile management UI testing:**
+
+**Toggle Switch Interaction:**
+- **Issue**: Direct `tap()` on Form toggles doesn't change state in UI tests
+- **Solution**: Use coordinate-based tapping at the switch control area
+```swift
+// ❌ This doesn't work reliably in SwiftUI Forms
+compoundedToggle.tap()
+
+// ✅ This works - tap at the actual switch control (right side)
+compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+```
+
+**Picker Element Selection:**
+- **Issue**: Dynamic accessibility identifiers based on selection state are unreliable
+- **Solution**: Use static identifiers for picker elements
+```swift
+// ✅ Good - static identifier
+app.pickers["medication-picker"]
+
+// ❌ Bad - dynamic based on current selection
+app.pickers["medication-\(currentSelection)"]
+```
+
+**List Item Types:**
+- **SwiftUI Lists**: Profile items render as `Button` type, not `Cell` type
+- **Navigation**: Use proper element types when searching list items
+- **Accessibility**: List items inherit button semantics from SwiftUI
+
+**Test Management:**
+- **Unimplemented Features**: Use `throw XCTSkip("reason")` instead of commenting out tests
+- **Error Messages**: Provide clear context for debugging UI test failures
+- **State Validation**: Always check element state before and after interactions
+
+## Medication Profile Management 🔄
 
 ### Core Medication Types
 The app supports exactly 4 GLP-1 medications with medically accurate properties:
@@ -719,11 +754,20 @@ The app supports exactly 4 GLP-1 medications with medically accurate properties:
 - `Medication` enum already exists with computed medical properties
 - Integrated with existing CloudKit sync and User relationships
 
-### Testing Coverage ✅
-- **ReconstitutionCalculatorTests**: 11 comprehensive tests for all calculation scenarios
-- **PenClickCalculatorTests**: 15 tests covering all pen types and edge cases
-- Medical accuracy validated with real-world dosing scenarios
-- Performance targets met: <50ms calculation updates
+### UI Implementation Status (Session 4 - 2025-09-06)
+- ✅ **Basic CRUD UI**: Create, Read, Delete functionality implemented in MedicationProfileSettingsView
+- ✅ **E2E Tests**: CRUD flow tests passing with proper SwiftUI Form interaction handling
+- ⏳ **Update Logic**: UI exists but not connected to MedicationManager.updateProfile()
+- ⏳ **Calculator UIs**: ReconstitutionCalculatorView and PenClickCalculatorView not implemented
+- **PR Status**: Draft PR #35 with basic CRUD functionality
+
+### Testing Coverage ✅ (Enhanced Session 4)
+- **ReconstitutionCalculatorTests**: 11 comprehensive tests + error description coverage → **96% coverage**
+- **PenClickCalculatorTests**: 15 tests + maximum dose coverage for all pen types → **98% coverage**
+- **MedicationManagerTests**: 15 comprehensive CRUD tests → **79% coverage**
+- **Coverage Policy**: All new files added to coverage-config.json and meet requirements
+- **Medical accuracy** validated with real-world dosing scenarios
+- **Performance targets** met: <50ms calculation updates
 
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
