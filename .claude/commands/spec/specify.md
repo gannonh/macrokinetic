@@ -1,7 +1,15 @@
 
+---
+description: Create a new feature specification and branch
+argument-hint: feature description (required)
+---
+**Feature Description**: $ARGUMENTS
+
 Start a new feature by creating a specification and feature branch.
 
 This is the first step in the Spec-Driven Development lifecycle.
+
+If the feature description has not been provided, ask it of the user before proceeding.
 
 Given the feature description provided as an argument, do this:
 

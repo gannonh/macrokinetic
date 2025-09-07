@@ -9,6 +9,10 @@ Activate **ULTRATHINK**
 
 **CURRENT FEATURE**: $ARGUMENTS  
 
+**Session Flow**:
+- Continue next session with: `/start-session $ARGUMENTS`
+- When feature is complete, use: `/wrap-feature $ARGUMENTS`
+
 ## Review and update feature-level documentation (as needed)
 
  **IMPORTANT** include any context needed for the next session to continue seamlessly.

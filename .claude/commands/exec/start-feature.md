@@ -22,6 +22,12 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 - `$ARGUMENTS/spec.md` - Feature requirements
 - `$ARGUMENTS/quickstart.md` - Test scenarios
 
+**Session Management**:
+- This is SESSION 1 of a new feature
+- End with: `/wrap-session $ARGUMENTS`
+- Continue with: `/start-session $ARGUMENTS`
+- Complete with: `/wrap-feature $ARGUMENTS`
+
 ## Core Principles
 
 1. **Tasks.md is Truth** - Execute tasks in exact order specified
