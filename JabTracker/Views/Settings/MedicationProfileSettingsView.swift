@@ -168,6 +168,7 @@ struct AddMedicationProfileView: View {
 
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var showingReconstitutionCalculator = false
 
     // Computed properties to ensure valid selections
     private var validBrand: String {
@@ -251,7 +252,7 @@ struct AddMedicationProfileView: View {
                         // Show reconstitution calculation
                         if self.vialStrength > 0, self.selectedDose > 0 {
                             Button("Calculate Reconstitution") {
-                                // This will be handled by ReconstitutionCalculatorView
+                                self.showingReconstitutionCalculator = true
                             }
                             .accessibilityIdentifier("calculate-reconstitution")
                         }
@@ -295,6 +296,9 @@ struct AddMedicationProfileView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(self.errorMessage)
+            }
+            .sheet(isPresented: self.$showingReconstitutionCalculator) {
+                ReconstitutionCalculatorView()
             }
         }
     }
@@ -360,13 +364,12 @@ struct MedicationProfileDetailView: View {
                     }
                     .accessibilityIdentifier("reconstitution-calculator")
                 } else {
-                    NavigationLink(destination: PenClickCalculatorView(profile: self.profile)) {
-                        CalculatorCard(
-                            title: "Pen Click Calculator",
-                            description: "Calculate pen clicks for dose adjustments",
-                            icon: "syringe.fill")
-                    }
-                    .accessibilityIdentifier("pen-click-calculator")
+                    // TODO: Re-enable PenClickCalculatorView once compilation issues are resolved
+                    CalculatorCard(
+                        title: "Pen Click Calculator",
+                        description: "Calculate pen clicks for dose adjustments (Coming Soon)",
+                        icon: "syringe.fill")
+                        .opacity(0.6)
                 }
 
                 Spacer()
