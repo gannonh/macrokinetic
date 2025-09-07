@@ -12,7 +12,6 @@ struct ReconstitutionCalculatorView: View {
     @State private var errorMessage: String = ""
     @State private var showingError = false
     
-    
     init(profile: MedicationProfile? = nil) {
         self.profile = profile
         if let profile = profile {
