@@ -9,19 +9,41 @@ Activate **ULTRATHINK**
 
 **CURRENT FEATURE**: $ARGUMENTS  
 
-**Session Flow**:
-- Continue next session with: `/start-session $ARGUMENTS`
-- When feature is complete, use: `/wrap-feature $ARGUMENTS`
-
 ## Review and update feature-level documentation (as needed)
 
  **IMPORTANT** include any context needed for the next session to continue seamlessly.
 
 1. `$ARGUMENTS/tasks.md` - Task list to execute
+   - **PRIORITY WORK FOR NEXT SESSION**: Clear list of next tasks
+   - **Current Status**: What's complete vs pending
+   - **Key Technical Learnings**: Important patterns discovered
+   - **Files Modified/Created**: Complete list for context
+   - **Git Status**: Branch, PR status, working tree state
 2. `$ARGUMENTS/plan.md` - Technical context and structure
 3. `$ARGUMENTS/spec.md` - Feature requirements
 4. `$ARGUMENTS/quickstart.md` - Test scenarios
+   - **Completion Criteria**: Update status of each scenario
+   - **Current Test Status**: Note passing/failing/skipped tests
+   - Mark scenarios as ✅ complete, ⏳ in progress, or ❌ not started
 5. `$ARGUMENTS/data-model.md` - Data model and relationships
+
+## Critical Sections to Update in tasks.md
+
+Before wrapping up, ensure these sections are current:
+
+- [ ] **PRIORITY WORK FOR NEXT SESSION** - What should be tackled first next time?
+- [ ] **Current Status** - Update completed/pending items
+- [ ] **Key Technical Learnings** - Document any patterns, gotchas, or solutions
+- [ ] **Test Coverage Status** - Note any XCTSkip tests and why
+- [ ] **Session Notes** - What was done this session?
+
+## Document Test Status
+
+Update test information for next session:
+- E2E tests written this session
+- Tests currently skipped with XCTSkip
+- Test coverage for new components
+- Known failing tests that need attention
 
 ## Review and update project-level documentation (as needed)
 

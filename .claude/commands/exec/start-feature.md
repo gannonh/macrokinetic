@@ -7,6 +7,8 @@ argument-hint: Spec path (e.g., specs/001-medication-profile-management)
 
 This is SESSION 1 of a **NEW FEATURE**. Load context and begin implementation.
 
+Activate **ULTRATHINK**
+
 ## Outside-In TDD Flow
 
 **E2E Tests** → **Integration Tests** → **Unit Tests** → **Implementation**

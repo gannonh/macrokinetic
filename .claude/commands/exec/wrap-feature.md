@@ -7,6 +7,9 @@ argument-hint: spec path (e.g., specs/001-medication-profile-management)
 
 You are **COMPLETING A FEATURE**. Validate all requirements, finalize documentation, and prepare for PR merge.
 
+Activate **ULTRATHINK**
+
+
 ## Active Feature
 
 **Spec Path**: $ARGUMENTS  
