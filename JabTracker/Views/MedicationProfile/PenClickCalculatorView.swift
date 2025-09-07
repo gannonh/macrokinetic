@@ -11,7 +11,6 @@ struct PenClickCalculatorView: View {
     @State private var errorMessage: String = ""
     @State private var showingError = false
     
-    
     init(profile: MedicationProfile) {
         self.profile = profile
         self._targetDose = State(initialValue: profile.currentDose)
@@ -88,7 +87,8 @@ struct PenClickCalculatorView: View {
                     Section(header: Text("Pen Click Instructions")) {
                         VStack(alignment: .leading, spacing: 8) {
                             if result.clicks > 0 {
-                                Text("Dial to \(result.clicks) clicks for your \(String(format: "%.2f", result.actualDose)) mg dose")
+                                Text("Dial to \(result.clicks) clicks for your " +
+                                     "\(String(format: "%.2f", result.actualDose)) mg dose")
                                     .font(.headline)
                                     .foregroundColor(.primary)
                             } else {
