@@ -12,12 +12,32 @@ struct ReconstitutionCalculatorView: View {
     @State private var errorMessage: String = ""
     @State private var showingError = false
     
-    init(profile: MedicationProfile? = nil) {
+    init(profile: MedicationProfile? = nil, vialStrength: Double? = nil, targetDose: Double? = nil, waterVolume: Double? = nil) {
         self.profile = profile
-        if let profile = profile {
+        
+        // Initialize with provided values, profile values, or defaults
+        if let vialStrength = vialStrength {
+            self._vialStrength = State(initialValue: String(vialStrength))
+        } else if let profile = profile {
             self._vialStrength = State(initialValue: String(profile.vialStrength ?? 10.0))
+        } else {
+            self._vialStrength = State(initialValue: "")
+        }
+        
+        if let targetDose = targetDose {
+            self._targetDose = State(initialValue: String(targetDose))
+        } else if let profile = profile {
             self._targetDose = State(initialValue: String(profile.currentDose))
+        } else {
+            self._targetDose = State(initialValue: "")
+        }
+        
+        if let waterVolume = waterVolume {
+            self._waterVolume = State(initialValue: String(waterVolume))
+        } else if let profile = profile {
             self._waterVolume = State(initialValue: String(profile.reconstitutionVolume ?? 10.0))
+        } else {
+            self._waterVolume = State(initialValue: "10")
         }
     }
     

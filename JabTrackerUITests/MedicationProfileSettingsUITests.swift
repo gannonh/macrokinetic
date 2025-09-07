@@ -165,6 +165,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         let toggleControlPoint = CGPoint(
             x: toggleFrame.maxX - 30, // Tap near the right edge where the switch control is
             y: toggleFrame.midY)
+        sleep(1)
 
         // Perform coordinate-based tap
         compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()

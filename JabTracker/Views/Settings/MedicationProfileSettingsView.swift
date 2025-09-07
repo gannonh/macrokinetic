@@ -298,7 +298,11 @@ struct AddMedicationProfileView: View {
                 Text(self.errorMessage)
             }
             .sheet(isPresented: self.$showingReconstitutionCalculator) {
-                ReconstitutionCalculatorView()
+                ReconstitutionCalculatorView(
+                    vialStrength: self.vialStrength,
+                    targetDose: self.selectedDose,
+                    waterVolume: 10.0
+                )
             }
         }
     }
