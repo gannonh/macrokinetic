@@ -35,7 +35,7 @@ struct PenClickCalculatorView: View {
                 .font(.body)
             if let penTypeString = profile.penType,
                let penType = PenClickCalculator.PenType(rawValue: penTypeString) {
-                Text("Pen Type: \(penType.displayName)")
+                Text("Pen Type: \(penType.rawValue)")
                     .font(.body)
             }
         } header: {
@@ -49,7 +49,7 @@ struct PenClickCalculatorView: View {
             Picker("Pen Type", selection: $selectedPenType) {
                 Text("Select Pen Type").tag(nil as PenClickCalculator.PenType?)
                 ForEach(availablePens, id: \.self) { penType in
-                    Text(penType.displayName).tag(penType as PenClickCalculator.PenType?)
+                    Text(penType.rawValue).tag(penType as PenClickCalculator.PenType?)
                 }
             }
             .pickerStyle(.menu)
@@ -84,20 +84,11 @@ struct PenClickCalculatorView: View {
                     }
                 }
                 
-                Section {
-                    Button(action: calculatePenClicks) {
-                        Text("Calculate Pen Clicks")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(selectedPenType == nil)
-                }
-                
                 if let result = calculationResult {
                     Section(header: Text("Pen Click Instructions")) {
                         VStack(alignment: .leading, spacing: 8) {
-                            if let clicks = result.clicksNeeded {
-                                Text("Dial to \(clicks) clicks for your \(String(format: "%.2f", targetDose)) mg dose")
+                            if result.clicks > 0 {
+                                Text("Dial to \(result.clicks) clicks for your \(String(format: "%.2f", result.actualDose)) mg dose")
                                     .font(.headline)
                                     .foregroundColor(.primary)
                             } else {
@@ -107,12 +98,12 @@ struct PenClickCalculatorView: View {
                             }
                             
                             if let penType = selectedPenType {
-                                Text("Maximum dose: \(String(format: "%.2f", penType.maxDose)) mg")
+                                Text("Maximum dose: \(String(format: "%.2f", penType.maximumDose)) mg")
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
                                 if penType.isAdjustable {
-                                    Text("Click size: \(String(format: "%.2f", penType.clickSize)) mg per click")
+                                    Text("Click size: \(String(format: "%.2f", penType.dosePerClick)) mg per click")
                                         .font(.body)
                                         .foregroundColor(.secondary)
                                 } else {

@@ -364,12 +364,13 @@ struct MedicationProfileDetailView: View {
                     }
                     .accessibilityIdentifier("reconstitution-calculator")
                 } else {
-                    // TODO: Re-enable PenClickCalculatorView once compilation issues are resolved
-                    CalculatorCard(
-                        title: "Pen Click Calculator",
-                        description: "Calculate pen clicks for dose adjustments (Coming Soon)",
-                        icon: "syringe.fill")
-                        .opacity(0.6)
+                    NavigationLink(destination: PenClickCalculatorView(profile: self.profile)) {
+                        CalculatorCard(
+                            title: "Pen Click Calculator",
+                            description: "Calculate pen clicks for dose adjustments",
+                            icon: "syringe.fill")
+                    }
+                    .accessibilityIdentifier("pen-click-calculator")
                 }
 
                 Spacer()
