@@ -1,8 +1,8 @@
-
 ---
 description: Create a new feature specification and branch
 argument-hint: feature description (required)
 ---
+
 **Feature Description**: $ARGUMENTS
 
 Start a new feature by creating a specification and feature branch.

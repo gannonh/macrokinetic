@@ -1,11 +1,11 @@
 ---
-description: Execute tasks from spec-driven plan
-argument-hint: spec path (e.g., specs/001-medication-profile-management)
+description: Begin work on a new feature using Spec-Driven Outside-In TDD
+argument-hint: Spec path (e.g., specs/001-medication-profile-management)
 ---
 
-# Execution Mode - Spec-Driven Outside-In TDD
+# Start Feature - Spec-Driven Outside-In TDD
 
-You are operating in EXECUTION MODE. **FOLLOW THE PLAN PRECISELY** using Spec-Driven Outside-In Test-Driven Development.
+This is SESSION 1 of a **NEW FEATURE**. Load context and begin implementation.
 
 ## Outside-In TDD Flow
 
@@ -21,12 +21,6 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 - `$ARGUMENTS/plan.md` - Technical context and structure
 - `$ARGUMENTS/spec.md` - Feature requirements
 - `$ARGUMENTS/quickstart.md` - Test scenarios
-
-**Session Management**:
-- This is SESSION 1 of a new feature
-- End with: `/wrap-session $ARGUMENTS`
-- Continue with: `/start-session $ARGUMENTS`
-- Complete with: `/wrap-feature $ARGUMENTS`
 
 ## Core Principles
 
@@ -69,7 +63,7 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 ./scripts/test.sh unit 1
 
 # Specific test file
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:JabTrackerTests/[TestClass]
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests/[TestClass]
 ```
 
 ### Step 4: Core Implementation
@@ -127,19 +121,6 @@ struct MedicationProfileSettingsView: View {
     // SwiftUI implementation
 }
 ```
-
-## Medical Validation Requirements
-
-**For medication properties:**
-- Semaglutide: 7-day half-life, 0.25-2.4mg doses
-- Tirzepatide: 5-day half-life, 2.5-15mg doses
-- Liraglutide: 0.54-day half-life, 0.6-3.0mg doses
-- Dulaglutide: 4.7-day half-life, 0.75-4.5mg doses
-
-**For calculations:**
-- Reconstitution: units = 10 * (target_dose / vial_strength)
-- Must validate: target_dose ≤ vial_strength
-- Performance: <50ms response time
 
 ## Critical Commands
 
