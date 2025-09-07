@@ -422,6 +422,7 @@ struct EditMedicationProfileView: View {
 
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var showingReconstitutionCalculator = false
 
     init(profile: MedicationProfile, medicationManager: MedicationManager) {
         self.profile = profile
@@ -456,50 +457,25 @@ struct EditMedicationProfileView: View {
                         self.selectedDose = newDose
                     }
 
-                    Picker("Brand", selection: self.$selectedBrand) {
-                        ForEach(self.selectedMedication.brands, id: \.self) { brand in
-                            Text(brand)
-                                .tag(brand)
-                        }
-                    }
-                    .accessibilityIdentifier("edit-brand-picker")
-
-                    Toggle("Compounded Medication", isOn: self.$isCompounded)
-                        .accessibilityIdentifier("edit-compounded-toggle")
                 }
 
-                Section("Dosing") {
-                    if self.isCompounded {
-                        HStack {
-                            Text("Vial Strength (mg)")
-                            Spacer()
-                            TextField("10.0", value: self.$vialStrength, format: .number)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 80)
-                                .accessibilityIdentifier("edit-vial-strength-input")
-                        }
+                MedicationBrandSection(
+                    selectedMedication: self.selectedMedication,
+                    selectedBrand: self.$selectedBrand,
+                    isCompounded: self.isCompounded,
+                    accessibilityPrefix: "edit"
+                )
 
-                        HStack {
-                            Text("Target Dose (mg)")
-                            Spacer()
-                            TextField("1.0", value: self.$selectedDose, format: .number)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 80)
-                                .accessibilityIdentifier("edit-target-dose-input")
-                        }
-                    } else {
-                        Picker("Current Dose", selection: self.$selectedDose) {
-                            ForEach(self.selectedMedication.availableDoses, id: \.self) { dose in
-                                Text("\(String(format: "%.2f", dose)) mg")
-                                    .tag(dose)
-                                    .accessibilityIdentifier("edit-dose-option-\(String(format: "%.2f", dose))")
-                            }
-                        }
-                        .accessibilityIdentifier("edit-dose-picker")
+                MedicationDosingSection(
+                    selectedMedication: self.selectedMedication,
+                    selectedDose: self.$selectedDose,
+                    isCompounded: self.$isCompounded,
+                    vialStrength: self.$vialStrength,
+                    accessibilityPrefix: "edit",
+                    onCalculateReconstitution: {
+                        self.showingReconstitutionCalculator = true
                     }
-                }
+                )
 
                 Section("Notes") {
                     TextField("Optional notes about your medication...", text: self.$notes, axis: .vertical)
@@ -529,15 +505,30 @@ struct EditMedicationProfileView: View {
             } message: {
                 Text(self.errorMessage)
             }
+            .sheet(isPresented: self.$showingReconstitutionCalculator) {
+                ReconstitutionCalculatorView(
+                    vialStrength: self.vialStrength,
+                    targetDose: self.selectedDose,
+                    waterVolume: 1.0,
+                    onSave: { vialStrength, targetDose, waterVolume in
+                        self.vialStrength = vialStrength
+                        self.selectedDose = targetDose
+                        self.reconstitutionVolume = waterVolume
+                    }
+                )
+            }
         }
     }
 
     private func updateMedicationProfile() {
         do {
+            // Use "Generic" brand for compounded medications
+            let brandName = self.isCompounded ? "Generic" : self.selectedBrand
+            
             try self.medicationManager.updateProfile(
                 self.profile,
                 medication: self.selectedMedication,
-                brandName: self.selectedBrand,
+                brandName: brandName,
                 currentDose: self.selectedDose,
                 isCompounded: self.isCompounded,
                 vialStrength: self.isCompounded ? self.vialStrength : nil,
