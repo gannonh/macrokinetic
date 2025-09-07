@@ -208,68 +208,27 @@ struct AddMedicationProfileView: View {
                     }
                 }
 
-                Section("Brand") {
-                    Picker("Brand", selection: Binding(
+                MedicationBrandSection(
+                    selectedMedication: self.selectedMedication,
+                    selectedBrand: Binding(
                         get: { self.validBrand },
-                        set: { self.selectedBrand = $0 }))
-                    {
-                        ForEach(self.selectedMedication.brands, id: \.self) { brand in
-                            Text(brand)
-                                .tag(brand)
-                                .accessibilityIdentifier("brand-\(brand.lowercased())")
-                        }
+                        set: { self.selectedBrand = $0 }),
+                    isCompounded: self.isCompounded,
+                    accessibilityPrefix: ""
+                )
+
+                MedicationDosingSection(
+                    selectedMedication: self.selectedMedication,
+                    selectedDose: Binding(
+                        get: { self.validDose },
+                        set: { self.selectedDose = $0 }),
+                    isCompounded: self.$isCompounded,
+                    vialStrength: self.$vialStrength,
+                    accessibilityPrefix: "",
+                    onCalculateReconstitution: {
+                        self.showingReconstitutionCalculator = true
                     }
-                    .accessibilityIdentifier("brand-picker")
-                }
-
-                Section("Dosing") {
-                    Toggle("Compounded Medication", isOn: self.$isCompounded)
-                        .accessibilityIdentifier("compounded-medication-toggle")
-                        .accessibilityLabel("Compounded Medication")
-                        .accessibilityValue(self.isCompounded ? "On" : "Off")
-
-                    if self.isCompounded {
-                        HStack {
-                            Text("Vial Strength (mg)")
-                            Spacer()
-                            TextField("10.0", value: self.$vialStrength, format: .number)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 80)
-                                .accessibilityIdentifier("vial-strength-input")
-                        }
-
-                        HStack {
-                            Text("Target Dose (mg)")
-                            Spacer()
-                            TextField("1.0", value: self.$selectedDose, format: .number)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 80)
-                                .accessibilityIdentifier("target-dose-input")
-                        }
-
-                        // Show reconstitution calculation
-                        if self.vialStrength > 0, self.selectedDose > 0 {
-                            Button("Calculate Reconstitution") {
-                                self.showingReconstitutionCalculator = true
-                            }
-                            .accessibilityIdentifier("calculate-reconstitution")
-                        }
-                    } else {
-                        Picker("Dose", selection: Binding(
-                            get: { self.validDose },
-                            set: { self.selectedDose = $0 }))
-                        {
-                            ForEach(self.selectedMedication.availableDoses, id: \.self) { dose in
-                                Text("\(String(format: "%.2f", dose)) mg")
-                                    .tag(dose)
-                                    .accessibilityIdentifier("dose-option-\(String(format: "%.2f", dose))")
-                            }
-                        }
-                        .accessibilityIdentifier("dose-picker")
-                    }
-                }
+                )
 
                 Section("Notes") {
                     TextField("Optional notes about your medication...", text: self.$notes, axis: .vertical)
@@ -301,7 +260,12 @@ struct AddMedicationProfileView: View {
                 ReconstitutionCalculatorView(
                     vialStrength: self.vialStrength,
                     targetDose: self.selectedDose,
-                    waterVolume: 10.0
+                    waterVolume: 1.0,
+                    onSave: { vialStrength, targetDose, waterVolume in
+                        self.vialStrength = vialStrength
+                        self.selectedDose = targetDose
+                        self.reconstitutionVolume = waterVolume
+                    }
                 )
             }
         }
@@ -309,10 +273,13 @@ struct AddMedicationProfileView: View {
 
     private func saveMedicationProfile() {
         do {
+            // Use "Generic" brand for compounded medications
+            let brandName = self.isCompounded ? "Generic" : self.selectedBrand
+            
             _ = try self.medicationManager.createProfile(
                 for: self.currentUser,
                 medication: self.selectedMedication,
-                brandName: self.selectedBrand,
+                brandName: brandName,
                 currentDose: self.selectedDose,
                 isCompounded: self.isCompounded,
                 vialStrength: self.isCompounded ? self.vialStrength : nil,

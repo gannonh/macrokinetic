@@ -38,7 +38,7 @@ struct ReconstitutionCalculatorView: View {
         if let waterVolume = waterVolume {
             self._waterVolume = State(initialValue: String(waterVolume))
         } else if let profile = profile {
-            self._waterVolume = State(initialValue: String(profile.reconstitutionVolume ?? 10.0))
+            self._waterVolume = State(initialValue: String(profile.reconstitutionVolume ?? 1.0))
         } else {
             self._waterVolume = State(initialValue: "1")
         }
