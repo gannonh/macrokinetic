@@ -367,14 +367,6 @@ struct MedicationProfileDetailView: View {
                             icon: "drop.fill")
                     }
                     .accessibilityIdentifier("reconstitution-calculator")
-                } else {
-                    NavigationLink(destination: PenClickCalculatorView(profile: self.profile)) {
-                        CalculatorCard(
-                            title: "Pen Click Calculator",
-                            description: "Calculate pen clicks for dose adjustments",
-                            icon: "syringe.fill")
-                    }
-                    .accessibilityIdentifier("pen-click-calculator")
                 }
 
                 Spacer()

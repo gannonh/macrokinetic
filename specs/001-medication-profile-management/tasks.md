@@ -1,7 +1,7 @@
 # Tasks: Medication Profile Management
 
-**Status**: Partially Complete (Backend Done, Basic UI CRUD Done)
-**Last Updated**: 2025-09-06
+**Status**: Backend Complete, Pen Click Feature Removed, Onboarding Integration Pending
+**Last Updated**: 2025-09-07
 
 **Input**: Design documents from `/specs/001-medication-profile-management/`
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
@@ -57,6 +57,18 @@
 3. ✅ Created comprehensive draft PR #35 for medication profile CRUD
 4. ✅ Fixed all SwiftLint violations across codebase
 5. ✅ All unit tests passing (325+ tests), coverage requirements met
+
+**Session 5 - What Was Done (2025-09-07)**:
+1. ✅ Removed PenClickCalculator feature entirely due to liability concerns around off-label dosing
+   - Deleted PenClickCalculatorView.swift and PenClickCalculator.swift
+   - Removed penType field from MedicationProfile model
+   - Updated E2E tests to skip pen click calculator functionality
+2. ✅ Enhanced medication dose validation with brand-specific dose options
+   - Updated Medication enum with availableDoses(for brand: String) method
+   - Implemented FDA-approved dose specifications per brand/pen type
+   - Fixed MedicationManager to use brand-aware dose validation
+3. ✅ Fixed build issues by regenerating Xcode project with XcodeGen
+4. ⚠️ **IDENTIFIED ISSUE**: Onboarding medication selection not persisting as medication profile
 
 **Current Status**:
 - ✅ All backend services implemented and tested

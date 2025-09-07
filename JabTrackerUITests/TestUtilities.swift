@@ -12,7 +12,7 @@ enum TestUtilities {
     static func launchAppWithTestMode() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["UI_TESTING"] = "true"
-        app.launchArguments.append("--ui-testing")
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
         app.launch()
         return app
     }

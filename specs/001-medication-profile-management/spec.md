@@ -61,35 +61,43 @@ As a user taking GLP-1 medications (Ozempic, Wegovy, Mounjaro, etc.), I need to 
 - **FR-001**: System MUST support exactly four GLP-1 medications: Semaglutide, Tirzepatide, Liraglutide, and Dulaglutide with their medically accurate properties
 - **FR-002**: System MUST provide medication selection interface displaying brand names (Ozempic/Wegovy, Mounjaro/Zepbound, Victoza/Saxenda, Trulicity) mapped to generic medication types
 - **FR-003**: System MUST store medication half-life values (Semaglutide: 7 days, Tirzepatide: 5 days, Liraglutide: 0.54 days, Dulaglutide: 4.7 days) for pharmacokinetic calculations
-- **FR-004**: System MUST provide correct available dose options for each medication (e.g., Semaglutide: 0.25-2.4mg, Tirzepatide: 2.5-15mg)
+- **FR-004**: System MUST provide brand-specific available dose options based on FDA-approved pen specifications (e.g., Ozempic: [0.25, 0.5, 1.0, 2.0], Wegovy: [0.25, 0.5, 1.0, 1.7, 2.4])
 - **FR-005**: System MUST enforce proper dosing frequency constraints (daily for Liraglutide, weekly for others)
 - **FR-006**: Users MUST be able to create, view, update, and delete their medication profiles
 - **FR-007**: System MUST track dose escalation schedules with start date, target dose, and escalation timeline
 - **FR-008**: System MUST maintain medication profile history to support switching between different medications
-- **FR-009**: Users MUST be able to set their current dose level within the valid range for their selected medication
-- **FR-010**: System MUST validate that selected doses are available for the chosen medication type
+- **FR-009**: Users MUST be able to set their current dose level within the valid range for their selected medication and brand
+- **FR-010**: System MUST validate that selected doses are available for the chosen medication type and brand combination
 - **FR-011**: System MUST provide compounded medication reconstitution calculator that accepts vial strength (mg) and target dose (mg) and calculates required water volume (ml) and units per dose
 - **FR-012**: System MUST display reconstitution results in simple format: "Add X ml water. Your dose is Y units" where units = 10 * (target dose / vial strength)
 - **FR-013**: System MUST validate reconstitution inputs to ensure target dose does not exceed vial strength
-- **FR-014**: System MUST provide pen click calculator that shows number of clicks/units to dial for branded pen medications (Ozempic, Wegovy, Mounjaro, Trulicity) based on target dose
-- **FR-015**: System MUST store pen-specific click-to-dose ratios for accurate dose adjustment calculations
-- **FR-016**: System MUST display pen instructions in simple format: "Dial to X clicks/units for your Y mg dose"
+- **FR-014**: ~~System MUST provide pen click calculator that shows number of clicks/units to dial for branded pen medications~~ **REMOVED** due to liability concerns around off-label dosing recommendations
+- **FR-015**: ~~System MUST store pen-specific click-to-dose ratios for accurate dose adjustment calculations~~ **REMOVED** due to liability concerns
+- **FR-016**: ~~System MUST display pen instructions in simple format~~ **REMOVED** due to liability concerns
+- **FR-017**: System MUST integrate medication profile creation with onboarding flow to ensure selected medication during onboarding persists as a medication profile
 
 ### Scope & Boundaries
-This feature encompasses three distinct but related medication management capabilities:
-1. **Core Medication Profile Management**: CRUD operations for the four supported GLP-1 medications with medical properties
+This feature encompasses two distinct but related medication management capabilities:
+1. **Core Medication Profile Management**: CRUD operations for the four supported GLP-1 medications with brand-specific dose validation
 2. **Compounded Medication Support**: Simple reconstitution calculator for vial-based medications 
-3. **Branded Pen Dose Adjustment**: Click/unit calculator for pen-based medications
 
 **In Scope**: 
 - Medication selection (onboarding wizard)
 - Profile management (Settings CRUD operations)
 - Dose escalation tracking 
 - Reconstitution calculations
-- Pen click calculations
+- Brand-specific dose validation
 - Settings UI for profile modification
+- Onboarding integration fixes
 
-**Out of Scope**: Pharmacokinetic modeling (separate feature), dose reminders (separate feature), multiple concurrent medications
+**Out of Scope**: 
+- Pen click calculations (removed due to liability concerns)
+- Pharmacokinetic modeling (separate feature)
+- Dose reminders (separate feature)
+- Multiple concurrent medications
+
+**Known Issues**:
+- Onboarding flow medication selection does not persist as medication profile (needs investigation and fix)
 
 ### Key Entities *(include if feature involves data)*
 - **Medication**: Represents the four supported GLP-1 medication types with properties including generic name, brand names, half-life in days, available dose array, dosing frequency, and pen click-to-dose ratios for branded formulations

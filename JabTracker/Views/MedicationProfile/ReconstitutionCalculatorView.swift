@@ -4,16 +4,19 @@ import SwiftUI
 /// Uses ReconstitutionCalculator service for medical accuracy
 struct ReconstitutionCalculatorView: View {
     let profile: MedicationProfile?
+    let onSave: ((Double, Double, Double) -> Void)?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var vialStrength: String = ""
     @State private var targetDose: String = ""
-    @State private var waterVolume: String = "10"
+    @State private var waterVolume: String = "1"
     @State private var calculationResult: ReconstitutionCalculator.ReconstitutionResult?
     @State private var errorMessage: String = ""
     @State private var showingError = false
     
-    init(profile: MedicationProfile? = nil, vialStrength: Double? = nil, targetDose: Double? = nil, waterVolume: Double? = nil) {
+    init(profile: MedicationProfile? = nil, vialStrength: Double? = nil, targetDose: Double? = nil, waterVolume: Double? = nil, onSave: ((Double, Double, Double) -> Void)? = nil) {
         self.profile = profile
+        self.onSave = onSave
         
         // Initialize with provided values, profile values, or defaults
         if let vialStrength = vialStrength {
@@ -37,7 +40,7 @@ struct ReconstitutionCalculatorView: View {
         } else if let profile = profile {
             self._waterVolume = State(initialValue: String(profile.reconstitutionVolume ?? 10.0))
         } else {
-            self._waterVolume = State(initialValue: "10")
+            self._waterVolume = State(initialValue: "1")
         }
     }
     
@@ -84,7 +87,7 @@ struct ReconstitutionCalculatorView: View {
                         Text("Calculate Reconstitution")
                             .frame(maxWidth: .infinity)
                     }
-                    .accessibilityIdentifier("calculate-reconstitution")
+                    .accessibilityIdentifier("calculate-reconstitution-sheet")
                     .buttonStyle(.borderedProminent)
                 }
                 
@@ -116,6 +119,15 @@ struct ReconstitutionCalculatorView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Close") {
                         dismiss()
+                    }
+                }
+                
+                if let result = calculationResult {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Save") {
+                            saveCalculationToProfile(result: result)
+                        }
+                        .accessibilityIdentifier("save-reconstitution-calculation")
                     }
                 }
             }
@@ -152,6 +164,41 @@ struct ReconstitutionCalculatorView: View {
         errorMessage = message
         showingError = true
         calculationResult = nil
+    }
+    
+    private func saveCalculationToProfile(result: ReconstitutionCalculator.ReconstitutionResult) {
+        guard let vialStrengthValue = Double(vialStrength),
+              let targetDoseValue = Double(targetDose),
+              let waterVolumeValue = Double(waterVolume) else {
+            showError("Invalid calculation values")
+            return
+        }
+        
+        if let profile = profile {
+            // Update existing profile
+            profile.currentDose = targetDoseValue
+            profile.vialStrength = vialStrengthValue
+            profile.reconstitutionVolume = waterVolumeValue
+            profile.updatedAt = Date()
+            
+            // Force Generic brand for compounded medications
+            if profile.isCompounded {
+                profile.brandName = "Generic"
+            }
+            
+            do {
+                try modelContext.save()
+                dismiss()
+            } catch {
+                showError("Failed to save: \(error.localizedDescription)")
+            }
+        } else if let onSave = onSave {
+            // Callback to parent form with calculated values
+            onSave(vialStrengthValue, targetDoseValue, waterVolumeValue)
+            dismiss()
+        } else {
+            showError("No save action available")
+        }
     }
 }
 

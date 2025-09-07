@@ -131,7 +131,6 @@ final class MedicationProfileSettingsUITests: XCTestCase {
     // MARK: - E2E Acceptance Test: Compounded Medication Setup
 
     /// Acceptance Test: User can set up compounded medication with reconstitution calculator
-    /// TODO: Compounded medication and reconstitution calculator not yet implemented
     func testCompoundedMedicationSetup() throws {
         // ReconstitutionCalculatorView is now implemented - test the full flow
         // GIVEN: User is on Settings tab
@@ -159,12 +158,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         let initialValue = compoundedToggle.value as? String
         print("Toggle initial value: \(initialValue ?? "nil")")
 
-        // In SwiftUI Forms, we need to tap at the toggle's actual control position
-        // The toggle control is usually on the right side of the cell
-        let toggleFrame = compoundedToggle.frame
-        let toggleControlPoint = CGPoint(
-            x: toggleFrame.maxX - 30, // Tap near the right edge where the switch control is
-            y: toggleFrame.midY)
+        // Pause briefly to ensure UI is stable
         sleep(1)
 
         // Perform coordinate-based tap
@@ -185,12 +179,16 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         let vialStrengthField = self.app.textFields["vial-strength-input"]
         XCTAssertTrue(vialStrengthField.waitForExistence(timeout: 3.0))
         vialStrengthField.tap()
+        // Clear existing text if any
+        vialStrengthField.doubleTap() // Select all existing text
         vialStrengthField.typeText("10")
 
         // AND: User enters target dose
         let targetDoseField = self.app.textFields["target-dose-input"]
         XCTAssertTrue(targetDoseField.waitForExistence(timeout: 3.0))
         targetDoseField.tap()
+        // Clear existing text if any
+        targetDoseField.doubleTap()
         targetDoseField.typeText("1")
 
         // AND: User requests calculation
@@ -198,13 +196,20 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         XCTAssertTrue(calculateButton.waitForExistence(timeout: 3.0))
         calculateButton.tap()
 
-        // THEN: ReconstitutionCalculatorView should open
-        let calculatorTitle = self.app.navigationBars["Reconstitution Calculator"]
+        // THEN: ReconstitutionCalculatorView should open as a sheet
+        let calculatorTitle = self.app.staticTexts["Reconstitution Calculator"]
         XCTAssertTrue(calculatorTitle.waitForExistence(timeout: 3.0))
 
-        // AND: Calculator should show results
-        let resultText = self.app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Add'"))
-        XCTAssertTrue(resultText.firstMatch.waitForExistence(timeout: 3.0))
+        // AND: User taps Calculate Reconstitution button in the sheet
+        let calculateInSheetButton = self.app.buttons["calculate-reconstitution-sheet"]
+        XCTAssertTrue(calculateInSheetButton.waitForExistence(timeout: 3.0))
+        calculateInSheetButton.tap()
+
+        // THEN: Calculator should show results
+        XCTAssertTrue(self.app.staticTexts["Add 1.0 ml water. Your dose is 10.0 units"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(self.app.staticTexts["Units per dose: 10.0"].exists)
+        XCTAssertTrue(self.app.staticTexts["Concentration: 10.00 mg/ml"].exists)
+        XCTAssertTrue(self.app.staticTexts["Total units: 100.0"].exists)
 
         // Close the calculator
         self.app.buttons["Close"].tap()
@@ -215,38 +220,5 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         // THEN: Compounded profile appears in list
         let compoundedCell = self.app.buttons["medication-profile-semaglutide-generic-1.00mg"]
         XCTAssertTrue(compoundedCell.waitForExistence(timeout: 3.0))
-    }
-
-    // MARK: - E2E Acceptance Test: Pen Click Calculator
-
-    /// Acceptance Test: User can calculate pen clicks for dose adjustments
-    /// TODO: Pen click calculator feature not yet implemented
-    func testPenClickCalculator() throws {
-        throw XCTSkip("Pen click calculator feature not yet implemented")
-        // GIVEN: User has branded medication profile
-        self.app.tabBars.buttons["Settings"].tap()
-        self.app.buttons["Medication Profiles"].tap()
-        self.app.buttons["Add Medication Profile"].tap()
-        self.app.buttons["medication-semaglutide"].tap()
-        self.app.buttons["brand-ozempic"].tap()
-        self.app.buttons["dose-button-0.5"].tap()
-        self.app.buttons["save-medication-profile"].tap()
-
-        // WHEN: User accesses pen click calculator
-        let profileCell = self.app.cells["medication-profile-semaglutide-ozempic-0.5mg"]
-        profileCell.tap()
-
-        let penCalculatorButton = self.app.buttons["pen-click-calculator"]
-        XCTAssertTrue(penCalculatorButton.waitForExistence(timeout: 3.0))
-        penCalculatorButton.tap()
-
-        // AND: User changes target dose
-        let targetDoseSlider = self.app.sliders["target-dose-slider"]
-        XCTAssertTrue(targetDoseSlider.waitForExistence(timeout: 3.0))
-        targetDoseSlider.adjust(toNormalizedSliderPosition: 0.25) // 0.25mg
-
-        // THEN: Pen click instructions should update
-        let clickInstruction = self.app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'clicks for your 0.25 mg dose'")).firstMatch
-        XCTAssertTrue(clickInstruction.waitForExistence(timeout: 3.0))
     }
 }

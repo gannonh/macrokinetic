@@ -98,11 +98,11 @@ class MedicationManager: ObservableObject {
         isCompounded: Bool = false,
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
-        penType: String? = nil,
         notes: String = "") throws -> MedicationProfile
     {
-        // Validate dose is within medication range
-        guard medication.availableDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
+        // Validate dose is within brand-specific medication range
+        let validDoses = medication.availableDoses(for: brandName)
+        guard validDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
             throw MedicationError.doseOutOfRange(medication: medication, currentDose: currentDose)
         }
 
@@ -127,7 +127,6 @@ class MedicationManager: ObservableObject {
             isCompounded: isCompounded,
             vialStrength: vialStrength,
             reconstitutionVolume: reconstitutionVolume,
-            penType: penType,
             notes: notes)
 
         // Link profile to user
@@ -154,7 +153,6 @@ class MedicationManager: ObservableObject {
         isCompounded: Bool? = nil,
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
-        penType: String? = nil,
         notes: String? = nil) throws
     {
         // Update medication type if provided
@@ -174,7 +172,9 @@ class MedicationManager: ObservableObject {
         if let currentDose,
            let medicationForValidation
         {
-            guard medicationForValidation.availableDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
+            let brandNameForValidation = brandName ?? profile.brandName
+            let validDoses = medicationForValidation.availableDoses(for: brandNameForValidation)
+            guard validDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
                 throw MedicationError.doseOutOfRange(medication: medicationForValidation, currentDose: currentDose)
             }
             profile.currentDose = currentDose
@@ -197,9 +197,6 @@ class MedicationManager: ObservableObject {
             profile.reconstitutionVolume = reconstitutionVolume
         }
 
-        if let penType {
-            profile.penType = penType
-        }
 
         if let notes {
             profile.notes = notes
@@ -288,19 +285,4 @@ class MedicationManager: ObservableObject {
             waterVolume: reconstitutionVolume)
     }
 
-    // MARK: - Pen Click Helpers
-
-    /// Calculate pen clicks for a branded profile
-    func calculatePenClicks(for profile: MedicationProfile) throws -> PenClickCalculator.PenClickResult? {
-        guard !profile.isCompounded,
-              let penTypeString = profile.penType,
-              let penType = PenClickCalculator.PenType(rawValue: penTypeString)
-        else {
-            return nil
-        }
-
-        return try PenClickCalculator.calculate(
-            penType: penType,
-            targetDose: profile.currentDose)
-    }
 }
