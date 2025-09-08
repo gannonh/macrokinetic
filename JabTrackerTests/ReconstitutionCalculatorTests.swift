@@ -204,7 +204,7 @@ struct ReconstitutionCalculatorTests {
     }
 
     @Test("Error description coverage")
-    func testErrorDescriptions() {
+    func errorDescriptions() {
         // Test all error description cases to achieve full coverage
         #expect(ReconstitutionCalculator.ReconstitutionError.invalidVialStrength.errorDescription == "Vial strength must be greater than 0")
         #expect(ReconstitutionCalculator.ReconstitutionError.invalidTargetDose.errorDescription == "Target dose must be greater than 0")

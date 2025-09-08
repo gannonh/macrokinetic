@@ -58,7 +58,6 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
             return [0.25, 0.5, 1.0, 1.7, 2.4] // Single-dose fixed pens
         case (.semaglutide, "Generic"):
             return [0.25, 0.5, 1.0, 1.5, 2.0, 2.5] // Compounded - flexible dosing
-            
         // Tirzepatide - all fixed-dose pens
         case (.tirzepatide, "Mounjaro"):
             return [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] // Fixed-dose single-use pens
@@ -66,7 +65,6 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
             return [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] // Fixed-dose single-use pens
         case (.tirzepatide, "Generic"):
             return [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] // Compounded - match clinical doses
-            
         // Liraglutide - dial-based dose selection
         case (.liraglutide, "Victoza"):
             return [0.6, 1.2, 1.8] // Dial-selected doses
@@ -74,19 +72,17 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
             return [0.6, 1.2, 1.8, 2.4, 3.0] // Extended dial-selected doses
         case (.liraglutide, "Generic"):
             return [0.6, 1.2, 1.8, 2.4, 3.0] // Compounded - full range
-            
         // Dulaglutide - all fixed-dose auto-injectors
         case (.dulaglutide, "Trulicity"):
             return [0.75, 1.5, 3.0, 4.5] // Fixed-dose auto-injectors
         case (.dulaglutide, "Generic"):
             return [0.75, 1.5, 3.0, 4.5] // Compounded - match clinical doses
-            
         // Fallback for unknown brands - use medication defaults
         default:
             return self.defaultAvailableDoses
         }
     }
-    
+
     /// Default available doses when brand is not specified (for onboarding/general use)
     var availableDoses: [Double] {
         switch self {
@@ -96,10 +92,10 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
         case .dulaglutide: return [0.75, 1.5, 3.0, 4.5]
         }
     }
-    
+
     /// Default available doses when brand is not specified
     private var defaultAvailableDoses: [Double] {
-        return availableDoses
+        self.availableDoses
     }
 
     var frequency: DoseFrequency {

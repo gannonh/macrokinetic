@@ -156,7 +156,7 @@ struct AddMedicationProfileView: View {
     @State private var selectedMedication: Medication = .semaglutide
     @State private var selectedBrand: String = Medication.semaglutide.brands.first ?? ""
     @State private var selectedDose: Double = Medication.semaglutide.availableDoses.first ?? 0.25
-    @State private var startDate: Date = Date()
+    @State private var startDate: Date = .init()
     @State private var preferredInjectionSites: [String] = ["Thigh"]
     @State private var isInitialized = false
     @State private var isCompounded = false
@@ -214,8 +214,7 @@ struct AddMedicationProfileView: View {
                         get: { self.validBrand },
                         set: { self.selectedBrand = $0 }),
                     isCompounded: self.isCompounded,
-                    accessibilityPrefix: "add"
-                )
+                    accessibilityPrefix: "add")
 
                 MedicationDosingSection(
                     selectedMedication: self.selectedMedication,
@@ -227,14 +226,13 @@ struct AddMedicationProfileView: View {
                     accessibilityPrefix: "add",
                     onCalculateReconstitution: {
                         self.showingReconstitutionCalculator = true
-                    }
-                )
+                    })
 
                 Section("Start Date") {
                     DatePicker("Start Date", selection: self.$startDate, displayedComponents: .date)
                         .accessibilityIdentifier("add-start-date-picker")
                 }
-                
+
                 Section("Preferred Injection Sites") {
                     ForEach(["Thigh", "Abdomen", "Upper Arm", "Buttocks"], id: \.self) { site in
                         HStack {
@@ -284,22 +282,21 @@ struct AddMedicationProfileView: View {
                 Text(self.errorMessage)
             }
             .reconstitutionCalculatorSheet(
-                isPresented: $showingReconstitutionCalculator,
-                vialStrength: vialStrength,
-                targetDose: selectedDose,
+                isPresented: self.$showingReconstitutionCalculator,
+                vialStrength: self.vialStrength,
+                targetDose: self.selectedDose,
                 waterVolume: 1.0,
                 onSave: { vialStrength, targetDose, waterVolume in
                     self.vialStrength = vialStrength
                     self.selectedDose = targetDose
                     self.reconstitutionVolume = waterVolume
-                    
+
                     // Calculate and store concentration and units per dose
                     do {
                         let result = try ReconstitutionCalculator.calculate(
                             vialStrength: vialStrength,
                             targetDose: targetDose,
-                            waterVolume: waterVolume
-                        )
+                            waterVolume: waterVolume)
                         self.concentration = result.concentration
                         self.unitsPerDose = result.unitsPerDose
                     } catch {
@@ -307,8 +304,7 @@ struct AddMedicationProfileView: View {
                         self.concentration = nil
                         self.unitsPerDose = nil
                     }
-                }
-            )
+                })
         }
     }
 
@@ -316,7 +312,7 @@ struct AddMedicationProfileView: View {
         do {
             // Use "Generic" brand for compounded medications
             let brandName = self.isCompounded ? "Generic" : self.selectedBrand
-            
+
             _ = try self.medicationManager.createProfile(
                 for: self.currentUser,
                 medication: self.selectedMedication,
@@ -386,7 +382,7 @@ struct MedicationProfileDetailView: View {
                 // Calculator Tools
                 if self.profile.isCompounded {
                     Button {
-                        showingReconstitutionCalculator = true
+                        self.showingReconstitutionCalculator = true
                     } label: {
                         CalculatorCard(
                             title: "Reconstitution Calculator",
@@ -414,37 +410,34 @@ struct MedicationProfileDetailView: View {
             EditMedicationProfileView(profile: self.profile, medicationManager: self.medicationManager)
         }
         .reconstitutionCalculatorSheet(
-            isPresented: $showingReconstitutionCalculator,
-            vialStrength: profile.vialStrength ?? 1.0,
-            targetDose: profile.currentDose,
-            waterVolume: profile.reconstitutionVolume ?? 1.0,
+            isPresented: self.$showingReconstitutionCalculator,
+            vialStrength: self.profile.vialStrength ?? 1.0,
+            targetDose: self.profile.currentDose,
+            waterVolume: self.profile.reconstitutionVolume ?? 1.0,
             onSave: { vialStrength, targetDose, waterVolume in
                 // Calculate and store concentration and units per dose
                 do {
                     let result = try ReconstitutionCalculator.calculate(
                         vialStrength: vialStrength,
                         targetDose: targetDose,
-                        waterVolume: waterVolume
-                    )
-                    
+                        waterVolume: waterVolume)
+
                     // Update the profile with new values
-                    try medicationManager.updateProfile(
-                        profile,
-                        medication: profile.medication,
-                        brandName: profile.brandName,
+                    try self.medicationManager.updateProfile(
+                        self.profile,
+                        medication: self.profile.medication,
+                        brandName: self.profile.brandName,
                         currentDose: targetDose,
-                        isCompounded: profile.isCompounded,
+                        isCompounded: self.profile.isCompounded,
                         vialStrength: vialStrength,
                         reconstitutionVolume: waterVolume,
                         concentration: result.concentration,
                         unitsPerDose: result.unitsPerDose,
-                        notes: profile.notes
-                    )
+                        notes: self.profile.notes)
                 } catch {
                     print("Failed to update profile with reconstitution values: \(error)")
                 }
-            }
-        )
+            })
     }
 }
 
@@ -557,15 +550,13 @@ struct EditMedicationProfileView: View {
                         self.selectedBrand = newBrand
                         self.selectedDose = newDose
                     }
-
                 }
 
                 MedicationBrandSection(
                     selectedMedication: self.selectedMedication,
                     selectedBrand: self.$selectedBrand,
                     isCompounded: self.isCompounded,
-                    accessibilityPrefix: "edit"
-                )
+                    accessibilityPrefix: "edit")
 
                 MedicationDosingSection(
                     selectedMedication: self.selectedMedication,
@@ -575,14 +566,13 @@ struct EditMedicationProfileView: View {
                     accessibilityPrefix: "edit",
                     onCalculateReconstitution: {
                         self.showingReconstitutionCalculator = true
-                    }
-                )
+                    })
 
                 Section("Start Date") {
                     DatePicker("Start Date", selection: self.$startDate, displayedComponents: .date)
                         .accessibilityIdentifier("edit-start-date-picker")
                 }
-                
+
                 Section("Preferred Injection Sites") {
                     ForEach(["Thigh", "Abdomen", "Upper Arm", "Buttocks"], id: \.self) { site in
                         HStack {
@@ -634,22 +624,21 @@ struct EditMedicationProfileView: View {
                 Text(self.errorMessage)
             }
             .reconstitutionCalculatorSheet(
-                isPresented: $showingReconstitutionCalculator,
-                vialStrength: vialStrength,
-                targetDose: selectedDose,
+                isPresented: self.$showingReconstitutionCalculator,
+                vialStrength: self.vialStrength,
+                targetDose: self.selectedDose,
                 waterVolume: 1.0,
                 onSave: { vialStrength, targetDose, waterVolume in
                     self.vialStrength = vialStrength
                     self.selectedDose = targetDose
                     self.reconstitutionVolume = waterVolume
-                    
+
                     // Calculate and store concentration and units per dose
                     do {
                         let result = try ReconstitutionCalculator.calculate(
                             vialStrength: vialStrength,
                             targetDose: targetDose,
-                            waterVolume: waterVolume
-                        )
+                            waterVolume: waterVolume)
                         self.concentration = result.concentration
                         self.unitsPerDose = result.unitsPerDose
                     } catch {
@@ -657,8 +646,7 @@ struct EditMedicationProfileView: View {
                         self.concentration = nil
                         self.unitsPerDose = nil
                     }
-                }
-            )
+                })
         }
     }
 
@@ -666,7 +654,7 @@ struct EditMedicationProfileView: View {
         do {
             // Use "Generic" brand for compounded medications
             let brandName = self.isCompounded ? "Generic" : self.selectedBrand
-            
+
             try self.medicationManager.updateProfile(
                 self.profile,
                 medication: self.selectedMedication,

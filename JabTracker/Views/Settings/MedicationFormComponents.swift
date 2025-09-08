@@ -7,10 +7,10 @@ struct MedicationBrandSection: View {
     @Binding var selectedBrand: String
     let isCompounded: Bool
     let accessibilityPrefix: String
-    
+
     var body: some View {
         Section("Brand") {
-            if isCompounded {
+            if self.isCompounded {
                 HStack {
                     Text("Brand")
                     Spacer()
@@ -18,14 +18,14 @@ struct MedicationBrandSection: View {
                         .foregroundColor(.secondary)
                 }
             } else {
-                Picker("Brand", selection: $selectedBrand) {
-                    ForEach(selectedMedication.brands, id: \.self) { brand in
+                Picker("Brand", selection: self.$selectedBrand) {
+                    ForEach(self.selectedMedication.brands, id: \.self) { brand in
                         Text(brand)
                             .tag(brand)
-                            .accessibilityIdentifier("\(accessibilityPrefix)-brand-\(brand.lowercased())")
+                            .accessibilityIdentifier("\(self.accessibilityPrefix)-brand-\(brand.lowercased())")
                     }
                 }
-                .accessibilityIdentifier("\(accessibilityPrefix)-brand-picker")
+                .accessibilityIdentifier("\(self.accessibilityPrefix)-brand-picker")
             }
         }
     }
@@ -38,51 +38,51 @@ struct MedicationDosingSection: View {
     @Binding var vialStrength: Double
     let accessibilityPrefix: String
     let onCalculateReconstitution: () -> Void
-    
+
     var body: some View {
         Section("Dosing") {
-            Toggle("Compounded Medication", isOn: $isCompounded)
-                .accessibilityIdentifier("\(accessibilityPrefix)-compounded-medication-toggle")
+            Toggle("Compounded Medication", isOn: self.$isCompounded)
+                .accessibilityIdentifier("\(self.accessibilityPrefix)-compounded-medication-toggle")
                 .accessibilityLabel("Compounded Medication")
-                .accessibilityValue(isCompounded ? "On" : "Off")
-            
-            if isCompounded {
+                .accessibilityValue(self.isCompounded ? "On" : "Off")
+
+            if self.isCompounded {
                 HStack {
                     Text("Vial Strength (mg)")
                     Spacer()
-                    TextField("10.0", value: $vialStrength, format: .number)
+                    TextField("10.0", value: self.$vialStrength, format: .number)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .frame(width: 80)
-                        .accessibilityIdentifier("\(accessibilityPrefix)-vial-strength-input")
+                        .accessibilityIdentifier("\(self.accessibilityPrefix)-vial-strength-input")
                 }
-                
+
                 HStack {
                     Text("Target Dose (mg)")
                     Spacer()
-                    TextField("1.0", value: $selectedDose, format: .number)
+                    TextField("1.0", value: self.$selectedDose, format: .number)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .frame(width: 80)
-                        .accessibilityIdentifier("\(accessibilityPrefix)-target-dose-input")
+                        .accessibilityIdentifier("\(self.accessibilityPrefix)-target-dose-input")
                 }
-                
+
                 // Show reconstitution calculation
-                if vialStrength > 0, selectedDose > 0 {
+                if self.vialStrength > 0, self.selectedDose > 0 {
                     Button("Calculate Reconstitution") {
-                        onCalculateReconstitution()
+                        self.onCalculateReconstitution()
                     }
-                    .accessibilityIdentifier("\(accessibilityPrefix)-calculate-reconstitution")
+                    .accessibilityIdentifier("\(self.accessibilityPrefix)-calculate-reconstitution")
                 }
             } else {
-                Picker("Dose", selection: $selectedDose) {
-                    ForEach(selectedMedication.availableDoses, id: \.self) { dose in
+                Picker("Dose", selection: self.$selectedDose) {
+                    ForEach(self.selectedMedication.availableDoses, id: \.self) { dose in
                         Text("\(String(format: "%.2f", dose)) mg")
                             .tag(dose)
-                            .accessibilityIdentifier("\(accessibilityPrefix)-dose-option-\(String(format: "%.2f", dose))")
+                            .accessibilityIdentifier("\(self.accessibilityPrefix)-dose-option-\(String(format: "%.2f", dose))")
                     }
                 }
-                .accessibilityIdentifier("\(accessibilityPrefix)-dose-picker")
+                .accessibilityIdentifier("\(self.accessibilityPrefix)-dose-picker")
             }
         }
     }
@@ -94,16 +94,15 @@ struct ReconstitutionCalculatorSheet: ViewModifier {
     let targetDose: Double
     let waterVolume: Double
     let onSave: (Double, Double, Double) -> Void
-    
+
     func body(content: Content) -> some View {
         content
-            .sheet(isPresented: $isPresented) {
+            .sheet(isPresented: self.$isPresented) {
                 ReconstitutionCalculatorView(
-                    vialStrength: vialStrength,
-                    targetDose: targetDose,
-                    waterVolume: waterVolume,
-                    onSave: onSave
-                )
+                    vialStrength: self.vialStrength,
+                    targetDose: self.targetDose,
+                    waterVolume: self.waterVolume,
+                    onSave: self.onSave)
             }
     }
 }
@@ -114,14 +113,13 @@ extension View {
         vialStrength: Double,
         targetDose: Double,
         waterVolume: Double = 1.0,
-        onSave: @escaping (Double, Double, Double) -> Void
-    ) -> some View {
+        onSave: @escaping (Double, Double, Double) -> Void) -> some View
+    {
         modifier(ReconstitutionCalculatorSheet(
             isPresented: isPresented,
             vialStrength: vialStrength,
             targetDose: targetDose,
             waterVolume: waterVolume,
-            onSave: onSave
-        ))
+            onSave: onSave))
     }
 }

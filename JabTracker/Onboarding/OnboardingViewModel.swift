@@ -189,7 +189,7 @@ class OnboardingViewModel: ObservableObject {
             startDate: self.selectedStartDate,
             medicationType: selectedMedication.rawValue,
             preferredInjectionSites: Array(self.selectedSites))
-        
+
         // Link medication profile to user
         medicationProfile.user = user
         context.insert(medicationProfile)

@@ -44,8 +44,7 @@ struct MedicationManagerTests {
             medication: medication,
             brandName: brandName,
             currentDose: currentDose,
-            isCompounded: false,
-)
+            isCompounded: false)
 
         // Then
         #expect(profile.genericName == medication.displayName)
@@ -316,7 +315,7 @@ struct MedicationManagerTests {
 
     @Test("Calculate pen clicks for branded profile")
     @MainActor
-    func testCalculatePenClicks() throws {
+    func calculatePenClicks() throws {
         // Given
         let manager = MedicationManager(modelContext: context)
         let testUser = try createTestUser()

@@ -195,11 +195,11 @@ class MedicationManager: ObservableObject {
         if let startDate {
             profile.startDate = startDate
         }
-        
+
         if let refillDate {
             profile.refillDate = refillDate
         }
-        
+
         if let preferredInjectionSites {
             profile.preferredInjectionSites = preferredInjectionSites
         }
@@ -269,7 +269,7 @@ class MedicationManager: ObservableObject {
             abs(availableDose - dose) < 0.01
         }
     }
-    
+
     /// Check if a dose is valid for a specific medication brand
     func isValidDose(_ dose: Double, for medication: Medication, brandName: String) -> Bool {
         medication.availableDoses(for: brandName).contains { availableDose in
@@ -318,5 +318,4 @@ class MedicationManager: ObservableObject {
             targetDose: profile.currentDose,
             waterVolume: reconstitutionVolume)
     }
-
 }
