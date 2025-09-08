@@ -1,62 +1,42 @@
- Fix Reconstitution Calculator Integration Issues
+Recommended Approach: Incremental Update + New Tests
 
-    Issues Identified
+  Looking at the existing tests, they're well-structured but will need updates. I
+  recommend this approach:
 
-    1. NavigationLink Problem: Detail view uses NavigationLink but calculator 
-    can't save when accessed this way (no onSave callback)
-    2. Default Water Volume: Inconsistent - Edit view defaults to 10ml instead of
-     1ml
-    3. Code Duplication: Significant duplication between Add and Edit views for 
-    calculator sheet presentation
-    4. Missing Save Button: NavigationLink presentation doesn't provide save 
-    functionality
+  Option 1: Incremental Update (Recommended)
+  - Fix the existing testMedicationProfileCRUDFlow() - basic CRUD should still work
+  - Update testCompoundedMedicationSetup() for the new sheet-based calculator flow
+  - Add new focused tests for the reconstitution calculator scenarios
 
-    Proposed Solution
+  Option 2: Complete Rewrite
+  - Start fresh with new test structure
+  - Risk of losing good existing patterns
 
-    1. Fix NavigationLink in Detail View
+  I lean toward Option 1 because:
+  1. The existing test structure is solid
+  2. Basic CRUD flow is likely still valid (just need accessibility ID updates)
+  3. We can incrementally fix and add comprehensive calculator tests
+  4. Maintains continuity with existing test patterns
 
-    - Change from NavigationLink to a button that opens calculator as sheet (like
-     Add view)
-    - This ensures consistent behavior and proper save functionality
+  Key changes needed:
+  - Update accessibility IDs that may have changed
+  - Fix the calculator flow (NavigationLink → Button+Sheet)
+  - Add tests for the detail view calculator access
+  - Add comprehensive calculation scenario tests
 
-    2. Fix Default Water Volume
+  New test scenarios to add:
+  - Detail view calculator access and save functionality
+  - Multiple calculation scenarios (different vial strengths, doses, water volumes)
+  - Error handling (invalid inputs, calculation failures)
+  - Default value verification (1ml water, 10mg vial)
 
-    - Change default from 10ml to 1ml in both:
-      - EditMedicationProfileView initialization (line 467)
-      - ReconstitutionCalculatorView profile fallback (line 41)
-
-    3. Create Shared Calculator Sheet Component
-
-    - Extract duplicate sheet presentation code into reusable component
-    - Create ReconstitutionCalculatorSheet that handles:
-      - Sheet presentation binding
-      - onSave callback with concentration/units calculation
-      - Consistent defaults (1ml water volume)
-
-    4. Update All Three Views
-
-    - MedicationProfileDetailView: Replace NavigationLink with button + sheet
-    - AddMedicationProfileView: Use new shared component
-    - EditMedicationProfileView: Use new shared component
-
-    Implementation Steps
-
-    1. Create ReconstitutionCalculatorSheet component in 
-    MedicationFormComponents.swift
-    2. Update MedicationProfileDetailView to use sheet instead of NavigationLink
-    3. Replace duplicate sheet code in Add and Edit views with shared component
-    4. Fix default water volume to 1ml everywhere
-    5. Test all three access paths to ensure save functionality works
-
-    Benefits
-
-    - DRY Principle: Single source of truth for calculator presentation
-    - Consistency: Same behavior across all access points
-    - Maintainability: Future changes only need to be made in one place
-    - User Experience: Save button always available, consistent defaults
+  Would you like me to start by running the current tests to see exactly what breaks, then
+   fix them incrementally? Or do you prefer the clean slate approach?
 
   Todos
-  ☐ Fix NavigationLink for calculator in detail view
-  ☐ Fix default water volume to 1ml instead of 10ml
-  ☐ Add save functionality when navigating to calculator
-  ☐ Refactor duplicate code between Add and Edit views
+  ☐ Analyze current E2E test failures and scope of required updates
+  ☐ Update basic CRUD flow test for new UI patterns
+  ☐ Update compounded medication setup test for sheet-based calculator
+  ☐ Add new test for detail view calculator access
+  ☐ Add comprehensive reconstitution calculation scenarios
+  ☐ Verify all calculator edge cases and error handling

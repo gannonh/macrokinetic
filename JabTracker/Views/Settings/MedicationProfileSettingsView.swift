@@ -212,7 +212,7 @@ struct AddMedicationProfileView: View {
                         get: { self.validBrand },
                         set: { self.selectedBrand = $0 }),
                     isCompounded: self.isCompounded,
-                    accessibilityPrefix: ""
+                    accessibilityPrefix: "add"
                 )
 
                 MedicationDosingSection(
@@ -222,7 +222,7 @@ struct AddMedicationProfileView: View {
                         set: { self.selectedDose = $0 }),
                     isCompounded: self.$isCompounded,
                     vialStrength: self.$vialStrength,
-                    accessibilityPrefix: "",
+                    accessibilityPrefix: "add",
                     onCalculateReconstitution: {
                         self.showingReconstitutionCalculator = true
                     }

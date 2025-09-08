@@ -45,20 +45,20 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         semaglutideOption.tap()
 
         // AND: User selects Ozempic brand from picker
-        let brandPicker = self.app.buttons["brand-picker"]
+        let brandPicker = self.app.buttons["add-brand-picker"]
         XCTAssertTrue(brandPicker.waitForExistence(timeout: 3.0))
         brandPicker.tap()
 
-        let ozempicOption = self.app.buttons["brand-ozempic"]
+        let ozempicOption = self.app.buttons["add-brand-ozempic"]
         XCTAssertTrue(ozempicOption.waitForExistence(timeout: 3.0))
         ozempicOption.tap()
 
         // AND: User selects 0.25 mg dose from picker
-        let dosePicker = self.app.buttons["dose-picker"]
+        let dosePicker = self.app.buttons["add-dose-picker"]
         XCTAssertTrue(dosePicker.waitForExistence(timeout: 3.0))
         dosePicker.tap()
 
-        let doseOption = self.app.buttons["dose-option-0.25"]
+        let doseOption = self.app.buttons["add-dose-option-0.25"]
         XCTAssertTrue(doseOption.waitForExistence(timeout: 3.0))
         doseOption.tap()
 
