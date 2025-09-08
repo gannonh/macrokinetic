@@ -360,7 +360,7 @@ struct MedicationProfileDetailView: View {
                             description: "Calculate water volume and units per dose",
                             icon: "drop.fill")
                     }
-                    .accessibilityIdentifier("reconstitution-calculator")
+                    .accessibilityIdentifier("detail-reconstitution-calculator")
                 }
 
                 Spacer()

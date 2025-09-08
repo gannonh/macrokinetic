@@ -223,4 +223,237 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         let compoundedCell = self.app.buttons["medication-profile-semaglutide-generic-1.00mg"]
         XCTAssertTrue(compoundedCell.waitForExistence(timeout: 3.0))
     }
+    
+    // MARK: - E2E Acceptance Test: Detail View Calculator Access
+    
+    /// Acceptance Test: User can access reconstitution calculator from profile detail view
+    func testDetailViewCalculatorAccess() throws {
+        // GIVEN: User has created a compounded medication profile
+        self.app.tabBars.buttons["Settings"].tap()
+        self.app.buttons["Medication Profiles"].tap()
+        self.app.buttons["Add Medication Profile"].tap()
+        
+        // Create compounded semaglutide profile
+        self.app.buttons["medication-picker"].tap()
+        self.app.buttons["medication-semaglutide"].tap()
+        
+        let compoundedToggle = self.app.switches["add-compounded-medication-toggle"]
+        XCTAssertTrue(compoundedToggle.waitForExistence(timeout: 3.0))
+        compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        sleep(1)
+        
+        let vialStrengthField = self.app.textFields["add-vial-strength-input"]
+        vialStrengthField.tap()
+        sleep(1) // Wait for keyboard to appear
+        vialStrengthField.doubleTap() // Select all existing text
+        vialStrengthField.typeText("15")
+        
+        let targetDoseField = self.app.textFields["add-target-dose-input"]
+        targetDoseField.tap()
+        sleep(1) // Wait for focus change
+        targetDoseField.doubleTap() // Select all existing text
+        targetDoseField.typeText("2.5")
+        
+        self.app.buttons["save-medication-profile"].tap()
+        
+        // WHEN: User taps on the created profile to view details
+        let profileCell = self.app.buttons["medication-profile-semaglutide-generic-2.50mg"]
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+        profileCell.tap()
+        
+        // THEN: Detail view should display profile information
+        XCTAssertTrue(self.app.staticTexts["Medication Details"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(self.app.staticTexts["Semaglutide"].exists)
+        XCTAssertTrue(self.app.staticTexts["Generic"].exists)
+        XCTAssertTrue(self.app.staticTexts["2.50 mg"].exists)
+        
+        // AND: Calculator button should be present as simple button (not NavigationLink)
+        let calculatorButton = self.app.buttons["detail-reconstitution-calculator"]
+        XCTAssertTrue(calculatorButton.waitForExistence(timeout: 3.0),
+                      "Calculator button should be accessible from detail view")
+        
+        // WHEN: User taps calculator button
+        calculatorButton.tap()
+        
+        // THEN: Calculator should open as sheet with profile values pre-filled
+        let calculatorTitle = self.app.staticTexts["Reconstitution Calculator"]
+        XCTAssertTrue(calculatorTitle.waitForExistence(timeout: 3.0))
+        
+        // AND: Calculator should show Reconstitution Parameters section
+        XCTAssertTrue(self.app.staticTexts["Reconstitution Parameters"].exists ||
+                     self.app.staticTexts["RECONSTITUTION PARAMETERS"].exists,
+                     "Reconstitution Parameters section should be visible")
+        
+        // AND: Calculator fields should show profile values
+        let calculatorVialField = self.app.textFields["vial-strength-input"]
+        XCTAssertTrue(calculatorVialField.waitForExistence(timeout: 3.0))
+        XCTAssertEqual(calculatorVialField.value as? String, "15.0")
+        
+        let calculatorDoseField = self.app.textFields["target-dose-input"]
+        XCTAssertTrue(calculatorDoseField.waitForExistence(timeout: 3.0))
+        XCTAssertEqual(calculatorDoseField.value as? String, "2.5")
+        
+        // WHEN: User calculates reconstitution
+        self.app.buttons["calculate-reconstitution-sheet"].tap()
+        
+        // THEN: Results should be displayed (15mg vial, 2.5mg dose = 16.7 units)
+        XCTAssertTrue(self.app.staticTexts["Add 1.0 ml water. Your dose is 16.7 units"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(self.app.staticTexts["Units per dose: 16.7"].exists)
+        XCTAssertTrue(self.app.staticTexts["Concentration: 15.00 mg/ml"].exists)
+        
+        // AND: User can save updates to profile
+        let saveButton = self.app.buttons["save-reconstitution-calculation"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
+        saveButton.tap()
+        
+        // THEN: Should return to detail view and show updated information
+        XCTAssertTrue(self.app.staticTexts["Medication Details"].waitForExistence(timeout: 3.0))
+    }
+    
+    // MARK: - E2E Acceptance Test: Comprehensive Calculation Scenarios
+    
+    /// Acceptance Test: Calculator handles various medication strengths and doses
+    func testCalculatorScenarios() throws {
+        // GIVEN: User navigates to add medication profile
+        self.app.tabBars.buttons["Settings"].tap()
+        self.app.buttons["Medication Profiles"].tap()
+        self.app.buttons["Add Medication Profile"].tap()
+        
+        // Set up compounded medication
+        self.app.buttons["medication-picker"].tap()
+        self.app.buttons["medication-semaglutide"].tap()
+        
+        let compoundedToggle = self.app.switches["add-compounded-medication-toggle"]
+        XCTAssertTrue(compoundedToggle.waitForExistence(timeout: 3.0))
+        compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        sleep(1)
+        
+        // SCENARIO 1: Standard 10mg vial with 1mg dose
+        self.app.textFields["add-vial-strength-input"].tap()
+        self.app.textFields["add-vial-strength-input"].typeText("10")
+        
+        self.app.textFields["add-target-dose-input"].tap()
+        self.app.textFields["add-target-dose-input"].typeText("1")
+        
+        self.app.buttons["add-calculate-reconstitution"].tap()
+        
+        // Verify calculator opened
+        XCTAssertTrue(self.app.staticTexts["Reconstitution Calculator"].waitForExistence(timeout: 3.0))
+        
+        self.app.buttons["calculate-reconstitution-sheet"].tap()
+        
+        // THEN: Should show correct calculation for 10mg/1ml = 10mg/ml, 1mg dose = 10 units
+        XCTAssertTrue(self.app.staticTexts["Add 1.0 ml water. Your dose is 10.0 units"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(self.app.staticTexts["Units per dose: 10.0"].exists)
+        XCTAssertTrue(self.app.staticTexts["Concentration: 10.00 mg/ml"].exists)
+        XCTAssertTrue(self.app.staticTexts["Total units: 100.0"].exists)
+        
+        // Close calculator without saving to test more scenarios
+        self.app.buttons["Close"].tap()
+        
+        // SCENARIO 2: High-strength 25mg vial with 2.5mg dose
+        let scenario2VialField = self.app.textFields["add-vial-strength-input"]
+        scenario2VialField.tap()
+        sleep(1)
+        scenario2VialField.doubleTap()
+        scenario2VialField.typeText("25")
+        
+        let scenario2DoseField = self.app.textFields["add-target-dose-input"]
+        scenario2DoseField.tap()
+        sleep(1)
+        scenario2DoseField.doubleTap()
+        scenario2DoseField.typeText("2.5")
+        
+        self.app.buttons["add-calculate-reconstitution"].tap()
+        self.app.buttons["calculate-reconstitution-sheet"].tap()
+        
+        // THEN: Should show correct calculation for 25mg/1ml = 25mg/ml, 2.5mg dose = 10 units
+        XCTAssertTrue(self.app.staticTexts["Add 1.0 ml water. Your dose is 10.0 units"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(self.app.staticTexts["Units per dose: 10.0"].exists)
+        XCTAssertTrue(self.app.staticTexts["Concentration: 25.00 mg/ml"].exists)
+        XCTAssertTrue(self.app.staticTexts["Total units: 100.0"].exists)
+        
+        // Save this scenario
+        self.app.buttons["save-reconstitution-calculation"].tap()
+        self.app.buttons["save-medication-profile"].tap()
+        
+        // Verify profile was created with correct dose
+        let profileCell = self.app.buttons["medication-profile-semaglutide-generic-2.50mg"]
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+    }
+    
+    // MARK: - E2E Acceptance Test: Calculator Error Handling
+    
+    /// Acceptance Test: Calculator properly handles invalid inputs and edge cases
+    func testCalculatorErrorHandling() throws {
+        // GIVEN: User navigates to calculator
+        self.app.tabBars.buttons["Settings"].tap()
+        self.app.buttons["Medication Profiles"].tap()
+        self.app.buttons["Add Medication Profile"].tap()
+        
+        self.app.buttons["medication-picker"].tap()
+        self.app.buttons["medication-semaglutide"].tap()
+        
+        let compoundedToggle = self.app.switches["add-compounded-medication-toggle"]
+        XCTAssertTrue(compoundedToggle.waitForExistence(timeout: 3.0))
+        compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        sleep(1)
+        
+        self.app.buttons["add-calculate-reconstitution"].tap()
+        
+        // SCENARIO 1: Empty fields should show validation error
+        self.app.buttons["calculate-reconstitution-sheet"].tap()
+        
+        // THEN: Should show error alert
+        XCTAssertTrue(self.app.alerts["Calculation Error"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(self.app.staticTexts["Please enter valid numeric values for all fields"].exists)
+        self.app.buttons["OK"].tap()
+        
+        // SCENARIO 2: Invalid dose higher than vial strength
+        self.app.textFields["vial-strength-input"].tap()
+        self.app.textFields["vial-strength-input"].typeText("5")
+        
+        self.app.textFields["target-dose-input"].tap()
+        self.app.textFields["target-dose-input"].typeText("10") // Higher than vial strength
+        
+        self.app.buttons["calculate-reconstitution-sheet"].tap()
+        
+        // THEN: Should show validation error
+        XCTAssertTrue(self.app.alerts["Calculation Error"].waitForExistence(timeout: 3.0))
+        self.app.buttons["OK"].tap()
+        
+        // SCENARIO 3: Zero values should be handled
+        let vialField = self.app.textFields["vial-strength-input"]
+        vialField.tap()
+        sleep(1)
+        vialField.doubleTap()
+        vialField.typeText("0")
+        
+        self.app.buttons["calculate-reconstitution-sheet"].tap()
+        
+        // THEN: Should show validation error
+        XCTAssertTrue(self.app.alerts["Calculation Error"].waitForExistence(timeout: 3.0))
+        self.app.buttons["OK"].tap()
+        
+        // SCENARIO 4: Valid calculation after fixing errors
+        vialField.tap()
+        sleep(1)
+        vialField.doubleTap()
+        vialField.typeText("10")
+        
+        let doseField = self.app.textFields["target-dose-input"]
+        doseField.tap()
+        sleep(1)
+        doseField.doubleTap()
+        doseField.typeText("1")
+        
+        self.app.buttons["calculate-reconstitution-sheet"].tap()
+        
+        // THEN: Should show successful calculation
+        XCTAssertTrue(self.app.staticTexts["Add 1.0 ml water. Your dose is 10.0 units"].waitForExistence(timeout: 3.0))
+        XCTAssertFalse(self.app.alerts.element.exists, "No error alerts should be present")
+        
+        // Close calculator
+        self.app.buttons["Close"].tap()
+    }
 }

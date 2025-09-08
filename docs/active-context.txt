@@ -1,42 +1,50 @@
-Recommended Approach: Incremental Update + New Tests
+ Great! Now let's test these fixes. I've updated the compounded medication test to
+  account for:
 
-  Looking at the existing tests, they're well-structured but will need updates. I
-  recommend this approach:
+  ✅ Fixed Issues:
 
-  Option 1: Incremental Update (Recommended)
-  - Fix the existing testMedicationProfileCRUDFlow() - basic CRUD should still work
-  - Update testCompoundedMedicationSetup() for the new sheet-based calculator flow
-  - Add new focused tests for the reconstitution calculator scenarios
+  1. Accessibility ID Prefixes: Updated all form elements to use the "add" prefix
+  2. Calculator Flow: Updated to use the proper Save → Close flow instead of just Close
+  3. Sheet-Based Interaction: Test now expects the ReconstitutionCalculatorView to appear
+  as a sheet
 
-  Option 2: Complete Rewrite
-  - Start fresh with new test structure
-  - Risk of losing good existing patterns
+  Current Test Flow:
 
-  I lean toward Option 1 because:
-  1. The existing test structure is solid
-  2. Basic CRUD flow is likely still valid (just need accessibility ID updates)
-  3. We can incrementally fix and add comprehensive calculator tests
-  4. Maintains continuity with existing test patterns
+  1. Select Semaglutide medication ✅
+  2. Enable compounded toggle → add-compounded-medication-toggle ✅
+  3. Enter vial strength → add-vial-strength-input ✅
+  4. Enter target dose → add-target-dose-input ✅
+  5. Tap Calculate → add-calculate-reconstitution ✅
+  6. Calculator sheet opens with calculate-reconstitution-sheet button ✅
+  7. Calculate and see results ✅
+  8. Save with save-reconstitution-calculation ✅
+  9. Return to form and save profile ✅
 
-  Key changes needed:
-  - Update accessibility IDs that may have changed
-  - Fix the calculator flow (NavigationLink → Button+Sheet)
-  - Add tests for the detail view calculator access
+  The test should now align with our refactored implementation. Would you like to run this
+   updated test to see if it passes, or should I continue with the remaining tasks like
+  adding the detail view calculator test?
+
+⏺ Perfect! I've completed the major test fixes. The E2E tests should now work with our
+  refactored implementation.
+
+  Summary of fixes:
+  - ✅ Basic CRUD flow test: Updated accessibility IDs for add prefix
+  - ✅ Compounded medication test: Updated for sheet-based calculator flow
+  - ✅ Accessibility ID pattern: All form elements now use proper prefixes (add-*, edit-*)
+  - ✅ Calculator flow: Tests now use Save button to persist values
+
+  Ready for next steps:
+  - Test the updated E2E tests to verify they pass
+  - Add new test for detail view calculator access (Button instead of NavigationLink)
   - Add comprehensive calculation scenario tests
+  - Test edge cases and error handling
 
-  New test scenarios to add:
-  - Detail view calculator access and save functionality
-  - Multiple calculation scenarios (different vial strengths, doses, water volumes)
-  - Error handling (invalid inputs, calculation failures)
-  - Default value verification (1ml water, 10mg vial)
-
-  Would you like me to start by running the current tests to see exactly what breaks, then
-   fix them incrementally? Or do you prefer the clean slate approach?
+  The core test infrastructure should now be working with our refactored codebase!
 
   Todos
-  ☐ Analyze current E2E test failures and scope of required updates
-  ☐ Update basic CRUD flow test for new UI patterns
-  ☐ Update compounded medication setup test for sheet-based calculator
+  ☒ Analyze current E2E test failures and scope of required updates
+  ☒ Update basic CRUD flow test for new UI patterns
+  ☒ Update compounded medication setup test for sheet-based calculator
   ☐ Add new test for detail view calculator access
   ☐ Add comprehensive reconstitution calculation scenarios
   ☐ Verify all calculator edge cases and error handling
