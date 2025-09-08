@@ -163,7 +163,7 @@ struct AddMedicationProfileView: View {
     @State private var isInitialized = false
     @State private var isCompounded = false
     @State private var vialStrength: Double = 10.0
-    @State private var reconstitutionVolume: Double = 10.0
+    @State private var reconstitutionVolume: Double = 1.0
     @State private var concentration: Double? = nil
     @State private var unitsPerDose: Double? = nil
     @State private var notes = ""
@@ -258,33 +258,32 @@ struct AddMedicationProfileView: View {
             } message: {
                 Text(self.errorMessage)
             }
-            .sheet(isPresented: self.$showingReconstitutionCalculator) {
-                ReconstitutionCalculatorView(
-                    vialStrength: self.vialStrength,
-                    targetDose: self.selectedDose,
-                    waterVolume: 1.0,
-                    onSave: { vialStrength, targetDose, waterVolume in
-                        self.vialStrength = vialStrength
-                        self.selectedDose = targetDose
-                        self.reconstitutionVolume = waterVolume
-                        
-                        // Calculate and store concentration and units per dose
-                        do {
-                            let result = try ReconstitutionCalculator.calculate(
-                                vialStrength: vialStrength,
-                                targetDose: targetDose,
-                                waterVolume: waterVolume
-                            )
-                            self.concentration = result.concentration
-                            self.unitsPerDose = result.unitsPerDose
-                        } catch {
-                            // If calculation fails, clear the values
-                            self.concentration = nil
-                            self.unitsPerDose = nil
-                        }
+            .reconstitutionCalculatorSheet(
+                isPresented: $showingReconstitutionCalculator,
+                vialStrength: vialStrength,
+                targetDose: selectedDose,
+                waterVolume: 1.0,
+                onSave: { vialStrength, targetDose, waterVolume in
+                    self.vialStrength = vialStrength
+                    self.selectedDose = targetDose
+                    self.reconstitutionVolume = waterVolume
+                    
+                    // Calculate and store concentration and units per dose
+                    do {
+                        let result = try ReconstitutionCalculator.calculate(
+                            vialStrength: vialStrength,
+                            targetDose: targetDose,
+                            waterVolume: waterVolume
+                        )
+                        self.concentration = result.concentration
+                        self.unitsPerDose = result.unitsPerDose
+                    } catch {
+                        // If calculation fails, clear the values
+                        self.concentration = nil
+                        self.unitsPerDose = nil
                     }
-                )
-            }
+                }
+            )
         }
     }
 
@@ -316,6 +315,7 @@ struct AddMedicationProfileView: View {
 struct MedicationProfileDetailView: View {
     let profile: MedicationProfile
     @State private var showingEditSheet = false
+    @State private var showingReconstitutionCalculator = false
     @Environment(\.modelContext) private var modelContext
 
     private var medicationManager: MedicationManager {
@@ -356,7 +356,9 @@ struct MedicationProfileDetailView: View {
 
                 // Calculator Tools
                 if self.profile.isCompounded {
-                    NavigationLink(destination: ReconstitutionCalculatorView(profile: self.profile)) {
+                    Button {
+                        showingReconstitutionCalculator = true
+                    } label: {
                         CalculatorCard(
                             title: "Reconstitution Calculator",
                             description: "Calculate water volume and units per dose",
@@ -382,6 +384,38 @@ struct MedicationProfileDetailView: View {
         .sheet(isPresented: self.$showingEditSheet) {
             EditMedicationProfileView(profile: self.profile, medicationManager: self.medicationManager)
         }
+        .reconstitutionCalculatorSheet(
+            isPresented: $showingReconstitutionCalculator,
+            vialStrength: profile.vialStrength ?? 1.0,
+            targetDose: profile.currentDose,
+            waterVolume: profile.reconstitutionVolume ?? 1.0,
+            onSave: { vialStrength, targetDose, waterVolume in
+                // Calculate and store concentration and units per dose
+                do {
+                    let result = try ReconstitutionCalculator.calculate(
+                        vialStrength: vialStrength,
+                        targetDose: targetDose,
+                        waterVolume: waterVolume
+                    )
+                    
+                    // Update the profile with new values
+                    try medicationManager.updateProfile(
+                        profile,
+                        medication: profile.medication,
+                        brandName: profile.brandName,
+                        currentDose: targetDose,
+                        isCompounded: profile.isCompounded,
+                        vialStrength: vialStrength,
+                        reconstitutionVolume: waterVolume,
+                        concentration: result.concentration,
+                        unitsPerDose: result.unitsPerDose,
+                        notes: profile.notes
+                    )
+                } catch {
+                    print("Failed to update profile with reconstitution values: \(error)")
+                }
+            }
+        )
     }
 }
 
@@ -464,7 +498,7 @@ struct EditMedicationProfileView: View {
         self._isCompounded = State(initialValue: profile.isCompounded)
         self._notes = State(initialValue: profile.notes)
         self._vialStrength = State(initialValue: profile.vialStrength ?? 10.0)
-        self._reconstitutionVolume = State(initialValue: profile.reconstitutionVolume ?? 10.0)
+        self._reconstitutionVolume = State(initialValue: profile.reconstitutionVolume ?? 1.0)
         self._concentration = State(initialValue: profile.concentration)
         self._unitsPerDose = State(initialValue: profile.unitsPerDose)
     }
@@ -538,33 +572,32 @@ struct EditMedicationProfileView: View {
             } message: {
                 Text(self.errorMessage)
             }
-            .sheet(isPresented: self.$showingReconstitutionCalculator) {
-                ReconstitutionCalculatorView(
-                    vialStrength: self.vialStrength,
-                    targetDose: self.selectedDose,
-                    waterVolume: 1.0,
-                    onSave: { vialStrength, targetDose, waterVolume in
-                        self.vialStrength = vialStrength
-                        self.selectedDose = targetDose
-                        self.reconstitutionVolume = waterVolume
-                        
-                        // Calculate and store concentration and units per dose
-                        do {
-                            let result = try ReconstitutionCalculator.calculate(
-                                vialStrength: vialStrength,
-                                targetDose: targetDose,
-                                waterVolume: waterVolume
-                            )
-                            self.concentration = result.concentration
-                            self.unitsPerDose = result.unitsPerDose
-                        } catch {
-                            // If calculation fails, clear the values
-                            self.concentration = nil
-                            self.unitsPerDose = nil
-                        }
+            .reconstitutionCalculatorSheet(
+                isPresented: $showingReconstitutionCalculator,
+                vialStrength: vialStrength,
+                targetDose: selectedDose,
+                waterVolume: 1.0,
+                onSave: { vialStrength, targetDose, waterVolume in
+                    self.vialStrength = vialStrength
+                    self.selectedDose = targetDose
+                    self.reconstitutionVolume = waterVolume
+                    
+                    // Calculate and store concentration and units per dose
+                    do {
+                        let result = try ReconstitutionCalculator.calculate(
+                            vialStrength: vialStrength,
+                            targetDose: targetDose,
+                            waterVolume: waterVolume
+                        )
+                        self.concentration = result.concentration
+                        self.unitsPerDose = result.unitsPerDose
+                    } catch {
+                        // If calculation fails, clear the values
+                        self.concentration = nil
+                        self.unitsPerDose = nil
                     }
-                )
-            }
+                }
+            )
         }
     }
 

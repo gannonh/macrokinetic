@@ -87,3 +87,41 @@ struct MedicationDosingSection: View {
         }
     }
 }
+
+struct ReconstitutionCalculatorSheet: ViewModifier {
+    @Binding var isPresented: Bool
+    let vialStrength: Double
+    let targetDose: Double
+    let waterVolume: Double
+    let onSave: (Double, Double, Double) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $isPresented) {
+                ReconstitutionCalculatorView(
+                    vialStrength: vialStrength,
+                    targetDose: targetDose,
+                    waterVolume: waterVolume,
+                    onSave: onSave
+                )
+            }
+    }
+}
+
+extension View {
+    func reconstitutionCalculatorSheet(
+        isPresented: Binding<Bool>,
+        vialStrength: Double,
+        targetDose: Double,
+        waterVolume: Double = 1.0,
+        onSave: @escaping (Double, Double, Double) -> Void
+    ) -> some View {
+        modifier(ReconstitutionCalculatorSheet(
+            isPresented: isPresented,
+            vialStrength: vialStrength,
+            targetDose: targetDose,
+            waterVolume: waterVolume,
+            onSave: onSave
+        ))
+    }
+}
