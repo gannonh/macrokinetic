@@ -188,6 +188,9 @@ class OnboardingViewModel: ObservableObject {
             currentDose: self.selectedDose,
             startDate: self.selectedStartDate,
             medicationType: selectedMedication.rawValue)
+        
+        // Link medication profile to user
+        medicationProfile.user = user
         context.insert(medicationProfile)
 
         // Create initial dose record with first selected site
