@@ -62,6 +62,25 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         XCTAssertTrue(doseOption.waitForExistence(timeout: 3.0))
         doseOption.tap()
 
+        // AND: User sets start date (DatePicker should exist and be interactable)
+        let startDatePicker = self.app.datePickers["add-start-date-picker"]
+        XCTAssertTrue(startDatePicker.waitForExistence(timeout: 3.0),
+                      "Start date picker should be accessible")
+        // Note: DatePicker value testing is complex in XCUITest, we verify existence and basic interaction
+        startDatePicker.tap()
+        
+        // AND: User selects preferred injection sites (default Thigh should be selected)
+        let thighSite = self.app.buttons["add-injection-site-thigh"]
+        XCTAssertTrue(thighSite.waitForExistence(timeout: 3.0))
+        XCTAssertTrue(thighSite.images["checkmark"].exists, "Thigh should be selected by default")
+        
+        // User adds Abdomen as additional site
+        let abdomenSite = self.app.buttons["add-injection-site-abdomen"]
+        XCTAssertTrue(abdomenSite.waitForExistence(timeout: 3.0))
+        abdomenSite.tap()
+        XCTAssertTrue(abdomenSite.images["checkmark"].waitForExistence(timeout: 2.0),
+                      "Abdomen should be selected after tap")
+
         // AND: User saves the profile
         let saveButton = self.app.buttons["save-medication-profile"]
         XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
@@ -87,6 +106,11 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         XCTAssertTrue(self.app.staticTexts["0.25 mg"].exists)
         XCTAssertTrue(self.app.staticTexts["7.0 days"].exists) // Half-life
         XCTAssertTrue(self.app.staticTexts["Weekly"].exists)
+        
+        // AND: Start Date and Preferred Sites should be displayed
+        XCTAssertTrue(self.app.staticTexts["Start Date"].exists, "Start Date label should be visible")
+        XCTAssertTrue(self.app.staticTexts["Preferred Sites"].exists, "Preferred Sites label should be visible")
+        XCTAssertTrue(self.app.staticTexts["Thigh, Abdomen"].exists, "Selected injection sites should be displayed")
 
         // WHEN: User edits the profile
         let editButton = self.app.buttons["edit-medication-profile"]
@@ -102,6 +126,24 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         let editDoseOption = self.app.buttons["edit-dose-option-0.50"]
         XCTAssertTrue(editDoseOption.waitForExistence(timeout: 3.0))
         editDoseOption.tap()
+        
+        // AND: User verifies start date picker is present and can be interacted with
+        let editStartDatePicker = self.app.datePickers["edit-start-date-picker"]
+        XCTAssertTrue(editStartDatePicker.waitForExistence(timeout: 3.0),
+                      "Edit start date picker should be accessible")
+        editStartDatePicker.tap()
+        
+        // AND: User modifies injection sites (remove Abdomen, add Upper Arm)
+        let editAbdomenSite = self.app.buttons["edit-injection-site-abdomen"]
+        XCTAssertTrue(editAbdomenSite.waitForExistence(timeout: 3.0))
+        XCTAssertTrue(editAbdomenSite.images["checkmark"].exists, "Abdomen should still be selected")
+        editAbdomenSite.tap() // Deselect Abdomen
+        
+        let editUpperArmSite = self.app.buttons["edit-injection-site-upper arm"]
+        XCTAssertTrue(editUpperArmSite.waitForExistence(timeout: 3.0))
+        editUpperArmSite.tap() // Select Upper Arm
+        XCTAssertTrue(editUpperArmSite.images["checkmark"].waitForExistence(timeout: 2.0),
+                      "Upper Arm should be selected after tap")
 
         // AND: User saves changes
         self.app.buttons["edit-save-button"].tap()
@@ -113,6 +155,12 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         let updatedCell = self.app.buttons["medication-profile-semaglutide-ozempic-0.50mg"]
         XCTAssertTrue(updatedCell.waitForExistence(timeout: 3.0))
         XCTAssertTrue(updatedCell.staticTexts["0.50 mg"].exists)
+        
+        // AND: Verify updated injection sites by viewing detail again
+        updatedCell.tap()
+        XCTAssertTrue(self.app.staticTexts["Thigh, Upper Arm"].waitForExistence(timeout: 3.0),
+                      "Updated injection sites should be displayed")
+        self.app.navigationBars.buttons.element(boundBy: 0).tap() // Back to list
 
         // WHEN: User deletes the profile
         updatedCell.swipeLeft()
@@ -126,6 +174,125 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         // AND: Empty state should be shown
         let emptyStateLabel = self.app.staticTexts["No medication profiles yet"]
         XCTAssertTrue(emptyStateLabel.waitForExistence(timeout: 3.0))
+    }
+
+    // MARK: - E2E Acceptance Test: Injection Sites Selection
+
+    /// Acceptance Test: User can select and modify preferred injection sites
+    /// Tests the multi-selection functionality for injection site preferences
+    func testInjectionSitesSelection() throws {
+        // GIVEN: User is on Settings tab and creates new profile
+        self.app.tabBars.buttons["Settings"].tap()
+        self.app.buttons["Medication Profiles"].tap()
+        self.app.buttons["Add Medication Profile"].tap()
+
+        // AND: User selects basic medication info (Semaglutide, Ozempic, 0.25mg)
+        let medicationPicker = self.app.buttons["medication-picker"]
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3.0))
+        medicationPicker.tap()
+        self.app.buttons["medication-semaglutide"].tap()
+        
+        self.app.buttons["add-brand-picker"].tap()
+        self.app.buttons["add-brand-ozempic"].tap()
+        
+        self.app.buttons["add-dose-picker"].tap()
+        self.app.buttons["add-dose-option-0.25"].tap()
+
+        // WHEN: User interacts with injection site selection
+        let thighSite = self.app.buttons["add-injection-site-thigh"]
+        let abdomenSite = self.app.buttons["add-injection-site-abdomen"] 
+        let upperArmSite = self.app.buttons["add-injection-site-upper arm"]
+        let buttocksSite = self.app.buttons["add-injection-site-buttocks"]
+
+        // THEN: All injection site options should be available
+        XCTAssertTrue(thighSite.waitForExistence(timeout: 3.0))
+        XCTAssertTrue(abdomenSite.waitForExistence(timeout: 3.0))
+        XCTAssertTrue(upperArmSite.waitForExistence(timeout: 3.0))
+        XCTAssertTrue(buttocksSite.waitForExistence(timeout: 3.0))
+
+        // AND: Thigh should be selected by default
+        XCTAssertTrue(thighSite.images["checkmark"].exists, "Thigh should be selected by default")
+        XCTAssertFalse(abdomenSite.images["checkmark"].exists, "Abdomen should not be selected initially")
+        XCTAssertFalse(upperArmSite.images["checkmark"].exists, "Upper Arm should not be selected initially")
+        XCTAssertFalse(buttocksSite.images["checkmark"].exists, "Buttocks should not be selected initially")
+
+        // WHEN: User selects multiple sites
+        abdomenSite.tap()
+        upperArmSite.tap()
+        
+        // THEN: Multiple sites should be selected
+        XCTAssertTrue(thighSite.images["checkmark"].exists, "Thigh should remain selected")
+        XCTAssertTrue(abdomenSite.images["checkmark"].waitForExistence(timeout: 2.0), 
+                      "Abdomen should be selected after tap")
+        XCTAssertTrue(upperArmSite.images["checkmark"].waitForExistence(timeout: 2.0),
+                      "Upper Arm should be selected after tap")
+        XCTAssertFalse(buttocksSite.images["checkmark"].exists, "Buttocks should remain unselected")
+
+        // WHEN: User deselects a site
+        thighSite.tap()
+        
+        // THEN: That site should be deselected while others remain
+        XCTAssertFalse(thighSite.images["checkmark"].exists, "Thigh should be deselected after tap")
+        XCTAssertTrue(abdomenSite.images["checkmark"].exists, "Abdomen should remain selected")
+        XCTAssertTrue(upperArmSite.images["checkmark"].exists, "Upper Arm should remain selected")
+
+        // WHEN: User saves profile with selected sites
+        self.app.buttons["save-medication-profile"].tap()
+
+        // AND: Views profile details
+        let profileCell = self.app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+        profileCell.tap()
+
+        // THEN: Selected sites should be displayed correctly
+        XCTAssertTrue(self.app.staticTexts["Preferred Sites"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(self.app.staticTexts["Abdomen, Upper Arm"].exists, 
+                      "Selected injection sites should be displayed in detail view")
+    }
+
+    // MARK: - E2E Acceptance Test: Start Date Functionality 
+
+    /// Acceptance Test: User can set and view start date for medication profile
+    func testStartDateFunctionality() throws {
+        // GIVEN: User is on Settings tab and creates new profile
+        self.app.tabBars.buttons["Settings"].tap()
+        self.app.buttons["Medication Profiles"].tap()
+        self.app.buttons["Add Medication Profile"].tap()
+
+        // AND: User selects basic medication info
+        let medicationPicker = self.app.buttons["medication-picker"]
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3.0))
+        medicationPicker.tap()
+        self.app.buttons["medication-semaglutide"].tap()
+        
+        self.app.buttons["add-brand-picker"].tap()
+        self.app.buttons["add-brand-ozempic"].tap()
+        
+        self.app.buttons["add-dose-picker"].tap()
+        self.app.buttons["add-dose-option-0.25"].tap()
+
+        // WHEN: User interacts with start date picker
+        let startDatePicker = self.app.datePickers["add-start-date-picker"]
+        XCTAssertTrue(startDatePicker.waitForExistence(timeout: 3.0),
+                      "Start date picker should be present")
+        
+        // THEN: Date picker should be interactable (tap to verify accessibility)
+        startDatePicker.tap()
+        XCTAssertTrue(startDatePicker.exists, "Start date picker should remain accessible after interaction")
+
+        // WHEN: User saves profile
+        self.app.buttons["save-medication-profile"].tap()
+
+        // AND: Views profile details  
+        let profileCell = self.app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+        profileCell.tap()
+
+        // THEN: Start date should be displayed in detail view
+        XCTAssertTrue(self.app.staticTexts["Start Date"].waitForExistence(timeout: 3.0),
+                      "Start Date label should be visible in detail view")
+        // Note: Actual date value testing requires more complex date manipulation
+        // We verify the presence of the field and basic functionality
     }
 
     // MARK: - E2E Acceptance Test: Compounded Medication Setup
