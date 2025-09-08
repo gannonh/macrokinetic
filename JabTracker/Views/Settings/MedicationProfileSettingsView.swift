@@ -127,10 +127,6 @@ struct MedicationProfileRow: View {
                 }
 
                 Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
-                    .font(.caption)
             }
         }
         .buttonStyle(PlainButtonStyle())
@@ -458,6 +454,7 @@ struct CalculatorCard: View {
                     Text(self.description)
                         .font(DesignTokens.Typography.body)
                         .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
                 }
 
                 Spacer()
