@@ -46,7 +46,7 @@ struct ReconstitutionCalculatorView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
+        Form {
                 if let profile = profile {
                     Section(header: Text("Medication Profile")) {
                         if let medication = profile.medication {
@@ -114,15 +114,19 @@ struct ReconstitutionCalculatorView: View {
                 }
             }
             .navigationTitle("Reconstitution Calculator")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
-                        dismiss()
+                // Close button for sheet presentation
+                if onSave != nil {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Close") {
+                            dismiss()
+                        }
                     }
                 }
                 
-                if let result = calculationResult {
+                // Save button when calculation is complete and presented as sheet
+                if let result = calculationResult, onSave != nil {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Save") {
                             saveCalculationToProfile(result: result)
@@ -179,6 +183,11 @@ struct ReconstitutionCalculatorView: View {
             profile.currentDose = targetDoseValue
             profile.vialStrength = vialStrengthValue
             profile.reconstitutionVolume = waterVolumeValue
+            
+            // Save calculated reconstitution values
+            profile.concentration = result.concentration
+            profile.unitsPerDose = result.unitsPerDose
+            
             profile.updatedAt = Date()
             
             // Force Generic brand for compounded medications

@@ -30,7 +30,7 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.isCompounded == false)
         #expect(profile.vialStrength == nil)
         #expect(profile.reconstitutionVolume == nil)
-        #expect(profile.penType == nil)
+        // penType field removed
         #expect(profile.notes == "")
         #expect(profile.updatedAt != Date.distantPast)
         #expect(profile.createdAt != Date.distantPast)
@@ -57,14 +57,14 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.isCompounded == true)
         #expect(profile.vialStrength == vialStrength)
         #expect(profile.reconstitutionVolume == reconstitutionVolume)
-        #expect(profile.penType == nil)
+        // penType field removed
         #expect(profile.notes == "From specialty pharmacy")
     }
 
     @Test("Create branded medication profile")
     func createBrandedProfile() {
         // Given
-        let penType = "Ozempic 1mg pen"
+        // penType parameter removed
 
         // When
         let profile = MedicationProfile(
@@ -73,14 +73,13 @@ struct MedicationProfileEnhancementTests {
             currentDose: 0.5,
             medicationType: Medication.semaglutide.rawValue,
             isCompounded: false,
-            penType: penType,
             notes: "Insurance covered")
 
         // Then
         #expect(profile.isCompounded == false)
         #expect(profile.vialStrength == nil)
         #expect(profile.reconstitutionVolume == nil)
-        #expect(profile.penType == penType)
+        // penType field removed
         #expect(profile.notes == "Insurance covered")
     }
 
@@ -182,7 +181,7 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.isCompounded == false) // Bool with default
         #expect(profile.vialStrength == nil) // Optional is OK
         #expect(profile.reconstitutionVolume == nil) // Optional is OK
-        #expect(profile.penType == nil) // Optional is OK
+        // penType field removed // Optional is OK
         #expect(profile.notes == "") // String with default
         #expect(profile.updatedAt != Date.distantPast) // Date with default
         #expect(profile.createdAt != Date.distantPast) // Date with default
@@ -220,13 +219,13 @@ struct MedicationProfileEnhancementTests {
             isCompounded: false)
 
         // Then: Should have nil pen type if not provided
-        #expect(profile.penType == nil)
+        // penType field removed
 
         // When: Add pen type
-        profile.penType = "Ozempic 1mg pen"
+        // penType field removed
 
         // Then
-        #expect(profile.penType == "Ozempic 1mg pen")
+        // penType field removed
         #expect(profile.vialStrength == nil) // Should not have vial data
         #expect(profile.reconstitutionVolume == nil)
     }
@@ -245,13 +244,13 @@ struct MedicationProfileEnhancementTests {
         // When: Switch to branded
         profile.isCompounded = false
         profile.brandName = "Ozempic"
-        profile.penType = "Ozempic 1mg pen"
+        // penType field removed
         profile.vialStrength = nil
         profile.reconstitutionVolume = nil
 
         // Then
         #expect(profile.isCompounded == false)
-        #expect(profile.penType == "Ozempic 1mg pen")
+        // penType field removed
         #expect(profile.vialStrength == nil)
         #expect(profile.reconstitutionVolume == nil)
     }

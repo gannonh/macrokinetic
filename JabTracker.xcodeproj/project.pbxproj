@@ -82,7 +82,6 @@
 		BB0B0BE3932C0675496AC8AD /* SubscriptionManager+Testing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797DA89486FFE995221D6609 /* SubscriptionManager+Testing.swift */; };
 		BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92209045E4347373E0C9BCAB /* Colors+Extensions.swift */; };
 		BFF5E7E70314E00D22E10A9B /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AE7A45FA75867366A66399 /* AuthenticationView.swift */; };
-		C2443B2AFFBD8ACDE157EC6E /* PenClickCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21627C5AD21336BB03B6AEB4 /* PenClickCalculatorTests.swift */; };
 		C24A8A61EAB23384FC48562D /* SubscriptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D30809BE84F01DA83E83F4C /* SubscriptionUITests.swift */; };
 		C58F9C3E622882A3CAB09EC5 /* SubscriptionUINetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */; };
 		CB0812C52EDE841D631C81B9 /* BiometricAuthManagerCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C046C9CE67D30EEA5AF3C0 /* BiometricAuthManagerCoreTests.swift */; };
@@ -142,7 +141,6 @@
 		1CDAA0E6A2199F895649643B /* MedicationSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationSelectionView.swift; sourceTree = "<group>"; };
 		1E94E4AE5BAB59EDF35956F6 /* OnboardingViewModelCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelCoverageTests.swift; sourceTree = "<group>"; };
 		2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationUITests.swift; sourceTree = "<group>"; };
-		21627C5AD21336BB03B6AEB4 /* PenClickCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PenClickCalculatorTests.swift; sourceTree = "<group>"; };
 		237634B95610580901398F2F /* ReconstitutionCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReconstitutionCalculator.swift; sourceTree = "<group>"; };
 		2637EC9BBAF683E18CB1F8F2 /* SubscriptionUITests+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SubscriptionUITests+Helpers.swift"; sourceTree = "<group>"; };
 		263A861237894E446E233B24 /* DataControllerSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerSyncTests.swift; sourceTree = "<group>"; };
@@ -344,7 +342,6 @@
 				8686B61DCDA3746CC692F9F3 /* MedicationTests.swift */,
 				1E94E4AE5BAB59EDF35956F6 /* OnboardingViewModelCoverageTests.swift */,
 				19090A1FF0084878E8E5E150 /* OnboardingViewModelTests.swift */,
-				21627C5AD21336BB03B6AEB4 /* PenClickCalculatorTests.swift */,
 				7150A995B6D4936C3556044A /* PersistenceTests.swift */,
 				74561A6393FDC6200F4C41E6 /* PharmacokineticsTests.swift */,
 				68B3D664292BAEEAE6B7308C /* PricingCalculatorTests.swift */,
@@ -662,7 +659,6 @@
 				5CE07BEE514FC9B1C700823C /* MedicationTests.swift in Sources */,
 				28C344FA71FC43E28013B3C7 /* OnboardingViewModelCoverageTests.swift in Sources */,
 				02F2C52197FFBD349FC6D4F1 /* OnboardingViewModelTests.swift in Sources */,
-				C2443B2AFFBD8ACDE157EC6E /* PenClickCalculatorTests.swift in Sources */,
 				FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */,
 				3CF9D98330F58C68EEE51B53 /* PharmacokineticsTests.swift in Sources */,
 				760C54ED700B1A0A473B593F /* PricingCalculatorTests.swift in Sources */,

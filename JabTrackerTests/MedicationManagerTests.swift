@@ -45,14 +45,14 @@ struct MedicationManagerTests {
             brandName: brandName,
             currentDose: currentDose,
             isCompounded: false,
-            penType: "Ozempic 1mg pen")
+)
 
         // Then
         #expect(profile.genericName == medication.displayName)
         #expect(profile.brandName == brandName)
         #expect(profile.currentDose == currentDose)
         #expect(profile.isCompounded == false)
-        #expect(profile.penType == "Ozempic 1mg pen")
+        // penType field removed
         #expect(profile.medicationType == medication.rawValue)
     }
 
@@ -258,7 +258,7 @@ struct MedicationManagerTests {
             for: testUser,
             medication: .semaglutide,
             brandName: "Ozempic",
-            currentDose: 2.4 // Maximum dose
+            currentDose: 2.0 // Maximum dose for Ozempic
         )
 
         // When
@@ -325,16 +325,10 @@ struct MedicationManagerTests {
             medication: .semaglutide,
             brandName: "Ozempic",
             currentDose: 0.5,
-            isCompounded: false,
-            penType: PenClickCalculator.PenType.ozempic1mg.rawValue)
+            isCompounded: false)
 
-        // When
-        let result = try manager.calculatePenClicks(for: profile)
-
-        // Then
-        #expect(result != nil)
-        #expect(result?.clicks == 50) // 0.5mg / 0.01mg per click
-        #expect(result?.actualDose == 0.5)
+        // Pen click feature removed due to liability concerns
+        #expect(profile.genericName == "Semaglutide")
     }
 
     @Test("Active profile selection")

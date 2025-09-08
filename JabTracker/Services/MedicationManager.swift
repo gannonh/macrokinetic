@@ -98,6 +98,8 @@ class MedicationManager: ObservableObject {
         isCompounded: Bool = false,
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
+        concentration: Double? = nil,
+        unitsPerDose: Double? = nil,
         notes: String = "") throws -> MedicationProfile
     {
         // Validate dose is within brand-specific medication range
@@ -127,6 +129,8 @@ class MedicationManager: ObservableObject {
             isCompounded: isCompounded,
             vialStrength: vialStrength,
             reconstitutionVolume: reconstitutionVolume,
+            concentration: concentration,
+            unitsPerDose: unitsPerDose,
             notes: notes)
 
         // Link profile to user
@@ -153,6 +157,8 @@ class MedicationManager: ObservableObject {
         isCompounded: Bool? = nil,
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
+        concentration: Double? = nil,
+        unitsPerDose: Double? = nil,
         notes: String? = nil) throws
     {
         // Update medication type if provided
@@ -197,6 +203,13 @@ class MedicationManager: ObservableObject {
             profile.reconstitutionVolume = reconstitutionVolume
         }
 
+        if let concentration {
+            profile.concentration = concentration
+        }
+
+        if let unitsPerDose {
+            profile.unitsPerDose = unitsPerDose
+        }
 
         if let notes {
             profile.notes = notes
@@ -243,20 +256,28 @@ class MedicationManager: ObservableObject {
             abs(availableDose - dose) < 0.01
         }
     }
+    
+    /// Check if a dose is valid for a specific medication brand
+    func isValidDose(_ dose: Double, for medication: Medication, brandName: String) -> Bool {
+        medication.availableDoses(for: brandName).contains { availableDose in
+            abs(availableDose - dose) < 0.01
+        }
+    }
 
     /// Get the next recommended dose for escalation
     func nextEscalationDose(for profile: MedicationProfile) -> Double? {
         guard let medication = profile.medication else { return nil }
 
         let currentDose = profile.currentDose
-        let availableDoses = medication.availableDoses.sorted()
+        let brandName = profile.brandName
+        let availableDoses = medication.availableDoses(for: brandName).sorted()
 
-        // Find the next higher dose
+        // Find the next higher dose for this specific brand
         for dose in availableDoses where dose > currentDose {
             return dose
         }
 
-        return nil // Already at maximum dose
+        return nil // Already at maximum dose for this brand
     }
 
     /// Calculate days until refill needed

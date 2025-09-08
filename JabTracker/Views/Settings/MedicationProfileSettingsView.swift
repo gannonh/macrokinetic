@@ -164,6 +164,8 @@ struct AddMedicationProfileView: View {
     @State private var isCompounded = false
     @State private var vialStrength: Double = 10.0
     @State private var reconstitutionVolume: Double = 10.0
+    @State private var concentration: Double? = nil
+    @State private var unitsPerDose: Double? = nil
     @State private var notes = ""
 
     @State private var showingError = false
@@ -265,6 +267,21 @@ struct AddMedicationProfileView: View {
                         self.vialStrength = vialStrength
                         self.selectedDose = targetDose
                         self.reconstitutionVolume = waterVolume
+                        
+                        // Calculate and store concentration and units per dose
+                        do {
+                            let result = try ReconstitutionCalculator.calculate(
+                                vialStrength: vialStrength,
+                                targetDose: targetDose,
+                                waterVolume: waterVolume
+                            )
+                            self.concentration = result.concentration
+                            self.unitsPerDose = result.unitsPerDose
+                        } catch {
+                            // If calculation fails, clear the values
+                            self.concentration = nil
+                            self.unitsPerDose = nil
+                        }
                     }
                 )
             }
@@ -284,6 +301,8 @@ struct AddMedicationProfileView: View {
                 isCompounded: self.isCompounded,
                 vialStrength: self.isCompounded ? self.vialStrength : nil,
                 reconstitutionVolume: self.isCompounded ? self.reconstitutionVolume : nil,
+                concentration: self.isCompounded ? self.concentration : nil,
+                unitsPerDose: self.isCompounded ? self.unitsPerDose : nil,
                 notes: self.notes.isEmpty ? "" : self.notes)
 
             self.dismiss()
@@ -316,6 +335,16 @@ struct MedicationProfileDetailView: View {
                             DetailRow(title: "Medication", value: self.profile.medicationType.capitalized)
                             DetailRow(title: "Brand", value: self.profile.brandName)
                             DetailRow(title: "Current Dose", value: "\(String(format: "%.2f", self.profile.currentDose)) mg")
+
+                            // Show reconstitution data for compounded medications
+                            if self.profile.isCompounded {
+                                if let concentration = self.profile.concentration {
+                                    DetailRow(title: "Concentration", value: "\(String(format: "%.2f", concentration)) mg/ml")
+                                }
+                                if let unitsPerDose = self.profile.unitsPerDose {
+                                    DetailRow(title: "Dose in Units", value: "\(String(format: "%.1f", unitsPerDose)) units")
+                                }
+                            }
 
                             if let medication = Medication(rawValue: profile.medicationType) {
                                 DetailRow(title: "Half-life", value: "\(String(format: "%.1f", medication.halfLifeDays)) days")
@@ -419,6 +448,8 @@ struct EditMedicationProfileView: View {
     @State private var notes: String
     @State private var vialStrength: Double
     @State private var reconstitutionVolume: Double
+    @State private var concentration: Double?
+    @State private var unitsPerDose: Double?
 
     @State private var showingError = false
     @State private var errorMessage = ""
@@ -434,6 +465,8 @@ struct EditMedicationProfileView: View {
         self._notes = State(initialValue: profile.notes)
         self._vialStrength = State(initialValue: profile.vialStrength ?? 10.0)
         self._reconstitutionVolume = State(initialValue: profile.reconstitutionVolume ?? 10.0)
+        self._concentration = State(initialValue: profile.concentration)
+        self._unitsPerDose = State(initialValue: profile.unitsPerDose)
     }
 
     var body: some View {
@@ -514,6 +547,21 @@ struct EditMedicationProfileView: View {
                         self.vialStrength = vialStrength
                         self.selectedDose = targetDose
                         self.reconstitutionVolume = waterVolume
+                        
+                        // Calculate and store concentration and units per dose
+                        do {
+                            let result = try ReconstitutionCalculator.calculate(
+                                vialStrength: vialStrength,
+                                targetDose: targetDose,
+                                waterVolume: waterVolume
+                            )
+                            self.concentration = result.concentration
+                            self.unitsPerDose = result.unitsPerDose
+                        } catch {
+                            // If calculation fails, clear the values
+                            self.concentration = nil
+                            self.unitsPerDose = nil
+                        }
                     }
                 )
             }
@@ -533,6 +581,8 @@ struct EditMedicationProfileView: View {
                 isCompounded: self.isCompounded,
                 vialStrength: self.isCompounded ? self.vialStrength : nil,
                 reconstitutionVolume: self.isCompounded ? self.reconstitutionVolume : nil,
+                concentration: self.isCompounded ? self.concentration : nil,
+                unitsPerDose: self.isCompounded ? self.unitsPerDose : nil,
                 notes: self.notes.isEmpty ? "" : self.notes)
 
             self.dismiss()

@@ -20,6 +20,8 @@ final class MedicationProfile {
     var isCompounded: Bool = false // Compounded vs branded medication
     var vialStrength: Double? // For compounded: mg in vial
     var reconstitutionVolume: Double? // For compounded: ml of water to add
+    var concentration: Double? // For compounded: mg/ml (calculated from reconstitution)
+    var unitsPerDose: Double? // For compounded: units to draw (calculated from dose/concentration)
     var notes: String = "" // User notes about medication
     var updatedAt: Date = Date() // Track modifications
     var createdAt: Date = Date() // Track creation
@@ -40,6 +42,8 @@ final class MedicationProfile {
         isCompounded: Bool = false,
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
+        concentration: Double? = nil,
+        unitsPerDose: Double? = nil,
         notes: String = "")
     {
         self.genericName = genericName
@@ -51,6 +55,8 @@ final class MedicationProfile {
         self.isCompounded = isCompounded
         self.vialStrength = vialStrength
         self.reconstitutionVolume = reconstitutionVolume
+        self.concentration = concentration
+        self.unitsPerDose = unitsPerDose
         self.notes = notes
         self.createdAt = Date()
         self.updatedAt = Date()
