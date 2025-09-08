@@ -187,7 +187,8 @@ class OnboardingViewModel: ObservableObject {
             brandName: selectedMedication.brands.first ?? "",
             currentDose: self.selectedDose,
             startDate: self.selectedStartDate,
-            medicationType: selectedMedication.rawValue)
+            medicationType: selectedMedication.rawValue,
+            preferredInjectionSites: Array(self.selectedSites))
         
         // Link medication profile to user
         medicationProfile.user = user

@@ -156,6 +156,8 @@ struct AddMedicationProfileView: View {
     @State private var selectedMedication: Medication = .semaglutide
     @State private var selectedBrand: String = Medication.semaglutide.brands.first ?? ""
     @State private var selectedDose: Double = Medication.semaglutide.availableDoses.first ?? 0.25
+    @State private var startDate: Date = Date()
+    @State private var preferredInjectionSites: [String] = ["Thigh"]
     @State private var isInitialized = false
     @State private var isCompounded = false
     @State private var vialStrength: Double = 10.0
@@ -228,6 +230,33 @@ struct AddMedicationProfileView: View {
                     }
                 )
 
+                Section("Start Date") {
+                    DatePicker("Start Date", selection: self.$startDate, displayedComponents: .date)
+                        .accessibilityIdentifier("add-start-date-picker")
+                }
+                
+                Section("Preferred Injection Sites") {
+                    ForEach(["Thigh", "Abdomen", "Upper Arm", "Buttocks"], id: \.self) { site in
+                        HStack {
+                            Text(site)
+                            Spacer()
+                            if self.preferredInjectionSites.contains(site) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if self.preferredInjectionSites.contains(site) {
+                                self.preferredInjectionSites.removeAll { $0 == site }
+                            } else {
+                                self.preferredInjectionSites.append(site)
+                            }
+                        }
+                        .accessibilityIdentifier("add-injection-site-\(site.lowercased())")
+                    }
+                }
+
                 Section("Notes") {
                     TextField("Optional notes about your medication...", text: self.$notes, axis: .vertical)
                         .lineLimit(3 ... 6)
@@ -293,6 +322,8 @@ struct AddMedicationProfileView: View {
                 medication: self.selectedMedication,
                 brandName: brandName,
                 currentDose: self.selectedDose,
+                startDate: self.startDate,
+                preferredInjectionSites: self.preferredInjectionSites,
                 isCompounded: self.isCompounded,
                 vialStrength: self.isCompounded ? self.vialStrength : nil,
                 reconstitutionVolume: self.isCompounded ? self.reconstitutionVolume : nil,
@@ -331,6 +362,8 @@ struct MedicationProfileDetailView: View {
                             DetailRow(title: "Medication", value: self.profile.medicationType.capitalized)
                             DetailRow(title: "Brand", value: self.profile.brandName)
                             DetailRow(title: "Current Dose", value: "\(String(format: "%.2f", self.profile.currentDose)) mg")
+                            DetailRow(title: "Start Date", value: self.profile.startDate.formatted(date: .abbreviated, time: .omitted))
+                            DetailRow(title: "Preferred Sites", value: self.profile.preferredInjectionSites.joined(separator: ", "))
 
                             // Show reconstitution data for compounded medications
                             if self.profile.isCompounded {
@@ -475,6 +508,8 @@ struct EditMedicationProfileView: View {
     @State private var selectedMedication: Medication
     @State private var selectedBrand: String
     @State private var selectedDose: Double
+    @State private var startDate: Date
+    @State private var preferredInjectionSites: [String]
     @State private var isCompounded: Bool
     @State private var notes: String
     @State private var vialStrength: Double
@@ -492,6 +527,8 @@ struct EditMedicationProfileView: View {
         self._selectedMedication = State(initialValue: Medication(rawValue: profile.medicationType) ?? .semaglutide)
         self._selectedBrand = State(initialValue: profile.brandName)
         self._selectedDose = State(initialValue: profile.currentDose)
+        self._startDate = State(initialValue: profile.startDate)
+        self._preferredInjectionSites = State(initialValue: profile.preferredInjectionSites)
         self._isCompounded = State(initialValue: profile.isCompounded)
         self._notes = State(initialValue: profile.notes)
         self._vialStrength = State(initialValue: profile.vialStrength ?? 10.0)
@@ -540,6 +577,33 @@ struct EditMedicationProfileView: View {
                         self.showingReconstitutionCalculator = true
                     }
                 )
+
+                Section("Start Date") {
+                    DatePicker("Start Date", selection: self.$startDate, displayedComponents: .date)
+                        .accessibilityIdentifier("edit-start-date-picker")
+                }
+                
+                Section("Preferred Injection Sites") {
+                    ForEach(["Thigh", "Abdomen", "Upper Arm", "Buttocks"], id: \.self) { site in
+                        HStack {
+                            Text(site)
+                            Spacer()
+                            if self.preferredInjectionSites.contains(site) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if self.preferredInjectionSites.contains(site) {
+                                self.preferredInjectionSites.removeAll { $0 == site }
+                            } else {
+                                self.preferredInjectionSites.append(site)
+                            }
+                        }
+                        .accessibilityIdentifier("edit-injection-site-\(site.lowercased())")
+                    }
+                }
 
                 Section("Notes") {
                     TextField("Optional notes about your medication...", text: self.$notes, axis: .vertical)
@@ -608,6 +672,8 @@ struct EditMedicationProfileView: View {
                 medication: self.selectedMedication,
                 brandName: brandName,
                 currentDose: self.selectedDose,
+                startDate: self.startDate,
+                preferredInjectionSites: self.preferredInjectionSites,
                 isCompounded: self.isCompounded,
                 vialStrength: self.isCompounded ? self.vialStrength : nil,
                 reconstitutionVolume: self.isCompounded ? self.reconstitutionVolume : nil,

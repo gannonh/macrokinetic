@@ -95,6 +95,8 @@ class MedicationManager: ObservableObject {
         medication: Medication,
         brandName: String,
         currentDose: Double,
+        startDate: Date = Date(),
+        preferredInjectionSites: [String] = ["Thigh"],
         isCompounded: Bool = false,
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
@@ -123,7 +125,7 @@ class MedicationManager: ObservableObject {
             genericName: medication.displayName,
             brandName: brandName,
             currentDose: currentDose,
-            startDate: Date(),
+            startDate: startDate,
             refillDate: nil,
             medicationType: medication.rawValue,
             isCompounded: isCompounded,
@@ -131,6 +133,7 @@ class MedicationManager: ObservableObject {
             reconstitutionVolume: reconstitutionVolume,
             concentration: concentration,
             unitsPerDose: unitsPerDose,
+            preferredInjectionSites: preferredInjectionSites,
             notes: notes)
 
         // Link profile to user
@@ -153,7 +156,9 @@ class MedicationManager: ObservableObject {
         medication: Medication? = nil,
         brandName: String? = nil,
         currentDose: Double? = nil,
+        startDate: Date? = nil,
         refillDate: Date? = nil,
+        preferredInjectionSites: [String]? = nil,
         isCompounded: Bool? = nil,
         vialStrength: Double? = nil,
         reconstitutionVolume: Double? = nil,
@@ -187,8 +192,16 @@ class MedicationManager: ObservableObject {
         }
 
         // Update other fields if provided
+        if let startDate {
+            profile.startDate = startDate
+        }
+        
         if let refillDate {
             profile.refillDate = refillDate
+        }
+        
+        if let preferredInjectionSites {
+            profile.preferredInjectionSites = preferredInjectionSites
         }
 
         if let isCompounded {

@@ -22,6 +22,7 @@ final class MedicationProfile {
     var reconstitutionVolume: Double? // For compounded: ml of water to add
     var concentration: Double? // For compounded: mg/ml (calculated from reconstitution)
     var unitsPerDose: Double? // For compounded: units to draw (calculated from dose/concentration)
+    var preferredInjectionSites: [String] = ["Thigh"] // Preferred injection sites from onboarding
     var notes: String = "" // User notes about medication
     var updatedAt: Date = Date() // Track modifications
     var createdAt: Date = Date() // Track creation
@@ -44,6 +45,7 @@ final class MedicationProfile {
         reconstitutionVolume: Double? = nil,
         concentration: Double? = nil,
         unitsPerDose: Double? = nil,
+        preferredInjectionSites: [String] = ["Thigh"],
         notes: String = "")
     {
         self.genericName = genericName
@@ -57,6 +59,7 @@ final class MedicationProfile {
         self.reconstitutionVolume = reconstitutionVolume
         self.concentration = concentration
         self.unitsPerDose = unitsPerDose
+        self.preferredInjectionSites = preferredInjectionSites
         self.notes = notes
         self.createdAt = Date()
         self.updatedAt = Date()
