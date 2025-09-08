@@ -151,7 +151,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
 
         // AND: User enables compounded medication option
         // SwiftUI Forms wrap toggles in cells, need to tap the toggle control specifically
-        let compoundedToggle = self.app.switches["compounded-medication-toggle"]
+        let compoundedToggle = self.app.switches["add-compounded-medication-toggle"]
         XCTAssertTrue(compoundedToggle.waitForExistence(timeout: 3.0), "Toggle should exist")
 
         // Get the current value
@@ -176,7 +176,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         sleep(1)
 
         // AND: User enters vial strength
-        let vialStrengthField = self.app.textFields["vial-strength-input"]
+        let vialStrengthField = self.app.textFields["add-vial-strength-input"]
         XCTAssertTrue(vialStrengthField.waitForExistence(timeout: 3.0))
         vialStrengthField.tap()
         // Clear existing text if any
@@ -184,7 +184,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         vialStrengthField.typeText("10")
 
         // AND: User enters target dose
-        let targetDoseField = self.app.textFields["target-dose-input"]
+        let targetDoseField = self.app.textFields["add-target-dose-input"]
         XCTAssertTrue(targetDoseField.waitForExistence(timeout: 3.0))
         targetDoseField.tap()
         // Clear existing text if any
@@ -192,7 +192,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         targetDoseField.typeText("1")
 
         // AND: User requests calculation
-        let calculateButton = self.app.buttons["calculate-reconstitution"]
+        let calculateButton = self.app.buttons["add-calculate-reconstitution"]
         XCTAssertTrue(calculateButton.waitForExistence(timeout: 3.0))
         calculateButton.tap()
 
@@ -211,8 +211,10 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         XCTAssertTrue(self.app.staticTexts["Concentration: 10.00 mg/ml"].exists)
         XCTAssertTrue(self.app.staticTexts["Total units: 100.0"].exists)
 
-        // Close the calculator
-        self.app.buttons["Close"].tap()
+        // Save the calculator results
+        let saveButton = self.app.buttons["save-reconstitution-calculation"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
+        saveButton.tap()
 
         // AND: User can save compounded profile
         self.app.buttons["save-medication-profile"].tap()

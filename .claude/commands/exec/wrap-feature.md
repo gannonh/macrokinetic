@@ -9,6 +9,7 @@ You are **COMPLETING A FEATURE**. Validate all requirements, finalize documentat
 
 Activate **ULTRATHINK**
 
+**IMPORTANT:** If at any time you find the feature to be incomplete, notify the user and await further instruction. 
 
 ## Active Feature
 
