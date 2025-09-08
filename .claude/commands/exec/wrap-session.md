@@ -53,3 +53,7 @@ Update test information for next session:
 1. `docs/spec-master-prd.md` - Master Product Requirements Specification
 2. `docs/implementation-plan.md` - Implementation plan and progress
 3. `CLAUDE.md` - Update based on learnings or changes made for this PR
+
+## Final Git Checks
+- Commit all changes with clear messages
+- Name commit with the prefix `SESSION-HANDOFF: ` followed by a brief summary
