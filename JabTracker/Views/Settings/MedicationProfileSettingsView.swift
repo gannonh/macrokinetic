@@ -160,8 +160,8 @@ struct AddMedicationProfileView: View {
     @State private var isCompounded = false
     @State private var vialStrength: Double = 10.0
     @State private var reconstitutionVolume: Double = 1.0
-    @State private var concentration: Double? = nil
-    @State private var unitsPerDose: Double? = nil
+    @State private var concentration: Double?
+    @State private var unitsPerDose: Double?
     @State private var notes = ""
 
     @State private var showingError = false
