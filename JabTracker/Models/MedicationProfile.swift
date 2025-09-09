@@ -30,6 +30,9 @@ final class MedicationProfile {
     @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
     var doses: [Dose]? // CloudKit requires optional relationships
 
+    @Relationship(deleteRule: .cascade, inverse: \DoseTitration.medicationProfile)
+    var doseTitrations: [DoseTitration]? // Titration plans for this medication
+
     @Relationship(inverse: \User.medicationProfiles)
     var user: User? // Parent user relationship
 
