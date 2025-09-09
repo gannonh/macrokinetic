@@ -7,14 +7,14 @@ We are wrapping up this session and preparing the project for the next session t
 
 Activate **ULTRATHINK**
 
-**CURRENT FEATURE**: $ARGUMENTS  
+**CURRENT FEATURE PATH**: $ARGUMENTS  
 
 ## Review and update feature-level documentation (as needed)
 
  **IMPORTANT** 
  
  - Include any context needed for the next session to continue seamlessly.
- - If you determine that the feature is complete, complete the tasks below and notify the user of the completion status.
+ - If you determine that the feature is complete, notify the user of the completion status.
 
 1. `$ARGUMENTS/tasks.md` - Task list to execute
    - **PRIORITY WORK FOR NEXT SESSION**: Clear list of next tasks

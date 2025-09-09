@@ -11,8 +11,7 @@
           "Dose.swift",
           "MedicationProfile.swift",
           "Medication.swift",
-          "ReconstitutionCalculator.swift",
-          "PenClickCalculator.swift"
+          "ReconstitutionCalculator.swift"
         ]
       },
       "infrastructure": {
@@ -45,7 +44,8 @@
         "files": [
           "ProfileValidation.swift",
           "Array+Unique.swift",
-          "SubscriptionProducts.swift"
+          "SubscriptionProducts.swift",
+          "MedicationFormComponents.swift"
         ]
       }
     }
@@ -79,7 +79,7 @@
     "description": "Test files that contribute to coverage for the corresponding source files",
     "subscription_manager_tests": [
       "SubscriptionManagerTests.swift",
-      "SubscriptionManagerMoreTests.swift", 
+      "SubscriptionManagerMoreTests.swift",
       "SubscriptionManagerStoreKitIntegrationTests.swift",
       "SubscriptionManagerRestoreIntegrationTests.swift",
       "SubscriptionManagerCoreLogicTests.swift"
