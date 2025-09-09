@@ -7,7 +7,12 @@ We are wrapping up this session and preparing the project for the next session t
 
 Activate **ULTRATHINK**
 
-**CURRENT FEATURE PATH**: $ARGUMENTS  
+**CURRENT FEATURE PATH**: $ARGUMENTS
+
+## Review the work completed this session
+
+- The scope of this session is everything done since the last `SESSION-HANDOFF:*` commit message.
+- Use `git log` to identify the commits in this session.
 
 ## Review and update feature-level documentation (as needed)
 
@@ -30,7 +35,7 @@ Activate **ULTRATHINK**
    - Mark scenarios as ✅ complete, ⏳ in progress, or ❌ not started
 5. `$ARGUMENTS/data-model.md` - Data model and relationships
 
-## Critical Sections to Update in tasks.md
+### Critical Sections to Update in tasks.md
 
 Before wrapping up, ensure these sections are current:
 
@@ -40,7 +45,7 @@ Before wrapping up, ensure these sections are current:
 - [ ] **Test Coverage Status** - Note any XCTSkip tests and why
 - [ ] **Session Notes** - What was done this session?
 
-## Document Test Status
+### Document Test Status
 
 Update test information for next session:
 - E2E tests written this session

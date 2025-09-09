@@ -19,6 +19,10 @@ Activate **ULTRATHINK**
 - `$ARGUMENTS/spec.md` - All requirements must be met
 - `$ARGUMENTS/tasks.md` - All tasks must be complete
 
+## WORK REVIEW
+
+- [ ] Review full scope of branch/PR
+
 ## COMPLETION CHECKLIST
 
 ### 1. Validate Feature Completion
@@ -60,6 +64,9 @@ grep -r "XCTSkip" JabTrackerUITests/ JabTrackerTests/
 - Add "FEATURE COMPLETE" section with summary
 - Document any deferred work or future enhancements
 
+**Update `$ARGUMENTS/spec.md`:**
+- Mark all requirements as ✅ complete
+
 **Update `$ARGUMENTS/quickstart.md`:**
 - Mark all scenarios as ✅
 - Set "Ready for production deployment: ✅"
@@ -67,6 +74,10 @@ grep -r "XCTSkip" JabTrackerUITests/ JabTrackerTests/
 **Update `docs/implementation-plan.md`:**
 - Move feature from "In Progress" to "Completed"
 - Update with final implementation details
+
+**Update `docs/spec-master-prd.md`:**
+- Mark feature as complete in master PRD
+- Document any project level changes
 
 **Update `CLAUDE.md`:**
 - Change status emoji from 🔄 to ✅
