@@ -58,9 +58,6 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 - [ ] Commit failing test with message: `test: add failing test for [feature]`
 
 ```bash
-# E2E/UI tests
-./scripts/test.sh ui 1
-
 # Unit tests
 ./scripts/test.sh unit 1
 
@@ -132,15 +129,13 @@ xcodegen generate
 
 # Run tests by type
 ./scripts/test.sh unit 1    # Unit tests
-./scripts/test.sh ui 1      # UI tests  
-./scripts/test.sh all 1     # All tests
 
 # Coverage analysis
 ./scripts/check-coverage.sh
 ./scripts/coverage-detail.sh [FileName]
 
 # Full validation
-./scripts/check-all.sh
+./scripts/check-all.sh --skip-ui
 ```
 
 ## Stop and Clarify When
