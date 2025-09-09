@@ -44,8 +44,7 @@
         "files": [
           "ProfileValidation.swift",
           "Array+Unique.swift",
-          "SubscriptionProducts.swift",
-          "MedicationFormComponents.swift"
+          "SubscriptionProducts.swift"
         ]
       }
     }
