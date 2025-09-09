@@ -1,7 +1,7 @@
 # Tasks: Medication Profile Management
 
-**Status**: Backend Complete, Pen Click Feature Removed, Onboarding Integration Pending
-**Last Updated**: 2025-09-07
+**Status**: Backend Complete, UI Tests Fixed, Reconstitution Calculator UI Pending
+**Last Updated**: 2025-09-09
 
 **Input**: Design documents from `/specs/001-medication-profile-management/`
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
@@ -70,6 +70,17 @@
 3. ✅ Fixed build issues by regenerating Xcode project with XcodeGen
 4. ⚠️ **IDENTIFIED ISSUE**: Onboarding medication selection not persisting as medication profile
 
+**Session 6 - What Was Done (2025-09-09)**:
+1. ✅ **CRITICAL FIX**: Resolved UI test failures in MedicationProfileSettingsUITests
+   - Fixed DatePicker modal dismissal using PopoverDismissRegion button instead of navigation bar tap
+   - Fixed injection site element detection from Button to StaticText based on accessibility hierarchy analysis
+   - Used XcodeBuildMCP describe_ui tool to analyze actual element types instead of assumptions
+   - Updated checkmark detection to use Image elements with proper accessibility identifiers
+   - Resolved variable name conflicts (dismissRegion redeclaration) with unique names
+2. ✅ **ALL E2E TESTS NOW PASSING**: testMedicationProfileCRUDFlow, testInjectionSitesSelection, testStartDateFunctionality
+3. ✅ Applied fixes across all DatePicker interactions in the test suite
+4. ✅ Committed comprehensive fix with detailed technical explanation
+
 **Current Status**:
 - ✅ All backend services implemented and tested
 - ✅ Model enhancements complete with CloudKit compatibility
@@ -89,17 +100,10 @@
    - Display ReconstitutionResult using existing service
    - Handle validation errors gracefully
 
-2. **PenClickCalculatorView.swift** (T027):
-   - Create SwiftUI view in `JabTracker/Views/MedicationProfile/`
-   - Add navigation from profile detail/edit view
-   - Pen type selection based on medication
-   - Target dose input with validation
-   - Display PenClickResult using existing service
-
-3. **Integration Testing**:
+2. **Integration Testing**:
    - Remove XCTSkip from `testCompoundedMedicationSetup` test
-   - Remove XCTSkip from `testPenClickCalculator` test
-   - Update E2E tests to cover full calculator flows
+   - Update E2E tests to cover full reconstitution calculator flows
+   - **NOTE**: PenClickCalculator functionality removed due to liability concerns
 
 **PRIORITY 2: UPDATE FUNCTIONALITY** (Secondary)
 1. Connect edit button in profile list to actual update logic
@@ -119,14 +123,19 @@
 - Remember to run `xcodegen generate` after adding new files
 - SwiftLint is configured and should be run before commits
 
-**Key Technical Learnings from Sessions 3-4**:
+**Key Technical Learnings from Sessions 3-6**:
 - **SwiftUI Form Testing**: Toggles need coordinate-based tapping (dx: 0.9, dy: 0.5) to actually change state
 - **Accessibility IDs**: Use static identifiers like `medication-picker` not dynamic ones based on selection  
 - **List Rendering**: SwiftUI profile lists render items as Buttons, not Cells in UI automation
 - **Test Management**: XCTSkip is the proper way to handle unimplemented features in tests
 - **Coverage Requirements**: Pure business logic (calculators) must meet 90% coverage minimum
 - **File Structure**: Calculator views belong in `JabTracker/Views/MedicationProfile/` directory
-- **Service Integration**: Existing services (ReconstitutionCalculator, PenClickCalculator) are fully tested and ready for UI
+- **Service Integration**: Existing services (ReconstitutionCalculator, MedicationManager) are fully tested and ready for UI
+- **🔥 CRITICAL**: **XcodeBuildMCP describe_ui tool is essential for UI testing** - never guess element types from screenshots
+- **DatePicker Testing**: SwiftUI DatePicker modals require PopoverDismissRegion button tap for dismissal, not navigation bar
+- **Element Type Detection**: HStack with tap gestures render as StaticText, not Button elements in accessibility hierarchy
+- **Checkmark Validation**: Use Image elements with same accessibility identifier for selection state checks
+- **UI Debugging**: XcodeBuildMCP tools provide precise coordinates and element types for reliable test automation
 
 **Files Modified/Created (Complete List)**:
 - Modified: `JabTracker/Models/MedicationProfile.swift` - Enhanced with new fields
@@ -146,10 +155,12 @@
 **Git Status**:
 - Branch: `001-medication-profile-management` (up to date with origin)
 - Working tree clean (all work committed)
+- Latest commit: "fix: resolve DatePicker modal dismissal and injection site element types in UI tests"
 - Draft PR #35: "feat: medication profile CRUD UI with basic Create, Read, Delete" 
-- CRUD E2E tests passing, calculator tests properly skipped with XCTSkip
+- **ALL E2E TESTS PASSING**: CRUD flow, injection site selection, date picker functionality
+- Calculator tests properly skipped with XCTSkip until UI implementation
 - Coverage config updated and requirements met for all new files
-- Ready for calculator UI implementation in next session
+- Ready for ReconstitutionCalculatorView UI implementation in next session
 
 ## Execution Flow (main)
 ```

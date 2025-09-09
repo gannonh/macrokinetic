@@ -73,14 +73,14 @@
 - ✅ Support for Semaglutide, Tirzepatide, Liraglutide, Dulaglutide
 - ✅ Build medication profile CRUD operations with SwiftData
 - ✅ Create basic UI for medication profile management (Create, Read, Delete)
-- ✅ Backend calculator services (ReconstitutionCalculator, PenClickCalculator)
+- ✅ Backend calculator services (ReconstitutionCalculator)
 - ✅ Comprehensive unit test coverage (96%+ for calculators)
-- ✅ E2E CRUD tests passing with proper XCTSkip for unimplemented features
+- ✅ **ALL E2E TESTS PASSING** - Fixed DatePicker modal dismissal and injection site element detection using XcodeBuildMCP
 - ⏳ Update functionality (UI exists, needs backend connection)
 - ⏳ Implement reconstitution calculator UI
-- ⏳ Implement pen click calculator UI
 - ❌ Create medication selection wizard for onboarding
 - ❌ Add dose escalation schedule tracking
+- ❌ ~~Pen click calculator~~ (Removed - liability concerns)
 
 ### Dose Entry and Tracking UI 📋
 **Core Dose Management Features**
