@@ -68,6 +68,8 @@ final class MedicationProfileSettingsUITests: XCTestCase {
                       "Start date picker should be accessible")
         // Note: DatePicker value testing is complex in XCUITest, we verify existence and basic interaction
         startDatePicker.tap()
+        sleep(1) // Wait for any animations
+        startDatePicker.tap()
 
         // AND: User selects preferred injection sites (default Thigh should be selected)
         let thighSite = self.app.buttons["add-injection-site-thigh"]
