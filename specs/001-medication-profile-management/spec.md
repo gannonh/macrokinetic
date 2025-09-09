@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-medication-profile-management`  
 **Created**: 2025-09-05  
-**Status**: ✅ **COMPLETED** (2025-09-09)  
+**Status**: ⏳ **IN PROGRESS** - Core CRUD complete, dose escalation tracking missing  
 **Input**: User description: "Medication Profile Management - Medication Enum & Profile System including Medication enum with properties (half-life, available doses, frequency), support for Semaglutide/Tirzepatide/Liraglutide/Dulaglutide, medication selection wizard for onboarding, medication profile CRUD operations with SwiftData, and dose escalation schedule tracking"
 
 ## Execution Flow (main)
