@@ -50,8 +50,8 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 3),
                       "Should show subscription placeholder screen")
 
-        XCTAssertTrue(app.staticTexts["Subscription pricing: $4.99 per month with 2-week free trial"].exists,
-                      "Should show pricing and trial information")
+        XCTAssertTrue(app.staticTexts["Choose Your Plan"].exists,
+                      "Should show pricing plan selection")
 
         app.buttons["onboarding-complete-button"].tap()
 
