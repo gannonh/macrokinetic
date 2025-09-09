@@ -148,12 +148,13 @@ class OnboardingViewModel: ObservableObject {
         }
 
         let typesToRead: Set<HKObjectType> = [bodyMassType, bodyMassIndexType]
+        let typesToShare: Set<HKSampleType> = [bodyMassType, bodyMassIndexType]
 
         if let forced = testForcedHealthAuthResult {
             self.healthKitGranted = forced
         } else {
             do {
-                try await healthStore.requestAuthorization(toShare: [], read: typesToRead)
+                try await healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead)
                 // Check authorization status for the weight type
                 let authStatus = healthStore.authorizationStatus(for: bodyMassType)
                 self.healthKitGranted = authStatus == .sharingAuthorized
