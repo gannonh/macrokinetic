@@ -72,9 +72,9 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         sleep(1) // Wait for calendar modal to appear
         
         // Dismiss the calendar modal by tapping the dismiss region
-        let dismissRegion = self.app.buttons["PopoverDismissRegion"]
-        if dismissRegion.exists {
-            dismissRegion.tap()
+        let addDismissRegion = self.app.buttons["PopoverDismissRegion"]
+        if addDismissRegion.exists {
+            addDismissRegion.tap()
         }
 
         // AND: User selects preferred injection sites (default Thigh should be selected)
@@ -140,21 +140,33 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         editDoseOption.tap()
 
         // AND: User verifies start date picker is present and can be interacted with
-        let editStartDatePicker = self.app.datePickers["edit-start-date-picker"]
+        // The DatePicker appears as a Button with label "Date Picker" in the accessibility hierarchy
+        let editStartDatePicker = self.app.buttons["Date Picker"]
         XCTAssertTrue(editStartDatePicker.waitForExistence(timeout: 3.0),
                       "Edit start date picker should be accessible")
         editStartDatePicker.tap()
+        sleep(1) // Wait for calendar modal to appear
+        
+        // Dismiss the calendar modal by tapping the dismiss region
+        let editDismissRegion = self.app.buttons["PopoverDismissRegion"]
+        if editDismissRegion.exists {
+            editDismissRegion.tap()
+        }
 
         // AND: User modifies injection sites (remove Abdomen, add Upper Arm)
-        let editAbdomenSite = self.app.buttons["edit-injection-site-abdomen"]
+        let editAbdomenSite = self.app.staticTexts["edit-injection-site-abdomen"]
         XCTAssertTrue(editAbdomenSite.waitForExistence(timeout: 3.0))
-        XCTAssertTrue(editAbdomenSite.images["checkmark"].exists, "Abdomen should still be selected")
+        // Check for selected state by looking for the checkmark image with same identifier
+        let editAbdomenCheckmark = self.app.images["edit-injection-site-abdomen"].firstMatch
+        XCTAssertTrue(editAbdomenCheckmark.exists, "Abdomen should still be selected")
         editAbdomenSite.tap() // Deselect Abdomen
 
-        let editUpperArmSite = self.app.buttons["edit-injection-site-upper arm"]
+        let editUpperArmSite = self.app.staticTexts["edit-injection-site-upper arm"]
         XCTAssertTrue(editUpperArmSite.waitForExistence(timeout: 3.0))
         editUpperArmSite.tap() // Select Upper Arm
-        XCTAssertTrue(editUpperArmSite.images["checkmark"].waitForExistence(timeout: 2.0),
+        // Check for selected state by looking for the checkmark image that appears
+        let editUpperArmCheckmark = self.app.images["edit-injection-site-upper arm"].firstMatch
+        XCTAssertTrue(editUpperArmCheckmark.waitForExistence(timeout: 2.0),
                       "Upper Arm should be selected after tap")
 
         // AND: User saves changes
@@ -211,10 +223,10 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         self.app.buttons["add-dose-option-0.25"].tap()
 
         // WHEN: User interacts with injection site selection
-        let thighSite = self.app.buttons["add-injection-site-thigh"]
-        let abdomenSite = self.app.buttons["add-injection-site-abdomen"]
-        let upperArmSite = self.app.buttons["add-injection-site-upper arm"]
-        let buttocksSite = self.app.buttons["add-injection-site-buttocks"]
+        let thighSite = self.app.staticTexts["add-injection-site-thigh"]
+        let abdomenSite = self.app.staticTexts["add-injection-site-abdomen"]
+        let upperArmSite = self.app.staticTexts["add-injection-site-upper arm"]
+        let buttocksSite = self.app.staticTexts["add-injection-site-buttocks"]
 
         // THEN: All injection site options should be available
         XCTAssertTrue(thighSite.waitForExistence(timeout: 3.0))
@@ -223,30 +235,35 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         XCTAssertTrue(buttocksSite.waitForExistence(timeout: 3.0))
 
         // AND: Thigh should be selected by default
-        XCTAssertTrue(thighSite.images["checkmark"].exists, "Thigh should be selected by default")
-        XCTAssertFalse(abdomenSite.images["checkmark"].exists, "Abdomen should not be selected initially")
-        XCTAssertFalse(upperArmSite.images["checkmark"].exists, "Upper Arm should not be selected initially")
-        XCTAssertFalse(buttocksSite.images["checkmark"].exists, "Buttocks should not be selected initially")
+        let thighCheckmark = self.app.images["add-injection-site-thigh"].firstMatch
+        let abdomenCheckmark = self.app.images["add-injection-site-abdomen"].firstMatch  
+        let upperArmCheckmark = self.app.images["add-injection-site-upper arm"].firstMatch
+        let buttocksCheckmark = self.app.images["add-injection-site-buttocks"].firstMatch
+        
+        XCTAssertTrue(thighCheckmark.exists, "Thigh should be selected by default")
+        XCTAssertFalse(abdomenCheckmark.exists, "Abdomen should not be selected initially")
+        XCTAssertFalse(upperArmCheckmark.exists, "Upper Arm should not be selected initially")
+        XCTAssertFalse(buttocksCheckmark.exists, "Buttocks should not be selected initially")
 
         // WHEN: User selects multiple sites
         abdomenSite.tap()
         upperArmSite.tap()
 
         // THEN: Multiple sites should be selected
-        XCTAssertTrue(thighSite.images["checkmark"].exists, "Thigh should remain selected")
-        XCTAssertTrue(abdomenSite.images["checkmark"].waitForExistence(timeout: 2.0),
+        XCTAssertTrue(thighCheckmark.exists, "Thigh should remain selected")
+        XCTAssertTrue(abdomenCheckmark.waitForExistence(timeout: 2.0),
                       "Abdomen should be selected after tap")
-        XCTAssertTrue(upperArmSite.images["checkmark"].waitForExistence(timeout: 2.0),
+        XCTAssertTrue(upperArmCheckmark.waitForExistence(timeout: 2.0),
                       "Upper Arm should be selected after tap")
-        XCTAssertFalse(buttocksSite.images["checkmark"].exists, "Buttocks should remain unselected")
+        XCTAssertFalse(buttocksCheckmark.exists, "Buttocks should remain unselected")
 
         // WHEN: User deselects a site
         thighSite.tap()
 
         // THEN: That site should be deselected while others remain
-        XCTAssertFalse(thighSite.images["checkmark"].exists, "Thigh should be deselected after tap")
-        XCTAssertTrue(abdomenSite.images["checkmark"].exists, "Abdomen should remain selected")
-        XCTAssertTrue(upperArmSite.images["checkmark"].exists, "Upper Arm should remain selected")
+        XCTAssertFalse(thighCheckmark.exists, "Thigh should be deselected after tap")
+        XCTAssertTrue(abdomenCheckmark.exists, "Abdomen should remain selected")
+        XCTAssertTrue(upperArmCheckmark.exists, "Upper Arm should remain selected")
 
         // WHEN: User saves profile with selected sites
         self.app.buttons["save-medication-profile"].tap()
@@ -284,13 +301,23 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         self.app.buttons["add-dose-option-0.25"].tap()
 
         // WHEN: User interacts with start date picker
-        let startDatePicker = self.app.datePickers["add-start-date-picker"]
+        // The DatePicker appears as a Button with label "Date Picker" in the accessibility hierarchy
+        let startDatePicker = self.app.buttons["Date Picker"]
         XCTAssertTrue(startDatePicker.waitForExistence(timeout: 3.0),
                       "Start date picker should be present")
 
         // THEN: Date picker should be interactable (tap to verify accessibility)
         startDatePicker.tap()
-        XCTAssertTrue(startDatePicker.exists, "Start date picker should remain accessible after interaction")
+        sleep(1) // Wait for calendar modal to appear
+        
+        // Dismiss the calendar modal by tapping the dismiss region
+        let startDismissRegion = self.app.buttons["PopoverDismissRegion"]
+        if startDismissRegion.exists {
+            startDismissRegion.tap()
+        }
+        
+        // Verify picker is accessible after interaction
+        XCTAssertTrue(self.app.buttons["Date Picker"].exists, "Start date picker should remain accessible after interaction")
 
         // WHEN: User saves profile
         self.app.buttons["save-medication-profile"].tap()
