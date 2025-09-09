@@ -81,7 +81,7 @@
 - ✅ **SHARED COMPONENTS** - Extracted MedicationFormComponents for reusability
 - ✅ **FORM REFACTORING** - Clean separation between Add/Edit/Detail views
 - ✅ **ERROR HANDLING** - Complete validation and user-friendly error messaging
-- ❌ Add dose escalation schedule tracking (future enhancement)
+- ⏳ **Dose escalation schedule tracking** - Core requirement from spec FR-007, not implemented yet
 
 ### Dose Entry and Tracking UI 📋
 **Core Dose Management Features**

@@ -28,10 +28,6 @@ gh pr view --json title,state,url
 
 # Review priority work from last session
 cat $ARGUMENTS/tasks.md | grep -A 20 "PRIORITY WORK FOR NEXT SESSION"
-
-# Check test status
-./scripts/test.sh unit 1
-./scripts/test.sh ui 1
 ```
 
 ### 2. Assess Test Coverage for Next Tasks
