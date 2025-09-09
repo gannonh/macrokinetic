@@ -63,24 +63,34 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         doseOption.tap()
 
         // AND: User sets start date (DatePicker should exist and be interactable)
-        let startDatePicker = self.app.datePickers["add-start-date-picker"]
+        // The DatePicker appears as a Button with label "Date Picker" in the accessibility hierarchy
+        let startDatePicker = self.app.buttons["Date Picker"]
         XCTAssertTrue(startDatePicker.waitForExistence(timeout: 3.0),
                       "Start date picker should be accessible")
         // Note: DatePicker value testing is complex in XCUITest, we verify existence and basic interaction
         startDatePicker.tap()
-        sleep(1) // Wait for any animations
-        startDatePicker.tap()
+        sleep(1) // Wait for calendar modal to appear
+        
+        // Dismiss the calendar modal by tapping the dismiss region
+        let dismissRegion = self.app.buttons["PopoverDismissRegion"]
+        if dismissRegion.exists {
+            dismissRegion.tap()
+        }
 
         // AND: User selects preferred injection sites (default Thigh should be selected)
-        let thighSite = self.app.buttons["add-injection-site-thigh"]
+        let thighSite = self.app.staticTexts["add-injection-site-thigh"]
         XCTAssertTrue(thighSite.waitForExistence(timeout: 3.0))
-        XCTAssertTrue(thighSite.images["checkmark"].exists, "Thigh should be selected by default")
+        // Check for selected state by looking for the checkmark image with same identifier
+        let thighCheckmark = self.app.images["add-injection-site-thigh"].firstMatch
+        XCTAssertTrue(thighCheckmark.exists, "Thigh should be selected by default")
 
         // User adds Abdomen as additional site
-        let abdomenSite = self.app.buttons["add-injection-site-abdomen"]
+        let abdomenSite = self.app.staticTexts["add-injection-site-abdomen"]
         XCTAssertTrue(abdomenSite.waitForExistence(timeout: 3.0))
         abdomenSite.tap()
-        XCTAssertTrue(abdomenSite.images["checkmark"].waitForExistence(timeout: 2.0),
+        // Check for selected state by looking for the checkmark image that appears
+        let abdomenCheckmark = self.app.images["add-injection-site-abdomen"].firstMatch
+        XCTAssertTrue(abdomenCheckmark.waitForExistence(timeout: 2.0),
                       "Abdomen should be selected after tap")
 
         // AND: User saves the profile
