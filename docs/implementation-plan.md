@@ -81,8 +81,6 @@
 - ✅ **SHARED COMPONENTS** - Extracted MedicationFormComponents for reusability
 - ✅ **FORM REFACTORING** - Clean separation between Add/Edit/Detail views
 - ✅ **ERROR HANDLING** - Complete validation and user-friendly error messaging
-- ❌ ~~Pen click calculator~~ (Removed - liability concerns, implemented then removed)
-- ❌ Create medication selection wizard for onboarding (future enhancement)
 - ❌ Add dose escalation schedule tracking (future enhancement)
 
 ### Dose Entry and Tracking UI 📋
