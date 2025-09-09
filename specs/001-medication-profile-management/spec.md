@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-medication-profile-management`  
 **Created**: 2025-09-05  
-**Status**: Draft  
+**Status**: ✅ **COMPLETED** (2025-09-09)  
 **Input**: User description: "Medication Profile Management - Medication Enum & Profile System including Medication enum with properties (half-life, available doses, frequency), support for Semaglutide/Tirzepatide/Liraglutide/Dulaglutide, medication selection wizard for onboarding, medication profile CRUD operations with SwiftData, and dose escalation schedule tracking"
 
 ## Execution Flow (main)
@@ -97,7 +97,7 @@ This feature encompasses two distinct but related medication management capabili
 - Multiple concurrent medications
 
 **Known Issues**:
-- Onboarding flow medication selection does not persist as medication profile (needs investigation and fix)
+- ~~Onboarding flow medication selection does not persist as medication profile~~ ✅ **RESOLVED** (fixed in commit ac99407)
 
 ### Key Entities *(include if feature involves data)*
 - **Medication**: Represents the four supported GLP-1 medication types with properties including generic name, brand names, half-life in days, available dose array, dosing frequency, and pen click-to-dose ratios for branded formulations
