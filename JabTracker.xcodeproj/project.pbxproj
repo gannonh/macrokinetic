@@ -46,6 +46,7 @@
 		682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */; };
 		68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */; };
 		6D1110D677A82B0FDC706888 /* UserProfileViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */; };
+		6F3061A524E0D5A90989C802 /* DoseTitrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2AFF8F01D51AA1930CFD7A2 /* DoseTitrationView.swift */; };
 		704AEE9061F5B9D23CBC19D8 /* SubscriptionProducts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E2AEB8B2D7270CBDA42825 /* SubscriptionProducts.swift */; };
 		72A9BEB2AE70FDDEE0272DD2 /* AuthenticationDatabaseIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8D1209E3EB9E079E0C5416 /* AuthenticationDatabaseIntegrationTests.swift */; };
 		747C6E49FE3A1CF40CBB6F5D /* CodeGen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */; };
@@ -224,6 +225,7 @@
 		CDC07DC6AC9A3098F3CF677D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerTests.swift; sourceTree = "<group>"; };
 		D23B2CB25BA56529BBA6E7DB /* ProfileValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileValidationTests.swift; sourceTree = "<group>"; };
+		D2AFF8F01D51AA1930CFD7A2 /* DoseTitrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseTitrationView.swift; sourceTree = "<group>"; };
 		D3C9AD909F79531B7470B5BD /* SubscriptionUIPlanSwitchingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIPlanSwitchingTests.swift; sourceTree = "<group>"; };
 		D72C377F30F091F203828A17 /* BiometricEnumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricEnumTests.swift; sourceTree = "<group>"; };
 		D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerTests.swift; sourceTree = "<group>"; };
@@ -466,6 +468,7 @@
 		EFAC870834C2BEF0E40633F4 /* MedicationProfile */ = {
 			isa = PBXGroup;
 			children = (
+				D2AFF8F01D51AA1930CFD7A2 /* DoseTitrationView.swift */,
 				0494B8E4B04DEEE6EF76134D /* ReconstitutionCalculatorView.swift */,
 			);
 			path = MedicationProfile;
@@ -696,6 +699,7 @@
 				25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */,
 				E4E2E302D5AC11A67F4A584B /* Dose.swift in Sources */,
 				D113BB6008AF2C6C24B9EE68 /* DoseTitration.swift in Sources */,
+				6F3061A524E0D5A90989C802 /* DoseTitrationView.swift in Sources */,
 				9E27575CFDF53DA45781E258 /* InitialDoseSetupView.swift in Sources */,
 				80F00B03F4A9C63A52D46AAE /* JabTrackerApp.swift in Sources */,
 				8028FC4C576731EA49792A87 /* Medication.swift in Sources */,

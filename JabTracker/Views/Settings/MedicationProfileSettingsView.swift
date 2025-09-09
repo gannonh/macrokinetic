@@ -339,6 +339,7 @@ struct MedicationProfileDetailView: View {
     let profile: MedicationProfile
     @State private var showingEditSheet = false
     @State private var showingReconstitutionCalculator = false
+    @State private var showingDoseTitration = false
     @Environment(\.modelContext) private var modelContext
 
     private var medicationManager: MedicationManager {
@@ -391,6 +392,17 @@ struct MedicationProfileDetailView: View {
                     }
                     .accessibilityIdentifier("detail-reconstitution-calculator")
                 }
+                
+                // Dose Titration Management
+                Button {
+                    self.showingDoseTitration = true
+                } label: {
+                    CalculatorCard(
+                        title: "Dose Titration Plan",
+                        description: "Schedule and track dose increases",
+                        icon: "chart.line.uptrend.xyaxis")
+                }
+                .accessibilityIdentifier("dose-escalation-button")
 
                 Spacer()
             }
@@ -438,6 +450,9 @@ struct MedicationProfileDetailView: View {
                     print("Failed to update profile with reconstitution values: \(error)")
                 }
             })
+            .sheet(isPresented: self.$showingDoseTitration) {
+                DoseTitrationView(profile: self.profile)
+            }
     }
 }
 
