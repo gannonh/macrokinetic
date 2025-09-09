@@ -671,4 +671,167 @@ final class MedicationProfileSettingsUITests: XCTestCase {
         // Close calculator
         self.app.buttons["Close"].tap()
     }
+    
+    // MARK: - E2E Acceptance Test: Dose Escalation Tracking
+    
+    /// Acceptance Test: User can schedule and track dose escalations for medication profiles
+    /// This defines what "done" looks like for dose escalation functionality from user perspective
+    func testDoseEscalationTracking() throws {
+        // GIVEN: User has an existing medication profile at starting dose
+        self.app.tabBars.buttons["Settings"].tap()
+        self.app.buttons["Medication Profiles"].tap()
+        self.app.buttons["Add Medication Profile"].tap()
+        
+        // Create Semaglutide profile starting at 0.25mg
+        self.app.buttons["medication-picker"].tap()
+        self.app.buttons["medication-semaglutide"].tap()
+        
+        self.app.buttons["add-brand-picker"].tap()
+        self.app.buttons["add-brand-ozempic"].tap()
+        
+        self.app.buttons["add-dose-picker"].tap()
+        self.app.buttons["add-dose-option-0.25"].tap()
+        
+        self.app.buttons["save-medication-profile"].tap()
+        
+        // Navigate to profile details
+        let profileCell = self.app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+        profileCell.tap()
+        
+        // WHEN: User accesses dose escalation planning
+        let escalationButton = self.app.buttons["dose-escalation-button"]
+        XCTAssertTrue(escalationButton.waitForExistence(timeout: 3.0), 
+                      "Dose escalation button should be accessible from profile detail")
+        escalationButton.tap()
+        
+        // THEN: Escalation management view should open
+        let escalationTitle = self.app.staticTexts["Dose Escalation Plan"]
+        XCTAssertTrue(escalationTitle.waitForExistence(timeout: 3.0),
+                      "Dose escalation view should open")
+        
+        // AND: Current dose should be displayed
+        XCTAssertTrue(self.app.staticTexts["Current Dose"].exists)
+        XCTAssertTrue(self.app.staticTexts["0.25 mg"].exists)
+        
+        // WHEN: User creates new escalation plan
+        let createEscalationButton = self.app.buttons["create-escalation-plan"]
+        XCTAssertTrue(createEscalationButton.waitForExistence(timeout: 3.0))
+        createEscalationButton.tap()
+        
+        // AND: User selects target dose (0.5mg - next level up)
+        let targetDosePicker = self.app.buttons["escalation-target-dose-picker"]
+        XCTAssertTrue(targetDosePicker.waitForExistence(timeout: 3.0))
+        targetDosePicker.tap()
+        
+        let targetDoseOption = self.app.buttons["escalation-dose-option-0.50"]
+        XCTAssertTrue(targetDoseOption.waitForExistence(timeout: 3.0))
+        targetDoseOption.tap()
+        
+        // AND: User sets escalation date (4 weeks from now)
+        let escalationDatePicker = self.app.buttons["Date Picker"]
+        XCTAssertTrue(escalationDatePicker.waitForExistence(timeout: 3.0))
+        escalationDatePicker.tap()
+        sleep(1) // Wait for calendar modal
+        
+        // Set date to 4 weeks in future - for now just dismiss modal
+        // TODO: Implement specific date selection logic
+        let dismissRegion = self.app.buttons["PopoverDismissRegion"]
+        if dismissRegion.exists {
+            dismissRegion.tap()
+        }
+        
+        // AND: User saves escalation plan
+        let saveEscalationButton = self.app.buttons["save-escalation-plan"]
+        XCTAssertTrue(saveEscalationButton.waitForExistence(timeout: 3.0))
+        saveEscalationButton.tap()
+        
+        // THEN: Escalation should appear in timeline
+        let escalationTimeline = self.app.staticTexts["Escalation Timeline"]
+        XCTAssertTrue(escalationTimeline.waitForExistence(timeout: 3.0))
+        
+        let scheduledEscalation = self.app.staticTexts["Scheduled: 0.25 mg → 0.50 mg"]
+        XCTAssertTrue(scheduledEscalation.waitForExistence(timeout: 3.0),
+                      "Scheduled escalation should appear in timeline")
+        
+        // AND: Escalation date should be displayed
+        XCTAssertTrue(self.app.staticTexts["Escalation Date"].exists,
+                      "Escalation date should be visible")
+        
+        // WHEN: User marks escalation as completed
+        let markCompleteButton = self.app.buttons["mark-escalation-complete"]
+        XCTAssertTrue(markCompleteButton.waitForExistence(timeout: 3.0))
+        markCompleteButton.tap()
+        
+        // THEN: Profile should be updated with new dose
+        XCTAssertTrue(self.app.staticTexts["Completed: 0.25 mg → 0.50 mg"].waitForExistence(timeout: 3.0),
+                      "Completed escalation should be marked in timeline")
+        
+        // AND: Current dose should be updated
+        XCTAssertTrue(self.app.staticTexts["Current Dose"].exists)
+        XCTAssertTrue(self.app.staticTexts["0.50 mg"].exists, "Current dose should be updated to new level")
+        
+        // WHEN: User creates another escalation (0.5mg -> 1.0mg)
+        let createSecondEscalationButton = self.app.buttons["create-escalation-plan"]
+        XCTAssertTrue(createSecondEscalationButton.waitForExistence(timeout: 3.0))
+        createSecondEscalationButton.tap()
+        
+        // Select 1.0mg as next target
+        let secondTargetPicker = self.app.buttons["escalation-target-dose-picker"]
+        secondTargetPicker.tap()
+        
+        let onePartZeroDoseOption = self.app.buttons["escalation-dose-option-1.00"]
+        XCTAssertTrue(onePartZeroDoseOption.waitForExistence(timeout: 3.0))
+        onePartZeroDoseOption.tap()
+        
+        // Set escalation date
+        let secondDatePicker = self.app.buttons["Date Picker"]
+        secondDatePicker.tap()
+        sleep(1)
+        
+        let secondDismissRegion = self.app.buttons["PopoverDismissRegion"]
+        if secondDismissRegion.exists {
+            secondDismissRegion.tap()
+        }
+        
+        // Save second escalation
+        let saveSecondEscalationButton = self.app.buttons["save-escalation-plan"]
+        saveSecondEscalationButton.tap()
+        
+        // THEN: Multiple escalations should be visible in timeline
+        let firstCompleted = self.app.staticTexts["Completed: 0.25 mg → 0.50 mg"]
+        let secondScheduled = self.app.staticTexts["Scheduled: 0.50 mg → 1.00 mg"]
+        
+        XCTAssertTrue(firstCompleted.exists, "First completed escalation should remain visible")
+        XCTAssertTrue(secondScheduled.waitForExistence(timeout: 3.0), "Second scheduled escalation should be visible")
+        
+        // WHEN: User deletes future escalation
+        let deleteEscalationButton = self.app.buttons["delete-escalation-1.00mg"]
+        XCTAssertTrue(deleteEscalationButton.waitForExistence(timeout: 3.0))
+        deleteEscalationButton.tap()
+        
+        // Confirm deletion
+        let confirmDeleteButton = self.app.buttons["Confirm Delete"]
+        XCTAssertTrue(confirmDeleteButton.waitForExistence(timeout: 3.0))
+        confirmDeleteButton.tap()
+        
+        // THEN: Scheduled escalation should be removed
+        XCTAssertFalse(secondScheduled.exists, "Deleted escalation should not appear in timeline")
+        XCTAssertTrue(firstCompleted.exists, "Completed escalation should remain")
+        
+        // WHEN: User returns to profile list
+        self.app.navigationBars.buttons.element(boundBy: 0).tap() // Back to detail
+        self.app.navigationBars.buttons.element(boundBy: 0).tap() // Back to list
+        
+        // THEN: Profile should show updated dose from escalation
+        let updatedProfileCell = self.app.buttons["medication-profile-semaglutide-ozempic-0.50mg"]
+        XCTAssertTrue(updatedProfileCell.waitForExistence(timeout: 3.0),
+                      "Profile should show updated dose after escalation completion")
+        
+        // Clean up - delete the test profile
+        updatedProfileCell.swipeLeft()
+        let deleteButton = self.app.buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 3.0))
+        deleteButton.tap()
+    }
 }
