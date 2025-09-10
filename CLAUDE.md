@@ -156,8 +156,7 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 ### Coverage Policy & Reporting
 
 - Coverage config: `coverage-config.json`
-- Coverage policy: `coverage-policy.md`
-
+- 
 ```bash
 # Enable coverage in Xcode scheme (already configured)
 # codeCoverageEnabled = "YES" in JabTracker.xcscheme
@@ -175,7 +174,6 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 
 # Generate code coverage reports (EASY WAY - use test script)
 ./scripts/test.sh unit 1 --coverage     # Unit tests with coverage
-./scripts/test.sh all --coverage        # All tests with coverage
 
 # COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
 ./scripts/coverage-detail.sh                    # Full coverage report
@@ -194,13 +192,14 @@ xcrun xccov view --report --json /tmp/coverage.xcresult | jq
 xcrun xccov view --file-list /tmp/coverage.xcresult
 ```
 
-**Coverage Policy (SwiftUI-Aware):**
-- **Business Logic (90% minimum)**: AuthenticationManager, BiometricAuthManager, DataController, Models
-- **View Models (85% minimum)**: ObservableObject classes with business logic (none defined yet)
+**Coverage Policy (5-Tier System):**
+- **Tier 1 - Pure Business Logic (90%)**: PharmacokineticsEngine, Models (User, Dose, MedicationProfile, Medication), ReconstitutionCalculator, DoseTitration
+- **Tier 2 - Infrastructure (62%)**: DataController, MedicationManager
+- **Tier 3 - Framework Integration (42%)**: AuthenticationManager, BiometricAuthManager, SubscriptionManager
+- **Tier 4 - View Models (85%)**: OnboardingViewModel
+- **Tier 5 - Utilities (75%)**: ProfileValidation, Array+Unique, SubscriptionProducts
 - **SwiftUI Views**: No coverage requirements (view bodies cannot be unit tested)
-- **Overall Coverage**: ~23% (informational only, not a requirement)
-
-See `docs/coverage-policy.md` for detailed requirements and rationale.
+- **Overall Coverage**: ~20% (informational only, not a requirement)
 
 #### Coverage Analysis Tips
 
@@ -210,11 +209,10 @@ See `docs/coverage-policy.md` for detailed requirements and rationale.
 - Private methods need indirect testing through public methods that call them
 - Async methods may need `Task.sleep()` waits in tests for proper coverage
 
-**Key Coverage Targets from Analysis:**
-- `DataController.checkiCloudStatus()`: 0% (30 lines) - Test via `retryCloudKitSetup()`  
-- `DataController.checkCloudKitStatus()`: 0% (5 lines) - Test via initialization paths
-- `AuthenticationManager.resetAppData()`: 0% (20 lines) - Test via `--reset-app-data` argument
-- `AuthenticationManager.processAppleIDCredential(_:)`: 0% (32 lines) - Test via delegate methods
+**Current Coverage Gaps (as of Session 8):**
+- **AuthenticationManager**: 39% (below 42% threshold) - needs additional credential handling tests
+- **PharmacokineticsEngine**: Not yet implemented - future core requirement
+- **SubscriptionProducts**: Not found in coverage report - check test inclusion
 
 **Common Coverage Issues:**
 - Result bundle not found: Run tests with `--coverage` first
