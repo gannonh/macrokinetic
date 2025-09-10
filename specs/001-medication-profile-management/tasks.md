@@ -176,7 +176,7 @@
 6. **ONBOARDING INTEGRATION**: Seamless flow from onboarding to medication profile creation
 
 ### Missing Implementation:
-- **DOSE ESCALATION SYSTEM**: FR-007 requirement not implemented (DoseEscalation model, DoseEscalationView, tracking logic)
+- **DOSE ESCALATION SYSTEM**: FR-007 requirement not implemented (DoseEscalation model, DoseTitrationView, tracking logic)
 
 **Git Status**:
 - Branch: `001-medication-profile-management` 
@@ -267,7 +267,7 @@
 - [x] T025 Create MedicationProfileSettingsView.swift in JabTracker/Views/Settings/ - profile CRUD UI ✅ Basic CRUD done
 - [x] T026 Create ReconstitutionCalculatorView.swift in JabTracker/Views/MedicationProfile/ ✅ Done
 - [❌] T027 Create PenClickCalculatorView.swift in JabTracker/Views/MedicationProfile/ ❌ REMOVED (liability concerns)
-- [ ] T028 Create DoseEscalationView.swift in JabTracker/Views/MedicationProfile/
+- [ ] T028 Create DoseTitrationView.swift in JabTracker/Views/MedicationProfile/
 
 ### Onboarding Enhancement
 - [x] T029 Enhance MedicationSelectionView.swift in JabTracker/Views/Onboarding/ - integrate with Medication enum ✅ Done
@@ -368,7 +368,7 @@ Task: "Implement PenClickCalculator.swift service"
 
 **Missing Tasks**:
 - T018: DoseEscalation.swift model
-- T028: DoseEscalationView.swift UI
+- T028: DoseTitrationView.swift UI
 - T013: DoseEscalationUITests.swift E2E tests
 - T030: Compounded vs branded onboarding selection
 - Various polish tasks (T033-T043)
