@@ -1,9 +1,9 @@
 ---
-description: Complete feature implementation and prepare for PR merge
+description: Complete feature implementation and prepare for PR review
 argument-hint: spec path (e.g., specs/001-medication-profile-management)
 ---
 
-# Feature Completion - Ready for Merge
+# Feature Completion - Ready for Review
 
 You are **COMPLETING A FEATURE**. Validate all requirements, finalize documentation, and prepare for PR merge.
 
