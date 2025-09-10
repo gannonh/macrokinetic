@@ -241,7 +241,7 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 Since GitHub Actions can be unreliable, use the comprehensive check script before merging PRs:
 
 ```bash
-./scripts/check-all.sh
+./scripts/check-all.sh --skip-ui  # Skip UI tests if you want faster feedback
 ```
 
 This script runs:
@@ -254,7 +254,7 @@ This script runs:
 **Note:** All scripts use xcbeautify for better output formatting and Swift Testing support.
 
 **Pre-merge checklist:**
-1. Run `./scripts/check-all.sh`
+1. Run `./scripts/check-all.sh --skip-ui`
 2. All checks must pass ✅
 3. Fix any issues with `swiftlint --fix` and `swiftformat .`
 4. Re-run until all checks pass
@@ -564,12 +564,11 @@ For `describe_ui` to work properly, the simulator must have accessibility enable
 ```bash
 xcrun simctl spawn 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB defaults write com.apple.Accessibility VoiceOverTouchEnabled -bool true
 
-# Then restart the app:
-stop_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker" })
-launch_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker", args: ["--ui-testing", "--force-onboarding"] })
+# Then run describe_ui again
+describe_ui({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB" })
 ```
 
-After this, `describe_ui` will return proper accessibility hierarchy with full coordinates and element data.
+Now`describe_ui` will return proper accessibility hierarchy with full coordinates and element data.
 
 ### UI Testing Element Selector Patterns
 Based on onboarding flow implementation analysis:
@@ -628,65 +627,17 @@ app.pickers["medication-\(currentSelection)"]
 - **Error Messages**: Provide clear context for debugging UI test failures
 - **State Validation**: Always check element state before and after interactions
 
-## Medication Profile Management ✅ (FULLY COMPLETE INCLUDING DOSE ESCALATION)
+## Medication Profile Management (Implementation Complete)
 
-### Core Medication Types
-The app supports exactly 4 GLP-1 medications with medically accurate properties:
-- **Semaglutide** (Ozempic/Wegovy): 7-day half-life, 0.25-2.4mg doses, weekly
-- **Tirzepatide** (Mounjaro/Zepbound): 5-day half-life, 2.5-15mg doses, weekly
-- **Liraglutide** (Victoza/Saxenda): 0.54-day half-life, 0.6-3.0mg doses, daily
-- **Dulaglutide** (Trulicity): 4.7-day half-life, 0.75-4.5mg doses, weekly
+**Status**: ✅ Fully implemented including dose escalation system  
+**Details**: See `specs/001-medication-profile-management/` for complete implementation documentation
 
-### Calculation Services (Implemented)
-- **ReconstitutionCalculator**: For compounded medications - calculates water volume and units per dose
-  - Validates vial strength, target dose, and water volume
-  - Returns units per dose, concentration, and total units
-  - Common scenarios pre-calculated for quick reference
-- **PenClickCalculator**: ❌ REMOVED (Session 5) - Removed due to liability concerns around off-label dosing guidance
-- **MedicationManager**: CRUD operations for medication profiles with validation
-  - Profile creation with compounding support
-  - Dose validation against medication ranges
-  - Integration with dose escalation system
-  - Start date and injection site preference tracking
-- **DoseTitration**: Complete dose escalation system (Session 8)
-  - Timeline tracking with scheduled escalation dates
-  - Automatic medication profile dose updates on completion
-  - Medical validation ensuring only higher doses can be scheduled
-  - Full UI implementation with creation forms and status indicators
-
-### SwiftData Model Enhancements ✅
-- Enhanced `MedicationProfile` with new fields:
-  - `isCompounded`: Boolean for medication type
-  - `vialStrength` & `reconstitutionVolume`: For compounded meds
-  - `startDate` & `preferredInjectionSites`: User preferences and tracking
-  - `notes`, `createdAt`, `updatedAt`: Audit and user data
-- `DoseTitration`: Complete dose escalation model (Session 8)
-  - `fromDose`, `toDose`: Escalation progression tracking
-  - `scheduledDate`, `completedDate`: Timeline management
-  - `isCompleted`: Status tracking with business logic
-  - CloudKit-compatible with proper default values
-- `Medication` enum already exists with computed medical properties
-- Integrated with existing CloudKit sync and User relationships
-
-### UI Implementation Status ✅ (COMPLETE as of Session 8 - 2025-09-10)
-- ✅ **Full CRUD UI**: Complete Create, Read, Update, Delete functionality in MedicationProfileSettingsView
-- ✅ **ReconstitutionCalculatorView**: Full UI implementation with sheet presentation and error handling (Session 7)
-- ✅ **DoseTitrationView**: Complete dose escalation timeline with CRUD operations (Session 8)
-- ✅ **CreateTitrationView**: Dose escalation plan creation with validation and accessibility (Session 8)
-- ✅ **E2E Tests**: All scenarios passing - CRUD, calculators, date pickers, injection sites, dose escalation
-- ✅ **Shared Components**: MedicationFormComponents extracted for reusability (Session 7)
-- ✅ **Onboarding Integration**: Medication profile creation connected to onboarding wizard (Session 7)
-
-### Testing Coverage ✅ (COMPLETE as of Session 8)
-- **ReconstitutionCalculatorTests**: 11 comprehensive tests + error description coverage → **96% coverage**
-- **MedicationManagerTests**: 15 comprehensive CRUD tests → **79% coverage**
-- **DoseTitrationTests**: Comprehensive unit tests for model validation and business logic (Session 8)
-- **E2E Test Coverage**: Complete end-to-end testing for all scenarios:
-  - MedicationProfileSettingsUITests: CRUD operations, date pickers, injection sites
-  - MedicationProfileAdvancedUITests: Compounded medications, dose escalation tracking
-- **Coverage Policy**: All files meet business logic coverage requirements (90%+ for calculators)
-- **Medical accuracy** validated with real-world dosing scenarios and FDA-compliant constraints
-- **Performance targets** met: <50ms calculation updates, <10ms dose validation
+**Key Components Delivered**:
+- Full CRUD operations for medication profiles
+- Reconstitution calculator for compounded medications  
+- Dose escalation system with timeline tracking
+- Comprehensive E2E test coverage (all scenarios passing)
+- Medical accuracy validation with FDA-compliant constraints
 
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
