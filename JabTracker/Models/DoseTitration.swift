@@ -60,12 +60,12 @@ final class DoseTitration {
 
     /// Whether this titration is scheduled for the future
     var isFuture: Bool {
-        return scheduledDate > Date() && !isCompleted
+        scheduledDate > Date() && !isCompleted
     }
 
     /// Whether this titration is overdue
     var isOverdue: Bool {
-        return scheduledDate < Date() && !isCompleted
+        scheduledDate < Date() && !isCompleted
     }
 
     // MARK: - Business Logic

@@ -27,7 +27,7 @@ struct DoseTitrationTests {
         scheduledDate: Date = Date(),
         isCompleted: Bool = false
     ) -> DoseTitration {
-        return DoseTitration(
+        DoseTitration(
             fromDose: fromDose,
             toDose: toDose,
             scheduledDate: scheduledDate,
