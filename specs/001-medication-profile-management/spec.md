@@ -71,9 +71,6 @@ As a user taking GLP-1 medications (Ozempic, Wegovy, Mounjaro, etc.), I need to 
 - **FR-011**: System MUST provide compounded medication reconstitution calculator that accepts vial strength (mg) and target dose (mg) and calculates required water volume (ml) and units per dose
 - **FR-012**: System MUST display reconstitution results in simple format: "Add X ml water. Your dose is Y units" where units = 10 * (target dose / vial strength)
 - **FR-013**: System MUST validate reconstitution inputs to ensure target dose does not exceed vial strength
-- **FR-014**: ~~System MUST provide pen click calculator that shows number of clicks/units to dial for branded pen medications~~ **REMOVED** due to liability concerns around off-label dosing recommendations
-- **FR-015**: ~~System MUST store pen-specific click-to-dose ratios for accurate dose adjustment calculations~~ **REMOVED** due to liability concerns
-- **FR-016**: ~~System MUST display pen instructions in simple format~~ **REMOVED** due to liability concerns
 - **FR-017**: System MUST integrate medication profile creation with onboarding flow to ensure selected medication during onboarding persists as a medication profile
 
 ### Scope & Boundaries

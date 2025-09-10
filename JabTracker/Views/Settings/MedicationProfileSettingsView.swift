@@ -13,6 +13,8 @@ struct MedicationProfileSettingsView: View {
     }
 
     @State private var showingAddProfile = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
 
     private var medicationManager: MedicationManager {
         MedicationManager(modelContext: self.modelContext)
@@ -71,6 +73,11 @@ struct MedicationProfileSettingsView: View {
                     AddMedicationProfileView(medicationManager: self.medicationManager, currentUser: currentUser)
                 }
             }
+            .alert("Error", isPresented: self.$showingError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(self.errorMessage)
+            }
         }
     }
 
@@ -83,8 +90,8 @@ struct MedicationProfileSettingsView: View {
         do {
             try self.modelContext.save()
         } catch {
-            // Handle error appropriately
-            print("Failed to delete medication profile: \(error)")
+            self.errorMessage = "Failed to delete medication profile: \(error.localizedDescription)"
+            self.showingError = true
         }
     }
 }
