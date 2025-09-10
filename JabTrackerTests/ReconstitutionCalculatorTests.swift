@@ -208,7 +208,8 @@ struct ReconstitutionCalculatorTests {
         // Test all error description cases to achieve full coverage
         #expect(ReconstitutionCalculator.ReconstitutionError.invalidVialStrength.errorDescription == "Vial strength must be greater than 0")
         #expect(ReconstitutionCalculator.ReconstitutionError.invalidTargetDose.errorDescription == "Target dose must be greater than 0")
-        #expect(ReconstitutionCalculator.ReconstitutionError.targetDoseExceedsVialStrength.errorDescription == "Target dose cannot exceed vial strength")
+        #expect(ReconstitutionCalculator.ReconstitutionError.targetDoseExceedsVialStrength.errorDescription == 
+            "Target dose cannot exceed vial strength")
         #expect(ReconstitutionCalculator.ReconstitutionError.invalidWaterVolume.errorDescription == "Water volume must be greater than 0")
     }
 }

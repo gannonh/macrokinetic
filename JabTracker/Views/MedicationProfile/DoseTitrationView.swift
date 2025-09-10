@@ -337,20 +337,12 @@ struct CreateTitrationView: View {
 }
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: MedicationProfile.self, configurations: config)
-    let context = container.mainContext
-
-    // Create sample profile
-    let profile = MedicationProfile(
+    @Previewable @State var sampleProfile = MedicationProfile(
         genericName: "Semaglutide",
-        brandName: "Ozempic",
+        brandName: "Ozempic", 
         currentDose: 0.25,
-        medicationType: "semaglutide")
-
-    context.insert(profile)
-    try! context.save()
-
-    return DoseTitrationView(profile: profile)
-        .modelContainer(container)
+        medicationType: "semaglutide"
+    )
+    
+    DoseTitrationView(profile: sampleProfile)
 }
