@@ -392,7 +392,7 @@ struct MedicationProfileDetailView: View {
                     }
                     .accessibilityIdentifier("detail-reconstitution-calculator")
                 }
-                
+
                 // Dose Titration Management
                 Button {
                     self.showingDoseTitration = true
@@ -450,9 +450,9 @@ struct MedicationProfileDetailView: View {
                     print("Failed to update profile with reconstitution values: \(error)")
                 }
             })
-            .sheet(isPresented: self.$showingDoseTitration) {
-                DoseTitrationView(profile: self.profile)
-            }
+        .sheet(isPresented: self.$showingDoseTitration) {
+            DoseTitrationView(profile: self.profile)
+        }
     }
 }
 

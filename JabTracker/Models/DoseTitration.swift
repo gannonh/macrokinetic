@@ -51,21 +51,21 @@ final class DoseTitration {
 
     /// Status display text for UI
     var statusText: String {
-        if isCompleted {
-            return "Completed: \(titrationDescription)"
+        if self.isCompleted {
+            return "Completed: \(self.titrationDescription)"
         } else {
-            return "Scheduled: \(titrationDescription)"
+            return "Scheduled: \(self.titrationDescription)"
         }
     }
 
     /// Whether this titration is scheduled for the future
     var isFuture: Bool {
-        scheduledDate > Date() && !isCompleted
+        self.scheduledDate > Date() && !self.isCompleted
     }
 
     /// Whether this titration is overdue
     var isOverdue: Bool {
-        scheduledDate < Date() && !isCompleted
+        self.scheduledDate < Date() && !self.isCompleted
     }
 
     // MARK: - Business Logic
@@ -75,7 +75,7 @@ final class DoseTitration {
         self.isCompleted = true
         self.completedDate = Date()
         self.updatedAt = Date()
-        
+
         // Update medication profile current dose when titration is completed
         self.medicationProfile?.currentDose = self.toDose
         self.medicationProfile?.updatedAt = Date()
@@ -86,6 +86,6 @@ final class DoseTitration {
         // Allow for small time differences (1 minute) to handle test timing issues
         let now = Date()
         let oneMinuteAgo = now.addingTimeInterval(-60)
-        return toDose > fromDose && scheduledDate >= oneMinuteAgo
+        return self.toDose > self.fromDose && self.scheduledDate >= oneMinuteAgo
     }
 }

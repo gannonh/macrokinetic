@@ -11,16 +11,16 @@ struct DoseTitrationView: View {
     let profile: MedicationProfile
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var showingCreateTitration = false
     @State private var showingDeleteConfirmation = false
     @State private var titrationToDelete: DoseTitration?
-    
+
     // Get current titrations from the profile
     private var titrations: [DoseTitration] {
-        profile.doseTitrations?.sorted { $0.scheduledDate < $1.scheduledDate } ?? []
+        self.profile.doseTitrations?.sorted { $0.scheduledDate < $1.scheduledDate } ?? []
     }
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -30,39 +30,38 @@ struct DoseTitrationView: View {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Current Dose")
                                 .font(DesignTokens.Typography.headline)
-                            
+
                             HStack {
-                                Text("\(String(format: "%.2f", profile.currentDose)) mg")
+                                Text("\(String(format: "%.2f", self.profile.currentDose)) mg")
                                     .font(DesignTokens.Typography.largeTitle)
                                     .foregroundColor(.primary)
-                                
+
                                 Spacer()
-                                
-                                Text(profile.brandName)
+
+                                Text(self.profile.brandName)
                                     .font(DesignTokens.Typography.body)
                                     .foregroundColor(.secondary)
                             }
                         }
                     }
-                    
+
                     // Titration Timeline
-                    if !titrations.isEmpty {
+                    if !self.titrations.isEmpty {
                         DesignCard {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Escalation Timeline")
                                     .font(DesignTokens.Typography.headline)
-                                
-                                ForEach(titrations, id: \.id) { titration in
+
+                                ForEach(self.titrations, id: \.id) { titration in
                                     TitrationRowView(
                                         titration: titration,
-                                        onMarkComplete: { markTitrationCompleted(titration) },
-                                        onDelete: { 
-                                            titrationToDelete = titration
-                                            showingDeleteConfirmation = true
-                                        }
-                                    )
-                                    
-                                    if titration.id != titrations.last?.id {
+                                        onMarkComplete: { self.markTitrationCompleted(titration) },
+                                        onDelete: {
+                                            self.titrationToDelete = titration
+                                            self.showingDeleteConfirmation = true
+                                        })
+
+                                    if titration.id != self.titrations.last?.id {
                                         Divider()
                                     }
                                 }
@@ -74,11 +73,11 @@ struct DoseTitrationView: View {
                                 Image(systemName: "chart.line.uptrend.xyaxis")
                                     .font(.largeTitle)
                                     .foregroundColor(.secondary)
-                                
+
                                 Text("No Escalation Plans")
                                     .font(DesignTokens.Typography.headline)
                                     .foregroundColor(.secondary)
-                                
+
                                 Text("Create an escalation plan to schedule your dose increases.")
                                     .font(DesignTokens.Typography.body)
                                     .foregroundColor(.secondary)
@@ -87,29 +86,29 @@ struct DoseTitrationView: View {
                             .padding(.vertical, 16)
                         }
                     }
-                    
+
                     // Create New Titration Button
                     Button {
-                        showingCreateTitration = true
+                        self.showingCreateTitration = true
                     } label: {
                         DesignCard {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(DesignTokens.Colors.primary)
-                                
+
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Create Escalation Plan")
                                         .font(DesignTokens.Typography.headline)
                                         .foregroundColor(.primary)
-                                    
+
                                     Text("Schedule your next dose increase")
                                         .font(DesignTokens.Typography.body)
                                         .foregroundColor(.secondary)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.secondary)
                                     .font(.caption)
@@ -117,7 +116,7 @@ struct DoseTitrationView: View {
                         }
                     }
                     .accessibilityIdentifier("create-escalation-plan")
-                    
+
                     Spacer()
                 }
                 .padding(.horizontal, 16)
@@ -127,21 +126,21 @@ struct DoseTitrationView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Close") {
-                        dismiss()
+                        self.dismiss()
                     }
                 }
             }
-            .sheet(isPresented: $showingCreateTitration) {
-                CreateTitrationView(profile: profile)
+            .sheet(isPresented: self.$showingCreateTitration) {
+                CreateTitrationView(profile: self.profile)
             }
-            .alert("Delete Titration", isPresented: $showingDeleteConfirmation) {
-                Button("Cancel", role: .cancel) { 
-                    titrationToDelete = nil 
+            .alert("Delete Titration", isPresented: self.$showingDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    self.titrationToDelete = nil
                 }
                 Button("Confirm Delete", role: .destructive) {
                     if let titration = titrationToDelete {
-                        deleteTitration(titration)
-                        titrationToDelete = nil
+                        self.deleteTitration(titration)
+                        self.titrationToDelete = nil
                     }
                 }
             } message: {
@@ -151,24 +150,24 @@ struct DoseTitrationView: View {
             }
         }
     }
-    
+
     // MARK: - Business Logic
-    
+
     private func markTitrationCompleted(_ titration: DoseTitration) {
         titration.markCompleted()
-        
+
         do {
-            try modelContext.save()
+            try self.modelContext.save()
         } catch {
             print("Failed to mark titration as completed: \(error)")
         }
     }
-    
+
     private func deleteTitration(_ titration: DoseTitration) {
-        modelContext.delete(titration)
-        
+        self.modelContext.delete(titration)
+
         do {
-            try modelContext.save()
+            try self.modelContext.save()
         } catch {
             print("Failed to delete titration: \(error)")
         }
@@ -181,44 +180,44 @@ struct TitrationRowView: View {
     let titration: DoseTitration
     let onMarkComplete: () -> Void
     let onDelete: () -> Void
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(titration.statusText)
+                Text(self.titration.statusText)
                     .font(DesignTokens.Typography.body)
-                    .foregroundColor(titration.isCompleted ? .secondary : .primary)
-                
+                    .foregroundColor(self.titration.isCompleted ? .secondary : .primary)
+
                 HStack {
                     Text("Escalation Date")
                         .font(DesignTokens.Typography.caption)
                         .foregroundColor(.secondary)
-                    
-                    Text(titration.scheduledDate.formatted(date: .abbreviated, time: .omitted))
+
+                    Text(self.titration.scheduledDate.formatted(date: .abbreviated, time: .omitted))
                         .font(DesignTokens.Typography.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
-            
-            if !titration.isCompleted {
+
+            if !self.titration.isCompleted {
                 HStack(spacing: 8) {
                     Button("Complete") {
-                        onMarkComplete()
+                        self.onMarkComplete()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .accessibilityIdentifier("mark-escalation-complete")
-                    
+
                     Button {
-                        onDelete()
+                        self.onDelete()
                     } label: {
                         Image(systemName: "trash")
                             .font(.caption)
                             .foregroundColor(.red)
                     }
-                    .accessibilityIdentifier("delete-escalation-\(String(format: "%.2f", titration.toDose))mg")
+                    .accessibilityIdentifier("delete-escalation-\(String(format: "%.2f", self.titration.toDose))mg")
                 }
             }
         }
@@ -229,20 +228,20 @@ struct CreateTitrationView: View {
     let profile: MedicationProfile
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var targetDose: Double
     @State private var scheduledDate = Calendar.current.date(byAdding: .weekOfYear, value: 4, to: Date()) ?? Date()
     @State private var notes = ""
     @State private var showingError = false
     @State private var errorMessage = ""
-    
+
     // Available dose options based on medication type
     private var availableDoses: [Double] {
         guard let medication = Medication(rawValue: profile.medicationType) else { return [] }
-        return medication.availableDoses(for: profile.brandName)
-            .filter { $0 > profile.currentDose } // Only show higher doses
+        return medication.availableDoses(for: self.profile.brandName)
+            .filter { $0 > self.profile.currentDose } // Only show higher doses
     }
-    
+
     init(profile: MedicationProfile) {
         self.profile = profile
         // Initialize with next available dose higher than current
@@ -251,7 +250,7 @@ struct CreateTitrationView: View {
             .first { $0 > profile.currentDose } ?? profile.currentDose + 0.25
         self._targetDose = State(initialValue: nextDose)
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -259,23 +258,23 @@ struct CreateTitrationView: View {
                     HStack {
                         Text("From Dose")
                         Spacer()
-                        Text("\(String(format: "%.2f", profile.currentDose)) mg")
+                        Text("\(String(format: "%.2f", self.profile.currentDose)) mg")
                             .foregroundColor(.secondary)
                     }
-                    
-                    Picker("Target Dose", selection: $targetDose) {
-                        ForEach(availableDoses, id: \.self) { dose in
+
+                    Picker("Target Dose", selection: self.$targetDose) {
+                        ForEach(self.availableDoses, id: \.self) { dose in
                             Text("\(String(format: "%.2f", dose)) mg")
                                 .tag(dose)
                                 .accessibilityIdentifier("escalation-dose-option-\(String(format: "%.2f", dose))")
                         }
                     }
                     .accessibilityIdentifier("escalation-target-dose-picker")
-                    
-                    DatePicker("Scheduled Date", selection: $scheduledDate, displayedComponents: .date)
+
+                    DatePicker("Scheduled Date", selection: self.$scheduledDate, displayedComponents: .date)
                         .datePickerStyle(.compact)
-                    
-                    TextField("Notes (optional)", text: $notes, axis: .vertical)
+
+                    TextField("Notes (optional)", text: self.$notes, axis: .vertical)
                         .lineLimit(3)
                 }
             }
@@ -284,56 +283,55 @@ struct CreateTitrationView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        self.dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        saveTitration()
+                        self.saveTitration()
                     }
                     .accessibilityIdentifier("save-escalation-plan")
                 }
             }
-            .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+            .alert("Error", isPresented: self.$showingError) {
+                Button("OK") {}
             } message: {
-                Text(errorMessage)
+                Text(self.errorMessage)
             }
         }
     }
-    
+
     private func saveTitration() {
         // Validate input
-        guard targetDose > profile.currentDose else {
-            errorMessage = "Target dose must be higher than current dose."
-            showingError = true
+        guard self.targetDose > self.profile.currentDose else {
+            self.errorMessage = "Target dose must be higher than current dose."
+            self.showingError = true
             return
         }
-        
-        guard scheduledDate >= Date() else {
-            errorMessage = "Scheduled date must be in the future."
-            showingError = true
+
+        guard self.scheduledDate >= Date() else {
+            self.errorMessage = "Scheduled date must be in the future."
+            self.showingError = true
             return
         }
-        
+
         // Create new titration
         let titration = DoseTitration(
             fromDose: profile.currentDose,
-            toDose: targetDose,
-            scheduledDate: scheduledDate,
-            notes: notes,
-            medicationProfile: profile
-        )
-        
-        modelContext.insert(titration)
-        
+            toDose: self.targetDose,
+            scheduledDate: self.scheduledDate,
+            notes: self.notes,
+            medicationProfile: self.profile)
+
+        self.modelContext.insert(titration)
+
         do {
-            try modelContext.save()
-            dismiss()
+            try self.modelContext.save()
+            self.dismiss()
         } catch {
-            errorMessage = "Failed to save titration plan: \(error.localizedDescription)"
-            showingError = true
+            self.errorMessage = "Failed to save titration plan: \(error.localizedDescription)"
+            self.showingError = true
         }
     }
 }
@@ -342,18 +340,17 @@ struct CreateTitrationView: View {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: MedicationProfile.self, configurations: config)
     let context = container.mainContext
-    
+
     // Create sample profile
     let profile = MedicationProfile(
         genericName: "Semaglutide",
         brandName: "Ozempic",
         currentDose: 0.25,
-        medicationType: "semaglutide"
-    )
-    
+        medicationType: "semaglutide")
+
     context.insert(profile)
     try! context.save()
-    
+
     return DoseTitrationView(profile: profile)
         .modelContainer(container)
 }
