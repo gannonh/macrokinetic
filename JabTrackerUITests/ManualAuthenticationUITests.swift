@@ -4,8 +4,15 @@ import XCTest
 /// These tests are excluded from CI/automation and intended for manual verification
 /// Run these tests manually in Xcode when you need to verify real Sign in with Apple integration
 final class ManualAuthenticationUITests: XCTestCase {
+    // Toggle this to enable/disable all tests in this file
+    private let testsEnabled = false
+    
     override func setUpWithError() throws {
         continueAfterFailure = false
+        
+        if !testsEnabled {
+            throw XCTSkip("Manual authentication tests are disabled. Set testsEnabled = true to run.")
+        }
     }
 
     @MainActor
