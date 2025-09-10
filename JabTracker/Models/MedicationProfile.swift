@@ -16,8 +16,25 @@ final class MedicationProfile {
     var refillDate: Date? // Optional - may not have refill scheduled yet
     var medicationType: String = "" // Store Medication enum rawValue for CloudKit compatibility
 
+    // Enhanced fields for compounding and pen support
+    var isCompounded: Bool = false // Compounded vs branded medication
+    var vialStrength: Double? // For compounded: mg in vial
+    var reconstitutionVolume: Double? // For compounded: ml of water to add
+    var concentration: Double? // For compounded: mg/ml (calculated from reconstitution)
+    var unitsPerDose: Double? // For compounded: units to draw (calculated from dose/concentration)
+    var preferredInjectionSites: [String] = ["Thigh"] // Preferred injection sites from onboarding
+    var notes: String = "" // User notes about medication
+    var updatedAt: Date = Date() // Track modifications
+    var createdAt: Date = Date() // Track creation
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
     var doses: [Dose]? // CloudKit requires optional relationships
+
+    @Relationship(deleteRule: .cascade, inverse: \DoseTitration.medicationProfile)
+    var doseTitrations: [DoseTitration]? // Titration plans for this medication
+
+    @Relationship(inverse: \User.medicationProfiles)
+    var user: User? // Parent user relationship
 
     init(
         genericName: String = "",
@@ -25,7 +42,14 @@ final class MedicationProfile {
         currentDose: Double = 0.0,
         startDate: Date = Date(),
         refillDate: Date? = nil,
-        medicationType: String = "")
+        medicationType: String = "",
+        isCompounded: Bool = false,
+        vialStrength: Double? = nil,
+        reconstitutionVolume: Double? = nil,
+        concentration: Double? = nil,
+        unitsPerDose: Double? = nil,
+        preferredInjectionSites: [String] = ["Thigh"],
+        notes: String = "")
     {
         self.genericName = genericName
         self.brandName = brandName
@@ -33,6 +57,15 @@ final class MedicationProfile {
         self.startDate = startDate
         self.refillDate = refillDate
         self.medicationType = medicationType
+        self.isCompounded = isCompounded
+        self.vialStrength = vialStrength
+        self.reconstitutionVolume = reconstitutionVolume
+        self.concentration = concentration
+        self.unitsPerDose = unitsPerDose
+        self.preferredInjectionSites = preferredInjectionSites
+        self.notes = notes
+        self.createdAt = Date()
+        self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
     }
 

@@ -2,18 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Project Requirements and Implementation Plan
 
-JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 medication doses (Ozempic, Wegovy, Mounjaro) with pharmacokinetic modeling for drug concentration calculations.
+@docs/spec-master-prd.md
 
-**Technology Stack:**
-- Framework: SwiftUI (iOS 17.0+)
-- Backend: CloudKit (Sync, Storage, User Management)  
-- Data: SwiftData + CloudKit Sync (with graceful fallback to local-only storage)
-- Charts: Swift Charts
-- Health: HealthKit integration
-- Auth: Sign in with Apple (sole authentication method)
-- Testing: Swift Testing for unit tests, XCUITest for UI tests
+@docs/implementation-plan.md
 
 ## Development Commands
 
@@ -161,8 +154,7 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 ### Coverage Policy & Reporting
 
 - Coverage config: `coverage-config.json`
-- Coverage policy: `coverage-policy.md`
-
+- 
 ```bash
 # Enable coverage in Xcode scheme (already configured)
 # codeCoverageEnabled = "YES" in JabTracker.xcscheme
@@ -180,7 +172,6 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 
 # Generate code coverage reports (EASY WAY - use test script)
 ./scripts/test.sh unit 1 --coverage     # Unit tests with coverage
-./scripts/test.sh all --coverage        # All tests with coverage
 
 # COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
 ./scripts/coverage-detail.sh                    # Full coverage report
@@ -199,13 +190,14 @@ xcrun xccov view --report --json /tmp/coverage.xcresult | jq
 xcrun xccov view --file-list /tmp/coverage.xcresult
 ```
 
-**Coverage Policy (SwiftUI-Aware):**
-- **Business Logic (90% minimum)**: AuthenticationManager, BiometricAuthManager, DataController, Models
-- **View Models (85% minimum)**: ObservableObject classes with business logic (none defined yet)
+**Coverage Policy (5-Tier System):**
+- **Tier 1 - Pure Business Logic (90%)**: PharmacokineticsEngine, Models (User, Dose, MedicationProfile, Medication), ReconstitutionCalculator, DoseTitration
+- **Tier 2 - Infrastructure (62%)**: DataController, MedicationManager
+- **Tier 3 - Framework Integration (42%)**: AuthenticationManager, BiometricAuthManager, SubscriptionManager
+- **Tier 4 - View Models (85%)**: OnboardingViewModel
+- **Tier 5 - Utilities (75%)**: ProfileValidation, Array+Unique, SubscriptionProducts
 - **SwiftUI Views**: No coverage requirements (view bodies cannot be unit tested)
-- **Overall Coverage**: ~23% (informational only, not a requirement)
-
-See `docs/coverage-policy.md` for detailed requirements and rationale.
+- **Overall Coverage**: ~20% (informational only, not a requirement)
 
 #### Coverage Analysis Tips
 
@@ -215,11 +207,10 @@ See `docs/coverage-policy.md` for detailed requirements and rationale.
 - Private methods need indirect testing through public methods that call them
 - Async methods may need `Task.sleep()` waits in tests for proper coverage
 
-**Key Coverage Targets from Analysis:**
-- `DataController.checkiCloudStatus()`: 0% (30 lines) - Test via `retryCloudKitSetup()`  
-- `DataController.checkCloudKitStatus()`: 0% (5 lines) - Test via initialization paths
-- `AuthenticationManager.resetAppData()`: 0% (20 lines) - Test via `--reset-app-data` argument
-- `AuthenticationManager.processAppleIDCredential(_:)`: 0% (32 lines) - Test via delegate methods
+**Current Coverage Gaps (as of Session 8):**
+- **AuthenticationManager**: 39% (below 42% threshold) - needs additional credential handling tests
+- **PharmacokineticsEngine**: Not yet implemented - future core requirement
+- **SubscriptionProducts**: Not found in coverage report - check test inclusion
 
 **Common Coverage Issues:**
 - Result bundle not found: Run tests with `--coverage` first
@@ -248,7 +239,7 @@ See `docs/coverage-policy.md` for detailed requirements and rationale.
 Since GitHub Actions can be unreliable, use the comprehensive check script before merging PRs:
 
 ```bash
-./scripts/check-all.sh
+./scripts/check-all.sh --skip-ui  # Skip UI tests if you want faster feedback
 ```
 
 This script runs:
@@ -261,7 +252,7 @@ This script runs:
 **Note:** All scripts use xcbeautify for better output formatting and Swift Testing support.
 
 **Pre-merge checklist:**
-1. Run `./scripts/check-all.sh`
+1. Run `./scripts/check-all.sh --skip-ui`
 2. All checks must pass ✅
 3. Fix any issues with `swiftlint --fix` and `swiftformat .`
 4. Re-run until all checks pass
@@ -285,120 +276,40 @@ xcodegen generate
 - If build/test targets seem missing files
 - When file references appear broken in Xcode
 
-## Architecture & Code Structure
+## Key Development Patterns
 
-### SwiftData Models
-The app uses three primary SwiftData models with CloudKit sync:
-- `User`: Profile information including weight, timezone, medication preferences
-  - ✅ `appleUserId` for authentication linking
-  - ✅ `updatedAt` for tracking profile modifications
-  - ✅ Weight unit conversion between kg/lbs with real-time validation
-- `Dose`: Individual dose records with timestamp, amount, injection site, notes
-- `MedicationProfile`: Medication details, current dose, refill dates
+### SwiftData Model Architecture
+- All models use CloudKit-compatible default values (avoids optionals where possible)
+- Include `createdAt` and `updatedAt` timestamps for audit trails
+- Use proper `@Relationship` attributes with `inverse` and `deleteRule` specifications
+- Example: `MedicationProfile` with enhanced fields for compounding and dose escalation
 
-**DataController Features:**
-- Automatic CloudKit sync with iCloud availability detection
-- Graceful fallback to local-only storage when iCloud is unavailable
-- Real-time sync status monitoring (`SyncStatus` enum)
-- User-friendly sync status display with actionable guidance
+### Authentication Implementation Gotchas
+- Biometric authentication simulator limitations - test on real devices for accuracy
+- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
+- Authentication state must be checked on app launch for proper flow control
+- Face ID prompt timing can cause test flakiness - add appropriate waits and timeouts
+- Environment variables and launch arguments are key for test/production differentiation
+- Always provide authentication bypass for UI testing to avoid external dependencies
+- Keychain access can fail in test scenarios - implement proper error handling
 
-### Key Components
+### Testing Framework Best Practices
+- Swift Testing provides cleaner, more modern test syntax than XCTest
+- xcbeautify offers better Swift Testing output support than xcpretty
+- Never use `CODE_SIGNING_ALLOWED=NO` for UI tests - prevents app launch
+- File-based test organization improves maintainability
 
-**Medication Support:**
-- Semaglutide (Ozempic, Wegovy) - 7 day half-life, weekly dosing
-- Tirzepatide (Mounjaro, Zepbound) - 5 day half-life, weekly dosing  
-- Liraglutide (Victoza, Saxenda) - 0.54 day half-life, daily dosing
-- Dulaglutide (Trulicity) - 4.7 day half-life, weekly dosing
+### XcodeGen Workflow
+- **CRITICAL**: Always run `xcodegen generate` after adding new Swift files
+- Project uses XcodeGen for automatic project file management
+- New test files won't appear in test runs until project is regenerated
+- Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
 
-**Pharmacokinetics Engine:**
-Core calculation logic for drug concentration modeling using exponential decay based on medication half-lives. Located in `PharmacokineticsEngine` class.
-
-**Authentication System:**
-- `AuthenticationManager`: Handles Sign in with Apple, credential management, state persistence
-- `BiometricAuthManager`: Face ID/Touch ID integration with fallback to device passcode  
-- `AuthenticationView`: Clean Sign in with Apple UI following HIG
-- `UserProfileView`: Complete profile management with weight conversion, validation
-- Authentication state persistence across app launches using Keychain
-
-**Navigation Structure:**
-TabView with 5 main tabs:
-- Dashboard (Home) - Current levels, next dose
-- Add Dose - Quick entry and manual logging
-- History - Dose tracking and calendar view
-- Analytics - Charts and insights using Swift Charts
-- Settings - Profile, notifications, export
-
-### Data Flow
-1. User logs doses through AddDoseView
-2. Doses stored in SwiftData with automatic CloudKit sync (when available)
-3. PharmacokineticsEngine calculates real-time concentrations
-4. Charts display concentration timeline and trends
-5. Notifications remind users of upcoming doses
-6. SyncStatusCard displays real-time iCloud sync status to users
-
-### Project Status
-
-**Current Phase**: Core Functionality Implementation  
-**Completed**: Foundation & Infrastructure (GitHub Issues #1-4) + ✅ Authentication & User Profile (GitHub Issue #11)  
-**Next Up**: User Onboarding Flow & Dose Tracking Features
-
-For detailed progress tracking and roadmap, see `docs/implementation-plan.md`.  
-For product vision and feature specifications, see `docs/spec.md`.
-
-### Design System
-
-**Colors:** Primary gradient from #667eea to #764ba2
-**Typography:** System fonts with rounded design for large titles
-**Components:** Follow Human Interface Guidelines with accessibility support
-
-### Testing Strategy
-- Unit tests using Swift Testing framework for modern testing approach
-- UI tests using XCUITest for end-to-end user flow testing
-- SwiftData model and persistence testing (comprehensive coverage implemented)
-- Design system component testing for accessibility and functionality
-- ✅ Authentication unit tests (`AuthenticationTests`) - comprehensive coverage
-- ✅ Authentication UI tests (`AuthenticationUITests`) - complete E2E testing
-- ✅ Biometric authentication testing with mock scenarios
-- ✅ Keychain integration security testing
-- xcbeautify for enhanced test output formatting with Swift Testing support
-- Details: `docs/testing-strategy.md`
-
-### Privacy & Security
-- SwiftData encryption enabled
-- CloudKit private database for user data protection
-- Graceful handling of iCloud availability without compromising functionality
-- ✅ Keychain storage for sensitive authentication credentials (implemented)
-- ✅ Face ID/Touch ID authentication with BiometricAuthManager (implemented)
-- ✅ Sign in with Apple as sole authentication method (implemented)
-- ✅ Secure authentication state management with AuthenticationManager (implemented)
-- HIPAA compliance considerations
-- App Tracking Transparency implementation
-
-## Development Notes
-
-- Follow TDD approach especially for pharmacokinetic calculations
-- Implement authentication early to establish user context for all features
-- Use environment variables to differentiate test vs production authentication
-- Always provide UI testing bypass for authentication flows
-- Prioritize accessibility with VoiceOver, Dynamic Type, and Reduced Motion support
-- Implement offline-first functionality with CloudKit sync
-- Use ProMotion (120Hz) support for smooth animations
-- Target < 2 second app launch time and < 50ms calculation updates
-- Keep medical accuracy as top priority - validate all pharmacokinetic formulas
-
-## Regulatory Considerations
-
-This app handles medical data and dosing information. Ensure:
-- FDA medical device classification compliance
-- Clinical validation of pharmacokinetic models
-- Proper disclaimers about not replacing medical advice
-- Adverse event reporting mechanisms if required
-
-## Resources
-
-- Project Spec: @docs/spec.md
-- Implementation Plan: @docs/implementation-plan.md
-- GitHub Repo: https://github.com/gannonh/jab-tracker-ios
+### CloudKit + SwiftData Integration
+- Always implement graceful fallback when CloudKit is unavailable
+- Check for test environment before enabling CloudKit to avoid test conflicts
+- Use `@Published` properties for real-time sync status updates
+- Provide clear user feedback about sync status with actionable guidance
 
 ## GitHub Sub-Issue Management (gh-sub-issue Integration)
 
@@ -651,12 +562,11 @@ For `describe_ui` to work properly, the simulator must have accessibility enable
 ```bash
 xcrun simctl spawn 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB defaults write com.apple.Accessibility VoiceOverTouchEnabled -bool true
 
-# Then restart the app:
-stop_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker" })
-launch_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker", args: ["--ui-testing", "--force-onboarding"] })
+# Then run describe_ui again
+describe_ui({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB" })
 ```
 
-After this, `describe_ui` will return proper accessibility hierarchy with full coordinates and element data.
+Now`describe_ui` will return proper accessibility hierarchy with full coordinates and element data.
 
 ### UI Testing Element Selector Patterns
 Based on onboarding flow implementation analysis:
@@ -680,6 +590,41 @@ Based on onboarding flow implementation analysis:
 - Assuming element visibility without checking if scrolling is required
 - Using screenshots for coordinates instead of `describe_ui` data
 
+### SwiftUI Form Testing Patterns (Session 4 Learnings)
+**Critical for medication profile management UI testing:**
+
+**Toggle Switch Interaction:**
+- **Issue**: Direct `tap()` on Form toggles doesn't change state in UI tests
+- **Solution**: Use coordinate-based tapping at the switch control area
+```swift
+// ❌ This doesn't work reliably in SwiftUI Forms
+compoundedToggle.tap()
+
+// ✅ This works - tap at the actual switch control (right side)
+compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+```
+
+**Picker Element Selection:**
+- **Issue**: Dynamic accessibility identifiers based on selection state are unreliable
+- **Solution**: Use static identifiers for picker elements
+```swift
+// ✅ Good - static identifier
+app.pickers["medication-picker"]
+
+// ❌ Bad - dynamic based on current selection
+app.pickers["medication-\(currentSelection)"]
+```
+
+**List Item Types:**
+- **SwiftUI Lists**: Profile items render as `Button` type, not `Cell` type
+- **Navigation**: Use proper element types when searching list items
+- **Accessibility**: List items inherit button semantics from SwiftUI
+
+**Test Management:**
+- **Unimplemented Features**: Use `throw XCTSkip("reason")` instead of commenting out tests
+- **Error Messages**: Provide clear context for debugging UI test failures
+- **State Validation**: Always check element state before and after interactions
+
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
 - Always test iCloud sync scenarios: available, unavailable, not signed in
@@ -687,6 +632,7 @@ Based on onboarding flow implementation analysis:
 - XcodeBuildMCP provides a range of useful tools for working with the project.
 - Simulator name always includes OS: `iPhone 15,OS=17.5`
 - **ALWAYS use `describe_ui` for precise coordinates** - never guess from screenshots
+- **Medical accuracy is critical** - validate all calculations and dose ranges
 - Easiest way to run tests is using the convenience script:
   - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
   - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`

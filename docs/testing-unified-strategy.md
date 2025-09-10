@@ -134,13 +134,13 @@ func dataControllerHandlesAllCloudKitStatusScenarios() throws {
 
 #### StoreKit Testing Layers
 
-| Layer | Purpose | Automation Level | Apple Account Needed |
-|-------|---------|-----------------|---------------------|
-| StoreKit Configuration (.storekit) | Fast deterministic simulator tests | Full (CI) | No |
-| SKTestSession Programmatic Control | Edge cases & time travel | Full (CI) | No |
-| Sandbox Testers (App Store Connect) | Real network/receipt pipeline | Manual/Semi | Yes (sandbox) |
-| TestFlight (Internal) | Distribution realism | Manual | Sandbox Apple ID |
-| Production Canary (Passive) | Runtime assurance | Observability only | Real users |
+| Layer                               | Purpose                            | Automation Level   | Apple Account Needed |
+| ----------------------------------- | ---------------------------------- | ------------------ | -------------------- |
+| StoreKit Configuration (.storekit)  | Fast deterministic simulator tests | Full (CI)          | No                   |
+| SKTestSession Programmatic Control  | Edge cases & time travel           | Full (CI)          | No                   |
+| Sandbox Testers (App Store Connect) | Real network/receipt pipeline      | Manual/Semi        | Yes (sandbox)        |
+| TestFlight (Internal)               | Distribution realism               | Manual             | Sandbox Apple ID     |
+| Production Canary (Passive)         | Runtime assurance                  | Observability only | Real users           |
 
 **Unit Tests**: Extract deterministic business rules
 - Status evaluation (`evaluateStatus`)
@@ -170,16 +170,16 @@ func testMonthlyPurchaseAndRenewal() async throws {
 
 **Test Matrix for Subscriptions**:
 
-| Scenario | Layer | Automated? | Notes |
-|----------|-------|------------|--------|
-| Initial purchase (monthly) | StoreKit Config | Yes | Core path |
-| Initial purchase (annual) | StoreKit Config | Yes | Pricing tier coverage |
-| Trial → first renewal | SKTestSession | Yes | Time advance |
-| Multiple renewals | SKTestSession | Yes | Entitlement stability |
-| Grace period (billing failure) | SKTestSession | Yes | Enable failTransactionsEnabled |
-| Restore on fresh install | SKTestSession | Yes | Clear transactions & restore |
-| Refund/revocation | SKTestSession | Yes | Revoke entitlements |
-| Real sandbox purchase | Sandbox | Manual | Weekly regression |
+| Scenario                       | Layer           | Automated? | Notes                          |
+| ------------------------------ | --------------- | ---------- | ------------------------------ |
+| Initial purchase (monthly)     | StoreKit Config | Yes        | Core path                      |
+| Initial purchase (annual)      | StoreKit Config | Yes        | Pricing tier coverage          |
+| Trial → first renewal          | SKTestSession   | Yes        | Time advance                   |
+| Multiple renewals              | SKTestSession   | Yes        | Entitlement stability          |
+| Grace period (billing failure) | SKTestSession   | Yes        | Enable failTransactionsEnabled |
+| Restore on fresh install       | SKTestSession   | Yes        | Clear transactions & restore   |
+| Refund/revocation              | SKTestSession   | Yes        | Revoke entitlements            |
+| Real sandbox purchase          | Sandbox         | Manual     | Weekly regression              |
 
 ## Test Organization
 
@@ -280,7 +280,7 @@ private func listenForTransactions() {
 
 # StoreKit integration tests (CI)
 xcodebuild test -scheme JabTracker \
-  -destination 'platform=iOS Simulator,name=iPhone 15' \
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
   -only-testing:JabTrackerTests/SubscriptionIntegrationTests
 ```
 

@@ -1,144 +1,127 @@
-Implementation Plan for Issue #21: Subscription Model & In-App Purchases                   
-                                                                                           
-Overview                                                                                   
-                                                                                           
-Implement a premium-only subscription model with StoreKit 2 integration, including a 4-week
-trial period, monthly ($4.99) and annual ($39.99) subscription tiers, and comprehensive    
-subscription management UI.                                                                
-                                                                                           
-Implementation Steps (Outside-In TDD Approach)                                             
-                                                                                           
-Step 1: E2E Test - Subscription Purchase Flow                                              
-                                                                                           
-1. Create JabTrackerUITests/SubscriptionUITests.swift                                      
-  - Test trial activation after onboarding                                                 
-  - Test subscription purchase flow                                                        
-  - Test subscription status display in Settings                                           
-  - Test trial expiration handling                                                         
-  - Test restore purchases functionality                                                   
-                                                                                           
-Step 2: Unit Tests - SubscriptionManager Core                                              
-                                                                                           
-1. Create JabTrackerTests/SubscriptionManagerTests.swift                                   
-  - Test product loading from StoreKit                                                     
-  - Test purchase transaction handling                                                     
-  - Test subscription status validation                                                    
-  - Test trial period calculations                                                         
-  - Test subscription renewal detection                                                    
-                                                                                           
-Step 3: Implementation - SubscriptionManager                                               
-                                                                                           
-1. Create JabTracker/Subscription/SubscriptionManager.swift                                
-  - ObservableObject with @Published properties                                            
-  - StoreKit 2 Product loading                                                             
-  - Purchase handling with async/await                                                     
-  - Transaction verification                                                               
-  - Subscription status monitoring                                                         
-  - Trial management logic                                                                 
-                                                                                           
-Step 4: Implementation - Configuration                                                     
-                                                                                           
-1. Create JabTracker/Subscription/StoreKitConfiguration.storekit                           
-  - Define product identifiers                                                             
-  - Configure subscription products                                                        
-  - Set up subscription group                                                              
-2. Update JabTracker.entitlements                                                          
-  - Add In-App Purchase capability                                                         
-                                                                                           
-Step 5: Unit Tests - Pricing View Components                                               
-                                                                                           
-1. Create JabTrackerTests/PricingViewTests.swift                                           
-  - Test pricing card display                                                              
-  - Test product selection                                                                 
-  - Test purchase button states                                                            
-  - Test error handling UI                                                                 
-                                                                                           
-Step 6: Implementation - Pricing UI                                                        
-                                                                                           
-1. Replace SubscriptionPlaceholderView.swift with PricingView.swift                        
-  - Real product pricing display                                                           
-  - Purchase buttons with loading states                                                   
-  - Trial countdown display                                                                
-  - Restore purchases button                                                               
-  - Terms & Privacy links                                                                  
-                                                                                           
-Step 7: Integration - Settings Tab                                                         
-                                                                                           
-1. Update JabTracker/Views/SettingsView.swift                                              
-  - Add subscription status section                                                        
-  - Display trial days remaining                                                           
-  - Show renewal date for paid users                                                       
-  - Manage subscription button                                                             
-                                                                                           
-Step 8: Implementation - App Lifecycle                                                     
-                                                                                           
-1. Update JabTrackerApp.swift                                                              
-  - Initialize SubscriptionManager                                                         
-  - Check subscription status on launch                                                    
-  - Handle transaction updates                                                             
-                                                                                           
-Step 9: Implementation - Read-Only Mode                                                    
-                                                                                           
-1. Create JabTracker/Subscription/SubscriptionGate.swift                                   
-  - ViewModifier for premium features                                                      
-  - Read-only state management                                                             
-  - Graceful degradation UI                                                                
-                                                                                           
-Step 10: Final E2E Verification                                                            
-                                                                                           
-1. Complete E2E test suite execution                                                       
-2. Manual testing in StoreKit testing environment                                          
-3. Verify all acceptance criteria                                                          
-                                                                                           
-Key Files to Create/Modify                                                                 
-                                                                                           
-New Files:                                                                                 
-- JabTracker/Subscription/SubscriptionManager.swift                                        
-- JabTracker/Subscription/StoreKitConfiguration.storekit                                   
-- JabTracker/Subscription/PricingView.swift                                                
-- JabTracker/Subscription/SubscriptionGate.swift                                           
-- JabTrackerTests/SubscriptionManagerTests.swift                                           
-- JabTrackerTests/PricingViewTests.swift                                                   
-- JabTrackerUITests/SubscriptionUITests.swift                                              
-                                                                                           
-Modified Files:                                                                            
-- JabTracker/JabTracker.entitlements (add IAP capability)                                  
-- JabTracker/JabTrackerApp.swift (initialize SubscriptionManager)                          
-- JabTracker/Views/SettingsView.swift (add subscription status)                            
-- JabTracker/Onboarding/OnboardingViewModel.swift (integrate real pricing)                 
-- project.yml (regenerate with xcodegen after new files)                                   
-                                                                                           
-Technical Approach                                                                         
-                                                                                           
-StoreKit 2 Modern Implementation:                                                          
-- Use Product.products(for:) for loading                                                   
-- Use Product.purchase() for transactions                                                  
-- Use Transaction.currentEntitlements for status                                           
-- Use Product.SubscriptionInfo for details                                                 
-- Implement transaction observation with Transaction.updates                               
-                                                                                           
-Testing Strategy:                                                                          
-- Mock StoreKit for unit tests                                                             
-- Use StoreKit testing configuration for UI tests                                          
-- Test both success and failure paths                                                      
-- Verify subscription status persistence                                                   
-                                                                                           
-Acceptance Criteria Validation                                                             
-                                                                                           
-✅ 4-week trial starts automatically after onboarding                                       
-✅ All features available during trial                                                      
-✅ Trial expiration reminders implemented                                                   
-✅ Smooth purchase flow with StoreKit 2                                                     
-✅ Subscription status persists across launches                                             
-✅ Restore purchases functionality                                                          
-✅ Read-only mode for expired subscriptions                                                 
-✅ Analytics tracking for conversions                                                       
-                                                                                           
-Estimated Timeline                                                                         
-                                                                                           
-- E2E Tests: 2 hours                                                                       
-- Unit Tests: 3 hours                                                                      
-- SubscriptionManager: 4 hours                                                             
-- UI Implementation: 3 hours                                                               
-- Integration & Testing: 2 hours                                                           
-- Total: ~14 hours 
+    - @claude[bot]:
+    Claude finished @gannonh's task —— https://github.com/gannonh/jab-tracker-ios/actions/runs/17623960354
+
+    ---  Code Review: Medication Profile CRUD Implementation
+
+    - I've completed my review of this PR implementing medication profile management. This is a substantial feature
+  addition with 91 changed files, ~9400 lines added, and comprehensive test coverage.
+
+    Review Checklist
+
+        - Read feature specification and requirements
+      - Review new models and data structures
+      - Review service layer implementation
+      - Review UI/UX implementation
+      - Check test coverage and quality
+      - Assess error handling and validation
+      - Check for security concerns
+      - Review code quality and architecture
+
+    🎯 Overall Assessment
+
+    This is a high-quality implementation that demonstrates:
+        - Strong adherence to iOS/SwiftUI best practices
+      - Comprehensive test coverage (unit + UI tests)
+      - Medical accuracy in calculations and dose validation
+      - Clean architecture with proper separation of concerns
+      - Excellent error handling and user experience
+
+    ✅ Strengths
+
+        i. Medical Accuracy & Safety
+            - ReconstitutionCalculator uses standard pharmaceutical formulas with insulin unit conversions (U-100)
+        - Dose validation against brand-specific FDA-approved ranges
+        - Comprehensive error handling prevents unsafe calculations
+        - Test coverage validates edge cases and medical scenarios
+      ii. Architecture & Code Quality
+            - Clean MVVM-style architecture with MedicationManager service layer
+        - SwiftData models follow CloudKit best practices
+        - Proper use of SwiftUI property wrappers and environment
+        - Good separation between UI, business logic, and data layers
+      iii. Test Coverage
+            - 24 unit tests for MedicationManager
+        - 14 tests for ReconstitutionCalculator (96%+ coverage)
+        - 21 tests for DoseTitration model
+        - Comprehensive UI tests covering CRUD operations and calculators
+        - Tests validate medical accuracy and edge cases
+      iv. User Experience
+            - Clear empty states and onboarding guidance
+        - Contextual calculator tools based on medication type
+        - Proper loading states and error messages
+        - Accessibility identifiers throughout for testing
+
+    🔧 Areas for Improvement
+
+        i. Model Relationships - DoseTitration.swift:34
+      // Missing explicit relationship attribute
+  var medicationProfile: MedicationProfile?
+      i. Recommendation: Add @Relationship(inverse: \MedicationProfile.doseTitrations)
+      ii. UI Error Handling - MedicationProfileSettingsView.swift:98
+      } catch {
+      print("Failed to delete medication profile: \(error)")
+  }
+      ii. Issue: Delete errors aren't shown to users
+  Fix: Add an error alert similar to save operations
+      iii. File Organization - MedicationProfileSettingsView.swift (699 lines)
+            - Consider splitting into separate files for each view component
+        - Extract AddMedicationProfileView, EditMedicationProfileView, etc.
+      iv. Missing UI Tests
+            - No E2E test for updating existing profiles
+        - Limited testing of dose escalation timeline UI
+        - No tests for managing multiple profiles
+      v. Service Layer Enhancement - MedicationManager.swift
+            - Consider adding async/await support for better SwiftUI integration
+        - Add protocol abstraction for improved testability
+        - Batch operations could improve performance
+
+    🚨 Minor Issues
+
+        i. Validation Grace Period - DoseTitration.swift:62
+            - The 1-minute grace period for past dates in validateTitration() could be confusing
+        - Consider documenting the rationale or making it configurable
+      ii. Missing User Feedback
+            - No loading indicators during save/update operations
+        - Consider adding haptic feedback for successful actions
+      iii. Force Unwrapping Risk - Various locations
+            - Some optional chains could be more defensive
+        - Example: Profile detail view assumes relationships exist
+
+    💡 Suggestions for Enhancement
+
+        i. Add Loading Overlays
+      @State private var isSaving = false
+
+  // In save handler
+  isSaving = true
+  defer { isSaving = false }
+      ii. Implement Undo for Deletions
+            - Store recently deleted profiles temporarily
+        - Show undo toast after deletion
+      iii. Add View Models
+            - Extract complex state management from views
+        - Improve testability and reusability
+      iv. Enhanced Validation
+            - Validate doses against medication's available doses in DoseTitration
+        - Add maximum water volume validation in calculator
+
+    ✨ Commendable Patterns
+
+        - Excellent use of MedicationFormComponents for UI reusability
+      - Smart field reset when medication changes (prevents invalid states)
+      - Comprehensive common scenarios in calculator
+      - Clear separation of concerns in service layer
+      - Thoughtful accessibility implementation
+
+    🔒 Security Assessment
+
+    No security concerns identified:
+        - No sensitive data logging
+      - Proper data isolation per user
+      - No credential storage in this feature
+      - Safe medical calculations with validation
+
+    📋 Recommendation
+
+    APPROVE with minor revisions. This is a well-implemented feature that follows iOS best practices and maintains high
+  code quality. The medical calculations are accurate and safe. The suggested improvements are mostly organizational and UX
+   enhancements that can be addressed in follow-up PRs.

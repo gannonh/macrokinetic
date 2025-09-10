@@ -9,10 +9,18 @@ enum TestUtilities {
     /// - Bypasses real Sign in with Apple authentication
     /// - Creates mock user data for testing
     /// - Provides full app functionality without external dependencies
-    static func launchAppWithTestMode() -> XCUIApplication {
+    /// - Parameters:
+    ///   - resetData: Whether to reset app data for clean state (default: true)
+    static func launchAppWithTestMode(resetData: Bool = true) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["UI_TESTING"] = "true"
-        app.launchArguments.append("--ui-testing")
+
+        if resetData {
+            app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        } else {
+            app.launchArguments = ["--ui-testing"]
+        }
+
         app.launch()
         return app
     }

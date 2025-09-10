@@ -18,7 +18,7 @@ struct DataControllerBasicTests {
 
         // Test that shared instance has valid container
         _ = shared1.container.mainContext
-        #expect(shared1.container.schema.entities.count == 3, "Should have 3 entities (User, Dose, MedicationProfile)")
+        #expect(shared1.container.schema.entities.count == 4, "Should have 4 entities (User, Dose, MedicationProfile, DoseTitration)")
     }
 
     @Test("DataController test container creation")
@@ -31,7 +31,7 @@ struct DataControllerBasicTests {
         _ = context // ModelContext is never nil, just verify we can access it
 
         // Test container should have correct schema
-        #expect(testController.container.schema.entities.count == 3, "Should have 3 entities")
+        #expect(testController.container.schema.entities.count == 4, "Should have 4 entities")
 
         // Test that it's isolated from shared instance
         #expect(testController !== DataController.shared, "Test container should be separate from shared instance")
@@ -52,7 +52,7 @@ struct DataControllerBasicTests {
         _ = context // ModelContext is never nil, just verify we can access it
 
         // Should attempt CloudKit setup
-        #expect(productionStyleController.container.schema.entities.count == 3, "Should have 3 entities")
+        #expect(productionStyleController.container.schema.entities.count == 4, "Should have 4 entities")
 
         // CloudKit status should be set
         let validStatuses: [SyncStatus] = [
@@ -72,9 +72,10 @@ struct DataControllerBasicTests {
         #expect(entityNames.contains("User"), "Schema should contain User entity")
         #expect(entityNames.contains("Dose"), "Schema should contain Dose entity")
         #expect(entityNames.contains("MedicationProfile"), "Schema should contain MedicationProfile entity")
+        #expect(entityNames.contains("DoseTitration"), "Schema should contain DoseTitration entity")
 
         // Test schema has correct number of entities
-        #expect(schema.entities.count == 3, "Should have exactly 3 entities in schema")
+        #expect(schema.entities.count == 4, "Should have exactly 4 entities in schema")
     }
 
     @Test("DataController published properties")

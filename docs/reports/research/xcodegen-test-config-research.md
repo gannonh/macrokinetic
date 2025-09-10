@@ -182,7 +182,7 @@ After applying any solution, verify the configuration works:
 # Run tests with explicit parallelization control
 xcodebuild test \
   -scheme JabTracker \
-  -destination 'platform=iOS Simulator,name=iPhone 15' \
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
   -parallel-testing-enabled NO \
   -maximum-parallel-testing-workers 1
 ```

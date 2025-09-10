@@ -52,5 +52,7 @@
 	<string>JabTracker uses Face ID to securely protect your medical data and ensure only you can access your medication tracking information.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>JabTracker would like to read your weight data from Health to provide personalized medication tracking and insights.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>JabTracker would like to update your weight data in Health to keep your health records synchronized.</string>
 </dict>
 </plist>

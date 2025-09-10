@@ -10,14 +10,17 @@
           "User.swift",
           "Dose.swift",
           "MedicationProfile.swift",
-          "Medication.swift"
+          "Medication.swift",
+          "ReconstitutionCalculator.swift",
+          "DoseTitration.swift"
         ]
       },
       "infrastructure": {
         "threshold": 62,
         "description": "Data management with some framework dependencies",
         "files": [
-          "DataController.swift"
+          "DataController.swift",
+          "MedicationManager.swift"
         ]
       },
       "framework_integration": {
@@ -71,30 +74,6 @@
       "e2e_test_file": "AuthenticationUITests.swift",
       "test_approach": "Hybrid - E2E for real authentication flows, unit tests for error handling and state management"
     }
-  },
-  "test_files": {
-    "description": "Test files that contribute to coverage for the corresponding source files",
-    "subscription_manager_tests": [
-      "SubscriptionManagerTests.swift",
-      "SubscriptionManagerMoreTests.swift", 
-      "SubscriptionManagerStoreKitIntegrationTests.swift",
-      "SubscriptionManagerRestoreIntegrationTests.swift",
-      "SubscriptionManagerCoreLogicTests.swift"
-    ],
-    "authentication_tests": [
-      "AuthenticationTests.swift",
-      "AuthenticationDelegateTests.swift",
-      "AuthenticationResetAndEdgeCaseTests.swift",
-      "AuthenticationUITestingTests.swift",
-      "AuthenticationDelegateMethodTests.swift",
-      "AuthenticationDelegateIntegrationTests.swift",
-      "AuthenticationDatabaseIntegrationTests.swift"
-    ],
-    "data_controller_tests": [
-      "DataControllerBasicTests.swift",
-      "DataControllerInitializationTests.swift",
-      "DataControllerSyncTests.swift"
-    ]
   },
   "overall_target": {
     "informational_only": true,

@@ -5,7 +5,7 @@ echo "🔨 Generating Swift documentation..."
 
 xcodebuild docbuild \
   -scheme JabTracker \
-  -destination 'platform=iOS Simulator,name=iPhone 15'
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
 
 if [ $? -eq 0 ]; then
     echo "✅ Documentation generated successfully"
