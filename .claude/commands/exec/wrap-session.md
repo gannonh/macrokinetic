@@ -14,7 +14,7 @@ Activate **ULTRATHINK**
 - The scope of this session is everything done since the last `SESSION-HANDOFF:*` commit message.
 - Use `git log` to identify the commits in this session.
 
-## Review and update feature-level documentation (as needed)
+## REVIEW AND UPDATE FEATURE-LEVEL DOCUMENTATION (AS NEEDED)
 
  **IMPORTANT** 
  
@@ -53,7 +53,7 @@ Update test information for next session:
 - Test coverage for new components
 - Known failing tests that need attention
 
-## Review and update project-level documentation (as needed)
+## REVIEW AND UPDATE PROJECT-LEVEL DOCUMENTATION (AS NEEDED)
 
 1. `docs/spec-master-prd.md` - Master Product Requirements Specification
 2. `docs/implementation-plan.md` - Implementation plan and progress
