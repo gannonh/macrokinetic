@@ -2,11 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Project Requirements and Implementation Plan
 
 @docs/spec-master-prd.md
-
-For detailed implementation progress and roadmap, see:
 
 @docs/implementation-plan.md
 
@@ -626,18 +624,6 @@ app.pickers["medication-\(currentSelection)"]
 - **Unimplemented Features**: Use `throw XCTSkip("reason")` instead of commenting out tests
 - **Error Messages**: Provide clear context for debugging UI test failures
 - **State Validation**: Always check element state before and after interactions
-
-## Medication Profile Management (Implementation Complete)
-
-**Status**: ✅ Fully implemented including dose escalation system  
-**Details**: See `specs/001-medication-profile-management/` for complete implementation documentation
-
-**Key Components Delivered**:
-- Full CRUD operations for medication profiles
-- Reconstitution calculator for compounded medications  
-- Dose escalation system with timeline tracking
-- Comprehensive E2E test coverage (all scenarios passing)
-- Medical accuracy validation with FDA-compliant constraints
 
 # Reminders
 - Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
