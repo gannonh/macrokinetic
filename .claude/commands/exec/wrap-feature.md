@@ -35,9 +35,10 @@ Activate **ULTRATHINK**
 ./scripts/check-coverage.sh
 
 # Run full validation suite
-./scripts/check-all.sh
+./scripts/check-all.sh --skip-ui # Assume the user is handling ui test validation
 
-# Verify no XCTSkip remaining (unless for future features)
+# Verify no XCTSkip remaining 
+# Exceptions: JabTrackerUITests/CodeGen.swift and JabTrackerUITests/ManualAuthenticationUITests.swift may be skipped
 grep -r "XCTSkip" JabTrackerUITests/ JabTrackerTests/
 ```
 
@@ -57,7 +58,7 @@ grep -r "XCTSkip" JabTrackerUITests/ JabTrackerTests/
 - [ ] Accessibility validated
 - [ ] Security requirements met
 
-### 3. Update Documentation
+### 3a. Update Feature-Level Documentation
 
 **Update `$ARGUMENTS/tasks.md`:**
 - Mark all tasks as ✅ complete
@@ -70,6 +71,8 @@ grep -r "XCTSkip" JabTrackerUITests/ JabTrackerTests/
 **Update `$ARGUMENTS/quickstart.md`:**
 - Mark all scenarios as ✅
 - Set "Ready for production deployment: ✅"
+
+### 3b. Update Project-level Documentation
 
 **Update `docs/implementation-plan.md`:**
 - Move feature from "In Progress" to "Completed"
@@ -127,43 +130,9 @@ EOF
 )"
 
 # Request review
-gh pr review --request @reviewer
+gh pr review --request @claude
 ```
 
-### 5. Merge Preparation
-
-**Pre-merge verification:**
-```bash
-# Rebase on main if needed
-git fetch origin main
-git rebase origin/main
-
-# Final test run
-./scripts/check-all.sh
-
-# Squash commits if desired
-git rebase -i main
-```
-
-**Merge PR:**
-```bash
-# Once approved
-gh pr merge --squash --delete-branch
-```
-
-### 6. Post-Merge Cleanup
-
-```bash
-# Switch back to main
-git checkout main
-git pull origin main
-
-# Verify feature is integrated
-./scripts/test.sh all 1
-
-# Archive feature spec (optional)
-mv $ARGUMENTS $ARGUMENTS-COMPLETED-$(date +%Y%m%d)
-```
 
 ## Success Criteria
 
@@ -172,9 +141,6 @@ mv $ARGUMENTS $ARGUMENTS-COMPLETED-$(date +%Y%m%d)
 - ✅ All quickstart.md scenarios passing
 - ✅ All tasks.md items complete
 - ✅ Test coverage meets/exceeds requirements
-- ✅ PR approved and ready to merge
+- ✅ PR under review
 - ✅ Documentation fully updated
 
----
-
-**Final Step**: Celebrate! 🎉 Feature successfully delivered from spec to production.
