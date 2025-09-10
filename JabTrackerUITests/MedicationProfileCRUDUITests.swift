@@ -6,11 +6,11 @@ final class MedicationProfileCRUDUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        
+
         self.app = XCUIApplication()
         self.app.launchArguments = ["--ui-testing", "--reset-app-data"]
         self.app.launch()
-        
+
         XCTAssertTrue(self.app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
     }
 
@@ -22,8 +22,8 @@ final class MedicationProfileCRUDUITests: XCTestCase {
     }
 
     func testCreateMedicationProfile() throws {
-        navigateToMedicationProfiles()
-        
+        self.navigateToMedicationProfiles()
+
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         XCTAssertTrue(addProfileButton.waitForExistence(timeout: 3.0))
         addProfileButton.tap()
@@ -32,7 +32,7 @@ final class MedicationProfileCRUDUITests: XCTestCase {
         let medicationPicker = self.app.buttons["medication-picker"]
         XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3.0))
         medicationPicker.tap()
-        
+
         let semaglutideOption = self.app.buttons["medication-semaglutide"]
         XCTAssertTrue(semaglutideOption.waitForExistence(timeout: 3.0))
         semaglutideOption.tap()
@@ -41,7 +41,7 @@ final class MedicationProfileCRUDUITests: XCTestCase {
         let brandPicker = self.app.buttons["add-brand-picker"]
         XCTAssertTrue(brandPicker.waitForExistence(timeout: 3.0))
         brandPicker.tap()
-        
+
         let ozempicOption = self.app.buttons["add-brand-ozempic"]
         XCTAssertTrue(ozempicOption.waitForExistence(timeout: 3.0))
         ozempicOption.tap()
@@ -50,7 +50,7 @@ final class MedicationProfileCRUDUITests: XCTestCase {
         let dosePicker = self.app.buttons["add-dose-picker"]
         XCTAssertTrue(dosePicker.waitForExistence(timeout: 3.0))
         dosePicker.tap()
-        
+
         let doseOption = self.app.buttons["add-dose-option-0.25"]
         XCTAssertTrue(doseOption.waitForExistence(timeout: 3.0))
         doseOption.tap()
@@ -68,22 +68,22 @@ final class MedicationProfileCRUDUITests: XCTestCase {
     }
 
     func testViewMedicationProfileDetail() throws {
-        navigateToMedicationProfiles()
-        
+        self.navigateToMedicationProfiles()
+
         // First create a profile (simplified)
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         addProfileButton.tap()
-        
+
         let medicationPicker = self.app.buttons["medication-picker"]
         medicationPicker.tap()
         let semaglutideOption = self.app.buttons["medication-semaglutide"]
         semaglutideOption.tap()
-        
+
         let brandPicker = self.app.buttons["add-brand-picker"]
         brandPicker.tap()
         let ozempicOption = self.app.buttons["add-brand-ozempic"]
         ozempicOption.tap()
-        
+
         let saveButton = self.app.buttons["save-medication-profile"]
         saveButton.tap()
 
@@ -101,17 +101,17 @@ final class MedicationProfileCRUDUITests: XCTestCase {
     }
 
     func testDeleteMedicationProfile() throws {
-        navigateToMedicationProfiles()
-        
+        self.navigateToMedicationProfiles()
+
         // Create profile first
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         addProfileButton.tap()
-        
+
         let medicationPicker = self.app.buttons["medication-picker"]
         medicationPicker.tap()
         let semaglutideOption = self.app.buttons["medication-semaglutide"]
         semaglutideOption.tap()
-        
+
         let saveButton = self.app.buttons["save-medication-profile"]
         saveButton.tap()
 
@@ -120,7 +120,7 @@ final class MedicationProfileCRUDUITests: XCTestCase {
             identifier: "medication-profile-semaglutide-ozempic-0.25mg"
         ).firstMatch
         XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
-        
+
         profileCell.swipeLeft()
         let deleteButton = self.app.buttons["Delete"]
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 3.0))

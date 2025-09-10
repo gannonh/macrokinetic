@@ -14,11 +14,12 @@ struct ReconstitutionCalculatorView: View {
     @State private var errorMessage: String = ""
     @State private var showingError = false
 
-    init(profile: MedicationProfile? = nil, 
-         vialStrength: Double? = nil, 
-         targetDose: Double? = nil, 
-         waterVolume: Double? = nil, 
-         onSave: ((Double, Double, Double) -> Void)? = nil) {
+    init(profile: MedicationProfile? = nil,
+         vialStrength: Double? = nil,
+         targetDose: Double? = nil,
+         waterVolume: Double? = nil,
+         onSave: ((Double, Double, Double) -> Void)? = nil)
+    {
         self.profile = profile
         self.onSave = onSave
 

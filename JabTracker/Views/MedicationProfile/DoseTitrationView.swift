@@ -339,10 +339,9 @@ struct CreateTitrationView: View {
 #Preview {
     @Previewable @State var sampleProfile = MedicationProfile(
         genericName: "Semaglutide",
-        brandName: "Ozempic", 
+        brandName: "Ozempic",
         currentDose: 0.25,
-        medicationType: "semaglutide"
-    )
-    
+        medicationType: "semaglutide")
+
     DoseTitrationView(profile: sampleProfile)
 }

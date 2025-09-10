@@ -7,23 +7,23 @@ final class MedicationProfileSettingsUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        
+
         self.app = XCUIApplication()
         self.app.launchArguments = ["--ui-testing", "--reset-app-data"]
         self.app.launch()
-        
+
         XCTAssertTrue(self.app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
     }
 
     /// Integration test: Settings navigation to medication profiles
     func testMedicationProfilesNavigation() throws {
         self.app.tabBars.buttons["Settings"].tap()
-        
+
         let medicationProfilesButton = self.app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0),
                       "Medication Profiles button should exist in Settings")
         medicationProfilesButton.tap()
-        
+
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         XCTAssertTrue(addProfileButton.waitForExistence(timeout: 3.0),
                       "Add button should be accessible in medication profiles")
@@ -33,7 +33,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
     func testEmptyStateDisplay() throws {
         self.app.tabBars.buttons["Settings"].tap()
         self.app.buttons["Medication Profiles"].tap()
-        
+
         let emptyStateLabel = self.app.staticTexts["No medication profiles yet"]
         XCTAssertTrue(emptyStateLabel.waitForExistence(timeout: 3.0),
                       "Empty state should be shown when no profiles exist")

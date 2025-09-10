@@ -6,11 +6,11 @@ import XCTest
 final class ManualAuthenticationUITests: XCTestCase {
     // Toggle this to enable/disable all tests in this file
     private let testsEnabled = false
-    
+
     override func setUpWithError() throws {
         continueAfterFailure = false
-        
-        if !testsEnabled {
+
+        if !self.testsEnabled {
             throw XCTSkip("Manual authentication tests are disabled. Set testsEnabled = true to run.")
         }
     }

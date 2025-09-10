@@ -6,11 +6,11 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        
+
         self.app = XCUIApplication()
         self.app.launchArguments = ["--ui-testing", "--reset-app-data"]
         self.app.launch()
-        
+
         XCTAssertTrue(self.app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
     }
 
@@ -22,8 +22,8 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
     }
 
     func testInjectionSitesSelection() throws {
-        navigateToMedicationProfiles()
-        
+        self.navigateToMedicationProfiles()
+
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         XCTAssertTrue(addProfileButton.waitForExistence(timeout: 3.0))
         addProfileButton.tap()
@@ -37,7 +37,7 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
         // Test default injection site selection
         let thighSite = self.app.staticTexts["add-injection-site-thigh"]
         XCTAssertTrue(thighSite.waitForExistence(timeout: 3.0))
-        
+
         let thighCheckmark = self.app.images["add-injection-site-thigh"].firstMatch
         XCTAssertTrue(thighCheckmark.exists, "Thigh should be selected by default")
 
@@ -45,15 +45,15 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
         let abdomenSite = self.app.staticTexts["add-injection-site-abdomen"]
         XCTAssertTrue(abdomenSite.waitForExistence(timeout: 3.0))
         abdomenSite.tap()
-        
+
         let abdomenCheckmark = self.app.images["add-injection-site-abdomen"].firstMatch
         XCTAssertTrue(abdomenCheckmark.waitForExistence(timeout: 2.0),
                       "Abdomen should be selected after tap")
     }
 
     func testStartDateFunctionality() throws {
-        navigateToMedicationProfiles()
-        
+        self.navigateToMedicationProfiles()
+
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         addProfileButton.tap()
 
@@ -78,8 +78,8 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
     }
 
     func testCompoundedMedicationSetup() throws {
-        navigateToMedicationProfiles()
-        
+        self.navigateToMedicationProfiles()
+
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         addProfileButton.tap()
 
@@ -93,11 +93,11 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
         let compoundedToggle = self.app.switches["add-compounded-medication-toggle"]
         XCTAssertTrue(compoundedToggle.waitForExistence(timeout: 3.0),
                       "Compounded toggle should be present")
-        
+
         // Verify initial state (should be off)
         XCTAssertEqual(compoundedToggle.value as? String, "Off",
                        "Compounded toggle should be off by default")
-        
+
         // Toggle on using coordinate-based approach (required for SwiftUI Form toggles)
         compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         XCTAssertEqual(compoundedToggle.value as? String, "On",
@@ -107,15 +107,15 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
         let vialStrengthField = self.app.textFields["add-vial-strength-input"]
         XCTAssertTrue(vialStrengthField.waitForExistence(timeout: 2.0),
                       "Vial strength field should appear for compounded medication")
-        
+
         let targetDoseField = self.app.textFields["add-target-dose-input"]
         XCTAssertTrue(targetDoseField.waitForExistence(timeout: 2.0),
                       "Target dose field should appear for compounded medication")
     }
 
     func testDoseEscalationTracking() throws {
-        navigateToMedicationProfiles()
-        
+        self.navigateToMedicationProfiles()
+
         // Create test profile
         let addProfileButton = self.app.buttons["Add Medication Profile"]
         addProfileButton.tap()
