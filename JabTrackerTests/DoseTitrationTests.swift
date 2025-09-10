@@ -280,7 +280,12 @@ struct DoseTitrationTests {
     @Test("titration handles extreme dose values")
     @MainActor
     func testExtremeDoseValues() throws {
-        let titration = createTestTitration(fromDose: 0.0001, toDose: 999.9999)
+        let futureDate = Date().addingTimeInterval(86400) // 1 day from now
+        let titration = createTestTitration(
+            fromDose: 0.0001, 
+            toDose: 999.9999,
+            scheduledDate: futureDate
+        )
         
         #expect(titration.titrationDescription == "0.00 mg → 1000.00 mg")
         #expect(titration.validateTitration() == true) // Still valid escalation
