@@ -4,22 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 medication doses (Ozempic, Wegovy, Mounjaro) with pharmacokinetic modeling for drug concentration calculations.
+@docs/spec-master-prd.md
 
-**Technology Stack:**
-- Framework: SwiftUI (iOS 17.0+)
-- Backend: CloudKit (Sync, Storage, User Management)  
-- Data: SwiftData + CloudKit Sync (with graceful fallback to local-only storage)
-- Charts: Swift Charts
-- Health: HealthKit integration
-- Auth: Sign in with Apple (sole authentication method)
-- Testing: Swift Testing for unit tests, XCUITest for UI tests
+For detailed implementation progress and roadmap, see:
 
-**Development Philosophy:**
-- Outside-In TDD: Always start with E2E acceptance tests that define user-facing success. Work inward through integration and unit tests, writing only the minimal code needed to pass each test. E2E tests are the ultimate acceptance criteria for features.
-- TDD: Tests must fail before implementation (RED → GREEN → REFACTOR).
-- Medical accuracy and coverage are non-negotiable.
-- Minimal, incremental changes only; no scope creep.
+@docs/implementation-plan.md
 
 ## Development Commands
 
@@ -291,120 +280,40 @@ xcodegen generate
 - If build/test targets seem missing files
 - When file references appear broken in Xcode
 
-## Architecture & Code Structure
+## Key Development Patterns
 
-### SwiftData Models
-The app uses three primary SwiftData models with CloudKit sync:
-- `User`: Profile information including weight, timezone, medication preferences
-  - ✅ `appleUserId` for authentication linking
-  - ✅ `updatedAt` for tracking profile modifications
-  - ✅ Weight unit conversion between kg/lbs with real-time validation
-- `Dose`: Individual dose records with timestamp, amount, injection site, notes
-- `MedicationProfile`: Medication details, current dose, refill dates
+### SwiftData Model Architecture
+- All models use CloudKit-compatible default values (avoids optionals where possible)
+- Include `createdAt` and `updatedAt` timestamps for audit trails
+- Use proper `@Relationship` attributes with `inverse` and `deleteRule` specifications
+- Example: `MedicationProfile` with enhanced fields for compounding and dose escalation
 
-**DataController Features:**
-- Automatic CloudKit sync with iCloud availability detection
-- Graceful fallback to local-only storage when iCloud is unavailable
-- Real-time sync status monitoring (`SyncStatus` enum)
-- User-friendly sync status display with actionable guidance
+### Authentication Implementation Gotchas
+- Biometric authentication simulator limitations - test on real devices for accuracy
+- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
+- Authentication state must be checked on app launch for proper flow control
+- Face ID prompt timing can cause test flakiness - add appropriate waits and timeouts
+- Environment variables and launch arguments are key for test/production differentiation
+- Always provide authentication bypass for UI testing to avoid external dependencies
+- Keychain access can fail in test scenarios - implement proper error handling
 
-### Key Components
+### Testing Framework Best Practices
+- Swift Testing provides cleaner, more modern test syntax than XCTest
+- xcbeautify offers better Swift Testing output support than xcpretty
+- Never use `CODE_SIGNING_ALLOWED=NO` for UI tests - prevents app launch
+- File-based test organization improves maintainability
 
-**Medication Support:**
-- Semaglutide (Ozempic, Wegovy) - 7 day half-life, weekly dosing
-- Tirzepatide (Mounjaro, Zepbound) - 5 day half-life, weekly dosing  
-- Liraglutide (Victoza, Saxenda) - 0.54 day half-life, daily dosing
-- Dulaglutide (Trulicity) - 4.7 day half-life, weekly dosing
+### XcodeGen Workflow
+- **CRITICAL**: Always run `xcodegen generate` after adding new Swift files
+- Project uses XcodeGen for automatic project file management
+- New test files won't appear in test runs until project is regenerated
+- Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
 
-**Pharmacokinetics Engine:**
-Core calculation logic for drug concentration modeling using exponential decay based on medication half-lives. Located in `PharmacokineticsEngine` class.
-
-**Authentication System:**
-- `AuthenticationManager`: Handles Sign in with Apple, credential management, state persistence
-- `BiometricAuthManager`: Face ID/Touch ID integration with fallback to device passcode  
-- `AuthenticationView`: Clean Sign in with Apple UI following HIG
-- `UserProfileView`: Complete profile management with weight conversion, validation
-- Authentication state persistence across app launches using Keychain
-
-**Navigation Structure:**
-TabView with 5 main tabs:
-- Dashboard (Home) - Current levels, next dose
-- Add Dose - Quick entry and manual logging
-- History - Dose tracking and calendar view
-- Analytics - Charts and insights using Swift Charts
-- Settings - Profile, notifications, export
-
-### Data Flow
-1. User logs doses through AddDoseView
-2. Doses stored in SwiftData with automatic CloudKit sync (when available)
-3. PharmacokineticsEngine calculates real-time concentrations
-4. Charts display concentration timeline and trends
-5. Notifications remind users of upcoming doses
-6. SyncStatusCard displays real-time iCloud sync status to users
-
-### Project Status
-
-**Current Phase**: Core Functionality Implementation  
-**Completed**: Foundation & Infrastructure (GitHub Issues #1-4) + ✅ Authentication & User Profile (GitHub Issue #11)  
-**Next Up**: User Onboarding Flow & Dose Tracking Features
-
-For detailed progress tracking and roadmap, see `docs/implementation-plan.md`.  
-For product vision and feature specifications, see `docs/spec.md`.
-
-### Design System
-
-**Colors:** Primary gradient from #667eea to #764ba2
-**Typography:** System fonts with rounded design for large titles
-**Components:** Follow Human Interface Guidelines with accessibility support
-
-### Testing Strategy
-- Unit tests using Swift Testing framework for modern testing approach
-- UI tests using XCUITest for end-to-end user flow testing
-- SwiftData model and persistence testing (comprehensive coverage implemented)
-- Design system component testing for accessibility and functionality
-- ✅ Authentication unit tests (`AuthenticationTests`) - comprehensive coverage
-- ✅ Authentication UI tests (`AuthenticationUITests`) - complete E2E testing
-- ✅ Biometric authentication testing with mock scenarios
-- ✅ Keychain integration security testing
-- xcbeautify for enhanced test output formatting with Swift Testing support
-- Details: `docs/testing-strategy.md`
-
-### Privacy & Security
-- SwiftData encryption enabled
-- CloudKit private database for user data protection
-- Graceful handling of iCloud availability without compromising functionality
-- ✅ Keychain storage for sensitive authentication credentials (implemented)
-- ✅ Face ID/Touch ID authentication with BiometricAuthManager (implemented)
-- ✅ Sign in with Apple as sole authentication method (implemented)
-- ✅ Secure authentication state management with AuthenticationManager (implemented)
-- HIPAA compliance considerations
-- App Tracking Transparency implementation
-
-## Development Notes
-
-- Follow TDD approach especially for pharmacokinetic calculations
-- Implement authentication early to establish user context for all features
-- Use environment variables to differentiate test vs production authentication
-- Always provide UI testing bypass for authentication flows
-- Prioritize accessibility with VoiceOver, Dynamic Type, and Reduced Motion support
-- Implement offline-first functionality with CloudKit sync
-- Use ProMotion (120Hz) support for smooth animations
-- Target < 2 second app launch time and < 50ms calculation updates
-- Keep medical accuracy as top priority - validate all pharmacokinetic formulas
-
-## Regulatory Considerations
-
-This app handles medical data and dosing information. Ensure:
-- FDA medical device classification compliance
-- Clinical validation of pharmacokinetic models
-- Proper disclaimers about not replacing medical advice
-- Adverse event reporting mechanisms if required
-
-## Resources
-
-- Project Spec: @docs/spec.md
-- Implementation Plan: @docs/implementation-plan.md
-- GitHub Repo: https://github.com/gannonh/jab-tracker-ios
+### CloudKit + SwiftData Integration
+- Always implement graceful fallback when CloudKit is unavailable
+- Check for test environment before enabling CloudKit to avoid test conflicts
+- Use `@Published` properties for real-time sync status updates
+- Provide clear user feedback about sync status with actionable guidance
 
 ## GitHub Sub-Issue Management (gh-sub-issue Integration)
 
