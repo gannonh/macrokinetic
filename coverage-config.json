@@ -11,7 +11,8 @@
           "Dose.swift",
           "MedicationProfile.swift",
           "Medication.swift",
-          "ReconstitutionCalculator.swift"
+          "ReconstitutionCalculator.swift",
+          "DoseTitration.swift"
         ]
       },
       "infrastructure": {
