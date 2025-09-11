@@ -19,17 +19,18 @@ struct QuickDoseButton: View {
     var body: some View {
         Button(action: {
             showingQuickDoseSheet = true
-        }) {
+        }, label: {
             Label("Quick Add Dose", systemImage: "plus.circle.fill")
-        }
+        })
         .buttonStyle(.borderedProminent)
         .accessibilityIdentifier("quick-add-dose-button")
-        .sheet(isPresented: $showingQuickDoseSheet) {
+        .sheet(isPresented: $showingQuickDoseSheet,
+               content: {
             QuickDoseSheet(
                 viewModel: viewModel,
                 showingSuccessMessage: $showingSuccessMessage
             )
-        }
+        })
         .onAppear {
             viewModel.loadSmartDefaults(context: modelContext)
         }

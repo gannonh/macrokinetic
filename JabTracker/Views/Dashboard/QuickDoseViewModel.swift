@@ -14,7 +14,7 @@ class QuickDoseViewModel: ObservableObject {
     // MARK: - Published Properties
     
     @Published var medicationProfiles: [MedicationProfile] = []
-    @Published var selectedMedicationProfile: MedicationProfile? = nil {
+    @Published var selectedMedicationProfile: MedicationProfile? {
         didSet {
             updateDoseAmount()
             updateRecommendedInjectionSites()
@@ -27,7 +27,7 @@ class QuickDoseViewModel: ObservableObject {
     @Published var notes: String = ""
     
     @Published var recommendedInjectionSites: [String] = []
-    @Published var errorMessage: String? = nil
+    @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     
     // MARK: - Computed Properties
@@ -209,7 +209,7 @@ enum QuickDoseError: LocalizedError {
 extension MedicationProfile {
     /// Computed property to get Medication enum from generic/brand names
     var medication: Medication? {
-        return Medication.fromGenericName(genericName)
+        Medication.fromGenericName(genericName)
     }
 }
 
