@@ -13,7 +13,6 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 ## Target Users
 
 ### Primary Users
-- **Type 2 Diabetes Patients**: Using GLP-1 medications for blood sugar management
 - **Weight Management Patients**: Using GLP-1 medications for obesity treatment
 - **Age Range**: 25-65 years old
 - **Tech Comfort**: Moderate to high iOS device familiarity
@@ -30,7 +29,7 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Dose Tracking**: Manual logging is cumbersome and error-prone
 - **Provider Communication**: Hard to communicate adherence patterns to doctors
 - **Concentration Understanding**: No visibility into drug levels in body
-- **Dose Escalation**: Confusion about when and how to increase doses
+- **Dose Titration**: Confusion about when and how to increase doses
 
 ### Healthcare Provider Needs
 - **Objective Data**: Reliable adherence metrics beyond patient self-reporting

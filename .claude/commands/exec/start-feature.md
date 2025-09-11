@@ -11,7 +11,7 @@ Activate **ULTRATHINK**
 
 ## Outside-In TDD Flow
 
-**E2E Tests** → **Integration Tests** → **Unit Tests** → **Implementation**
+**E2E Tests (Red) → Integration/Unit Tests (Red) → Implementation (Blue) → Integration/Unit Tests (Green) → E2E Tests (Green)**
 
 Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 

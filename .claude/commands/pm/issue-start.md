@@ -114,6 +114,7 @@ Task:
     3. Commit frequently with format: "Issue #$ARGUMENTS: {specific change}"
     4. Update progress in: .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
     5. Follow coordination rules in /rules/agent-coordination.md
+    6. Outside-In TDD: E2E Tests (Red) → Integration/Unit Tests (Red) → Implementation (Blue) → Integration/Unit Tests (Green) → E2E Tests (Green) - Start with E2E acceptance tests that define user-facing success, then work inward through integration and unit tests before implementation. E2E tests are the ultimate acceptance criteria.
     
     If you need to modify files outside your scope:
     - Check if another stream owns them
