@@ -77,8 +77,8 @@ struct DoseValidationSiteTests {
             #expect(DoseValidation.isValidSiteRotation("Abdomen", previousSites: ["Thigh"]))
             #expect(DoseValidation.isValidSiteRotation("Upper Arm", previousSites: ["Abdomen", "Thigh"]))
             
-            // Using different sites in sequence
-            #expect(DoseValidation.isValidSiteRotation("Buttocks", previousSites: previousSites))
+            // Using different site from last in sequence (Thigh is different from last site Buttocks)
+            #expect(DoseValidation.isValidSiteRotation("Thigh", previousSites: previousSites))
             
             // Empty previous sites (first dose)
             #expect(DoseValidation.isValidSiteRotation("Thigh", previousSites: []))

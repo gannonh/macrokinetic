@@ -110,7 +110,9 @@ enum DoseValidation {
     static func isReasonableHistoricalDate(_ date: Date, maxPastDays: Int = 365) -> Bool {
         let now = Date()
         let oldestAllowed = now.addingTimeInterval(-Double(maxPastDays) * 24 * 60 * 60)
-        return date >= oldestAllowed
+        // Add small tolerance for boundary conditions and timing precision
+        let tolerance: TimeInterval = 60 // 1 minute tolerance for boundary calculations
+        return date >= oldestAllowed.addingTimeInterval(-tolerance)
     }
     
     // MARK: - Comprehensive Dose Validation

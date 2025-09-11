@@ -57,14 +57,14 @@ struct DoseValidationComprehensiveTests {
             #expect(DoseValidation.isValidDoseDate(now.addingTimeInterval(-60))) // 1 minute ago
             #expect(DoseValidation.isValidDoseDate(now.addingTimeInterval(-3600))) // 1 hour ago
             
-            // Future dates should be invalid
-            #expect(!DoseValidation.isValidDoseDate(now.addingTimeInterval(60))) // 1 minute future
+            // Small tolerance for clock skew (5 minutes) - these should be valid
+            #expect(DoseValidation.isValidDoseDate(now.addingTimeInterval(60))) // 1 minute future - within tolerance
+            #expect(DoseValidation.isValidDoseDate(now.addingTimeInterval(300))) // 5 minutes future - exactly at tolerance
+            
+            // Future dates beyond tolerance should be invalid
+            #expect(!DoseValidation.isValidDoseDate(now.addingTimeInterval(301))) // Just over tolerance
             #expect(!DoseValidation.isValidDoseDate(now.addingTimeInterval(3600))) // 1 hour future
             #expect(!DoseValidation.isValidDoseDate(now.addingTimeInterval(24 * 60 * 60))) // 1 day future
-            
-            // Small tolerance for clock skew (5 minutes)
-            #expect(DoseValidation.isValidDoseDate(now.addingTimeInterval(300))) // 5 minutes future - should be valid
-            #expect(!DoseValidation.isValidDoseDate(now.addingTimeInterval(301))) // Just over tolerance
         }
         
         @Test("Historical date validation")
