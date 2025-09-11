@@ -235,10 +235,11 @@ enum ValidationError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidDoseAmount(let amount, let medication, let brand):
-            return "Dose \(amount) mg is not available for \(medication.displayName) (\(brand)). Available doses: \(medication.availableDoses(for: brand).map { String($0) }.joined(separator: ", ")) mg"
+            let availableDoses = medication.availableDoses(for: brand).map { String($0) }.joined(separator: ", ")
+            return "Dose \(amount) mg is not available for \(medication.displayName) (\(brand)). Available doses: \(availableDoses) mg"
             
         case .invalidDosePrecision(let amount, let medication):
-            return "Dose \(amount) mg has invalid precision for \(medication.displayName). Use increments appropriate for this medication."
+            return "Dose \(amount) mg has invalid precision for \(medication.displayName). Use appropriate increments."
             
         case .futureDate:
             return "Dose date cannot be in the future."
@@ -249,10 +250,11 @@ enum ValidationError: LocalizedError {
         case .invalidDoseTiming(_, let lastDate, let medication):
             let frequencyDesc = medication.frequency == .daily ? "daily" : "weekly"
             let lastDateDesc = lastDate?.formatted(date: .abbreviated, time: .omitted) ?? "unknown"
-            return "Too soon since last dose (\(lastDateDesc)). \(medication.displayName) is a \(frequencyDesc) medication."
+            return "Too soon since last dose (\(lastDateDesc)). \(medication.displayName) is \(frequencyDesc)."
             
         case .invalidInjectionSite(let site):
-            return "'\(site)' is not a safe injection site. Use: \(DoseValidation.AnatomicalSites.approved.joined(separator: ", "))"
+            let approvedSites = DoseValidation.AnatomicalSites.approved.joined(separator: ", ")
+            return "'\(site)' is not a safe injection site. Use: \(approvedSites)"
             
         case .invalidSiteRotation(let site, let previousSites):
             let lastSite = previousSites.last ?? ""
