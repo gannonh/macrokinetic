@@ -206,13 +206,6 @@ enum QuickDoseError: LocalizedError {
 
 // MARK: - Extensions
 
-extension MedicationProfile {
-    /// Computed property to get Medication enum from generic/brand names
-    var medication: Medication? {
-        Medication.fromGenericName(genericName)
-    }
-}
-
 extension Medication {
     /// Helper to create Medication from generic name string
     static func fromGenericName(_ name: String) -> Medication? {

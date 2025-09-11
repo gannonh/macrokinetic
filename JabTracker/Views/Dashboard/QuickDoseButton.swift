@@ -188,7 +188,7 @@ struct QuickDoseSheet: View {
 }
 
 #Preview("Sheet") {
-    @State var showingSuccess = false
+    @Previewable @State var showingSuccess = false
     let viewModel = QuickDoseViewModel()
     
     return QuickDoseSheet(
