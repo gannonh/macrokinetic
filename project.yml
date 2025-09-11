@@ -40,6 +40,8 @@ targets:
     sources: [JabTrackerTests]
     settings:
       GENERATE_INFOPLIST_FILE: YES
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: ZBZKKWF95G
     dependencies:
       - target: JabTracker
       
@@ -51,6 +53,8 @@ targets:
       - path: JabTrackerStoreKit.storekit
     settings:
       GENERATE_INFOPLIST_FILE: YES
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: ZBZKKWF95G
     dependencies:
       - target: JabTracker
 

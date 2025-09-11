@@ -53,13 +53,15 @@ class DataController: ObservableObject {
             amount: 1.0,
             timestamp: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1 week ago
             site: "Abdomen",
-            skipped: false,
-            user: sampleUser,
-            medication: sampleMedication)
+            skipped: false)
 
         context.insert(sampleUser)
         context.insert(sampleMedication)
         context.insert(sampleDose)
+        
+        // Set relationships after insertion to avoid duplicate registration
+        sampleDose.user = sampleUser
+        sampleDose.medication = sampleMedication
 
         try? context.save()
 
@@ -73,6 +75,7 @@ class DataController: ObservableObject {
             User.self,
             Dose.self,
             MedicationProfile.self,
+            DoseTitration.self,
         ])
 
         // Configure CloudKit database for production vs in-memory/testing

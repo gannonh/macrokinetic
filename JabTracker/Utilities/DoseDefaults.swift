@@ -91,15 +91,19 @@ struct DoseDefaults {
     /// Calculate next scheduled dose date for a medication profile
     static func nextScheduledDose(
         for profile: MedicationProfile,
-        from currentDate: Date = Date()
+        from currentDate: Date = Date(),
+        doses: [Dose]? = nil
     ) -> Date? {
         guard let medication = profile.medication else { return nil }
         
         let calendar = Calendar.current
         let frequency = medication.frequency
         
+        // Use provided doses array for testing, or profile.doses for production
+        let dosesArray = doses ?? (profile.doses ?? [])
+        
         // Get most recent dose or use start date
-        let lastDoseDate = profile.doses?.max(by: { $0.timestamp < $1.timestamp })?.timestamp ?? profile.startDate
+        let lastDoseDate = dosesArray.max(by: { $0.timestamp < $1.timestamp })?.timestamp ?? profile.startDate
         
         switch frequency {
         case .daily:
@@ -115,9 +119,10 @@ struct DoseDefaults {
     static func isDoseOverdue(
         for profile: MedicationProfile,
         currentDate: Date = Date(),
-        gracePeriodHours: Int = 2
+        gracePeriodHours: Int = 2,
+        doses: [Dose]? = nil
     ) -> Bool {
-        guard let nextDose = nextScheduledDose(for: profile, from: currentDate) else { return false }
+        guard let nextDose = nextScheduledDose(for: profile, from: currentDate, doses: doses) else { return false }
         
         // Add grace period to next dose time
         let calendar = Calendar.current
@@ -134,7 +139,8 @@ struct DoseDefaults {
     static func calculateAdherence(
         for profile: MedicationProfile,
         in timeRange: DateInterval,
-        currentDate: Date = Date()
+        currentDate: Date = Date(),
+        doses: [Dose]? = nil
     ) -> Double {
         guard let medication = profile.medication else { return 0.0 }
         
@@ -152,10 +158,13 @@ struct DoseDefaults {
             expectedDoses = max(1, daysBetween / 7)
         }
         
+        // Use provided doses array for testing, or profile.doses for production
+        let dosesArray = doses ?? (profile.doses ?? [])
+        
         // Count actual doses in time range (excluding skipped doses)
-        let actualDoses = profile.doses?.filter { dose in
+        let actualDoses = dosesArray.filter { dose in
             timeRange.contains(dose.timestamp) && !dose.skipped
-        }.count ?? 0
+        }.count
         
         guard expectedDoses > 0 else { return 0.0 }
         
@@ -166,10 +175,13 @@ struct DoseDefaults {
     /// Get dose streak (consecutive days/weeks with doses taken)
     static func calculateDoseStreak(
         for profile: MedicationProfile,
-        currentDate: Date = Date()
+        currentDate: Date = Date(),
+        doses: [Dose]? = nil
     ) -> Int {
-        guard let medication = profile.medication,
-              let doses = profile.doses?.sorted(by: { $0.timestamp > $1.timestamp }) else { return 0 }
+        guard let medication = profile.medication else { return 0 }
+        // Use provided doses array for testing, or profile.doses for production
+        let dosesArray = doses ?? (profile.doses ?? [])
+        let sortedDoses = dosesArray.sorted(by: { $0.timestamp > $1.timestamp })
         
         let calendar = Calendar.current
         let frequency = medication.frequency
@@ -195,7 +207,7 @@ struct DoseDefaults {
                 dateRange = weekInterval
             }
             
-            hassDoseInPeriod = doses.contains { dose in
+            hassDoseInPeriod = sortedDoses.contains { dose in
                 dateRange.contains(dose.timestamp) && !dose.skipped
             }
             
@@ -219,12 +231,14 @@ struct DoseDefaults {
     /// Get summary statistics for a medication profile
     static func getDoseSummary(
         for profile: MedicationProfile,
-        in timeRange: DateInterval? = nil
+        in timeRange: DateInterval? = nil,
+        doses: [Dose]? = nil
     ) -> DoseSummary {
-        let doses = profile.doses ?? []
+        // Use provided doses array for testing, or profile.doses for production
+        let dosesArray = doses ?? (profile.doses ?? [])
         let filteredDoses = timeRange.map { range in
-            doses.filter { range.contains($0.timestamp) }
-        } ?? doses
+            dosesArray.filter { range.contains($0.timestamp) }
+        } ?? dosesArray
         
         let totalDoses = filteredDoses.count
         let completedDoses = filteredDoses.filter { !$0.skipped }.count
@@ -236,10 +250,10 @@ struct DoseDefaults {
         let mostUsedSite = getMostUsedInjectionSite(from: filteredDoses)
         
         let adherence = timeRange.map { range in
-            calculateAdherence(for: profile, in: range)
+            calculateAdherence(for: profile, in: range, doses: dosesArray)
         } ?? 0.0
         
-        let currentStreak = calculateDoseStreak(for: profile)
+        let currentStreak = calculateDoseStreak(for: profile, doses: dosesArray)
         
         return DoseSummary(
             totalDoses: totalDoses,

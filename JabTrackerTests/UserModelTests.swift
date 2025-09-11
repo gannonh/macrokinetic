@@ -231,12 +231,12 @@ struct UserModelTests {
         context.insert(user)
 
         // Doses relationship should be handled by SwiftData
-        #expect(user.doses == nil || user.doses?.isEmpty == true, "Doses should be nil or empty initially")
+        #expect(user.doses?.isEmpty ?? true, "Doses should be empty or nil initially")
 
         try context.save()
 
         // After save, relationship should still be properly managed
-        #expect(user.doses == nil || user.doses?.isEmpty == true, "Doses should remain nil or empty after save")
+        #expect(user.doses?.isEmpty ?? true, "Doses should remain empty or nil after save")
     }
 
     @Test("User model Apple User ID linking")

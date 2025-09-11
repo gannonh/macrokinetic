@@ -33,7 +33,6 @@ final class MedicationProfile {
     @Relationship(deleteRule: .cascade, inverse: \DoseTitration.medicationProfile)
     var doseTitrations: [DoseTitration]? // Titration plans for this medication
 
-    @Relationship(inverse: \User.medicationProfiles)
     var user: User? // Parent user relationship
 
     init(
