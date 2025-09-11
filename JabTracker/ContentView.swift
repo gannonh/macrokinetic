@@ -57,17 +57,20 @@ struct DashboardView: View {
 struct AddDoseView: View {
     var body: some View {
         NavigationStack {
-            VStack {
+            VStack(spacing: 20) {
                 Text("Add Dose")
                     .font(.largeTitle)
                     .bold()
-                Button("Quick Add Dose") {
-                    // TODO: Implement dose addition
-                }
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("quick-add-dose-button")
+                
+                Text("Quickly log your medication dose with smart defaults")
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                
+                QuickDoseButton()
             }
             .navigationTitle("Add Dose")
+            .padding()
         }
     }
 }
