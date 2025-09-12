@@ -74,9 +74,22 @@ Using the test-runner agent ensures:
 
 ## Outside-In TDD Flow
 
+**Sequential Work:**
 **E2E Tests (Red) → Integration/Unit Tests (Red) → Implementation (Blue) → Integration/Unit Tests (Green) → E2E Tests (Green)**
 
+**Parallel Work (to avoid test conflicts):**
+**E2E Tests (written) → Integration/Unit Tests (written) → Implementation → [Coordination Point] → All Tests Run → Fix Issues**
+
 Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
+
+### Parallel TDD Coordination
+
+When multiple agents work on the same feature:
+- **All agents write E2E acceptance tests first** (defines user-facing success)
+- **Agents write but DO NOT run tests** (avoids execution conflicts)  
+- **Coordination phase**: Run all tests together, fix failures interactively
+- **Test ownership**: Each stream writes tests for their domain, coordinator runs them
+- **E2E tests run manually** with human guidance for complex user interactions
 
 ## Project Requirements and Implementation Plan
 

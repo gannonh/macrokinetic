@@ -118,17 +118,35 @@ Task:
     4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
     5. Follow coordination rules in /rules/agent-coordination.md
 
-     IMPORTANT - Practice Outside-In TDD:
-
-    - For user-facing features always start with E2E acceptance tests that define user-facing success. Work inward through integration and unit tests, writing only the minimal code needed to pass each test. E2E tests are the ultimate acceptance criteria for features.
-    - Typical workflow:
-      1. E2E Tests - failing (Red) → 
-      2. Integration/Unit Tests - failing (Red) → 
-      3. Implementation - minimal code to pass (Blue) → 
-      4. Integration/Unit Tests - passing (Green) → 
-      5. E2E Tests - passing (Green)**
-      6. Refactor while keeping tests green (REFACTOR)
-      - Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
+     IMPORTANT - Outside-In TDD for Parallel Work:
+    
+    - Follow Outside-In TDD: Start with E2E acceptance tests that define "done"
+    - Write tests but DO NOT run them (to avoid conflicts with other streams)
+    
+    Workflow for each stream:
+    1. Write E2E acceptance tests for your feature scope (defines user-facing success)
+       - Commit: "Issue #$ARGUMENTS: add E2E acceptance tests for {feature}"
+    2. Write failing integration/unit tests (defines component contracts)  
+       - Commit: "Issue #$ARGUMENTS: add unit tests for {feature}"
+    3. Implement minimal code to satisfy the tests
+       - Commit: "Issue #$ARGUMENTS: implement {feature}"
+    4. Mark in progress file: "ready_for_testing: true"
+    
+    Test Writing Guidelines:
+    - E2E tests: Define user-facing acceptance criteria (XCUITest)
+    - Integration tests: Define component interactions
+    - Unit tests: Define individual component behavior
+    - ALL streams write E2E tests for their features first
+    - DO NOT run tests (coordinator will handle this)
+    
+    Outside-In TDD Flow:
+    E2E Tests (written) → Unit Tests (written) → Implementation → [Coordination Point] → Tests Run
+    
+    Coordination Checkpoint:
+    - Update your stream file with "ready_for_testing: true"
+    - List which test files you created
+    - Wait for coordinator to run full test suite
+    - Fix any issues found during coordination
     
     If you need to modify files outside your scope:
     - Check if another stream owns them
