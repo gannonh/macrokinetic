@@ -1,7 +1,7 @@
 ---
 issue: 41
 title: History List View
-analyzed: 2025-09-12T17:31:42Z
+analyzed: 2025-09-12T17:50:43Z
 estimated_hours: 6
 parallelization_factor: 2.5
 ---
@@ -9,82 +9,128 @@ parallelization_factor: 2.5
 # Parallel Work Analysis: Issue #41
 
 ## Overview
-Build a comprehensive dose history list view with swipe actions, search functionality, and filtering options. This is a complex UI feature requiring SwiftData integration, search/filter logic, and extensive testing.
+Building a comprehensive dose history list view with swipe actions, search functionality, and filtering. This involves UI components, business logic, data access patterns, and extensive testing coverage.
 
 ## Parallel Streams
 
-### Stream A: Data Layer & View Model
-**Scope**: SwiftData integration, business logic, and search/filter algorithms
+### Stream A: Data Layer & Business Logic
+**Scope**: SwiftData integration, ViewModels, and core business logic
 **Files**:
-- `DoseHistoryViewModel.swift` - Core business logic and data management
-- Extensions to existing SwiftData queries for filtering
-**Agent Type**: backend-specialist
+- `JabTracker/ViewModels/DoseHistoryViewModel.swift`
+- `JabTracker/Models/Extensions/Dose+Filtering.swift`
+- `JabTracker/Services/DoseSearchService.swift`
+**Agent Type**: general-purpose
+**Can Start**: immediately
+**Estimated Hours**: 3
+**Dependencies**: none
+
+**Tasks**:
+- Implement DoseHistoryViewModel with @Published properties
+- Create dose filtering and search algorithms
+- Handle SwiftData fetch descriptors with sorting
+- Implement delete, edit, and duplicate operations
+- Add pull-to-refresh data management
+
+### Stream B: UI Components & Presentation
+**Scope**: SwiftUI views, list presentation, and user interactions
+**Files**:
+- `JabTracker/Views/History/DoseHistoryView.swift`
+- `JabTracker/Views/History/DoseHistoryRow.swift`
+- `JabTracker/Views/History/DoseSearchAndFilterView.swift`
+- `JabTracker/Views/History/HistoryView.swift` (modifications)
+**Agent Type**: general-purpose
 **Can Start**: immediately
 **Estimated Hours**: 2.5
 **Dependencies**: none
 
-### Stream B: UI Components
-**Scope**: SwiftUI views and user interface components
-**Files**:
-- `DoseHistoryView.swift` - Main history list container
-- `DoseHistoryRow.swift` - Individual dose list item
-- `DoseSearchAndFilterView.swift` - Search and filter controls
-**Agent Type**: frontend-specialist
-**Can Start**: immediately
-**Estimated Hours**: 2.5
-**Dependencies**: none
+**Tasks**:
+- Create list view with section headers and grouping
+- Implement swipe actions (edit, delete, skip, duplicate)
+- Build search bar and filter controls UI
+- Add empty state and loading indicators
+- Integrate with existing HistoryView navigation
 
-### Stream C: Integration & Testing
-**Scope**: Component integration, file modifications, and comprehensive testing
+### Stream C: Testing & Integration
+**Scope**: Unit tests, UI tests, and final integration testing
 **Files**:
-- `HistoryView.swift` - Integrate with history list view
-- `DoseEntrySheet.swift` - Support edit mode with pre-populated data
-- `DoseHistoryTests.swift` - Unit tests
-- `DoseHistoryUITests.swift` - UI tests
-**Agent Type**: fullstack-specialist
-**Can Start**: after Streams A & B complete
-**Estimated Hours**: 2.0
-**Dependencies**: Streams A & B
+- `JabTrackerTests/ViewModels/DoseHistoryViewModelTests.swift`
+- `JabTrackerTests/Services/DoseSearchServiceTests.swift`
+- `JabTrackerUITests/DoseHistoryUITests.swift`
+- `JabTracker/Views/Dose/DoseEntrySheet.swift` (edit mode support)
+**Agent Type**: test-runner
+**Can Start**: after Stream A & B are 80% complete
+**Estimated Hours**: 2
+**Dependencies**: Stream A (ViewModel), Stream B (UI Components)
+
+**Tasks**:
+- Create comprehensive unit tests for business logic
+- Build UI tests for swipe actions and search
+- Add edit mode support to DoseEntrySheet
+- Performance testing with large datasets
+- Accessibility testing with VoiceOver
 
 ## Coordination Points
 
-### Shared Interfaces
-The streams will need to coordinate on:
-- `DoseHistoryViewModel` interface (Stream A defines, Stream B consumes)
-- Published properties and state management patterns
-- SwiftUI data binding approach
+### Shared Files
+- `JabTracker/Views/Dose/DoseEntrySheet.swift` - Stream B creates edit interface, Stream C adds edit mode support
+
+### Data Flow Dependencies
+- Stream B UI components need to know ViewModel interface from Stream A
+- Stream C testing requires both completed components
+- Edit functionality requires coordination between history list and dose entry
 
 ### Sequential Requirements
-1. ViewModel interface must be established before UI components
-2. Both data layer and UI must be complete before integration testing
-3. Edit functionality requires DoseEntrySheet modifications
+1. ViewModel interface definition before UI binding
+2. Basic UI structure before swipe action implementation
+3. Core functionality before comprehensive testing
+4. Edit mode integration after both streams complete base functionality
 
 ## Conflict Risk Assessment
-- **Low Risk**: Streams work on different files initially
-- **Medium Risk**: Integration phase will merge components (manageable with coordination)
-- **Low Risk**: No shared core files during parallel phase
+**Low Risk**: Streams work on completely different directories and file sets
+- Stream A: ViewModels, Services, Model extensions
+- Stream B: History Views, UI components  
+- Stream C: Test files, integration points
+
+**No shared files requiring merge coordination**
 
 ## Parallelization Strategy
 
-**Recommended Approach**: parallel
+**Recommended Approach**: Parallel with staged integration
 
-Launch Streams A and B simultaneously, with Stream A focusing on the data/business logic and Stream B on the UI components. Stream C starts once both A & B complete their core work, handling integration and testing.
+**Phase 1** (Parallel): Launch Streams A & B simultaneously
+- Stream A builds ViewModel and business logic
+- Stream B creates UI components with placeholder ViewModels
+- Communication: Share ViewModel interface design early
 
-Stream A will define the ViewModel interface early, allowing Stream B to build UI components against a clear contract.
+**Phase 2** (Integration): Start Stream C when A & B are 80% complete
+- Stream C begins testing against real implementations
+- Final integration and edit mode support
+- Performance optimization and accessibility polish
 
 ## Expected Timeline
 
 With parallel execution:
-- Wall time: 2.5 hours (A & B parallel) + 2.0 hours (C integration) = 4.5 hours
-- Total work: 7.0 hours
-- Efficiency gain: 36% speedup
+- **Wall time**: 3 hours (with Stream C overlap)
+- **Total work**: 7.5 hours  
+- **Efficiency gain**: 60% speedup
 
 Without parallel execution:
-- Wall time: 7.0 hours (sequential)
+- **Wall time**: 7.5 hours
+
+**Timeline Breakdown**:
+- Hours 0-2.5: Streams A & B work in parallel
+- Hours 2.5-3: Stream A completes, Stream B finishes final components
+- Hours 2-5: Stream C overlaps, testing and integration
+- Hour 5+: Final polish and edge case handling
 
 ## Notes
-- Stream A should prioritize defining ViewModel interface in first hour
-- Stream B can start with static UI while waiting for ViewModel contract
-- Both streams should follow existing design system patterns
-- Integration testing in Stream C is critical given the complexity of swipe actions
-- Consider UI testing complexity - swipe actions require careful coordination with XcodeBuildMCP tools
+
+**Stream Communication**: Stream A should define ViewModel public interface early (within first hour) for Stream B to use in UI binding.
+
+**Testing Strategy**: Stream C should begin with mock data testing while real implementations are completing, then transition to integration testing.
+
+**Risk Mitigation**: If coordination issues arise, fall back to sequential completion of Stream A, then B, then C.
+
+**Performance Consideration**: Large dose history datasets should be tested in Stream C with pagination planning for future optimization.
+
+**Accessibility Priority**: VoiceOver support and Dynamic Type should be implemented in Stream B during initial development, not as afterthought.
