@@ -99,7 +99,6 @@ struct DashboardView: View {
     }
 }
 
-
 struct HistoryView: View {
     var body: some View {
         NavigationStack {
