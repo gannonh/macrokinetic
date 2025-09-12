@@ -2,7 +2,7 @@
 name: dose-tracking
 status: backlog
 created: 2025-09-11T17:34:41Z
-progress: 0%
+progress: 33%
 prd: .claude/prds/dose-tracking.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/37
 ---
@@ -174,8 +174,8 @@ High-level task categories that will be created:
 
 ## Tasks Created
 - [ ] #38 - Data Layer Extensions (parallel: true)
-- [ ] #39 - Quick Dose Entry (parallel: true) 
-- [ ] #40 - Dose Entry Form (parallel: true after 38)
+- [x] #39 - Quick Dose Entry (parallel: true) 
+- [x] #40 - Dose Entry Form (closed - covered by #39)
 - [ ] #41 - History List View (parallel: true after 38)
 - [ ] #42 - Calendar Integration (parallel: true after 38)
 - [ ] #43 - Photo Attachments (parallel: true after 40)

@@ -89,10 +89,8 @@ Failed:
 
 ### 5. Cleanup
 
-```bash
-# Kill any hanging test processes
-pkill -f "jest|mocha|pytest" 2>/dev/null || true
-```
+- Kill any hanging test processes
+
 
 ## Error Handling
 

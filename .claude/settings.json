@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/gannonhall/dev/epic-dose-tracking/**)",
+      "Bash(gh issue edit:*)",
+      "Read(//Users/gannonhall/dev/**)",
+      "mcp__XcodeBuildMCP__describe_ui"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "perplexity-server",
+    "XcodeBuildMCP"
+  ]
+}

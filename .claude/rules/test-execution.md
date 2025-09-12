@@ -45,13 +45,6 @@ Focus on what failed:
 - Timeout → Kill process, report incomplete
 - Framework missing → Install dependencies
 
-## Cleanup
-
-Always clean up after tests:
-```bash
-pkill -f "jest|mocha|pytest" 2>/dev/null || true
-```
-
 ## Important Notes
 
 - Don't parallelize tests (avoid conflicts)
