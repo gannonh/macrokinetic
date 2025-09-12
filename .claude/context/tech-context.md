@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-11T20:59:06Z
-version: 1.1
+last_updated: 2025-09-12T16:35:25Z
+version: 1.2
 author: Claude Code PM System
 ---
 
@@ -75,7 +75,11 @@ author: Claude Code PM System
 - **Xcode**: Primary IDE with full Swift ecosystem
 - **Simulators**: iOS Simulator for testing (iPhone 15, iOS 17.5)
 - **Git**: Version control with GitHub integration
-- **Claude Code**: AI-assisted development with comprehensive PM system
+- **Claude Code**: AI-assisted development with comprehensive PM system (CCPM)
+  - **PM Commands**: 49 command implementations for epic/issue management
+  - **Agent System**: Specialized agents (code-analyzer, file-analyzer, test-runner)
+  - **Context Management**: Automated documentation and project tracking
+  - **Workflow Integration**: GitHub issue sync, epic decomposition, parallel execution
 - **MCP Servers**: Context7 (library docs), Perplexity (research), XcodeBuildMCP (simulator automation)
 
 ## Medical Domain Specifics
@@ -91,3 +95,6 @@ author: Claude Code PM System
 - **Memory Usage**: < 100MB
 - **Offline Capability**: Full functionality without network
 - **ProMotion Support**: 120Hz display optimization
+
+## Update History
+- 2025-09-12T16:35:25Z: Added Claude Code PM system (CCPM) details - 49 commands, agent system, workflow integration

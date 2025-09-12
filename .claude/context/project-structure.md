@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-11T20:59:06Z
-version: 1.0
+last_updated: 2025-09-12T16:35:25Z
+version: 1.1
 author: Claude Code PM System
 ---
 
@@ -10,14 +10,20 @@ author: Claude Code PM System
 ## Root Directory Organization
 ```
 jab-tracker-ios/
-├── .claude/                    # Claude Code PM system files
-│   ├── agents/                 # Sub-agent configurations
-│   ├── commands/              # Custom command implementations
-│   ├── context/               # Project context documentation
+├── .claude/                    # Claude Code PM system files (231+ files)
+│   ├── agents/                 # Sub-agent configurations (code-analyzer, file-analyzer, etc.)
+│   ├── commands/              # Custom command implementations (49 command files)
+│   │   ├── context/           # Context management (create, update, prime)
+│   │   ├── pm/                # Project management (epic/issue workflows)
+│   │   └── testing/           # Test execution and analysis
+│   ├── context/               # Project context documentation (this directory)
 │   ├── epics/                 # Epic and feature tracking
+│   │   └── dose-tracking/     # Current epic with 9 tasks and analysis
+│   ├── hooks/                 # Development workflow hooks (NEW)
 │   ├── prds/                  # Product Requirements Documents
-│   ├── rules/                 # Development rules and guidelines
-│   └── scripts/               # PM automation scripts
+│   ├── rules/                 # Development rules and guidelines (10+ rule files)
+│   ├── scripts/               # PM automation scripts (shell implementations)
+│   └── settings.json          # PM system configuration (NEW)
 ├── ccpm/                      # Claude Code Project Management tools
 ├── docs/                      # Project documentation
 │   ├── spec-master-prd.md     # Master Product Requirements
@@ -87,3 +93,6 @@ JabTracker/
 - **Separation of concerns**: UI, business logic, and data layers separated
 - **Reusable components**: Design system components for consistency
 - **Test colocation**: Tests organized to mirror source structure
+
+## Update History
+- 2025-09-12T16:35:25Z: Added PM system structure details (231+ files, hooks, settings), dose-tracking epic organization
