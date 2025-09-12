@@ -99,20 +99,7 @@ struct DashboardView: View {
     }
 }
 
-struct HistoryView: View {
-    var body: some View {
-        NavigationStack {
-            VStack {
-                Text("Dose History")
-                    .font(.largeTitle)
-                    .bold()
-                Text("Your medication tracking history")
-                    .foregroundColor(.secondary)
-            }
-            .navigationTitle("History")
-        }
-    }
-}
+// HistoryView moved to JabTracker/Views/History/HistoryView.swift
 
 struct AnalyticsView: View {
     var body: some View {

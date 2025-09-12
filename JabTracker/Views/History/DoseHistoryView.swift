@@ -193,7 +193,9 @@ struct DoseHistoryView: View {
         Button {
             showingSearchAndFilter = true
         } label: {
-            Image(systemName: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+            Image(systemName: viewModel.hasActiveFilters 
+                    ? "line.3.horizontal.decrease.circle.fill" 
+                    : "line.3.horizontal.decrease.circle")
                 .foregroundColor(viewModel.hasActiveFilters ? .accentColor : .primary)
         }
         .accessibilityIdentifier("search-filter-button")
