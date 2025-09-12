@@ -326,6 +326,114 @@ enum TestUtilities {
         let editButton = app.buttons["edit-profile-button"]
         XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Should return to view mode after save")
     }
+
+    // MARK: - Medication Profile Helpers
+
+    /// Navigate to medication profiles settings
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for navigation (default: 3 seconds)
+    static func navigateToMedicationProfiles(_ app: XCUIApplication, timeout: TimeInterval = 3) {
+        navigateToTab(app, tabName: "Settings", timeout: timeout)
+        
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: timeout),
+                      "Medication Profiles button should exist")
+        medicationProfilesButton.tap()
+    }
+
+    /// Create a test medication profile with specified parameters
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - genericName: The generic medication name (default: "semaglutide")
+    ///   - brandName: The brand name (default: "Ozempic")
+    ///   - dose: The dose amount (default: "0.25")
+    ///   - timeout: Maximum time to wait for each UI element (default: 3 seconds)
+    /// - Returns: The accessibility identifier for the created profile
+    @discardableResult
+    static func createMedicationProfile(
+        _ app: XCUIApplication,
+        genericName: String = "semaglutide",
+        brandName: String = "Ozempic", 
+        dose: String = "0.25",
+        timeout: TimeInterval = 3
+    ) -> String {
+        navigateToMedicationProfiles(app, timeout: timeout)
+
+        let addProfileButton = app.buttons["Add Medication Profile"]
+        XCTAssertTrue(addProfileButton.waitForExistence(timeout: timeout),
+                      "Add Medication Profile button should exist")
+        addProfileButton.tap()
+
+        // Select medication
+        let medicationPicker = app.buttons["medication-picker"]
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: timeout),
+                      "Medication picker should exist")
+        medicationPicker.tap()
+
+        let medicationOption = app.buttons["medication-\(genericName)"]
+        XCTAssertTrue(medicationOption.waitForExistence(timeout: timeout),
+                      "Medication option \(genericName) should exist")
+        medicationOption.tap()
+
+        // Select brand
+        let brandPicker = app.buttons["add-brand-picker"]
+        XCTAssertTrue(brandPicker.waitForExistence(timeout: timeout),
+                      "Brand picker should exist")
+        brandPicker.tap()
+
+        let brandOption = app.buttons["add-brand-\(brandName.lowercased())"]
+        XCTAssertTrue(brandOption.waitForExistence(timeout: timeout),
+                      "Brand option \(brandName) should exist")
+        brandOption.tap()
+
+        // Select dose
+        let dosePicker = app.buttons["add-dose-picker"]
+        XCTAssertTrue(dosePicker.waitForExistence(timeout: timeout),
+                      "Dose picker should exist")
+        dosePicker.tap()
+
+        let doseOption = app.buttons["add-dose-option-\(dose)"]
+        XCTAssertTrue(doseOption.waitForExistence(timeout: timeout),
+                      "Dose option \(dose) should exist")
+        doseOption.tap()
+
+        // Save profile
+        let saveButton = app.buttons["save-medication-profile"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: timeout),
+                      "Save button should exist")
+        saveButton.tap()
+
+        // Verify profile created and return its identifier
+        let profileIdentifier = "medication-profile-\(genericName)-\(brandName.lowercased())-\(dose)mg"
+        let profileCell = app.buttons[profileIdentifier]
+        XCTAssertTrue(profileCell.waitForExistence(timeout: timeout),
+                      "Created profile should appear in list")
+        
+        return profileIdentifier
+    }
+
+    /// Delete a medication profile by its identifier
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance  
+    ///   - profileIdentifier: The accessibility identifier of the profile to delete
+    ///   - timeout: Maximum time to wait for UI elements (default: 3 seconds)
+    static func deleteMedicationProfile(_ app: XCUIApplication, profileIdentifier: String, timeout: TimeInterval = 3) {
+        let profileCell = app.buttons[profileIdentifier]
+        XCTAssertTrue(profileCell.exists, "Profile \(profileIdentifier) should exist before deletion")
+        
+        // Swipe to delete (standard iOS pattern)
+        profileCell.swipeLeft()
+        
+        let deleteButton = app.buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: timeout),
+                      "Delete button should appear after swipe")
+        deleteButton.tap()
+        
+        // Verify profile is removed
+        XCTAssertFalse(profileCell.waitForExistence(timeout: 1),
+                       "Profile should be deleted and no longer exist")
+    }
 }
 
 // MARK: - XCUIElement Extensions

@@ -5,6 +5,7 @@
 
 import Testing
 import SwiftData
+import Foundation
 @testable import JabTracker
 
 @Suite("QuickDoseViewModel Tests")
@@ -12,6 +13,7 @@ struct QuickDoseViewModelTests {
     
     // MARK: - Test Setup
     
+    @MainActor
     func createTestContext() -> ModelContext {
         let container = DataController.testContainer()
         return container.container.mainContext
@@ -144,7 +146,7 @@ struct QuickDoseViewModelTests {
     func testMedicationSelectionUpdatesDoseAmount() async {
         let context = createTestContext()
         let profile1 = createTestMedicationProfile(context: context, currentDose: 1.0)
-        let profile2 = createTestMedicationProfile(context: context, currentDose: 2.0, brandName: "Wegovy")
+        let profile2 = createTestMedicationProfile(context: context, brandName: "Wegovy", currentDose: 2.0)
         
         let viewModel = QuickDoseViewModel()
         viewModel.loadSmartDefaults(context: context)
