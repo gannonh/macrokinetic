@@ -96,7 +96,7 @@ extension Dose {
     // MARK: - Medication Filtering
     
     /// Check if dose matches a specific medication type
-    func hasmedication(_ medicationType: String) -> Bool {
+    func hasMedication(_ medicationType: String) -> Bool {
         return medication?.genericName == medicationType
     }
     
@@ -185,7 +185,7 @@ extension Dose {
     
     /// Formatted dose amount with medication unit
     var formattedAmount: String {
-        let unit = medication?.medication?.unit ?? "mg"
+        let unit = "mg" // Default unit for all GLP-1 medications
         return String(format: "%.2f", amount) + " " + unit
     }
     
@@ -237,7 +237,7 @@ extension Array where Element == Dose {
             
             // Medication filter
             if let medication = medication {
-                if !dose.hasmedication(medication) {
+                if !dose.hasMedication(medication) {
                     return false
                 }
             }
@@ -309,12 +309,14 @@ extension Array where Element == Dose {
     
     /// Get unique medication types from dose array
     var uniqueMedications: [String] {
-        return Array(Set(compactMap { $0.medication?.genericName })).sorted()
+        let medications: [String] = self.compactMap { dose in dose.medication?.genericName }
+        return Array(Set(medications)).sorted()
     }
     
     /// Get unique injection sites from dose array
     var uniqueInjectionSites: [String] {
-        return Array(Set(compactMap { $0.site })).sorted()
+        let sites: [String] = self.compactMap { dose in dose.site }
+        return Array(Set(sites)).sorted()
     }
     
     /// Get dose count for each medication
