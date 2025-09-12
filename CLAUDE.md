@@ -270,11 +270,6 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 - Private methods need indirect testing through public methods that call them
 - Async methods may need `Task.sleep()` waits in tests for proper coverage
 
-**Current Coverage Gaps (as of Session 8):**
-- **AuthenticationManager**: 39% (below 42% threshold) - needs additional credential handling tests
-- **PharmacokineticsEngine**: Not yet implemented - future core requirement
-- **SubscriptionProducts**: Not found in coverage report - check test inclusion
-
 **Common Coverage Issues:**
 - Result bundle not found: Run tests with `--coverage` first
 - Private method coverage: Use public methods that invoke them
@@ -288,6 +283,7 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 
 # Run tests
 ./scripts/test.sh unit    # Unit tests only
+# Use seldom; Running ALL UI tests takes a very long time
 ./scripts/test.sh ui      # UI tests only
 ./scripts/test.sh all     # All tests
 
@@ -295,7 +291,7 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 ./scripts/docs.sh
 
 # Run full CI check suite (recommended before PR merge)
-./scripts/check-all.sh    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
+./scripts/check-all.sh --skip-ui    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
 ```
 
 ### Local CI Verification
@@ -373,127 +369,6 @@ xcodegen generate
 - Check for test environment before enabling CloudKit to avoid test conflicts
 - Use `@Published` properties for real-time sync status updates
 - Provide clear user feedback about sync status with actionable guidance
-
-## GitHub Sub-Issue Management (gh-sub-issue Integration)
-
-Claude Code: Use the `gh-sub-issue` GitHub CLI extension to maintain hierarchical task structures (epic → tasks) and compute progress metrics automatically.
-
-### TL;DR Essentials
-- Parent issue = "Epic" / feature container (title prefix: `Epic:` or `Feature:`)
-- Sub-issues = actionable tasks (title prefix: none / verb-led)
-- Commands: `create` (new sub-issue), `add` (link existing), `list` (query state / metrics), `remove` (unlink)
-- Always prefer JSON output for automation (`--json number,title,state` + meta fields)
-- Progress metric: `openCount/total` from `list --json parent.number,total,openCount`
-- Keep parent issue body updated with an auto-generated checklist (OPTIONAL enhancement)
-
-### Installation (idempotent)
-```bash
-gh extension install yahsan2/gh-sub-issue  # safe if already installed
-```
-
-### Core Command Patterns
-```bash
-# Create new sub-issue (preferred way to add work)
-gh sub-issue create --parent <PARENT_NUM> --title "Implement dose history export" --label backend
-
-# Link existing issue
-gh sub-issue add <PARENT_NUM> <CHILD_NUM>
-
-# List (TTY human view)
-gh sub-issue list <PARENT_NUM> --state all
-
-# List (machine JSON)
-gh sub-issue list <PARENT_NUM> --json number,title,state,parent.number,total,openCount
-
-# Remove linkage (keeps child issue alive)
-gh sub-issue remove <PARENT_NUM> <CHILD_NUM> --force
-```
-
-### JSON Automation Examples
-Progress snapshot (Bash):
-```bash
-progress_json=$(gh sub-issue list "$PARENT" --json parent.number,total,openCount 2>/dev/null)
-total=$(echo "$progress_json" | jq -r '.parent.total // .total // 0')
-open=$(echo "$progress_json" | jq -r '.parent.openCount // .openCount // 0')
-echo "EPIC #$PARENT: $((total-open)) closed / $total total ($open open)"
-```
-
-Enumerate open tasks (titles only):
-```bash
-gh sub-issue list "$PARENT" --state open --json number,title | jq -r '.subIssues[] | "#\(.number) - \(.title)"'
-```
-
-### Repository Conventions
-- Parent (epic) titles: `Epic: <High-Level Goal>` or `Feature: <User-Facing Capability>`
-- Sub-issue titles: Imperative, single responsibility, fits in < 80 chars
-- Labels:
-  - `epic` (apply manually to parent issues only)
-  - Functional area labels (e.g. `auth`, `persistence`, `ui`, `pharmacokinetics`)
-  - Priority (`p0`, `p1`, `p2`) optional
-- Milestones: attach to parent; inherit manually for critical children
-- Close rule: Parent closes automatically only when all sub-issues closed (enforced manually / by future automation script)
-
-### Recommended Workflow for New Feature
-1. Create parent epic (manual): `gh issue create --title "Epic: Onboarding Flow" --body "Summary..." --label epic,onboarding`
-2. Decompose into concrete tasks: use `gh sub-issue create` for each
-3. Link any pre-existing issues with `gh sub-issue add`
-4. Periodically compute progress (script snippet above) → update epic body checklist (optional)
-5. When all sub-issues closed, verify no hidden work → close epic
-
-### Epic Body Checklist Pattern (Optional Automation)
-Maintain a checklist block delimited by HTML comments to allow safe regeneration.
-```
-<!-- sub-issue-checklist:start -->
-- [ ] #123 Implement core DataController sync improvements
-- [x] #140 Add unit tests for BiometricAuthManager
-<!-- sub-issue-checklist:end -->
-```
-Automation script can:
-1. Fetch current list JSON
-2. Rebuild checklist lines with `[ ]` or `[x]`
-3. Replace block via sed/perl; post with `gh issue edit`
-
-### Integration Guidelines for Claude
-- Prefer creating sub-issues instead of expanding epic description with untracked tasks.
-- Use JSON mode for any reasoning requiring counts or progress metrics.
-- Before starting new task work: confirm it's linked under an epic (create if missing).
-- Avoid nesting >1 level (tool supports only single parent layer effectively for now).
-- If an issue spans multiple epics, split into smaller issues rather than dual-link.
-
-### Edge Cases & Handling
-- Parent not found: validate existence via `gh issue view <num>` before sub-issue operations.
-- Cross-repo linking not currently used; omit `--repo` unless explicitly needed later.
-- Removing a sub-issue does not close or delete; verify if re-homing to a different epic is required and then `add` to new parent.
-- Large epics: paginate manually with `--limit` if output > default (30); run multiple list calls if needed.
-
-### Minimal Decision Heuristics (for Claude Automation)
-| Situation                             | Action                                        |
-| ------------------------------------- | --------------------------------------------- |
-| Need to track new chunk of work       | `sub-issue create` under appropriate epic     |
-| Existing issue logically part of epic | `sub-issue add`                               |
-| Epic progress update needed           | `sub-issue list --json` → recompute checklist |
-| Child out of scope now                | `sub-issue remove` (keep issue open)          |
-| Epic has 0 openCount                  | Propose closing epic                          |
-
-### Quick Sanity Check Command
-```bash
-gh sub-issue list <PARENT> --json total,openCount || echo "Sub-issue extension or parent missing"
-```
-
-### Troubleshooting Cheatsheet
-| Symptom                        | Likely Cause                | Resolution                  |
-| ------------------------------ | --------------------------- | --------------------------- |
-| `gh: Could not find extension` | Extension not installed     | Re-run install command      |
-| Empty JSON fields              | Missing `--json` args       | Supply explicit field list  |
-| `parent issue not found`       | Wrong number / private repo | Verify number & permissions |
-| `rate limit exceeded`          | Heavy automation loop       | Add delays / ensure auth    |
-
-### Future Automation Opportunities
-- Auto-close epic when all children complete
-- CI job generating progress badge (open vs total)
-- Weekly epic status summary comment bot
-
-This section is the authoritative minimal contract for hierarchical issue management tooling in this repo.
 
 ## Security Implementation Guidelines
 
