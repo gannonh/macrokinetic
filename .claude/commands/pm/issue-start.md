@@ -86,8 +86,11 @@ status: in_progress
 ## Scope
 {stream_description}
 
+## Worktree Location
+../epic-{epic_name}/
+
 ## Files
-{file_patterns}
+../epic-{epic_name}/{file_patterns}
 
 ## Progress
 - Starting implementation
@@ -105,14 +108,14 @@ Task:
     Your stream: {stream_name}
     
     Your scope:
-    - Files to modify: {file_patterns}
+    - Files to modify: ../epic-{epic_name}/{file_patterns}
     - Work to complete: {stream_description}
     
     Requirements:
     1. Read full task from: .claude/epics/{epic_name}/{task_file}
-    2. Work ONLY in your assigned files
+    2. Work ONLY in the Worktree location and work ONLY in your assigned files
     3. Commit frequently with format: "Issue #$ARGUMENTS: {specific change}"
-    4. Update progress in: .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
+    4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
     5. Follow coordination rules in /rules/agent-coordination.md
     
     If you need to modify files outside your scope:

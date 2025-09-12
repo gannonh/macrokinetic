@@ -65,6 +65,19 @@ Using the test-runner agent ensures:
 - NO MIXED CONCERNS - Don't put validation logic inside API handlers, database queries inside UI components, etc. instead of proper separation
 - NO RESOURCE LEAKS - Don't forget to close database connections, clear timeouts, remove event listeners, or clean up file handles
 
+## Development Philosophy:
+
+- Outside-In TDD: Always start with E2E acceptance tests that define user-facing success. Work inward through integration and unit tests, writing only the minimal code needed to pass each test. E2E tests are the ultimate acceptance criteria for features.
+- TDD: Tests must fail before implementation (RED → GREEN → REFACTOR).
+- Medical accuracy and coverage are non-negotiable.
+- Minimal, incremental changes only; no scope creep.
+
+## Outside-In TDD Flow
+
+**E2E Tests (Red) → Integration/Unit Tests (Red) → Implementation (Blue) → Integration/Unit Tests (Green) → E2E Tests (Green)**
+
+Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
+
 ## Project Requirements and Implementation Plan
 
 @docs/spec-master-prd.md
