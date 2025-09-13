@@ -1,6 +1,6 @@
 # Agent Coordination
 
-Rules for multiple agents working in parallel within the same epic worktree.
+Rules for multiple agents working in parallel within the same epic branch.
 
 ## Parallel Execution Principles
 

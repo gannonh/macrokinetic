@@ -1,5 +1,7 @@
 ---
 allowed-tools: Bash, Read, Write, LS, Task
+description: Launch parallel agents to work on epic tasks in a shared branch and create draft PR
+argument-hint: Epic name (e.g., dose-tracking)
 ---
 
 # Epic Start
@@ -60,7 +62,71 @@ else
 fi
 ```
 
-### 2. Identify Ready Issues
+### 2. Create Draft Pull Request
+
+Create a draft PR for the epic to track progress and enable collaboration:
+
+```bash
+# Check if PR already exists
+if gh pr view epic/$ARGUMENTS >/dev/null 2>&1; then
+  echo "✅ Pull Request already exists for epic/$ARGUMENTS"
+  pr_url=$(gh pr view epic/$ARGUMENTS --json url -q .url)
+  echo "   URL: $pr_url"
+else
+  # Read epic metadata for PR description
+  epic_title=$(grep '^name:' .claude/epics/$ARGUMENTS/epic.md | cut -d: -f2- | xargs)
+  epic_description=$(grep '^description:' .claude/epics/$ARGUMENTS/epic.md | cut -d: -f2- | xargs)
+  github_issue=$(grep '^github:' .claude/epics/$ARGUMENTS/epic.md | cut -d: -f2- | xargs)
+
+  # Create comprehensive PR description
+  pr_body="## Epic: $epic_title
+
+$epic_description
+
+### Status
+🚧 **WORK IN PROGRESS** - This is a draft PR for tracking epic development
+
+### Planned Features
+$(cd .claude/epics/$ARGUMENTS && ls *.md | grep -E '^[0-9]+' | while read f; do
+  task_name=$(grep '^name:' $f 2>/dev/null | cut -d: -f2- | xargs)
+  if [ ! -z "$task_name" ]; then
+    echo "- [ ] $task_name"
+  else
+    echo "- [ ] $(basename $f .md)"
+  fi
+done)
+
+### Related Issues
+$github_issue
+
+### Development Notes
+- Epic developed using parallel agent workflow
+- Multiple commits will be added as work progresses
+- PR will be marked ready for review when epic is complete
+
+### Testing Checklist
+- [ ] Unit tests pass
+- [ ] UI tests pass
+- [ ] Manual testing completed
+- [ ] Code review completed
+
+---
+*This PR was auto-created by epic-start workflow*"
+
+  # Create draft PR
+  gh pr create \
+    --title "Epic: $epic_title" \
+    --body "$pr_body" \
+    --base main \
+    --head epic/$ARGUMENTS \
+    --draft
+
+  pr_url=$(gh pr view epic/$ARGUMENTS --json url -q .url)
+  echo "✅ Draft PR created: $pr_url"
+fi
+```
+
+### 3. Identify Ready Issues
 
 Read all task files in `.claude/epics/$ARGUMENTS/`:
 - Parse frontmatter for `status`, `depends_on`, `parallel` fields
@@ -73,7 +139,7 @@ Categorize issues:
 - **In Progress**: Already being worked on
 - **Complete**: Finished
 
-### 3. Analyze Ready Issues
+### 4. Analyze Ready Issues
 
 For each ready issue without analysis:
 ```bash
@@ -84,7 +150,7 @@ if ! test -f .claude/epics/$ARGUMENTS/{issue}-analysis.md; then
 fi
 ```
 
-### 4. Launch Parallel Agents
+### 5. Launch Parallel Agents
 
 For each ready issue with analysis:
 
@@ -126,7 +192,7 @@ Task:
     .claude/epics/$ARGUMENTS/updates/{issue}/stream-{X}.md
 ```
 
-### 5. Track Active Agents
+### 6. Track Active Agents
 
 Create/update `.claude/epics/$ARGUMENTS/execution-status.md`:
 
@@ -151,7 +217,7 @@ branch: epic/$ARGUMENTS
 - {None yet}
 ```
 
-### 6. Monitor and Coordinate
+### 7. Monitor and Coordinate
 
 Set up monitoring:
 ```bash
@@ -172,7 +238,7 @@ Merge when complete:
 "
 ```
 
-### 7. Handle Dependencies
+### 8. Handle Dependencies
 
 As agents complete streams:
 - Check if any blocked issues are now ready

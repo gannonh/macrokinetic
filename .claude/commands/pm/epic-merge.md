@@ -1,21 +1,18 @@
 ---
 allowed-tools: Bash, Read, Write
+description: Merge completed epic from branch to main using GitHub Pull Request workflow
+argument-hint: Epic name (e.g., dose-tracking)
 ---
 
 # Epic Merge
 
-Merge completed epic from worktree back to main branch.
-
-## Usage
-```
-/pm:epic-merge <epic_name>
-```
+Merge completed epic from branch to main using GitHub Pull Request workflow.
 
 ## Quick Check
 
-1. **Verify worktree exists:**
+1. **Verify branch exists:**
    ```bash
-   git worktree list | grep "epic-$ARGUMENTS" || echo "❌ No worktree for epic: $ARGUMENTS"
+   git branch | grep "epic/$ARGUMENTS" || echo "❌ No branch for epic: $ARGUMENTS"
    ```
 
 2. **Check for active agents:**
@@ -26,32 +23,31 @@ Merge completed epic from worktree back to main branch.
 
 ### 1. Pre-Merge Validation
 
-Navigate to worktree and check status:
+Check current branch status:
 ```bash
-cd ../epic-$ARGUMENTS
+# Ensure we're on the epic branch
+git checkout epic/$ARGUMENTS
 
 # Check for uncommitted changes
 if [[ $(git status --porcelain) ]]; then
-  echo "⚠️ Uncommitted changes in worktree:"
+  echo "⚠️ Uncommitted changes in branch:"
   git status --short
   echo "Commit or stash changes before merging"
   exit 1
 fi
 
-# Check branch status
+# Update branch with latest changes
 git fetch origin
+git push origin epic/$ARGUMENTS
 git status -sb
 ```
 
-### 2. Run Tests (Optional but Recommended)
+### 2. Run Checks (Optional but Recommended)
 
 ```bash
-# Look for test commands
-if [ -f package.json ]; then
-  npm test || echo "⚠️ Tests failed. Continue anyway? (yes/no)"
-elif [ -f Makefile ]; then
-  make test || echo "⚠️ Tests failed. Continue anyway? (yes/no)"
-fi
+
+./scripts/check-all.sh --skip-ui  || echo "⚠️ Checks failed. Continue anyway? (yes/no)"
+
 ```
 
 ### 3. Update Epic Documentation
@@ -63,72 +59,95 @@ Update `.claude/epics/$ARGUMENTS/epic.md`:
 - Update completion date
 - Add final summary
 
-### 4. Attempt Merge
+### 4. Create Pull Request
 
 ```bash
-# Return to main repository
-cd {main-repo-path}
+# Ensure branch is pushed to origin
+git push origin epic/$ARGUMENTS
 
-# Ensure main is up to date
+# Create PR with comprehensive description
+pr_title="Epic: $ARGUMENTS"
+pr_body="## Epic Summary
+
+Completed epic: $ARGUMENTS
+
+### Features Implemented
+$(cd .claude/epics/$ARGUMENTS && ls *.md | grep -E '^[0-9]+' | while read f; do
+  echo "- $(grep '^name:' $f | cut -d: -f2 | tr -d ' ')" 2>/dev/null || echo "- $(basename $f .md)"
+done)
+
+### Testing
+- [ ] Unit tests pass
+- [ ] UI tests pass
+- [ ] Manual testing completed
+- [ ] Code review completed
+
+### Related Issues
+$(grep 'github:' .claude/epics/$ARGUMENTS/epic.md | grep -oE '#[0-9]+' || echo "No linked issues")
+
+### Deployment Notes
+- Review changes before merging
+- Consider deployment impact
+- Update documentation if needed
+
+## Checklist
+- [x] All commits are clean and descriptive
+- [x] Branch is up to date with main
+- [x] Epic documentation updated
+- [ ] Code review completed
+- [ ] Ready to merge"
+
+# Create the PR
+gh pr create \
+  --title "$pr_title" \
+  --body "$pr_body" \
+  --base main \
+  --head epic/$ARGUMENTS \
+  --draft=false
+
+echo "✅ Pull Request created successfully"
+```
+
+### 5. Monitor PR Status
+
+```bash
+# Get PR number and URL
+pr_url=$(gh pr view epic/$ARGUMENTS --json url -q .url)
+pr_number=$(gh pr view epic/$ARGUMENTS --json number -q .number)
+
+echo "
+📋 Pull Request Details:
+  Number: #$pr_number
+  URL: $pr_url
+  Branch: epic/$ARGUMENTS → main
+
+Next Steps:
+1. Review the PR in GitHub
+2. Address any CI/CD checks
+3. Request code review if needed
+4. Merge when ready using GitHub UI
+"
+```
+
+### 6. Post-Merge Cleanup (Run after GitHub merge)
+
+After the PR is merged in GitHub UI:
+```bash
+# Switch to main and update
 git checkout main
 git pull origin main
 
-# Attempt merge
-echo "Merging epic/$ARGUMENTS to main..."
-git merge epic/$ARGUMENTS --no-ff -m "Merge epic: $ARGUMENTS
+# Verify merge completed
+if git log --oneline -5 | grep -q "$ARGUMENTS"; then
+  echo "✅ Epic successfully merged to main"
+else
+  echo "❌ Epic not found in main branch history"
+  exit 1
+fi
 
-Completed features:
-$(cd .claude/epics/$ARGUMENTS && ls *.md | grep -E '^[0-9]+' | while read f; do
-  echo "- $(grep '^name:' $f | cut -d: -f2)"
-done)
-
-Closes epic #$(grep 'github:' .claude/epics/$ARGUMENTS/epic.md | grep -oE '#[0-9]+')"
-```
-
-### 5. Handle Merge Conflicts
-
-If merge fails with conflicts:
-```bash
-# Check conflict status
-git status
-
-echo "
-❌ Merge conflicts detected!
-
-Conflicts in:
-$(git diff --name-only --diff-filter=U)
-
-Options:
-1. Resolve manually:
-   - Edit conflicted files
-   - git add {files}
-   - git commit
-   
-2. Abort merge:
-   git merge --abort
-   
-3. Get help:
-   /pm:epic-resolve $ARGUMENTS
-
-Worktree preserved at: ../epic-$ARGUMENTS
-"
-exit 1
-```
-
-### 6. Post-Merge Cleanup
-
-If merge succeeds:
-```bash
-# Push to remote
-git push origin main
-
-# Clean up worktree
-git worktree remove ../epic-$ARGUMENTS
-echo "✅ Worktree removed: ../epic-$ARGUMENTS"
-
-# Delete branch
+# Clean up local branch
 git branch -d epic/$ARGUMENTS
-git push origin --delete epic/$ARGUMENTS 2>/dev/null || true
+echo "✅ Local branch deleted: epic/$ARGUMENTS"
 
 # Archive epic locally
 mkdir -p .claude/epics/archived/
@@ -144,13 +163,15 @@ Close related issues:
 epic_issue=$(grep 'github:' .claude/epics/archived/$ARGUMENTS/epic.md | grep -oE '[0-9]+$')
 
 # Close epic issue
-gh issue close $epic_issue -c "Epic completed and merged to main"
+if [ ! -z "$epic_issue" ]; then
+  gh issue close $epic_issue -c "Epic completed and merged to main via PR #$pr_number"
+fi
 
 # Close task issues
 for task_file in .claude/epics/archived/$ARGUMENTS/[0-9]*.md; do
-  issue_num=$(grep 'github:' $task_file | grep -oE '[0-9]+$')
+  issue_num=$(grep 'github:' $task_file | grep -oE '[0-9]+$' 2>/dev/null)
   if [ ! -z "$issue_num" ]; then
-    gh issue close $issue_num -c "Completed in epic merge"
+    gh issue close $issue_num -c "Completed in epic merge via PR #$pr_number"
   fi
 done
 ```
@@ -158,54 +179,67 @@ done
 ### 8. Final Output
 
 ```
-✅ Epic Merged Successfully: $ARGUMENTS
+✅ Epic Ready for Merge: $ARGUMENTS
 
-Summary:
+Pull Request Created:
+  PR #$pr_number: $pr_url
   Branch: epic/$ARGUMENTS → main
-  Commits merged: {count}
-  Files changed: {count}
-  Issues closed: {count}
-  
-Cleanup completed:
-  ✓ Worktree removed
-  ✓ Branch deleted
-  ✓ Epic archived
-  ✓ GitHub issues closed
-  
-Next steps:
-  - Deploy changes if needed
-  - Start new epic: /pm:prd-new {feature}
-  - View completed work: git log --oneline -20
+  Status: Ready for review
+
+Epic Status:
+  ✓ Branch pushed to GitHub
+  ✓ PR created with details
+  ✓ Epic documentation updated
+  ✓ Tests validated
+
+Next Steps:
+  1. Review PR in GitHub: $pr_url
+  2. Address any CI/CD feedback
+  3. Merge PR when approved
+  4. Run post-merge cleanup: /pm:epic-cleanup $ARGUMENTS
+
+After Merge:
+  - Clean up local branch
+  - Archive epic documentation
+  - Close related GitHub issues
 ```
 
-## Conflict Resolution Help
+## PR Review Guidelines
 
-If conflicts need resolution:
-```
-The epic branch has conflicts with main.
+When reviewing the created PR:
 
-This typically happens when:
-- Main has changed since epic started
-- Multiple epics modified same files
-- Dependencies were updated
+1. **Code Quality**
+   - All changes follow project conventions
+   - No debug code or commented sections
+   - Proper error handling implemented
 
-To resolve:
-1. Open conflicted files
-2. Look for <<<<<<< markers
-3. Choose correct version or combine
-4. Remove conflict markers
-5. git add {resolved files}
-6. git commit
-7. git push
+2. **Testing**
+   - Unit tests updated/added
+   - UI tests pass
+   - Manual testing completed
 
-Or abort and try later:
-  git merge --abort
-```
+3. **Documentation**
+   - README updated if needed
+   - Code comments added for complex logic
+   - Epic documentation complete
+
+4. **Dependencies**
+   - No unnecessary dependencies added
+   - Existing dependencies updated safely
+   - Breaking changes documented
+
+## GitHub Merge Options
+
+Recommend using **"Squash and merge"** for epic branches:
+- Creates clean commit history
+- Preserves epic context in commit message
+- Easier to revert if needed
 
 ## Important Notes
 
-- Always check for uncommitted changes first
-- Run tests before merging when possible
-- Use --no-ff to preserve epic history
+- Always create PR instead of direct merge
+- Use GitHub's review process for quality control
+- Preserve epic history in PR description
 - Archive epic data instead of deleting
-- Close GitHub issues to maintain sync
+- Close GitHub issues after successful merge
+- Consider CI/CD pipeline requirements

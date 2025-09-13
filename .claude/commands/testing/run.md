@@ -30,7 +30,7 @@ If test target provided, verify it exists and determine literal filepath/test pa
 
 **IMPORTANT** 
 - `$ARGUMENTS` may or may not be a literal file path
-- Unless otherwise mentioned in `$ARGUMENTS`, assume the test should be run **in the worktree branch**.
+- Unless otherwise mentioned in `$ARGUMENTS`, assume the test should be run **in the current branch**.
 - It is your job to determine and verify correct `{test_target}` based on the provided arguments: `$ARGUMENTS`
 
 ## Instructions

@@ -1,5 +1,7 @@
 ---
 allowed-tools: Read, LS
+description: Decompose epic into tasks and sync to GitHub in one operation
+argument-hint: Epic name (e.g., dose-tracking)
 ---
 
 # Epic Oneshot
@@ -58,7 +60,7 @@ This will:
 - Create epic issue on GitHub
 - Create sub-issues (using parallel agents if appropriate)
 - Rename task files to issue IDs
-- Create worktree
+- Create branch
 
 ### 4. Output
 

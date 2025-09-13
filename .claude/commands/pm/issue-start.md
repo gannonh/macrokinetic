@@ -37,18 +37,22 @@ Begin work on a GitHub issue with parallel agents based on work stream analysis.
 
 ## Instructions
 
-### 1. Ensure Worktree Exists
+### 1. Ensure Epic Branch Exists
 
-Check if epic worktree exists:
+Check if epic branch exists and switch to it:
 ```bash
 # Find epic name from task file
 epic_name={extracted_from_path}
 
-# Check worktree
-if ! git worktree list | grep -q "epic-$epic_name"; then
-  echo "❌ No worktree for epic. Run: /pm:epic-start $epic_name"
+# Check branch exists
+if ! git show-ref --verify --quiet refs/heads/epic/$epic_name; then
+  echo "❌ No branch for epic. Run: /pm:epic-start $epic_name"
   exit 1
 fi
+
+# Switch to epic branch
+git checkout epic/$epic_name
+git pull origin epic/$epic_name
 ```
 
 ### 2. Read Analysis
@@ -88,11 +92,11 @@ status: in_progress
 ## Scope
 {stream_description}
 
-## Worktree Location
-../epic-{epic_name}/
+## Branch
+epic/{epic_name}
 
 ## Files
-../epic-{epic_name}/{file_patterns}
+{file_patterns}
 
 ## Progress
 - Starting implementation
@@ -104,21 +108,22 @@ Task:
   description: "Issue #$ARGUMENTS Stream {X}"
   subagent_type: "{agent_type}"
   prompt: |
-    You are working on Issue #$ARGUMENTS in the epic worktree.
-    
-    Worktree location: ../epic-{epic_name}/
+    You are working on Issue #$ARGUMENTS in the current directory on branch epic/{epic_name}.
+
+    Branch: epic/{epic_name}
     Your stream: {stream_name}
-    
+
     Your scope:
-    - Files to modify: ../epic-{epic_name}/{file_patterns}
+    - Files to modify: {file_patterns}
     - Work to complete: {stream_description}
-    
+
     Requirements:
     1. Read full task from: .claude/epics/{epic_name}/{task_file}
-    2. Work ONLY in the Worktree location and work ONLY in your assigned files
+    2. Work ONLY in your assigned files in the current directory
     3. Commit frequently with format: "Issue #$ARGUMENTS: {specific change}"
     4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
-    5. Follow coordination rules in /rules/agent-coordination.md
+    5. Add new files to coverage-config.json
+    6. Follow coordination rules in /rules/agent-coordination.md
 
      IMPORTANT - Outside-In TDD for Parallel Work:
     
@@ -171,7 +176,7 @@ gh issue edit $ARGUMENTS --add-assignee @me --add-label "in-progress"
 ✅ Started parallel work on issue #$ARGUMENTS
 
 Epic: {epic_name}
-Worktree: ../epic-{epic_name}/
+Branch: epic/{epic_name}
 
 Launching {count} parallel agents:
   Stream A: {name} (Agent-1) ✓ Started

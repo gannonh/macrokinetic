@@ -1,12 +1,14 @@
 # Claude Hooks Configuration
 
-## Bash Worktree Fix Hook
+## Legacy Bash Worktree Fix Hook
 
-This hook automatically fixes the Bash tool's directory reset issue when working in git worktrees.
+**NOTE: This hook is no longer needed as the PM system now uses standard branches instead of worktrees.**
+
+This hook previously fixed the Bash tool's directory reset issue when working in git worktrees.
 
 ### Problem
 
-The Bash tool resets to the main project directory after every command, making it impossible to work in worktrees without manually prefixing every command with `cd /path/to/worktree &&`.
+The Bash tool previously reset to the main project directory after every command, making it impossible to work in worktrees without manually prefixing every command with `cd /path/to/worktree &&`.
 
 ### Solution
 
@@ -95,7 +97,7 @@ Once configured, this hook will:
 
 ### Result
 
-With this hook in place, agents can work in worktrees naturally:
+With this hook in place, agents could work in worktrees naturally (no longer relevant):
 
 **Agent writes:**
 
