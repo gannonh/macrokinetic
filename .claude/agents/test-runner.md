@@ -124,7 +124,9 @@ app.launchArguments = ["--ui-testing", "--reset-app-data"]
 
 ### XcodeBuildMCP Simulator Usage
 
-**IMPORTANT**: When using XcodeBuildMCP tools, prefer `simulatorId` over `simulatorName` to avoid OS version parsing issues:
+**IMPORTANT**: 
+- XcodeBuildMCP is extremely useful for debugging UI tests and issues as it allows you to "see" the ui through `describe_ui` 
+- Always prefer using `simulatorId` (UUID) over `simulatorName` to avoid OS version parsing issues.
 
 ```bash
 # ❌ This can cause "option 'OS' may only be provided once" errors
