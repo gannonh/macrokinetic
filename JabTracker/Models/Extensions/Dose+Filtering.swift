@@ -307,17 +307,8 @@ extension Array where Element == Dose {
         }
     }
     
-    /// Get unique medication types from dose array
-    var uniqueMedications: [String] {
-        let medications: [String] = self.compactMap { dose in dose.medication?.genericName }
-        return Array(Set(medications)).sorted()
-    }
-    
-    /// Get unique injection sites from dose array
-    var uniqueInjectionSites: [String] {
-        let sites: [String] = self.compactMap { dose in dose.site }
-        return Array(Set(sites)).sorted()
-    }
+    // NOTE: Removed problematic unique methods due to Swift compiler type inference issues
+    // These are available as computed properties in DoseHistoryViewModel instead
     
     /// Get dose count for each medication
     var medicationCounts: [String: Int] {

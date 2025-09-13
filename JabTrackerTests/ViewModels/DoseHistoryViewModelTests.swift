@@ -9,6 +9,7 @@
 import Testing
 import SwiftData
 import Foundation
+import XCTest
 @testable import JabTracker
 
 @MainActor
@@ -20,8 +21,12 @@ struct DoseHistoryViewModelTests {
     
     init() throws {
         // Create in-memory container for testing
-        let schema = Schema([User.self, Dose.self, MedicationProfile.self])
-        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let schema = Schema([User.self, Dose.self, MedicationProfile.self, DoseTitration.self])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
         container = try ModelContainer(for: schema, configurations: [configuration])
         context = container.mainContext
         viewModel = DoseHistoryViewModel()
@@ -30,7 +35,7 @@ struct DoseHistoryViewModelTests {
     // MARK: - Data Loading Tests
     
     @Test("ViewModel loads doses in reverse chronological order")
-    func testLoadDataSortsInReverseChronologicalOrder() throws {
+    func testLoadDataSortsInReverseChronologicalOrder() async throws {
         // Given: Multiple doses with different timestamps
         let olderDate = Date().addingTimeInterval(-86400) // 1 day ago
         let newerDate = Date()
@@ -44,6 +49,7 @@ struct DoseHistoryViewModelTests {
         
         // When: ViewModel loads data
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Doses are sorted in reverse chronological order (newest first)
         #expect(viewModel.allDoses.count == 2)
@@ -54,11 +60,12 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("ViewModel handles empty data correctly")
-    func testLoadDataWithNoDoses() throws {
+    func testLoadDataWithNoDoses() async throws {
         // Given: No doses in database
         
         // When: ViewModel loads data
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Arrays are empty but no error occurs
         #expect(viewModel.allDoses.isEmpty)
@@ -68,12 +75,13 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("ViewModel handles loading state correctly")
-    func testLoadingStateManagement() throws {
+    func testLoadingStateManagement() async throws {
         // Given: Fresh view model
         #expect(viewModel.isLoading == false)
         
         // When: Starting to load data
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Loading state is managed properly
         #expect(viewModel.isLoading == false) // Synchronous operation completes immediately
@@ -87,6 +95,7 @@ struct DoseHistoryViewModelTests {
         context.insert(initialDose)
         try context.save()
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         let initialCount = viewModel.allDoses.count
         
@@ -96,6 +105,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         await viewModel.refreshData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Data is updated
         #expect(viewModel.allDoses.count == initialCount + 1)
@@ -105,7 +115,7 @@ struct DoseHistoryViewModelTests {
     // MARK: - Search and Filtering Tests
     
     @Test("Search text filters doses correctly")
-    func testSearchTextFiltering() throws {
+    func testSearchTextFiltering() async throws {
         // Given: Doses with different notes
         let doseWithMorning = createTestDose(notes: "morning injection")
         let doseWithEvening = createTestDose(notes: "evening dose")
@@ -117,6 +127,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // When: Setting search text
         viewModel.searchText = "morning"
@@ -127,7 +138,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Medication filter works correctly")
-    func testMedicationFiltering() throws {
+    func testMedicationFiltering() async throws {
         // Given: Doses with different medications
         let semaglutideProfile = createTestMedicationProfile(genericName: "Semaglutide")
         let tirzepatideProfile = createTestMedicationProfile(genericName: "Tirzepatide")
@@ -135,16 +146,19 @@ struct DoseHistoryViewModelTests {
         let semaglutideDose = createTestDose(amount: 1.0)
         let tirzepatideDose = createTestDose(amount: 2.0)
         
-        semaglutideDose.medication = semaglutideProfile
-        tirzepatideDose.medication = tirzepatideProfile
-        
         context.insert(semaglutideProfile)
         context.insert(tirzepatideProfile)
         context.insert(semaglutideDose)
         context.insert(tirzepatideDose)
+        
+        // Set relationships after insertion
+        semaglutideDose.medication = semaglutideProfile
+        tirzepatideDose.medication = tirzepatideProfile
+        
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // When: Filtering by medication
         viewModel.selectedMedicationFilter = "Semaglutide"
@@ -155,7 +169,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Injection site filter works correctly")
-    func testInjectionSiteFiltering() throws {
+    func testInjectionSiteFiltering() async throws {
         // Given: Doses with different injection sites
         let thighDose = createTestDose(site: "Thigh")
         let abdomenDose = createTestDose(site: "Abdomen")
@@ -167,6 +181,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // When: Filtering by injection site
         viewModel.selectedInjectionSiteFilter = "Thigh"
@@ -177,7 +192,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Date range filtering works correctly")
-    func testDateRangeFiltering() throws {
+    func testDateRangeFiltering() async throws {
         // Given: Doses with different timestamps
         let yesterday = Date().addingTimeInterval(-86400)
         let today = Date()
@@ -193,6 +208,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // When: Setting date range filter
         viewModel.filterStartDate = yesterday
@@ -204,7 +220,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Skipped dose filter works correctly")
-    func testSkippedDoseFiltering() throws {
+    func testSkippedDoseFiltering() async throws {
         // Given: Mix of skipped and regular doses
         let regularDose = createTestDose(skipped: false)
         let skippedDose = createTestDose(skipped: true)
@@ -214,6 +230,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // When: Hiding skipped doses
         viewModel.showSkippedDoses = false
@@ -230,7 +247,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Multiple filters work together")
-    func testMultipleFiltersComposition() throws {
+    func testMultipleFiltersComposition() async throws {
         // Given: Complex data set
         let profile = createTestMedicationProfile(genericName: "Semaglutide")
         
@@ -238,9 +255,9 @@ struct DoseHistoryViewModelTests {
             timestamp: Date(),
             site: "Thigh",
             notes: "morning injection",
-            skipped: false
+            skipped: false,
+            medication: profile
         )
-        matchingDose.medication = profile
         
         let nonMatchingDose = createTestDose(
             timestamp: Date().addingTimeInterval(-86400),
@@ -255,6 +272,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // When: Applying multiple filters
         viewModel.searchText = "morning"
@@ -270,7 +288,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Clear all filters resets to show all doses")
-    func testClearAllFilters() throws {
+    func testClearAllFilters() async throws {
         // Given: Filtered data
         let dose1 = createTestDose(notes: "morning")
         let dose2 = createTestDose(notes: "evening")
@@ -280,6 +298,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         viewModel.searchText = "morning"
         
         #expect(viewModel.filteredDoses.count == 1)
@@ -302,7 +321,7 @@ struct DoseHistoryViewModelTests {
     // MARK: - Computed Properties Tests
     
     @Test("Available medications computed correctly")
-    func testAvailableMedicationsComputation() throws {
+    func testAvailableMedicationsComputation() async throws {
         // Given: Doses with different medications
         let profile1 = createTestMedicationProfile(genericName: "Semaglutide")
         let profile2 = createTestMedicationProfile(genericName: "Tirzepatide")
@@ -313,11 +332,6 @@ struct DoseHistoryViewModelTests {
         let dose3 = createTestDose(amount: 3.0)
         let doseWithoutMedication = createTestDose(amount: 4.0)
         
-        dose1.medication = profile1
-        dose2.medication = profile2
-        dose3.medication = profile3
-        // doseWithoutMedication has no medication
-        
         context.insert(profile1)
         context.insert(profile2)
         context.insert(profile3)
@@ -325,9 +339,16 @@ struct DoseHistoryViewModelTests {
         context.insert(dose2)
         context.insert(dose3)
         context.insert(doseWithoutMedication)
+        
+        // Set relationships after insertion
+        dose1.medication = profile1
+        dose2.medication = profile2
+        dose3.medication = profile3
+        
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Unique medications are returned, sorted
         let medications = viewModel.availableMedications
@@ -338,7 +359,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Available injection sites computed correctly")
-    func testAvailableInjectionSitesComputation() throws {
+    func testAvailableInjectionSitesComputation() async throws {
         // Given: Doses with different injection sites
         let dose1 = createTestDose(site: "Thigh")
         let dose2 = createTestDose(site: "Abdomen")
@@ -352,6 +373,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Unique injection sites are returned, sorted
         let sites = viewModel.availableInjectionSites
@@ -362,7 +384,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Grouped doses by date computed correctly")
-    func testGroupedDosesByDateComputation() throws {
+    func testGroupedDosesByDateComputation() async throws {
         // Given: Doses from different dates
         let today = Date()
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
@@ -377,6 +399,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Doses are grouped by date, sorted by date (newest first)
         let groupedDoses = viewModel.groupedDoses
@@ -424,13 +447,14 @@ struct DoseHistoryViewModelTests {
     // MARK: - CRUD Operations Tests
     
     @Test("Delete dose removes from context and updates arrays")
-    func testDeleteDose() throws {
+    func testDeleteDose() async throws {
         // Given: Dose exists
         let dose = createTestDose(amount: 1.5)
         context.insert(dose)
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         #expect(viewModel.allDoses.count == 1)
         
         // When: Deleting dose
@@ -447,13 +471,14 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Toggle skipped status updates dose and refreshes filters")
-    func testToggleSkippedStatus() throws {
+    func testToggleSkippedStatus() async throws {
         // Given: Non-skipped dose exists
         let dose = createTestDose(skipped: false)
         context.insert(dose)
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         #expect(dose.skipped == false)
         
         // When: Toggling skipped status
@@ -470,9 +495,12 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Duplicate dose creates new dose with current timestamp")
-    func testDuplicateDose() throws {
+    func testDuplicateDose() async throws {
         // Given: Original dose exists
         let originalTimestamp = Date().addingTimeInterval(-3600) // 1 hour ago
+        let profile = createTestMedicationProfile(genericName: "Semaglutide")
+        let user = createTestUser()
+        
         let originalDose = createTestDose(
             timestamp: originalTimestamp,
             amount: 1.5,
@@ -481,18 +509,18 @@ struct DoseHistoryViewModelTests {
             skipped: true // This should not be copied
         )
         
-        let profile = createTestMedicationProfile(genericName: "Semaglutide")
-        let user = createTestUser()
-        
-        originalDose.medication = profile
-        originalDose.user = user
-        
         context.insert(profile)
         context.insert(user)
         context.insert(originalDose)
+        
+        // Set relationships after insertion
+        originalDose.user = user
+        originalDose.medication = profile
+        
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         let initialCount = viewModel.allDoses.count
         
         // When: Duplicating dose
@@ -527,6 +555,7 @@ struct DoseHistoryViewModelTests {
         let testTimestamp = Date()
         let testSkipped = true
         
+        let profile = createTestMedicationProfile(genericName: "Tirzepatide")
         let dose = createTestDose(
             timestamp: testTimestamp,
             amount: testAmount,
@@ -535,11 +564,12 @@ struct DoseHistoryViewModelTests {
             skipped: testSkipped
         )
         
-        let profile = createTestMedicationProfile(genericName: "Tirzepatide")
-        dose.medication = profile
-        
         context.insert(profile)
         context.insert(dose)
+        
+        // Set relationships after insertion
+        dose.medication = profile
+        
         try context.save()
         
         // When: Getting dose for editing
@@ -556,7 +586,7 @@ struct DoseHistoryViewModelTests {
     }
     
     @Test("Update dose modifies existing dose and refreshes data")
-    func testUpdateDose() throws {
+    func testUpdateDose() async throws {
         // Given: Existing dose
         let originalDose = createTestDose(
             amount: 1.0,
@@ -568,6 +598,7 @@ struct DoseHistoryViewModelTests {
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // When: Updating dose with new data
         let newAmount = 2.5
@@ -587,6 +618,7 @@ struct DoseHistoryViewModelTests {
         )
         
         try viewModel.updateDose(originalDose, with: editData, context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Then: Dose is updated with new values
         #expect(originalDose.amount == newAmount)
@@ -602,13 +634,14 @@ struct DoseHistoryViewModelTests {
     // MARK: - Error Handling Tests
     
     @Test("Delete operation handles context save errors")
-    func testDeleteDoseErrorHandling() throws {
+    func testDeleteDoseErrorHandling() async throws {
         // Given: Dose exists but context is in invalid state
         let dose = createTestDose(amount: 1.0)
         context.insert(dose)
         try context.save()
         
         viewModel.loadData(context: context)
+        try await Task.sleep(nanoseconds: 100_000_000)
         
         // Create a scenario where save might fail by using a different context
         let invalidContext = container.mainContext
@@ -634,7 +667,9 @@ struct DoseHistoryViewModelTests {
         site: String? = nil,
         notes: String? = nil,
         imageData: Data? = nil,
-        skipped: Bool = false
+        skipped: Bool = false,
+        user: User? = nil,
+        medication: MedicationProfile? = nil
     ) -> Dose {
         return Dose(
             amount: amount,
@@ -642,7 +677,9 @@ struct DoseHistoryViewModelTests {
             site: site,
             notes: notes,
             imageData: imageData,
-            skipped: skipped
+            skipped: skipped,
+            user: user,
+            medication: medication
         )
     }
     

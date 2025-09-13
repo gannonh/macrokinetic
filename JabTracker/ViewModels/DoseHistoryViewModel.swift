@@ -129,7 +129,7 @@ class DoseHistoryViewModel: ObservableObject {
                 errorMessage = nil
                 
                 // Create fetch descriptor for all doses, sorted by timestamp descending
-                var descriptor = FetchDescriptor<Dose>(
+                let descriptor = FetchDescriptor<Dose>(
                     sortBy: [SortDescriptor(\Dose.timestamp, order: .reverse)]
                 )
                 

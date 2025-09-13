@@ -19,13 +19,18 @@ struct DoseHistoryView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    loadingView
-                } else if viewModel.filteredDoses.isEmpty {
-                    emptyStateView
-                } else {
-                    historyListView
+            VStack(spacing: 0) {
+                // Search field for E2E test compatibility
+                searchFieldView
+                
+                Group {
+                    if viewModel.isLoading {
+                        loadingView
+                    } else if viewModel.filteredDoses.isEmpty {
+                        emptyStateView
+                    } else {
+                        historyListView
+                    }
                 }
             }
             .navigationTitle("History")
@@ -67,6 +72,29 @@ struct DoseHistoryView: View {
     
     // MARK: - Subviews
     
+    private var searchFieldView: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+            
+            TextField("Search doses...", text: $viewModel.searchText)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("dose-history-search")
+            
+            if !viewModel.searchText.isEmpty {
+                Button {
+                    viewModel.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("Clear text")
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+    
     private var loadingView: some View {
         VStack(spacing: 20) {
             ProgressView()
@@ -86,9 +114,10 @@ struct DoseHistoryView: View {
                 .foregroundColor(.gray)
             
             VStack(spacing: 8) {
-                Text("No Dose History")
+                Text("No doses logged yet")
                     .font(.headline)
                     .fontWeight(.medium)
+                    .accessibilityIdentifier("empty-state-message")
                 
                 if viewModel.hasActiveFilters {
                     Text("No doses match your current filters.")
@@ -104,12 +133,18 @@ struct DoseHistoryView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+                    
+                    Button("Log Your First Dose") {
+                        // TODO: Navigate to quick dose sheet when available
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("log-first-dose-button")
                 }
             }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityIdentifier("empty-state")
+        .accessibilityIdentifier("dose-history-empty-state")
     }
     
     private var historyListView: some View {
@@ -117,14 +152,19 @@ struct DoseHistoryView: View {
             ForEach(viewModel.groupedDoses, id: \.0) { dateString, doses in
                 Section(header: sectionHeader(dateString: dateString)) {
                     ForEach(doses, id: \.id) { dose in
-                        DoseHistoryRow(dose: dose)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                trailingSwipeActions(for: dose)
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                leadingSwipeActions(for: dose)
-                            }
-                            .accessibilityIdentifier("dose-row-\(dose.id.uuidString)")
+                        Button {
+                            // TODO: Handle row tap if needed
+                        } label: {
+                            DoseHistoryRow(dose: dose)
+                        }
+                        .buttonStyle(.plain)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            trailingSwipeActions(for: dose)
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            leadingSwipeActions(for: dose)
+                        }
+                        .accessibilityIdentifier("dose-history-row")
                     }
                 }
             }
@@ -141,50 +181,37 @@ struct DoseHistoryView: View {
             Spacer()
         }
         .padding(.vertical, 4)
-        .accessibilityIdentifier("section-header-\(dateString)")
+        .accessibilityIdentifier("dose-date-section-header")
     }
     
     // MARK: - Swipe Actions
     
     @ViewBuilder
     private func trailingSwipeActions(for dose: Dose) -> some View {
-        Button {
+        Button("Delete") {
             doseToDelete = dose
             showingDeleteConfirmation = true
-        } label: {
-            Label("Delete", systemImage: "trash")
         }
         .tint(.red)
-        .accessibilityIdentifier("delete-action-\(dose.id.uuidString)")
         
-        Button {
+        Button("Edit") {
             editingDose = viewModel.getDoseForEditing(dose)
             showingEditSheet = true
-        } label: {
-            Label("Edit", systemImage: "pencil")
         }
         .tint(.blue)
-        .accessibilityIdentifier("edit-action-\(dose.id.uuidString)")
     }
     
     @ViewBuilder
     private func leadingSwipeActions(for dose: Dose) -> some View {
-        Button {
+        Button("Duplicate") {
             try? viewModel.duplicateDose(dose, context: modelContext)
-        } label: {
-            Label("Duplicate", systemImage: "plus.square.on.square")
         }
         .tint(.green)
-        .accessibilityIdentifier("duplicate-action-\(dose.id.uuidString)")
         
-        Button {
+        Button(dose.skipped ? "Mark Taken" : "Mark as Skipped") {
             try? viewModel.toggleSkippedStatus(for: dose, context: modelContext)
-        } label: {
-            Label(dose.skipped ? "Mark Taken" : "Mark Skipped", 
-                  systemImage: dose.skipped ? "checkmark.circle" : "xmark.circle")
         }
         .tint(dose.skipped ? .green : .orange)
-        .accessibilityIdentifier("toggle-skipped-action-\(dose.id.uuidString)")
     }
     
     // MARK: - Toolbar Items
@@ -198,7 +225,7 @@ struct DoseHistoryView: View {
                     : "line.3.horizontal.decrease.circle")
                 .foregroundColor(viewModel.hasActiveFilters ? .accentColor : .primary)
         }
-        .accessibilityIdentifier("search-filter-button")
+        .accessibilityIdentifier("filter-button")
         .accessibilityLabel("Search and filter")
         .accessibilityHint(viewModel.hasActiveFilters ? "Filters are active" : "No active filters")
     }

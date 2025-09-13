@@ -2,34 +2,97 @@
 //  DoseSearchService.swift
 //  JabTracker
 //
+//  Search service for filtering and finding doses based on various criteria
+//  Supports basic text search, advanced queries, and complex filtering logic
+//
 
 import Foundation
 
-/// Service for searching and filtering dose data with full-text search capabilities
-/// Provides advanced search functionality across all dose fields and related medication data
-struct DoseSearchService {
+/// Service class providing search functionality for dose data
+/// Implements comprehensive search algorithms with various scopes and modes
+class DoseSearchService {
     
-    // MARK: - Search Types
+    // MARK: - Search Scopes
     
+    /// Defines the scope of search - which fields to search in
     enum SearchScope {
-        case all
-        case notes
-        case medication
-        case injectionSite
-        case amount
-        case date
+        case all            // Search in all fields
+        case notes          // Search only in notes field
+        case medication     // Search in medication names (generic/brand)
+        case injectionSite  // Search only in injection site
+        case amount         // Search in dose amount
+        case date           // Search in formatted date/time
     }
     
+    // MARK: - Search Modes
+    
+    /// Defines how the search text is matched against field content
     enum SearchMode {
-        case contains    // Default - partial matching
-        case exact       // Exact matching
-        case startsWith  // Prefix matching
-        case endsWith    // Suffix matching
+        case contains       // Field contains search text (default)
+        case exact          // Field exactly matches search text
+        case startsWith     // Field starts with search text
+        case endsWith       // Field ends with search text
     }
     
-    // MARK: - Primary Search Methods
+    // MARK: - Basic Search Methods
     
-    /// Perform comprehensive search across all dose fields
+    /// Search doses with text across all fields (convenience method)
+    static func searchDoses(doses: [Dose], searchText: String) -> [Dose] {
+        return searchDoses(
+            doses: doses,
+            searchText: searchText,
+            scope: .all,
+            mode: .contains,
+            caseSensitive: false
+        )
+    }
+    
+    /// Search doses with specified scope
+    static func searchDoses(
+        doses: [Dose],
+        searchText: String,
+        scope: SearchScope
+    ) -> [Dose] {
+        return searchDoses(
+            doses: doses,
+            searchText: searchText,
+            scope: scope,
+            mode: .contains,
+            caseSensitive: false
+        )
+    }
+    
+    /// Search doses with specified mode
+    static func searchDoses(
+        doses: [Dose],
+        searchText: String,
+        mode: SearchMode
+    ) -> [Dose] {
+        return searchDoses(
+            doses: doses,
+            searchText: searchText,
+            scope: .all,
+            mode: mode,
+            caseSensitive: false
+        )
+    }
+    
+    /// Search doses with case sensitivity control
+    static func searchDoses(
+        doses: [Dose],
+        searchText: String,
+        caseSensitive: Bool
+    ) -> [Dose] {
+        return searchDoses(
+            doses: doses,
+            searchText: searchText,
+            scope: .all,
+            mode: .contains,
+            caseSensitive: caseSensitive
+        )
+    }
+    
+    /// Main search method with all parameters
     static func searchDoses(
         doses: [Dose],
         searchText: String,
@@ -37,29 +100,20 @@ struct DoseSearchService {
         mode: SearchMode = .contains,
         caseSensitive: Bool = false
     ) -> [Dose] {
-        guard !searchText.isEmpty else { return doses }
-        
-        let processedSearchText = caseSensitive ? searchText : searchText.lowercased()
+        // Return all doses if search text is empty or whitespace only
+        let trimmedText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else {
+            return doses
+        }
         
         return doses.filter { dose in
-            switch scope {
-            case .all:
-                return searchAllFields(dose: dose, searchText: processedSearchText, mode: mode, caseSensitive: caseSensitive)
-            case .notes:
-                return searchNotes(dose: dose, searchText: processedSearchText, mode: mode, caseSensitive: caseSensitive)
-            case .medication:
-                return searchMedication(dose: dose, searchText: processedSearchText, mode: mode, caseSensitive: caseSensitive)
-            case .injectionSite:
-                return searchInjectionSite(dose: dose, searchText: processedSearchText, mode: mode, caseSensitive: caseSensitive)
-            case .amount:
-                return searchAmount(dose: dose, searchText: processedSearchText, mode: mode)
-            case .date:
-                return searchDate(dose: dose, searchText: processedSearchText, mode: mode, caseSensitive: caseSensitive)
-            }
+            matchesDose(dose, searchText: trimmedText, scope: scope, mode: mode, caseSensitive: caseSensitive)
         }
     }
     
-    /// Search with multiple terms (AND logic)
+    // MARK: - Multiple Terms Search
+    
+    /// Search with multiple terms (AND logic - all terms must be found)
     static func searchDosesWithMultipleTerms(
         doses: [Dose],
         searchTerms: [String],
@@ -71,18 +125,12 @@ struct DoseSearchService {
         
         return doses.filter { dose in
             searchTerms.allSatisfy { term in
-                !searchDoses(
-                    doses: [dose],
-                    searchText: term,
-                    scope: scope,
-                    mode: mode,
-                    caseSensitive: caseSensitive
-                ).isEmpty
+                matchesDose(dose, searchText: term, scope: scope, mode: mode, caseSensitive: caseSensitive)
             }
         }
     }
     
-    /// Search with multiple terms (OR logic)
+    /// Search with multiple terms (OR logic - any term can be found)
     static func searchDosesWithAnyTerm(
         doses: [Dose],
         searchTerms: [String],
@@ -94,283 +142,269 @@ struct DoseSearchService {
         
         return doses.filter { dose in
             searchTerms.contains { term in
-                !searchDoses(
-                    doses: [dose],
-                    searchText: term,
-                    scope: scope,
-                    mode: mode,
-                    caseSensitive: caseSensitive
-                ).isEmpty
+                matchesDose(dose, searchText: term, scope: scope, mode: mode, caseSensitive: caseSensitive)
             }
         }
     }
     
-    // MARK: - Field-Specific Search Methods
+    // MARK: - Advanced Search
     
-    private static func searchAllFields(
-        dose: Dose,
+    /// Parse advanced search query string into SearchQuery object
+    static func parseAdvancedSearch(_ queryString: String) -> SearchQuery {
+        var query = SearchQuery()
+        
+        // Tokenize the query, handling quoted strings
+        let tokens = tokenizeQuery(queryString)
+        
+        for token in tokens {
+            if token.contains(":") {
+                // Field-specific query
+                let parts = token.split(separator: ":", maxSplits: 1)
+                guard parts.count == 2 else { continue }
+                
+                let field = String(parts[0]).lowercased()
+                let value = String(parts[1])
+                
+                switch field {
+                case "medication", "med":
+                    query.medicationFilter = value
+                case "site", "injection":
+                    query.injectionSiteFilter = value
+                case "amount", "dose":
+                    query.amountFilter = parseAmountFilter(value)
+                case "date", "time":
+                    query.dateFilter = parseDateFilter(value)
+                default:
+                    // Unknown field, treat as general search term
+                    query.searchTerms.append(token)
+                }
+            } else if token.hasPrefix("\"") && token.hasSuffix("\"") {
+                // Exact phrase (quoted)
+                let phrase = String(token.dropFirst().dropLast())
+                if !phrase.isEmpty {
+                    query.exactPhrases.append(phrase)
+                }
+            } else {
+                // General search term
+                query.searchTerms.append(token)
+            }
+        }
+        
+        return query
+    }
+    
+    /// Apply advanced search query to doses
+    static func searchWithAdvancedQuery(doses: [Dose], query: SearchQuery) -> [Dose] {
+        return doses.filter { dose in
+            // Apply medication filter
+            if let medicationFilter = query.medicationFilter {
+                guard let medication = dose.medication,
+                      medication.genericName.localizedCaseInsensitiveContains(medicationFilter) ||
+                      medication.brandName.localizedCaseInsensitiveContains(medicationFilter) else {
+                    return false
+                }
+            }
+            
+            // Apply injection site filter
+            if let siteFilter = query.injectionSiteFilter {
+                guard let site = dose.site,
+                      site.localizedCaseInsensitiveContains(siteFilter) else {
+                    return false
+                }
+            }
+            
+            // Apply amount filter
+            if let amountFilter = query.amountFilter {
+                guard amountFilter.matches(dose.amount) else {
+                    return false
+                }
+            }
+            
+            // Apply date filter
+            if let dateFilter = query.dateFilter {
+                guard dateFilter.contains(dose.timestamp) else {
+                    return false
+                }
+            }
+            
+            // Apply exact phrases
+            for phrase in query.exactPhrases {
+                guard matchesDose(dose, searchText: phrase, scope: .all, mode: .exact, caseSensitive: false) else {
+                    return false
+                }
+            }
+            
+            // Apply general search terms (all must match)
+            for term in query.searchTerms {
+                guard matchesDose(dose, searchText: term, scope: .all, mode: .contains, caseSensitive: false) else {
+                    return false
+                }
+            }
+            
+            return true
+        }
+    }
+    
+    // MARK: - Private Helper Methods
+    
+    /// Check if a dose matches the search criteria
+    private static func matchesDose(
+        _ dose: Dose,
         searchText: String,
+        scope: SearchScope,
         mode: SearchMode,
         caseSensitive: Bool
     ) -> Bool {
-        return searchNotes(dose: dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
-               searchMedication(dose: dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
-               searchInjectionSite(dose: dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
-               searchAmount(dose: dose, searchText: searchText, mode: mode) ||
-               searchDate(dose: dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+        switch scope {
+        case .all:
+            return matchesInNotes(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
+                   matchesInMedication(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
+                   matchesInInjectionSite(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
+                   matchesInAmount(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
+                   matchesInDate(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+            
+        case .notes:
+            return matchesInNotes(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+            
+        case .medication:
+            return matchesInMedication(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+            
+        case .injectionSite:
+            return matchesInInjectionSite(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+            
+        case .amount:
+            return matchesInAmount(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+            
+        case .date:
+            return matchesInDate(dose, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+        }
     }
     
-    private static func searchNotes(
-        dose: Dose,
+    /// Check if search text matches in dose notes
+    private static func matchesInNotes(
+        _ dose: Dose,
         searchText: String,
         mode: SearchMode,
         caseSensitive: Bool
     ) -> Bool {
         guard let notes = dose.notes else { return false }
-        let targetText = caseSensitive ? notes : notes.lowercased()
-        return matchesText(targetText, searchText: searchText, mode: mode)
+        return matchesString(notes, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
     }
     
-    private static func searchMedication(
-        dose: Dose,
+    /// Check if search text matches in medication names
+    private static func matchesInMedication(
+        _ dose: Dose,
         searchText: String,
         mode: SearchMode,
         caseSensitive: Bool
     ) -> Bool {
         guard let medication = dose.medication else { return false }
         
-        let genericName = caseSensitive ? medication.genericName : medication.genericName.lowercased()
-        let brandName = caseSensitive ? medication.brandName : medication.brandName.lowercased()
-        
-        return matchesText(genericName, searchText: searchText, mode: mode) ||
-               matchesText(brandName, searchText: searchText, mode: mode)
+        return matchesString(medication.genericName, searchText: searchText, mode: mode, caseSensitive: caseSensitive) ||
+               matchesString(medication.brandName, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
     }
     
-    private static func searchInjectionSite(
-        dose: Dose,
+    /// Check if search text matches in injection site
+    private static func matchesInInjectionSite(
+        _ dose: Dose,
         searchText: String,
         mode: SearchMode,
         caseSensitive: Bool
     ) -> Bool {
         guard let site = dose.site else { return false }
-        let targetText = caseSensitive ? site : site.lowercased()
-        return matchesText(targetText, searchText: searchText, mode: mode)
+        return matchesString(site, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
     }
     
-    private static func searchAmount(
-        dose: Dose,
-        searchText: String,
-        mode: SearchMode
-    ) -> Bool {
-        let amountString = String(dose.amount)
-        let formattedAmount = String(format: "%.1f", dose.amount)
-        let formattedAmountTwoDecimal = String(format: "%.2f", dose.amount)
-        
-        // Check various amount representations
-        return matchesText(amountString, searchText: searchText, mode: mode) ||
-               matchesText(formattedAmount, searchText: searchText, mode: mode) ||
-               matchesText(formattedAmountTwoDecimal, searchText: searchText, mode: mode)
-    }
-    
-    private static func searchDate(
-        dose: Dose,
+    /// Check if search text matches in dose amount
+    private static func matchesInAmount(
+        _ dose: Dose,
         searchText: String,
         mode: SearchMode,
         caseSensitive: Bool
     ) -> Bool {
-        let dateFormatters = [
-            createDateFormatter(dateStyle: .full, timeStyle: .short),
-            createDateFormatter(dateStyle: .long, timeStyle: .short),
-            createDateFormatter(dateStyle: .medium, timeStyle: .short),
-            createDateFormatter(dateStyle: .short, timeStyle: .short),
-            createDateFormatter(dateStyle: .medium, timeStyle: .none),
-            createDateFormatter(dateStyle: .none, timeStyle: .short)
-        ]
-        
-        for formatter in dateFormatters {
-            let dateString = formatter.string(from: dose.timestamp)
-            let targetText = caseSensitive ? dateString : dateString.lowercased()
-            if matchesText(targetText, searchText: searchText, mode: mode) {
-                return true
-            }
-        }
-        
-        // Also search individual date components
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dose.timestamp)
-        
-        if let year = components.year, matchesText(String(year), searchText: searchText, mode: mode) {
-            return true
-        }
-        if let month = components.month, matchesText(String(month), searchText: searchText, mode: mode) {
-            return true
-        }
-        if let day = components.day, matchesText(String(day), searchText: searchText, mode: mode) {
-            return true
-        }
-        
-        return false
+        let amountString = String(dose.amount)
+        return matchesString(amountString, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
     }
     
-    // MARK: - Text Matching Utilities
+    /// Check if search text matches in formatted date
+    private static func matchesInDate(
+        _ dose: Dose,
+        searchText: String,
+        mode: SearchMode,
+        caseSensitive: Bool
+    ) -> Bool {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        let dateString = formatter.string(from: dose.timestamp)
+        
+        return matchesString(dateString, searchText: searchText, mode: mode, caseSensitive: caseSensitive)
+    }
     
-    private static func matchesText(
+    /// Generic string matching function
+    private static func matchesString(
         _ text: String,
         searchText: String,
-        mode: SearchMode
+        mode: SearchMode,
+        caseSensitive: Bool
     ) -> Bool {
+        let targetText = caseSensitive ? text : text.lowercased()
+        let searchTerm = caseSensitive ? searchText : searchText.lowercased()
+        
         switch mode {
         case .contains:
-            return text.contains(searchText)
+            return targetText.contains(searchTerm)
         case .exact:
-            return text == searchText
+            return targetText == searchTerm
         case .startsWith:
-            return text.hasPrefix(searchText)
+            return targetText.hasPrefix(searchTerm)
         case .endsWith:
-            return text.hasSuffix(searchText)
+            return targetText.hasSuffix(searchTerm)
         }
     }
     
-    private static func createDateFormatter(dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style) -> DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateStyle = dateStyle
-        formatter.timeStyle = timeStyle
-        return formatter
-    }
-    
-    // MARK: - Advanced Search Features
-    
-    /// Parse search query for advanced search syntax
-    /// Supports:
-    /// - "exact phrase" (quoted text)
-    /// - medication:semaglutide (field-specific search)
-    /// - site:thigh (injection site search)
-    /// - amount:>1.0 (amount comparison)
-    /// - date:2024-01 (date search)
-    static func parseAdvancedSearch(_ query: String) -> SearchQuery {
-        var searchQuery = SearchQuery()
-        
-        // Split query into tokens while preserving quoted strings
-        let tokens = tokenizeQuery(query)
-        
-        for token in tokens {
-            if token.hasPrefix("medication:") {
-                let value = String(token.dropFirst("medication:".count))
-                searchQuery.medicationFilter = value.isEmpty ? nil : value
-            } else if token.hasPrefix("site:") {
-                let value = String(token.dropFirst("site:".count))
-                searchQuery.injectionSiteFilter = value.isEmpty ? nil : value
-            } else if token.hasPrefix("amount:") {
-                let value = String(token.dropFirst("amount:".count))
-                searchQuery.amountFilter = parseAmountFilter(value)
-            } else if token.hasPrefix("date:") {
-                let value = String(token.dropFirst("date:".count))
-                searchQuery.dateFilter = parseDateFilter(value)
-            } else if token.hasPrefix("\"") && token.hasSuffix("\"") {
-                // Exact phrase search
-                let phrase = String(token.dropFirst().dropLast())
-                searchQuery.exactPhrases.append(phrase)
-            } else {
-                // Regular search term
-                searchQuery.searchTerms.append(token)
-            }
-        }
-        
-        return searchQuery
-    }
-    
-    /// Apply advanced search query to dose array
-    static func searchWithAdvancedQuery(doses: [Dose], query: SearchQuery) -> [Dose] {
-        var results = doses
-        
-        // Apply search terms
-        if !query.searchTerms.isEmpty {
-            results = searchDosesWithMultipleTerms(
-                doses: results,
-                searchTerms: query.searchTerms,
-                scope: .all,
-                mode: .contains,
-                caseSensitive: false
-            )
-        }
-        
-        // Apply exact phrases
-        for phrase in query.exactPhrases {
-            results = searchDoses(
-                doses: results,
-                searchText: phrase,
-                scope: .all,
-                mode: .exact,
-                caseSensitive: false
-            )
-        }
-        
-        // Apply medication filter
-        if let medicationFilter = query.medicationFilter {
-            results = results.filter { dose in
-                dose.medication?.genericName.lowercased().contains(medicationFilter.lowercased()) == true ||
-                dose.medication?.brandName.lowercased().contains(medicationFilter.lowercased()) == true
-            }
-        }
-        
-        // Apply injection site filter
-        if let siteFilter = query.injectionSiteFilter {
-            results = results.filter { dose in
-                dose.site?.lowercased().contains(siteFilter.lowercased()) == true
-            }
-        }
-        
-        // Apply amount filter
-        if let amountFilter = query.amountFilter {
-            results = results.filter { dose in
-                amountFilter.matches(dose.amount)
-            }
-        }
-        
-        // Apply date filter
-        if let dateFilter = query.dateFilter {
-            results = results.filter { dose in
-                dateFilter.contains(dose.timestamp)
-            }
-        }
-        
-        return results
-    }
-    
-    // MARK: - Query Parsing Utilities
-    
-    private static func tokenizeQuery(_ query: String) -> [String] {
+    /// Tokenize query string, handling quoted strings
+    private static func tokenizeQuery(_ queryString: String) -> [String] {
         var tokens: [String] = []
         var currentToken = ""
         var inQuotes = false
+        var escapeNext = false
         
-        for char in query {
-            if char == "\"" {
+        for char in queryString {
+            if escapeNext {
+                currentToken.append(char)
+                escapeNext = false
+            } else if char == "\\" {
+                escapeNext = true
+            } else if char == "\"" {
                 if inQuotes {
-                    // End of quoted string
-                    currentToken += String(char)
+                    // End quote - add the quoted content as token
+                    currentToken.append(char)
                     tokens.append(currentToken)
                     currentToken = ""
                     inQuotes = false
                 } else {
-                    // Start of quoted string
+                    // Start quote - finish current token if any
                     if !currentToken.isEmpty {
                         tokens.append(currentToken)
                         currentToken = ""
                     }
-                    currentToken += String(char)
+                    currentToken.append(char)
                     inQuotes = true
                 }
             } else if char.isWhitespace && !inQuotes {
+                // Whitespace outside quotes - finish current token
                 if !currentToken.isEmpty {
                     tokens.append(currentToken)
                     currentToken = ""
                 }
             } else {
-                currentToken += String(char)
+                // Regular character
+                currentToken.append(char)
             }
         }
         
+        // Add final token if any
         if !currentToken.isEmpty {
             tokens.append(currentToken)
         }
@@ -378,60 +412,67 @@ struct DoseSearchService {
         return tokens
     }
     
-    private static func parseAmountFilter(_ value: String) -> AmountFilter? {
-        if value.hasPrefix(">=") {
-            guard let amount = Double(String(value.dropFirst(2))) else { return nil }
-            return .greaterThanOrEqual(amount)
-        } else if value.hasPrefix("<=") {
-            guard let amount = Double(String(value.dropFirst(2))) else { return nil }
-            return .lessThanOrEqual(amount)
-        } else if value.hasPrefix(">") {
-            guard let amount = Double(String(value.dropFirst(1))) else { return nil }
-            return .greaterThan(amount)
-        } else if value.hasPrefix("<") {
-            guard let amount = Double(String(value.dropFirst(1))) else { return nil }
-            return .lessThan(amount)
-        } else if value.hasPrefix("=") {
-            guard let amount = Double(String(value.dropFirst(1))) else { return nil }
-            return .equals(amount)
-        } else {
-            guard let amount = Double(value) else { return nil }
-            return .equals(amount)
+    /// Parse amount filter from string (e.g., ">1.0", "<=2.5", "1.0")
+    private static func parseAmountFilter(_ filterString: String) -> AmountFilter? {
+        let trimmed = filterString.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if trimmed.hasPrefix(">=") {
+            let valueString = String(trimmed.dropFirst(2))
+            if let value = Double(valueString) {
+                return .greaterThanOrEqual(value)
+            }
+        } else if trimmed.hasPrefix("<=") {
+            let valueString = String(trimmed.dropFirst(2))
+            if let value = Double(valueString) {
+                return .lessThanOrEqual(value)
+            }
+        } else if trimmed.hasPrefix(">") {
+            let valueString = String(trimmed.dropFirst(1))
+            if let value = Double(valueString) {
+                return .greaterThan(value)
+            }
+        } else if trimmed.hasPrefix("<") {
+            let valueString = String(trimmed.dropFirst(1))
+            if let value = Double(valueString) {
+                return .lessThan(value)
+            }
+        } else if let value = Double(trimmed) {
+            return .equals(value)
         }
+        
+        return nil
     }
     
-    private static func parseDateFilter(_ value: String) -> DateInterval? {
-        let dateFormatter = DateFormatter()
+    /// Parse date filter from string (supports YYYY, YYYY-MM, YYYY-MM-DD)
+    private static func parseDateFilter(_ dateString: String) -> DateInterval? {
+        let trimmed = dateString.trimmingCharacters(in: .whitespacesAndNewlines)
+        let calendar = Calendar.current
         
-        // Try various date formats
-        let formats = [
-            "yyyy-MM-dd",
-            "yyyy-MM",
-            "yyyy",
-            "MM/dd/yyyy",
-            "MM-dd-yyyy"
-        ]
-        
-        for format in formats {
-            dateFormatter.dateFormat = format
-            if let date = dateFormatter.date(from: value) {
-                let calendar = Calendar.current
-                
-                switch format {
-                case "yyyy":
-                    // Full year
-                    let startOfYear = calendar.dateInterval(of: .year, for: date)
-                    return startOfYear
-                case "yyyy-MM":
-                    // Full month
-                    let startOfMonth = calendar.dateInterval(of: .month, for: date)
-                    return startOfMonth
-                default:
-                    // Single day
-                    let startOfDay = calendar.startOfDay(for: date)
-                    let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-                    return DateInterval(start: startOfDay, end: endOfDay)
-                }
+        // Try different date formats
+        if trimmed.count == 4, let year = Int(trimmed) {
+            // Year only (e.g., "2024")
+            guard let startDate = calendar.date(from: DateComponents(year: year, month: 1, day: 1)),
+                  let endDate = calendar.date(from: DateComponents(year: year + 1, month: 1, day: 1)) else {
+                return nil
+            }
+            return DateInterval(start: startDate, end: endDate)
+            
+        } else if trimmed.count == 7, let year = Int(String(trimmed.prefix(4))), let month = Int(String(trimmed.suffix(2))) {
+            // Year-month (e.g., "2024-01")
+            guard let startDate = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
+                  let nextMonth = calendar.date(byAdding: .month, value: 1, to: startDate) else {
+                return nil
+            }
+            return DateInterval(start: startDate, end: nextMonth)
+            
+        } else if trimmed.count == 10 {
+            // Full date (e.g., "2024-01-15")
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            
+            if let date = formatter.date(from: trimmed) {
+                let endDate = calendar.date(byAdding: .day, value: 1, to: date) ?? date
+                return DateInterval(start: date, end: endDate)
             }
         }
         
@@ -441,17 +482,17 @@ struct DoseSearchService {
 
 // MARK: - Supporting Types
 
-/// Advanced search query structure
+/// Comprehensive search query structure for advanced searches
 struct SearchQuery {
-    var searchTerms: [String] = []
-    var exactPhrases: [String] = []
     var medicationFilter: String?
     var injectionSiteFilter: String?
     var amountFilter: AmountFilter?
     var dateFilter: DateInterval?
+    var exactPhrases: [String] = []
+    var searchTerms: [String] = []
 }
 
-/// Amount comparison filter
+/// Amount filter with comparison operators
 enum AmountFilter {
     case equals(Double)
     case greaterThan(Double)
@@ -459,8 +500,9 @@ enum AmountFilter {
     case greaterThanOrEqual(Double)
     case lessThanOrEqual(Double)
     
+    /// Check if the given amount matches this filter
     func matches(_ amount: Double) -> Bool {
-        let tolerance = 0.001
+        let tolerance = 0.001 // Floating point comparison tolerance
         
         switch self {
         case .equals(let target):
@@ -470,9 +512,9 @@ enum AmountFilter {
         case .lessThan(let target):
             return amount < target
         case .greaterThanOrEqual(let target):
-            return amount >= target || abs(amount - target) <= tolerance
+            return amount >= target - tolerance
         case .lessThanOrEqual(let target):
-            return amount <= target || abs(amount - target) <= tolerance
+            return amount <= target + tolerance
         }
     }
 }

@@ -59,13 +59,15 @@ struct DoseHistoryRow: View {
     
     private var doseStatusIndicator: some View {
         Circle()
-            .fill(dose.skipped ? Color.orange.opacity(0.3) : DesignTokens.Colors.primaryGradient)
+            .fill(dose.skipped ? 
+                  AnyShapeStyle(Color.orange.opacity(0.3)) : 
+                  AnyShapeStyle(DesignTokens.Colors.primaryGradient))
             .frame(width: 12, height: 12)
             .accessibilityHidden(true)
     }
     
     private var doseAmountText: some View {
-        Text("\(dose.amount, specifier: "%.1f") mg")
+        Text(String(format: "%.1f mg", dose.amount))
             .font(.headline)
             .fontWeight(.semibold)
             .foregroundColor(dose.skipped ? .secondary : .primary)
@@ -76,7 +78,7 @@ struct DoseHistoryRow: View {
         Text(dose.timestamp, style: .time)
             .font(.caption)
             .foregroundColor(.secondary)
-            .accessibilityIdentifier("dose-time")
+            .accessibilityIdentifier("dose-timestamp")
     }
     
     private var medicationText: some View {
@@ -92,7 +94,7 @@ struct DoseHistoryRow: View {
                     .italic()
             }
         }
-        .accessibilityIdentifier("medication-name")
+        .accessibilityIdentifier("dose-medication")
     }
     
     @ViewBuilder
@@ -116,7 +118,7 @@ struct DoseHistoryRow: View {
             .font(.caption)
             .foregroundColor(.secondary)
             .lineLimit(1)
-            .accessibilityIdentifier("dose-notes-preview")
+            .accessibilityIdentifier("dose-notes")
     }
     
     private var photoIndicator: some View {
@@ -124,7 +126,7 @@ struct DoseHistoryRow: View {
             .font(.caption)
             .foregroundColor(.blue)
             .accessibilityLabel("Photo attached")
-            .accessibilityIdentifier("photo-indicator")
+            .accessibilityIdentifier("dose-photo-indicator")
     }
     
     private var skippedIndicator: some View {
@@ -132,7 +134,7 @@ struct DoseHistoryRow: View {
             .font(.caption)
             .foregroundColor(.orange)
             .accessibilityLabel("Dose skipped")
-            .accessibilityIdentifier("skipped-indicator")
+            .accessibilityIdentifier("skipped-dose-indicator")
     }
     
     // MARK: - Accessibility
@@ -141,7 +143,7 @@ struct DoseHistoryRow: View {
         var components: [String] = []
         
         // Dose amount
-        components.append("\(dose.amount, specifier: "%.1f") milligrams")
+        components.append(String(format: "%.1f milligrams", dose.amount))
         
         // Medication
         if let medication = dose.medication {

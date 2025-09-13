@@ -45,10 +45,13 @@ struct QuickDoseViewModelTests {
         let dose = Dose(
             amount: amount,
             timestamp: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1 week ago
-            site: site,
-            medication: medication
+            site: site
         )
         context.insert(dose)
+        
+        // Set relationship after both objects are in context
+        dose.medication = medication
+        
         try? context.save()
         return dose
     }
@@ -367,11 +370,17 @@ struct QuickDoseViewModelTests {
         
         let nextDoseTime = viewModel.getNextScheduledDoseTime()
         
-        #expect(nextDoseTime != nil)
+        #expect(nextDoseTime != nil, "Expected getNextScheduledDoseTime() to return a non-nil value")
+        
+        // Safe unwrapping to avoid crash
+        guard let nextDoseTime = nextDoseTime else {
+            #expect(Bool(false), "nextDoseTime was nil when it shouldn't be")
+            return
+        }
         
         // Next dose should be approximately now (since last dose was 1 week ago)
-        let timeDifference = abs(nextDoseTime!.timeIntervalSinceNow)
-        #expect(timeDifference < 24 * 60 * 60) // Within 24 hours
+        let timeDifference = abs(nextDoseTime.timeIntervalSinceNow)
+        #expect(timeDifference < 24 * 60 * 60, "Time difference should be within 24 hours, but was \(timeDifference / 3600) hours")
     }
     
     @Test("Is dose overdue detection")
@@ -383,10 +392,13 @@ struct QuickDoseViewModelTests {
         // Create a dose that's overdue (2 weeks ago for weekly medication)
         let overdueDose = Dose(
             amount: 1.0,
-            timestamp: Date().addingTimeInterval(-14 * 24 * 60 * 60), // 2 weeks ago
-            medication: profile
+            timestamp: Date().addingTimeInterval(-14 * 24 * 60 * 60) // 2 weeks ago
         )
         context.insert(overdueDose)
+        
+        // Set relationship after both objects are in context
+        overdueDose.medication = profile
+        
         try? context.save()
         
         let viewModel = QuickDoseViewModel()

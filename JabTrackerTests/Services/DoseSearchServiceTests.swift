@@ -8,9 +8,34 @@
 
 import Testing
 import Foundation
+import SwiftData
 @testable import JabTracker
 
+@MainActor
 struct DoseSearchServiceTests {
+    
+    // Create an in-memory model container for testing without CloudKit
+    private var modelContainer: ModelContainer {
+        let schema = Schema([
+            User.self,
+            Dose.self,
+            MedicationProfile.self,
+            DoseTitration.self
+        ])
+        
+        // Disable CloudKit for testing - same logic as DataController
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        
+        do {
+            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }
     
     // MARK: - Basic Search Tests
     
@@ -50,7 +75,10 @@ struct DoseSearchServiceTests {
     
     @Test("Search filters doses by medication name")
     func testSearchInMedication() throws {
-        // Given: Doses with different medications
+        // Given: Doses with different medications using model context
+        let container = modelContainer
+        let context = container.mainContext
+        
         let semaglutideProfile = createTestMedicationProfile(
             genericName: "Semaglutide",
             brandName: "Ozempic"
@@ -64,8 +92,17 @@ struct DoseSearchServiceTests {
         let tirzepatideDose = createTestDose(amount: 2.0)
         let noMedicationDose = createTestDose(amount: 3.0)
         
+        context.insert(semaglutideProfile)
+        context.insert(tirzepatideProfile)
+        context.insert(semaglutideDose)
+        context.insert(tirzepatideDose)
+        context.insert(noMedicationDose)
+        
+        // Set relationships after insertion
         semaglutideDose.medication = semaglutideProfile
         tirzepatideDose.medication = tirzepatideProfile
+        
+        try context.save()
         
         let doses = [semaglutideDose, tirzepatideDose, noMedicationDose]
         
@@ -186,13 +223,25 @@ struct DoseSearchServiceTests {
     
     @Test("Search works across all fields when scope is .all")
     func testSearchInAllFields() throws {
-        // Given: Doses with data in different fields
+        // Given: Doses with data in different fields using model context
+        let container = modelContainer
+        let context = container.mainContext
+        
         let medicationProfile = createTestMedicationProfile(genericName: "Semaglutide")
         
         let notesDose = createTestDose(notes: "morning injection")
         let siteDose = createTestDose(site: "Thigh")
         let medicationDose = createTestDose(amount: 1.0)
+        
+        context.insert(medicationProfile)
+        context.insert(notesDose)
+        context.insert(siteDose)
+        context.insert(medicationDose)
+        
+        // Set relationships after insertion
         medicationDose.medication = medicationProfile
+        
+        try context.save()
         
         let doses = [notesDose, siteDose, medicationDose]
         
@@ -424,7 +473,10 @@ struct DoseSearchServiceTests {
     
     @Test("Apply advanced search query to doses")
     func testAdvancedSearchQueryApplication() throws {
-        // Given: Doses with various data
+        // Given: Doses with various data using model context
+        let container = modelContainer
+        let context = container.mainContext
+        
         let semaglutideProfile = createTestMedicationProfile(genericName: "Semaglutide")
         let tirzepatideProfile = createTestMedicationProfile(genericName: "Tirzepatide")
         
@@ -433,21 +485,31 @@ struct DoseSearchServiceTests {
             site: "Thigh", 
             notes: "morning exact phrase"
         )
-        matchingDose.medication = semaglutideProfile
         
         let nonMatchingDose1 = createTestDose(
             amount: 0.5, // Too low amount
             site: "Thigh",
             notes: "morning exact phrase"
         )
-        nonMatchingDose1.medication = semaglutideProfile
         
         let nonMatchingDose2 = createTestDose(
             amount: 1.5,
             site: "Abdomen", // Wrong site
             notes: "morning exact phrase"
         )
+        
+        context.insert(semaglutideProfile)
+        context.insert(tirzepatideProfile)
+        context.insert(matchingDose)
+        context.insert(nonMatchingDose1)
+        context.insert(nonMatchingDose2)
+        
+        // Set relationships after insertion
+        matchingDose.medication = semaglutideProfile
+        nonMatchingDose1.medication = semaglutideProfile
         nonMatchingDose2.medication = semaglutideProfile
+        
+        try context.save()
         
         let doses = [matchingDose, nonMatchingDose1, nonMatchingDose2]
         
@@ -461,11 +523,14 @@ struct DoseSearchServiceTests {
         let results = DoseSearchService.searchWithAdvancedQuery(doses: doses, query: searchQuery)
         
         // Then: Only fully matching dose is returned
-        #expect(results.count == 1)
-        #expect(results[0].amount == 1.5)
-        #expect(results[0].site == "Thigh")
-        #expect(results[0].notes?.contains("exact phrase") == true)
-        #expect(results[0].medication?.genericName == "Semaglutide")
+        #expect(results.count == 1, "Expected 1 result but got \(results.count). Medication names: \(doses.compactMap { $0.medication?.genericName })")
+        
+        if results.count > 0 {
+            #expect(results[0].amount == 1.5)
+            #expect(results[0].site == "Thigh")
+            #expect(results[0].notes?.contains("exact phrase") == true)
+            #expect(results[0].medication?.genericName == "Semaglutide")
+        }
     }
     
     // MARK: - Amount Filter Tests

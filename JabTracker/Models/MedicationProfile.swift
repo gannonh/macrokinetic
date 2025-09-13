@@ -27,10 +27,10 @@ final class MedicationProfile {
     var updatedAt: Date = Date() // Track modifications
     var createdAt: Date = Date() // Track creation
 
-    @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
+    @Relationship(deleteRule: .cascade)
     var doses: [Dose]? // CloudKit requires optional relationships
 
-    @Relationship(deleteRule: .cascade, inverse: \DoseTitration.medicationProfile)
+    @Relationship(deleteRule: .cascade)
     var doseTitrations: [DoseTitration]? // Titration plans for this medication
 
     var user: User? // Parent user relationship
