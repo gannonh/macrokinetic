@@ -40,6 +40,82 @@ Using the test-runner agent ensures:
 - If the test fails, consider checking if the test is structured correctly before deciding we need to refactor the codebase.
 - Tests to be verbose so we can use them for debugging.
 
+#### SwiftData Relationship Testing (Critical)
+
+**REQUIRED PATTERN**: All tests that access SwiftData relationships (`dose.medication`, `user.doses`, etc.) MUST use proper ModelContext setup or they will crash:
+
+```swift
+@MainActor
+struct YourTestStruct {
+    
+    // Create an in-memory model container for testing without CloudKit
+    private var modelContainer: ModelContainer {
+        let schema = Schema([
+            User.self,
+            Dose.self,
+            MedicationProfile.self,
+            DoseTitration.self
+        ])
+        
+        // Disable CloudKit for testing - same logic as DataController
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        
+        do {
+            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }
+    
+    @Test("Your test name")
+    func yourTest() throws {
+        // Given: Objects with relationships
+        let container = modelContainer
+        let context = container.mainContext
+        
+        let medicationProfile = MedicationProfile(genericName: "Semaglutide")
+        let dose = Dose(amount: 1.0)
+        
+        // CRITICAL: Insert objects into context FIRST
+        context.insert(medicationProfile)
+        context.insert(dose)
+        
+        // CRITICAL: Set relationships AFTER insertion
+        dose.medication = medicationProfile
+        
+        // CRITICAL: Save the context
+        try context.save()
+        
+        // Now relationships work safely
+        #expect(dose.medication?.genericName == "Semaglutide")
+    }
+}
+```
+
+**❌ NEVER do this (causes crashes):**
+```swift
+let dose = Dose(amount: 1.0)
+let medication = MedicationProfile(genericName: "Semaglutide") 
+dose.medication = medication // CRASH: No ModelContext
+```
+
+**✅ ALWAYS do this:**
+```swift
+context.insert(dose)
+context.insert(medication)
+dose.medication = medication // Safe: Objects in ModelContext
+try context.save()
+```
+
+**Common Issues:**
+- Tests showing "Executed 0 tests" usually means the app crashed during test setup
+- CloudKit relationship errors mean you need `.none` CloudKit database in test config
+- SwiftData relationship access without ModelContext always crashes
+
 ## Tone and Behavior
 
 - Criticism is welcome. Please tell me when I am wrong or mistaken, or even when you think I might be wrong or mistaken.
