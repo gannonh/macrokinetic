@@ -120,28 +120,88 @@ final class MedicationProfile {
 
 ## Testing Standards
 
-### Test Organization
+### Swift Testing Framework Patterns
+
+#### Test Organization and Naming
 ```swift
-// Test class naming: SourceClassNameTests
-final class AuthenticationManagerTests {
+// Use @Test attribute with descriptive names
+@Test("Calculate next scheduled dose for weekly medication")
+@MainActor
+func testGetNextScheduledDoseTimeWeekly() async {
+    let context = createTestContext()
+    let profile = createTestMedicationProfile(
+        context: context,
+        genericName: "semaglutide"
+    )
     
-    // Setup and teardown
-    override func setUpWithError() throws {
-        // Test setup
+    // Add a dose from 1 week ago
+    _ = createTestDose(context: context, medication: profile)
+    
+    let viewModel = QuickDoseViewModel()
+    viewModel.selectedMedicationProfile = profile
+    
+    let nextDoseTime = viewModel.getNextScheduledDoseTime()
+    
+    // Use #expect for modern assertions
+    #expect(nextDoseTime != nil, "Expected getNextScheduledDoseTime() to return a non-nil value")
+    
+    // Safe unwrapping to avoid crashes
+    guard let nextDoseTime = nextDoseTime else {
+        #expect(Bool(false), "nextDoseTime was nil when it shouldn't be")
+        return
     }
     
-    // Test method naming: test + WhatIsBeingTested + ExpectedOutcome
-    func testSignInWithApple_ValidCredentials_CreatesUser() throws {
-        // Given
-        let expectedEmail = "test@example.com"
-        
-        // When
-        let result = authManager.signInWithApple(email: expectedEmail)
-        
-        // Then
-        XCTAssertEqual(result.email, expectedEmail)
-    }
+    // Verify timing with tolerance
+    let timeDifference = abs(nextDoseTime.timeIntervalSinceNow)
+    #expect(timeDifference < 24 * 60 * 60, "Time difference should be within 24 hours")
 }
+```
+
+#### Async Testing Best Practices
+```swift
+// Always mark async tests with @MainActor when testing UI components
+@Test("Verify medication profile selection updates state")
+@MainActor
+func testMedicationProfileSelection() async {
+    let viewModel = OnboardingViewModel()
+    let medication = Medication.semaglutide
+    
+    // Test async state changes
+    await viewModel.selectMedication(medication)
+    
+    #expect(viewModel.selectedMedication == medication)
+    #expect(viewModel.canProceedToNextStep == true)
+}
+```
+
+#### Safe Unwrapping Patterns in Tests
+```swift
+// ❌ Avoid force unwrapping that can crash tests
+let result = viewModel.calculateDose()!
+
+// ✅ Use safe unwrapping with explicit test failures
+guard let result = viewModel.calculateDose() else {
+    #expect(Bool(false), "calculateDose() returned nil unexpectedly")
+    return
+}
+
+// ✅ Alternative pattern with nil validation
+let result = viewModel.calculateDose()
+#expect(result != nil, "Expected calculateDose() to return a value")
+```
+
+#### Tolerance-Based Assertions for Time/Dates
+```swift
+// ❌ Exact time comparisons can be flaky
+#expect(nextDose == expectedDate)
+
+// ✅ Use tolerance for time-based assertions
+let timeDifference = abs(nextDose.timeIntervalSince(expectedDate))
+#expect(timeDifference < 60, "Time should be within 1 minute tolerance")
+
+// ✅ For dose scheduling (more generous tolerance)
+let timeDifference = abs(nextDoseTime.timeIntervalSinceNow)
+#expect(timeDifference < 24 * 60 * 60, "Next dose should be within 24 hours")
 ```
 
 ### Test Data Patterns
@@ -155,6 +215,32 @@ extension User {
     ) -> User {
         User(email: email, name: name, weight: weight)
     }
+}
+
+// Context creation helpers
+func createTestContext() -> ModelContext {
+    let schema = Schema([User.self, MedicationProfile.self, Dose.self])
+    let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: schema, configurations: [config])
+    return ModelContext(container)
+}
+```
+
+### Modern Swift Testing vs XCTest Migration
+```swift
+// ✅ Swift Testing - Modern, cleaner syntax
+@Test("User creation with valid data")
+func testUserCreation() {
+    let user = User(email: "test@example.com", name: "Test User")
+    #expect(user.email == "test@example.com")
+    #expect(user.name == "Test User")
+}
+
+// ❌ XCTest - Legacy syntax (avoid in new tests)
+func testUserCreation() throws {
+    let user = User(email: "test@example.com", name: "Test User")
+    XCTAssertEqual(user.email, "test@example.com")
+    XCTAssertEqual(user.name, "Test User")
 }
 ```
 

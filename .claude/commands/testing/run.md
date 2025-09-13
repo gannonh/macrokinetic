@@ -1,4 +1,6 @@
 ---
+description: Run the test suite or specific tests using the configured test-runner agent.
+argument-hint: Optional test target (file path, pattern, or suite name)
 allowed-tools: Bash, Read, Write, LS, Task
 ---
 

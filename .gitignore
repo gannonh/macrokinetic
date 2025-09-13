@@ -13,6 +13,9 @@ build/
 .swiftpm/
 Package.resolved
 
+# Test outputs
+logs/
+
 # misc
 .serena/cache/
 test-snapshots/
