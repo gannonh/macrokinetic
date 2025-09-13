@@ -120,27 +120,33 @@ class DoseHistoryViewModel: ObservableObject {
     }
     
     // MARK: - Data Loading
-    
-    /// Load dose data from SwiftData context
+
+    /// Set doses from @Query for automatic reactivity
+    func setDoses(_ doses: [Dose]) {
+        self.allDoses = doses
+        applyFiltersAndSearch()
+    }
+
+    /// Load dose data from SwiftData context (fallback method)
     func loadData(context: ModelContext) {
         Task { @MainActor in
             do {
                 isLoading = true
                 errorMessage = nil
-                
+
                 // Create fetch descriptor for all doses, sorted by timestamp descending
                 let descriptor = FetchDescriptor<Dose>(
                     sortBy: [SortDescriptor(\Dose.timestamp, order: .reverse)]
                 )
-                
+
                 // Fetch all doses
                 allDoses = try context.fetch(descriptor)
-                
+
                 // Apply initial filters
                 applyFiltersAndSearch()
-                
+
                 isLoading = false
-                
+
             } catch {
                 errorMessage = "Failed to load dose history: \(error.localizedDescription)"
                 isLoading = false

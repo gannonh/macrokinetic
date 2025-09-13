@@ -195,16 +195,6 @@ class OnboardingViewModel: ObservableObject {
         medicationProfile.user = user
         context.insert(medicationProfile)
 
-        // Create initial dose record with first selected site
-        let primarySite = self.selectedSites.first ?? "Thigh"
-        let initialDose = Dose(
-            amount: selectedDose,
-            timestamp: selectedStartDate,
-            site: primarySite,
-            notes: "Initial dose - onboarding",
-            user: user,
-            medication: medicationProfile)
-        context.insert(initialDose)
 
         // Mark user onboarding as complete
         user.hasCompletedOnboarding = true

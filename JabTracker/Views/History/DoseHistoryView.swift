@@ -10,6 +10,7 @@ import SwiftData
 
 struct DoseHistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Dose.timestamp, order: .reverse) private var allDoses: [Dose]
     @StateObject private var viewModel = DoseHistoryViewModel()
     @State private var showingSearchAndFilter = false
     @State private var showingDeleteConfirmation = false
@@ -55,7 +56,10 @@ struct DoseHistoryView: View {
                 editDoseSheet
             }
             .onAppear {
-                viewModel.loadData(context: modelContext)
+                viewModel.setDoses(allDoses)
+            }
+            .onChange(of: allDoses) { _, newDoses in
+                viewModel.setDoses(newDoses)
             }
             .accessibilityIdentifier("dose-history-view")
         }
