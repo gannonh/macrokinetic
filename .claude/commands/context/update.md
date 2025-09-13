@@ -149,7 +149,57 @@ If update fails:
 - Note which files failed and why
 - Preserve original files (don't leave corrupted state)
 
-### 6. Update Summary
+### 6. Process Captured Learnings
+
+**Scan for uncaptured learnings:**
+```bash
+# Find issues with uncaptured learnings
+find .claude/epics -name "*.md" -exec grep -l "learnings_captured: false" {} \; 2>/dev/null
+```
+
+**For each issue with learnings:**
+
+1. **Read the learnings section** from the issue file
+2. **Process by category** to appropriate context files:
+
+   - **Technical Patterns → system-patterns.md**
+     - Testing patterns, architecture decisions, implementation approaches
+     - Add to appropriate sections with examples
+     - Mark patterns as "discovered during Issue #X"
+
+   - **Technology Insights → tech-context.md**
+     - Framework-specific knowledge, tool discoveries, integration insights  
+     - Add to relevant technology sections
+     - Include version numbers and compatibility notes
+
+   - **Process Insights → progress.md**
+     - Debugging approaches, workflow improvements, coordination lessons
+     - Add to development process or troubleshooting sections
+     - Include "lessons learned" subsection
+
+   - **Product Insights → product-context.md**
+     - User experience discoveries, feature insights, requirement clarifications
+     - Update user stories or feature definitions
+     - Include usability findings
+
+   - **Project Structure → project-structure.md**
+     - File organization learnings, structure improvements
+     - Update organization guidelines
+     - Note any structural pattern discoveries
+
+3. **Update issue frontmatter** after processing:
+   ```yaml
+   learnings_captured: true
+   learnings_processed_date: {current_datetime}
+   ```
+
+4. **Commit learning updates:**
+   ```bash
+   git add .claude/context/*.md .claude/epics/**/*.md
+   git commit -m "Context update: process learnings from recent issues"
+   ```
+
+### 7. Update Summary
 
 Provide detailed summary of updates:
 
@@ -160,6 +210,7 @@ Provide detailed summary of updates:
   - Files Scanned: {total_count}
   - Files Updated: {updated_count}
   - Files Skipped: {skipped_count} (no changes needed)
+  - Learnings Processed: {learnings_count}
   - Errors: {error_count}
 
 📝 Updated Files:
@@ -167,10 +218,14 @@ Provide detailed summary of updates:
   ✅ tech-context.md - Added 3 new dependencies
   ✅ project-structure.md - Noted new /utils directory
 
+🧠 Learnings Processed:
+  ✅ Issue #41 - SwiftData testing patterns → system-patterns.md
+  ✅ Issue #41 - CloudKit relationship debugging → tech-context.md
+  ✅ Issue #41 - Test crash debugging process → progress.md
+
 ⏭️ Skipped Files (no changes):
   - project-brief.md (last updated: 5 days ago)
   - project-vision.md (last updated: 2 weeks ago)
-  - system-patterns.md (last updated: 3 days ago)
 
 ⚠️ Issues:
   {any warnings or errors}

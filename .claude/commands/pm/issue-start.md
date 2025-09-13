@@ -1,4 +1,6 @@
 ---
+description: Begin work on a GitHub issue with parallel agents based on work stream analysis.
+argument-hint: Issue number (e.g., 42)
 allowed-tools: Bash, Read, Write, LS, Task
 ---
 
@@ -122,8 +124,8 @@ Task:
     
     - Follow Outside-In TDD: Start with E2E acceptance tests that define "done"
     - Write tests but DO NOT run them (to avoid conflicts with other streams)
-    
-    Workflow for each stream:
+
+    Typical workflow:
     1. Write E2E acceptance tests for your feature scope (defines user-facing success)
        - Commit: "Issue #$ARGUMENTS: add E2E acceptance tests for {feature}"
     2. Write failing integration/unit tests (defines component contracts)  
