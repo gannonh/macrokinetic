@@ -36,13 +36,21 @@ created: 2025-01-22T04:47:23Z
 - **Design System**: DesignSystemUITests
 - **CloudKit Integration**: CloudKitIntegrationUITests
 
-## Commands
-- **Run All Tests**: `./scripts/test.sh all`
-- **Run Unit Tests Only**: `./scripts/test.sh unit`
-- **Run UI Tests Only**: `./scripts/test.sh ui`
+## Commands (All tests automatically log to ./logs directory)
+- **Run Unit Tests**: `./scripts/test.sh unit 1` (RECOMMENDED)
+- **Run Specific UI Test Class**: `./scripts/test.sh ui 1 OnboardingUITests` (RECOMMENDED)
 - **Run Specific Test File**: `./scripts/test.sh {unit|ui} 1 {TestFileName}`
 - **Run with Coverage**: `./scripts/test.sh unit 1 --coverage`
-- **Run with Simulator Reset**: `./scripts/test.sh ui 1 --reset`
+- **Run with Simulator Reset**: `./scripts/test.sh ui 1 OnboardingUITests --reset`
+- **Help**: `./scripts/test.sh --help`
+
+### New Logging Flags
+- **No Logging**: `./scripts/test.sh unit 1 --no-log`
+- **Log Only (Silent)**: `./scripts/test.sh unit 1 --log-only`
+
+### ⚠️ AVOID (Very Slow - Use Only for Final Verification)
+- **All UI Tests**: `./scripts/test.sh ui 1` (takes 10+ minutes)
+- **All Tests**: `./scripts/test.sh all 1` (very long running)
 
 ## Available Simulators
 1. **PRIMARY** iPhone 15,OS=17.5 (Default - UUID: 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB)
@@ -55,6 +63,8 @@ created: 2025-01-22T04:47:23Z
 - **Test Devices**: iOS Simulator
 - **Launch Arguments**: --ui-testing (auth bypass), --reset-app-data, --force-onboarding
 - **Coverage**: Available via xccov with --coverage flag
+- **Automatic Logging**: All test runs save to ./logs with timestamped directories
+- **Log Access**: `cat logs/latest/output.txt` or `open logs/latest/results.xcresult`
 
 ## Test-Runner Agent Configuration
 - Use test-runner agent for all test executions
@@ -71,27 +81,40 @@ created: 2025-01-22T04:47:23Z
 - **Coverage Policy**: 5-tier system with different thresholds per component type
 - **File-Based Organization**: Swift Testing uses file-based test structure for efficiency
 
-## Common Test Commands
+## Common Test Commands (All automatically log to ./logs)
 ```bash
-# Quick unit test run
+# Quick unit test run (RECOMMENDED)
 ./scripts/test.sh unit 1
 
-# Full UI test suite (excludes manual tests)  
-./scripts/test.sh ui 1
+# Specific UI test class (RECOMMENDED)
+./scripts/test.sh ui 1 OnboardingUITests
+./scripts/test.sh ui 1 AuthenticationUITests
 
 # Specific test with coverage
 ./scripts/test.sh unit 1 AuthenticationManagerCoreTests --coverage
 
-# Reset simulator and run UI tests
-./scripts/test.sh ui 1 --reset
+# Reset simulator and run specific UI tests
+./scripts/test.sh ui 1 OnboardingUITests --reset
 
-# All tests with coverage report
-./scripts/test.sh all 1 --coverage
+# Coverage analysis in background
+./scripts/test.sh unit 1 --coverage --log-only
+
+# View latest test results
+cat logs/latest/output.txt
+open logs/latest/results.xcresult
+
+# ⚠️ AVOID unless final verification (very slow):
+# ./scripts/test.sh ui 1              # ALL UI tests - takes 10+ minutes
+# ./scripts/test.sh all 1 --coverage   # ALL tests with coverage - very slow
 ```
 
 ## Test Execution Notes
 - Always use test-runner agent for consistent output formatting
+- All test runs automatically log to `./logs/{test_type}_YYYY-MM-DD_HH-MM-SS/`
+- Latest test results always available via `logs/latest` symlink
 - Swift Testing framework handles unit tests with modern syntax
-- UI tests use XCUITest with accessibility-based element selection  
-- Coverage reports saved to `/tmp/jab-tracker-coverage.xcresult`
+- UI tests use XCUITest with accessibility-based element selection
+- **PREFER specific UI test classes** over running all UI tests (performance)
+- Coverage reports saved to test log directory and `/tmp/jab-tracker-coverage.xcresult`
 - Manual authentication tests require Xcode for interactive Apple ID flow
+- Log files include: `output.txt`, `results.xcresult`, `coverage.json` (if --coverage used)

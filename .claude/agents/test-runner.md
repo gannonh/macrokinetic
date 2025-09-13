@@ -30,11 +30,14 @@ xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
 ```bash
 # Run tests with automatic logging to ./logs directory
 ./scripts/test.sh unit 1              # Unit tests with logging
-./scripts/test.sh ui 1                # UI tests with logging
+./scripts/test.sh ui 1 OnboardingUITests  # Run specific UI test class (RECOMMENDED)
 ./scripts/test.sh unit 1 --coverage   # Unit tests with coverage
 ./scripts/test.sh unit 1 --no-log     # Unit tests without logging
 ./scripts/test.sh unit 1 --log-only   # Unit tests with logging but no console output
 ./scripts/test.sh --help              # Show all available options
+
+# ⚠️  AVOID: Running ALL UI tests (very slow, use only for final checks)
+# ./scripts/test.sh ui 1              # Takes 10+ minutes, use sparingly
 
 # View test results
 cat logs/latest/output.txt            # Latest test output
@@ -223,17 +226,20 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 # Build project
 ./scripts/build.sh
 
-# Run tests
-./scripts/test.sh unit    # Unit tests only
-# Use seldom; Running ALL UI tests takes a very long time
-./scripts/test.sh ui      # UI tests only
-./scripts/test.sh all     # All tests
+# Run tests (PREFER specific UI test classes over running all)
+./scripts/test.sh unit 1                    # Unit tests with logging
+./scripts/test.sh ui 1 OnboardingUITests    # Specific UI test class (RECOMMENDED)
+./scripts/test.sh ui 1 AuthenticationUITests # Specific UI test class (RECOMMENDED)
+
+# ⚠️  AVOID unless final verification (very slow):
+# ./scripts/test.sh ui 1        # ALL UI tests - takes 10+ minutes
+# ./scripts/test.sh all 1       # ALL tests - very long running
 
 # Generate documentation
 ./scripts/docs.sh
 
 # Run full CI check suite (recommended before PR merge)
-./scripts/check-all.sh --skip-ui    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
+./scripts/check-all.sh --skip-ui    # Runs SwiftLint, build, unit tests, and SwiftFormat
 ```
 ### XcodeGen Project Regeneration
 This project uses XcodeGen for project file management. **Important**: When adding new Swift files (especially test files), you must regenerate the Xcode project:

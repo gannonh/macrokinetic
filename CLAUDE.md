@@ -383,11 +383,22 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 # Build project
 ./scripts/build.sh
 
-# Run tests
-./scripts/test.sh unit    # Unit tests only
-# Use seldom; Running ALL UI tests takes a very long time
-./scripts/test.sh ui      # UI tests only
-./scripts/test.sh all     # All tests
+# Run tests (with automatic logging to ./logs directory)
+./scripts/test.sh unit 1                    # Unit tests with logging
+./scripts/test.sh ui 1 OnboardingUITests    # Specific UI test class (RECOMMENDED)
+./scripts/test.sh ui 1 AuthenticationUITests # Specific UI test class (RECOMMENDED)
+./scripts/test.sh unit 1 --coverage         # Unit tests with coverage
+./scripts/test.sh unit 1 --no-log           # Unit tests without logging
+./scripts/test.sh unit 1 --log-only         # Unit tests with logging but no console output
+./scripts/test.sh --help                    # Show all available options
+
+# ⚠️  AVOID unless final verification (very slow):
+# ./scripts/test.sh ui 1        # ALL UI tests - takes 10+ minutes
+# ./scripts/test.sh all 1       # ALL tests - very long running
+
+# View test results
+cat logs/latest/output.txt            # Latest test output
+open logs/latest/results.xcresult     # Open result bundle in Xcode
 
 # Generate documentation
 ./scripts/docs.sh
@@ -673,7 +684,9 @@ app.pickers["medication-\(currentSelection)"]
 - Simulator name always includes OS: `iPhone 15,OS=17.5`
 - **ALWAYS use `describe_ui` for precise coordinates** - never guess from screenshots
 - **Medical accuracy is critical** - validate all calculations and dose ranges
-- Easiest way to run tests is using the convenience script:
-  - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
-  - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`
-  - `./scripts/test.sh all 1    # All tests on iPhone 15`
+- Easiest way to run tests is using the convenience script (automatically logs to ./logs):
+  - `./scripts/test.sh unit 1       # Unit tests with logging`
+  - `./scripts/test.sh ui 1 OnboardingUITests  # Specific UI test class (RECOMMENDED)`
+  - `./scripts/test.sh unit 1 --coverage --log-only  # Coverage analysis in background`
+  - `cat logs/latest/output.txt     # View latest test results`
+  - ⚠️ **AVOID** `./scripts/test.sh ui 1` (ALL UI tests - takes 10+ minutes)

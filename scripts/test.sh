@@ -14,9 +14,11 @@ DEVICES=(
 DEFAULT_DEVICE="iPhone 15,OS=17.5"
 ENABLE_COVERAGE=false
 RESET_DEVICE=false
+ENABLE_LOGGING=true
+LOG_ONLY=false
 
 show_usage() {
-    echo "Usage: $0 {unit|ui|all} [device] [test_file] [--coverage] [--reset]"
+    echo "Usage: $0 {unit|ui|all} [device] [test_file] [--coverage] [--reset] [--no-log] [--log-only] [--help]"
     echo ""
     echo "Test types:"
     echo "  unit - Run unit tests only"
@@ -31,6 +33,9 @@ show_usage() {
     echo "Options:"
     echo "  --coverage  Generate code coverage report and display results"
     echo "  --reset     Reset simulator before running tests (clears all permissions)"
+    echo "  --no-log    Disable automatic logging to ./logs directory"
+    echo "  --log-only  Save logs without displaying console output"
+    echo "  --help      Show this help message"
     echo ""
     echo "Available test files:"
     echo "  Unit tests (file-based organization):"
@@ -60,6 +65,13 @@ show_usage() {
     exit 1
 }
 
+# Check for help flag first
+for arg in "$@"; do
+    if [[ "$arg" == "--help" ]]; then
+        show_usage
+    fi
+done
+
 if [ $# -eq 0 ]; then
     show_usage
 fi
@@ -79,6 +91,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --reset)
             RESET_DEVICE=true
+            shift
+            ;;
+        --no-log)
+            ENABLE_LOGGING=false
+            shift
+            ;;
+        --log-only)
+            LOG_ONLY=true
             shift
             ;;
         *)
@@ -106,7 +126,42 @@ fi
 
 SIMULATOR="platform=iOS Simulator,name=${SELECTED_DEVICE}"
 
-echo "📱 Using simulator: $SELECTED_DEVICE"
+# Set up logging
+if [ "$ENABLE_LOGGING" = true ]; then
+    # Create timestamp for this test run
+    TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+
+    # Determine log directory name
+    case "$TEST_TYPE" in
+        "unit")
+            LOG_DIR="logs/unit_tests_${TIMESTAMP}"
+            ;;
+        "ui")
+            LOG_DIR="logs/ui_tests_${TIMESTAMP}"
+            ;;
+        "all")
+            LOG_DIR="logs/all_tests_${TIMESTAMP}"
+            ;;
+    esac
+
+    # Create log directory
+    mkdir -p "$LOG_DIR"
+
+    # Update latest symlink
+    rm -f logs/latest
+    ln -s "$(basename "$LOG_DIR")" logs/latest
+
+    LOG_FILE="$LOG_DIR/output.txt"
+    XCRESULT_PATH="$LOG_DIR/results.xcresult"
+
+    if [ "$LOG_ONLY" = false ]; then
+        echo "📝 Logging to: $LOG_DIR"
+    fi
+fi
+
+if [ "$LOG_ONLY" = false ]; then
+    echo "📱 Using simulator: $SELECTED_DEVICE"
+fi
 
 # Reset simulator if requested
 if [ "$RESET_DEVICE" = true ]; then
@@ -161,60 +216,136 @@ build_test_target() {
 
 TEST_TARGET=$(build_test_target "$TEST_TYPE" "$TEST_FILE")
 
-# Build coverage options
+# Build coverage and result bundle options
 COVERAGE_OPTIONS=""
 RESULT_BUNDLE_PATH=""
-if [ "$ENABLE_COVERAGE" = true ]; then
-    # Clean up any existing result bundle
+
+if [ "$ENABLE_LOGGING" = true ]; then
+    # Always generate xcresult when logging
+    RESULT_BUNDLE_PATH="-resultBundlePath $XCRESULT_PATH"
+    if [ "$ENABLE_COVERAGE" = true ]; then
+        COVERAGE_OPTIONS="-enableCodeCoverage YES"
+    fi
+elif [ "$ENABLE_COVERAGE" = true ]; then
+    # Coverage without logging uses temp path
     rm -rf /tmp/jab-tracker-coverage.xcresult
     COVERAGE_OPTIONS="-enableCodeCoverage YES"
     RESULT_BUNDLE_PATH="-resultBundlePath /tmp/jab-tracker-coverage.xcresult"
 fi
 
-if [ -n "$TEST_FILE" ]; then
-    case "$TEST_TYPE" in
-        "unit")
-            echo "🎯 Running unit tests (Note: Swift Testing runs all unit tests, but focus on $TEST_FILE results)"
-            ;;
-        "ui")
-            echo "🎯 Running specific UI test: $TEST_FILE"
-            ;;
-    esac
-else
-    if [ "$ENABLE_COVERAGE" = true ]; then
-        echo "📊 Coverage report will be generated after test completion"
+if [ "$LOG_ONLY" = false ]; then
+    if [ -n "$TEST_FILE" ]; then
+        case "$TEST_TYPE" in
+            "unit")
+                echo "🎯 Running unit tests (Note: Swift Testing runs all unit tests, but focus on $TEST_FILE results)"
+                ;;
+            "ui")
+                echo "🎯 Running specific UI test: $TEST_FILE"
+                ;;
+        esac
+    else
+        if [ "$ENABLE_COVERAGE" = true ]; then
+            echo "📊 Coverage report will be generated after test completion"
+        fi
     fi
 fi
 
+# Function to run tests with appropriate output handling
+run_tests() {
+    local test_description="$1"
+
+    if [ "$LOG_ONLY" = false ]; then
+        echo "$test_description"
+    fi
+
+    if [ "$ENABLE_LOGGING" = true ]; then
+        if [ "$LOG_ONLY" = true ]; then
+            # Log only - suppress console output
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify > "$LOG_FILE" 2>&1
+        else
+            # Log and display
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify | tee "$LOG_FILE"
+        fi
+        TEST_EXIT_CODE=${PIPESTATUS[0]}
+    else
+        # No logging
+        xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
+        TEST_EXIT_CODE=${PIPESTATUS[0]}
+    fi
+}
+
 case "$TEST_TYPE" in
   "unit")
-    echo "🧪 Running unit tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
+    run_tests "🧪 Running unit tests..."
     ;;
   "ui")
-    echo "🖱️  Running UI tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
+    run_tests "🖱️  Running UI tests..."
     ;;
   "all")
-    echo "🎯 Running all tests..."
-    xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
+    run_tests "🎯 Running all tests..."
     ;;
   *)
     show_usage
     ;;
 esac
 
-# Show coverage report if requested
-if [ "$ENABLE_COVERAGE" = true ] && [ -d "/tmp/jab-tracker-coverage.xcresult" ]; then
-    echo ""
-    echo "📊 Code Coverage Report:"
-    echo "=========================="
-    xcrun xccov view --report /tmp/jab-tracker-coverage.xcresult
-    echo ""
-    echo "💡 Coverage data saved to: /tmp/jab-tracker-coverage.xcresult"
-    echo "💡 To view detailed coverage: xcrun xccov view --file-list /tmp/jab-tracker-coverage.xcresult"
-elif [ "$ENABLE_COVERAGE" = true ]; then
-    echo ""
-    echo "⚠️  Coverage report requested but result bundle not found."
-    echo "💡 This may happen if tests fail to complete."
+# Handle coverage report
+if [ "$ENABLE_COVERAGE" = true ]; then
+    COVERAGE_RESULT_PATH=""
+    if [ "$ENABLE_LOGGING" = true ]; then
+        COVERAGE_RESULT_PATH="$XCRESULT_PATH"
+    else
+        COVERAGE_RESULT_PATH="/tmp/jab-tracker-coverage.xcresult"
+    fi
+
+    if [ -d "$COVERAGE_RESULT_PATH" ]; then
+        if [ "$LOG_ONLY" = false ]; then
+            echo ""
+            echo "📊 Code Coverage Report:"
+            echo "=========================="
+            xcrun xccov view --report "$COVERAGE_RESULT_PATH"
+        fi
+
+        # Save coverage JSON if logging is enabled
+        if [ "$ENABLE_LOGGING" = true ]; then
+            xcrun xccov view --report --json "$COVERAGE_RESULT_PATH" > "$LOG_DIR/coverage.json" 2>/dev/null
+            if [ "$LOG_ONLY" = false ]; then
+                echo ""
+                echo "💡 Coverage data saved to: $LOG_DIR/coverage.json"
+            fi
+        elif [ "$LOG_ONLY" = false ]; then
+            echo ""
+            echo "💡 Coverage data saved to: $COVERAGE_RESULT_PATH"
+            echo "💡 To view detailed coverage: xcrun xccov view --file-list $COVERAGE_RESULT_PATH"
+        fi
+    elif [ "$LOG_ONLY" = false ]; then
+        echo ""
+        echo "⚠️  Coverage report requested but result bundle not found."
+        echo "💡 This may happen if tests fail to complete."
+    fi
 fi
+
+# Show summary
+if [ "$ENABLE_LOGGING" = true ]; then
+    echo ""
+    echo "📁 Test Results Summary:"
+    echo "========================"
+    if [ "$TEST_EXIT_CODE" -eq 0 ]; then
+        echo "✅ Tests passed"
+    else
+        echo "❌ Tests failed (exit code: $TEST_EXIT_CODE)"
+    fi
+    echo ""
+    echo "📂 Log files saved to: $LOG_DIR/"
+    echo "   • Test output: $LOG_FILE"
+    echo "   • Result bundle: $XCRESULT_PATH"
+    if [ "$ENABLE_COVERAGE" = true ] && [ -f "$LOG_DIR/coverage.json" ]; then
+        echo "   • Coverage data: $LOG_DIR/coverage.json"
+    fi
+    echo ""
+    echo "💡 View latest logs: cat logs/latest/output.txt"
+    echo "💡 Open result bundle: open $XCRESULT_PATH"
+fi
+
+# Exit with the test exit code
+exit ${TEST_EXIT_CODE:-0}
