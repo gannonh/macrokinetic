@@ -31,6 +31,7 @@ xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
 # Run tests with automatic logging to ./logs directory
 ./scripts/test.sh unit 1              # Unit tests with logging
 ./scripts/test.sh ui 1 OnboardingUITests  # Run specific UI test class (RECOMMENDED)
+./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow  # Run specific UI test method
 ./scripts/test.sh unit 1 --coverage   # Unit tests with coverage
 ./scripts/test.sh unit 1 --no-log     # Unit tests without logging
 ./scripts/test.sh unit 1 --log-only   # Unit tests with logging but no console output

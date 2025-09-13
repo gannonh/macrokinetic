@@ -26,17 +26,18 @@ Where `test_target` can be:
 test -f .claude/testing-config.md || echo "❌ Testing not configured. Run /testing:prime first"
 ```
 
-If test target provided, verify it exists:
-```bash
-# For file targets
-test -f "$ARGUMENTS" || echo "⚠️ Test file not found: $ARGUMENTS"
-```
+If test target provided, verify it exists and determine literal filepath/test pattern/method name: {test_target}
+
+**IMPORTANT** 
+- `$ARGUMENTS` may or may not be a literal file path
+- Unless otherwise mentioned in `$ARGUMENTS`, assume the test should be run **in the worktree branch**.
+- It is your job to determine and verify correct `{test_target}` based on the provided arguments: `$ARGUMENTS`
 
 ## Instructions
 
 ### 1. Determine Test Command
 
-Based on testing-config.md and target:
+Based on `.claude/testing-config.md` and target:
 - No arguments → Run full test suite from config
 - File path → Run specific test file
 - Pattern → Run tests matching pattern
@@ -46,7 +47,7 @@ Based on testing-config.md and target:
 Use the test-runner agent from `.claude/agents/test-runner.md`:
 
 ```markdown
-Execute tests for: $ARGUMENTS (or "all" if empty)
+Execute tests for: `{test_target}` (or "all" if empty)
 
 Requirements:
 - Run with verbose output for debugging
