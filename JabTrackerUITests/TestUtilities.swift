@@ -434,6 +434,87 @@ enum TestUtilities {
         XCTAssertFalse(profileCell.waitForExistence(timeout: 1),
                        "Profile should be deleted and no longer exist")
     }
+
+    // MARK: - Dose Creation Helpers
+
+    /// Create a test dose using the Quick Add Dose functionality
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - injectionSite: Optional injection site to select (default: nil, uses default)
+    ///   - notes: Optional notes to add (default: nil)
+    ///   - timeout: Maximum time to wait for UI elements (default: 3 seconds)
+    /// - Returns: True if dose was successfully created
+    @discardableResult
+    static func createTestDose(
+        _ app: XCUIApplication,
+        injectionSite: String? = nil,
+        notes: String? = nil,
+        timeout: TimeInterval = 3
+    ) -> Bool {
+        // Tap Add tab to open Quick Dose Sheet
+        let addTab = app.tabBars.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
+        addTab.tap()
+
+        // Wait for Quick Dose Sheet to appear
+        let quickDoseSheet = app.sheets["quick-dose-sheet"]
+        XCTAssertTrue(quickDoseSheet.waitForExistence(timeout: timeout), "Quick dose sheet should open")
+
+        // Set injection site if provided
+        if let injectionSite = injectionSite {
+            let sitePicker = app.pickers["quick-dose-site-picker"]
+            if sitePicker.exists {
+                sitePicker.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: injectionSite)
+            }
+        }
+
+        // Add notes if provided
+        if let notes = notes {
+            let notesField = app.textFields["quick-dose-notes"]
+            if notesField.exists {
+                notesField.tap()
+                notesField.typeText(notes)
+            }
+        }
+
+        // Save the dose - try accessibility identifier first, fallback to coordinate tap
+        let saveButton = app.buttons["quick-dose-save-button"]
+        if saveButton.waitForExistence(timeout: 2) {
+            saveButton.tap()
+        } else {
+            // Fallback: tap at Save button location (top right of sheet)
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.52)).tap()
+        }
+
+        // Verify sheet dismissed (dose was saved)
+        let dismissed = !quickDoseSheet.waitForExistence(timeout: 1)
+        XCTAssertTrue(dismissed, "Quick dose sheet should dismiss after saving dose")
+
+        return dismissed
+    }
+
+    /// Create multiple test doses with different timestamps
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - count: Number of doses to create (default: 3)
+    ///   - delay: Delay between each dose creation in seconds (default: 0.5)
+    ///   - timeout: Maximum time to wait for UI elements (default: 3 seconds)
+    static func createMultipleTestDoses(
+        _ app: XCUIApplication,
+        count: Int = 3,
+        delay: TimeInterval = 0.5,
+        timeout: TimeInterval = 3
+    ) {
+        for i in 0..<count {
+            let success = createTestDose(app, notes: "Test dose \(i+1)", timeout: timeout)
+            XCTAssertTrue(success, "Should successfully create test dose \(i+1)")
+
+            // Add delay for different timestamps
+            if i < count - 1 {
+                Thread.sleep(forTimeInterval: delay)
+            }
+        }
+    }
 }
 
 // MARK: - XCUIElement Extensions

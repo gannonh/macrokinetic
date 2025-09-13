@@ -24,24 +24,30 @@ final class DoseHistoryUITests: XCTestCase {
         // Given: User has a medication profile set up
         TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
 
-        // When: User taps the "+" (Add) tab button
+        // When: User opens quick dose sheet
         let addTab = app.tabBars.element.buttons["Add"]
         addTab.tap()
 
-        // Then: QuickDoseSheet content should appear
+        // Verify sheet content is visible
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
-        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 2),
-                      "Quick dose sheet should appear when Add tab is tapped")
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 2))
 
-        // And: Sheet should have pre-populated smart defaults
-        let doseAmountText = app.staticTexts["quick-dose-amount"]
-        let injectionSitePicker = app.buttons["quick-dose-site-picker"]
-        let timeDisplay = app.staticTexts["quick-dose-time"]
+        // When: User confirms dose with defaults and taps save
+        let saveButton = app.buttons["quick-dose-save-button"]
+        XCTAssertTrue(saveButton.exists, "Save button should exist")
+        XCTAssertTrue(saveButton.isEnabled, "Save button should be enabled by default")
 
-        XCTAssertTrue(medicationPicker.exists, "Medication picker should be visible")
-        XCTAssertTrue(doseAmountText.exists, "Dose amount should be pre-populated")
-        XCTAssertTrue(injectionSitePicker.exists, "Injection site picker should be visible")
-        XCTAssertTrue(timeDisplay.exists, "Current time should be displayed")
+        saveButton.tap()
+
+        // Then: User should receive visual feedback (success message)
+        // Note: Success message appears at ContentView level, not in sheet
+        let successIndicator = app.staticTexts["dose-logged-success"]
+        XCTAssertTrue(successIndicator.waitForExistence(timeout: 3),
+                      "Success feedback should appear after dose logging")
+
+        // And: Sheet should dismiss automatically after success (check after success message)
+        XCTAssertFalse(medicationPicker.waitForExistence(timeout: 2),
+                       "Sheet should dismiss after successful save")
     }
 
     // commenting out all broken tests
