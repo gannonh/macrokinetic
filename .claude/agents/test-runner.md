@@ -25,6 +25,23 @@ xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
 ```
 
 ### Testing Commands
+
+**PREFERRED: Use the enhanced test.sh script with automatic logging:**
+```bash
+# Run tests with automatic logging to ./logs directory
+./scripts/test.sh unit 1              # Unit tests with logging
+./scripts/test.sh ui 1                # UI tests with logging
+./scripts/test.sh unit 1 --coverage   # Unit tests with coverage
+./scripts/test.sh unit 1 --no-log     # Unit tests without logging
+./scripts/test.sh unit 1 --log-only   # Unit tests with logging but no console output
+./scripts/test.sh --help              # Show all available options
+
+# View test results
+cat logs/latest/output.txt            # Latest test output
+open logs/latest/results.xcresult     # Open result bundle in Xcode
+```
+
+**Direct xcodebuild commands (less convenient):**
 ```bash
 # Run all tests (unit + UI)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
@@ -35,16 +52,11 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 # Run only UI tests (E2E)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerUITests
 
-# Run specific test method
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests/JabTrackerTests/testUserCreation
-
 # Find available simulators
 xcrun simctl list devices | grep iPhone
 
 # Pretty output with xcbeautify (install with: brew install xcbeautify)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' | xcbeautify
-
-# xcbeautify provides better Swift Testing support than xcpretty
 ```
 
 ### UI Testing with Authentication
