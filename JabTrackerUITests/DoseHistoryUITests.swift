@@ -61,7 +61,7 @@ final class DoseHistoryUITests: XCTestCase {
         // THEN: Edit action appears and functions correctly
         let editButton = app.buttons["Edit"]
         XCTAssertTrue(editButton.waitForExistence(timeout: 3),
-                     "Edit button should appear after swipe")
+                      "Edit button should appear after swipe")
 
         // Tap the Edit button
         editButton.tap()
@@ -70,7 +70,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Wait for the edit sheet to appear
         let editSheet = app.navigationBars["Edit Dose"]
         XCTAssertTrue(editSheet.waitForExistence(timeout: 5),
-                     "Edit dose sheet should appear")
+                      "Edit dose sheet should appear")
 
         // Use the correct accessibility identifiers found through testing
         let cancelButton = app.buttons["quick-dose-cancel-button"]
@@ -83,7 +83,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Use the correct medication picker identifier from the accessibility hierarchy
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
         XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3),
-                     "Medication picker should be available")
+                      "Medication picker should be available")
         medicationPicker.tap()
 
         // Try to select a different medication profile if available
@@ -115,6 +115,8 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_swipeActionsDeleteDose() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: A dose exists in history
 
         // WHEN: User swipes left and taps delete
