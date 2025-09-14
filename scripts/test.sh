@@ -260,11 +260,11 @@ run_tests() {
 
     if [ "$ENABLE_LOGGING" = true ]; then
         if [ "$LOG_ONLY" = true ]; then
-            # Log only - suppress console output
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify > "$LOG_FILE" 2>&1
+            # Log only - suppress console output, strip ANSI codes for clean log file
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify | sed 's/\x1b\[[0-9;]*m//g' > "$LOG_FILE" 2>&1
         else
-            # Log and display
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify | tee "$LOG_FILE"
+            # Log and display - show colored output on console, save clean text to file
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify | tee >(sed 's/\x1b\[[0-9;]*m//g' > "$LOG_FILE")
         fi
         TEST_EXIT_CODE=${PIPESTATUS[0]}
     else
