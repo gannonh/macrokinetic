@@ -74,7 +74,7 @@ schemes:
           randomExecutionOrder: false
     run:
       commandLineArguments:
-        "--force-onboarding": true
-        "--reset-app-data": false
+        "--force-onboarding": false
+        "--reset-app-data": true
         "--ui-testing": false
       storeKitConfiguration: JabTrackerStoreKit.storekit
