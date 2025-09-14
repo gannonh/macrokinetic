@@ -67,12 +67,12 @@ final class DoseHistoryUITests: XCTestCase {
         historyTab.tap()
 
         // Then: History list should display doses in reverse chronological order
-        let historyList = app.tables["dose-history-list"]
-        XCTAssertTrue(historyList.waitForExistence(timeout: 5),
-                     "History list should appear")
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(historyView.waitForExistence(timeout: 5),
+                     "History view should appear")
 
-        // Verify we have the expected number of dose rows
-        let doseRows = historyList.cells.matching(identifier: "dose-history-row")
+        // Verify we have the expected number of dose rows - search in entire app since we found the container
+        let doseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertGreaterThanOrEqual(doseRows.count, 3,
                                    "Should display at least 3 logged doses")
 
