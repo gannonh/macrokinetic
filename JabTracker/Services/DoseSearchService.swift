@@ -355,7 +355,10 @@ class DoseSearchService {
         case .contains:
             return targetText.contains(searchTerm)
         case .exact:
-            return targetText == searchTerm
+            // For exact mode, check if the search term exists as a complete phrase within the text
+            // Use word boundaries to ensure exact phrase matching
+            let pattern = "\\b" + NSRegularExpression.escapedPattern(for: searchTerm) + "\\b"
+            return targetText.range(of: pattern, options: caseSensitive ? .regularExpression : [.regularExpression, .caseInsensitive]) != nil
         case .startsWith:
             return targetText.hasPrefix(searchTerm)
         case .endsWith:
@@ -502,17 +505,17 @@ enum AmountFilter {
     
     /// Check if the given amount matches this filter
     func matches(_ amount: Double) -> Bool {
-        let tolerance = 0.001 // Floating point comparison tolerance
-        
+        let tolerance = 0.0001 // Tighter floating point comparison tolerance
+
         switch self {
         case .equals(let target):
             return abs(amount - target) <= tolerance
         case .greaterThan(let target):
-            return amount > target
+            return amount > target + tolerance
         case .lessThan(let target):
-            return amount < target
+            return amount < target - tolerance
         case .greaterThanOrEqual(let target):
-            return amount >= target - tolerance
+            return amount > target - tolerance
         case .lessThanOrEqual(let target):
             return amount <= target + tolerance
         }

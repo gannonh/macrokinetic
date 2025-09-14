@@ -14,7 +14,11 @@ class DoseHistoryViewModel: ObservableObject {
     // MARK: - Published Properties
     
     /// All doses fetched from SwiftData
-    @Published var allDoses: [Dose] = []
+    @Published var allDoses: [Dose] = [] {
+        didSet {
+            applyFiltersAndSearch()
+        }
+    }
     
     /// Filtered and sorted doses for display
     @Published var filteredDoses: [Dose] = []
@@ -199,8 +203,9 @@ class DoseHistoryViewModel: ObservableObject {
         
         // Apply date range filter
         if let startDate = filterStartDate {
+            let startOfDay = Calendar.current.startOfDay(for: startDate)
             filtered = filtered.filter { dose in
-                dose.timestamp >= startDate
+                dose.timestamp >= startOfDay
             }
         }
         
