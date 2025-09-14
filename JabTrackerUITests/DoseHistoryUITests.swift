@@ -115,18 +115,64 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_swipeActionsDeleteDose() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
-
         // GIVEN: A dose exists in history
+        let app = TestUtilities.launchAppWithTestMode()
 
-        // WHEN: User swipes left and taps delete
+        // Given: User has a medication profile and a dose for it
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+
+        // Navigate to History tab
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // Find the first dose row
+        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let firstDoseRow = doseRows.element(boundBy: 0)
+
+        // WHEN: User swipes left on dose row to reveal trailing actions
+        firstDoseRow.swipeLeft()
+
+        // THEN: Delete action appears
+        let deleteButton = app.buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 3),
+                      "Delete button should appear after swipe")
+
+        // Tap the Delete button
+        deleteButton.tap()
 
         // THEN: Delete confirmation alert appears
+        let deleteAlert = app.alerts["Delete Dose"]
+        XCTAssertTrue(deleteAlert.waitForExistence(timeout: 5),
+                      "Delete confirmation alert should appear")
+
+        // Verify alert has proper buttons
+        let cancelAlertButton = deleteAlert.buttons["Cancel"]
+        let deleteAlertButton = deleteAlert.buttons["Delete"]
+
+        XCTAssertTrue(cancelAlertButton.exists, "Cancel button should exist in alert")
+        XCTAssertTrue(deleteAlertButton.exists, "Delete button should exist in alert")
+
+        // Confirm deletion
+        deleteAlertButton.tap()
 
         // THEN: Dose is removed from list
+        // Wait for alert to dismiss
+        let alertDismissed = !deleteAlert.waitForExistence(timeout: 3)
+        XCTAssertTrue(alertDismissed, "Delete alert should dismiss after confirmation")
+
+        // Verify we're back on the History view
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should return to history view")
+
+        // Verify the dose row no longer exists (empty state or reduced count)
+        // Since we created 1 dose and deleted it, we should see empty state or no dose rows
+        let updatedDoseRows = app.buttons.matching(identifier: "dose-history-row")
+        XCTAssertEqual(updatedDoseRows.count, 0,
+                       "Dose row should be removed after deletion")
     }
 
     func test_doseHistory_swipeActionsSkipDose() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: A non-skipped dose exists in history
 
         // WHEN: User swipes left and taps mark as skipped
@@ -135,6 +181,8 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_swipeActionsDuplicateDose() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: A dose exists in history
 
         // WHEN: User swipes left and taps duplicate
@@ -147,6 +195,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Delete confirmation prevents accidental deletion
 
     func test_doseHistory_deleteConfirmationPreventsAccidentalDeletion() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: A dose exists in history
 
         // WHEN: User starts delete process but cancels confirmation
@@ -159,6 +209,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Search filters list in real-time
 
     func test_doseHistory_searchFiltersInRealTime() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Multiple doses with different notes exist
 
         // WHEN: User enters text in search bar
@@ -169,6 +221,8 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_searchClearsWhenTextRemoved() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Search has filtered the list
 
         // WHEN: User clears search text
@@ -179,6 +233,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Date range filtering works accurately
 
     func test_doseHistory_dateRangeFiltering() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Doses from multiple dates exist
 
         // WHEN: User applies date range filter
@@ -189,6 +245,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Medication and injection site filters apply correctly
 
     func test_doseHistory_medicationFiltering() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Doses with different medications exist
 
         // WHEN: User filters by specific medication
@@ -197,6 +255,8 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_injectionSiteFiltering() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Doses with different injection sites exist
 
         // WHEN: User filters by specific injection site
@@ -207,6 +267,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Pull-to-refresh updates data
 
     func test_doseHistory_pullToRefreshUpdatesData() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Dose history is displayed
 
         // WHEN: User pulls down to refresh
@@ -217,6 +279,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Empty state displays when no doses exist
 
     func test_doseHistory_showsEmptyStateWhenNoDoses() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: No doses exist (fresh app state from reset-app-data)
 
         // WHEN: User navigates to History tab
@@ -227,6 +291,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Section headers group doses by date
 
     func test_doseHistory_groupsDosesByDateSections() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Doses from multiple dates exist
 
         // WHEN: User views history list
@@ -237,6 +303,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: VoiceOver navigation works properly
 
     func test_doseHistory_voiceOverAccessibility() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Doses exist in history
 
         // WHEN: VoiceOver examines the history list
@@ -247,6 +315,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Edit action pre-populates dose entry form
 
     func test_doseHistory_editActionPrePopulatesDoseEntryForm() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: A dose with specific data exists
 
         // WHEN: User edits the dose
@@ -257,6 +327,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Visual indicators for photos and skipped doses
 
     func test_doseHistory_visualIndicatorsForPhotosAndSkippedDoses() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Doses with photos and skipped doses exist
 
         // THEN: Photo indicator is visible for doses with photos
@@ -267,6 +339,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Performance remains smooth with large dose counts
 
     func test_doseHistory_performanceWithLargeDoseCounts() throws {
+        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+
         // GIVEN: Large number of doses exist
 
         // WHEN: User navigates to history and scrolls
