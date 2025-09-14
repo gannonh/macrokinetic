@@ -267,7 +267,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify the dose is still there (count should remain 1)
         let updatedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
         XCTAssertEqual(updatedDoseRows.count, 1,
-                      "Should still have 1 dose after marking as skipped")
+                       "Should still have 1 dose after marking as skipped")
 
         // Verify the dose row still exists and is accessible after being marked as skipped
         XCTAssertTrue(updatedDoseRows.element(boundBy: 0).exists,
@@ -276,13 +276,14 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify the skipped dose shows the X mark symbol indicator
         let skippedIndicator = app.images["skipped-dose-indicator"]
         XCTAssertTrue(skippedIndicator.waitForExistence(timeout: 3),
-                     "Skipped dose should show orange X mark indicator symbol")
+                      "Skipped dose should show orange X mark indicator symbol")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Delete confirmation prevents accidental deletion
 
     func test_doseHistory_deleteConfirmationPreventsAccidentalDeletion() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: A dose exists in history
 
@@ -296,7 +297,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Search filters list in real-time
 
     func test_doseHistory_searchFiltersInRealTime() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Multiple doses with different notes exist
 
@@ -308,7 +310,8 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_searchClearsWhenTextRemoved() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Search has filtered the list
 
@@ -320,7 +323,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Date range filtering works accurately
 
     func test_doseHistory_dateRangeFiltering() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Doses from multiple dates exist
 
@@ -332,8 +336,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Medication and injection site filters apply correctly
 
     func test_doseHistory_medicationFiltering() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
-
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
         // GIVEN: Doses with different medications exist
 
         // WHEN: User filters by specific medication
@@ -342,7 +346,8 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_injectionSiteFiltering() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Doses with different injection sites exist
 
@@ -354,7 +359,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Pull-to-refresh updates data
 
     func test_doseHistory_pullToRefreshUpdatesData() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Dose history is displayed
 
@@ -366,7 +372,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Empty state displays when no doses exist
 
     func test_doseHistory_showsEmptyStateWhenNoDoses() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: No doses exist (fresh app state from reset-app-data)
 
@@ -378,7 +385,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Section headers group doses by date
 
     func test_doseHistory_groupsDosesByDateSections() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Doses from multiple dates exist
 
@@ -390,7 +398,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: VoiceOver navigation works properly
 
     func test_doseHistory_voiceOverAccessibility() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Doses exist in history
 
@@ -402,7 +411,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Edit action pre-populates dose entry form
 
     func test_doseHistory_editActionPrePopulatesDoseEntryForm() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: A dose with specific data exists
 
@@ -414,7 +424,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Visual indicators for photos and skipped doses
 
     func test_doseHistory_visualIndicatorsForPhotosAndSkippedDoses() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Doses with photos and skipped doses exist
 
@@ -426,7 +437,8 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Performance remains smooth with large dose counts
 
     func test_doseHistory_performanceWithLargeDoseCounts() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
 
         // GIVEN: Large number of doses exist
 
