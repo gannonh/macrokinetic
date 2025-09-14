@@ -104,10 +104,10 @@ final class MedicationProfile {
     var currentDose: Double = 0.0
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
-    
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.medicationProfile)
     var doses: [Dose] = []
-    
+
     init(genericName: String, brandName: String, currentDose: Double) {
         self.genericName = genericName
         self.brandName = brandName
@@ -116,6 +116,65 @@ final class MedicationProfile {
         self.updatedAt = Date()
     }
 }
+```
+
+### SwiftData + CloudKit Relationship Patterns
+
+#### The One-Side Rule
+- **ONLY the parent/owning side** should have `@Relationship` attributes
+- **Child/referenced side** uses plain properties (no `@Relationship`)
+- **CloudKit requires explicit inverse specification** in the parent's `@Relationship`
+- **Never add `@Relationship` to both sides** - this creates circular references that break SwiftData
+
+#### Correct Pattern Example:
+```swift
+// ✅ CORRECT: Parent (User) - HAS @Relationship with inverse
+@Model
+final class User {
+    @Relationship(deleteRule: .cascade, inverse: \Dose.user)
+    var doses: [Dose]?
+
+    @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
+    var medicationProfiles: [MedicationProfile]?
+}
+
+// ✅ CORRECT: Child (Dose) - Plain property, NO @Relationship
+@Model
+final class Dose {
+    var user: User?  // Plain property - NO @Relationship attribute
+    var medication: MedicationProfile?  // Plain property - NO @Relationship attribute
+}
+
+// ✅ CORRECT: Another Parent (MedicationProfile) with its own children
+@Model
+final class MedicationProfile {
+    var user: User?  // Plain property - this is a child reference
+
+    @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
+    var doses: [Dose]?  // Parent relationship to Doses
+}
+```
+
+#### Common Mistakes to Avoid:
+```swift
+// ❌ WRONG: Adding @Relationship to both sides creates circular references
+@Model
+final class Dose {
+    @Relationship(inverse: \User.doses)  // ❌ Don't do this!
+    var user: User?
+}
+```
+
+#### Testing Pattern for SwiftData Relationships:
+```swift
+// Tests must disable CloudKit to avoid relationship validation errors
+let schema = Schema([User.self, Dose.self, MedicationProfile.self])
+let config = ModelConfiguration(
+    schema: schema,
+    isStoredInMemoryOnly: true,
+    cloudKitDatabase: .none  // Critical: Disable CloudKit for tests
+)
+let container = try ModelContainer(for: schema, configurations: [config])
 ```
 
 ## Testing Standards

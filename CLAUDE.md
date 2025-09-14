@@ -351,6 +351,7 @@ xcodegen generate
 - All models use CloudKit-compatible default values (avoids optionals where possible)
 - Include `createdAt` and `updatedAt` timestamps for audit trails
 - Use proper `@Relationship` attributes with `inverse` and `deleteRule` specifications
+- **One-Side Relationship Rule**: Only parent entities use `@Relationship(inverse:)` - child entities use plain properties to avoid circular references
 - Example: `MedicationProfile` with enhanced fields for compounding and dose escalation
 
 ### Authentication Implementation Gotchas
