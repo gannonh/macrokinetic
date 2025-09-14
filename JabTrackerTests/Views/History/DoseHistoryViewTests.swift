@@ -16,7 +16,7 @@ struct DoseHistoryViewTests {
     // MARK: - Test Infrastructure
     
     private func createTestModelContext() -> ModelContext {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try! ModelContainer(for: User.self, Dose.self, MedicationProfile.self, configurations: config)
         return ModelContext(container)
     }
@@ -78,22 +78,24 @@ struct DoseHistoryViewTests {
         let dose1 = createTestDose(context: context, user: user, medication: medication, amount: 1.0)
         let dose2 = createTestDose(context: context, user: user, medication: medication, amount: 0.5, timestamp: Date().addingTimeInterval(-86400))
         
-        let viewModel = DoseHistoryViewModel()
-        
+        let viewModel = await DoseHistoryViewModel()
+
         // Load data
-        viewModel.loadData(context: context)
+        await viewModel.loadData(context: context)
         
         // Wait for async operation
         try await Task.sleep(nanoseconds: 100_000_000)
         
         // Verify data is loaded
-        #expect(viewModel.allDoses.count == 2)
-        #expect(viewModel.filteredDoses.count == 2)
-        #expect(viewModel.isLoading == false)
-        
-        // Verify sorting (newest first)
-        #expect(viewModel.filteredDoses.first?.id == dose1.id)
-        #expect(viewModel.filteredDoses.last?.id == dose2.id)
+        await MainActor.run {
+            #expect(viewModel.allDoses.count == 2)
+            #expect(viewModel.filteredDoses.count == 2)
+            #expect(viewModel.isLoading == false)
+
+            // Verify sorting (newest first)
+            #expect(viewModel.filteredDoses.first?.id == dose1.id)
+            #expect(viewModel.filteredDoses.last?.id == dose2.id)
+        }
     }
     
     @Test("DoseHistoryViewModel search functionality works")
@@ -107,28 +109,36 @@ struct DoseHistoryViewTests {
         let dose2 = createTestDose(context: context, user: user, medication: medication, notes: "Evening dose")
         let dose3 = createTestDose(context: context, user: user, medication: medication, notes: "Weekly medication")
         
-        let viewModel = DoseHistoryViewModel()
-        viewModel.loadData(context: context)
-        
+        let viewModel = await DoseHistoryViewModel()
+        await viewModel.loadData(context: context)
+
         // Wait for data to load
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test search
-        viewModel.searchText = "morning"
-        
+        await MainActor.run {
+            viewModel.searchText = "morning"
+        }
+
         // Wait for filter to apply
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Verify search results
-        #expect(viewModel.filteredDoses.count == 1)
-        #expect(viewModel.filteredDoses.first?.notes == "Morning injection")
-        
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 1)
+            #expect(viewModel.filteredDoses.first?.notes == "Morning injection")
+        }
+
         // Test case-insensitive search
-        viewModel.searchText = "EVENING"
+        await MainActor.run {
+            viewModel.searchText = "EVENING"
+        }
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 1)
-        #expect(viewModel.filteredDoses.first?.notes == "Evening dose")
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 1)
+            #expect(viewModel.filteredDoses.first?.notes == "Evening dose")
+        }
     }
     
     @Test("DoseHistoryViewModel filters work correctly")
@@ -151,33 +161,45 @@ struct DoseHistoryViewTests {
         let dose2 = createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
         let dose3 = createTestDose(context: context, user: user, medication: medication1, site: "Arm", skipped: true)
         
-        let viewModel = DoseHistoryViewModel()
-        viewModel.loadData(context: context)
-        
+        let viewModel = await DoseHistoryViewModel()
+        await viewModel.loadData(context: context)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test medication filter
-        viewModel.selectedMedicationFilter = "Semaglutide"
+        await MainActor.run {
+            viewModel.selectedMedicationFilter = "Semaglutide"
+        }
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 2) // dose1 and dose3
-        #expect(viewModel.filteredDoses.allSatisfy { $0.medication?.genericName == "Semaglutide" })
-        
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 2) // dose1 and dose3
+            #expect(viewModel.filteredDoses.allSatisfy { $0.medication?.genericName == "Semaglutide" })
+        }
+
         // Test injection site filter
-        viewModel.selectedMedicationFilter = nil
-        viewModel.selectedInjectionSiteFilter = "Thigh"
+        await MainActor.run {
+            viewModel.selectedMedicationFilter = nil
+            viewModel.selectedInjectionSiteFilter = "Thigh"
+        }
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 1)
-        #expect(viewModel.filteredDoses.first?.site == "Thigh")
-        
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 1)
+            #expect(viewModel.filteredDoses.first?.site == "Thigh")
+        }
+
         // Test show skipped filter
-        viewModel.selectedInjectionSiteFilter = nil
-        viewModel.showSkippedDoses = false
+        await MainActor.run {
+            viewModel.selectedInjectionSiteFilter = nil
+            viewModel.showSkippedDoses = false
+        }
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 2) // dose1 and dose2 (not skipped)
-        #expect(viewModel.filteredDoses.allSatisfy { !$0.skipped })
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 2) // dose1 and dose2 (not skipped)
+            #expect(viewModel.filteredDoses.allSatisfy { !$0.skipped })
+        }
     }
     
     @Test("DoseHistoryViewModel CRUD operations work")
@@ -188,37 +210,41 @@ struct DoseHistoryViewTests {
         
         let dose = createTestDose(context: context, user: user, medication: medication)
         
-        let viewModel = DoseHistoryViewModel()
-        viewModel.loadData(context: context)
-        
+        let viewModel = await DoseHistoryViewModel()
+        await viewModel.loadData(context: context)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
-        let initialCount = viewModel.allDoses.count
-        
+
+        let initialCount = await MainActor.run { viewModel.allDoses.count }
+
         // Test toggle skipped status
-        try viewModel.toggleSkippedStatus(for: dose, context: context)
+        try await viewModel.toggleSkippedStatus(for: dose, context: context)
         #expect(dose.skipped == true)
-        
+
         // Test duplicate dose
-        try viewModel.duplicateDose(dose, context: context)
+        try await viewModel.duplicateDose(dose, context: context)
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.allDoses.count == initialCount + 1)
-        
+
+        await MainActor.run {
+            #expect(viewModel.allDoses.count == initialCount + 1)
+        }
+
         // Find the duplicated dose
-        let duplicatedDose = viewModel.allDoses.first { $0.id != dose.id }
+        let duplicatedDose = await MainActor.run { viewModel.allDoses.first { $0.id != dose.id } }
         #expect(duplicatedDose != nil)
         #expect(duplicatedDose?.amount == dose.amount)
         #expect(duplicatedDose?.site == dose.site)
         #expect(duplicatedDose?.notes == dose.notes)
         #expect(duplicatedDose?.skipped == false) // New dose should not be skipped
-        
+
         // Test delete dose
-        try viewModel.deleteDose(dose, context: context)
+        try await viewModel.deleteDose(dose, context: context)
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.allDoses.count == initialCount) // Back to original count
-        #expect(!viewModel.allDoses.contains { $0.id == dose.id })
+
+        await MainActor.run {
+            #expect(viewModel.allDoses.count == initialCount) // Back to original count
+            #expect(!viewModel.allDoses.contains { $0.id == dose.id })
+        }
     }
     
     @Test("DoseHistoryViewModel grouped doses work correctly")
@@ -237,26 +263,26 @@ struct DoseHistoryViewTests {
         let dose3 = createTestDose(context: context, user: user, medication: medication, timestamp: yesterday)
         let dose4 = createTestDose(context: context, user: user, medication: medication, timestamp: twoDaysAgo)
         
-        let viewModel = DoseHistoryViewModel()
-        viewModel.loadData(context: context)
-        
+        let viewModel = await DoseHistoryViewModel()
+        await viewModel.loadData(context: context)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
-        let groupedDoses = viewModel.groupedDoses
-        
+
+        let groupedDoses = await MainActor.run { viewModel.groupedDoses }
+
         // Should have 3 date groups
         #expect(groupedDoses.count == 3)
-        
+
         // Verify grouping and sorting
         let todayGroup = groupedDoses.first
         #expect(todayGroup?.1.count == 2) // Two doses today
-        
+
         // Verify dates are sorted descending (newest first)
         let dates = groupedDoses.map { $0.0 }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        
+
         let todayString = formatter.string(from: today)
         #expect(dates.first == todayString)
     }
@@ -264,66 +290,70 @@ struct DoseHistoryViewTests {
     @Test("DoseHistoryViewModel error handling works")
     func testViewModelErrorHandling() async throws {
         // Create a context that will fail operations
-        let viewModel = DoseHistoryViewModel()
-        
+        let viewModel = await DoseHistoryViewModel()
+
         // Test error state
-        #expect(viewModel.errorMessage == nil)
-        
-        // This would normally be tested with a failing context,
-        // but for this test we'll verify the error property exists and can be set
-        viewModel.errorMessage = "Test error"
-        #expect(viewModel.errorMessage == "Test error")
-        
-        // Test clearing error
-        viewModel.errorMessage = nil
-        #expect(viewModel.errorMessage == nil)
+        await MainActor.run {
+            #expect(viewModel.errorMessage == nil)
+
+            // This would normally be tested with a failing context,
+            // but for this test we'll verify the error property exists and can be set
+            viewModel.errorMessage = "Test error"
+            #expect(viewModel.errorMessage == "Test error")
+
+            // Test clearing error
+            viewModel.errorMessage = nil
+            #expect(viewModel.errorMessage == nil)
+        }
     }
     
     @Test("DoseHistoryViewModel hasActiveFilters property works")
     func testViewModelHasActiveFilters() async throws {
-        let viewModel = DoseHistoryViewModel()
-        
-        // Initially no filters
-        #expect(viewModel.hasActiveFilters == false)
-        
-        // Test search text
-        viewModel.searchText = "test"
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.searchText = ""
-        #expect(viewModel.hasActiveFilters == false)
-        
-        // Test medication filter
-        viewModel.selectedMedicationFilter = "Semaglutide"
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.selectedMedicationFilter = nil
-        #expect(viewModel.hasActiveFilters == false)
-        
-        // Test injection site filter
-        viewModel.selectedInjectionSiteFilter = "Thigh"
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.selectedInjectionSiteFilter = nil
-        #expect(viewModel.hasActiveFilters == false)
-        
-        // Test date filters
-        viewModel.filterStartDate = Date()
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.filterStartDate = nil
-        viewModel.filterEndDate = Date()
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.filterEndDate = nil
-        #expect(viewModel.hasActiveFilters == false)
-        
-        // Test show skipped filter
-        viewModel.showSkippedDoses = false
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.showSkippedDoses = true
-        #expect(viewModel.hasActiveFilters == false)
+        let viewModel = await DoseHistoryViewModel()
+
+        await MainActor.run {
+            // Initially no filters
+            #expect(viewModel.hasActiveFilters == false)
+
+            // Test search text
+            viewModel.searchText = "test"
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.searchText = ""
+            #expect(viewModel.hasActiveFilters == false)
+
+            // Test medication filter
+            viewModel.selectedMedicationFilter = "Semaglutide"
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.selectedMedicationFilter = nil
+            #expect(viewModel.hasActiveFilters == false)
+
+            // Test injection site filter
+            viewModel.selectedInjectionSiteFilter = "Thigh"
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.selectedInjectionSiteFilter = nil
+            #expect(viewModel.hasActiveFilters == false)
+
+            // Test date filters
+            viewModel.filterStartDate = Date()
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.filterStartDate = nil
+            viewModel.filterEndDate = Date()
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.filterEndDate = nil
+            #expect(viewModel.hasActiveFilters == false)
+
+            // Test show skipped filter
+            viewModel.showSkippedDoses = false
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.showSkippedDoses = true
+            #expect(viewModel.hasActiveFilters == false)
+        }
     }
     
     @Test("DoseHistoryViewModel available medications and sites work")
@@ -346,23 +376,25 @@ struct DoseHistoryViewTests {
         let dose2 = createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
         let dose3 = createTestDose(context: context, user: user, medication: medication1, site: "Arm")
         
-        let viewModel = DoseHistoryViewModel()
-        viewModel.loadData(context: context)
-        
+        let viewModel = await DoseHistoryViewModel()
+        await viewModel.loadData(context: context)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
-        // Test available medications
-        let availableMeds = viewModel.availableMedications
-        #expect(availableMeds.count == 2)
-        #expect(availableMeds.contains("Semaglutide"))
-        #expect(availableMeds.contains("Tirzepatide"))
-        
-        // Test available injection sites
-        let availableSites = viewModel.availableInjectionSites
-        #expect(availableSites.count == 3)
-        #expect(availableSites.contains("Thigh"))
-        #expect(availableSites.contains("Abdomen"))
-        #expect(availableSites.contains("Arm"))
+
+        await MainActor.run {
+            // Test available medications
+            let availableMeds = viewModel.availableMedications
+            #expect(availableMeds.count == 2)
+            #expect(availableMeds.contains("Semaglutide"))
+            #expect(availableMeds.contains("Tirzepatide"))
+
+            // Test available injection sites
+            let availableSites = viewModel.availableInjectionSites
+            #expect(availableSites.count == 3)
+            #expect(availableSites.contains("Thigh"))
+            #expect(availableSites.contains("Abdomen"))
+            #expect(availableSites.contains("Arm"))
+        }
     }
     
     @Test("DoseHistoryViewModel refresh functionality works")
@@ -373,18 +405,22 @@ struct DoseHistoryViewTests {
         
         let dose = createTestDose(context: context, user: user, medication: medication)
         
-        let viewModel = DoseHistoryViewModel()
-        viewModel.loadData(context: context)
-        
+        let viewModel = await DoseHistoryViewModel()
+        await viewModel.loadData(context: context)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
-        #expect(viewModel.isRefreshing == false)
-        
+
+        await MainActor.run {
+            #expect(viewModel.isRefreshing == false)
+        }
+
         // Test refresh
         await viewModel.refreshData(context: context)
-        
-        #expect(viewModel.isRefreshing == false) // Should be false after completion
-        #expect(viewModel.allDoses.count >= 1) // Data should still be loaded
+
+        await MainActor.run {
+            #expect(viewModel.isRefreshing == false) // Should be false after completion
+            #expect(viewModel.allDoses.count >= 1) // Data should still be loaded
+        }
     }
 }
 

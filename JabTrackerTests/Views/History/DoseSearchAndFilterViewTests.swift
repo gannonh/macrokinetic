@@ -16,16 +16,16 @@ struct DoseSearchAndFilterViewTests {
     // MARK: - Test Infrastructure
     
     private func createTestModelContext() -> ModelContext {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try! ModelContainer(for: User.self, Dose.self, MedicationProfile.self, configurations: config)
         return ModelContext(container)
     }
     
-    private func createTestViewModel() -> DoseHistoryViewModel {
-        return DoseHistoryViewModel()
+    private func createTestViewModel() async -> DoseHistoryViewModel {
+        return await DoseHistoryViewModel()
     }
     
-    private func setupTestData(context: ModelContext, viewModel: DoseHistoryViewModel) {
+    private func setupTestData(context: ModelContext, viewModel: DoseHistoryViewModel) async {
         let user = User(email: "test@example.com", name: "Test User")
         context.insert(user)
         
@@ -80,16 +80,16 @@ struct DoseSearchAndFilterViewTests {
         try! context.save()
         
         // Load data into view model
-        viewModel.loadData(context: context)
+        await viewModel.loadData(context: context)
     }
     
     // MARK: - View Creation Tests
     
     @Test("DoseSearchAndFilterView can be created with view model")
-    func testViewCreation() {
-        let viewModel = createTestViewModel()
+    func testViewCreation() async {
+        let viewModel = await createTestViewModel()
         let view = DoseSearchAndFilterView(viewModel: viewModel)
-        
+
         // Should not crash
         #expect(view.viewModel === viewModel)
     }
@@ -99,43 +99,53 @@ struct DoseSearchAndFilterViewTests {
     @Test("Search text binding works correctly")
     func testSearchTextBinding() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         let view = DoseSearchAndFilterView(viewModel: viewModel)
-        
+
         // Wait for data to load
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test initial state
-        #expect(viewModel.searchText.isEmpty)
-        
+        await MainActor.run {
+            #expect(viewModel.searchText.isEmpty)
+        }
+
         // Test search text update
-        viewModel.searchText = "morning"
-        
+        await MainActor.run {
+            viewModel.searchText = "morning"
+        }
+
         // Wait for filter to apply
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.searchText == "morning")
-        #expect(viewModel.filteredDoses.count == 1)
-        #expect(viewModel.filteredDoses.first?.notes == "Morning dose")
+
+        await MainActor.run {
+            #expect(viewModel.searchText == "morning")
+            #expect(viewModel.filteredDoses.count == 1)
+            #expect(viewModel.filteredDoses.first?.notes == "Morning dose")
+        }
     }
     
     @Test("Clear search functionality works")
     func testClearSearchFunctionality() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Set search text
-        viewModel.searchText = "test search"
-        #expect(!viewModel.searchText.isEmpty)
-        
+        await MainActor.run {
+            viewModel.searchText = "test search"
+            #expect(!viewModel.searchText.isEmpty)
+        }
+
         // Clear search
-        viewModel.searchText = ""
-        #expect(viewModel.searchText.isEmpty)
+        await MainActor.run {
+            viewModel.searchText = ""
+            #expect(viewModel.searchText.isEmpty)
+        }
     }
     
     // MARK: - Filter Functionality Tests
@@ -143,108 +153,138 @@ struct DoseSearchAndFilterViewTests {
     @Test("Medication filter works correctly")
     func testMedicationFilter() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test initial state
-        #expect(viewModel.selectedMedicationFilter == nil)
-        #expect(viewModel.availableMedications.count == 2)
-        #expect(viewModel.availableMedications.contains("Semaglutide"))
-        #expect(viewModel.availableMedications.contains("Tirzepatide"))
-        
+        await MainActor.run {
+            #expect(viewModel.selectedMedicationFilter == nil)
+            #expect(viewModel.availableMedications.count == 2)
+            #expect(viewModel.availableMedications.contains("Semaglutide"))
+            #expect(viewModel.availableMedications.contains("Tirzepatide"))
+        }
+
         // Apply medication filter
-        viewModel.selectedMedicationFilter = "Semaglutide"
-        
+        await MainActor.run {
+            viewModel.selectedMedicationFilter = "Semaglutide"
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 2) // Two Semaglutide doses
-        #expect(viewModel.filteredDoses.allSatisfy { $0.medication?.genericName == "Semaglutide" })
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 2) // Two Semaglutide doses
+            #expect(viewModel.filteredDoses.allSatisfy { $0.medication?.genericName == "Semaglutide" })
+        }
     }
     
     @Test("Injection site filter works correctly")
     func testInjectionSiteFilter() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test initial state
-        #expect(viewModel.selectedInjectionSiteFilter == nil)
-        #expect(viewModel.availableInjectionSites.count == 3)
-        #expect(viewModel.availableInjectionSites.contains("Thigh"))
-        #expect(viewModel.availableInjectionSites.contains("Abdomen"))
-        #expect(viewModel.availableInjectionSites.contains("Arm"))
-        
+        await MainActor.run {
+            #expect(viewModel.selectedInjectionSiteFilter == nil)
+            #expect(viewModel.availableInjectionSites.count == 3)
+            #expect(viewModel.availableInjectionSites.contains("Thigh"))
+            #expect(viewModel.availableInjectionSites.contains("Abdomen"))
+            #expect(viewModel.availableInjectionSites.contains("Arm"))
+        }
+
         // Apply injection site filter
-        viewModel.selectedInjectionSiteFilter = "Thigh"
-        
+        await MainActor.run {
+            viewModel.selectedInjectionSiteFilter = "Thigh"
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 1)
-        #expect(viewModel.filteredDoses.first?.site == "Thigh")
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 1)
+            #expect(viewModel.filteredDoses.first?.site == "Thigh")
+        }
     }
     
     @Test("Show skipped doses toggle works")
     func testShowSkippedDosesToggle() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test initial state (show all doses including skipped)
-        #expect(viewModel.showSkippedDoses == true)
-        #expect(viewModel.filteredDoses.count == 3)
-        
+        await MainActor.run {
+            #expect(viewModel.showSkippedDoses == true)
+            #expect(viewModel.filteredDoses.count == 3)
+        }
+
         // Hide skipped doses
-        viewModel.showSkippedDoses = false
-        
+        await MainActor.run {
+            viewModel.showSkippedDoses = false
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 2) // Exclude the skipped dose
-        #expect(viewModel.filteredDoses.allSatisfy { !$0.skipped })
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 2) // Exclude the skipped dose
+            #expect(viewModel.filteredDoses.allSatisfy { !$0.skipped })
+        }
     }
     
     @Test("Date range filters work correctly")
     func testDateRangeFilters() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         let today = Date()
         let yesterday = today.addingTimeInterval(-86400)
-        
+
         // Test start date filter
-        viewModel.filterStartDate = yesterday
-        
+        await MainActor.run {
+            viewModel.filterStartDate = yesterday
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should show doses from yesterday onwards
-        #expect(viewModel.filteredDoses.count >= 2)
-        
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count >= 2)
+        }
+
         // Test end date filter
-        viewModel.filterStartDate = nil
-        viewModel.filterEndDate = yesterday
-        
+        await MainActor.run {
+            viewModel.filterStartDate = nil
+            viewModel.filterEndDate = yesterday
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should show doses up to yesterday
-        #expect(viewModel.filteredDoses.count >= 1)
-        
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count >= 1)
+        }
+
         // Test both start and end date
         let twoDaysAgo = today.addingTimeInterval(-172800)
-        viewModel.filterStartDate = twoDaysAgo
-        viewModel.filterEndDate = today
-        
+        await MainActor.run {
+            viewModel.filterStartDate = twoDaysAgo
+            viewModel.filterEndDate = today
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should show all doses in range
-        #expect(viewModel.filteredDoses.count >= 2)
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count >= 2)
+        }
     }
     
     // MARK: - Active Filters Tests
@@ -252,88 +292,108 @@ struct DoseSearchAndFilterViewTests {
     @Test("Active filters detection works correctly")
     func testActiveFiltersDetection() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test initial state - no active filters
-        #expect(viewModel.hasActiveFilters == false)
-        
+        await MainActor.run {
+            #expect(viewModel.hasActiveFilters == false)
+        }
+
         // Test search text filter
-        viewModel.searchText = "test"
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.searchText = ""
-        #expect(viewModel.hasActiveFilters == false)
-        
+        await MainActor.run {
+            viewModel.searchText = "test"
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.searchText = ""
+            #expect(viewModel.hasActiveFilters == false)
+        }
+
         // Test medication filter
-        viewModel.selectedMedicationFilter = "Semaglutide"
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.selectedMedicationFilter = nil
-        #expect(viewModel.hasActiveFilters == false)
-        
+        await MainActor.run {
+            viewModel.selectedMedicationFilter = "Semaglutide"
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.selectedMedicationFilter = nil
+            #expect(viewModel.hasActiveFilters == false)
+        }
+
         // Test injection site filter
-        viewModel.selectedInjectionSiteFilter = "Thigh"
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.selectedInjectionSiteFilter = nil
-        #expect(viewModel.hasActiveFilters == false)
-        
+        await MainActor.run {
+            viewModel.selectedInjectionSiteFilter = "Thigh"
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.selectedInjectionSiteFilter = nil
+            #expect(viewModel.hasActiveFilters == false)
+        }
+
         // Test date filters
-        viewModel.filterStartDate = Date()
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.filterStartDate = nil
-        viewModel.filterEndDate = Date()
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.filterEndDate = nil
-        #expect(viewModel.hasActiveFilters == false)
-        
+        await MainActor.run {
+            viewModel.filterStartDate = Date()
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.filterStartDate = nil
+            viewModel.filterEndDate = Date()
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.filterEndDate = nil
+            #expect(viewModel.hasActiveFilters == false)
+        }
+
         // Test show skipped filter
-        viewModel.showSkippedDoses = false
-        #expect(viewModel.hasActiveFilters == true)
-        
-        viewModel.showSkippedDoses = true
-        #expect(viewModel.hasActiveFilters == false)
+        await MainActor.run {
+            viewModel.showSkippedDoses = false
+            #expect(viewModel.hasActiveFilters == true)
+
+            viewModel.showSkippedDoses = true
+            #expect(viewModel.hasActiveFilters == false)
+        }
     }
     
     @Test("Clear all filters functionality works")
     func testClearAllFilters() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Set multiple filters
-        viewModel.searchText = "test"
-        viewModel.selectedMedicationFilter = "Semaglutide"
-        viewModel.selectedInjectionSiteFilter = "Thigh"
-        viewModel.filterStartDate = Date()
-        viewModel.filterEndDate = Date()
-        viewModel.showSkippedDoses = false
-        
-        #expect(viewModel.hasActiveFilters == true)
-        
+        await MainActor.run {
+            viewModel.searchText = "test"
+            viewModel.selectedMedicationFilter = "Semaglutide"
+            viewModel.selectedInjectionSiteFilter = "Thigh"
+            viewModel.filterStartDate = Date()
+            viewModel.filterEndDate = Date()
+            viewModel.showSkippedDoses = false
+
+            #expect(viewModel.hasActiveFilters == true)
+        }
+
         // Clear all filters
-        viewModel.clearAllFilters()
-        
+        await MainActor.run {
+            viewModel.clearAllFilters()
+        }
+
         // Verify all filters are cleared
-        #expect(viewModel.searchText.isEmpty)
-        #expect(viewModel.selectedMedicationFilter == nil)
-        #expect(viewModel.selectedInjectionSiteFilter == nil)
-        #expect(viewModel.filterStartDate == nil)
-        #expect(viewModel.filterEndDate == nil)
-        #expect(viewModel.showSkippedDoses == true)
-        #expect(viewModel.hasActiveFilters == false)
-        
+        await MainActor.run {
+            #expect(viewModel.searchText.isEmpty)
+            #expect(viewModel.selectedMedicationFilter == nil)
+            #expect(viewModel.selectedInjectionSiteFilter == nil)
+            #expect(viewModel.filterStartDate == nil)
+            #expect(viewModel.filterEndDate == nil)
+            #expect(viewModel.showSkippedDoses == true)
+            #expect(viewModel.hasActiveFilters == false)
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should show all doses again
-        #expect(viewModel.filteredDoses.count == 3)
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 3)
+        }
     }
     
     // MARK: - Date Range Display Tests
@@ -341,41 +401,49 @@ struct DoseSearchAndFilterViewTests {
     @Test("Date range display text formats correctly")
     func testDateRangeDisplayText() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         let view = DoseSearchAndFilterView(viewModel: viewModel)
-        
+
         // Test no date range
-        #expect(viewModel.filterStartDate == nil)
-        #expect(viewModel.filterEndDate == nil)
-        // Display text should be "All dates"
-        
+        await MainActor.run {
+            #expect(viewModel.filterStartDate == nil)
+            #expect(viewModel.filterEndDate == nil)
+            // Display text should be "All dates"
+        }
+
         // Test start date only
         let startDate = Date()
-        viewModel.filterStartDate = startDate
-        viewModel.filterEndDate = nil
-        
-        // Display text should include "From [date]"
-        #expect(viewModel.filterStartDate != nil)
-        #expect(viewModel.filterEndDate == nil)
-        
+        await MainActor.run {
+            viewModel.filterStartDate = startDate
+            viewModel.filterEndDate = nil
+
+            // Display text should include "From [date]"
+            #expect(viewModel.filterStartDate != nil)
+            #expect(viewModel.filterEndDate == nil)
+        }
+
         // Test end date only
-        viewModel.filterStartDate = nil
-        viewModel.filterEndDate = startDate
-        
-        // Display text should include "Until [date]"
-        #expect(viewModel.filterStartDate == nil)
-        #expect(viewModel.filterEndDate != nil)
-        
+        await MainActor.run {
+            viewModel.filterStartDate = nil
+            viewModel.filterEndDate = startDate
+
+            // Display text should include "Until [date]"
+            #expect(viewModel.filterStartDate == nil)
+            #expect(viewModel.filterEndDate != nil)
+        }
+
         // Test both dates
         let endDate = startDate.addingTimeInterval(86400)
-        viewModel.filterStartDate = startDate
-        viewModel.filterEndDate = endDate
-        
-        // Display text should include both dates
-        #expect(viewModel.filterStartDate != nil)
-        #expect(viewModel.filterEndDate != nil)
+        await MainActor.run {
+            viewModel.filterStartDate = startDate
+            viewModel.filterEndDate = endDate
+
+            // Display text should include both dates
+            #expect(viewModel.filterStartDate != nil)
+            #expect(viewModel.filterEndDate != nil)
+        }
     }
     
     // MARK: - Multiple Filters Combination Tests
@@ -383,43 +451,51 @@ struct DoseSearchAndFilterViewTests {
     @Test("Multiple filters work together correctly")
     func testMultipleFiltersInteraction() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Apply multiple filters that should narrow results
-        viewModel.selectedMedicationFilter = "Semaglutide"
-        viewModel.selectedInjectionSiteFilter = "Thigh"
-        viewModel.searchText = "morning"
-        
+        await MainActor.run {
+            viewModel.selectedMedicationFilter = "Semaglutide"
+            viewModel.selectedInjectionSiteFilter = "Thigh"
+            viewModel.searchText = "morning"
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should find the one dose that matches all criteria
-        #expect(viewModel.filteredDoses.count == 1)
-        
-        let matchingDose = viewModel.filteredDoses.first!
-        #expect(matchingDose.medication?.genericName == "Semaglutide")
-        #expect(matchingDose.site == "Thigh")
-        #expect(matchingDose.notes?.localizedCaseInsensitiveContains("morning") == true)
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 1)
+
+            let matchingDose = viewModel.filteredDoses.first!
+            #expect(matchingDose.medication?.genericName == "Semaglutide")
+            #expect(matchingDose.site == "Thigh")
+            #expect(matchingDose.notes?.localizedCaseInsensitiveContains("morning") == true)
+        }
     }
     
     @Test("Conflicting filters produce empty results")
     func testConflictingFilters() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Apply conflicting filters (medication that doesn't have this injection site)
-        viewModel.selectedMedicationFilter = "Tirzepatide"
-        viewModel.selectedInjectionSiteFilter = "Thigh" // Only Semaglutide dose is in Thigh
-        
+        await MainActor.run {
+            viewModel.selectedMedicationFilter = "Tirzepatide"
+            viewModel.selectedInjectionSiteFilter = "Thigh" // Only Semaglutide dose is in Thigh
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should find no matching doses
-        #expect(viewModel.filteredDoses.isEmpty)
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.isEmpty)
+        }
     }
     
     // MARK: - Filter State Persistence Tests
@@ -427,24 +503,28 @@ struct DoseSearchAndFilterViewTests {
     @Test("Filter state persists during view lifecycle")
     func testFilterStatePersistence() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Set filters
-        viewModel.searchText = "morning"
-        viewModel.selectedMedicationFilter = "Semaglutide"
-        
+        await MainActor.run {
+            viewModel.searchText = "morning"
+            viewModel.selectedMedicationFilter = "Semaglutide"
+        }
+
         // Create new view with same view model
         let view1 = DoseSearchAndFilterView(viewModel: viewModel)
         let view2 = DoseSearchAndFilterView(viewModel: viewModel)
-        
+
         // Both views should see same filter state
-        #expect(view1.viewModel.searchText == "morning")
-        #expect(view2.viewModel.searchText == "morning")
-        #expect(view1.viewModel.selectedMedicationFilter == "Semaglutide")
-        #expect(view2.viewModel.selectedMedicationFilter == "Semaglutide")
+        await MainActor.run {
+            #expect(view1.viewModel.searchText == "morning")
+            #expect(view2.viewModel.searchText == "morning")
+            #expect(view1.viewModel.selectedMedicationFilter == "Semaglutide")
+            #expect(view2.viewModel.selectedMedicationFilter == "Semaglutide")
+        }
     }
     
     // MARK: - Edge Cases Tests
@@ -452,31 +532,33 @@ struct DoseSearchAndFilterViewTests {
     @Test("Empty data set handling")
     func testEmptyDataSetHandling() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        
+        let viewModel = await createTestViewModel()
+
         // Don't setup any test data
-        viewModel.loadData(context: context)
-        
+        await viewModel.loadData(context: context)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         let view = DoseSearchAndFilterView(viewModel: viewModel)
-        
-        #expect(viewModel.allDoses.isEmpty)
-        #expect(viewModel.filteredDoses.isEmpty)
-        #expect(viewModel.availableMedications.isEmpty)
-        #expect(viewModel.availableInjectionSites.isEmpty)
-        #expect(viewModel.hasActiveFilters == false)
+
+        await MainActor.run {
+            #expect(viewModel.allDoses.isEmpty)
+            #expect(viewModel.filteredDoses.isEmpty)
+            #expect(viewModel.availableMedications.isEmpty)
+            #expect(viewModel.availableInjectionSites.isEmpty)
+            #expect(viewModel.hasActiveFilters == false)
+        }
     }
     
     @Test("Special characters in search text")
     func testSpecialCharactersInSearch() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        
+        let viewModel = await createTestViewModel()
+
         // Create test data with special characters
         let user = User(email: "test@example.com", name: "Test User")
         context.insert(user)
-        
+
         let medication = MedicationProfile(
             genericName: "Test Med",
             brandName: "Test Brand",
@@ -484,7 +566,7 @@ struct DoseSearchAndFilterViewTests {
         )
         medication.user = user
         context.insert(medication)
-        
+
         let dose = Dose(
             amount: 1.0,
             timestamp: Date(),
@@ -495,82 +577,106 @@ struct DoseSearchAndFilterViewTests {
         )
         context.insert(dose)
         try! context.save()
-        
-        viewModel.loadData(context: context)
-        
+
+        await viewModel.loadData(context: context)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test searching for special characters
-        viewModel.searchText = "émojis"
-        
+        await MainActor.run {
+            viewModel.searchText = "émojis"
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 1)
-        
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 1)
+        }
+
         // Test searching for emoji
-        viewModel.searchText = "💉"
-        
+        await MainActor.run {
+            viewModel.searchText = "💉"
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
-        #expect(viewModel.filteredDoses.count == 1)
+
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count == 1)
+        }
     }
     
     @Test("Very long search text handling")
     func testVeryLongSearchText() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         // Test very long search text
         let longSearchText = String(repeating: "very long search text ", count: 100)
-        viewModel.searchText = longSearchText
-        
+        await MainActor.run {
+            viewModel.searchText = longSearchText
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should handle gracefully without crashing
-        #expect(viewModel.searchText == longSearchText)
-        #expect(viewModel.filteredDoses.count >= 0) // May or may not find results
+        await MainActor.run {
+            #expect(viewModel.searchText == longSearchText)
+            #expect(viewModel.filteredDoses.count >= 0) // May or may not find results
+        }
     }
     
     @Test("Date range edge cases")
     func testDateRangeEdgeCases() async throws {
         let context = createTestModelContext()
-        let viewModel = createTestViewModel()
-        setupTestData(context: context, viewModel: viewModel)
-        
+        let viewModel = await createTestViewModel()
+        await setupTestData(context: context, viewModel: viewModel)
+
         try await Task.sleep(nanoseconds: 100_000_000)
-        
+
         let today = Date()
         let futureDate = today.addingTimeInterval(86400) // Tomorrow
         let pastDate = today.addingTimeInterval(-172800 * 365) // Long ago
-        
+
         // Test future date range
-        viewModel.filterStartDate = futureDate
-        viewModel.filterEndDate = futureDate.addingTimeInterval(86400)
-        
+        await MainActor.run {
+            viewModel.filterStartDate = futureDate
+            viewModel.filterEndDate = futureDate.addingTimeInterval(86400)
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should find no doses in future
-        #expect(viewModel.filteredDoses.isEmpty)
-        
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.isEmpty)
+        }
+
         // Test very old date range
-        viewModel.filterStartDate = pastDate
-        viewModel.filterEndDate = pastDate.addingTimeInterval(86400)
-        
+        await MainActor.run {
+            viewModel.filterStartDate = pastDate
+            viewModel.filterEndDate = pastDate.addingTimeInterval(86400)
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should find no doses in distant past
-        #expect(viewModel.filteredDoses.isEmpty)
-        
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.isEmpty)
+        }
+
         // Test reversed date range (end before start)
-        viewModel.filterStartDate = today
-        viewModel.filterEndDate = pastDate
-        
+        await MainActor.run {
+            viewModel.filterStartDate = today
+            viewModel.filterEndDate = pastDate
+        }
+
         try await Task.sleep(nanoseconds: 50_000_000)
-        
+
         // Should handle gracefully
-        #expect(viewModel.filteredDoses.count >= 0)
+        await MainActor.run {
+            #expect(viewModel.filteredDoses.count >= 0)
+        }
     }
 }
