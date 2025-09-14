@@ -132,7 +132,7 @@ struct QuickDoseSheet: View {
                     if isEditMode {
                         // Date/Time picker for editing
                         DatePicker(
-                            "Date & Time",
+                            "Date",
                             selection: $viewModel.doseTime,
                             displayedComponents: [.date, .hourAndMinute]
                         )
