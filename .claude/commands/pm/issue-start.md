@@ -131,8 +131,8 @@ Task:
     - Write tests but DO NOT run them (to avoid conflicts with other streams)
 
     Typical workflow:
-    1. Write E2E acceptance tests for your feature scope (defines user-facing success)
-       - Commit: "Issue #$ARGUMENTS: add E2E acceptance tests for {feature}"
+    1. Write E2E acceptance tests (criteria only) for your feature scope (defines user-facing success)
+       - Commit: "Issue #$ARGUMENTS: add E2E acceptance criteria for {feature}"
     2. Write failing integration/unit tests (defines component contracts)  
        - Commit: "Issue #$ARGUMENTS: add unit tests for {feature}"
     3. Implement minimal code to satisfy the unit/integration tests
@@ -145,9 +145,23 @@ Task:
     - Unit tests: Define individual component behavior
     - ALL streams write E2E tests for their features first
     - DO NOT run tests (coordinator will handle this)
+    - For unit tests write actual tests but do not run them.
+    - For E2E tests, create non-functional test methods that use comments to descrtibe the intended behavior. 
+      Example:
+
+      // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
+      func test_doseHistory_swipeActionsEditDose() throws {
+         // GIVEN: A dose exists in history
+
+         // WHEN: User swipes left on dose row
+
+         // THEN: Edit action appears and functions correctly
+
+         // THEN: Dose entry sheet opens with pre-populated data
+      }
     
     Outside-In TDD Flow:
-    E2E Tests (written) → Unit Tests (written) → Implementation → [Coordination Point] → Tests Run
+    E2E Tests (written/non-functional - red) → Unit Tests (written/functional - red) → Implementation → [Coordination Point] → Tests Run (green) → Refactor (as needed)
     
     Coordination Checkpoint:
     - Update your stream file with "ready_for_testing: true"
