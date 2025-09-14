@@ -269,14 +269,14 @@ final class DoseHistoryUITests: XCTestCase {
         XCTAssertEqual(updatedDoseRows.count, 1,
                       "Should still have 1 dose after marking as skipped")
 
-        // Verify both dose rows exist and are accessible
+        // Verify the dose row still exists and is accessible after being marked as skipped
         XCTAssertTrue(updatedDoseRows.element(boundBy: 0).exists,
-                      "First dose row should exist")
-        XCTAssertTrue(updatedDoseRows.element(boundBy: 1).exists,
-                      "Second dose row (duplicate) should exist")
+                      "Dose row should still exist after being marked as skipped")
 
-        // Note: Success message validation would require the UI to show a success indicator
-        // The duplication action itself completing successfully is the main validation
+        // Verify the skipped dose shows the X mark symbol indicator
+        let skippedIndicator = app.images["skipped-dose-indicator"]
+        XCTAssertTrue(skippedIndicator.waitForExistence(timeout: 3),
+                     "Skipped dose should show orange X mark indicator symbol")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Delete confirmation prevents accidental deletion
