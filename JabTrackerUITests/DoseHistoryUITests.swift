@@ -170,16 +170,6 @@ final class DoseHistoryUITests: XCTestCase {
                        "Dose row should be removed after deletion")
     }
 
-    func test_doseHistory_swipeActionsSkipDose() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
-
-        // GIVEN: A non-skipped dose exists in history
-
-        // WHEN: User swipes left and taps mark as skipped
-
-        // THEN: Dose row shows skipped styling/indicator
-    }
-
     func test_doseHistory_swipeActionsDuplicateDose() throws {
         // IMPORTANT: Follow patterns established with prior tests in this file ☝️
 
