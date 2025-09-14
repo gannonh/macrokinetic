@@ -282,16 +282,61 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Delete confirmation prevents accidental deletion
 
     func test_doseHistory_deleteConfirmationPreventsAccidentalDeletion() throws {
-        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
-        //            2. Don't make assumptions! Look at the actual implementation.
-
         // GIVEN: A dose exists in history
+        let app = TestUtilities.launchAppWithTestMode()
+
+        // Given: User has a medication profile and a dose for it
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+
+        // Navigate to History tab
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // Find the first dose row
+        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let firstDoseRow = doseRows.element(boundBy: 0)
 
         // WHEN: User starts delete process but cancels confirmation
+        firstDoseRow.swipeLeft()
 
-        // THEN: User can cancel deletion
+        // THEN: Delete action appears
+        let deleteButton = app.buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 3),
+                      "Delete button should appear after swipe")
 
-        // THEN: Dose remains in list
+        // Tap the Delete button
+        deleteButton.tap()
+
+        // THEN: Delete confirmation alert appears
+        let deleteAlert = app.alerts["Delete Dose"]
+        XCTAssertTrue(deleteAlert.waitForExistence(timeout: 5),
+                      "Delete confirmation alert should appear")
+
+        // Verify alert has proper buttons
+        let cancelAlertButton = deleteAlert.buttons["Cancel"]
+        let deleteAlertButton = deleteAlert.buttons["Delete"]
+
+        XCTAssertTrue(cancelAlertButton.exists, "Cancel button should exist in alert")
+        XCTAssertTrue(deleteAlertButton.exists, "Delete button should exist in alert")
+
+        // WHEN: User cancels deletion
+        cancelAlertButton.tap()
+
+        // THEN: Alert dismisses and dose remains in list
+        let alertDismissed = !deleteAlert.waitForExistence(timeout: 3)
+        XCTAssertTrue(alertDismissed, "Delete alert should dismiss after cancellation")
+
+        // Verify we're back on the History view
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should return to history view")
+
+        // THEN: Dose remains in list (should still have the original dose)
+        let remainingDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        XCTAssertEqual(remainingDoseRows.count, 1,
+                       "Dose row should remain after canceling deletion")
+
+        // Verify the dose row still exists and is accessible
+        XCTAssertTrue(remainingDoseRows.element(boundBy: 0).exists,
+                      "Original dose row should still exist after canceling deletion")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Search filters list in real-time
