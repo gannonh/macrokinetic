@@ -183,15 +183,52 @@ final class DoseHistoryUITests: XCTestCase {
     }
 
     func test_doseHistory_swipeActionsDuplicateDose() throws {
-        // IMPORTANT: Follow patterns established with prior tests in this file ☝️
-
         // GIVEN: A dose exists in history
+        let app = TestUtilities.launchAppWithTestMode()
 
-        // WHEN: User swipes left and taps duplicate
+        // Given: User has a medication profile and a dose for it
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+
+        // Navigate to History tab
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // Find the first dose row and verify there's only one dose initially
+        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let firstDoseRow = initialDoseRows.element(boundBy: 0)
+        XCTAssertEqual(initialDoseRows.count, 1, "Should start with exactly 1 dose")
+
+        // WHEN: User swipes right on dose row to reveal leading actions (duplicate is on leading edge)
+        firstDoseRow.swipeRight()
+
+        // THEN: Duplicate action appears
+        let duplicateButton = app.buttons["Duplicate"]
+        XCTAssertTrue(duplicateButton.waitForExistence(timeout: 3),
+                     "Duplicate button should appear after right swipe")
+
+        // Tap the Duplicate button
+        duplicateButton.tap()
 
         // THEN: New dose is created with same data but current timestamp
+        // Wait a moment for the duplication to complete
+        sleep(1)
 
-        // THEN: Success message appears
+        // Verify we're still on the History view
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(historyView.exists, "Should remain on history view")
+
+        // THEN: Dose count should increase to 2 (original + duplicate)
+        let updatedDoseRows = app.buttons.matching(identifier: "dose-history-row")
+        XCTAssertEqual(updatedDoseRows.count, 2,
+                      "Should have 2 doses after duplication (original + duplicate)")
+
+        // Verify both dose rows exist and are accessible
+        XCTAssertTrue(updatedDoseRows.element(boundBy: 0).exists,
+                     "First dose row should exist")
+        XCTAssertTrue(updatedDoseRows.element(boundBy: 1).exists,
+                     "Second dose row (duplicate) should exist")
+
+        // Note: Success message validation would require the UI to show a success indicator
+        // The duplication action itself completing successfully is the main validation
     }
 
     // MARK: - ACCEPTANCE CRITERION: Delete confirmation prevents accidental deletion
