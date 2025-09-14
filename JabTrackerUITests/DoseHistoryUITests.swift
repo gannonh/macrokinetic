@@ -100,7 +100,7 @@ final class DoseHistoryUITests: XCTestCase {
         // WHEN: User changes the date/time using the DatePicker
         let dateTimePicker = app.datePickers["quick-dose-datetime-picker"]
         XCTAssertTrue(dateTimePicker.waitForExistence(timeout: 3),
-                     "Date/time picker should be available in edit mode")
+                      "Date/time picker should be available in edit mode")
 
         // Verify picker is interactable by tapping on it (this will open date/time selection)
         XCTAssertTrue(dateTimePicker.isHittable, "Date/time picker should be interactable")
@@ -203,7 +203,7 @@ final class DoseHistoryUITests: XCTestCase {
         // THEN: Duplicate action appears
         let duplicateButton = app.buttons["Duplicate"]
         XCTAssertTrue(duplicateButton.waitForExistence(timeout: 3),
-                     "Duplicate button should appear after right swipe")
+                      "Duplicate button should appear after right swipe")
 
         // Tap the Duplicate button
         duplicateButton.tap()
@@ -219,13 +219,61 @@ final class DoseHistoryUITests: XCTestCase {
         // THEN: Dose count should increase to 2 (original + duplicate)
         let updatedDoseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertEqual(updatedDoseRows.count, 2,
-                      "Should have 2 doses after duplication (original + duplicate)")
+                       "Should have 2 doses after duplication (original + duplicate)")
 
         // Verify both dose rows exist and are accessible
         XCTAssertTrue(updatedDoseRows.element(boundBy: 0).exists,
-                     "First dose row should exist")
+                      "First dose row should exist")
         XCTAssertTrue(updatedDoseRows.element(boundBy: 1).exists,
-                     "Second dose row (duplicate) should exist")
+                      "Second dose row (duplicate) should exist")
+
+        // Note: Success message validation would require the UI to show a success indicator
+        // The duplication action itself completing successfully is the main validation
+    }
+
+    func test_doseHistory_swipeActionsSkipDose() throws {
+        // GIVEN: A non-skipped dose exists in history
+        let app = TestUtilities.launchAppWithTestMode()
+
+        // Given: User has a medication profile and a dose for it
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+
+        // Navigate to History tab
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // Find the first dose row
+        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let firstDoseRow = doseRows.element(boundBy: 0)
+
+        // WHEN: User swipes right on dose row to reveal leading actions
+        firstDoseRow.swipeRight()
+
+        // THEN: Mark as Skipped action appears (for non-skipped doses)
+        let skipButton = app.buttons["Mark as Skipped"]
+        XCTAssertTrue(skipButton.waitForExistence(timeout: 3),
+                      "Mark as Skipped button should appear after right swipe")
+
+        // Tap the Skip button
+        skipButton.tap()
+
+        // THEN: Dose row shows skipped styling/indicator
+        // Wait a moment for the skip status to update
+        sleep(1)
+
+        // Verify we're still on the History view
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(historyView.exists, "Should remain on history view")
+
+        // Verify the dose is still there (count should remain 1)
+        let updatedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        XCTAssertEqual(updatedDoseRows.count, 1,
+                      "Should still have 1 dose after marking as skipped")
+
+        // Verify both dose rows exist and are accessible
+        XCTAssertTrue(updatedDoseRows.element(boundBy: 0).exists,
+                      "First dose row should exist")
+        XCTAssertTrue(updatedDoseRows.element(boundBy: 1).exists,
+                      "Second dose row (duplicate) should exist")
 
         // Note: Success message validation would require the UI to show a success indicator
         // The duplication action itself completing successfully is the main validation
