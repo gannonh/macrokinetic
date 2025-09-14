@@ -347,7 +347,7 @@ struct DoseDefaultsTests {
         // Create weekly doses for 3 weeks (perfect streak)
         let dose1 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .weekOfYear, value: -2, to: now)!) // 2 weeks ago
         let dose2 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .weekOfYear, value: -1, to: now)!) // 1 week ago
-        let dose3 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .day, value: -1, to: now)!) // Yesterday (current week)
+        let dose3 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .hour, value: -2, to: now)!) // A few hours ago (current week)
         
         let streak = DoseDefaults.calculateDoseStreak(for: profile, doses: [dose1, dose2, dose3])
         #expect(streak == 3) // 3-week streak
@@ -385,7 +385,7 @@ struct DoseDefaultsTests {
         // Create doses with a gap (missed week)
         let dose1 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .weekOfYear, value: -2, to: now)!) // 2 weeks ago
         // Missing: 1 week ago
-        let dose2 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .day, value: -1, to: now)!) // Yesterday (current week)
+        let dose2 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .hour, value: -2, to: now)!) // A few hours ago (current week)
         
         let streak = DoseDefaults.calculateDoseStreak(for: profile, doses: [dose1, dose2])
         #expect(streak == 1) // Only current week counts

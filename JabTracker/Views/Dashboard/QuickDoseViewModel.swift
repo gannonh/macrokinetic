@@ -205,21 +205,3 @@ enum QuickDoseError: LocalizedError {
 }
 
 // MARK: - Extensions
-
-extension Medication {
-    /// Helper to create Medication from generic name string
-    static func fromGenericName(_ name: String) -> Medication? {
-        switch name.lowercased() {
-        case "semaglutide":
-            return .semaglutide
-        case "tirzepatide":
-            return .tirzepatide
-        case "liraglutide":
-            return .liraglutide
-        case "dulaglutide":
-            return .dulaglutide
-        default:
-            return nil
-        }
-    }
-}

@@ -122,14 +122,33 @@ struct DoseDefaults {
         gracePeriodHours: Int = 2,
         doses: [Dose]? = nil
     ) -> Bool {
-        guard let nextDose = nextScheduledDose(for: profile, from: currentDate, doses: doses) else { return false }
-        
-        // Add grace period to next dose time
+        guard let medication = profile.medication else { return false }
+
         let calendar = Calendar.current
-        guard let gracePeriodEnd = calendar.date(byAdding: .hour, value: gracePeriodHours, to: nextDose) else {
+        let frequency = medication.frequency
+
+        // Use provided doses array for testing, or profile.doses for production
+        let dosesArray = doses ?? (profile.doses ?? [])
+
+        // Get most recent dose or use start date
+        let lastDoseDate = dosesArray.max(by: { $0.timestamp < $1.timestamp })?.timestamp ?? profile.startDate
+
+        // Calculate when the next dose should have been taken
+        let scheduledNextDose: Date
+        switch frequency {
+        case .daily:
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: lastDoseDate) else { return false }
+            scheduledNextDose = nextDay
+        case .weekly:
+            guard let nextWeek = calendar.date(byAdding: .day, value: 7, to: lastDoseDate) else { return false }
+            scheduledNextDose = nextWeek
+        }
+
+        // Add grace period to scheduled dose time
+        guard let gracePeriodEnd = calendar.date(byAdding: .hour, value: gracePeriodHours, to: scheduledNextDose) else {
             return false
         }
-        
+
         return currentDate > gracePeriodEnd
     }
     
@@ -191,27 +210,27 @@ struct DoseDefaults {
         
         // Work backwards from current date checking for doses
         while true {
-            let hassDoseInPeriod: Bool
+            let hasDoseInPeriod: Bool
             let dateRange: DateInterval
-            
+
             switch frequency {
             case .daily:
                 // Check if there's a dose on this day
                 let startOfDay = calendar.startOfDay(for: checkDate)
                 let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
                 dateRange = DateInterval(start: startOfDay, end: endOfDay)
-                
+
             case .weekly:
                 // Check if there's a dose in this week
                 let weekInterval = calendar.dateInterval(of: .weekOfYear, for: checkDate)!
                 dateRange = weekInterval
             }
-            
-            hassDoseInPeriod = sortedDoses.contains { dose in
+
+            hasDoseInPeriod = sortedDoses.contains { dose in
                 dateRange.contains(dose.timestamp) && !dose.skipped
             }
-            
-            if hassDoseInPeriod {
+
+            if hasDoseInPeriod {
                 streak += 1
                 // Move to previous period
                 switch frequency {
