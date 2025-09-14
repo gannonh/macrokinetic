@@ -320,7 +320,7 @@ class DoseHistoryViewModel: ObservableObject {
 // MARK: - Supporting Types
 
 /// Data structure for passing dose edit information
-struct DoseEditData {
+struct DoseEditData: Identifiable {
     let id: UUID
     var amount: Double
     var timestamp: Date

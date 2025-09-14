@@ -355,8 +355,13 @@ enum TestUtilities {
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for navigation (default: 3 seconds)
     static func navigateToMedicationProfiles(_ app: XCUIApplication, timeout: TimeInterval = 3) {
+        // Check if we're already on the Medication Profiles screen
+        if app.navigationBars["Medication Profiles"].exists {
+            return // Already there, no need to navigate
+        }
+
         navigateToTab(app, tabName: "Settings", timeout: timeout)
-        
+
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: timeout),
                       "Medication Profiles button should exist")
@@ -375,16 +380,17 @@ enum TestUtilities {
     static func createMedicationProfile(
         _ app: XCUIApplication,
         genericName: String = "semaglutide",
-        brandName: String = "Ozempic", 
+        brandName: String = "Ozempic",
         dose: String = "0.25",
         timeout: TimeInterval = 3
     ) -> String {
         navigateToMedicationProfiles(app, timeout: timeout)
 
-        let addProfileButton = app.buttons["Add Medication Profile"]
-        XCTAssertTrue(addProfileButton.waitForExistence(timeout: timeout),
-                      "Add Medication Profile button should exist")
-        addProfileButton.tap()
+        // Tap the + button in the navigation bar to add a new profile
+        let addButton = app.navigationBars["Medication Profiles"].buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: timeout),
+                      "Add (+) button should exist in navigation bar")
+        addButton.tap()
 
         // Select medication
         let medicationPicker = app.buttons["medication-picker"]

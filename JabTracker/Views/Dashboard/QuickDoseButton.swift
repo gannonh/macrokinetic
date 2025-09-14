@@ -63,9 +63,38 @@ struct QuickDoseButton: View {
 struct QuickDoseSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+
     @ObservedObject var viewModel: QuickDoseViewModel
     @Binding var showingSuccessMessage: Bool
+
+    // Edit mode support
+    let editingDose: DoseEditData?
+    let onSave: ((DoseEditData) -> Void)?
+    let onCancel: (() -> Void)?
+
+    // Convenience initializer for create mode (existing behavior)
+    init(viewModel: QuickDoseViewModel, showingSuccessMessage: Binding<Bool>) {
+        self.viewModel = viewModel
+        self._showingSuccessMessage = showingSuccessMessage
+        self.editingDose = nil
+        self.onSave = nil
+        self.onCancel = nil
+    }
+
+    // Full initializer for edit mode
+    init(editingDose: DoseEditData, onSave: @escaping (DoseEditData) -> Void, onCancel: @escaping () -> Void) {
+        self.editingDose = editingDose
+        self.onSave = onSave
+        self.onCancel = onCancel
+
+        // Create a temporary view model for edit mode
+        self.viewModel = QuickDoseViewModel()
+        self._showingSuccessMessage = .constant(false)
+    }
+
+    private var isEditMode: Bool {
+        editingDose != nil
+    }
     
     var body: some View {
         NavigationStack {
@@ -127,12 +156,16 @@ struct QuickDoseSheet: View {
                     Text("Additional Information")
                 }
             }
-            .navigationTitle("Quick Add Dose")
+            .navigationTitle(isEditMode ? "Edit Dose" : "Quick Add Dose")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        if let onCancel = onCancel {
+                            onCancel()
+                        } else {
+                            dismiss()
+                        }
                     }
                     .accessibilityIdentifier("quick-dose-cancel-button")
                     .accessibilityLabel("Cancel dose entry")
@@ -140,8 +173,12 @@ struct QuickDoseSheet: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        Task {
-                            await saveDose()
+                        if isEditMode {
+                            handleEditSave()
+                        } else {
+                            Task {
+                                await saveDose()
+                            }
                         }
                     }
                     .disabled(!viewModel.canSaveDose)
@@ -150,14 +187,36 @@ struct QuickDoseSheet: View {
                 }
             }
             .onAppear {
-                viewModel.loadSmartDefaults(context: modelContext)
+                if isEditMode, let editData = editingDose {
+                    viewModel.loadEditData(editData, context: modelContext)
+                } else {
+                    viewModel.loadSmartDefaults(context: modelContext)
+                }
             }
         }
         .accessibilityIdentifier("quick-dose-sheet")
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
-    
+
+    private func handleEditSave() {
+        guard let editData = editingDose, let onSave = onSave else { return }
+
+        // Create updated dose data from current view model state
+        let updatedDose = DoseEditData(
+            id: editData.id,
+            amount: viewModel.doseAmount,
+            timestamp: viewModel.doseTime,
+            site: viewModel.selectedInjectionSite.isEmpty ? nil : viewModel.selectedInjectionSite,
+            notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
+            imageData: editData.imageData, // Keep existing image data
+            skipped: editData.skipped, // Keep existing skipped status
+            medicationProfile: viewModel.selectedMedicationProfile
+        )
+
+        onSave(updatedDose)
+    }
+
     @MainActor
     private func saveDose() async {
         do {

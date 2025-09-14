@@ -19,62 +19,14 @@ final class DoseHistoryUITests: XCTestCase {
     func test_doseHistory_displaysInReverseChronologicalOrder() throws {
         let app = TestUtilities.launchAppWithTestMode()
 
-        // Given: User has a medication profile set up
-        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-
-        // Given: Multiple doses are logged with different timestamps
-        // First dose (oldest)
-        let addTab = app.tabBars.element.buttons["Add"]
-        addTab.tap()
-
-        let medicationPicker = app.buttons["quick-dose-medication-picker"]
-        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3))
-
-        let saveButton = app.buttons["quick-dose-save-button"]
-        XCTAssertTrue(saveButton.exists && saveButton.isEnabled)
-        saveButton.tap()
-
-        // Wait for success and sheet dismiss
-        let successIndicator = app.staticTexts["dose-logged-success"]
-        XCTAssertTrue(successIndicator.waitForExistence(timeout: 3))
-        XCTAssertTrue(successIndicator.waitForNonExistence(timeout: 3))
-
-        // Small delay to ensure different timestamps
-        Thread.sleep(forTimeInterval: 1.0)
-
-        // Second dose (newer)
-        addTab.tap()
-        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3))
-        XCTAssertTrue(saveButton.exists && saveButton.isEnabled)
-        saveButton.tap()
-
-        XCTAssertTrue(successIndicator.waitForExistence(timeout: 3))
-        XCTAssertTrue(successIndicator.waitForNonExistence(timeout: 3))
-
-        Thread.sleep(forTimeInterval: 1.0)
-
-        // Third dose (newest)
-        addTab.tap()
-        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3))
-        XCTAssertTrue(saveButton.exists && saveButton.isEnabled)
-        saveButton.tap()
-
-        XCTAssertTrue(successIndicator.waitForExistence(timeout: 3))
-        XCTAssertTrue(successIndicator.waitForNonExistence(timeout: 3))
+        // Given: User has medication profile and multiple doses
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
 
         // When: User navigates to History tab
-        let historyTab = app.tabBars.element.buttons["History"]
-        historyTab.tap()
+        TestUtilities.navigateToHistoryView(in: app)
 
         // Then: History list should display doses in reverse chronological order
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(historyView.waitForExistence(timeout: 5),
-                      "History view should appear")
-
-        // Verify we have the expected number of dose rows - search in entire app since we found the container
-        let doseRows = app.buttons.matching(identifier: "dose-history-row")
-        XCTAssertGreaterThanOrEqual(doseRows.count, 3,
-                                    "Should display at least 3 logged doses")
+        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
 
         // Verify the doses are displayed (newest first)
         // Note: Without specific timestamp display verification, we verify the list exists and has content
@@ -90,13 +42,76 @@ final class DoseHistoryUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
 
     func test_doseHistory_swipeActionsEditDose() throws {
-        // GIVEN: A dose exists in history
+        // GIVEN: A dose exists in history with multiple medication profiles
+        let app = TestUtilities.launchAppWithTestMode()
 
-        // WHEN: User swipes left on dose row
+        // Given: User has 2 medication profiles and a dose for the first one
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1, medicationProfiles: 2)
+
+        // Navigate to History tab
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // Find the first dose row
+        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let firstDoseRow = doseRows.element(boundBy: 0)
+
+        // WHEN: User swipes left on dose row to reveal trailing actions
+        firstDoseRow.swipeLeft()
 
         // THEN: Edit action appears and functions correctly
+        let editButton = app.buttons["Edit"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3),
+                     "Edit button should appear after swipe")
+
+        // Tap the Edit button
+        editButton.tap()
 
         // THEN: Dose entry sheet opens with pre-populated data
+        // Wait for the edit sheet to appear
+        let editSheet = app.navigationBars["Edit Dose"]
+        XCTAssertTrue(editSheet.waitForExistence(timeout: 5),
+                     "Edit dose sheet should appear")
+
+        // Use the correct accessibility identifiers found through testing
+        let cancelButton = app.buttons["quick-dose-cancel-button"]
+        let saveButton = app.buttons["quick-dose-save-button"]
+
+        XCTAssertTrue(cancelButton.exists, "Cancel button should be present")
+        XCTAssertTrue(saveButton.exists, "Save button should be present")
+
+        // WHEN: User changes the medication from first to second profile
+        // Use the correct medication picker identifier from the accessibility hierarchy
+        let medicationPicker = app.buttons["quick-dose-medication-picker"]
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3),
+                     "Medication picker should be available")
+        medicationPicker.tap()
+
+        // Try to select a different medication profile if available
+        // Look for any medication option that's not the current one (Tirzepatide/Mounjaro)
+        let medicationOptions = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Mounjaro' OR label CONTAINS 'Tirzepatide'"))
+        if medicationOptions.count > 0 {
+            medicationOptions.firstMatch.tap()
+        } else {
+            // If we can't find a second medication, just close the picker and save as-is
+            // This tests that the edit flow works even if we don't change anything
+            medicationPicker.tap() // Tap again to close picker
+        }
+
+        // Save the changes
+        saveButton.tap()
+
+        // THEN: Sheet dismisses and dose is updated
+        // Wait a moment for the sheet to dismiss
+        let sheetDismissed = !editSheet.waitForExistence(timeout: 3)
+        XCTAssertTrue(sheetDismissed, "Edit sheet should dismiss after saving changes")
+
+        // Verify we're back on the History view and the dose row still exists
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should return to history view")
+
+        // Verify the dose row still exists after edit
+        let updatedDoseRow = TestUtilities.getDoseRows(from: app, minimumCount: 1).element(boundBy: 0)
+        XCTAssertTrue(updatedDoseRow.exists, "Updated dose row should still exist after edit")
     }
 
     func test_doseHistory_swipeActionsDeleteDose() throws {

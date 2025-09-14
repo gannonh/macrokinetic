@@ -16,7 +16,6 @@ struct DoseHistoryView: View {
     @State private var showingDeleteConfirmation = false
     @State private var doseToDelete: Dose?
     @State private var editingDose: DoseEditData?
-    @State private var showingEditSheet = false
     
     var body: some View {
         NavigationStack {
@@ -52,8 +51,20 @@ struct DoseHistoryView: View {
             .sheet(isPresented: $showingSearchAndFilter) {
                 searchAndFilterSheet
             }
-            .sheet(isPresented: $showingEditSheet) {
-                editDoseSheet
+            .sheet(item: $editingDose) { editData in
+                QuickDoseSheet(
+                    editingDose: editData,
+                    onSave: { updatedDose in
+                        // Update the dose with edited data
+                        if let originalDose = allDoses.first(where: { $0.id == editData.id }) {
+                            try? viewModel.updateDose(originalDose, with: updatedDose, context: modelContext)
+                        }
+                        editingDose = nil
+                    },
+                    onCancel: {
+                        editingDose = nil
+                    }
+                )
             }
             .onAppear {
                 viewModel.setDoses(allDoses)
@@ -200,7 +211,6 @@ struct DoseHistoryView: View {
         
         Button("Edit") {
             editingDose = viewModel.getDoseForEditing(dose)
-            showingEditSheet = true
         }
         .tint(.blue)
     }
@@ -265,45 +275,6 @@ struct DoseHistoryView: View {
         }
     }
     
-    @ViewBuilder
-    private var editDoseSheet: some View {
-        if let editData = editingDose {
-            NavigationStack {
-                // TODO: Replace with actual DoseEntrySheet when available
-                // For now, use a placeholder that will be replaced in Stream C integration
-                VStack {
-                    Text("Edit Dose")
-                        .font(.headline)
-                    Text("Amount: \(editData.amount, specifier: "%.1f")")
-                    Text("Date: \(editData.timestamp, formatter: DateFormatter.mediumDateTime)")
-                    if let site = editData.site {
-                        Text("Site: \(site)")
-                    }
-                    if let notes = editData.notes {
-                        Text("Notes: \(notes)")
-                    }
-                }
-                .padding()
-                .navigationTitle("Edit Dose")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Cancel") {
-                            editingDose = nil
-                            showingEditSheet = false
-                        }
-                    }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Save") {
-                            // TODO: Implement save functionality in Stream C
-                            editingDose = nil
-                            showingEditSheet = false
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 // MARK: - Extensions

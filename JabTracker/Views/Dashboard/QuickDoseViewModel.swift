@@ -82,7 +82,37 @@ class QuickDoseViewModel: ObservableObject {
             }
         }
     }
-    
+
+    /// Loads existing dose data for editing
+    func loadEditData(_ editData: DoseEditData, context: ModelContext) {
+        Task { @MainActor in
+            do {
+                isLoading = true
+                errorMessage = nil
+
+                // Fetch all medication profiles for the current user
+                let profileDescriptor = FetchDescriptor<MedicationProfile>()
+                self.medicationProfiles = try context.fetch(profileDescriptor)
+
+                // Set values from edit data
+                selectedMedicationProfile = editData.medicationProfile
+                doseAmount = editData.amount
+                doseTime = editData.timestamp
+                selectedInjectionSite = editData.site ?? ""
+                notes = editData.notes ?? ""
+
+                // Update recommended injection sites
+                updateRecommendedInjectionSites()
+
+                isLoading = false
+
+            } catch {
+                errorMessage = "Failed to load dose data: \(error.localizedDescription)"
+                isLoading = false
+            }
+        }
+    }
+
     // MARK: - Smart Default Updates
     
     /// Updates dose amount based on selected medication profile's current dose
