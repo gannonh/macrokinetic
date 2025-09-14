@@ -69,8 +69,7 @@ For each file loaded:
 
 After loading context files:
 - Run: `git ls-files --others --exclude-standard | head -20` to see untracked files
-- Read `README.md` if it exists for additional project information
-- Check for `.env.example` or similar for environment setup needs
+- Determine active Issue # for git commit messages, e.g. `git commit -m "Issue #41: message..."`
 
 ### 4. Error Recovery
 
