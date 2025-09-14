@@ -20,10 +20,8 @@ final class CloudKitIntegrationUITests: XCTestCase {
 
     @MainActor
     func testCloudKitSyncStatusDisplay() throws {
-        // Launch app with test mode and reset data to skip onboarding
-        let app = TestUtilities.launchAppWithConfiguration(
-            testMode: true,
-            resetData: true)
+        // Launch app with CloudKit test mode and reset data to skip onboarding
+        let app = TestUtilities.launchAppWithCloudKitTestMode(resetData: true)
 
         // Navigate to Settings where sync status is displayed
         TestUtilities.navigateToTab(app, tabName: "Settings")
@@ -53,9 +51,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
     @MainActor
     func testCloudKitAccountStatusDetection() throws {
         // Test that the app can detect and display iCloud account status
-        let app = TestUtilities.launchAppWithConfiguration(
-            testMode: true,
-            resetData: true)
+        let app = TestUtilities.launchAppWithCloudKitTestMode(resetData: true)
 
         TestUtilities.navigateToTab(app, tabName: "Settings")
 
@@ -82,9 +78,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
     @MainActor
     func testCloudKitRetryFunctionality() throws {
         // Test that users can retry CloudKit setup when there are issues
-        let app = TestUtilities.launchAppWithConfiguration(
-            testMode: true,
-            resetData: true)
+        let app = TestUtilities.launchAppWithCloudKitTestMode(resetData: true)
 
         TestUtilities.navigateToTab(app, tabName: "Settings")
 
@@ -124,7 +118,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
     @MainActor
     func testDataPersistenceWithCloudKitEnabled() throws {
         // Test that data persists correctly when CloudKit is enabled
-        let app = TestUtilities.launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithCloudKitTestMode()
 
         // Complete onboarding to create user data
         try self.completeOnboardingFlow(app)
@@ -137,7 +131,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
         // Restart app to test persistence
         app.terminate()
 
-        let restartedApp = TestUtilities.launchAppWithTestMode()
+        let restartedApp = TestUtilities.launchAppWithCloudKitTestMode()
 
         // Should skip onboarding and show main app
         XCTAssertTrue(restartedApp.tabBars.firstMatch.waitForExistence(timeout: 10),
@@ -151,7 +145,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
     @MainActor
     func testCloudKitFallbackBehavior() throws {
         // Test that app works correctly when CloudKit is unavailable
-        let app = TestUtilities.launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithCloudKitTestMode()
 
         TestUtilities.navigateToTab(app, tabName: "Settings")
 
@@ -179,7 +173,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
     @MainActor
     func testSyncStatusReflectsActualCloudKitState() throws {
         // Test that sync status accurately reflects real CloudKit availability
-        let app = TestUtilities.launchAppWithTestMode()
+        let app = TestUtilities.launchAppWithCloudKitTestMode()
 
         TestUtilities.navigateToTab(app, tabName: "Settings")
 

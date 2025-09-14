@@ -80,11 +80,16 @@ class DataController: ObservableObject {
 
         // Configure CloudKit database for production vs in-memory/testing
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
+
+        // Enhanced test environment detection
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
 
-        // CloudKit sync enabled for production
-        let shouldEnableCloudKit = true
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
+
+        // CloudKit enabled ONLY for CloudKit integration tests (not regular UI tests)
+        let shouldEnableCloudKit = isCloudKitTesting && !isUITesting && !isTestEnvironment
 
         let configuration = ModelConfiguration(
             schema: schema,
@@ -95,7 +100,7 @@ class DataController: ObservableObject {
 
         do {
             self.container = try ModelContainer(for: schema, configurations: [configuration])
-            if !inMemory, !isTestEnvironment, shouldEnableCloudKit {
+            if shouldEnableCloudKit {
                 self.isCloudKitEnabled = true
                 self.checkCloudKitStatus()
             } else {
