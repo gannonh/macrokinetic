@@ -125,7 +125,7 @@ Task:
     5. Add new files to coverage-config.json
     6. Follow coordination rules in /rules/agent-coordination.md
 
-     IMPORTANT - Outside-In TDD for Parallel Work:
+    IMPORTANT - Outside-In TDD flow:
     
     - Follow Outside-In TDD: Start with E2E acceptance tests that define "done"
     - Write tests but DO NOT run them (to avoid conflicts with other streams)
@@ -135,7 +135,7 @@ Task:
        - Commit: "Issue #$ARGUMENTS: add E2E acceptance tests for {feature}"
     2. Write failing integration/unit tests (defines component contracts)  
        - Commit: "Issue #$ARGUMENTS: add unit tests for {feature}"
-    3. Implement minimal code to satisfy the tests
+    3. Implement minimal code to satisfy the unit/integration tests
        - Commit: "Issue #$ARGUMENTS: implement {feature}"
     4. Mark in progress file: "ready_for_testing: true"
     
