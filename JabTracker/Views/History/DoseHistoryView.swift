@@ -16,6 +16,9 @@ struct DoseHistoryView: View {
     @State private var showingDeleteConfirmation = false
     @State private var doseToDelete: Dose?
     @State private var editingDose: DoseEditData?
+    @State private var showingNewDoseSheet = false
+    @State private var showingSuccessMessage = false
+    @StateObject private var quickDoseViewModel = QuickDoseViewModel()
     
     var body: some View {
         NavigationStack {
@@ -66,8 +69,15 @@ struct DoseHistoryView: View {
                     }
                 )
             }
+            .sheet(isPresented: $showingNewDoseSheet) {
+                QuickDoseSheet(
+                    viewModel: quickDoseViewModel,
+                    showingSuccessMessage: $showingSuccessMessage
+                )
+            }
             .onAppear {
                 viewModel.setDoses(allDoses)
+                quickDoseViewModel.loadSmartDefaults(context: modelContext)
             }
             .onChange(of: allDoses) { _, newDoses in
                 viewModel.setDoses(newDoses)
@@ -150,7 +160,7 @@ struct DoseHistoryView: View {
                         .multilineTextAlignment(.center)
                     
                     Button("Log Your First Dose") {
-                        // TODO: Navigate to quick dose sheet when available
+                        showingNewDoseSheet = true
                     }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("log-first-dose-button")
