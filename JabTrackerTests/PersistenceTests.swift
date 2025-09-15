@@ -129,11 +129,15 @@ struct CloudKitSyncTests {
         // This is important for CloudKit sync integrity
         let user = User(email: "sync-test@example.com", weight: 80.0)
         let medication = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
-        let dose = Dose(amount: 1.0, timestamp: Date(), user: user, medication: medication)
+        let dose = Dose(amount: 1.0, timestamp: Date())
 
         context.insert(user)
         context.insert(medication)
         context.insert(dose)
+        
+        // Set relationships after insertion to avoid duplicate registration
+        dose.user = user
+        dose.medication = medication
 
         try context.save()
 

@@ -53,13 +53,15 @@ class DataController: ObservableObject {
             amount: 1.0,
             timestamp: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1 week ago
             site: "Abdomen",
-            skipped: false,
-            user: sampleUser,
-            medication: sampleMedication)
+            skipped: false)
 
         context.insert(sampleUser)
         context.insert(sampleMedication)
         context.insert(sampleDose)
+        
+        // Set relationships after insertion to avoid duplicate registration
+        sampleDose.user = sampleUser
+        sampleDose.medication = sampleMedication
 
         try? context.save()
 
@@ -73,15 +75,21 @@ class DataController: ObservableObject {
             User.self,
             Dose.self,
             MedicationProfile.self,
+            DoseTitration.self,
         ])
 
         // Configure CloudKit database for production vs in-memory/testing
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
+
+        // Enhanced test environment detection
         let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
             ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
 
-        // CloudKit sync enabled for production
-        let shouldEnableCloudKit = true
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
+
+        // CloudKit enabled ONLY for CloudKit integration tests (not regular UI tests)
+        let shouldEnableCloudKit = isCloudKitTesting && !isUITesting && !isTestEnvironment
 
         let configuration = ModelConfiguration(
             schema: schema,
@@ -92,7 +100,7 @@ class DataController: ObservableObject {
 
         do {
             self.container = try ModelContainer(for: schema, configurations: [configuration])
-            if !inMemory, !isTestEnvironment, shouldEnableCloudKit {
+            if shouldEnableCloudKit {
                 self.isCloudKitEnabled = true
                 self.checkCloudKitStatus()
             } else {

@@ -1,5 +1,7 @@
 ---
-allowed-tools: Bash, Read, Write, LS
+description: Full bidirectional sync between local and GitHub.
+argument-hint: Epic name to sync (e.g., dose-tracking)
+allowed-tools: Read, Write, LS
 ---
 
 # Sync

@@ -11,7 +11,10 @@ You are an expert test execution and analysis specialist for the JabTracker syst
 ## Development Commands
 
 **IMPORTANT:** 
-- XcodeBuildMCP provides a range of useful tools for troubleshooting ui tests.
+- Use the enhanced `./scripts/test.sh` script with automatic logging whenever possible.
+- Log files are saved in the `./logs` directory for easy access and review (PRO TIP: use `cat logs/latest/output.txt` to see the latest output).
+- Never run the entire UI test suite as it is very slow (10+ minutes). Always prefer running specific test classes or methods.
+- For troubleshooting UI tests, use XcodeBuildMCP, in particular `describe_ui`, as it allows you to "see" the element hierarchy, get precise coordinates for taps/swipes, and verify accessibility identifiers.
 
 ### Building and Running
 
@@ -26,7 +29,7 @@ xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
 
 ### Testing Commands
 
-**PREFERRED: Use the enhanced test.sh script with automatic logging:**
+**PREFERRED: Use the enhanced `./scripts/test.sh` script with automatic logging:**
 ```bash
 # Run tests with automatic logging to ./logs directory
 ./scripts/test.sh unit 1              # Unit tests with logging
@@ -234,7 +237,6 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 
 # ⚠️  AVOID unless final verification (very slow):
 # ./scripts/test.sh ui 1        # ALL UI tests - takes 10+ minutes
-# ./scripts/test.sh all 1       # ALL tests - very long running
 
 # Generate documentation
 ./scripts/docs.sh

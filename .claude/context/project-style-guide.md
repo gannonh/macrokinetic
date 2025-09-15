@@ -104,10 +104,10 @@ final class MedicationProfile {
     var currentDose: Double = 0.0
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
-    
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.medicationProfile)
     var doses: [Dose] = []
-    
+
     init(genericName: String, brandName: String, currentDose: Double) {
         self.genericName = genericName
         self.brandName = brandName
@@ -118,7 +118,157 @@ final class MedicationProfile {
 }
 ```
 
+### SwiftData + CloudKit Relationship Patterns
+
+#### The One-Side Rule
+- **ONLY the parent/owning side** should have `@Relationship` attributes
+- **Child/referenced side** uses plain properties (no `@Relationship`)
+- **CloudKit requires explicit inverse specification** in the parent's `@Relationship`
+- **Never add `@Relationship` to both sides** - this creates circular references that break SwiftData
+
+#### Correct Pattern Example:
+```swift
+// ✅ CORRECT: Parent (User) - HAS @Relationship with inverse
+@Model
+final class User {
+    @Relationship(deleteRule: .cascade, inverse: \Dose.user)
+    var doses: [Dose]?
+
+    @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
+    var medicationProfiles: [MedicationProfile]?
+}
+
+// ✅ CORRECT: Child (Dose) - Plain property, NO @Relationship
+@Model
+final class Dose {
+    var user: User?  // Plain property - NO @Relationship attribute
+    var medication: MedicationProfile?  // Plain property - NO @Relationship attribute
+}
+
+// ✅ CORRECT: Another Parent (MedicationProfile) with its own children
+@Model
+final class MedicationProfile {
+    var user: User?  // Plain property - this is a child reference
+
+    @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
+    var doses: [Dose]?  // Parent relationship to Doses
+}
+```
+
+#### Common Mistakes to Avoid:
+```swift
+// ❌ WRONG: Adding @Relationship to both sides creates circular references
+@Model
+final class Dose {
+    @Relationship(inverse: \User.doses)  // ❌ Don't do this!
+    var user: User?
+}
+```
+
+#### Testing Pattern for SwiftData Relationships:
+```swift
+// Tests must disable CloudKit to avoid relationship validation errors
+let schema = Schema([User.self, Dose.self, MedicationProfile.self])
+let config = ModelConfiguration(
+    schema: schema,
+    isStoredInMemoryOnly: true,
+    cloudKitDatabase: .none  // Critical: Disable CloudKit for tests
+)
+let container = try ModelContainer(for: schema, configurations: [config])
+```
+
 ## Testing Standards
+
+### E2E Testing and Element Targeting Best Practices
+
+#### Critical Learning: Element Targeting is the Biggest Challenge
+**The #1 issue in E2E testing is incorrect element targeting due to accessibility hierarchy mismatches.**
+
+#### Debug-First Approach for Element Targeting
+When an E2E test fails to find elements, ALWAYS start with debugging the accessibility hierarchy:
+
+```swift
+// Use TestUtilities.debugElements() to identify available elements
+TestUtilities.debugElements(in: app, containing: "dose-history")
+
+// Example output helps identify actual element types:
+// 🔍 DEBUG: Tables: []
+// 🔍 DEBUG: ScrollViews: []
+// 🔍 DEBUG: CollectionViews: ["dose-history-view"]
+// 🔍 DEBUG: Elements containing 'dose-history': ["CollectionView:dose-history-view", "TextField:dose-history-view", "Button:dose-history-row"]
+```
+
+#### Common SwiftUI → Accessibility Hierarchy Mapping Issues
+```swift
+// ❌ WRONG: Assumptions about element types often fail
+let historyList = app.tables["dose-history-list"]        // List assumed to be Table
+let historyList = app.scrollViews.firstMatch           // NavigationStack assumed to be ScrollView
+
+// ✅ CORRECT: Use debug output to find actual element types
+let historyView = app.collectionViews["dose-history-view"]  // NavigationStack+List = CollectionView
+
+// Common mappings that differ from expectations:
+// SwiftUI List → CollectionView (not Table)
+// NavigationStack → CollectionView (not ScrollView)
+// Form toggles → require coordinate-based tapping, not direct .tap()
+// Picker selections → can have dynamic accessibility identifiers
+```
+
+#### Essential Debug Utility Usage
+```swift
+// Basic debugging - shows all common element types
+TestUtilities.debugElements(in: app)
+
+// Targeted debugging - filter by identifier substring
+TestUtilities.debugElements(in: app, containing: "dose-history")
+
+// Custom prefix for clearer output
+TestUtilities.debugElements(in: app, containing: "search", prefix: "🔍 SEARCH DEBUG")
+```
+
+#### XCUIElementQuery vs Standard Collections
+```swift
+// ❌ WRONG: XCUIElementQuery doesn't have isEmpty
+if !app.buttons.matching(predicate).isEmpty { ... }
+
+// ✅ CORRECT: Use count property for XCUIElementQuery
+if app.buttons.matching(predicate).count > 0 { ... }
+
+// Note: SwiftLint's "Empty Count" rule incorrectly converts .count == 0 to .isEmpty
+// This breaks XCUIElementQuery usage and must be manually fixed
+```
+
+#### Text Field Interaction Best Practices
+```swift
+// ❌ WRONG: These methods don't work reliably in XCUITest
+searchField.selectAll()
+app.keys["Delete"].tap()
+searchField.typeText("")  // Doesn't clear existing text
+
+// ✅ CORRECT: Use TestUtilities.clearAndEnterText()
+TestUtilities.clearAndEnterText(in: searchField)                    // Clear only
+TestUtilities.clearAndEnterText(in: searchField, newText: "search") // Clear and enter
+```
+
+#### Systematic Element Targeting Process
+1. **Test fails to find element** → Add `TestUtilities.debugElements()`
+2. **Analyze debug output** → Identify actual element type and identifier
+3. **Update test selector** → Use correct element type (tables/collectionViews/buttons)
+4. **Remove debug code** → Clean up after fixing selector
+5. **Document learning** → Add findings to style guide for future reference
+
+#### Performance Optimization for E2E Tests
+```swift
+// ❌ SLOW: Conditional waits for elements that may not exist
+if app.buttons["optional-button"].waitForExistence(timeout: 3) {
+    app.buttons["optional-button"].tap()
+}
+
+// ✅ FAST: Direct assertions for known elements (post-debug)
+let requiredButton = app.buttons["required-button"]
+XCTAssertTrue(requiredButton.exists, "Required button should exist")
+requiredButton.tap()
+```
 
 ### Swift Testing Framework Patterns
 

@@ -1,10 +1,13 @@
 ---
-allowed-tools: Bash, Read, Write, LS
+description: Mark an epic as complete when all issues are done
+argument-hint: Epic name (e.g., dose-tracking)
+allowed-tools: Read, LS
+model: Sonnet
 ---
 
 # Epic Close
 
-Mark an epic as complete when all tasks are done.
+Mark an epic as complete when all issues are done.
 
 ## Usage
 ```
@@ -13,11 +16,11 @@ Mark an epic as complete when all tasks are done.
 
 ## Instructions
 
-### 1. Verify All Tasks Complete
+### 1. Verify All Issues Complete
 
-Check all task files in `.claude/epics/$ARGUMENTS/`:
+Check all issue files in `.claude/epics/$ARGUMENTS/`:
 - Verify all have `status: closed` in frontmatter
-- If any open tasks found: "❌ Cannot close epic. Open tasks remain: {list}"
+- If any open issues found: "❌ Cannot close epic. Open issues remain: {list}"
 
 ### 2. Update Epic Status
 
@@ -39,7 +42,7 @@ If epic references a PRD, update its status to "complete".
 
 If epic has GitHub issue:
 ```bash
-gh issue close {epic_issue_number} --comment "✅ Epic completed - all tasks done"
+gh issue close {epic_issue_number} --comment "✅ Epic completed - all issues done"
 ```
 
 ### 5. Archive Option
@@ -54,7 +57,7 @@ If yes:
 
 ```
 ✅ Epic closed: $ARGUMENTS
-  Tasks completed: {count}
+  Issues completed: {count}
   Duration: {days_from_created_to_completed}
   
 {If archived}: Archived to .claude/epics/.archived/
@@ -64,6 +67,6 @@ Next epic: Run /pm:next to see priority work
 
 ## Important Notes
 
-Only close epics with all tasks complete.
+Only close epics with all issues complete.
 Preserve all data when archiving.
 Update related PRD status.

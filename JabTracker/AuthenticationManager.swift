@@ -119,8 +119,22 @@ class AuthenticationManager: NSObject, ObservableObject {
                 context.delete(profile)
             }
 
+            // Explicitly clean up all doses (in case cascade delete didn't work properly)
+            let doseFetchDescriptor = FetchDescriptor<Dose>()
+            let doses = try context.fetch(doseFetchDescriptor)
+            for dose in doses {
+                context.delete(dose)
+            }
+
+            // Clean up dose titration records as well
+            let titrationFetchDescriptor = FetchDescriptor<DoseTitration>()
+            let titrations = try context.fetch(titrationFetchDescriptor)
+            for titration in titrations {
+                context.delete(titration)
+            }
+
             try context.save()
-            Self.logger.info("✅ AuthenticationManager: App data reset successfully")
+            Self.logger.info("✅ AuthenticationManager: App data reset successfully - Deleted \(users.count) users, \(profiles.count) profiles, \(doses.count) doses, \(titrations.count) titrations")
         } catch {
             Self.logger.error("Failed to reset app data: \(error, privacy: .public)")
         }

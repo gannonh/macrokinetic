@@ -1,5 +1,7 @@
 ---
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
+description: Push epic and tasks to GitHub as issues, syncing local epic to GitHub
+argument-hint: Epic name (e.g., dose-tracking)
 ---
 
 # Epic Sync
@@ -406,22 +408,7 @@ echo "" >> .claude/epics/$ARGUMENTS/github-mapping.md
 echo "Synced: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> .claude/epics/$ARGUMENTS/github-mapping.md
 ```
 
-### 7. Create Worktree
-
-Follow `/rules/worktree-operations.md` to create development worktree:
-
-```bash
-# Ensure main is current
-git checkout main
-git pull origin main
-
-# Create worktree for epic
-git worktree add ../epic-$ARGUMENTS -b epic/$ARGUMENTS
-
-echo "✅ Created worktree: ../epic-$ARGUMENTS"
-```
-
-### 8. Output
+### 7. Output
 
 ```
 ✅ Synced to GitHub
@@ -430,10 +417,9 @@ echo "✅ Created worktree: ../epic-$ARGUMENTS"
   - Labels applied: epic, task, epic:{name}
   - Files renamed: 001.md → {issue_id}.md
   - References updated: depends_on/conflicts_with now use issue IDs
-  - Worktree: ../epic-$ARGUMENTS
 
 Next steps:
-  - Start parallel execution: /pm:epic-start $ARGUMENTS
+  - Start epic development: /pm:epic-start $ARGUMENTS
   - Or work on single issue: /pm:issue-start {issue_number}
   - View epic: https://github.com/{owner}/{repo}/issues/{epic_number}
 ```

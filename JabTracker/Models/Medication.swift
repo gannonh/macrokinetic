@@ -130,4 +130,10 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
         case .dulaglutide: return "8b9ff4"
         }
     }
+
+    /// Helper method to create Medication from generic name string (case insensitive)
+    static func fromGenericName(_ name: String) -> Medication? {
+        let lowercaseName = name.lowercased()
+        return Medication.allCases.first { $0.rawValue.lowercased() == lowercaseName }
+    }
 }

@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## USE SUB-AGENTS FOR CONTEXT OPTIMIZATION
 
 ### 1. Always use the file-analyzer sub-agent when asked to read files.
+
 The file-analyzer agent is an expert in extracting and summarizing critical information from files, particularly log files and verbose outputs. It provides concise, actionable summaries that preserve essential information while dramatically reducing context usage.
 
 ### 2. Always use the code-analyzer sub-agent when asked to search code, analyze code, research bugs, or trace logic flow.
@@ -40,82 +41,6 @@ Using the test-runner agent ensures:
 - If the test fails, consider checking if the test is structured correctly before deciding we need to refactor the codebase.
 - Tests to be verbose so we can use them for debugging.
 
-#### SwiftData Relationship Testing (Critical)
-
-**REQUIRED PATTERN**: All tests that access SwiftData relationships (`dose.medication`, `user.doses`, etc.) MUST use proper ModelContext setup or they will crash:
-
-```swift
-@MainActor
-struct YourTestStruct {
-    
-    // Create an in-memory model container for testing without CloudKit
-    private var modelContainer: ModelContainer {
-        let schema = Schema([
-            User.self,
-            Dose.self,
-            MedicationProfile.self,
-            DoseTitration.self
-        ])
-        
-        // Disable CloudKit for testing - same logic as DataController
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
-        
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }
-    
-    @Test("Your test name")
-    func yourTest() throws {
-        // Given: Objects with relationships
-        let container = modelContainer
-        let context = container.mainContext
-        
-        let medicationProfile = MedicationProfile(genericName: "Semaglutide")
-        let dose = Dose(amount: 1.0)
-        
-        // CRITICAL: Insert objects into context FIRST
-        context.insert(medicationProfile)
-        context.insert(dose)
-        
-        // CRITICAL: Set relationships AFTER insertion
-        dose.medication = medicationProfile
-        
-        // CRITICAL: Save the context
-        try context.save()
-        
-        // Now relationships work safely
-        #expect(dose.medication?.genericName == "Semaglutide")
-    }
-}
-```
-
-**❌ NEVER do this (causes crashes):**
-```swift
-let dose = Dose(amount: 1.0)
-let medication = MedicationProfile(genericName: "Semaglutide") 
-dose.medication = medication // CRASH: No ModelContext
-```
-
-**✅ ALWAYS do this:**
-```swift
-context.insert(dose)
-context.insert(medication)
-dose.medication = medication // Safe: Objects in ModelContext
-try context.save()
-```
-
-**Common Issues:**
-- Tests showing "Executed 0 tests" usually means the app crashed during test setup
-- CloudKit relationship errors mean you need `.none` CloudKit database in test config
-- SwiftData relationship access without ModelContext always crashes
-
 ## Tone and Behavior
 
 - Criticism is welcome. Please tell me when I am wrong or mistaken, or even when you think I might be wrong or mistaken.
@@ -141,31 +66,11 @@ try context.save()
 - NO MIXED CONCERNS - Don't put validation logic inside API handlers, database queries inside UI components, etc. instead of proper separation
 - NO RESOURCE LEAKS - Don't forget to close database connections, clear timeouts, remove event listeners, or clean up file handles
 
-## Development Philosophy:
-
-- Outside-In TDD: Always start with E2E acceptance tests that define user-facing success. Work inward through integration and unit tests, writing only the minimal code needed to pass each test. E2E tests are the ultimate acceptance criteria for features.
-- TDD: Tests must fail before implementation (RED → GREEN → REFACTOR).
-- Medical accuracy and coverage are non-negotiable.
-- Minimal, incremental changes only; no scope creep.
-
 ## Outside-In TDD Flow
 
-**Sequential Work:**
 **E2E Tests (Red) → Integration/Unit Tests (Red) → Implementation (Blue) → Integration/Unit Tests (Green) → E2E Tests (Green)**
 
-**Parallel Work (to avoid test conflicts):**
-**E2E Tests (written) → Integration/Unit Tests (written) → Implementation → [Coordination Point] → All Tests Run → Fix Issues**
-
 Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
-
-### Parallel TDD Coordination
-
-When multiple agents work on the same feature:
-- **All agents write E2E acceptance tests first** (defines user-facing success)
-- **Agents write but DO NOT run tests** (avoids execution conflicts)  
-- **Coordination phase**: Run all tests together, fix failures interactively
-- **Test ownership**: Each stream writes tests for their domain, coordinator runs them
-- **E2E tests run manually** with human guidance for complex user interactions
 
 ## Project Requirements and Implementation Plan
 
@@ -372,6 +277,11 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 - Private methods need indirect testing through public methods that call them
 - Async methods may need `Task.sleep()` waits in tests for proper coverage
 
+**Current Coverage Gaps (as of Session 8):**
+- **AuthenticationManager**: 39% (below 42% threshold) - needs additional credential handling tests
+- **PharmacokineticsEngine**: Not yet implemented - future core requirement
+- **SubscriptionProducts**: Not found in coverage report - check test inclusion
+
 **Common Coverage Issues:**
 - Result bundle not found: Run tests with `--coverage` first
 - Private method coverage: Use public methods that invoke them
@@ -383,28 +293,16 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 # Build project
 ./scripts/build.sh
 
-# Run tests (with automatic logging to ./logs directory)
-./scripts/test.sh unit 1                    # Unit tests with logging
-./scripts/test.sh ui 1 OnboardingUITests    # Specific UI test class (RECOMMENDED)
-./scripts/test.sh ui 1 AuthenticationUITests # Specific UI test class (RECOMMENDED)
-./scripts/test.sh unit 1 --coverage         # Unit tests with coverage
-./scripts/test.sh unit 1 --no-log           # Unit tests without logging
-./scripts/test.sh unit 1 --log-only         # Unit tests with logging but no console output
-./scripts/test.sh --help                    # Show all available options
-
-# ⚠️  AVOID unless final verification (very slow):
-# ./scripts/test.sh ui 1        # ALL UI tests - takes 10+ minutes
-# ./scripts/test.sh all 1       # ALL tests - very long running
-
-# View test results
-cat logs/latest/output.txt            # Latest test output
-open logs/latest/results.xcresult     # Open result bundle in Xcode
+# Run tests
+./scripts/test.sh unit    # Unit tests only
+./scripts/test.sh ui      # UI tests only
+./scripts/test.sh all     # All tests
 
 # Generate documentation
 ./scripts/docs.sh
 
 # Run full CI check suite (recommended before PR merge)
-./scripts/check-all.sh --skip-ui    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
+./scripts/check-all.sh    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
 ```
 
 ### Local CI Verification
@@ -454,6 +352,7 @@ xcodegen generate
 - All models use CloudKit-compatible default values (avoids optionals where possible)
 - Include `createdAt` and `updatedAt` timestamps for audit trails
 - Use proper `@Relationship` attributes with `inverse` and `deleteRule` specifications
+- **One-Side Relationship Rule**: Only parent entities use `@Relationship(inverse:)` - child entities use plain properties to avoid circular references
 - Example: `MedicationProfile` with enhanced fields for compounding and dose escalation
 
 ### Authentication Implementation Gotchas
@@ -470,6 +369,38 @@ xcodegen generate
 - xcbeautify offers better Swift Testing output support than xcpretty
 - Never use `CODE_SIGNING_ALLOWED=NO` for UI tests - prevents app launch
 - File-based test organization improves maintainability
+
+### E2E Testing Element Targeting (CRITICAL)
+**Element targeting is the #1 challenge in E2E testing.** When tests fail to find elements:
+
+#### Debug-First Approach
+```swift
+// ALWAYS start with debugging the accessibility hierarchy
+TestUtilities.debugElements(in: app, containing: "dose-history")
+
+// Example output reveals actual element types:
+// 🔍 DEBUG: Tables: []
+// 🔍 DEBUG: ScrollViews: []
+// 🔍 DEBUG: CollectionViews: ["dose-history-view"]
+```
+
+#### Common SwiftUI → Accessibility Mismatches
+- **SwiftUI List** → renders as **CollectionView** (not Table)
+- **NavigationStack** → renders as **CollectionView** (not ScrollView)
+- **Form toggles** → require coordinate-based tapping, not direct `.tap()`
+- **XCUIElementQuery** → has `.count` property, not `.isEmpty` (SwiftLint auto-fix breaks this)
+
+#### Essential Utilities
+- **`TestUtilities.debugElements()`** - Debug accessibility hierarchy
+- **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
+- Use **debug output** to identify correct element types before writing selectors
+
+#### Systematic Process
+1. Test fails to find element → Add `TestUtilities.debugElements()`
+2. Analyze debug output → Identify actual element type and identifier
+3. Update test selector → Use correct element type (collectionViews/tables/buttons)
+4. Remove debug code → Clean up after fixing selector
+5. Document learning → Update style guide for future reference
 
 ### XcodeGen Workflow
 - **CRITICAL**: Always run `xcodegen generate` after adding new Swift files
@@ -684,9 +615,7 @@ app.pickers["medication-\(currentSelection)"]
 - Simulator name always includes OS: `iPhone 15,OS=17.5`
 - **ALWAYS use `describe_ui` for precise coordinates** - never guess from screenshots
 - **Medical accuracy is critical** - validate all calculations and dose ranges
-- Easiest way to run tests is using the convenience script (automatically logs to ./logs):
-  - `./scripts/test.sh unit 1       # Unit tests with logging`
-  - `./scripts/test.sh ui 1 OnboardingUITests  # Specific UI test class (RECOMMENDED)`
-  - `./scripts/test.sh unit 1 --coverage --log-only  # Coverage analysis in background`
-  - `cat logs/latest/output.txt     # View latest test results`
-  - ⚠️ **AVOID** `./scripts/test.sh ui 1` (ALL UI tests - takes 10+ minutes)
+- Easiest way to run tests is using the convenience script:
+  - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
+  - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`
+  - `./scripts/test.sh all 1    # All tests on iPhone 15`

@@ -33,7 +33,6 @@ final class MedicationProfile {
     @Relationship(deleteRule: .cascade, inverse: \DoseTitration.medicationProfile)
     var doseTitrations: [DoseTitration]? // Titration plans for this medication
 
-    @Relationship(inverse: \User.medicationProfiles)
     var user: User? // Parent user relationship
 
     init(
@@ -56,7 +55,12 @@ final class MedicationProfile {
         self.currentDose = currentDose
         self.startDate = startDate
         self.refillDate = refillDate
-        self.medicationType = medicationType
+        // If medicationType is empty but genericName matches a known medication, use that
+        if medicationType.isEmpty && !genericName.isEmpty {
+            self.medicationType = Medication.fromGenericName(genericName)?.rawValue ?? ""
+        } else {
+            self.medicationType = medicationType
+        }
         self.isCompounded = isCompounded
         self.vialStrength = vialStrength
         self.reconstitutionVolume = reconstitutionVolume

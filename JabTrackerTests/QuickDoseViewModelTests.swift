@@ -1,0 +1,467 @@
+//
+//  QuickDoseViewModelTests.swift
+//  JabTrackerTests
+//
+
+import Testing
+import SwiftData
+import Foundation
+@testable import JabTracker
+
+@Suite("QuickDoseViewModel Tests")
+struct QuickDoseViewModelTests {
+    
+    // MARK: - Test Setup
+    
+    @MainActor
+    func createTestContext() -> ModelContext {
+        let container = DataController.testContainer()
+        return container.container.mainContext
+    }
+    
+    func createTestMedicationProfile(
+        context: ModelContext,
+        genericName: String = "semaglutide",
+        brandName: String = "Ozempic",
+        currentDose: Double = 1.0
+    ) -> MedicationProfile {
+        let profile = MedicationProfile(
+            genericName: genericName,
+            brandName: brandName,
+            currentDose: currentDose
+        )
+        profile.preferredInjectionSites = ["Thigh", "Abdomen"]
+        context.insert(profile)
+        try? context.save()
+        return profile
+    }
+    
+    func createTestDose(
+        context: ModelContext,
+        amount: Double = 1.0,
+        site: String = "Thigh",
+        medication: MedicationProfile
+    ) -> Dose {
+        let dose = Dose(
+            amount: amount,
+            timestamp: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1 week ago
+            site: site
+        )
+        context.insert(dose)
+        
+        // Set relationship after both objects are in context
+        dose.medication = medication
+        
+        try? context.save()
+        return dose
+    }
+    
+    // MARK: - Initialization Tests
+    
+    @Test("ViewModel initializes with default values")
+    @MainActor
+    func testViewModelInitialization() async {
+        let viewModel = QuickDoseViewModel()
+        
+        #expect(viewModel.medicationProfiles.isEmpty)
+        #expect(viewModel.selectedMedicationProfile == nil)
+        #expect(viewModel.doseAmount == 0.0)
+        #expect(viewModel.selectedInjectionSite.isEmpty)
+        #expect(viewModel.notes.isEmpty)
+        #expect(viewModel.recommendedInjectionSites.isEmpty)
+        #expect(viewModel.errorMessage == nil)
+        #expect(!viewModel.isLoading)
+        #expect(!viewModel.canSaveDose)
+    }
+    
+    // MARK: - Smart Defaults Loading Tests
+    
+    @Test("Loading smart defaults with medication profiles")
+    @MainActor
+    func testLoadSmartDefaultsWithProfiles() async {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(
+            context: context,
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 1.0
+        )
+        
+        let viewModel = QuickDoseViewModel()
+        
+        viewModel.loadSmartDefaults(context: context)
+        
+        // Wait for async loading to complete
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        
+        #expect(viewModel.medicationProfiles.count == 1)
+        #expect(viewModel.selectedMedicationProfile?.id == profile.id)
+        #expect(viewModel.doseAmount == 1.0)
+        #expect(!viewModel.selectedInjectionSite.isEmpty)
+        #expect(viewModel.errorMessage == nil)
+        #expect(!viewModel.isLoading)
+        #expect(viewModel.canSaveDose)
+    }
+    
+    @Test("Loading smart defaults with no medication profiles shows error")
+    @MainActor
+    func testLoadSmartDefaultsWithNoProfiles() async {
+        let context = createTestContext()
+        let viewModel = QuickDoseViewModel()
+        
+        viewModel.loadSmartDefaults(context: context)
+        
+        // Wait for async loading to complete
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        
+        #expect(viewModel.medicationProfiles.isEmpty)
+        #expect(viewModel.selectedMedicationProfile == nil)
+        #expect(viewModel.errorMessage?.contains("No medication profiles found") == true)
+        #expect(!viewModel.isLoading)
+        #expect(!viewModel.canSaveDose)
+    }
+    
+    @Test("Smart defaults include injection site rotation")
+    @MainActor
+    func testSmartDefaultsInjectionSiteRotation() async {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        // Create dose history with specific injection sites
+        _ = createTestDose(context: context, site: "Thigh", medication: profile)
+        _ = createTestDose(context: context, site: "Abdomen", medication: profile)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.loadSmartDefaults(context: context)
+        
+        // Wait for async loading to complete
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        
+        #expect(viewModel.recommendedInjectionSites.contains("Thigh"))
+        #expect(viewModel.recommendedInjectionSites.contains("Abdomen"))
+        #expect(!viewModel.selectedInjectionSite.isEmpty)
+    }
+    
+    // MARK: - Medication Selection Tests
+    
+    @Test("Selecting medication updates dose amount")
+    @MainActor
+    func testMedicationSelectionUpdatesDoseAmount() async {
+        let context = createTestContext()
+        let profile1 = createTestMedicationProfile(context: context, currentDose: 1.0)
+        let profile2 = createTestMedicationProfile(context: context, brandName: "Wegovy", currentDose: 2.0)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.loadSmartDefaults(context: context)
+        
+        // Wait for loading
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        
+        // Initially should select first profile
+        #expect(viewModel.doseAmount == profile1.currentDose)
+        
+        // Change to second profile
+        viewModel.selectedMedicationProfile = profile2
+        
+        #expect(viewModel.doseAmount == 2.0)
+    }
+    
+    @Test("Selecting medication updates recommended injection sites")
+    @MainActor
+    func testMedicationSelectionUpdatesInjectionSites() async {
+        let context = createTestContext()
+        let semaglutideProfile = createTestMedicationProfile(
+            context: context,
+            genericName: "semaglutide"
+        )
+        let liraglutideProfile = createTestMedicationProfile(
+            context: context,
+            genericName: "liraglutide",
+            brandName: "Victoza"
+        )
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.loadSmartDefaults(context: context)
+        
+        // Wait for loading
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        
+        // Select semaglutide profile
+        viewModel.selectedMedicationProfile = semaglutideProfile
+        
+        #expect(viewModel.recommendedInjectionSites.contains("Thigh"))
+        #expect(viewModel.recommendedInjectionSites.contains("Abdomen"))
+        
+        // Select liraglutide profile (daily medication with different site recommendations)
+        viewModel.selectedMedicationProfile = liraglutideProfile
+        
+        #expect(viewModel.recommendedInjectionSites.contains("Thigh"))
+        #expect(viewModel.recommendedInjectionSites.contains("Abdomen"))
+    }
+    
+    // MARK: - Validation Tests
+    
+    @Test("Can save dose validation with valid data")
+    @MainActor
+    func testCanSaveDoseWithValidData() async {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.loadSmartDefaults(context: context)
+        
+        // Wait for loading
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        
+        #expect(viewModel.canSaveDose)
+    }
+    
+    @Test("Cannot save dose without medication profile")
+    @MainActor
+    func testCannotSaveDoseWithoutMedicationProfile() async {
+        let viewModel = QuickDoseViewModel()
+        
+        viewModel.doseAmount = 1.0
+        viewModel.selectedInjectionSite = "Thigh"
+        
+        #expect(!viewModel.canSaveDose)
+    }
+    
+    @Test("Cannot save dose with zero amount")
+    @MainActor
+    func testCannotSaveDoseWithZeroAmount() async {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = 0.0
+        viewModel.selectedInjectionSite = "Thigh"
+        
+        #expect(!viewModel.canSaveDose)
+    }
+    
+    @Test("Cannot save dose without injection site")
+    @MainActor
+    func testCannotSaveDoseWithoutInjectionSite() async {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = 1.0
+        viewModel.selectedInjectionSite = ""
+        
+        #expect(!viewModel.canSaveDose)
+    }
+    
+    // MARK: - Dose Saving Tests
+    
+    @Test("Saving dose creates new dose in context")
+    @MainActor
+    func testSavingDoseCreatesNewDose() async throws {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = 1.5
+        viewModel.selectedInjectionSite = "Abdomen"
+        viewModel.notes = "Test dose"
+        
+        let initialDoseCount = try context.fetch(FetchDescriptor<Dose>()).count
+        
+        try await viewModel.saveDose(context: context)
+        
+        let finalDoseCount = try context.fetch(FetchDescriptor<Dose>()).count
+        let savedDoses = try context.fetch(FetchDescriptor<Dose>())
+        
+        #expect(finalDoseCount == initialDoseCount + 1)
+        
+        let savedDose = savedDoses.last
+        #expect(savedDose?.amount == 1.5)
+        #expect(savedDose?.site == "Abdomen")
+        #expect(savedDose?.notes == "Test dose")
+        #expect(savedDose?.medication?.id == profile.id)
+    }
+    
+    @Test("Saving dose with empty notes saves nil")
+    @MainActor
+    func testSavingDoseWithEmptyNotes() async throws {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = 1.0
+        viewModel.selectedInjectionSite = "Thigh"
+        viewModel.notes = ""
+        
+        try await viewModel.saveDose(context: context)
+        
+        let savedDoses = try context.fetch(FetchDescriptor<Dose>())
+        let savedDose = savedDoses.last
+        
+        #expect(savedDose?.notes == nil)
+    }
+    
+    @Test("Saving dose resets form fields")
+    @MainActor
+    func testSavingDoseResetsForm() async throws {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = 1.0
+        viewModel.selectedInjectionSite = "Thigh"
+        viewModel.notes = "Test notes"
+        
+        let originalTime = viewModel.doseTime
+        
+        try await viewModel.saveDose(context: context)
+        
+        // Notes should be reset
+        #expect(viewModel.notes.isEmpty)
+        
+        // Time should be updated to current time (approximately)
+        #expect(viewModel.doseTime > originalTime)
+        
+        // Medication selection and injection site should be maintained for convenience
+        #expect(viewModel.selectedMedicationProfile?.id == profile.id)
+        #expect(viewModel.selectedInjectionSite == "Thigh")
+    }
+    
+    @Test("Saving invalid dose throws error")
+    @MainActor
+    func testSavingInvalidDoseThrowsError() async {
+        let context = createTestContext()
+        let viewModel = QuickDoseViewModel()
+        
+        // Set invalid state (no medication profile)
+        viewModel.selectedMedicationProfile = nil
+        viewModel.doseAmount = 1.0
+        viewModel.selectedInjectionSite = "Thigh"
+        
+        do {
+            try await viewModel.saveDose(context: context)
+            #expect(Bool(false), "Should have thrown an error")
+        } catch {
+            #expect(error is QuickDoseError)
+        }
+    }
+    
+    // MARK: - Convenience Method Tests
+    
+    @Test("Get next scheduled dose time for weekly medication")
+    @MainActor
+    func testGetNextScheduledDoseTimeWeekly() async {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(
+            context: context,
+            genericName: "semaglutide" // weekly medication
+        )
+        
+        // Add a dose from 1 week ago
+        _ = createTestDose(context: context, medication: profile)
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        
+        let nextDoseTime = viewModel.getNextScheduledDoseTime()
+        
+        #expect(nextDoseTime != nil, "Expected getNextScheduledDoseTime() to return a non-nil value")
+        
+        // Safe unwrapping to avoid crash
+        guard let nextDoseTime = nextDoseTime else {
+            #expect(Bool(false), "nextDoseTime was nil when it shouldn't be")
+            return
+        }
+        
+        // Next dose should be approximately now (since last dose was 1 week ago)
+        let timeDifference = abs(nextDoseTime.timeIntervalSinceNow)
+        #expect(timeDifference < 24 * 60 * 60, "Time difference should be within 24 hours, but was \(timeDifference / 3600) hours")
+    }
+    
+    @Test("Is dose overdue detection")
+    @MainActor
+    func testIsDoseOverdueDetection() async {
+        let context = createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        
+        // Create a dose that's overdue (2 weeks ago for weekly medication)
+        let overdueDose = Dose(
+            amount: 1.0,
+            timestamp: Date().addingTimeInterval(-14 * 24 * 60 * 60) // 2 weeks ago
+        )
+        context.insert(overdueDose)
+        
+        // Set relationship after both objects are in context
+        overdueDose.medication = profile
+        
+        try? context.save()
+        
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        
+        let isOverdue = viewModel.isDoseOverdue()
+        
+        #expect(isOverdue)
+    }
+    
+    // MARK: - Error Handling Tests
+    
+    @Test("Error message clears when loading succeeds")
+    @MainActor
+    func testErrorMessageClearsOnSuccessfulLoading() async {
+        let context = createTestContext()
+        let viewModel = QuickDoseViewModel()
+        
+        // First load with no profiles (should set error)
+        viewModel.loadSmartDefaults(context: context)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        
+        #expect(viewModel.errorMessage != nil)
+        
+        // Add a profile
+        _ = createTestMedicationProfile(context: context)
+        
+        // Load again (should clear error)
+        viewModel.loadSmartDefaults(context: context)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        
+        #expect(viewModel.errorMessage == nil)
+    }
+    
+    // MARK: - Medication Extension Tests
+    
+    @Test("Medication profile extension returns correct medication")
+    func testMedicationProfileExtension() {
+        let semaglutideProfile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic"
+        )
+        let tirzepatideProfile = MedicationProfile(
+            genericName: "tirzepatide",
+            brandName: "Mounjaro"
+        )
+        let unknownProfile = MedicationProfile(
+            genericName: "unknown",
+            brandName: "Unknown"
+        )
+        
+        #expect(semaglutideProfile.medication == .semaglutide)
+        #expect(tirzepatideProfile.medication == .tirzepatide)
+        #expect(unknownProfile.medication == nil)
+    }
+    
+    @Test("Medication from generic name helper")
+    func testMedicationFromGenericName() {
+        #expect(Medication.fromGenericName("semaglutide") == .semaglutide)
+        #expect(Medication.fromGenericName("tirzepatide") == .tirzepatide)
+        #expect(Medication.fromGenericName("liraglutide") == .liraglutide)
+        #expect(Medication.fromGenericName("dulaglutide") == .dulaglutide)
+        #expect(Medication.fromGenericName("unknown") == nil)
+        #expect(Medication.fromGenericName("SEMAGLUTIDE") == .semaglutide) // Case insensitive
+    }
+}

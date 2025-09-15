@@ -115,15 +115,10 @@ struct OnboardingViewModelTests {
         #expect(profile.currentDose == 1.0)
         #expect(profile.medicationType == "semaglutide")
 
-        // Verify initial dose was created
+        // Verify no initial dose was created (onboarding doesn't create doses)
         let doseDescriptor = FetchDescriptor<Dose>()
         let doses = try context.fetch(doseDescriptor)
-        #expect(doses.count == 1)
-
-        let dose = try #require(doses.first)
-        #expect(dose.amount == 1.0)
-        #expect(dose.site == "Thigh")
-        #expect(dose.notes == "Initial dose - onboarding")
+        #expect(doses.isEmpty, "Onboarding should not create initial doses")
     }
 
     // MARK: - Navigation Method Tests

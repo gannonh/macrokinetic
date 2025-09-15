@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-12T16:35:25Z
-version: 1.2
+last_updated: 2025-09-15T18:21:44Z
+version: 1.3
 author: Claude Code PM System
 ---
 
@@ -96,5 +96,23 @@ author: Claude Code PM System
 - **Offline Capability**: Full functionality without network
 - **ProMotion Support**: 120Hz display optimization
 
+## Testing Framework Insights (Issue #41 Learnings)
+### CloudKit vs Testing
+- **CloudKit Requirements**: All relationships need proper inverses, but tests should disable CloudKit entirely
+- **Test Environment Detection**: DataController properly detects test environment and disables CloudKit automatically
+- **SwiftData Testing**: Raw model creation without ModelContext causes crashes when accessing relationships
+
+### SwiftUI Accessibility Hierarchy (Critical for UI Tests)
+- **List Rendering**: SwiftUI List renders as CollectionView (not Table/ScrollView as expected)
+- **NavigationStack**: Renders as CollectionView in accessibility hierarchy
+- **Element Queries**: XCUIElementQuery has `.count` property, not `.isEmpty` (SwiftLint auto-fix incorrectly converts)
+- **Text Field Interaction**: XCUITest text clearing requires delete character string approach, not selectAll() or keys["Delete"]
+
+### Framework Limitations and Workarounds
+- **SwiftLint Auto-fix Issues**: "Empty Count" rule breaks XCUIElementQuery usage by converting `.count == 0` to `.isEmpty`
+- **Element Targeting**: SwiftUI accessibility hierarchy doesn't match visual structure - requires debug-first approach
+- **Test Reliability**: Complex element targeting needs systematic debugging with TestUtilities.debugElements()
+
 ## Update History
+- 2025-09-15T18:21:44Z: Added testing framework insights from Issue #41, SwiftUI accessibility hierarchy patterns
 - 2025-09-12T16:35:25Z: Added Claude Code PM system (CCPM) details - 49 commands, agent system, workflow integration

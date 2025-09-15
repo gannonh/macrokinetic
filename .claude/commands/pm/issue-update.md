@@ -1,7 +1,7 @@
 ---
 description: Update an issue with recent activity, progress, and context from the current session.
 argument-hint: Issue number (e.g., 42)
-allowed-tools: Bash, Read, Write, Edit, LS
+allowed-tools: Read, Write, Edit, LS
 ---
 
 # Issue Update

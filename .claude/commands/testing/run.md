@@ -1,7 +1,7 @@
 ---
 description: Run the test suite or specific tests using the configured test-runner agent.
 argument-hint: Optional test target (file path, pattern, or suite name)
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
 ---
 
 # Run Tests
@@ -30,7 +30,7 @@ If test target provided, verify it exists and determine literal filepath/test pa
 
 **IMPORTANT** 
 - `$ARGUMENTS` may or may not be a literal file path
-- Unless otherwise mentioned in `$ARGUMENTS`, assume the test should be run **in the worktree branch**.
+- Unless otherwise mentioned in `$ARGUMENTS`, assume the test should be run **in the current branch**.
 - It is your job to determine and verify correct `{test_target}` based on the provided arguments: `$ARGUMENTS`
 
 ## Instructions

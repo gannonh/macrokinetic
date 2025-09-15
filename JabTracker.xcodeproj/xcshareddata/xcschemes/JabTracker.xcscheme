@@ -116,11 +116,11 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--force-onboarding"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ui-testing"

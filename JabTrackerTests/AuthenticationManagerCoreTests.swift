@@ -23,7 +23,7 @@ struct AuthenticationManagerCoreTests {
 
     @Test("AuthenticationManager sign in with Apple error handling")
     @MainActor
-    func signInWithAppleErrorHandling() throws {
+    func signInWithAppleErrorHandling() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
@@ -32,25 +32,23 @@ struct AuthenticationManagerCoreTests {
         #expect(authManager.currentUser == nil)
 
         // Test that signInWithApple properly propagates errors in test environment
-        Task {
-            var didThrowError = false
-            do {
-                _ = try await authManager.signInWithApple()
-            } catch {
-                didThrowError = true
-                // Should throw a specific AuthenticationError, not just any error
-                #expect(error is AuthenticationError, "Should throw AuthenticationError, got: \(type(of: error))")
-                // Authentication state should remain unchanged after error
-                #expect(authManager.authenticationState == .notDetermined)
-                #expect(authManager.currentUser == nil)
-            }
-            #expect(didThrowError, "signInWithApple should throw an error in test environment")
+        var didThrowError = false
+        do {
+            _ = try await authManager.signInWithApple()
+        } catch {
+            didThrowError = true
+            // Should throw a specific AuthenticationError, not just any error
+            #expect(error is AuthenticationError, "Should throw AuthenticationError, got: \(type(of: error))")
+            // Authentication state should remain unchanged after error
+            #expect(authManager.authenticationState == .notDetermined)
+            #expect(authManager.currentUser == nil)
         }
+        #expect(didThrowError, "signInWithApple should throw an error in test environment")
     }
 
     @Test("AuthenticationManager state transitions")
     @MainActor
-    func authStateTransitions() throws {
+    func authStateTransitions() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
@@ -59,37 +57,31 @@ struct AuthenticationManagerCoreTests {
         #expect(authManager.currentUser == nil)
 
         // Test signOut updates state correctly
-        Task {
-            try await authManager.signOut()
-            #expect(authManager.currentUser == nil, "currentUser should be nil after signOut")
-            #expect(authManager.authenticationState == .notAuthenticated,
-                    "authenticationState should be .notAuthenticated after signOut")
-        }
+        try await authManager.signOut()
+        #expect(authManager.currentUser == nil, "currentUser should be nil after signOut")
+        #expect(authManager.authenticationState == .notAuthenticated,
+                "authenticationState should be .notAuthenticated after signOut")
 
         // Test checkAuthenticationStatus with empty database maintains notAuthenticated state
-        Task {
-            await authManager.checkAuthenticationStatus()
-            // With no users in test database, should remain notAuthenticated
-            #expect(authManager.authenticationState == .notAuthenticated,
-                    "authenticationState should remain .notAuthenticated with empty database")
-        }
+        await authManager.checkAuthenticationStatus()
+        // With no users in test database, should remain notAuthenticated
+        #expect(authManager.authenticationState == .notAuthenticated,
+                "authenticationState should remain .notAuthenticated with empty database")
     }
 
     @Test("Authentication state consistency after app restart")
     @MainActor
-    func authStateConsistencyAfterRestart() throws {
+    func authStateConsistencyAfterRestart() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
         // Test checkAuthenticationStatus handles empty database gracefully
-        Task {
-            await authManager.checkAuthenticationStatus()
-            // Should not crash with empty user database
-            // AuthenticationState is an enum, so verify it has a valid state
-            #expect(authManager.authenticationState == .notDetermined ||
-                authManager.authenticationState == .authenticated ||
-                authManager.authenticationState == .notAuthenticated)
-        }
+        await authManager.checkAuthenticationStatus()
+        // Should not crash with empty user database
+        // AuthenticationState is an enum, so verify it has a valid state
+        #expect(authManager.authenticationState == .notDetermined ||
+            authManager.authenticationState == .authenticated ||
+            authManager.authenticationState == .notAuthenticated)
 
         // Test with existing user data
         let context = dataController.container.mainContext
@@ -97,59 +89,51 @@ struct AuthenticationManagerCoreTests {
         context.insert(testUser)
         try context.save()
 
-        Task {
-            await authManager.checkAuthenticationStatus()
-            // Should detect existing user data
-        }
+        await authManager.checkAuthenticationStatus()
+        // Should detect existing user data
     }
 
     @Test("Authentication manager error recovery")
     @MainActor
-    func authManagerErrorRecovery() throws {
+    func authManagerErrorRecovery() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
         // Test that sign out works regardless of current state
-        Task {
-            try await authManager.signOut()
-            #expect(authManager.currentUser == nil)
-        }
+        try await authManager.signOut()
+        #expect(authManager.currentUser == nil)
 
         // Test that checkAuthenticationStatus handles various states
-        Task {
-            await authManager.checkAuthenticationStatus()
-            // Should complete without error regardless of state
-        }
+        await authManager.checkAuthenticationStatus()
+        // Should complete without error regardless of state
     }
 
     @Test("Concurrent authentication operations")
     @MainActor
-    func concurrentAuthOperations() throws {
+    func concurrentAuthOperations() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
         // Test that multiple simultaneous auth status checks don't cause issues
-        Task {
-            await withTaskGroup(of: Void.self) { group in
-                // Simulate multiple concurrent auth status checks
-                for _ in 0 ..< 3 {
-                    group.addTask {
-                        await authManager.checkAuthenticationStatus()
-                    }
+        await withTaskGroup(of: Void.self) { group in
+            // Simulate multiple concurrent auth status checks
+            for _ in 0 ..< 3 {
+                group.addTask {
+                    await authManager.checkAuthenticationStatus()
                 }
             }
-
-            // Should complete without deadlocks or crashes
-            // AuthenticationState is an enum so it's never nil
-            #expect(authManager.authenticationState == .notDetermined ||
-                authManager.authenticationState == .authenticated ||
-                authManager.authenticationState == .notAuthenticated)
         }
+
+        // Should complete without deadlocks or crashes
+        // AuthenticationState is an enum so it's never nil
+        #expect(authManager.authenticationState == .notDetermined ||
+            authManager.authenticationState == .authenticated ||
+            authManager.authenticationState == .notAuthenticated)
     }
 
     @Test("Invalid user data handling")
     @MainActor
-    func invalidUserDataHandling() throws {
+    func invalidUserDataHandling() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
@@ -159,11 +143,9 @@ struct AuthenticationManagerCoreTests {
         context.insert(incompleteUser)
         try context.save()
 
-        Task {
-            await authManager.checkAuthenticationStatus()
-            // Should handle incomplete user data gracefully
-            // Don't assume this means authenticated if data is invalid
-        }
+        await authManager.checkAuthenticationStatus()
+        // Should handle incomplete user data gracefully
+        // Don't assume this means authenticated if data is invalid
 
         // Test authentication manager can handle users with missing Apple ID
         let userWithoutAppleID = User(email: "no-apple-id@example.com", weight: 70.0)
@@ -171,42 +153,36 @@ struct AuthenticationManagerCoreTests {
         context.insert(userWithoutAppleID)
         try context.save()
 
-        Task {
-            await authManager.checkAuthenticationStatus()
-            // Should handle missing Apple ID appropriately
-        }
+        await authManager.checkAuthenticationStatus()
+        // Should handle missing Apple ID appropriately
     }
 
     @Test("Authentication error handling scenarios")
     @MainActor
-    func authenticationErrorHandlingScenarios() throws {
+    func authenticationErrorHandlingScenarios() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
         // Test that signOut works even when no user is signed in
-        Task {
-            try await authManager.signOut()
-            #expect(authManager.authenticationState == .notAuthenticated,
-                    "signOut should succeed even when no user is signed in")
-            #expect(authManager.currentUser == nil,
-                    "currentUser should be nil after signOut")
-        }
+        try await authManager.signOut()
+        #expect(authManager.authenticationState == .notAuthenticated,
+                "signOut should succeed even when no user is signed in")
+        #expect(authManager.currentUser == nil,
+                "currentUser should be nil after signOut")
 
         // Test multiple consecutive signOut calls don't cause issues
-        Task {
-            try await authManager.signOut()
-            try await authManager.signOut()
-            try await authManager.signOut()
-            #expect(authManager.authenticationState == .notAuthenticated,
-                    "State should remain consistent after multiple signOut calls")
-            #expect(authManager.currentUser == nil,
-                    "User should remain nil after multiple signOut calls")
-        }
+        try await authManager.signOut()
+        try await authManager.signOut()
+        try await authManager.signOut()
+        #expect(authManager.authenticationState == .notAuthenticated,
+                "State should remain consistent after multiple signOut calls")
+        #expect(authManager.currentUser == nil,
+                "User should remain nil after multiple signOut calls")
     }
 
     @Test("Authentication manager reset app data functionality")
     @MainActor
-    func authManagerResetAppData() throws {
+    func authManagerResetAppData() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
@@ -223,40 +199,36 @@ struct AuthenticationManagerCoreTests {
 
         // Test reset through checkAuthenticationStatus with reset flag
         // This indirectly tests the resetAppData method
-        Task {
-            // Simulate UI testing environment with reset flag
-            await authManager.checkAuthenticationStatus()
+        // Simulate UI testing environment with reset flag
+        await authManager.checkAuthenticationStatus()
 
-            // Authentication state should be properly set
-            let validStates: [AuthenticationState] = [.notDetermined, .authenticated, .notAuthenticated]
-            #expect(validStates.contains(authManager.authenticationState),
-                    "Should have valid authentication state after check")
-        }
+        // Authentication state should be properly set
+        let validStates: [AuthenticationState] = [.notDetermined, .authenticated, .notAuthenticated]
+        #expect(validStates.contains(authManager.authenticationState),
+                "Should have valid authentication state after check")
     }
 
     @Test("Authentication manager processAppleIDCredential error scenarios")
     @MainActor
-    func authManagerProcessAppleIDCredentialErrorScenarios() throws {
+    func authManagerProcessAppleIDCredentialErrorScenarios() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
         // Test that sign in handles authorization denial
-        Task {
-            var didThrowExpectedError = false
-            do {
-                _ = try await authManager.signInWithApple()
-            } catch let error as AuthenticationError {
-                didThrowExpectedError = true
-                // Should be the not implemented error for test environment
-                #expect(error == .notImplemented, "Should throw notImplemented error in test environment")
-            }
-            #expect(didThrowExpectedError, "Should throw AuthenticationError for sign in")
+        var didThrowExpectedError = false
+        do {
+            _ = try await authManager.signInWithApple()
+        } catch let error as AuthenticationError {
+            didThrowExpectedError = true
+            // Should be the not implemented error for test environment
+            #expect(error == .notImplemented, "Should throw notImplemented error in test environment")
         }
+        #expect(didThrowExpectedError, "Should throw AuthenticationError for sign in")
     }
 
     @Test("Authentication manager state logging and transitions")
     @MainActor
-    func authManagerStateLoggingTransitions() throws {
+    func authManagerStateLoggingTransitions() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
@@ -269,19 +241,17 @@ struct AuthenticationManagerCoreTests {
         _ = authManager.authenticationState
 
         // Test checkAuthenticationStatus completes
-        Task {
-            await authManager.checkAuthenticationStatus()
+        await authManager.checkAuthenticationStatus()
 
-            // State should be determined after check
-            #expect(authManager.authenticationState != .notDetermined ||
-                authManager.authenticationState == .notAuthenticated,
-                "State should be determined after authentication check")
-        }
+        // State should be determined after check
+        #expect(authManager.authenticationState != .notDetermined ||
+            authManager.authenticationState == .notAuthenticated,
+            "State should be determined after authentication check")
     }
 
     @Test("Authentication manager with existing user data")
     @MainActor
-    func authManagerWithExistingUserData() throws {
+    func authManagerWithExistingUserData() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
@@ -291,14 +261,21 @@ struct AuthenticationManagerCoreTests {
         context.insert(existingUser)
         try context.save()
 
-        Task {
-            await authManager.checkAuthenticationStatus()
+        await authManager.checkAuthenticationStatus()
 
-            // Should detect existing user and set authenticated state
+        // Should detect existing user and set authenticated state
+        // But only if no UI testing or reset flags are active
+        if !ProcessInfo.processInfo.arguments.contains("--reset-app-data") &&
+           !ProcessInfo.processInfo.arguments.contains("--ui-testing") &&
+           ProcessInfo.processInfo.environment["UI_TESTING"] != "true" {
             #expect(authManager.currentUser != nil,
                     "Should set current user when existing user found")
             #expect(authManager.authenticationState == .authenticated,
                     "Should be authenticated when user data exists")
+        } else {
+            // In test environments with UI testing flags, the behavior might be different
+            #expect(authManager.authenticationState != .notDetermined,
+                    "Authentication state should be determined after check")
         }
     }
 

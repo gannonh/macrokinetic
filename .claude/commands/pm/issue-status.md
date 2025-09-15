@@ -1,5 +1,7 @@
 ---
-allowed-tools: Bash, Read, LS
+description: Check issue status (open/closed) and current state.
+argument-hint: Issue number (e.g., 42)
+allowed-tools: Read, LS
 ---
 
 # Issue Status
@@ -59,14 +61,21 @@ Use clear visual indicators:
 - ✅ Closed and complete
 - ❌ Closed without completion
 
+### 5. Acceptance Criteria Status
+Provide status of acceptance criteria using the following indicators:
+- ✅ Met
+- ❌ Not Met
+- ⚠️ Partially Met
+- ⏳ Not Reviewed
+
 ### 6. Actionable Next Steps
 Based on status, suggest actions:
 ```
 🚀 Suggested Actions:
    - Start work: /pm:issue-start $ARGUMENTS
    - Sync updates: /pm:issue-sync $ARGUMENTS
-   - Close issue: gh issue close #$ARGUMENTS
-   - Reopen issue: gh issue reopen #$ARGUMENTS
+   - Close issue: /pm:issue-close #$ARGUMENTS
+   - Reopen issue: /pm:issue-reopen #$ARGUMENTS
 ```
 
 ### 7. Batch Status

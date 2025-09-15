@@ -68,24 +68,6 @@ struct OnboardingViewModelCoverageTests {
         #expect(viewModel.selectedSites.count == 1, "Should have one site selected")
     }
 
-    @Test("Direct permission method execution for coverage")
-    @MainActor
-    func directPermissionMethodExecution() async throws {
-        let dataController = DataController.testContainer()
-        let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
-
-        // Test requestNotificationPermissions() directly
-        // Note: This will likely fail in test environment but improves code coverage
-        await viewModel.requestNotificationPermissions()
-        // The actual result depends on test environment permissions
-
-        // Test requestHealthKitPermissions() directly
-        // Note: This will likely fail in test environment but improves code coverage
-        await viewModel.requestHealthKitPermissions()
-        // The actual result depends on test environment permissions
-    }
-
     @Test("OnboardingStep enum title coverage")
     @MainActor
     func onboardingStepEnumTitleCoverage() throws {

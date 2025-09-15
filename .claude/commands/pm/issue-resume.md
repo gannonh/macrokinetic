@@ -1,7 +1,7 @@
 ---
 description: Resume work on an in-progress GitHub issue by analyzing current state and continuing work streams.
 argument-hint: Issue number (e.g., 42)
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
 ---
 
 # Issue Resume
@@ -34,18 +34,22 @@ Resume work on an in-progress GitHub issue by analyzing current state and contin
 
 ## Instructions
 
-### 1. Ensure Worktree Exists
+### 1. Ensure Issue Branch Exists
 
-Check if epic worktree exists:
+Check if issue branch exists and switch to it:
 ```bash
-# Find epic name from task file
-epic_name={extracted_from_path}
+# Find issue name from local task file
+issue_name={extracted_from_task_file_or_path}
 
-# Check worktree
-if ! git worktree list | grep -q "epic-$epic_name"; then
-  echo "❌ No worktree for epic. Run: /pm:epic-start $epic_name"
+# Check if issue branch exists
+if ! git show-ref --verify --quiet refs/heads/issue/{issue_name}; then
+  echo "❌ No branch issue/{issue_name} for issue #$ARGUMENTS. Run: /pm:issue-start $ARGUMENTS"
   exit 1
 fi
+
+# Switch to issue branch
+git checkout issue/{issue_name}
+git pull origin issue/{issue_name}
 ```
 
 ### 2. Analyze Current Progress
@@ -72,13 +76,16 @@ Read existing progress files at `.claude/epics/{epic_name}/updates/$ARGUMENTS/`:
 
 **Analyze work state:**
 ```bash
-# Check worktree git status
-cd ../epic-{epic_name}
+# Check git status on issue branch
+# (already on correct branch from step 1)
 git status --short
 git log --oneline -5
 
 # Check for uncommitted work
 git diff --stat
+
+# Check PR status
+gh pr view issue/{issue_name} --json state,isDraft -q '.state + " (draft: " + (.isDraft|tostring) + ")"'
 ```
 
 ### 3. Determine Resume Strategy
@@ -135,9 +142,9 @@ Task:
   description: "Resume Issue #$ARGUMENTS Stream {X}"
   subagent_type: "{agent_type}"
   prompt: |
-    You are resuming work on Issue #$ARGUMENTS in the epic worktree.
-    
-    Worktree location: ../epic-{epic_name}/
+    You are resuming work on Issue #$ARGUMENTS in the current directory on branch issue/{issue_name}.
+
+    Branch: issue/{issue_name}
     Your stream: {stream_name}
     
     RESUMING CONTEXT:
@@ -147,18 +154,19 @@ Task:
     - Last session notes: {last_progress_notes}
     
     Your continuation scope:
-    - Files to continue working on: ../epic-{epic_name}/{file_patterns}
+    - Files to continue working on: {file_patterns}
     - Work to complete: {remaining_work_description}
     - Blockers to resolve: {any_known_blockers}
     
     Requirements:
     1. Read full task from: .claude/epics/{epic_name}/{task_file}
-    2. Review your stream progress: {main_project_root}/.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
-    3. Check worktree git status: git status, git diff
+    2. Review your stream progress: .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
+    3. Check git status on branch: git status, git diff
     4. Continue from where you left off - don't restart completed work
     5. Commit frequently with format: "Issue #$ARGUMENTS: {specific change}"
-    6. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
-    7. Follow coordination rules in /rules/agent-coordination.md
+    6. Update progress in: .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
+    7. Add new files to coverage-config.json
+    8. Follow coordination rules in rules/agent-coordination.md
 
     CONTINUATION STRATEGY:
     - If tests were written but not run: Resume with test execution
@@ -217,7 +225,7 @@ Resumed at: {timestamp}" | gh issue comment $ARGUMENTS --body-file -
 🔄 Resumed work on issue #$ARGUMENTS
 
 Epic: {epic_name}
-Worktree: ../epic-{epic_name}/
+Branch: epic/{epic_name}
 
 Stream Status:
   Stream A: {name} - ✅ Completed (skipped)
@@ -239,7 +247,7 @@ Update progress: /pm:issue-update $ARGUMENTS
 If any step fails, report clearly:
 - "❌ Cannot resume - issue not in progress"
 - "❌ No previous work found - use /pm:issue-start instead"
-- "❌ Epic worktree missing - run /pm:epic-start first"
+- "❌ Epic branch missing - run /pm:epic-start first"
 - Continue with what's possible
 - Never leave inconsistent state
 
@@ -264,7 +272,7 @@ If any step fails, report clearly:
 
 ## Important Notes
 
-- Always check git status in worktree before resuming
+- Always check git status on branch before resuming
 - Don't restart completed work - continue from last state
 - Respect coordination between streams
 - Provide context to resumed agents about previous work

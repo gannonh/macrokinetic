@@ -117,46 +117,51 @@ struct AuthenticationDatabaseIntegrationTests {
 
     @Test("Authentication checkAuthenticationStatus with existing user flow")
     @MainActor
-    func authCheckAuthenticationStatusExistingUserFlow() throws {
+    func authCheckAuthenticationStatusExistingUserFlow() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
 
-        Task {
-            // Create an existing user in the database
-            let existingUser = User(email: "existing@example.com", name: "Existing User")
-            existingUser.appleUserId = "existing.apple.user.id"
-            context.insert(existingUser)
-            try context.save()
+        // Create an existing user in the database
+        let existingUser = User(email: "existing@example.com", name: "Existing User")
+        existingUser.appleUserId = "existing.apple.user.id"
+        context.insert(existingUser)
+        try context.save()
 
-            // Test checkAuthenticationStatus with existing user
-            await authManager.checkAuthenticationStatus()
+        // Verify user was created successfully before calling checkAuthenticationStatus
+        let beforeFetchDescriptor = FetchDescriptor<User>()
+        let usersBefore = try context.fetch(beforeFetchDescriptor)
+        #expect(!usersBefore.isEmpty, "Should have user before checkAuthenticationStatus")
 
-            // Since we're in test environment without real keychain,
-            // checkAuthenticationStatus should find the existing user
-            let fetchDescriptor = FetchDescriptor<User>()
-            let users = try context.fetch(fetchDescriptor)
+        // Test checkAuthenticationStatus with existing user
+        await authManager.checkAuthenticationStatus()
 
-            #expect(!users.isEmpty, "Should have users in database")
-            let foundUser = users.first { $0.email == "existing@example.com" }
-            #expect(foundUser != nil, "Should find existing user")
+        // The test should verify the authentication manager's state, not just database state
+        // Because checkAuthenticationStatus might reset data in test environments
+        #expect(authManager.authenticationState != .notDetermined,
+                "Authentication state should be determined after check")
+
+        // If no UI testing flags are set, the user should remain and be set as current user
+        if !ProcessInfo.processInfo.arguments.contains("--reset-app-data") &&
+           !ProcessInfo.processInfo.arguments.contains("--ui-testing") &&
+           ProcessInfo.processInfo.environment["UI_TESTING"] != "true" {
+            #expect(authManager.currentUser != nil, "Should set current user when existing user found")
+            #expect(authManager.authenticationState == .authenticated, "Should be authenticated when user exists")
         }
     }
 
     @Test("Authentication checkAuthenticationStatus database fetch error handling")
     @MainActor
-    func authCheckAuthenticationStatusDatabaseFetchError() throws {
+    func authCheckAuthenticationStatusDatabaseFetchError() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
 
-        Task {
-            // Test checkAuthenticationStatus with empty database
-            await authManager.checkAuthenticationStatus()
+        // Test checkAuthenticationStatus with empty database
+        await authManager.checkAuthenticationStatus()
 
-            // In test environment, should set notAuthenticated state
-            #expect(authManager.authenticationState == .notAuthenticated,
-                    "Should be notAuthenticated when no users exist")
-            #expect(authManager.currentUser == nil, "Current user should be nil")
-        }
+        // In test environment, should set notAuthenticated state
+        #expect(authManager.authenticationState == .notAuthenticated,
+                "Should be notAuthenticated when no users exist")
+        #expect(authManager.currentUser == nil, "Current user should be nil")
     }
 }

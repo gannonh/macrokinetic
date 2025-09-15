@@ -1,4 +1,4 @@
-# CCPM Notes
+# PM system Documentation
 
 ## Command Reference
 
@@ -108,16 +108,19 @@ Breaks epic into concrete, actionable tasks with acceptance criteria, effort est
 
 ```bash
 /pm:epic-sync feature-name
-# Or for confident workflows:
-/pm:epic-oneshot feature-name
 ```
 Pushes epic and tasks to GitHub as issues with appropriate labels and relationships.
 
 ### 5. Execution Phase
 
 ```bash
-/pm:issue-start 1234  # Launch specialized agent
-/pm:issue-sync 1234   # Push progress updates
-/pm:next             # Get next priority task
+/pm:issue-start 1234     # Create issue branch + draft PR + launch agents
+/pm:issue-update 1234    # Update progress and capture session work
+/pm:issue-resume 1234    # Resume work on in-progress issues
+/pm:issue-sync 1234      # Push progress updates to GitHub
+/pm:issue-merge 1234     # Mark PR ready → review → merge to main
+/pm:issue-close 1234     # Close issue + update epic progress
+/pm:epic-close epic-name # Close epic when all issues complete
 ```
-Specialized agents implement tasks while maintaining progress updates and an audit trail.
+
+**Issue/Branch/PR Workflow:** Each issue gets its own branch and pull request for focused development and review. Specialized agents implement features while maintaining comprehensive progress tracking and audit trails. Use `issue-update` to capture progress during development and `issue-resume` to continue work after breaks.

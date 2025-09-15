@@ -26,7 +26,7 @@ final class User {
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]? // CloudKit requires optional relationships
 
-    @Relationship(deleteRule: .cascade)
+    @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
     var medicationProfiles: [MedicationProfile]? // CloudKit requires optional relationships
 
     init(
