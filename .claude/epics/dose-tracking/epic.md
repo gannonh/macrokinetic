@@ -3,6 +3,8 @@ name: dose-tracking
 status: backlog
 created: 2025-09-11T17:34:41Z
 progress: 44%
+updated: 2025-09-15T20:55:35Z
+last_sync: 2025-09-15T21:00:20Z
 prd: .claude/prds/dose-tracking.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/37
 ---
