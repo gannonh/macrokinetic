@@ -181,7 +181,7 @@ struct DoseSearchServiceUnitTests {
         
         // Then: Only exact matches work (case insensitive by default)
         #expect(exactMatch.count == 1)
-        #expect(partialMatch.count == 0)
+        #expect(partialMatch.isEmpty)
         #expect(caseMatch.count == 1) // Case insensitive
     }
     
@@ -212,7 +212,7 @@ struct DoseSearchServiceUnitTests {
         
         // Then: Only prefix matches work
         #expect(startsWithMatch.count == 1)
-        #expect(middleMatch.count == 0)
+        #expect(middleMatch.isEmpty)
         #expect(fullMatch.count == 1)
     }
     
@@ -243,7 +243,7 @@ struct DoseSearchServiceUnitTests {
         
         // Then: Only suffix matches work
         #expect(endsWithMatch.count == 1)
-        #expect(beginningMatch.count == 0)
+        #expect(beginningMatch.isEmpty)
         #expect(fullMatch.count == 1)
     }
     
@@ -280,7 +280,7 @@ struct DoseSearchServiceUnitTests {
         
         // Then: Only exact case matches work
         #expect(sensitiveMatch.count == 1)
-        #expect(sensitiveNoMatch.count == 0)
+        #expect(sensitiveNoMatch.isEmpty)
     }
     
     // MARK: - Multiple Terms Search Implementation Tests
@@ -314,7 +314,7 @@ struct DoseSearchServiceUnitTests {
         #expect(bothTermsResults.count == 1)
         #expect(bothTermsResults[0].notes == "morning injection thigh")
         
-        #expect(noMatchResults.count == 0)
+        #expect(noMatchResults.isEmpty)
         #expect(emptyTermsResults.count == doses.count) // Empty terms return all
     }
     
@@ -348,7 +348,7 @@ struct DoseSearchServiceUnitTests {
         #expect(eitherTermResults.contains { $0.notes == "morning injection" })
         #expect(eitherTermResults.contains { $0.notes == "evening dose" })
         
-        #expect(noMatchResults.count == 0)
+        #expect(noMatchResults.isEmpty)
         #expect(emptyTermsResults.count == doses.count) // Empty terms return all
     }
     
@@ -429,7 +429,7 @@ struct DoseSearchServiceUnitTests {
         // Then: Only fully matching dose is returned
         #expect(results.count == 1, "Expected 1 result but got \(results.count). Medication names: \(doses.compactMap { $0.medication?.genericName })")
         
-        if results.count > 0 {
+        if !results.isEmpty {
             #expect(results[0].amount == 1.5)
             #expect(results[0].site == "Thigh")
             #expect(results[0].notes?.contains("exact phrase") == true)
@@ -583,7 +583,7 @@ struct DoseSearchServiceUnitTests {
         notes: String? = nil,
         skipped: Bool = false
     ) -> Dose {
-        return Dose(
+        Dose(
             amount: amount,
             timestamp: timestamp,
             site: site,
@@ -596,14 +596,14 @@ struct DoseSearchServiceUnitTests {
         genericName: String = "TestMedication",
         brandName: String = "TestBrand"
     ) -> MedicationProfile {
-        return MedicationProfile(
+        MedicationProfile(
             genericName: genericName,
             brandName: brandName
         )
     }
     
     private func createTestDoses() -> [Dose] {
-        return [
+        [
             createTestDose(notes: "morning dose"),
             createTestDose(notes: "evening injection"),
             createTestDose(site: "Thigh"),

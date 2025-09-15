@@ -453,7 +453,7 @@ struct DoseHistoryViewModelUnitTests {
         
         // Then: Dose is now skipped and filtered out
         #expect(dose.skipped == true)
-        #expect(viewModel.filteredDoses.count == 0)
+        #expect(viewModel.filteredDoses.isEmpty)
         
         // When: Toggling back
         try viewModel.toggleSkippedStatus(for: dose, context: context)
@@ -507,7 +507,7 @@ struct DoseHistoryViewModelUnitTests {
         notes: String? = nil,
         skipped: Bool = false
     ) -> Dose {
-        return Dose(
+        Dose(
             amount: amount,
             timestamp: timestamp,
             site: site,
@@ -520,7 +520,7 @@ struct DoseHistoryViewModelUnitTests {
         genericName: String = "TestMedication",
         brandName: String = "TestBrand"
     ) -> MedicationProfile {
-        return MedicationProfile(
+        MedicationProfile(
             genericName: genericName,
             brandName: brandName
         )

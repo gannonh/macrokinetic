@@ -118,7 +118,7 @@ struct OnboardingViewModelTests {
         // Verify no initial dose was created (onboarding doesn't create doses)
         let doseDescriptor = FetchDescriptor<Dose>()
         let doses = try context.fetch(doseDescriptor)
-        #expect(doses.count == 0, "Onboarding should not create initial doses")
+        #expect(doses.isEmpty, "Onboarding should not create initial doses")
     }
 
     // MARK: - Navigation Method Tests

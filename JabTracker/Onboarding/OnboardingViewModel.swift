@@ -195,7 +195,6 @@ class OnboardingViewModel: ObservableObject {
         medicationProfile.user = user
         context.insert(medicationProfile)
 
-
         // Mark user onboarding as complete
         user.hasCompletedOnboarding = true
         user.onboardingCompletedAt = Date()

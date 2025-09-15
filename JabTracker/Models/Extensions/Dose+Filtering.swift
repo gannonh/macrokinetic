@@ -97,12 +97,12 @@ extension Dose {
     
     /// Check if dose matches a specific medication type
     func hasMedication(_ medicationType: String) -> Bool {
-        return medication?.genericName == medicationType
+        medication?.genericName == medicationType
     }
     
     /// Check if dose matches a specific brand
     func hasBrand(_ brandName: String) -> Bool {
-        return medication?.brandName == brandName
+        medication?.brandName == brandName
     }
     
     /// Check if dose is for any of the provided medication types
@@ -115,7 +115,7 @@ extension Dose {
     
     /// Check if dose matches a specific injection site
     func hasInjectionSite(_ siteName: String) -> Bool {
-        return site == siteName
+        site == siteName
     }
     
     /// Check if dose is for any of the provided injection sites
@@ -141,24 +141,24 @@ extension Dose {
     
     /// Check if dose amount equals a specific value (with tolerance for floating point comparison)
     func amountEquals(_ targetAmount: Double, tolerance: Double = 0.001) -> Bool {
-        return abs(amount - targetAmount) <= tolerance
+        abs(amount - targetAmount) <= tolerance
     }
     
     // MARK: - Status Filtering
     
     /// Check if dose matches completion status
     func matchesCompletionStatus(completed: Bool) -> Bool {
-        return !skipped == completed
+        !skipped == completed
     }
     
     /// Check if dose has photo attachment
     var hasPhotoAttachment: Bool {
-        return imageData != nil
+        imageData != nil
     }
     
     /// Check if dose has notes
     var hasNotes: Bool {
-        return notes != nil && !notes!.isEmpty
+        notes != nil && !notes!.isEmpty
     }
     
     // MARK: - Time-based Filtering
@@ -227,7 +227,7 @@ extension Array where Element == Dose {
         includeSkipped: Bool = true,
         amountRange: ClosedRange<Double>? = nil
     ) -> [Dose] {
-        return self.filter { dose in
+        self.filter { dose in
             // Search text filter
             if let searchText = searchText, !searchText.isEmpty {
                 if !dose.matches(searchText: searchText) {
@@ -274,14 +274,14 @@ extension Array where Element == Dose {
     
     /// Sort doses by timestamp (most recent first by default)
     func sortedByTimestamp(ascending: Bool = false) -> [Dose] {
-        return sorted { first, second in
+        sorted { first, second in
             ascending ? first.timestamp < second.timestamp : first.timestamp > second.timestamp
         }
     }
     
     /// Sort doses by amount
     func sortedByAmount(ascending: Bool = true) -> [Dose] {
-        return sorted { first, second in
+        sorted { first, second in
             ascending ? first.amount < second.amount : first.amount > second.amount
         }
     }
@@ -312,13 +312,13 @@ extension Array where Element == Dose {
     
     /// Get dose count for each medication
     var medicationCounts: [String: Int] {
-        return Dictionary(grouping: self) { $0.medication?.genericName ?? "Unknown" }
+        Dictionary(grouping: self) { $0.medication?.genericName ?? "Unknown" }
             .mapValues { $0.count }
     }
     
     /// Get dose count for each injection site
     var injectionSiteCounts: [String: Int] {
-        return Dictionary(grouping: self) { $0.site ?? "Unknown" }
+        Dictionary(grouping: self) { $0.site ?? "Unknown" }
             .mapValues { $0.count }
     }
 }

@@ -316,7 +316,7 @@ struct DoseSearchServiceTests {
         
         // Then: Only exact match is found
         #expect(exactMatch.count == 1)
-        #expect(partialMatch.count == 0)
+        #expect(partialMatch.isEmpty)
     }
     
     @Test("Search mode .startsWith works correctly")
@@ -340,7 +340,7 @@ struct DoseSearchServiceTests {
         
         // Then: Only prefix match is found
         #expect(startsWithMatch.count == 1)
-        #expect(middleMatch.count == 0)
+        #expect(middleMatch.isEmpty)
     }
     
     @Test("Search mode .endsWith works correctly")
@@ -364,7 +364,7 @@ struct DoseSearchServiceTests {
         
         // Then: Only suffix match is found
         #expect(endsWithMatch.count == 1)
-        #expect(beginningMatch.count == 0)
+        #expect(beginningMatch.isEmpty)
     }
     
     @Test("Case sensitivity works correctly")
@@ -398,7 +398,7 @@ struct DoseSearchServiceTests {
         
         // Then: Only exact case match is found
         #expect(caseSensitiveMatch.count == 1)
-        #expect(caseSensitiveNoMatch.count == 0)
+        #expect(caseSensitiveNoMatch.isEmpty)
     }
     
     // MARK: - Multiple Term Search Tests
@@ -525,7 +525,7 @@ struct DoseSearchServiceTests {
         // Then: Only fully matching dose is returned
         #expect(results.count == 1, "Expected 1 result but got \(results.count). Medication names: \(doses.compactMap { $0.medication?.genericName })")
         
-        if results.count > 0 {
+        if !results.isEmpty {
             #expect(results[0].amount == 1.5)
             #expect(results[0].site == "Thigh")
             #expect(results[0].notes?.contains("exact phrase") == true)
@@ -678,7 +678,7 @@ struct DoseSearchServiceTests {
         
         // Then: Search completes in reasonable time and returns correct results
         #expect(elapsedTime < 1.0) // Should complete in less than 1 second
-        #expect(results.count > 0) // Should find matching doses
+        #expect(!results.isEmpty) // Should find matching doses
         #expect(results.allSatisfy { dose in
             dose.notes?.contains("500") == true || String(dose.amount).contains("500")
         })
@@ -729,7 +729,7 @@ struct DoseSearchServiceTests {
         notes: String? = nil,
         skipped: Bool = false
     ) -> Dose {
-        return Dose(
+        Dose(
             amount: amount,
             timestamp: timestamp,
             site: site,
@@ -742,14 +742,14 @@ struct DoseSearchServiceTests {
         genericName: String = "TestMedication",
         brandName: String = "TestBrand"
     ) -> MedicationProfile {
-        return MedicationProfile(
+        MedicationProfile(
             genericName: genericName,
             brandName: brandName
         )
     }
     
     private func createTestDoses() -> [Dose] {
-        return [
+        [
             createTestDose(notes: "morning dose"),
             createTestDose(notes: "evening injection"),
             createTestDose(site: "Thigh"),

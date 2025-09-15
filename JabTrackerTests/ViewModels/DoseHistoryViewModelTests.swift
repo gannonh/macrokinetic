@@ -461,13 +461,13 @@ struct DoseHistoryViewModelTests {
         try viewModel.deleteDose(dose, context: context)
         
         // Then: Dose is removed from context and view model arrays
-        #expect(viewModel.allDoses.count == 0)
-        #expect(viewModel.filteredDoses.count == 0)
+        #expect(viewModel.allDoses.isEmpty)
+        #expect(viewModel.filteredDoses.isEmpty)
         
         // Verify dose is actually deleted from context
         let descriptor = FetchDescriptor<Dose>()
         let remainingDoses = try context.fetch(descriptor)
-        #expect(remainingDoses.count == 0)
+        #expect(remainingDoses.isEmpty)
     }
     
     @Test("Toggle skipped status updates dose and refreshes filters")
@@ -671,7 +671,7 @@ struct DoseHistoryViewModelTests {
         user: User? = nil,
         medication: MedicationProfile? = nil
     ) -> Dose {
-        return Dose(
+        Dose(
             amount: amount,
             timestamp: timestamp,
             site: site,
@@ -688,7 +688,7 @@ struct DoseHistoryViewModelTests {
         brandName: String = "TestBrand",
         currentDose: Double = 1.0
     ) -> MedicationProfile {
-        return MedicationProfile(
+        MedicationProfile(
             genericName: genericName,
             brandName: brandName,
             currentDose: currentDose
@@ -699,7 +699,7 @@ struct DoseHistoryViewModelTests {
         email: String = "test@example.com",
         name: String = "Test User"
     ) -> User {
-        return User(
+        User(
             email: email,
             name: name
         )

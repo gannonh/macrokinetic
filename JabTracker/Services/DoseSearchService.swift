@@ -38,7 +38,7 @@ class DoseSearchService {
     
     /// Search doses with text across all fields (convenience method)
     static func searchDoses(doses: [Dose], searchText: String) -> [Dose] {
-        return searchDoses(
+        searchDoses(
             doses: doses,
             searchText: searchText,
             scope: .all,
@@ -53,7 +53,7 @@ class DoseSearchService {
         searchText: String,
         scope: SearchScope
     ) -> [Dose] {
-        return searchDoses(
+        searchDoses(
             doses: doses,
             searchText: searchText,
             scope: scope,
@@ -68,7 +68,7 @@ class DoseSearchService {
         searchText: String,
         mode: SearchMode
     ) -> [Dose] {
-        return searchDoses(
+        searchDoses(
             doses: doses,
             searchText: searchText,
             scope: .all,
@@ -83,7 +83,7 @@ class DoseSearchService {
         searchText: String,
         caseSensitive: Bool
     ) -> [Dose] {
-        return searchDoses(
+        searchDoses(
             doses: doses,
             searchText: searchText,
             scope: .all,
@@ -195,7 +195,7 @@ class DoseSearchService {
     
     /// Apply advanced search query to doses
     static func searchWithAdvancedQuery(doses: [Dose], query: SearchQuery) -> [Dose] {
-        return doses.filter { dose in
+        doses.filter { dose in
             // Apply medication filter
             if let medicationFilter = query.medicationFilter {
                 guard let medication = dose.medication,

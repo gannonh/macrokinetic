@@ -22,7 +22,7 @@ struct DoseSearchAndFilterViewTests {
     }
     
     private func createTestViewModel() async -> DoseHistoryViewModel {
-        return await DoseHistoryViewModel()
+        await DoseHistoryViewModel()
     }
     
     private func setupTestData(context: ModelContext, viewModel: DoseHistoryViewModel) async {
@@ -624,7 +624,7 @@ struct DoseSearchAndFilterViewTests {
         // Should handle gracefully without crashing
         await MainActor.run {
             #expect(viewModel.searchText == longSearchText)
-            #expect(viewModel.filteredDoses.count >= 0) // May or may not find results
+            #expect(viewModel.filteredDoses.isEmpty) // May or may not find results
         }
     }
     
@@ -676,7 +676,7 @@ struct DoseSearchAndFilterViewTests {
 
         // Should handle gracefully
         await MainActor.run {
-            #expect(viewModel.filteredDoses.count >= 0)
+            #expect(viewModel.filteredDoses.isEmpty)
         }
     }
 }
