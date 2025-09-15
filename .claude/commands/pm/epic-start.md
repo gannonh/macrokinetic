@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
 description: Launch parallel agents to work on epic tasks in a shared branch and create draft PR
 argument-hint: Epic name (e.g., dose-tracking)
 ---

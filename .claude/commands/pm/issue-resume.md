@@ -1,7 +1,7 @@
 ---
 description: Resume work on an in-progress GitHub issue by analyzing current state and continuing work streams.
 argument-hint: Issue number (e.g., 42)
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
 ---
 
 # Issue Resume

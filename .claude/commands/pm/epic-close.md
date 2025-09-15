@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, Write, LS
+allowed-tools: Read, Write, LS
 ---
 
 # Epic Close

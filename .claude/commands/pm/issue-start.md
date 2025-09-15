@@ -1,7 +1,7 @@
 ---
 description: Begin work on a GitHub issue with parallel agents based on work stream analysis.
 argument-hint: Issue number (e.g., 42)
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
 ---
 
 # Issue Start
@@ -154,7 +154,7 @@ Task:
          // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
          //            2. Don't make assumptions! Look at the actual implementation.
          //            3. For most operations reuse or create new, reusable TestUtilities methods.
-         
+
          // GIVEN: A dose exists in history
 
          // WHEN: User swipes left on dose row

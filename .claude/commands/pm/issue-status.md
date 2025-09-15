@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, LS
+allowed-tools: Read, LS
 ---
 
 # Issue Status

@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
 description: Push epic and tasks to GitHub as issues, syncing local epic to GitHub
 argument-hint: Epic name (e.g., dose-tracking)
 ---

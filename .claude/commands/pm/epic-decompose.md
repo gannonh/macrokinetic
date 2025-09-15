@@ -1,7 +1,7 @@
 ---
 description: Decompose a project epic into specific, actionable tasks with dependencies and parallelization.
 argument-hint: Epic name (e.g., user-authentication)
-allowed-tools: Bash, Read, Write, LS, Task
+allowed-tools: Read, Write, LS, Task
 ---
 
 # Epic Decompose

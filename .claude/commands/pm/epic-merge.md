@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, Write
+allowed-tools: Read, Write
 description: Merge completed epic from branch to main using GitHub Pull Request workflow
 argument-hint: Epic name (e.g., dose-tracking)
 ---
