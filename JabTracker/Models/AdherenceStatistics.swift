@@ -152,9 +152,6 @@ struct AdherenceStatisticsCalculator {
             dose.timestamp >= periodStart && dose.timestamp <= periodEnd
         }
 
-        guard !periodDoses.isEmpty else {
-            return .empty(periodStart: periodStart, periodEnd: periodEnd)
-        }
 
         // Basic counts
         let totalDoses = periodDoses.count
@@ -208,8 +205,7 @@ struct AdherenceStatisticsCalculator {
         frequency: DoseFrequency
     ) -> Int {
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.day], from: periodStart, to: periodEnd)
-        let dayCount = max(1, components.day ?? 1)
+        let dayCount = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: periodStart), to: Calendar.current.startOfDay(for: periodEnd)).day ?? 0
 
         switch frequency {
         case .daily:
@@ -281,16 +277,3 @@ struct AdherenceStatisticsCalculator {
     }
 }
 
-// MARK: - Supporting Types
-
-enum DoseFrequency {
-    case daily
-    case weekly
-
-    var description: String {
-        switch self {
-        case .daily: return "Daily"
-        case .weekly: return "Weekly"
-        }
-    }
-}

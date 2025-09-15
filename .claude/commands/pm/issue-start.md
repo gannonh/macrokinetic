@@ -1,7 +1,7 @@
 ---
 description: Begin work on a GitHub issue with parallel agents based on work stream analysis.
 argument-hint: Issue number (e.g., 42)
-allowed-tools: Read, Write, LS, Task
+allowed-tools: Read, Write, Edit, LS, Task
 ---
 
 # Issue Start
