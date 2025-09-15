@@ -258,7 +258,7 @@ struct DoseDayDetailViewTests {
         imageData: Data? = nil,
         skipped: Bool = false
     ) -> Dose {
-        return Dose(
+        Dose(
             amount: amount,
             timestamp: timestamp,
             site: site,

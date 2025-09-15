@@ -294,4 +294,3 @@ enum DoseFrequency {
         }
     }
 }
-
