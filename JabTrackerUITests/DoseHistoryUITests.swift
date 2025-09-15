@@ -645,40 +645,18 @@ final class DoseHistoryUITests: XCTestCase {
         // Navigate to History tab to see empty state
         TestUtilities.navigateToHistoryView(in: app)
 
-        // THEN: Empty state is displayed with helpful message
-        let emptyStateView = app.staticTexts["empty-state-message"]
-        let emptyStateTitle = app.staticTexts["No Doses Yet"]
-        let emptyStateDescription = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Start tracking'")).firstMatch
+        // THEN: Empty state is displayed - check elements we know exist
+        let emptyStateTitle = app.staticTexts["No doses logged yet"]
+        XCTAssertTrue(emptyStateTitle.exists, "Empty state title should be displayed")
 
-        // Check for empty state elements
-        if emptyStateView.waitForExistence(timeout: 3) {
-            XCTAssertTrue(emptyStateView.exists, "Empty state message should be displayed")
-        } else if emptyStateTitle.waitForExistence(timeout: 3) {
-            XCTAssertTrue(emptyStateTitle.exists, "Empty state title should be displayed")
-        } else if emptyStateDescription.waitForExistence(timeout: 3) {
-            XCTAssertTrue(emptyStateDescription.exists, "Empty state description should be displayed")
-        } else {
-            // Verify no dose rows exist
-            let doseRows = app.buttons.matching(identifier: "dose-history-row")
-            XCTAssertEqual(doseRows.count, 0, "No dose rows should exist in empty state")
-        }
+        let emptyStateDescription = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Start tracking'")).firstMatch
+        XCTAssertTrue(emptyStateDescription.exists, "Empty state description should be displayed")
+
+        // Verify no dose rows exist
+        let initialDoseRows = app.buttons.matching(identifier: "dose-history-row")
+        XCTAssertEqual(initialDoseRows.count, 0, "No dose rows should exist in empty state")
 
         // WHEN: User adds a new dose using the "Log Your First Dose" button
-        // Debug: Print all available buttons
-        print("🔍 DEBUG: All buttons in the app:")
-        for button in app.buttons.allElementsBoundByIndex {
-            print("  Button: '\(button.label)' identifier: '\(button.identifier)'")
-        }
-
-        print("🔍 DEBUG: All static texts in the app:")
-        for text in app.staticTexts.allElementsBoundByIndex {
-            print("  Text: '\(text.label)' identifier: '\(text.identifier)'")
-        }
-
-        // Use describe_ui to get complete hierarchy if available
-        // (This would require running with XcodeBuildMCP tools)
-
-        // Based on debug output, the button has identifier "dose-history-view" and label "Log Your First Dose"
         let logFirstDoseButton = app.buttons["Log Your First Dose"]
         XCTAssertTrue(logFirstDoseButton.exists, "Log Your First Dose button should be visible")
 
