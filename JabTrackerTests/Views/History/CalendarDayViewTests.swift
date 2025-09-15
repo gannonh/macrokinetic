@@ -206,7 +206,7 @@ struct CalendarDayViewTests {
     // MARK: - Helper Methods
 
     private func createMockDose(timestamp: Date, site: String? = "Abdomen") -> Dose {
-        return Dose(
+        Dose(
             amount: 1.0,
             timestamp: timestamp,
             site: site,
