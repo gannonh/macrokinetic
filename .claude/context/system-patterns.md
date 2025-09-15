@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-11T20:59:06Z
-version: 1.0
+last_updated: 2025-09-15T18:21:44Z
+version: 1.1
 author: Claude Code PM System
 ---
 
@@ -82,6 +82,14 @@ Individual Test Methods (testUserCreation, testDoseCalculation)
 - **Clean State**: `--reset-app-data` for fresh test environment
 - **Element Selection**: Accessibility identifiers over UI hierarchy
 - **Coordinate Precision**: `describe_ui` tool for exact element locations
+
+### E2E Testing Patterns (Issue #41 Learnings)
+- **SwiftData Relationship Testing**: Critical pattern for tests accessing relationships (dose.medication, user.doses) - must use proper ModelContainer with CloudKit disabled
+- **Test Container Setup**: ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` prevents CloudKit relationship validation errors
+- **Context Management**: Always insert models into context BEFORE setting relationships, then save context
+- **E2E Element Targeting**: TestUtilities.debugElements() is essential for identifying correct element types and selectors
+- **Text Field Utilities**: TestUtilities.clearAndEnterText() provides reliable text field interaction across all tests
+- **Debug Utilities**: Comprehensive element type mapping and accessibility hierarchy debugging prevents guesswork
 
 ## Error Handling Patterns
 

@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-12T16:35:25Z
-version: 1.2
+last_updated: 2025-09-15T18:21:44Z
+version: 1.3
 author: Claude Code PM System
 ---
 
@@ -9,21 +9,21 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: main
-- **Last Commit**: b14a943 - docs: ccpm  
-- **Status**: Active development - completed Quick Dose Entry feature and PM system enhancements
+- **Branch**: epic/dose-tracking
+- **Last Commit**: c5a6f46 - chore: update project references
+- **Status**: Active development - completed Issue #41 (History List View) with simplified quick dose approach
 
 ## Recent Work (Last 10 Commits)
-1. **b14a943** - docs: ccpm (PM system documentation updates)
-2. **e230134** - docs: ccpm (continued PM system enhancements)
-3. **7d68a11** - docs: pm docs (PM documentation finalization)
-4. **139b749** - feat: add dose tracking epic structure
-5. **87a858f** - INIT: ccpm (Claude Code PM system initialization)
-6. **6171497** - Merge PR #35: 001-medication-profile-management
-7. **3c2f496** - chore: format code with SwiftLint auto-fix
-8. **f272101** - fix: address Claude bot code review feedback
-9. **4f50892** - refactor: update project overview and remove completed sections
-10. **dedb417** - refactor: further streamline CLAUDE.md medication profile management
+1. **c5a6f46** - chore: update project references
+2. **c663b87** - chore: enhance issue-edit and issue-status documentation with descriptions and argument hints
+3. **e0a24eb** - chore: remove DoseEntrySheet.swift file
+4. **b84edc0** - Issue #41: update requirements for simplified quick dose approach
+5. **a599bd6** - chore: remove Bash tool from allowed-tools
+6. **04649d2** - Issue #41: update sync timestamp after GitHub sync
+7. **241d66a** - Issue #41: update progress tracking
+8. **392ff61** - chore: pm issue-close
+9. **f8e1326** - Issue #41: add E2E testing debug utilities and documentation
+10. **9b1731e** - Issue #41: fix pull-to-refresh test to use correct element type
 
 ## Current Working Directory Status
 - **Modified Files**: PM system documentation and dose tracking epic updates
@@ -90,13 +90,13 @@ author: Claude Code PM System
 3. **Dashboard Integration** - Add dose tracking widgets and visualization
 
 ## Active Epic Status
-**Dose Tracking Epic**: 33% complete (3/9 tasks)
-- ✅ #38 - Data Layer Extensions (CLOSED) 
+**Dose Tracking Epic**: 44% complete (4/9 tasks)
+- ✅ #38 - Data Layer Extensions (CLOSED)
 - ✅ #39 - Quick Dose Entry (CLOSED)
 - ✅ #40 - Dose Entry Form (CLOSED - covered by #39)
-- 🔲 #41 - History List View (next priority)
-- 🔲 #42 - Calendar Integration  
-- 🔲 #43 - Photo Attachments
+- ✅ #41 - History List View (CLOSED - simplified quick dose approach)
+- 🔲 #42 - Calendar Integration
+- 🔲 #43 - Photo Attachments (may be deprecated)
 - 🔲 #44 - Search & Filters
 - 🔲 #45 - PK Engine Integration
 - 🔲 #46 - Testing Suite
@@ -110,5 +110,17 @@ author: Claude Code PM System
 - **Architecture**: Clean MVVM with SwiftUI and SwiftData
 - **CI/CD**: Local verification scripts with comprehensive checks
 
+## Lessons Learned (from Issue #41)
+### E2E Testing Debugging Process
+- **"Executed 0 tests" Diagnosis**: App crash during test setup, not missing test targets
+- **Element Targeting Debug-First**: ALWAYS start with TestUtilities.debugElements() to reveal actual accessibility hierarchy
+- **Systematic Problem Solving**: 5-step process (debug → analyze → update → clean → document) prevents repeated element targeting issues
+
+### Testing Infrastructure Evolution
+- **Test Pattern Establishment**: Proper patterns early prevent widespread test failures later
+- **Stream Coordination**: Post-completion bug fixes can affect all streams and require systematic updates
+- **SwiftLint Auto-fix Hazards**: "Empty Count" rule incorrectly converts `.count == 0` to `.isEmpty` for XCUIElementQuery
+
 ## Update History
+- 2025-09-15T18:21:44Z: Issue #41 completion, E2E testing learnings, simplified quick dose architecture
 - 2025-09-12T16:35:25Z: Updated with Issue #39 completion and Issue #40 closure, dose tracking epic progress to 33%
