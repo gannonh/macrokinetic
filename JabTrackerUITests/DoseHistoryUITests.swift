@@ -570,13 +570,13 @@ final class DoseHistoryUITests: XCTestCase {
         XCTAssertEqual(initialDoseRows.count, 2, "Should start with 2 doses")
 
         // WHEN: User pulls down to refresh
-        let historyList = app.tables["dose-history-list"]
-        XCTAssertTrue(historyList.waitForExistence(timeout: 3),
-                      "History list should be available")
+        let historyView = app.collectionViews["dose-history-view"]
+        XCTAssertTrue(historyView.waitForExistence(timeout: 3),
+                      "History view should be available")
 
         // Perform pull-to-refresh gesture
-        let startCoordinate = historyList.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
-        let endCoordinate = historyList.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
+        let startCoordinate = historyView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        let endCoordinate = historyView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
         startCoordinate.press(forDuration: 0.1, thenDragTo: endCoordinate)
 
         // THEN: Refresh indicator appears and data updates
