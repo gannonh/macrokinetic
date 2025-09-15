@@ -371,7 +371,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify filtering occurred (assuming some doses match "test" and some don't)
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertLessThanOrEqual(filteredDoseRows.count, 3,
-                                "Filtered results should be less than or equal to original count")
+                                 "Filtered results should be less than or equal to original count")
 
         // Clear search to verify all doses return
         searchField.buttons["Clear text"].tap()
@@ -382,7 +382,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify all doses are shown again
         let restoredDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
         XCTAssertEqual(restoredDoseRows.count, 3,
-                      "All doses should be visible after clearing search")
+                       "All doses should be visible after clearing search")
     }
 
     func test_doseHistory_searchClearsWhenTextRemoved() throws {
@@ -419,11 +419,11 @@ final class DoseHistoryUITests: XCTestCase {
         // THEN: All doses are shown again
         let restoredDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
         XCTAssertEqual(restoredDoseRows.count, 3,
-                      "All doses should be visible after clearing search text")
+                       "All doses should be visible after clearing search text")
 
         // Verify search field is empty
         XCTAssertEqual(searchField.value as? String ?? "", "",
-                      "Search field should be empty after clearing")
+                       "Search field should be empty after clearing")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Date range filtering works accurately
@@ -452,7 +452,7 @@ final class DoseHistoryUITests: XCTestCase {
             let dateFromPicker = app.datePickers["date-from-picker"]
             let dateToPicker = app.datePickers["date-to-picker"]
 
-            if dateFromPicker.exists && dateToPicker.exists {
+            if dateFromPicker.exists, dateToPicker.exists {
                 // Apply date range filter (implementation depends on UI)
                 // For now, just verify the filtering interface exists
                 XCTAssertTrue(dateFromPicker.exists, "Date from picker should exist")
@@ -473,7 +473,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify filtering occurred (exact count depends on implementation)
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertLessThanOrEqual(filteredDoseRows.count, 5,
-                                "Filtered results should be less than or equal to original count")
+                                 "Filtered results should be less than or equal to original count")
 
         // Note: This test may need adjustment based on actual date filtering UI implementation
     }
@@ -514,7 +514,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify filtering occurred
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertLessThanOrEqual(filteredDoseRows.count, 3,
-                                "Filtered results should be less than or equal to original count")
+                                 "Filtered results should be less than or equal to original count")
 
         // Note: This test may need adjustment based on actual medication filtering UI implementation
     }
@@ -553,7 +553,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify filtering occurred
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertLessThanOrEqual(filteredDoseRows.count, 3,
-                                "Filtered results should be less than or equal to original count")
+                                 "Filtered results should be less than or equal to original count")
 
         // Note: This test may need adjustment based on actual injection site filtering UI implementation
     }
@@ -591,7 +591,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify data is still displayed (refresh completed)
         let refreshedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 2)
         XCTAssertGreaterThanOrEqual(refreshedDoseRows.count, 2,
-                                   "Doses should still be displayed after refresh")
+                                    "Doses should still be displayed after refresh")
 
         // Note: This test verifies pull-to-refresh gesture works, actual data refresh depends on implementation
     }
@@ -629,6 +629,102 @@ final class DoseHistoryUITests: XCTestCase {
         // Verify we're still on the History view
         let historyView = app.descendants(matching: .any)["dose-history-view"]
         XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should be on history view")
+    }
+
+    // MARK: - ACCEPTANCE CRITERION: Can add first dose from empty state
+
+    func test_doseHistory_addFirstDose() throws {
+        // GIVEN: No doses exist (fresh app state from reset-app-data)
+        let app = TestUtilities.launchAppWithTestMode()
+
+        // Create a medication profile but no doses - we want to test adding the first dose
+        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToMedicationProfiles(app)
+        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
+
+        // Navigate to History tab to see empty state
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // THEN: Empty state is displayed with helpful message
+        let emptyStateView = app.staticTexts["empty-state-message"]
+        let emptyStateTitle = app.staticTexts["No Doses Yet"]
+        let emptyStateDescription = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Start tracking'")).firstMatch
+
+        // Check for empty state elements
+        if emptyStateView.waitForExistence(timeout: 3) {
+            XCTAssertTrue(emptyStateView.exists, "Empty state message should be displayed")
+        } else if emptyStateTitle.waitForExistence(timeout: 3) {
+            XCTAssertTrue(emptyStateTitle.exists, "Empty state title should be displayed")
+        } else if emptyStateDescription.waitForExistence(timeout: 3) {
+            XCTAssertTrue(emptyStateDescription.exists, "Empty state description should be displayed")
+        } else {
+            // Verify no dose rows exist
+            let doseRows = app.buttons.matching(identifier: "dose-history-row")
+            XCTAssertEqual(doseRows.count, 0, "No dose rows should exist in empty state")
+        }
+
+        // WHEN: User adds a new dose using the "Log Your First Dose" button
+        // Debug: Print all available buttons
+        print("🔍 DEBUG: All buttons in the app:")
+        for button in app.buttons.allElementsBoundByIndex {
+            print("  Button: '\(button.label)' identifier: '\(button.identifier)'")
+        }
+
+        print("🔍 DEBUG: All static texts in the app:")
+        for text in app.staticTexts.allElementsBoundByIndex {
+            print("  Text: '\(text.label)' identifier: '\(text.identifier)'")
+        }
+
+        // Use describe_ui to get complete hierarchy if available
+        // (This would require running with XcodeBuildMCP tools)
+
+        // Based on debug output, the button has identifier "dose-history-view" and label "Log Your First Dose"
+        let logFirstDoseButton = app.buttons["Log Your First Dose"]
+        XCTAssertTrue(logFirstDoseButton.exists, "Log Your First Dose button should be visible")
+
+        // Tap the button to open quick dose sheet
+        logFirstDoseButton.tap()
+
+        // Wait for the quick dose sheet to appear
+        let quickDoseSheet = app.navigationBars.matching(NSPredicate(format: "identifier CONTAINS 'Dose' OR label CONTAINS 'Dose'")).firstMatch
+        XCTAssertTrue(quickDoseSheet.waitForExistence(timeout: 5),
+                      "Quick dose sheet should appear after tapping Log Your First Dose")
+
+        // Fill in the dose information (use existing medication profile)
+        let medicationPicker = app.buttons["quick-dose-medication-picker"]
+        if medicationPicker.waitForExistence(timeout: 3) {
+            // Medication should be pre-selected from the profile we created
+            XCTAssertTrue(medicationPicker.exists, "Medication picker should be available")
+        }
+
+        // Save the dose
+        let saveButton = app.buttons["quick-dose-save-button"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 3),
+                      "Save button should be available in dose sheet")
+        saveButton.tap()
+
+        // Wait for sheet to dismiss and return to history
+        let sheetDismissed = !quickDoseSheet.waitForExistence(timeout: 5)
+        XCTAssertTrue(sheetDismissed, "Quick dose sheet should dismiss after saving")
+
+        // THEN: Dose should be displayed in history
+        // Verify we're back on history view
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(historyView.waitForExistence(timeout: 3),
+                      "Should return to history view after adding dose")
+
+        // Verify the dose is now displayed (no more empty state)
+        let doseRows = app.buttons.matching(identifier: "dose-history-row")
+        XCTAssertEqual(doseRows.count, 1, "Should have exactly 1 dose after adding first dose")
+
+        // Verify the dose row exists and is accessible
+        let firstDoseRow = doseRows.element(boundBy: 0)
+        XCTAssertTrue(firstDoseRow.exists, "First dose should be displayed in history")
+
+        // Verify empty state is no longer shown
+        let emptyStateAfterAdd = app.staticTexts["empty-state-message"]
+        XCTAssertFalse(emptyStateAfterAdd.exists,
+                       "Empty state should not be visible after adding first dose")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Section headers group doses by date
@@ -849,11 +945,11 @@ final class DoseHistoryUITests: XCTestCase {
         if historyList.exists {
             // Scroll to bottom
             historyList.swipeUp()
-            usleep(500000) // 0.5 seconds
+            usleep(500_000) // 0.5 seconds
 
             // Scroll to top
             historyList.swipeDown()
-            usleep(500000) // 0.5 seconds
+            usleep(500_000) // 0.5 seconds
         }
 
         let scrollTime = Date().timeIntervalSince(scrollStartTime)
