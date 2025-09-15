@@ -34,22 +34,22 @@ Resume work on an in-progress GitHub issue by analyzing current state and contin
 
 ## Instructions
 
-### 1. Ensure Epic Branch Exists
+### 1. Ensure Issue Branch Exists
 
-Check if epic branch exists and switch to it:
+Check if issue branch exists and switch to it:
 ```bash
-# Find epic name from task file
-epic_name={extracted_from_path}
+# Find issue name from local task file
+issue_name={extracted_from_task_file_or_path}
 
-# Check branch exists
-if ! git show-ref --verify --quiet refs/heads/epic/$epic_name; then
-  echo "❌ No branch for epic. Run: /pm:epic-start $epic_name"
+# Check if issue branch exists
+if ! git show-ref --verify --quiet refs/heads/issue/{issue_name}; then
+  echo "❌ No branch issue/{issue_name} for issue #$ARGUMENTS. Run: /pm:issue-start $ARGUMENTS"
   exit 1
 fi
 
-# Switch to epic branch
-git checkout epic/$epic_name
-git pull origin epic/$epic_name
+# Switch to issue branch
+git checkout issue/{issue_name}
+git pull origin issue/{issue_name}
 ```
 
 ### 2. Analyze Current Progress
@@ -76,13 +76,16 @@ Read existing progress files at `.claude/epics/{epic_name}/updates/$ARGUMENTS/`:
 
 **Analyze work state:**
 ```bash
-# Check git status on epic branch
+# Check git status on issue branch
 # (already on correct branch from step 1)
 git status --short
 git log --oneline -5
 
 # Check for uncommitted work
 git diff --stat
+
+# Check PR status
+gh pr view issue/{issue_name} --json state,isDraft -q '.state + " (draft: " + (.isDraft|tostring) + ")"'
 ```
 
 ### 3. Determine Resume Strategy
@@ -139,9 +142,9 @@ Task:
   description: "Resume Issue #$ARGUMENTS Stream {X}"
   subagent_type: "{agent_type}"
   prompt: |
-    You are resuming work on Issue #$ARGUMENTS in the current directory on branch epic/{epic_name}.
+    You are resuming work on Issue #$ARGUMENTS in the current directory on branch issue/{issue_name}.
 
-    Branch: epic/{epic_name}
+    Branch: issue/{issue_name}
     Your stream: {stream_name}
     
     RESUMING CONTEXT:

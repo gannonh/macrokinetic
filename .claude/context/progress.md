@@ -9,7 +9,7 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: epic/dose-tracking
+- **Branch**: main (individual issue branches created per task)
 - **Last Commit**: c5a6f46 - chore: update project references
 - **Status**: Active development - completed Issue #41 (History List View) with simplified quick dose approach
 
@@ -65,7 +65,7 @@ author: Claude Code PM System
 - Design system with accessibility support
 - Testing infrastructure (Swift Testing + XCUITest)
 - Build automation with quality gates
-- Claude Code PM system with epic/issue management
+- Claude Code PM system with issue/branch/PR workflow
 
 ## Recent Technical Achievements (Current Session)
 ✅ **Issue #39 - Quick Dose Entry Implementation**

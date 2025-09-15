@@ -86,6 +86,6 @@ echo ""
 echo "💡 Actions:"
 [ $task_count -eq 0 ] && echo "  • Decompose into tasks: /pm:epic-decompose $epic_name"
 [ -z "$github" ] && [ $task_count -gt 0 ] && echo "  • Sync to GitHub: /pm:epic-sync $epic_name"
-[ -n "$github" ] && [ "$status" != "completed" ] && echo "  • Start work: /pm:epic-start $epic_name"
+[ -n "$github" ] && [ "$status" != "completed" ] && echo "  • Start work on issues: /pm:issue-start <issue-num>"
 
 exit 0
