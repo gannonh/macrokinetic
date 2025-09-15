@@ -94,6 +94,37 @@ fi
   
 Next: Run /pm:next for next priority task
 ```
+### 8. Capture Session Learnings
+
+Add learnings section to issue file if significant discoveries were made:
+
+```markdown
+## Learnings & Knowledge Capture
+
+### Technical Patterns → system-patterns.md
+- {testing patterns, architecture decisions, implementation approaches}
+
+### Technology Insights → tech-context.md  
+- {framework-specific knowledge, tool discoveries, integration insights}
+
+### Process Insights → progress.md
+- {debugging approaches, workflow improvements, coordination lessons}
+
+### Product Insights → product-context.md
+- {user experience discoveries, feature insights, requirement clarifications}
+
+### Project Structure → project-structure.md
+- {file organization learnings, structure improvements}
+
+**Learnings Status**: `learnings_captured: false`
+```
+
+Update frontmatter:
+```yaml
+learnings_captured: false  # flag for context/update.md to process
+```
+
+Commit doumentation updates.
 
 ## Important Notes
 
