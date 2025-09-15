@@ -89,7 +89,7 @@ final class DoseHistoryUITests: XCTestCase {
         // Try to select a different medication profile if available
         // Look for any medication option that's not the current one (Tirzepatide/Mounjaro)
         let medicationOptions = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Mounjaro' OR label CONTAINS 'Tirzepatide'"))
-        if !medicationOptions.isEmpty {
+        if medicationOptions.count > 0 {
             medicationOptions.firstMatch.tap()
         } else {
             // If we can't find a second medication, just close the picker and save as-is
@@ -725,7 +725,7 @@ final class DoseHistoryUITests: XCTestCase {
         XCTAssertEqual(doseRows.count, 5, "Should have 5 doses displayed")
 
         // Check if section headers exist (implementation may vary)
-        if !sectionHeaders.isEmpty {
+        if sectionHeaders.count > 0 {
             XCTAssertGreaterThan(sectionHeaders.count, 0, "Should have date section headers")
         } else {
             // Alternative: verify doses are ordered chronologically
