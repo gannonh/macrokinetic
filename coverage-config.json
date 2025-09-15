@@ -38,7 +38,8 @@
         "description": "ObservableObject classes with testable business logic",
         "files": [
           "OnboardingViewModel.swift",
-          "DoseCalendarViewModel.swift"
+          "DoseCalendarViewModel.swift",
+          "DoseHistoryViewModel.swift"
         ]
       },
       "utilities": {
