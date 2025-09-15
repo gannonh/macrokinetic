@@ -131,7 +131,7 @@ Task:
     - Write tests but DO NOT run them (to avoid conflicts with other streams)
 
     Typical workflow:
-    1. Write E2E acceptance tests (criteria only) for your feature scope (defines user-facing success)
+    1. Stub E2E acceptance tests (criteria only) for your feature scope (defines user-facing success)
        - Commit: "Issue #$ARGUMENTS: add E2E acceptance criteria for {feature}"
     2. Write failing integration/unit tests (defines component contracts)  
        - Commit: "Issue #$ARGUMENTS: add unit tests for {feature}"
@@ -146,11 +146,15 @@ Task:
     - ALL streams write E2E tests for their features first
     - DO NOT run tests (coordinator will handle this)
     - For unit tests write actual tests but do not run them.
-    - For E2E tests, create non-functional test methods that use comments to descrtibe the intended behavior. 
+    - For E2E tests, stub non-functional test methods that use comments to descrtibe the intended behavior. 
       Example:
 
       // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
       func test_doseHistory_swipeActionsEditDose() throws {
+         // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+         //            2. Don't make assumptions! Look at the actual implementation.
+         //            3. For most operations reuse or create new, reusable TestUtilities methods.
+         
          // GIVEN: A dose exists in history
 
          // WHEN: User swipes left on dose row

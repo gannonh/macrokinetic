@@ -348,6 +348,26 @@ enum TestUtilities {
         XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Should return to view mode after save")
     }
 
+    /// Clear existing text from a text field and optionally enter new text
+    /// - Parameters:
+    ///   - textField: The XCUIElement text field to clear and update
+    ///   - newText: Optional new text to enter after clearing. If nil, field is left empty
+    static func clearAndEnterText(in textField: XCUIElement, newText: String? = nil) {
+        // Tap to focus the text field
+        textField.tap()
+
+        // Clear existing text if any
+        if let stringValue = textField.value as? String, !stringValue.isEmpty {
+            let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: stringValue.count)
+            textField.typeText(deleteString)
+        }
+
+        // Enter new text if provided
+        if let newText = newText {
+            textField.typeText(newText)
+        }
+    }
+
     // MARK: - Medication Profile Helpers
 
     /// Navigate to medication profiles settings
