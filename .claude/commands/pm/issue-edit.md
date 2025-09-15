@@ -1,4 +1,6 @@
 ---
+description: Edit issue details (title, description, labels) locally and on GitHub.
+argument-hint: Issue number (e.g., 42)
 allowed-tools: Read, Write, LS
 ---
 
