@@ -106,17 +106,86 @@ final class CalendarIntegrationUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: View toggles smoothly between list and calendar
     func test_calendar_viewToggling() throws {
-        // GIVEN: User is in History tab
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
+        //            3. For most operations reuse or create new, reusable TestUtilities methods.
+
+        // GIVEN: User is in History tab with existing doses
+        let app = TestUtilities.launchAppWithTestMode()
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // Verify we start in list view
+        let historyListView = app.descendants(matching: .any)["dose-history-list"]
+        XCTAssertTrue(historyListView.waitForExistence(timeout: 3), "Should start in list view")
 
         // WHEN: User toggles from list view to calendar view
+        let calendarToggleButton = app.buttons["history-calendar-toggle"]
+        XCTAssertTrue(calendarToggleButton.waitForExistence(timeout: 3), "Calendar toggle should be available")
+        calendarToggleButton.tap()
 
         // THEN: Calendar view appears with smooth transition
+        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear after toggle")
+
+        // THEN: List view is no longer visible
+        XCTAssertFalse(historyListView.exists, "List view should be hidden when calendar is shown")
 
         // WHEN: User toggles back to list view
+        let listToggleButton = app.buttons["history-list-toggle"]
+        XCTAssertTrue(listToggleButton.exists, "List toggle should be available")
+        listToggleButton.tap()
 
         // THEN: List view appears with smooth transition
+        XCTAssertTrue(historyListView.waitForExistence(timeout: 3), "List view should reappear after toggle")
+
+        // THEN: Calendar view is no longer visible
+        XCTAssertFalse(calendarView.exists, "Calendar view should be hidden when list is shown")
 
         // THEN: Toggle control clearly indicates current view mode
+        XCTAssertTrue(listToggleButton.isSelected, "List toggle should indicate active state")
+        XCTAssertFalse(calendarToggleButton.isSelected, "Calendar toggle should indicate inactive state")
+    }
+
+    // MARK: - ACCEPTANCE CRITERION: Calendar integrates with existing history data
+    func test_calendar_showsHistoryDataIntegration() throws {
+        // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+        //            2. Don't make assumptions! Look at the actual implementation.
+        //            3. For most operations reuse or create new, reusable TestUtilities methods.
+
+        // GIVEN: User has doses recorded in history
+        let app = TestUtilities.launchAppWithTestMode()
+        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 5)
+        TestUtilities.navigateToHistoryView(in: app)
+
+        // Verify doses are in list view first
+        let historyListView = app.descendants(matching: .any)["dose-history-list"]
+        XCTAssertTrue(historyListView.waitForExistence(timeout: 3), "List view should show doses")
+
+        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 5)
+        XCTAssertEqual(doseRows.count, 5, "Should have 5 doses in list view")
+
+        // WHEN: User switches to calendar view
+        let calendarToggleButton = app.buttons["history-calendar-toggle"]
+        calendarToggleButton.tap()
+
+        // THEN: Calendar displays with dose indicators for the same dates
+        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
+
+        // THEN: Calendar shows dose indicators for dates with doses
+        let doseIndicators = app.descendants(matching: .any).matching(identifier: "calendar-dose-indicator")
+        XCTAssertGreaterThan(doseIndicators.count, 0, "Calendar should show dose indicators")
+
+        // WHEN: User taps on a date with dose
+        let dateWithDose = doseIndicators.firstMatch
+        if dateWithDose.exists {
+            dateWithDose.tap()
+
+            // THEN: Date detail view shows dose information
+            let dateDetailView = app.descendants(matching: .any)["dose-day-detail-view"]
+            XCTAssertTrue(dateDetailView.waitForExistence(timeout: 3), "Date detail view should appear")
+        }
     }
 
     // MARK: - ACCEPTANCE CRITERION: Calendar handles empty months gracefully
