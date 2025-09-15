@@ -570,7 +570,7 @@ final class DoseHistoryUITests: XCTestCase {
         XCTAssertEqual(initialDoseRows.count, 2, "Should start with 2 doses")
 
         // WHEN: User pulls down to refresh
-        let historyList = app.scrollViews.firstMatch
+        let historyList = app.tables["dose-history-list"]
         XCTAssertTrue(historyList.waitForExistence(timeout: 3),
                       "History list should be available")
 
