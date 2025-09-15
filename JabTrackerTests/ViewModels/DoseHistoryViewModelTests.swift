@@ -659,6 +659,119 @@ struct DoseHistoryViewModelTests {
         }
     }
     
+    // MARK: - Calendar Integration Tests
+
+    @Test("ViewModel provides doses grouped by date for calendar display")
+    func testGroupedDosesForCalendarView() async throws {
+        // Given: Doses on different dates
+        let today = Date()
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
+        let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: today)!
+
+        let dose1 = createTestDose(timestamp: today, amount: 1.0)
+        let dose2 = createTestDose(timestamp: today, amount: 2.0) // Same day
+        let dose3 = createTestDose(timestamp: yesterday, amount: 1.5)
+        let dose4 = createTestDose(timestamp: twoDaysAgo, amount: 0.5)
+
+        [dose1, dose2, dose3, dose4].forEach { context.insert($0) }
+        try context.save()
+
+        // When: Setting doses in ViewModel
+        viewModel.setDoses([dose1, dose2, dose3, dose4])
+
+        // Then: Grouped doses should organize by date correctly
+        let grouped = viewModel.groupedDoses
+
+        #expect(grouped.count == 3) // 3 different dates
+
+        // Find today's group
+        let todayFormatter = DateFormatter()
+        todayFormatter.dateStyle = .medium
+        todayFormatter.timeStyle = .none
+        let todayString = todayFormatter.string(from: today)
+
+        let todayGroup = grouped.first { $0.0 == todayString }
+        #expect(todayGroup != nil)
+        #expect(todayGroup?.1.count == 2) // 2 doses today
+    }
+
+    @Test("ViewModel filters doses by date range for calendar month view")
+    func testDateRangeFilteringForCalendarMonths() async throws {
+        // Given: Doses across multiple months
+        let calendar = Calendar.current
+        let currentMonth = Date()
+        let lastMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth)!
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth)!
+
+        let currentMonthDose = createTestDose(timestamp: currentMonth, amount: 1.0)
+        let lastMonthDose = createTestDose(timestamp: lastMonth, amount: 2.0)
+        let nextMonthDose = createTestDose(timestamp: nextMonth, amount: 3.0)
+
+        [currentMonthDose, lastMonthDose, nextMonthDose].forEach { context.insert($0) }
+        try context.save()
+
+        viewModel.setDoses([currentMonthDose, lastMonthDose, nextMonthDose])
+
+        // When: Filtering by current month date range
+        let monthStart = calendar.dateInterval(of: .month, for: currentMonth)!.start
+        let monthEnd = calendar.dateInterval(of: .month, for: currentMonth)!.end
+
+        viewModel.filterStartDate = monthStart
+        viewModel.filterEndDate = monthEnd
+
+        // Then: Only current month doses should be visible
+        #expect(viewModel.filteredDoses.count == 1)
+        #expect(viewModel.filteredDoses.first?.amount == 1.0)
+    }
+
+    @Test("ViewModel supports calendar data requirements with empty months")
+    func testEmptyMonthCalendarSupport() async throws {
+        // Given: No doses in the system
+        viewModel.setDoses([])
+
+        // When: Requesting grouped doses for calendar
+        let grouped = viewModel.groupedDoses
+
+        // Then: Empty array should be returned gracefully
+        #expect(grouped.isEmpty)
+        #expect(viewModel.filteredDoses.isEmpty)
+        #expect(!viewModel.hasActiveFilters) // No filters applied initially
+    }
+
+    @Test("ViewModel provides dose counts per date for calendar indicators")
+    func testDoseCountsPerDateForCalendarIndicators() async throws {
+        // Given: Multiple doses on same date and single doses on other dates
+        let targetDate = Date()
+        let otherDate = Calendar.current.date(byAdding: .day, value: -1, to: targetDate)!
+
+        let dose1 = createTestDose(timestamp: targetDate, amount: 1.0)
+        let dose2 = createTestDose(timestamp: targetDate, amount: 2.0) // Same date
+        let dose3 = createTestDose(timestamp: targetDate, amount: 1.5) // Same date
+        let dose4 = createTestDose(timestamp: otherDate, amount: 0.5) // Different date
+
+        [dose1, dose2, dose3, dose4].forEach { context.insert($0) }
+        try context.save()
+
+        viewModel.setDoses([dose1, dose2, dose3, dose4])
+
+        // When: Getting grouped doses
+        let grouped = viewModel.groupedDoses
+
+        // Then: Target date should have 3 doses, other date should have 1
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+
+        let targetDateString = formatter.string(from: targetDate)
+        let otherDateString = formatter.string(from: otherDate)
+
+        let targetGroup = grouped.first { $0.0 == targetDateString }
+        let otherGroup = grouped.first { $0.0 == otherDateString }
+
+        #expect(targetGroup?.1.count == 3)
+        #expect(otherGroup?.1.count == 1)
+    }
+
     // MARK: - Test Helper Methods
     
     private func createTestDose(
