@@ -179,6 +179,97 @@ let container = try ModelContainer(for: schema, configurations: [config])
 
 ## Testing Standards
 
+### E2E Testing and Element Targeting Best Practices
+
+#### Critical Learning: Element Targeting is the Biggest Challenge
+**The #1 issue in E2E testing is incorrect element targeting due to accessibility hierarchy mismatches.**
+
+#### Debug-First Approach for Element Targeting
+When an E2E test fails to find elements, ALWAYS start with debugging the accessibility hierarchy:
+
+```swift
+// Use TestUtilities.debugElements() to identify available elements
+TestUtilities.debugElements(in: app, containing: "dose-history")
+
+// Example output helps identify actual element types:
+// 🔍 DEBUG: Tables: []
+// 🔍 DEBUG: ScrollViews: []
+// 🔍 DEBUG: CollectionViews: ["dose-history-view"]
+// 🔍 DEBUG: Elements containing 'dose-history': ["CollectionView:dose-history-view", "TextField:dose-history-view", "Button:dose-history-row"]
+```
+
+#### Common SwiftUI → Accessibility Hierarchy Mapping Issues
+```swift
+// ❌ WRONG: Assumptions about element types often fail
+let historyList = app.tables["dose-history-list"]        // List assumed to be Table
+let historyList = app.scrollViews.firstMatch           // NavigationStack assumed to be ScrollView
+
+// ✅ CORRECT: Use debug output to find actual element types
+let historyView = app.collectionViews["dose-history-view"]  // NavigationStack+List = CollectionView
+
+// Common mappings that differ from expectations:
+// SwiftUI List → CollectionView (not Table)
+// NavigationStack → CollectionView (not ScrollView)
+// Form toggles → require coordinate-based tapping, not direct .tap()
+// Picker selections → can have dynamic accessibility identifiers
+```
+
+#### Essential Debug Utility Usage
+```swift
+// Basic debugging - shows all common element types
+TestUtilities.debugElements(in: app)
+
+// Targeted debugging - filter by identifier substring
+TestUtilities.debugElements(in: app, containing: "dose-history")
+
+// Custom prefix for clearer output
+TestUtilities.debugElements(in: app, containing: "search", prefix: "🔍 SEARCH DEBUG")
+```
+
+#### XCUIElementQuery vs Standard Collections
+```swift
+// ❌ WRONG: XCUIElementQuery doesn't have isEmpty
+if !app.buttons.matching(predicate).isEmpty { ... }
+
+// ✅ CORRECT: Use count property for XCUIElementQuery
+if app.buttons.matching(predicate).count > 0 { ... }
+
+// Note: SwiftLint's "Empty Count" rule incorrectly converts .count == 0 to .isEmpty
+// This breaks XCUIElementQuery usage and must be manually fixed
+```
+
+#### Text Field Interaction Best Practices
+```swift
+// ❌ WRONG: These methods don't work reliably in XCUITest
+searchField.selectAll()
+app.keys["Delete"].tap()
+searchField.typeText("")  // Doesn't clear existing text
+
+// ✅ CORRECT: Use TestUtilities.clearAndEnterText()
+TestUtilities.clearAndEnterText(in: searchField)                    // Clear only
+TestUtilities.clearAndEnterText(in: searchField, newText: "search") // Clear and enter
+```
+
+#### Systematic Element Targeting Process
+1. **Test fails to find element** → Add `TestUtilities.debugElements()`
+2. **Analyze debug output** → Identify actual element type and identifier
+3. **Update test selector** → Use correct element type (tables/collectionViews/buttons)
+4. **Remove debug code** → Clean up after fixing selector
+5. **Document learning** → Add findings to style guide for future reference
+
+#### Performance Optimization for E2E Tests
+```swift
+// ❌ SLOW: Conditional waits for elements that may not exist
+if app.buttons["optional-button"].waitForExistence(timeout: 3) {
+    app.buttons["optional-button"].tap()
+}
+
+// ✅ FAST: Direct assertions for known elements (post-debug)
+let requiredButton = app.buttons["required-button"]
+XCTAssertTrue(requiredButton.exists, "Required button should exist")
+requiredButton.tap()
+```
+
 ### Swift Testing Framework Patterns
 
 #### Test Organization and Naming
