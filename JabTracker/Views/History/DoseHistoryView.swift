@@ -21,69 +21,65 @@ struct DoseHistoryView: View {
     @StateObject private var quickDoseViewModel = QuickDoseViewModel()
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Search field for E2E test compatibility
-                searchFieldView
-                
-                Group {
-                    if viewModel.isLoading {
-                        loadingView
-                    } else if viewModel.filteredDoses.isEmpty {
-                        emptyStateView
-                    } else {
-                        historyListView
-                    }
+        VStack(spacing: 0) {
+            // Search field for E2E test compatibility
+            searchFieldView
+
+            Group {
+                if viewModel.isLoading {
+                    loadingView
+                } else if viewModel.filteredDoses.isEmpty {
+                    emptyStateView
+                } else {
+                    historyListView
                 }
             }
-            .navigationTitle("History")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    searchFilterButton
-                }
-            }
-            .refreshable {
-                await viewModel.refreshData(context: modelContext)
-            }
-            .alert("Delete Dose", isPresented: $showingDeleteConfirmation) {
-                deleteConfirmationAlert
-            } message: {
-                Text("This action cannot be undone.")
-            }
-            .sheet(isPresented: $showingSearchAndFilter) {
-                searchAndFilterSheet
-            }
-            .sheet(item: $editingDose) { editData in
-                QuickDoseSheet(
-                    editingDose: editData,
-                    onSave: { updatedDose in
-                        // Update the dose with edited data
-                        if let originalDose = allDoses.first(where: { $0.id == editData.id }) {
-                            try? viewModel.updateDose(originalDose, with: updatedDose, context: modelContext)
-                        }
-                        editingDose = nil
-                    },
-                    onCancel: {
-                        editingDose = nil
-                    }
-                )
-            }
-            .sheet(isPresented: $showingNewDoseSheet) {
-                QuickDoseSheet(
-                    viewModel: quickDoseViewModel,
-                    showingSuccessMessage: $showingSuccessMessage
-                )
-            }
-            .onAppear {
-                viewModel.setDoses(allDoses)
-                quickDoseViewModel.loadSmartDefaults(context: modelContext)
-            }
-            .onChange(of: allDoses) { _, newDoses in
-                viewModel.setDoses(newDoses)
-            }
-            .accessibilityIdentifier("dose-history-view")
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                searchFilterButton
+            }
+        }
+        .refreshable {
+            await viewModel.refreshData(context: modelContext)
+        }
+        .alert("Delete Dose", isPresented: $showingDeleteConfirmation) {
+            deleteConfirmationAlert
+        } message: {
+            Text("This action cannot be undone.")
+        }
+        .sheet(isPresented: $showingSearchAndFilter) {
+            searchAndFilterSheet
+        }
+        .sheet(item: $editingDose) { editData in
+            QuickDoseSheet(
+                editingDose: editData,
+                onSave: { updatedDose in
+                    // Update the dose with edited data
+                    if let originalDose = allDoses.first(where: { $0.id == editData.id }) {
+                        try? viewModel.updateDose(originalDose, with: updatedDose, context: modelContext)
+                    }
+                    editingDose = nil
+                },
+                onCancel: {
+                    editingDose = nil
+                }
+            )
+        }
+        .sheet(isPresented: $showingNewDoseSheet) {
+            QuickDoseSheet(
+                viewModel: quickDoseViewModel,
+                showingSuccessMessage: $showingSuccessMessage
+            )
+        }
+        .onAppear {
+            viewModel.setDoses(allDoses)
+            quickDoseViewModel.loadSmartDefaults(context: modelContext)
+        }
+        .onChange(of: allDoses) { _, newDoses in
+            viewModel.setDoses(newDoses)
+        }
+        .accessibilityIdentifier("dose-history-view")
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") {
                 viewModel.errorMessage = nil

@@ -33,8 +33,6 @@ struct DoseCalendarView: View {
 
             Spacer()
         }
-        .navigationTitle("Calendar")
-        .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showingDayDetail) {
             if let selectedDate = selectedDate {
                 DoseDayDetailView(
