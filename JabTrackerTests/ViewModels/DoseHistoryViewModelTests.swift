@@ -772,6 +772,74 @@ struct DoseHistoryViewModelTests {
         #expect(otherGroup?.1.count == 1)
     }
 
+    @Test("ViewModel provides doses for specific date calendar lookup")
+    func testDosesForSpecificDate() async throws {
+        // Given: Doses on different times of the same day and other days
+        let calendar = Calendar.current
+        let targetDate = Date()
+        let morningTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: targetDate)!
+        let eveningTime = calendar.date(bySettingHour: 20, minute: 30, second: 0, of: targetDate)!
+        let otherDate = calendar.date(byAdding: .day, value: -1, to: targetDate)!
+
+        let morningDose = createTestDose(timestamp: morningTime, amount: 1.0)
+        let eveningDose = createTestDose(timestamp: eveningTime, amount: 2.0)
+        let otherDayDose = createTestDose(timestamp: otherDate, amount: 3.0)
+
+        [morningDose, eveningDose, otherDayDose].forEach { context.insert($0) }
+        try context.save()
+
+        viewModel.setDoses([morningDose, eveningDose, otherDayDose])
+
+        // When: Getting doses for target date
+        let targetDateDoses = viewModel.doses(for: targetDate)
+
+        // Then: Should return both doses from target date, sorted by time
+        #expect(targetDateDoses.count == 2)
+        #expect(targetDateDoses[0].amount == 1.0) // Morning dose first
+        #expect(targetDateDoses[1].amount == 2.0) // Evening dose second
+
+        // When: Getting dose count for target date
+        let targetDateCount = viewModel.doseCount(for: targetDate)
+
+        // Then: Should return correct count
+        #expect(targetDateCount == 2)
+
+        // When: Getting doses for other date
+        let otherDateDoses = viewModel.doses(for: otherDate)
+
+        // Then: Should return only the other day dose
+        #expect(otherDateDoses.count == 1)
+        #expect(otherDateDoses[0].amount == 3.0)
+    }
+
+    @Test("ViewModel provides grouped doses by date for calendar integration")
+    func testGroupedDosesByDateForCalendar() async throws {
+        // Given: Doses on different dates
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+
+        let dose1 = createTestDose(timestamp: today, amount: 1.0)
+        let dose2 = createTestDose(timestamp: today, amount: 2.0) // Same day
+        let dose3 = createTestDose(timestamp: yesterday, amount: 3.0)
+
+        [dose1, dose2, dose3].forEach { context.insert($0) }
+        try context.save()
+
+        viewModel.setDoses([dose1, dose2, dose3])
+
+        // When: Getting grouped doses by date
+        let groupedByDate = viewModel.groupedDosesByDate
+
+        // Then: Should group by start of day correctly
+        let todayKey = calendar.startOfDay(for: today)
+        let yesterdayKey = calendar.startOfDay(for: yesterday)
+
+        #expect(groupedByDate.count == 2)
+        #expect(groupedByDate[todayKey]?.count == 2)
+        #expect(groupedByDate[yesterdayKey]?.count == 1)
+    }
+
     // MARK: - Test Helper Methods
     
     private func createTestDose(

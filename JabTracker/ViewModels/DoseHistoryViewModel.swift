@@ -101,11 +101,11 @@ class DoseHistoryViewModel: ObservableObject {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        
+
         let grouped = Dictionary(grouping: filteredDoses) { dose in
             formatter.string(from: dose.timestamp)
         }
-        
+
         return grouped.sorted { first, second in
             guard let firstDate = formatter.date(from: first.key),
                   let secondDate = formatter.date(from: second.key) else {
@@ -115,6 +115,30 @@ class DoseHistoryViewModel: ObservableObject {
         }.map { (key, doses) in
             (key, doses.sorted { $0.timestamp > $1.timestamp })
         }
+    }
+
+    /// Grouped doses by date using Date keys for calendar integration
+    var groupedDosesByDate: [Date: [Dose]] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: filteredDoses) { dose in
+            calendar.startOfDay(for: dose.timestamp)
+        }
+        return grouped
+    }
+
+    /// Get doses for a specific date (calendar integration)
+    func doses(for date: Date) -> [Dose] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+
+        return filteredDoses.filter { dose in
+            calendar.isDate(dose.timestamp, inSameDayAs: startOfDay)
+        }.sorted { $0.timestamp < $1.timestamp }
+    }
+
+    /// Get dose count for a specific date (calendar indicator support)
+    func doseCount(for date: Date) -> Int {
+        return doses(for: date).count
     }
     
     // MARK: - Initialization
