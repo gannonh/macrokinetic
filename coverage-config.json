@@ -12,7 +12,8 @@
           "MedicationProfile.swift",
           "Medication.swift",
           "ReconstitutionCalculator.swift",
-          "DoseTitration.swift"
+          "DoseTitration.swift",
+          "AdherenceStatistics.swift"
         ]
       },
       "infrastructure": {
@@ -36,7 +37,8 @@
         "threshold": 85,
         "description": "ObservableObject classes with testable business logic",
         "files": [
-          "OnboardingViewModel.swift"
+          "OnboardingViewModel.swift",
+          "DoseCalendarViewModel.swift"
         ]
       },
       "utilities": {
