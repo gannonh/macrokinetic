@@ -208,7 +208,7 @@ final class DoseButtonUITests: XCTestCase {
         if notesField.exists {
             // If notes field exists, it should be clearly marked as optional
             XCTAssertTrue(notesField.placeholderValue?.contains("Optional") == true ||
-                !app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'optional'")).isEmpty,
+                app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'optional'")).count > 0,
                 "Notes field should be marked as optional if present")
         }
     }
