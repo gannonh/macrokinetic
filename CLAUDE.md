@@ -24,6 +24,8 @@ Using the test-runner agent ensures:
 - All issues are properly surfaced
 - No approval dialogs interrupt the workflow
 
+**IMPORTANT**: DO NOT use test-runner to write or fix failing tests. Use it only to run tests and analyze results.
+
 ## Philosophy
 
 ### Error Handling
@@ -80,10 +82,56 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 
 ## Development Commands
 
-**IMPORTANT:** 
-- XcodeBuildMCP provides a range of useful tools for working with the project.
+**IMPORTANT**: It is highly recommended to use the provided **Convenience Scripts** for building, testing, and other common tasks. These scripts handle logging, formatting, and other best practices automatically.
 
-### Building and Running
+### Convenience Scripts
+
+```bash
+# Build project
+./scripts/build.sh
+
+# Run tests with automatic logging to ./logs directory
+./scripts/test.sh unit 1              # Unit tests with logging
+./scripts/test.sh ui 1 OnboardingUITests  # Run specific UI test class (RECOMMENDED)
+./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow  # Run specific UI test method
+./scripts/test.sh unit 1 --coverage   # Unit tests with coverage
+./scripts/test.sh unit 1 --no-log     # Unit tests without logging
+./scripts/test.sh unit 1 --log-only   # Unit tests with logging but no console output
+./scripts/test.sh --help              # Show all available options
+
+# ⚠️  AVOID: Running ALL UI tests (very slow, use only for final checks)
+# ./scripts/test.sh ui 1              # Takes 10+ minutes, use sparingly
+
+# View test results
+cat logs/latest/output.txt            # Latest test output
+
+# Generate documentation
+./scripts/docs.sh
+
+# Run full CI check suite (recommended before PR merge)
+./scripts/check-all.sh --skip-ui   # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
+```
+
+This script runs:
+- ✅ SwiftLint code quality checks
+- ✅ Build verification
+- ✅ Unit tests (Swift Testing framework)
+- ✅ UI tests (XCUITest framework)
+- ✅ SwiftFormat style checks (if installed)
+
+**Note:** All scripts use xcbeautify for better output formatting and Swift Testing support.
+
+**Pre-merge checklist:**
+1. Run `./scripts/check-all.sh --skip-ui`
+2. All checks must pass ✅
+3. Fix any issues with `swiftlint --fix` and `swiftformat .`
+4. Re-run until all checks pass
+
+### Direct XcodeBuild Commands
+
+**IMPORTATNT**: It is highly recommended to use the provided convenience scripts described above instead of these direct commands. They are provided here as a fallback and for reference.
+
+#### Building the Project
 
 ```bash
 # Build the project
@@ -94,7 +142,7 @@ xcrun simctl install <SIMULATOR_ID> "<APP_PATH>"
 xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
 ```
 
-### Testing Commands
+#### Testing Commands
 ```bash
 # Run all tests (unit + UI)
 xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
@@ -117,7 +165,7 @@ xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPh
 # xcbeautify provides better Swift Testing support than xcpretty
 ```
 
-### UI Testing with Authentication
+#### UI Testing with Authentication
 ```bash
 # Launch app in UI testing mode (bypasses real authentication)
 app.launchEnvironment["UI_TESTING"] = "true"
@@ -127,7 +175,7 @@ app.launchArguments.append("--ui-testing")
 app.launchArguments.append("--reset-app-data")
 ```
 
-### XcodeBuildMCP Authentication Bypass
+#### XcodeBuildMCP Authentication Bypass
 When using XcodeBuildMCP tools for manual testing or debugging, you can bypass authentication:
 
 ```bash
@@ -287,45 +335,6 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 - Private method coverage: Use public methods that invoke them
 - Async method coverage: Add `Task.sleep()` waits in tests
 - Delegate method coverage: Create proper mock controllers/requests
-
-### Convenience Scripts
-```bash
-# Build project
-./scripts/build.sh
-
-# Run tests
-./scripts/test.sh unit    # Unit tests only
-./scripts/test.sh ui      # UI tests only
-./scripts/test.sh all     # All tests
-
-# Generate documentation
-./scripts/docs.sh
-
-# Run full CI check suite (recommended before PR merge)
-./scripts/check-all.sh    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
-```
-
-### Local CI Verification
-Since GitHub Actions can be unreliable, use the comprehensive check script before merging PRs:
-
-```bash
-./scripts/check-all.sh --skip-ui  # Skip UI tests if you want faster feedback
-```
-
-This script runs:
-- ✅ SwiftLint code quality checks
-- ✅ Build verification  
-- ✅ Unit tests (Swift Testing framework)
-- ✅ UI tests (XCUITest framework)
-- ✅ SwiftFormat style checks (if installed)
-
-**Note:** All scripts use xcbeautify for better output formatting and Swift Testing support.
-
-**Pre-merge checklist:**
-1. Run `./scripts/check-all.sh --skip-ui`
-2. All checks must pass ✅
-3. Fix any issues with `swiftlint --fix` and `swiftformat .`
-4. Re-run until all checks pass
 
 ### XcodeGen Project Regeneration
 This project uses XcodeGen for project file management. **Important**: When adding new Swift files (especially test files), you must regenerate the Xcode project:

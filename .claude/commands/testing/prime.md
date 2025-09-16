@@ -140,7 +140,7 @@ find . -path "*/node_modules" -prune -o -name "*.test.js" -o -name "*.spec.js" |
 
 ### 3. Create Test Runner Configuration
 
-Create `.claude/testing-config.md` with discovered information:
+Create `.claude/context/testing-config.md` with discovered information:
 
 ```markdown
 ---
@@ -281,7 +281,7 @@ After configuration:
 ### 8. Save Configuration
 
 If successful, save configuration for future sessions:
-- Store in `.claude/testing-config.md`
+- Store in `.claude/context/testing-config.md`
 - Include all discovered settings
 - Update on subsequent runs if changes detected
 

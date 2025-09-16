@@ -105,7 +105,6 @@ created: 2025-01-22T04:47:23Z
 
 # View latest test results
 cat logs/latest/output.txt
-open logs/latest/results.xcresult
 
 # ⚠️ AVOID unless final verification (very slow):
 # ./scripts/test.sh ui 1              # ALL UI tests - takes 10+ minutes
