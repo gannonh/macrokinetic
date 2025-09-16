@@ -157,12 +157,32 @@ extension TestUtilities {
         let historyTab = app.tabBars.element.buttons["History"]
         historyTab.tap()
 
-        // Wait for history view to load
+        // Wait for either the list view or calendar view to appear (HistoryView uses segmented control)
         let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(historyView.waitForExistence(timeout: timeout),
-                     "History view should appear")
+        let listView = app.descendants(matching: .any)["dose-history-list"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
 
-        return historyView
+        // Check which view is visible - start by ensuring history view container exists
+        if historyView.waitForExistence(timeout: timeout) {
+            // History view container exists, return it
+            return historyView
+        } else if listView.waitForExistence(timeout: timeout) {
+            // List view is directly visible
+            return listView
+        } else if calendarView.waitForExistence(timeout: timeout) {
+            // Calendar is showing, switch to list view using segmented control
+            let segmentedControl = app.segmentedControls["history-view-mode-picker"]
+            let listToggle = segmentedControl.buttons["history-list-toggle"]
+            if segmentedControl.exists && listToggle.exists {
+                listToggle.tap()
+                XCTAssertTrue(historyView.waitForExistence(timeout: 2) || listView.waitForExistence(timeout: 2),
+                             "History view should appear after tapping list toggle")
+                return historyView.exists ? historyView : listView
+            }
+        }
+
+        XCTFail("History view did not appear within \(timeout) seconds")
+        return historyView // This will be non-existent, but satisfies return requirement
     }
 
     /// Gets dose rows from the history list
