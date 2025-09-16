@@ -74,6 +74,7 @@ struct CalendarDayView: View {
         Circle()
             .fill(indicatorColor(for: dose))
             .frame(width: 6, height: 6)
+            .accessibilityIdentifier("calendar-dose-indicator")
     }
 
     private func multipleDoseIndicator() -> some View {
@@ -82,6 +83,7 @@ struct CalendarDayView: View {
                 Circle()
                     .fill(indicatorColor(for: doses[index]))
                     .frame(width: 4, height: 4)
+                    .accessibilityIdentifier("calendar-dose-indicator")
             }
             if doses.count > 3 {
                 Text("+")
@@ -89,6 +91,7 @@ struct CalendarDayView: View {
                     .foregroundColor(.secondary)
             }
         }
+        .accessibilityIdentifier("calendar-multiple-dose-indicator")
     }
 
     // MARK: - Computed Properties
