@@ -6,7 +6,7 @@ allowed-tools: Read, LS, Task
 
 # Run Tests
 
-Execute tests with the configured test-runner agent.
+Execute tests per `.claude/context/testing-config.md`.
 
 ## Usage
 ```

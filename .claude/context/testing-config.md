@@ -67,14 +67,6 @@ created: 2025-01-22T04:47:23Z
 - **Automatic Logging**: All test runs save to ./logs with timestamped directories
 - **Log Access**: `cat logs/latest/output.txt` or `open logs/latest/results.xcresult`
 
-## Test-Runner Agent Configuration
-- Use test-runner agent for all test executions
-- Maximum verbosity enabled for debugging
-- Sequential execution (no parallel testing)
-- Real services - no mocking
-- Complete output capture including stack traces  
-- Test structure validation before assuming code issues
-- Coverage analysis when requested
 
 ## Special Test Cases
 - **Manual Authentication Tests**: Excluded from automated runs, require real Apple ID interaction
@@ -112,7 +104,6 @@ cat logs/latest/output.txt
 ```
 
 ## Test Execution Notes
-- Always use test-runner agent for consistent output formatting
 - All test runs automatically log to `./logs/{test_type}_YYYY-MM-DD_HH-MM-SS/`
 - Latest test results always available via `logs/latest` symlink
 - Swift Testing framework handles unit tests with modern syntax
