@@ -49,7 +49,7 @@ git push origin issue/{issue_name}
 git status -sb
 ```
 
-### 2. Run Checks 
+### 2. Run Checks & Fix Issues
 
 1. Run final checks: `./scripts/check-all.sh --skip-ui`
 2. If ANY failures or violations:
@@ -60,12 +60,15 @@ git status -sb
      ❌ 2 failed tests
      ❌ 1 security vulnerability
      ```
-  - Wait for further instruction
+  - Fix all issues and proceed to next step
 3. If all checks pass, proceed to next step
 
 ### 3. Mark PR as Ready for Review
 
 If PR is still a draft:
+```bash
+gh pr ready issue/{issue_name}
+echo "✅ PR marked as ready for review"
 ```bash
 # Convert draft to ready PR
 gh pr ready issue/{issue_name}
