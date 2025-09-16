@@ -18,7 +18,6 @@ excluded:
   - JabTracker.xcodeproj
   - .build
   - DerivedData
-  - JabTrackerUITests/CalendarNavigationUITests.swift
 
 
 line_length:
@@ -36,10 +35,6 @@ file_length:
 function_body_length:
   warning: 50
   error: 80
-  # Allow longer functions in test files (UI tests often need longer setup/teardown)
-  excluded:
-    - "JabTrackerTests"
-    - "JabTrackerUITests"
 
 identifier_name:
   min_length: 
