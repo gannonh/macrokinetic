@@ -95,7 +95,7 @@ final class CalendarIntegrationUITests: XCTestCase {
         wait(for: [expectation], timeout: 3.0)
 
         // Look for dose indicators on calendar days
-        let _ = app.descendants(matching: .any).matching(identifier: "calendar-dose-indicator")
+        _ = app.descendants(matching: .any).matching(identifier: "calendar-dose-indicator")
 
         // If indicators aren't found by identifier, check that today's date has visual content
         // (since our test creates doses on today's date)

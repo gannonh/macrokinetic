@@ -10,12 +10,18 @@ Merge completed issue from branch to main using GitHub Pull Request workflow.
 
 ## Quick Check
 
-1. **Verify branch exists:**
+1. **Determine issue name***
+   ```bash
+   issue_name=$(gh issue view $ARGUMENTS --json title -q .title | tr ' ' '-')
+   echo "Issue branch name: issue/${issue_name}"
+   ```
+
+2. **Verify branch exists:**
    ```bash
    git branch | grep "issue/{issue_name}" || echo "❌ No branch for issue: $ARGUMENTS"
    ```
 
-2. **Check PR status:**
+3. **Check PR status:**
    ```bash
    gh pr view issue/{issue_name} --json state,isDraft -q '.state + " (draft: " + (.isDraft|tostring) + ")"' || echo "❌ No PR found for issue branch"
    ```
