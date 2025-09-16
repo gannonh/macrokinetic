@@ -418,7 +418,6 @@ final class DoseHistoryUITests: XCTestCase {
         let restoredDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
         XCTAssertEqual(restoredDoseRows.count, 3,
                        "All doses should be visible after clearing search text")
-
     }
 
     // MARK: - ACCEPTANCE CRITERION: Date range filtering works accurately

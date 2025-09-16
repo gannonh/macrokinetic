@@ -19,18 +19,18 @@ struct DoseDayDetailView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if doses.isEmpty {
-                    emptyStateView
+                if self.doses.isEmpty {
+                    self.emptyStateView
                 } else {
-                    doseListView
+                    self.doseListView
                 }
             }
-            .navigationTitle(navigationTitle)
+            .navigationTitle(self.navigationTitle)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        dismiss()
+                        self.dismiss()
                     }
                 }
             }
@@ -51,7 +51,7 @@ struct DoseDayDetailView: View {
                     .font(.headline)
                     .fontWeight(.medium)
 
-                Text("No doses were logged for \(formattedDate).")
+                Text("No doses were logged for \(self.formattedDate).")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -65,15 +65,15 @@ struct DoseDayDetailView: View {
     private var doseListView: some View {
         List {
             Section {
-                ForEach(sortedDoses, id: \.id) { dose in
+                ForEach(self.sortedDoses, id: \.id) { dose in
                     DoseDetailRow(dose: dose)
                 }
             } header: {
                 HStack {
-                    Text("Doses for \(formattedDate)")
+                    Text("Doses for \(self.formattedDate)")
                         .font(.headline)
                     Spacer()
-                    Text("\(doses.count) dose\(doses.count == 1 ? "" : "s")")
+                    Text("\(self.doses.count) dose\(self.doses.count == 1 ? "" : "s")")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -86,12 +86,12 @@ struct DoseDayDetailView: View {
     // MARK: - Computed Properties
 
     private var navigationTitle: String {
-        if calendar.isDateInToday(date) {
+        if self.calendar.isDateInToday(self.date) {
             return "Today"
         } else {
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
-            return formatter.string(from: date)
+            return formatter.string(from: self.date)
         }
     }
 
@@ -99,11 +99,11 @@ struct DoseDayDetailView: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return formatter.string(from: date)
+        return formatter.string(from: self.date)
     }
 
     private var sortedDoses: [Dose] {
-        doses.sorted { $0.timestamp < $1.timestamp }
+        self.doses.sorted { $0.timestamp < $1.timestamp }
     }
 }
 
@@ -118,11 +118,11 @@ private struct DoseDetailRow: View {
             HStack {
                 // Time and amount
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(timeString)
+                    Text(self.timeString)
                         .font(.headline)
                         .foregroundColor(.primary)
 
-                    Text("\(dose.amount, specifier: "%.1f") mg")
+                    Text("\(self.dose.amount, specifier: "%.1f") mg")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -131,13 +131,13 @@ private struct DoseDetailRow: View {
 
                 // Status indicators
                 HStack(spacing: 8) {
-                    if dose.skipped {
+                    if self.dose.skipped {
                         Label("Skipped", systemImage: "xmark.circle.fill")
                             .font(.caption)
                             .foregroundColor(.orange)
                     }
 
-                    if dose.imageData != nil {
+                    if self.dose.imageData != nil {
                         Image(systemName: "camera.fill")
                             .font(.caption)
                             .foregroundColor(.blue)
@@ -149,7 +149,7 @@ private struct DoseDetailRow: View {
             if let site = dose.site {
                 HStack {
                     Image(systemName: "location.circle.fill")
-                        .foregroundColor(siteColor(for: site))
+                        .foregroundColor(self.siteColor(for: site))
                         .font(.caption)
 
                     Text(site)
@@ -173,7 +173,7 @@ private struct DoseDetailRow: View {
     private var timeString: String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
-        return formatter.string(from: dose.timestamp)
+        return formatter.string(from: self.dose.timestamp)
     }
 
     private func siteColor(for site: String) -> Color {
@@ -205,8 +205,7 @@ private struct DoseDetailRow: View {
             imageData: nil,
             skipped: false,
             user: nil,
-            medication: nil
-        ),
+            medication: nil),
         Dose(
             amount: 0.5,
             timestamp: eveningTime,
@@ -215,8 +214,7 @@ private struct DoseDetailRow: View {
             imageData: Data([0x01, 0x02]), // Mock image data
             skipped: false,
             user: nil,
-            medication: nil
-        )
+            medication: nil),
     ]
 
     Group {

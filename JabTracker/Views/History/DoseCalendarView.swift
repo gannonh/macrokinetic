@@ -5,8 +5,8 @@
 //  Main calendar component for displaying doses in a monthly calendar layout
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 /// Main calendar view component that displays doses in a monthly grid layout
 /// Provides navigation between months and visual indicators for doses
@@ -23,22 +23,21 @@ struct DoseCalendarView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Month header with navigation
-            monthHeaderView
+            self.monthHeaderView
 
             // Days of week header
-            weekdayHeaderView
+            self.weekdayHeaderView
 
             // Calendar grid
-            calendarGridView
+            self.calendarGridView
 
             Spacer()
         }
-        .sheet(isPresented: $showingDayDetail) {
-            if let selectedDate = selectedDate {
+        .sheet(isPresented: self.$showingDayDetail) {
+            if let selectedDate {
                 DoseDayDetailView(
                     date: selectedDate,
-                    doses: dosesForDate(selectedDate)
-                )
+                    doses: self.dosesForDate(selectedDate))
             }
         }
         .accessibilityIdentifier("dose-calendar-view")
@@ -48,7 +47,7 @@ struct DoseCalendarView: View {
 
     private var monthHeaderView: some View {
         HStack {
-            Button(action: previousMonth) {
+            Button(action: self.previousMonth) {
                 Image(systemName: "chevron.left")
                     .font(.title2)
                     .foregroundColor(.accentColor)
@@ -57,14 +56,14 @@ struct DoseCalendarView: View {
 
             Spacer()
 
-            Text(monthYearString)
+            Text(self.monthYearString)
                 .font(.title)
                 .fontWeight(.semibold)
                 .accessibilityIdentifier("calendar-month-year")
 
             Spacer()
 
-            Button(action: nextMonth) {
+            Button(action: self.nextMonth) {
                 Image(systemName: "chevron.right")
                     .font(.title2)
                     .foregroundColor(.accentColor)
@@ -77,8 +76,8 @@ struct DoseCalendarView: View {
 
     private var weekdayHeaderView: some View {
         HStack {
-            ForEach(calendar.weekdaySymbols.indices, id: \.self) { index in
-                Text(calendar.veryShortWeekdaySymbols[index])
+            ForEach(self.calendar.weekdaySymbols.indices, id: \.self) { index in
+                Text(self.calendar.veryShortWeekdaySymbols[index])
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
@@ -91,16 +90,16 @@ struct DoseCalendarView: View {
 
     private var calendarGridView: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 1) {
-            ForEach(daysInMonth, id: \.self) { date in
-                if let date = date {
+            ForEach(self.daysInMonth, id: \.self) { date in
+                if let date {
                     CalendarDayView(
                         date: date,
-                        doses: dosesForDate(date),
-                        isToday: calendar.isDateInToday(date),
-                        isSelected: selectedDate.map { calendar.isDate($0, inSameDayAs: date) } ?? false
-                    ) {
-                        selectedDate = date
-                        showingDayDetail = true
+                        doses: self.dosesForDate(date),
+                        isToday: self.calendar.isDateInToday(date),
+                        isSelected: self.selectedDate.map { self.calendar.isDate($0, inSameDayAs: date) } ?? false)
+                    {
+                        self.selectedDate = date
+                        self.showingDayDetail = true
                     }
                 } else {
                     // Empty day cell for padding
@@ -118,17 +117,18 @@ struct DoseCalendarView: View {
     private var monthYearString: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: currentDate)
+        return formatter.string(from: self.currentDate)
     }
 
     private var daysInMonth: [Date?] {
         guard let monthRange = calendar.range(of: .day, in: .month, for: currentDate),
-              let firstOfMonth = calendar.dateInterval(of: .month, for: currentDate)?.start else {
+              let firstOfMonth = calendar.dateInterval(of: .month, for: currentDate)?.start
+        else {
             return []
         }
 
-        let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
-        let paddingDays = firstWeekday - calendar.firstWeekday
+        let firstWeekday = self.calendar.component(.weekday, from: firstOfMonth)
+        let paddingDays = firstWeekday - self.calendar.firstWeekday
 
         var days: [Date?] = Array(repeating: nil, count: paddingDays)
 
@@ -149,10 +149,10 @@ struct DoseCalendarView: View {
     // MARK: - Helper Methods
 
     private func dosesForDate(_ date: Date) -> [Dose] {
-        let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
+        let startOfDay = self.calendar.startOfDay(for: date)
+        let endOfDay = self.calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
 
-        return allDoses.filter { dose in
+        return self.allDoses.filter { dose in
             dose.timestamp >= startOfDay && dose.timestamp < endOfDay
         }.sorted { $0.timestamp < $1.timestamp }
     }
@@ -160,7 +160,7 @@ struct DoseCalendarView: View {
     private func previousMonth() {
         withAnimation(.easeInOut(duration: 0.3)) {
             if let newDate = calendar.date(byAdding: .month, value: -1, to: currentDate) {
-                currentDate = newDate
+                self.currentDate = newDate
             }
         }
     }
@@ -168,7 +168,7 @@ struct DoseCalendarView: View {
     private func nextMonth() {
         withAnimation(.easeInOut(duration: 0.3)) {
             if let newDate = calendar.date(byAdding: .month, value: 1, to: currentDate) {
-                currentDate = newDate
+                self.currentDate = newDate
             }
         }
     }

@@ -10,92 +10,91 @@ import SwiftData
 /// Handles business logic for displaying and managing dose history data
 @MainActor
 class DoseHistoryViewModel: ObservableObject {
-    
     // MARK: - Published Properties
-    
+
     /// All doses fetched from SwiftData
     @Published var allDoses: [Dose] = [] {
         didSet {
-            applyFiltersAndSearch()
+            self.applyFiltersAndSearch()
         }
     }
-    
+
     /// Filtered and sorted doses for display
     @Published var filteredDoses: [Dose] = []
-    
+
     /// Current search text
     @Published var searchText: String = "" {
         didSet {
-            applyFiltersAndSearch()
+            self.applyFiltersAndSearch()
         }
     }
-    
+
     /// Selected medication filter (nil means show all)
     @Published var selectedMedicationFilter: String? {
         didSet {
-            applyFiltersAndSearch()
+            self.applyFiltersAndSearch()
         }
     }
-    
+
     /// Selected injection site filter (nil means show all)
     @Published var selectedInjectionSiteFilter: String? {
         didSet {
-            applyFiltersAndSearch()
+            self.applyFiltersAndSearch()
         }
     }
-    
+
     /// Date range filter - start date
     @Published var filterStartDate: Date? {
         didSet {
-            applyFiltersAndSearch()
+            self.applyFiltersAndSearch()
         }
     }
-    
+
     /// Date range filter - end date
     @Published var filterEndDate: Date? {
         didSet {
-            applyFiltersAndSearch()
+            self.applyFiltersAndSearch()
         }
     }
-    
+
     /// Whether to show skipped doses
     @Published var showSkippedDoses: Bool = true {
         didSet {
-            applyFiltersAndSearch()
+            self.applyFiltersAndSearch()
         }
     }
-    
+
     /// Loading state
     @Published var isLoading: Bool = false
-    
+
     /// Error message for display
     @Published var errorMessage: String?
-    
+
     /// Refresh indicator for pull-to-refresh
     @Published var isRefreshing: Bool = false
-    
+
     // MARK: - Computed Properties
-    
+
     /// Whether any filters are currently active
     var hasActiveFilters: Bool {
-        !searchText.isEmpty ||
-        selectedMedicationFilter != nil ||
-        selectedInjectionSiteFilter != nil ||
-        filterStartDate != nil ||
-        filterEndDate != nil ||
-        !showSkippedDoses
+        !self.searchText.isEmpty ||
+            self.selectedMedicationFilter != nil ||
+            self.selectedInjectionSiteFilter != nil ||
+            self.filterStartDate != nil ||
+            self.filterEndDate != nil ||
+            !self.showSkippedDoses
     }
-    
+
     /// Available medications for filtering (extracted from dose data)
     var availableMedications: [String] {
-        Array(Set(allDoses.compactMap { $0.medication?.genericName })).sorted()
+        Array(Set(self.allDoses.compactMap { $0.medication?.genericName })).sorted()
     }
-    
+
     /// Available injection sites for filtering (extracted from dose data)
     var availableInjectionSites: [String] {
-        Array(Set(allDoses.compactMap { $0.site })).sorted()
+        Array(Set(self.allDoses.compactMap(\.site))).sorted()
     }
-    
+
     /// Grouped doses by date for section headers
     var groupedDoses: [(String, [Dose])] {
         let formatter = DateFormatter()
@@ -108,11 +107,12 @@ class DoseHistoryViewModel: ObservableObject {
 
         return grouped.sorted { first, second in
             guard let firstDate = formatter.date(from: first.key),
-                  let secondDate = formatter.date(from: second.key) else {
+                  let secondDate = formatter.date(from: second.key)
+            else {
                 return first.key > second.key
             }
             return firstDate > secondDate
-        }.map { (key, doses) in
+        }.map { key, doses in
             (key, doses.sorted { $0.timestamp > $1.timestamp })
         }
     }
@@ -131,36 +131,36 @@ class DoseHistoryViewModel: ObservableObject {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
 
-        return filteredDoses.filter { dose in
+        return self.filteredDoses.filter { dose in
             calendar.isDate(dose.timestamp, inSameDayAs: startOfDay)
         }.sorted { $0.timestamp < $1.timestamp }
     }
 
     /// Get dose count for a specific date (calendar indicator support)
     func doseCount(for date: Date) -> Int {
-        return doses(for: date).count
+        self.doses(for: date).count
     }
-    
+
     // MARK: - Initialization
-    
+
     init() {
         // Start with empty state - loadData() will be called from view
     }
-    
+
     // MARK: - Data Loading
 
     /// Set doses from @Query for automatic reactivity
     func setDoses(_ doses: [Dose]) {
         self.allDoses = doses
-        applyFiltersAndSearch()
+        self.applyFiltersAndSearch()
     }
 
     /// Load dose data from SwiftData context (fallback method)
     func loadData(context: ModelContext) {
         Task { @MainActor in
             do {
-                isLoading = true
-                errorMessage = nil
+                self.isLoading = true
+                self.errorMessage = nil
 
                 // Create fetch descriptor for all doses, sorted by timestamp descending
                 let descriptor = FetchDescriptor<Dose>(
@@ -168,63 +168,62 @@ class DoseHistoryViewModel: ObservableObject {
                 )
 
                 // Fetch all doses
-                allDoses = try context.fetch(descriptor)
+                self.allDoses = try context.fetch(descriptor)
 
                 // Apply initial filters
-                applyFiltersAndSearch()
+                self.applyFiltersAndSearch()
 
-                isLoading = false
+                self.isLoading = false
 
             } catch {
-                errorMessage = "Failed to load dose history: \(error.localizedDescription)"
-                isLoading = false
+                self.errorMessage = "Failed to load dose history: \(error.localizedDescription)"
+                self.isLoading = false
             }
         }
     }
-    
+
     /// Refresh data with pull-to-refresh
     func refreshData(context: ModelContext) async {
         await MainActor.run {
-            isRefreshing = true
+            self.isRefreshing = true
         }
-        
+
         // Add small delay to show refresh animation
         try? await Task.sleep(nanoseconds: 500_000_000)
-        
+
         await MainActor.run {
-            loadData(context: context)
-            isRefreshing = false
+            self.loadData(context: context)
+            self.isRefreshing = false
         }
     }
-    
+
     // MARK: - Filtering and Search
-    
+
     /// Apply current filters and search to dose data
     private func applyFiltersAndSearch() {
-        var filtered = allDoses
-        
+        var filtered = self.allDoses
+
         // Apply search filter
-        if !searchText.isEmpty {
+        if !self.searchText.isEmpty {
             filtered = DoseSearchService.searchDoses(
                 doses: filtered,
-                searchText: searchText
-            )
+                searchText: self.searchText)
         }
-        
+
         // Apply medication filter
         if let medicationFilter = selectedMedicationFilter {
             filtered = filtered.filter { dose in
                 dose.medication?.genericName == medicationFilter
             }
         }
-        
+
         // Apply injection site filter
         if let siteFilter = selectedInjectionSiteFilter {
             filtered = filtered.filter { dose in
                 dose.site == siteFilter
             }
         }
-        
+
         // Apply date range filter
         if let startDate = filterStartDate {
             let startOfDay = Calendar.current.startOfDay(for: startDate)
@@ -232,59 +231,59 @@ class DoseHistoryViewModel: ObservableObject {
                 dose.timestamp >= startOfDay
             }
         }
-        
+
         if let endDate = filterEndDate {
             let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: endDate) ?? endDate
             filtered = filtered.filter { dose in
                 dose.timestamp < endOfDay
             }
         }
-        
+
         // Apply skipped dose filter
-        if !showSkippedDoses {
+        if !self.showSkippedDoses {
             filtered = filtered.filter { dose in
                 !dose.skipped
             }
         }
-        
+
         // Update filtered results
-        filteredDoses = filtered.sorted { $0.timestamp > $1.timestamp }
+        self.filteredDoses = filtered.sorted { $0.timestamp > $1.timestamp }
     }
-    
+
     /// Clear all active filters
     func clearAllFilters() {
-        searchText = ""
-        selectedMedicationFilter = nil
-        selectedInjectionSiteFilter = nil
-        filterStartDate = nil
-        filterEndDate = nil
-        showSkippedDoses = true
+        self.searchText = ""
+        self.selectedMedicationFilter = nil
+        self.selectedInjectionSiteFilter = nil
+        self.filterStartDate = nil
+        self.filterEndDate = nil
+        self.showSkippedDoses = true
         // applyFiltersAndSearch() is called automatically via didSet
     }
-    
+
     // MARK: - CRUD Operations
-    
+
     /// Delete a dose with confirmation
     func deleteDose(_ dose: Dose, context: ModelContext) throws {
         context.delete(dose)
         try context.save()
-        
+
         // Update local arrays
         if let index = allDoses.firstIndex(where: { $0.id == dose.id }) {
-            allDoses.remove(at: index)
+            self.allDoses.remove(at: index)
         }
-        applyFiltersAndSearch()
+        self.applyFiltersAndSearch()
     }
-    
+
     /// Toggle skipped status of a dose
     func toggleSkippedStatus(for dose: Dose, context: ModelContext) throws {
         dose.skipped.toggle()
         try context.save()
-        
+
         // Refresh filters to reflect changes
-        applyFiltersAndSearch()
+        self.applyFiltersAndSearch()
     }
-    
+
     /// Duplicate a dose (create new dose with same data but current timestamp)
     func duplicateDose(_ dose: Dose, context: ModelContext) throws {
         let newDose = Dose(
@@ -295,17 +294,16 @@ class DoseHistoryViewModel: ObservableObject {
             imageData: dose.imageData,
             skipped: false, // New dose should not be skipped
             user: dose.user,
-            medication: dose.medication
-        )
-        
+            medication: dose.medication)
+
         context.insert(newDose)
         try context.save()
-        
+
         // Add to local array and refresh
-        allDoses.insert(newDose, at: 0) // Insert at beginning since it has current timestamp
-        applyFiltersAndSearch()
+        self.allDoses.insert(newDose, at: 0) // Insert at beginning since it has current timestamp
+        self.applyFiltersAndSearch()
     }
-    
+
     /// Get dose for editing - returns dose data that can be used to pre-populate edit form
     func getDoseForEditing(_ dose: Dose) -> DoseEditData {
         DoseEditData(
@@ -316,16 +314,15 @@ class DoseHistoryViewModel: ObservableObject {
             notes: dose.notes,
             imageData: dose.imageData,
             skipped: dose.skipped,
-            medicationProfile: dose.medication
-        )
+            medicationProfile: dose.medication)
     }
-    
+
     /// Update a dose after editing
     func updateDose(
         _ dose: Dose,
         with editData: DoseEditData,
-        context: ModelContext
-    ) throws {
+        context: ModelContext) throws
+    {
         dose.amount = editData.amount
         dose.timestamp = editData.timestamp
         dose.site = editData.site
@@ -333,11 +330,11 @@ class DoseHistoryViewModel: ObservableObject {
         dose.imageData = editData.imageData
         dose.skipped = editData.skipped
         dose.medication = editData.medicationProfile
-        
+
         try context.save()
-        
+
         // Refresh data to reflect changes and re-sort if timestamp changed
-        loadData(context: context)
+        self.loadData(context: context)
     }
 }
 
@@ -361,14 +358,14 @@ enum DoseHistoryError: LocalizedError {
     case deleteFailed(underlying: Error)
     case updateFailed(underlying: Error)
     case duplicateFailed(underlying: Error)
-    
+
     var errorDescription: String? {
         switch self {
-        case .deleteFailed(let error):
+        case let .deleteFailed(error):
             return "Failed to delete dose: \(error.localizedDescription)"
-        case .updateFailed(let error):
+        case let .updateFailed(error):
             return "Failed to update dose: \(error.localizedDescription)"
-        case .duplicateFailed(let error):
+        case let .duplicateFailed(error):
             return "Failed to duplicate dose: \(error.localizedDescription)"
         }
     }

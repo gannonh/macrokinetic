@@ -10,7 +10,6 @@ import SwiftUI
 
 /// Displays comprehensive monthly statistics for dose tracking
 struct MonthlyStatsView: View {
-
     // MARK: - Properties
 
     /// Monthly statistics to display
@@ -31,14 +30,14 @@ struct MonthlyStatsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Header
-            monthlyStatsHeader
+            self.monthlyStatsHeader
 
-            if showDetailedView {
+            if self.showDetailedView {
                 // Detailed statistics view
-                detailedStatsView
+                self.detailedStatsView
             } else {
                 // Summary statistics view
-                summaryStatsView
+                self.summaryStatsView
             }
         }
         .padding()
@@ -60,7 +59,7 @@ struct MonthlyStatsView: View {
                     .font(.headline)
                     .fontWeight(.semibold)
 
-                Text(monthlyPeriodText)
+                Text(self.monthlyPeriodText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -68,7 +67,7 @@ struct MonthlyStatsView: View {
             Spacer()
 
             // Adherence rate badge
-            adherenceRateBadge
+            self.adherenceRateBadge
         }
     }
 
@@ -76,28 +75,25 @@ struct MonthlyStatsView: View {
 
     @ViewBuilder
     private var summaryStatsView: some View {
-        LazyVGrid(columns: summaryGridColumns, spacing: 12) {
+        LazyVGrid(columns: self.summaryGridColumns, spacing: 12) {
             StatisticCard(
                 title: "Total Doses",
-                value: "\(statistics.totalDoses)",
+                value: "\(self.statistics.totalDoses)",
                 icon: "syringe.fill",
-                color: .blue
-            )
+                color: .blue)
 
             StatisticCard(
                 title: "Current Streak",
-                value: streakDisplayText,
+                value: self.streakDisplayText,
                 icon: "flame.fill",
-                color: statistics.isCurrentStreakActive ? .orange : .gray
-            )
+                color: self.statistics.isCurrentStreakActive ? .orange : .gray)
 
-            if statistics.averageDose > 0 {
+            if self.statistics.averageDose > 0 {
                 StatisticCard(
                     title: "Avg Dose",
-                    value: String(format: "%.1f mg", statistics.averageDose),
+                    value: String(format: "%.1f mg", self.statistics.averageDose),
                     icon: "drop.fill",
-                    color: .green
-                )
+                    color: .green)
             }
 
             if let mostUsedSite = statistics.mostUsedSite {
@@ -105,8 +101,7 @@ struct MonthlyStatsView: View {
                     title: "Primary Site",
                     value: mostUsedSite,
                     icon: "location.fill",
-                    color: .purple
-                )
+                    color: .purple)
             }
         }
     }
@@ -117,17 +112,17 @@ struct MonthlyStatsView: View {
     private var detailedStatsView: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Adherence section
-            adherenceSection
+            self.adherenceSection
 
             // Dose information section
-            doseInformationSection
+            self.doseInformationSection
 
             // Streak information section
-            streakSection
+            self.streakSection
 
             // Injection sites section
-            if !statistics.siteDistribution.isEmpty {
-                injectionSitesSection
+            if !self.statistics.siteDistribution.isEmpty {
+                self.injectionSitesSection
             }
         }
     }
@@ -137,15 +132,15 @@ struct MonthlyStatsView: View {
     @ViewBuilder
     private var adherenceSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Adherence", icon: "checkmark.circle.fill", color: .green)
+            self.sectionHeader("Adherence", icon: "checkmark.circle.fill", color: .green)
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Rate: \(statistics.adherenceRatePercentage)")
+                    Text("Rate: \(self.statistics.adherenceRatePercentage)")
                         .font(.title2)
                         .fontWeight(.semibold)
 
-                    Text("\(statistics.totalDoses - statistics.skippedDoses) of \(statistics.scheduledDoses) scheduled")
+                    Text("\(self.statistics.totalDoses - self.statistics.skippedDoses) of \(self.statistics.scheduledDoses) scheduled")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -159,11 +154,11 @@ struct MonthlyStatsView: View {
                         .frame(width: 50, height: 50)
 
                     Circle()
-                        .trim(from: 0, to: statistics.adherenceRate)
-                        .stroke(adherenceColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .trim(from: 0, to: self.statistics.adherenceRate)
+                        .stroke(self.adherenceColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .frame(width: 50, height: 50)
                         .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut(duration: 0.5), value: statistics.adherenceRate)
+                        .animation(.easeInOut(duration: 0.5), value: self.statistics.adherenceRate)
                 }
             }
         }
@@ -172,31 +167,28 @@ struct MonthlyStatsView: View {
     @ViewBuilder
     private var doseInformationSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Dose Information", icon: "drop.fill", color: .blue)
+            self.sectionHeader("Dose Information", icon: "drop.fill", color: .blue)
 
-            LazyVGrid(columns: detailedGridColumns, spacing: 8) {
-                DetailStatRow(label: "Total Doses", value: "\(statistics.totalDoses)")
-                DetailStatRow(label: "Skipped", value: "\(statistics.skippedDoses)")
+            LazyVGrid(columns: self.detailedGridColumns, spacing: 8) {
+                DetailStatRow(label: "Total Doses", value: "\(self.statistics.totalDoses)")
+                DetailStatRow(label: "Skipped", value: "\(self.statistics.skippedDoses)")
 
-                if statistics.averageDose > 0 {
+                if self.statistics.averageDose > 0 {
                     DetailStatRow(
                         label: "Average",
-                        value: String(format: "%.1f mg", statistics.averageDose)
-                    )
+                        value: String(format: "%.1f mg", self.statistics.averageDose))
                 }
 
-                if statistics.totalMedicationAmount > 0 {
+                if self.statistics.totalMedicationAmount > 0 {
                     DetailStatRow(
                         label: "Total Amount",
-                        value: String(format: "%.1f mg", statistics.totalMedicationAmount)
-                    )
+                        value: String(format: "%.1f mg", self.statistics.totalMedicationAmount))
                 }
 
                 if let range = statistics.doseRange {
                     DetailStatRow(
                         label: "Range",
-                        value: String(format: "%.1f - %.1f mg", range.min, range.max)
-                    )
+                        value: String(format: "%.1f - %.1f mg", range.min, range.max))
                 }
             }
         }
@@ -205,7 +197,7 @@ struct MonthlyStatsView: View {
     @ViewBuilder
     private var streakSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Streaks", icon: "flame.fill", color: .orange)
+            self.sectionHeader("Streaks", icon: "flame.fill", color: .orange)
 
             HStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -214,11 +206,11 @@ struct MonthlyStatsView: View {
                         .foregroundStyle(.secondary)
 
                     HStack(spacing: 4) {
-                        Text("\(statistics.currentStreak)")
+                        Text("\(self.statistics.currentStreak)")
                             .font(.title2)
                             .fontWeight(.semibold)
 
-                        if statistics.isCurrentStreakActive {
+                        if self.statistics.isCurrentStreakActive {
                             Image(systemName: "flame.fill")
                                 .foregroundColor(.orange)
                                 .font(.caption)
@@ -231,7 +223,7 @@ struct MonthlyStatsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text("\(statistics.longestStreak)")
+                    Text("\(self.statistics.longestStreak)")
                         .font(.title2)
                         .fontWeight(.semibold)
                 }
@@ -244,10 +236,10 @@ struct MonthlyStatsView: View {
     @ViewBuilder
     private var injectionSitesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Injection Sites", icon: "location.fill", color: .purple)
+            self.sectionHeader("Injection Sites", icon: "location.fill", color: .purple)
 
-            LazyVGrid(columns: detailedGridColumns, spacing: 8) {
-                ForEach(Array(statistics.siteDistribution.sorted(by: { $0.value > $1.value })), id: \.key) { site, count in
+            LazyVGrid(columns: self.detailedGridColumns, spacing: 8) {
+                ForEach(Array(self.statistics.siteDistribution.sorted(by: { $0.value > $1.value })), id: \.key) { site, count in
                     DetailStatRow(label: site, value: "\(count)")
                 }
             }
@@ -271,16 +263,16 @@ struct MonthlyStatsView: View {
 
     @ViewBuilder
     private var adherenceRateBadge: some View {
-        Text(statistics.adherenceRatePercentage)
+        Text(self.statistics.adherenceRatePercentage)
             .font(.caption)
             .fontWeight(.semibold)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(adherenceColor.opacity(0.2))
+                    .fill(self.adherenceColor.opacity(0.2))
             )
-            .foregroundColor(adherenceColor)
+            .foregroundColor(self.adherenceColor)
     }
 
     // MARK: - Computed Properties
@@ -289,19 +281,19 @@ struct MonthlyStatsView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
 
-        let start = formatter.string(from: statistics.periodStart)
-        let end = formatter.string(from: statistics.periodEnd)
+        let start = formatter.string(from: self.statistics.periodStart)
+        let end = formatter.string(from: self.statistics.periodEnd)
 
         return "\(start) - \(end)"
     }
 
     private var streakDisplayText: String {
-        let days = statistics.currentStreak
+        let days = self.statistics.currentStreak
         return "\(days) day\(days == 1 ? "" : "s")"
     }
 
     private var adherenceColor: Color {
-        let rate = statistics.adherenceRate
+        let rate = self.statistics.adherenceRate
         if rate >= 0.9 { return .green }
         if rate >= 0.7 { return .orange }
         return .red
@@ -310,14 +302,14 @@ struct MonthlyStatsView: View {
     private var summaryGridColumns: [GridItem] {
         [
             GridItem(.flexible(), spacing: 8),
-            GridItem(.flexible(), spacing: 8)
+            GridItem(.flexible(), spacing: 8),
         ]
     }
 
     private var detailedGridColumns: [GridItem] {
         [
             GridItem(.flexible(), spacing: 8),
-            GridItem(.flexible(), spacing: 8)
+            GridItem(.flexible(), spacing: 8),
         ]
     }
 }
@@ -333,18 +325,18 @@ struct StatisticCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
+                Image(systemName: self.icon)
+                    .foregroundColor(self.color)
                     .font(.system(size: 14, weight: .medium))
 
                 Spacer()
             }
 
-            Text(value)
+            Text(self.value)
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            Text(title)
+            Text(self.title)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -354,7 +346,7 @@ struct StatisticCard: View {
                 .fill(Color(.tertiarySystemBackground))
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title): \(value)")
+        .accessibilityLabel("\(self.title): \(self.value)")
     }
 }
 
@@ -364,18 +356,18 @@ struct DetailStatRow: View {
 
     var body: some View {
         HStack {
-            Text(label)
+            Text(self.label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             Spacer()
 
-            Text(value)
+            Text(self.value)
                 .font(.caption)
                 .fontWeight(.medium)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(value)")
+        .accessibilityLabel("\(self.label): \(self.value)")
     }
 }
 
@@ -394,8 +386,7 @@ struct DetailStatRow: View {
         isCurrentStreakActive: true,
         siteDistribution: ["Thigh": 6, "Abdomen": 4, "Arm": 2],
         periodStart: Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date(),
-        periodEnd: Date()
-    )
+        periodEnd: Date())
 
     return MonthlyStatsView(statistics: sampleStats)
         .padding()
@@ -414,8 +405,7 @@ struct DetailStatRow: View {
         isCurrentStreakActive: true,
         siteDistribution: ["Thigh": 6, "Abdomen": 4, "Arm": 2],
         periodStart: Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date(),
-        periodEnd: Date()
-    )
+        periodEnd: Date())
 
     return MonthlyStatsView(statistics: sampleStats, showDetailedView: true)
         .padding()

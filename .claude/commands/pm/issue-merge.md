@@ -43,13 +43,19 @@ git push origin issue/{issue_name}
 git status -sb
 ```
 
-### 2. Run Checks (Optional but Recommended)
+### 2. Run Checks 
 
-```bash
-
-./scripts/test.sh unit || echo "⚠️ Tests failed. Fix before merging."
-
-```
+1. Run final checks: `./scripts/check-all.sh --skip-ui`
+2. If ANY failures or violations:
+   - **⚠️ STOP MERGE PROCESS ⚠️**
+   - Provide summary of issues found, eg:
+     ```
+     ❌ 3 lint errors
+     ❌ 2 failed tests
+     ❌ 1 security vulnerability
+     ```
+  - Wait for further instruction
+3. If all checks pass, proceed to next step
 
 ### 3. Mark PR as Ready for Review
 

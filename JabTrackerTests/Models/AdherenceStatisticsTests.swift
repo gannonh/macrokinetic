@@ -6,17 +6,16 @@
 //  Defines contracts for statistics calculations, streak detection, and adherence rate accuracy
 //
 
-import Testing
 import Foundation
 @testable import JabTracker
+import Testing
 
 @MainActor
 struct AdherenceStatisticsTests {
-
     // MARK: - Basic Statistics Tests
 
     @Test("AdherenceStatistics calculates adherence rate correctly")
-    func testAdherenceRateCalculation() throws {
+    func adherenceRateCalculation() throws {
         // Given: Known dose counts
         let stats = AdherenceStatistics(
             totalDoses: 10,
@@ -30,8 +29,7 @@ struct AdherenceStatisticsTests {
             isCurrentStreakActive: true,
             siteDistribution: [:],
             periodStart: Date(),
-            periodEnd: Date()
-        )
+            periodEnd: Date())
 
         // When: Calculating adherence rate
         let adherenceRate = stats.adherenceRate
@@ -43,7 +41,7 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatistics handles zero scheduled doses gracefully")
-    func testZeroScheduledDosesHandling() throws {
+    func zeroScheduledDosesHandling() throws {
         // Given: No scheduled doses
         let stats = AdherenceStatistics(
             totalDoses: 5,
@@ -57,8 +55,7 @@ struct AdherenceStatisticsTests {
             isCurrentStreakActive: false,
             siteDistribution: [:],
             periodStart: Date(),
-            periodEnd: Date()
-        )
+            periodEnd: Date())
 
         // When: Getting adherence rate
         let adherenceRate = stats.adherenceRate
@@ -70,7 +67,7 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatistics computes period days correctly")
-    func testPeriodDaysCalculation() throws {
+    func periodDaysCalculation() throws {
         // Given: Known date range
         let startDate = Date()
         let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate) ?? startDate
@@ -87,8 +84,7 @@ struct AdherenceStatisticsTests {
             isCurrentStreakActive: false,
             siteDistribution: [:],
             periodStart: startDate,
-            periodEnd: endDate
-        )
+            periodEnd: endDate)
 
         // When: Getting period days
         let periodDays = stats.periodDays
@@ -98,12 +94,12 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatistics identifies most used injection site")
-    func testMostUsedInjectionSite() throws {
+    func mostUsedInjectionSite() throws {
         // Given: Site distribution with clear winner
         let siteDistribution = [
             "Thigh": 8,
             "Abdomen": 5,
-            "Arm": 2
+            "Arm": 2,
         ]
 
         let stats = AdherenceStatistics(
@@ -118,8 +114,7 @@ struct AdherenceStatisticsTests {
             isCurrentStreakActive: false,
             siteDistribution: siteDistribution,
             periodStart: Date(),
-            periodEnd: Date()
-        )
+            periodEnd: Date())
 
         // When: Getting most used site
         let mostUsedSite = stats.mostUsedSite
@@ -129,7 +124,7 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatistics handles empty site distribution")
-    func testEmptySiteDistribution() throws {
+    func emptySiteDistribution() throws {
         // Given: No injection sites recorded
         let stats = AdherenceStatistics(
             totalDoses: 5,
@@ -143,8 +138,7 @@ struct AdherenceStatisticsTests {
             isCurrentStreakActive: false,
             siteDistribution: [:],
             periodStart: Date(),
-            periodEnd: Date()
-        )
+            periodEnd: Date())
 
         // When: Getting most used site
         let mostUsedSite = stats.mostUsedSite
@@ -156,7 +150,7 @@ struct AdherenceStatisticsTests {
     // MARK: - Empty State Tests
 
     @Test("AdherenceStatistics empty state creates correct defaults")
-    func testEmptyStateCreation() throws {
+    func emptyStateCreation() throws {
         // Given: Date range for empty period
         let startDate = Date()
         let endDate = Calendar.current.date(byAdding: .month, value: 1, to: startDate) ?? startDate
@@ -182,7 +176,7 @@ struct AdherenceStatisticsTests {
     // MARK: - Calculator Tests
 
     @Test("AdherenceStatisticsCalculator handles empty dose array")
-    func testCalculatorWithEmptyDoses() throws {
+    func calculatorWithEmptyDoses() throws {
         // Given: Empty dose array and date range
         let startDate = Date()
         let endDate = Calendar.current.date(byAdding: .month, value: 1, to: startDate) ?? startDate
@@ -192,8 +186,7 @@ struct AdherenceStatisticsTests {
             doses: [],
             periodStart: startDate,
             periodEnd: endDate,
-            medicationFrequency: .weekly
-        )
+            medicationFrequency: .weekly)
 
         // Then: Returns empty statistics
         #expect(stats.totalDoses == 0, "Calculator should return 0 total doses for empty array")
@@ -202,7 +195,7 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatisticsCalculator calculates basic counts correctly")
-    func testCalculatorBasicCounts() throws {
+    func calculatorBasicCounts() throws {
         // Given: Known doses with specific properties
         let startDate = Date()
         let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate) ?? startDate
@@ -210,11 +203,11 @@ struct AdherenceStatisticsTests {
         let doses = [
             createTestDose(timestamp: startDate, amount: 1.0, site: "Thigh", skipped: false),
             createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate,
-                          amount: 1.5, site: "Abdomen", skipped: false),
-            createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 2, to: startDate) ?? startDate,
-                          amount: 1.2, site: "Thigh", skipped: true),
-            createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 10, to: startDate) ?? startDate,
-                          amount: 2.0, site: "Arm", skipped: false) // Outside period
+                           amount: 1.5, site: "Abdomen", skipped: false),
+            self.createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 2, to: startDate) ?? startDate,
+                                amount: 1.2, site: "Thigh", skipped: true),
+            self.createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 10, to: startDate) ?? startDate,
+                                amount: 2.0, site: "Arm", skipped: false), // Outside period
         ]
 
         // When: Calculating statistics
@@ -222,8 +215,7 @@ struct AdherenceStatisticsTests {
             doses: doses,
             periodStart: startDate,
             periodEnd: endDate,
-            medicationFrequency: .weekly
-        )
+            medicationFrequency: .weekly)
 
         // Then: Counts are correct (only first 3 doses are in period)
         #expect(stats.totalDoses == 3, "Should count 3 doses in period")
@@ -242,7 +234,7 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatisticsCalculator calculates site distribution correctly")
-    func testCalculatorSiteDistribution() throws {
+    func calculatorSiteDistribution() throws {
         // Given: Doses with known injection sites
         let startDate = Date()
         let endDate = Calendar.current.date(byAdding: .day, value: 5, to: startDate) ?? startDate
@@ -250,13 +242,13 @@ struct AdherenceStatisticsTests {
         let doses = [
             createTestDose(timestamp: startDate, site: "Thigh", skipped: false),
             createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate,
-                          site: "Thigh", skipped: false),
-            createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 2, to: startDate) ?? startDate,
-                          site: "Abdomen", skipped: false),
-            createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 3, to: startDate) ?? startDate,
-                          site: "Thigh", skipped: true), // Skipped, but still included in site distribution logic
-            createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 4, to: startDate) ?? startDate,
-                          site: nil, skipped: false) // No site recorded
+                           site: "Thigh", skipped: false),
+            self.createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 2, to: startDate) ?? startDate,
+                                site: "Abdomen", skipped: false),
+            self.createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 3, to: startDate) ?? startDate,
+                                site: "Thigh", skipped: true), // Skipped, but still included in site distribution logic
+            self.createTestDose(timestamp: Calendar.current.date(byAdding: .day, value: 4, to: startDate) ?? startDate,
+                                site: nil, skipped: false), // No site recorded
         ]
 
         // When: Calculating statistics
@@ -264,8 +256,7 @@ struct AdherenceStatisticsTests {
             doses: doses,
             periodStart: startDate,
             periodEnd: endDate,
-            medicationFrequency: .daily
-        )
+            medicationFrequency: .daily)
 
         // Then: Site distribution is correct (based on non-skipped doses with sites)
         let expectedSites = ["Thigh": 2, "Abdomen": 1] // Only counting non-skipped doses
@@ -274,17 +265,17 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatisticsCalculator calculates weekly scheduled doses correctly")
-    func testCalculatorWeeklyScheduledDoses() throws {
+    func calculatorWeeklyScheduledDoses() throws {
         // Given: Different time periods with weekly frequency
         let startDate = Date()
 
         // Test various periods
         let testCases = [
-            (days: 7, expected: 1),   // 1 week = 1 dose
-            (days: 14, expected: 2),  // 2 weeks = 2 doses
-            (days: 10, expected: 2),  // 1.4 weeks = 2 doses (rounded up)
-            (days: 3, expected: 1),   // 0.4 weeks = 1 dose (minimum)
-            (days: 21, expected: 3),  // 3 weeks = 3 doses
+            (days: 7, expected: 1), // 1 week = 1 dose
+            (days: 14, expected: 2), // 2 weeks = 2 doses
+            (days: 10, expected: 2), // 1.4 weeks = 2 doses (rounded up)
+            (days: 3, expected: 1), // 0.4 weeks = 1 dose (minimum)
+            (days: 21, expected: 3), // 3 weeks = 3 doses
         ]
 
         for testCase in testCases {
@@ -295,17 +286,16 @@ struct AdherenceStatisticsTests {
                 doses: [],
                 periodStart: startDate,
                 periodEnd: endDate,
-                medicationFrequency: .weekly
-            )
+                medicationFrequency: .weekly)
 
             // Then: Scheduled doses match expected
             #expect(stats.scheduledDoses == testCase.expected,
-                   "For \(testCase.days) days, should schedule \(testCase.expected) weekly doses")
+                    "For \(testCase.days) days, should schedule \(testCase.expected) weekly doses")
         }
     }
 
     @Test("AdherenceStatisticsCalculator calculates daily scheduled doses correctly")
-    func testCalculatorDailyScheduledDoses() throws {
+    func calculatorDailyScheduledDoses() throws {
         // Given: Different time periods with daily frequency
         let startDate = Date()
 
@@ -323,17 +313,16 @@ struct AdherenceStatisticsTests {
                 doses: [],
                 periodStart: startDate,
                 periodEnd: endDate,
-                medicationFrequency: .daily
-            )
+                medicationFrequency: .daily)
 
             // Then: Scheduled doses match days
             #expect(stats.scheduledDoses == testCase.expected,
-                   "For \(testCase.days) days, should schedule \(testCase.expected) daily doses")
+                    "For \(testCase.days) days, should schedule \(testCase.expected) daily doses")
         }
     }
 
     @Test("AdherenceStatisticsCalculator calculates streaks correctly")
-    func testCalculatorStreakCalculation() throws {
+    func calculatorStreakCalculation() throws {
         // Given: Doses creating specific streak pattern
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -362,8 +351,7 @@ struct AdherenceStatisticsTests {
             doses: doses,
             periodStart: startDate,
             periodEnd: today,
-            medicationFrequency: .daily
-        )
+            medicationFrequency: .daily)
 
         // Then: Streak calculations are correct
         #expect(stats.longestStreak == 3, "Longest streak should be 3 consecutive days")
@@ -372,7 +360,7 @@ struct AdherenceStatisticsTests {
     }
 
     @Test("AdherenceStatisticsCalculator handles active current streak")
-    func testCalculatorActiveCurrentStreak() throws {
+    func calculatorActiveCurrentStreak() throws {
         // Given: Doses including today
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -390,8 +378,7 @@ struct AdherenceStatisticsTests {
             doses: doses,
             periodStart: startDate,
             periodEnd: today,
-            medicationFrequency: .daily
-        )
+            medicationFrequency: .daily)
 
         // Then: Current streak is active
         #expect(stats.currentStreak == 2, "Current streak should be 2 days")
@@ -404,8 +391,8 @@ struct AdherenceStatisticsTests {
         timestamp: Date = Date(),
         amount: Double = 1.0,
         site: String? = nil,
-        skipped: Bool = false
-    ) -> Dose {
+        skipped: Bool = false) -> Dose
+    {
         Dose(
             amount: amount,
             timestamp: timestamp,
@@ -414,7 +401,6 @@ struct AdherenceStatisticsTests {
             imageData: nil,
             skipped: skipped,
             user: nil,
-            medication: nil
-        )
+            medication: nil)
     }
 }

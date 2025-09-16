@@ -11,7 +11,6 @@ import SwiftUI
 /// Main history view that integrates list and calendar viewing modes
 /// Provides a segmented control to switch between different data presentations
 struct HistoryView: View {
-
     // MARK: - View Modes
 
     /// Available view modes for history display
@@ -40,10 +39,10 @@ struct HistoryView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // View mode selector
-                viewModePickerView
+                self.viewModePickerView
 
                 // Content based on selected mode
-                contentView
+                self.contentView
             }
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.large)
@@ -54,7 +53,7 @@ struct HistoryView: View {
 
     /// Segmented picker for switching between list and calendar views
     private var viewModePickerView: some View {
-        Picker("View Mode", selection: $selectedViewMode) {
+        Picker("View Mode", selection: self.$selectedViewMode) {
             ForEach(ViewMode.allCases, id: \.self) { mode in
                 Label(mode.rawValue, systemImage: mode.systemImage)
                     .tag(mode)
@@ -70,7 +69,7 @@ struct HistoryView: View {
     /// Main content view that switches based on selected mode
     private var contentView: some View {
         Group {
-            switch selectedViewMode {
+            switch self.selectedViewMode {
             case .list:
                 DoseHistoryView()
                     .accessibilityIdentifier("dose-history-list")
@@ -79,7 +78,7 @@ struct HistoryView: View {
                     .accessibilityIdentifier("dose-calendar-view")
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: selectedViewMode)
+        .animation(.easeInOut(duration: 0.3), value: self.selectedViewMode)
     }
 }
 

@@ -192,8 +192,8 @@ final class CloudKitIntegrationUITests: XCTestCase {
                 text.contains("Checking")
         }
 
-        XCTAssertFalse(cloudKitStatusTexts.isEmpty,
-                       "Should display at least one CloudKit status message")
+        XCTAssertGreaterThan(cloudKitStatusTexts.count, 0,
+                            "Should display at least one CloudKit status message")
 
         // Status should be consistent with actual CloudKit state
         // (This test validates that we're getting real CloudKit responses, not mocked)

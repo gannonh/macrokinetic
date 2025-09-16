@@ -3,39 +3,38 @@
 //  JabTracker
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 /// Self-contained SwiftUI component for quick dose entry with smart defaults
 /// Presents as a sheet from the Add tab button for streamlined dose logging
 struct QuickDoseButton: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     @StateObject private var viewModel = QuickDoseViewModel()
     @State private var showingQuickDoseSheet = false
     @State private var showingSuccessMessage = false
-    
+
     var body: some View {
         Button(action: {
-            showingQuickDoseSheet = true
+            self.showingQuickDoseSheet = true
         }, label: {
             Label("Quick Add Dose", systemImage: "plus.circle.fill")
         })
         .buttonStyle(.borderedProminent)
         .accessibilityIdentifier("quick-add-dose-button")
-        .sheet(isPresented: $showingQuickDoseSheet,
+        .sheet(isPresented: self.$showingQuickDoseSheet,
                content: {
-            QuickDoseSheet(
-                viewModel: viewModel,
-                showingSuccessMessage: $showingSuccessMessage
-            )
-        })
+                   QuickDoseSheet(
+                       viewModel: self.viewModel,
+                       showingSuccessMessage: self.$showingSuccessMessage)
+               })
         .onAppear {
-            viewModel.loadSmartDefaults(context: modelContext)
+            self.viewModel.loadSmartDefaults(context: self.modelContext)
         }
         .overlay(alignment: .top) {
-            if showingSuccessMessage {
+            if self.showingSuccessMessage {
                 Text("Dose logged successfully!")
                     .font(.caption)
                     .foregroundColor(.white)
@@ -50,7 +49,7 @@ struct QuickDoseButton: View {
                         // Auto-dismiss success message after 2 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             withAnimation {
-                                showingSuccessMessage = false
+                                self.showingSuccessMessage = false
                             }
                         }
                     }
@@ -93,57 +92,56 @@ struct QuickDoseSheet: View {
     }
 
     private var isEditMode: Bool {
-        editingDose != nil
+        self.editingDose != nil
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     // Medication Selection
-                    Picker("Medication", selection: $viewModel.selectedMedicationProfile) {
-                        ForEach(viewModel.medicationProfiles, id: \.id) { profile in
+                    Picker("Medication", selection: self.$viewModel.selectedMedicationProfile) {
+                        ForEach(self.viewModel.medicationProfiles, id: \.id) { profile in
                             Text("\(profile.brandName) (\(profile.currentDose, specifier: "%.2f") mg)")
                                 .tag(profile as MedicationProfile?)
                         }
                     }
                     .accessibilityIdentifier("quick-dose-medication-picker")
                     .accessibilityLabel("Select medication")
-                    
+
                     // Dose Amount (from selected medication profile)
                     HStack {
                         Text("Dose Amount")
                         Spacer()
-                        Text("\(viewModel.doseAmount, specifier: "%.2f") mg")
+                        Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("quick-dose-amount")
                     }
-                    
+
                     // Injection Site Selection
-                    Picker("Injection Site", selection: $viewModel.selectedInjectionSite) {
-                        ForEach(viewModel.recommendedInjectionSites, id: \.self) { site in
+                    Picker("Injection Site", selection: self.$viewModel.selectedInjectionSite) {
+                        ForEach(self.viewModel.recommendedInjectionSites, id: \.self) { site in
                             Text(site).tag(site)
                         }
                     }
                     .accessibilityIdentifier("quick-dose-site-picker")
                     .accessibilityLabel("Select injection site")
-                    
+
                     // Time Display/Picker
-                    if isEditMode {
+                    if self.isEditMode {
                         // Date/Time picker for editing
                         DatePicker(
                             "Date",
-                            selection: $viewModel.doseTime,
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .accessibilityIdentifier("quick-dose-datetime-picker")
-                        .accessibilityLabel("Select dose date and time")
+                            selection: self.$viewModel.doseTime,
+                            displayedComponents: [.date, .hourAndMinute])
+                            .accessibilityIdentifier("quick-dose-datetime-picker")
+                            .accessibilityLabel("Select dose date and time")
                     } else {
                         // Read-only time display for new doses
                         HStack {
                             Text("Time")
                             Spacer()
-                            Text(viewModel.doseTime.formatted(date: .omitted, time: .shortened))
+                            Text(self.viewModel.doseTime.formatted(date: .omitted, time: .shortened))
                                 .foregroundColor(.secondary)
                                 .accessibilityIdentifier("quick-dose-time")
                         }
@@ -157,10 +155,10 @@ struct QuickDoseSheet: View {
                             .accessibilityIdentifier("no-medication-profiles-error")
                     }
                 }
-                
+
                 // Optional Notes Section (streamlined)
                 Section {
-                    TextField("Notes (Optional)", text: $viewModel.notes, axis: .vertical)
+                    TextField("Notes (Optional)", text: self.$viewModel.notes, axis: .vertical)
                         .lineLimit(2)
                         .accessibilityIdentifier("quick-dose-notes")
                         .accessibilityLabel("Optional notes")
@@ -168,41 +166,41 @@ struct QuickDoseSheet: View {
                     Text("Additional Information")
                 }
             }
-            .navigationTitle(isEditMode ? "Edit Dose" : "Quick Add Dose")
+            .navigationTitle(self.isEditMode ? "Edit Dose" : "Quick Add Dose")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        if let onCancel = onCancel {
+                        if let onCancel {
                             onCancel()
                         } else {
-                            dismiss()
+                            self.dismiss()
                         }
                     }
                     .accessibilityIdentifier("quick-dose-cancel-button")
                     .accessibilityLabel("Cancel dose entry")
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        if isEditMode {
-                            handleEditSave()
+                        if self.isEditMode {
+                            self.handleEditSave()
                         } else {
                             Task {
-                                await saveDose()
+                                await self.saveDose()
                             }
                         }
                     }
-                    .disabled(!viewModel.canSaveDose)
+                    .disabled(!self.viewModel.canSaveDose)
                     .accessibilityIdentifier("quick-dose-save-button")
                     .accessibilityLabel("Save dose")
                 }
             }
             .onAppear {
-                if isEditMode, let editData = editingDose {
-                    viewModel.loadEditData(editData, context: modelContext)
+                if self.isEditMode, let editData = editingDose {
+                    self.viewModel.loadEditData(editData, context: self.modelContext)
                 } else {
-                    viewModel.loadSmartDefaults(context: modelContext)
+                    self.viewModel.loadSmartDefaults(context: self.modelContext)
                 }
             }
         }
@@ -212,19 +210,18 @@ struct QuickDoseSheet: View {
     }
 
     private func handleEditSave() {
-        guard let editData = editingDose, let onSave = onSave else { return }
+        guard let editData = editingDose, let onSave else { return }
 
         // Create updated dose data from current view model state
         let updatedDose = DoseEditData(
             id: editData.id,
-            amount: viewModel.doseAmount,
-            timestamp: viewModel.doseTime,
-            site: viewModel.selectedInjectionSite.isEmpty ? nil : viewModel.selectedInjectionSite,
-            notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
+            amount: self.viewModel.doseAmount,
+            timestamp: self.viewModel.doseTime,
+            site: self.viewModel.selectedInjectionSite.isEmpty ? nil : self.viewModel.selectedInjectionSite,
+            notes: self.viewModel.notes.isEmpty ? nil : self.viewModel.notes,
             imageData: editData.imageData, // Keep existing image data
             skipped: editData.skipped, // Keep existing skipped status
-            medicationProfile: viewModel.selectedMedicationProfile
-        )
+            medicationProfile: self.viewModel.selectedMedicationProfile)
 
         onSave(updatedDose)
     }
@@ -232,20 +229,20 @@ struct QuickDoseSheet: View {
     @MainActor
     private func saveDose() async {
         do {
-            try await viewModel.saveDose(context: modelContext)
-            
+            try await self.viewModel.saveDose(context: self.modelContext)
+
             // Provide haptic feedback for successful save
             let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
             impactFeedback.impactOccurred()
-            
+
             // Show success message
             withAnimation {
-                showingSuccessMessage = true
+                self.showingSuccessMessage = true
             }
-            
+
             // Dismiss sheet
-            dismiss()
-            
+            self.dismiss()
+
         } catch {
             // Error is handled by viewModel and displayed in UI
             print("Error saving dose: \(error)")
@@ -261,10 +258,9 @@ struct QuickDoseSheet: View {
 #Preview("Sheet") {
     @Previewable @State var showingSuccess = false
     let viewModel = QuickDoseViewModel()
-    
+
     return QuickDoseSheet(
         viewModel: viewModel,
-        showingSuccessMessage: $showingSuccess
-    )
-    .modelContainer(DataController.preview.container)
+        showingSuccessMessage: $showingSuccess)
+        .modelContainer(DataController.preview.container)
 }

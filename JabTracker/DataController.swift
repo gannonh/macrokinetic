@@ -58,7 +58,7 @@ class DataController: ObservableObject {
         context.insert(sampleUser)
         context.insert(sampleMedication)
         context.insert(sampleDose)
-        
+
         // Set relationships after insertion to avoid duplicate registration
         sampleDose.user = sampleUser
         sampleDose.medication = sampleMedication

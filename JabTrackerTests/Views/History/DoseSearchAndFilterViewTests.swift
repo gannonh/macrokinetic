@@ -6,45 +6,42 @@
 //  Tests search functionality, filter options, and UI state management
 //
 
-import Testing
-import SwiftUI
-import SwiftData
 @testable import JabTracker
+import SwiftData
+import SwiftUI
+import Testing
 
 struct DoseSearchAndFilterViewTests {
-    
     // MARK: - Test Infrastructure
-    
+
     private func createTestModelContext() -> ModelContext {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try! ModelContainer(for: User.self, Dose.self, MedicationProfile.self, configurations: config)
         return ModelContext(container)
     }
-    
+
     private func createTestViewModel() async -> DoseHistoryViewModel {
         await DoseHistoryViewModel()
     }
-    
+
     private func setupTestData(context: ModelContext, viewModel: DoseHistoryViewModel) async {
         let user = User(email: "test@example.com", name: "Test User")
         context.insert(user)
-        
+
         let medication1 = MedicationProfile(
             genericName: "Semaglutide",
             brandName: "Ozempic",
-            currentDose: 1.0
-        )
+            currentDose: 1.0)
         medication1.user = user
         context.insert(medication1)
-        
+
         let medication2 = MedicationProfile(
             genericName: "Tirzepatide",
             brandName: "Mounjaro",
-            currentDose: 2.5
-        )
+            currentDose: 2.5)
         medication2.user = user
         context.insert(medication2)
-        
+
         // Create doses with various properties
         let dose1 = Dose(
             amount: 1.0,
@@ -52,53 +49,50 @@ struct DoseSearchAndFilterViewTests {
             site: "Thigh",
             notes: "Morning dose",
             user: user,
-            medication: medication1
-        )
+            medication: medication1)
         context.insert(dose1)
-        
+
         let dose2 = Dose(
             amount: 2.5,
             timestamp: Date().addingTimeInterval(-86400),
             site: "Abdomen",
             notes: "Evening injection",
             user: user,
-            medication: medication2
-        )
+            medication: medication2)
         context.insert(dose2)
-        
+
         let dose3 = Dose(
             amount: 1.5,
-            timestamp: Date().addingTimeInterval(-172800),
+            timestamp: Date().addingTimeInterval(-172_800),
             site: "Arm",
             notes: "Weekly medication",
             skipped: true,
             user: user,
-            medication: medication1
-        )
+            medication: medication1)
         context.insert(dose3)
-        
+
         try! context.save()
-        
+
         // Load data into view model
         await viewModel.loadData(context: context)
     }
-    
+
     // MARK: - View Creation Tests
-    
+
     @Test("DoseSearchAndFilterView can be created with view model")
-    func testViewCreation() async {
+    func viewCreation() async {
         let viewModel = await createTestViewModel()
         let view = DoseSearchAndFilterView(viewModel: viewModel)
 
         // Should not crash
         #expect(view.viewModel === viewModel)
     }
-    
+
     // MARK: - Search Functionality Tests
-    
+
     @Test("Search text binding works correctly")
-    func testSearchTextBinding() async throws {
-        let context = createTestModelContext()
+    func searchTextBinding() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -126,10 +120,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.first?.notes == "Morning dose")
         }
     }
-    
+
     @Test("Clear search functionality works")
-    func testClearSearchFunctionality() async throws {
-        let context = createTestModelContext()
+    func clearSearchFunctionality() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -147,12 +141,12 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.searchText.isEmpty)
         }
     }
-    
+
     // MARK: - Filter Functionality Tests
-    
+
     @Test("Medication filter works correctly")
-    func testMedicationFilter() async throws {
-        let context = createTestModelContext()
+    func medicationFilter() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -178,10 +172,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.allSatisfy { $0.medication?.genericName == "Semaglutide" })
         }
     }
-    
+
     @Test("Injection site filter works correctly")
-    func testInjectionSiteFilter() async throws {
-        let context = createTestModelContext()
+    func injectionSiteFilter() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -208,10 +202,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.first?.site == "Thigh")
         }
     }
-    
+
     @Test("Show skipped doses toggle works")
-    func testShowSkippedDosesToggle() async throws {
-        let context = createTestModelContext()
+    func showSkippedDosesToggle() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -235,10 +229,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.allSatisfy { !$0.skipped })
         }
     }
-    
+
     @Test("Date range filters work correctly")
-    func testDateRangeFilters() async throws {
-        let context = createTestModelContext()
+    func dateRangeFilters() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -273,7 +267,7 @@ struct DoseSearchAndFilterViewTests {
         }
 
         // Test both start and end date
-        let twoDaysAgo = today.addingTimeInterval(-172800)
+        let twoDaysAgo = today.addingTimeInterval(-172_800)
         await MainActor.run {
             viewModel.filterStartDate = twoDaysAgo
             viewModel.filterEndDate = today
@@ -286,12 +280,12 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.count >= 2)
         }
     }
-    
+
     // MARK: - Active Filters Tests
-    
+
     @Test("Active filters detection works correctly")
-    func testActiveFiltersDetection() async throws {
-        let context = createTestModelContext()
+    func activeFiltersDetection() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -351,10 +345,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.hasActiveFilters == false)
         }
     }
-    
+
     @Test("Clear all filters functionality works")
     func testClearAllFilters() async throws {
-        let context = createTestModelContext()
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -395,12 +389,12 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.count == 3)
         }
     }
-    
+
     // MARK: - Date Range Display Tests
-    
+
     @Test("Date range display text formats correctly")
-    func testDateRangeDisplayText() async throws {
-        let context = createTestModelContext()
+    func dateRangeDisplayText() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -445,12 +439,12 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filterEndDate != nil)
         }
     }
-    
+
     // MARK: - Multiple Filters Combination Tests
-    
+
     @Test("Multiple filters work together correctly")
-    func testMultipleFiltersInteraction() async throws {
-        let context = createTestModelContext()
+    func multipleFiltersInteraction() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -475,10 +469,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(matchingDose.notes?.localizedCaseInsensitiveContains("morning") == true)
         }
     }
-    
+
     @Test("Conflicting filters produce empty results")
-    func testConflictingFilters() async throws {
-        let context = createTestModelContext()
+    func conflictingFilters() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -497,12 +491,12 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.isEmpty)
         }
     }
-    
+
     // MARK: - Filter State Persistence Tests
-    
+
     @Test("Filter state persists during view lifecycle")
-    func testFilterStatePersistence() async throws {
-        let context = createTestModelContext()
+    func filterStatePersistence() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -526,12 +520,12 @@ struct DoseSearchAndFilterViewTests {
             #expect(view2.viewModel.selectedMedicationFilter == "Semaglutide")
         }
     }
-    
+
     // MARK: - Edge Cases Tests
-    
+
     @Test("Empty data set handling")
-    func testEmptyDataSetHandling() async throws {
-        let context = createTestModelContext()
+    func emptyDataSetHandling() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
 
         // Don't setup any test data
@@ -549,10 +543,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.hasActiveFilters == false)
         }
     }
-    
+
     @Test("Special characters in search text")
-    func testSpecialCharactersInSearch() async throws {
-        let context = createTestModelContext()
+    func specialCharactersInSearch() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
 
         // Create test data with special characters
@@ -562,8 +556,7 @@ struct DoseSearchAndFilterViewTests {
         let medication = MedicationProfile(
             genericName: "Test Med",
             brandName: "Test Brand",
-            currentDose: 1.0
-        )
+            currentDose: 1.0)
         medication.user = user
         context.insert(medication)
 
@@ -573,8 +566,7 @@ struct DoseSearchAndFilterViewTests {
             site: "Thigh",
             notes: "Dose with émojis 💉 and spécial chars!",
             user: user,
-            medication: medication
-        )
+            medication: medication)
         context.insert(dose)
         try! context.save()
 
@@ -604,10 +596,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.count == 1)
         }
     }
-    
+
     @Test("Very long search text handling")
-    func testVeryLongSearchText() async throws {
-        let context = createTestModelContext()
+    func veryLongSearchText() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -627,10 +619,10 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filteredDoses.isEmpty) // May or may not find results
         }
     }
-    
+
     @Test("Date range edge cases")
-    func testDateRangeEdgeCases() async throws {
-        let context = createTestModelContext()
+    func dateRangeEdgeCases() async throws {
+        let context = self.createTestModelContext()
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
@@ -638,7 +630,7 @@ struct DoseSearchAndFilterViewTests {
 
         let today = Date()
         let futureDate = today.addingTimeInterval(86400) // Tomorrow
-        let pastDate = today.addingTimeInterval(-172800 * 365) // Long ago
+        let pastDate = today.addingTimeInterval(-172_800 * 365) // Long ago
 
         // Test future date range
         await MainActor.run {

@@ -56,7 +56,7 @@ final class MedicationProfile {
         self.startDate = startDate
         self.refillDate = refillDate
         // If medicationType is empty but genericName matches a known medication, use that
-        if medicationType.isEmpty && !genericName.isEmpty {
+        if medicationType.isEmpty, !genericName.isEmpty {
             self.medicationType = Medication.fromGenericName(genericName)?.rawValue ?? ""
         } else {
             self.medicationType = medicationType

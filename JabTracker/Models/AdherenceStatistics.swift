@@ -10,7 +10,6 @@ import Foundation
 
 /// Comprehensive adherence statistics for a given time period
 struct AdherenceStatistics {
-
     // MARK: - Basic Statistics
 
     /// Total number of doses taken in the period
@@ -24,14 +23,14 @@ struct AdherenceStatistics {
 
     /// Adherence rate as percentage (0.0 to 1.0)
     var adherenceRate: Double {
-        guard scheduledDoses > 0 else { return 0.0 }
-        let takenDoses = totalDoses - skippedDoses
-        return Double(takenDoses) / Double(scheduledDoses)
+        guard self.scheduledDoses > 0 else { return 0.0 }
+        let takenDoses = self.totalDoses - self.skippedDoses
+        return Double(takenDoses) / Double(self.scheduledDoses)
     }
 
     /// Adherence rate as percentage string (0% to 100%)
     var adherenceRatePercentage: String {
-        let percentage = adherenceRate * 100
+        let percentage = self.adherenceRate * 100
         return String(format: "%.1f%%", percentage)
     }
 
@@ -64,7 +63,7 @@ struct AdherenceStatistics {
 
     /// Most frequently used injection site
     var mostUsedSite: String? {
-        siteDistribution.max(by: { $0.value < $1.value })?.key
+        self.siteDistribution.max(by: { $0.value < $1.value })?.key
     }
 
     // MARK: - Time Period
@@ -77,7 +76,7 @@ struct AdherenceStatistics {
 
     /// Duration of the period in days
     var periodDays: Int {
-        let components = Calendar.current.dateComponents([.day], from: periodStart, to: periodEnd)
+        let components = Calendar.current.dateComponents([.day], from: self.periodStart, to: self.periodEnd)
         return max(1, components.day ?? 1)
     }
 
@@ -95,8 +94,8 @@ struct AdherenceStatistics {
         isCurrentStreakActive: Bool,
         siteDistribution: [String: Int],
         periodStart: Date,
-        periodEnd: Date
-    ) {
+        periodEnd: Date)
+    {
         self.totalDoses = totalDoses
         self.skippedDoses = skippedDoses
         self.scheduledDoses = scheduledDoses
@@ -115,7 +114,6 @@ struct AdherenceStatistics {
 // MARK: - Empty State
 
 extension AdherenceStatistics {
-
     /// Empty statistics for periods with no data
     static func empty(periodStart: Date, periodEnd: Date) -> AdherenceStatistics {
         AdherenceStatistics(
@@ -130,56 +128,50 @@ extension AdherenceStatistics {
             isCurrentStreakActive: false,
             siteDistribution: [:],
             periodStart: periodStart,
-            periodEnd: periodEnd
-        )
+            periodEnd: periodEnd)
     }
 }
 
 // MARK: - Statistics Calculator
 
-struct AdherenceStatisticsCalculator {
-
+enum AdherenceStatisticsCalculator {
     /// Calculate comprehensive adherence statistics for given doses and time period
     static func calculate(
         doses: [Dose],
         periodStart: Date,
         periodEnd: Date,
-        medicationFrequency: DoseFrequency = .weekly
-    ) -> AdherenceStatistics {
-
+        medicationFrequency: DoseFrequency = .weekly) -> AdherenceStatistics
+    {
         // Filter doses to the specified period
         let periodDoses = doses.filter { dose in
             dose.timestamp >= periodStart && dose.timestamp <= periodEnd
         }
 
-
         // Basic counts
         let totalDoses = periodDoses.count
-        let skippedDoses = periodDoses.filter { $0.skipped }.count
+        let skippedDoses = periodDoses.filter(\.skipped).count
         let takenDoses = periodDoses.filter { !$0.skipped }
 
         // Calculate scheduled doses based on frequency and period
-        let scheduledDoses = calculateScheduledDoses(
+        let scheduledDoses = self.calculateScheduledDoses(
             periodStart: periodStart,
             periodEnd: periodEnd,
-            frequency: medicationFrequency
-        )
+            frequency: medicationFrequency)
 
         // Dose amount calculations
-        let doseAmounts = takenDoses.map { $0.amount }
+        let doseAmounts = takenDoses.map(\.amount)
         let averageDose = doseAmounts.isEmpty ? 0.0 : doseAmounts.reduce(0, +) / Double(doseAmounts.count)
         let totalMedicationAmount = doseAmounts.reduce(0, +)
         let doseRange = doseAmounts.isEmpty ? nil : (min: doseAmounts.min()!, max: doseAmounts.max()!)
 
         // Site distribution
-        let siteDistribution = calculateSiteDistribution(doses: takenDoses)
+        let siteDistribution = self.calculateSiteDistribution(doses: takenDoses)
 
         // Streak calculations
-        let (currentStreak, longestStreak, isCurrentStreakActive) = calculateStreaks(
+        let (currentStreak, longestStreak, isCurrentStreakActive) = self.calculateStreaks(
             doses: takenDoses,
             periodStart: periodStart,
-            periodEnd: periodEnd
-        )
+            periodEnd: periodEnd)
 
         return AdherenceStatistics(
             totalDoses: totalDoses,
@@ -193,8 +185,7 @@ struct AdherenceStatisticsCalculator {
             isCurrentStreakActive: isCurrentStreakActive,
             siteDistribution: siteDistribution,
             periodStart: periodStart,
-            periodEnd: periodEnd
-        )
+            periodEnd: periodEnd)
     }
 
     // MARK: - Private Calculation Methods
@@ -202,8 +193,8 @@ struct AdherenceStatisticsCalculator {
     private static func calculateScheduledDoses(
         periodStart: Date,
         periodEnd: Date,
-        frequency: DoseFrequency
-    ) -> Int {
+        frequency: DoseFrequency) -> Int
+    {
         let calendar = Calendar.current
         let dayCount = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: periodStart), to: Calendar.current.startOfDay(for: periodEnd)).day ?? 0
 
@@ -217,16 +208,15 @@ struct AdherenceStatisticsCalculator {
     }
 
     private static func calculateSiteDistribution(doses: [Dose]) -> [String: Int] {
-        let sites = doses.compactMap { $0.site }
+        let sites = doses.compactMap(\.site)
         return Dictionary(grouping: sites) { $0 }.mapValues { $0.count }
     }
 
     private static func calculateStreaks(
         doses: [Dose],
         periodStart: Date,
-        periodEnd: Date
-    ) -> (current: Int, longest: Int, isActive: Bool) {
-
+        periodEnd: Date) -> (current: Int, longest: Int, isActive: Bool)
+    {
         // Sort doses by date
         let sortedDoses = doses.sorted { $0.timestamp < $1.timestamp }
 
@@ -267,7 +257,7 @@ struct AdherenceStatisticsCalculator {
                 } else if currentDate == yesterday {
                     mostRecentStreakCount = tempStreak
                     mostRecentStreakEndsYesterday = true
-                    mostRecentStreakEndsToday = false  // Will be updated if today also has a dose
+                    mostRecentStreakEndsToday = false // Will be updated if today also has a dose
                 }
             } else {
                 // Streak broken - reset
@@ -291,4 +281,3 @@ struct AdherenceStatisticsCalculator {
         return (currentStreak, longestStreak, isActive)
     }
 }
-

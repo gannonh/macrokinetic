@@ -5,12 +5,11 @@
 //  Unit tests for DoseDayDetailView component
 //
 
-import Testing
-import SwiftUI
 @testable import JabTracker
+import SwiftUI
+import Testing
 
 struct DoseDayDetailViewTests {
-
     // MARK: - Date Display Tests
 
     @Test("Dose day detail view formats date correctly")
@@ -75,9 +74,9 @@ struct DoseDayDetailViewTests {
         let eveningTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: date)!
 
         let doses = [
-            createMockDose(timestamp: eveningTime, amount: 3.0),    // Out of order
+            createMockDose(timestamp: eveningTime, amount: 3.0), // Out of order
             createMockDose(timestamp: morningTime, amount: 1.0),
-            createMockDose(timestamp: afternoonTime, amount: 2.0)
+            createMockDose(timestamp: afternoonTime, amount: 2.0),
         ]
 
         // WHEN: Sorting doses chronologically
@@ -115,11 +114,11 @@ struct DoseDayDetailViewTests {
         let doses = [
             createMockDose(timestamp: date, amount: 0.5),
             createMockDose(timestamp: date, amount: 1.0),
-            createMockDose(timestamp: date, amount: 2.4)
+            createMockDose(timestamp: date, amount: 2.4),
         ]
 
         // WHEN: Extracting dose amounts
-        let amounts = doses.map { $0.amount }
+        let amounts = doses.map(\.amount)
 
         // THEN: All amounts should be preserved
         #expect(amounts.contains(0.5))
@@ -134,11 +133,11 @@ struct DoseDayDetailViewTests {
         let doses = [
             createMockDose(timestamp: date, site: "Abdomen"),
             createMockDose(timestamp: date, site: "Thigh"),
-            createMockDose(timestamp: date, site: "Arm")
+            createMockDose(timestamp: date, site: "Arm"),
         ]
 
         // WHEN: Extracting injection sites
-        let sites = doses.compactMap { $0.site }
+        let sites = doses.compactMap(\.site)
 
         // THEN: All sites should be preserved
         #expect(sites.contains("Abdomen"))
@@ -150,7 +149,7 @@ struct DoseDayDetailViewTests {
     func doseDayDetailViewDisplaysDoseNotes() throws {
         // GIVEN: A dose with notes
         let date = Date()
-        let dose = createMockDose(timestamp: date, notes: "Taken with breakfast")
+        let dose = self.createMockDose(timestamp: date, notes: "Taken with breakfast")
 
         // WHEN: Accessing dose notes
         let notes = dose.notes
@@ -163,7 +162,7 @@ struct DoseDayDetailViewTests {
     func doseDayDetailViewHandlesDosesWithoutNotes() throws {
         // GIVEN: A dose without notes
         let date = Date()
-        let dose = createMockDose(timestamp: date, notes: nil)
+        let dose = self.createMockDose(timestamp: date, notes: nil)
 
         // WHEN: Accessing dose notes
         let notes = dose.notes
@@ -180,7 +179,7 @@ struct DoseDayDetailViewTests {
         let calendar = Calendar.current
         let date = Date()
         let specificTime = calendar.date(bySettingHour: 14, minute: 30, second: 0, of: date)!
-        let dose = createMockDose(timestamp: specificTime)
+        let dose = self.createMockDose(timestamp: specificTime)
 
         // WHEN: Formatting time for display
         let timeFormatter = DateFormatter()
@@ -197,7 +196,7 @@ struct DoseDayDetailViewTests {
     func doseDayDetailViewIndicatesSkippedDoses() throws {
         // GIVEN: A skipped dose
         let date = Date()
-        let dose = createMockDose(timestamp: date, skipped: true)
+        let dose = self.createMockDose(timestamp: date, skipped: true)
 
         // WHEN: Checking skip status
         let isSkipped = dose.skipped
@@ -210,7 +209,7 @@ struct DoseDayDetailViewTests {
     func doseDayDetailViewIndicatesTakenDoses() throws {
         // GIVEN: A taken dose
         let date = Date()
-        let dose = createMockDose(timestamp: date, skipped: false)
+        let dose = self.createMockDose(timestamp: date, skipped: false)
 
         // WHEN: Checking skip status
         let isSkipped = dose.skipped
@@ -226,7 +225,7 @@ struct DoseDayDetailViewTests {
         // GIVEN: A dose with photo data
         let date = Date()
         let photoData = Data([0x01, 0x02, 0x03]) // Mock photo data
-        let dose = createMockDose(timestamp: date, imageData: photoData)
+        let dose = self.createMockDose(timestamp: date, imageData: photoData)
 
         // WHEN: Checking for photo data
         let hasPhoto = dose.imageData != nil
@@ -239,7 +238,7 @@ struct DoseDayDetailViewTests {
     func doseDayDetailViewHandlesDosesWithoutPhotos() throws {
         // GIVEN: A dose without photo data
         let date = Date()
-        let dose = createMockDose(timestamp: date, imageData: nil)
+        let dose = self.createMockDose(timestamp: date, imageData: nil)
 
         // WHEN: Checking for photo data
         let hasPhoto = dose.imageData != nil
@@ -256,8 +255,8 @@ struct DoseDayDetailViewTests {
         site: String? = "Abdomen",
         notes: String? = nil,
         imageData: Data? = nil,
-        skipped: Bool = false
-    ) -> Dose {
+        skipped: Bool = false) -> Dose
+    {
         Dose(
             amount: amount,
             timestamp: timestamp,
@@ -266,7 +265,6 @@ struct DoseDayDetailViewTests {
             imageData: imageData,
             skipped: skipped,
             user: nil,
-            medication: nil
-        )
+            medication: nil)
     }
 }

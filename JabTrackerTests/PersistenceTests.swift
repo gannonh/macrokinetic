@@ -134,7 +134,7 @@ struct CloudKitSyncTests {
         context.insert(user)
         context.insert(medication)
         context.insert(dose)
-        
+
         // Set relationships after insertion to avoid duplicate registration
         dose.user = user
         dose.medication = medication

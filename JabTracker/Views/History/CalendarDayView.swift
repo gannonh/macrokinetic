@@ -18,53 +18,53 @@ struct CalendarDayView: View {
     private let calendar = Calendar.current
 
     var body: some View {
-        Button(action: onTap) {
+        Button(action: self.onTap) {
             ZStack {
                 // Background
-                backgroundView
+                self.backgroundView
 
                 VStack(spacing: 2) {
                     // Day number
-                    Text("\(dayNumber)")
+                    Text("\(self.dayNumber)")
                         .font(.system(.body, design: .rounded))
-                        .fontWeight(isToday ? .bold : .medium)
-                        .foregroundColor(textColor)
+                        .fontWeight(self.isToday ? .bold : .medium)
+                        .foregroundColor(self.textColor)
 
                     // Dose indicators
-                    doseIndicatorView
+                    self.doseIndicatorView
                 }
             }
         }
         .buttonStyle(.plain)
         .frame(height: 44)
-        .accessibilityIdentifier("calendar-day-\(dayNumber)")
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityHint(accessibilityHint)
+        .accessibilityIdentifier("calendar-day-\(self.dayNumber)")
+        .accessibilityLabel(self.accessibilityLabel)
+        .accessibilityHint(self.accessibilityHint)
     }
 
     // MARK: - Subviews
 
     private var backgroundView: some View {
         RoundedRectangle(cornerRadius: 8)
-            .fill(backgroundColor)
+            .fill(self.backgroundColor)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(borderColor, lineWidth: borderWidth)
+                    .stroke(self.borderColor, lineWidth: self.borderWidth)
             )
     }
 
     private var doseIndicatorView: some View {
         HStack(spacing: 2) {
-            if doses.isEmpty {
+            if self.doses.isEmpty {
                 // No indicator for days without doses
                 Color.clear
                     .frame(height: 4)
-            } else if doses.count == 1 {
+            } else if self.doses.count == 1 {
                 // Single dose indicator
-                singleDoseIndicator(dose: doses.first!)
+                self.singleDoseIndicator(dose: self.doses.first!)
             } else {
                 // Multiple doses indicator
-                multipleDoseIndicator()
+                self.multipleDoseIndicator()
             }
         }
         .frame(height: 4)
@@ -72,20 +72,20 @@ struct CalendarDayView: View {
 
     private func singleDoseIndicator(dose: Dose) -> some View {
         Circle()
-            .fill(indicatorColor(for: dose))
+            .fill(self.indicatorColor(for: dose))
             .frame(width: 6, height: 6)
             .accessibilityIdentifier("calendar-dose-indicator")
     }
 
     private func multipleDoseIndicator() -> some View {
         HStack(spacing: 1) {
-            ForEach(0..<min(doses.count, 3), id: \.self) { index in
+            ForEach(0 ..< min(self.doses.count, 3), id: \.self) { index in
                 Circle()
-                    .fill(indicatorColor(for: doses[index]))
+                    .fill(self.indicatorColor(for: self.doses[index]))
                     .frame(width: 4, height: 4)
                     .accessibilityIdentifier("calendar-dose-indicator")
             }
-            if doses.count > 3 {
+            if self.doses.count > 3 {
                 Text("+")
                     .font(.system(size: 8, weight: .bold))
                     .foregroundColor(.secondary)
@@ -97,13 +97,13 @@ struct CalendarDayView: View {
     // MARK: - Computed Properties
 
     private var dayNumber: Int {
-        calendar.component(.day, from: date)
+        self.calendar.component(.day, from: self.date)
     }
 
     private var backgroundColor: Color {
-        if isSelected {
+        if self.isSelected {
             return .accentColor.opacity(0.2)
-        } else if isToday {
+        } else if self.isToday {
             return .accentColor.opacity(0.1)
         } else {
             return Color.clear
@@ -111,9 +111,9 @@ struct CalendarDayView: View {
     }
 
     private var textColor: Color {
-        if isSelected {
+        if self.isSelected {
             return .accentColor
-        } else if isToday {
+        } else if self.isToday {
             return .accentColor
         } else {
             return .primary
@@ -121,9 +121,9 @@ struct CalendarDayView: View {
     }
 
     private var borderColor: Color {
-        if isSelected {
+        if self.isSelected {
             return .accentColor
-        } else if isToday {
+        } else if self.isToday {
             return .accentColor.opacity(0.5)
         } else {
             return Color.clear
@@ -131,9 +131,9 @@ struct CalendarDayView: View {
     }
 
     private var borderWidth: CGFloat {
-        if isSelected {
+        if self.isSelected {
             return 2
-        } else if isToday {
+        } else if self.isToday {
             return 1
         } else {
             return 0
@@ -143,20 +143,20 @@ struct CalendarDayView: View {
     private var accessibilityLabel: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        let dateString = formatter.string(from: date)
+        let dateString = formatter.string(from: self.date)
 
         var label = dateString
-        if isToday {
+        if self.isToday {
             label += ", today"
         }
-        if !doses.isEmpty {
-            label += ", \(doses.count) dose\(doses.count == 1 ? "" : "s")"
+        if !self.doses.isEmpty {
+            label += ", \(self.doses.count) dose\(self.doses.count == 1 ? "" : "s")"
         }
         return label
     }
 
     private var accessibilityHint: String {
-        if doses.isEmpty {
+        if self.doses.isEmpty {
             return "No doses recorded for this date"
         } else {
             return "Tap to view dose details"
@@ -195,16 +195,15 @@ struct CalendarDayView: View {
         imageData: nil,
         skipped: false,
         user: nil,
-        medication: nil
-    )
+        medication: nil)
 
     VStack {
         CalendarDayView(
             date: today,
             doses: [mockDose],
             isToday: true,
-            isSelected: false
-        ) {
+            isSelected: false)
+        {
             print("Tapped today")
         }
 
@@ -212,8 +211,8 @@ struct CalendarDayView: View {
             date: calendar.date(byAdding: .day, value: 1, to: today)!,
             doses: [],
             isToday: false,
-            isSelected: false
-        ) {
+            isSelected: false)
+        {
             print("Tapped tomorrow")
         }
 
@@ -221,8 +220,8 @@ struct CalendarDayView: View {
             date: calendar.date(byAdding: .day, value: -1, to: today)!,
             doses: [mockDose, mockDose],
             isToday: false,
-            isSelected: true
-        ) {
+            isSelected: true)
+        {
             print("Tapped yesterday")
         }
     }

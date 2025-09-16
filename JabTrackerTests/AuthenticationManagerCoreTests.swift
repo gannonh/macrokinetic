@@ -265,9 +265,10 @@ struct AuthenticationManagerCoreTests {
 
         // Should detect existing user and set authenticated state
         // But only if no UI testing or reset flags are active
-        if !ProcessInfo.processInfo.arguments.contains("--reset-app-data") &&
-           !ProcessInfo.processInfo.arguments.contains("--ui-testing") &&
-           ProcessInfo.processInfo.environment["UI_TESTING"] != "true" {
+        if !ProcessInfo.processInfo.arguments.contains("--reset-app-data"),
+           !ProcessInfo.processInfo.arguments.contains("--ui-testing"),
+           ProcessInfo.processInfo.environment["UI_TESTING"] != "true"
+        {
             #expect(authManager.currentUser != nil,
                     "Should set current user when existing user found")
             #expect(authManager.authenticationState == .authenticated,

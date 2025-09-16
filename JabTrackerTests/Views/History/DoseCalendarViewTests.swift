@@ -5,12 +5,11 @@
 //  Unit tests for DoseCalendarView component
 //
 
-import Testing
-import SwiftUI
 @testable import JabTracker
+import SwiftUI
+import Testing
 
 struct DoseCalendarViewTests {
-
     // MARK: - Calendar Display Tests
 
     @Test("Calendar view initializes with current month")
@@ -70,7 +69,7 @@ struct DoseCalendarViewTests {
 
         let doses = [
             createMockDose(timestamp: today),
-            createMockDose(timestamp: yesterday)
+            createMockDose(timestamp: yesterday),
         ]
 
         // WHEN: Calendar processes dose data
@@ -104,7 +103,7 @@ struct DoseCalendarViewTests {
 
         let doses = [
             createMockDose(timestamp: todayMorning),
-            createMockDose(timestamp: todayEvening)
+            createMockDose(timestamp: todayEvening),
         ]
 
         // WHEN: Calendar groups doses by date
@@ -149,7 +148,6 @@ struct DoseCalendarViewTests {
             imageData: nil,
             skipped: false,
             user: nil,
-            medication: nil
-        )
+            medication: nil)
     }
 }

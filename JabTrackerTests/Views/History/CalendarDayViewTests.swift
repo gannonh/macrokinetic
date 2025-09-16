@@ -5,12 +5,11 @@
 //  Unit tests for CalendarDayView component
 //
 
-import Testing
-import SwiftUI
 @testable import JabTracker
+import SwiftUI
+import Testing
 
 struct CalendarDayViewTests {
-
     // MARK: - Day Display Tests
 
     @Test("Calendar day view displays correct day number")
@@ -83,7 +82,7 @@ struct CalendarDayViewTests {
 
         let doses = [
             createMockDose(timestamp: morning),
-            createMockDose(timestamp: evening)
+            createMockDose(timestamp: evening),
         ]
 
         // WHEN: Grouping doses by date
@@ -153,14 +152,14 @@ struct CalendarDayViewTests {
     func calendarDayViewHandlesDifferentInjectionSites() throws {
         // GIVEN: Doses with different injection sites
         let date = Date()
-        let abdominalDose = createMockDose(timestamp: date, site: "Abdomen")
-        let thighDose = createMockDose(timestamp: date, site: "Thigh")
-        let armDose = createMockDose(timestamp: date, site: "Arm")
+        let abdominalDose = self.createMockDose(timestamp: date, site: "Abdomen")
+        let thighDose = self.createMockDose(timestamp: date, site: "Thigh")
+        let armDose = self.createMockDose(timestamp: date, site: "Arm")
 
         let doses = [abdominalDose, thighDose, armDose]
 
         // WHEN: Extracting injection sites
-        let injectionSites = Set(doses.compactMap { $0.site })
+        let injectionSites = Set(doses.compactMap(\.site))
 
         // THEN: All injection sites should be represented
         #expect(injectionSites.contains("Abdomen"))
@@ -173,7 +172,7 @@ struct CalendarDayViewTests {
     func calendarDayViewHandlesDosesWithoutInjectionSite() throws {
         // GIVEN: A dose without injection site
         let date = Date()
-        let dose = createMockDose(timestamp: date, site: nil)
+        let dose = self.createMockDose(timestamp: date, site: nil)
 
         // WHEN: Checking injection site
         let site = dose.site
@@ -214,7 +213,6 @@ struct CalendarDayViewTests {
             imageData: nil,
             skipped: false,
             user: nil,
-            medication: nil
-        )
+            medication: nil)
     }
 }
