@@ -146,43 +146,42 @@ extension TestUtilities {
                       "Created profile should appear in list")
     }
 
-    /// Navigates to History tab and waits for history view to load
+    /// Navigates to History tab and waits for history content to load
     /// - Parameters:
     ///   - app: The XCUIApplication instance
-    ///   - timeout: Timeout for history view to appear (default: 5 seconds)
-    /// - Returns: The history view element
+    ///   - timeout: Timeout for history content to appear (default: 3 seconds)
+    /// - Returns: The visible history content element (list or calendar)
     @discardableResult
-    static func navigateToHistoryView(in app: XCUIApplication, timeout: TimeInterval = 5) -> XCUIElement {
+    static func navigateToHistoryView(in app: XCUIApplication, timeout: TimeInterval = 3) -> XCUIElement {
         // Navigate to History tab
         let historyTab = app.tabBars.element.buttons["History"]
         historyTab.tap()
 
-        // Wait for either the list view or calendar view to appear (HistoryView uses segmented control)
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        let listView = app.descendants(matching: .any)["dose-history-list"]
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        // Wait for the segmented control to appear (this indicates HistoryView is loaded)
+        let segmentedControl = app.segmentedControls["history-view-mode-picker"]
+        XCTAssertTrue(segmentedControl.waitForExistence(timeout: timeout),
+                     "History view segmented control should appear within \(timeout) seconds")
 
-        // Check which view is visible - start by ensuring history view container exists
-        if historyView.waitForExistence(timeout: timeout) {
-            // History view container exists, return it
-            return historyView
-        } else if listView.waitForExistence(timeout: timeout) {
-            // List view is directly visible
+        // By default, HistoryView starts in list mode, so wait for list view
+        let listView = app.descendants(matching: .any)["dose-history-list"]
+        if listView.waitForExistence(timeout: 2) {
             return listView
-        } else if calendarView.waitForExistence(timeout: timeout) {
-            // Calendar is showing, switch to list view using segmented control
-            let segmentedControl = app.segmentedControls["history-view-mode-picker"]
+        }
+
+        // If list view doesn't appear quickly, check if we're in calendar mode and switch
+        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        if calendarView.exists {
             let listToggle = segmentedControl.buttons["history-list-toggle"]
-            if segmentedControl.exists && listToggle.exists {
+            if listToggle.exists {
                 listToggle.tap()
-                XCTAssertTrue(historyView.waitForExistence(timeout: 2) || listView.waitForExistence(timeout: 2),
-                             "History view should appear after tapping list toggle")
-                return historyView.exists ? historyView : listView
+                XCTAssertTrue(listView.waitForExistence(timeout: 2),
+                             "List view should appear after switching from calendar")
+                return listView
             }
         }
 
-        XCTFail("History view did not appear within \(timeout) seconds")
-        return historyView // This will be non-existent, but satisfies return requirement
+        XCTFail("Could not navigate to history list view within \(timeout) seconds")
+        return listView // This will be non-existent, but satisfies return requirement
     }
 
     /// Gets dose rows from the history list

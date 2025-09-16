@@ -181,10 +181,6 @@ final class CalendarIntegrationUITests: XCTestCase {
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
 
         // THEN: Calendar shows dose indicators for dates with doses
-        // Debug: Let's see what's available in the calendar view
-        TestUtilities.debugElements(in: app, containing: "calendar")
-        TestUtilities.debugElements(in: app, containing: "dose")
-
         // Wait for calendar to fully load
         let expectation = XCTestExpectation(description: "Wait for calendar to load")
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -192,48 +188,32 @@ final class CalendarIntegrationUITests: XCTestCase {
         }
         wait(for: [expectation], timeout: 3.0)
 
-        // Debug: Check if any calendar day elements exist
-        let calendarDays = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
-        print("🔍 DEBUG: Found \(calendarDays.count) calendar day buttons")
-
         // Find today's date (which should have our 5 doses from setup)
         let todayDay = Calendar.current.component(.day, from: Date())
         let todayButton = app.buttons["calendar-day-\(todayDay)"]
-        print("🔍 DEBUG: Looking for today's date button: calendar-day-\(todayDay)")
-        print("🔍 DEBUG: Today button exists: \(todayButton.exists)")
 
         XCTAssertTrue(todayButton.waitForExistence(timeout: 3), "Today's calendar day button should exist")
 
         // WHEN: User taps on today's date (which has doses)
-        print("🔍 DEBUG: Tapping today's date button")
         todayButton.tap()
 
         // THEN: Date detail view appears
         let dateDetailView = app.descendants(matching: .any)["dose-day-detail-view"]
-        print("🔍 DEBUG: Waiting for date detail view...")
-        let detailViewAppeared = dateDetailView.waitForExistence(timeout: 5)
-        print("🔍 DEBUG: Date detail view appeared: \(detailViewAppeared)")
-
-        XCTAssertTrue(detailViewAppeared, "Date detail view should appear when tapping date with doses")
+        XCTAssertTrue(dateDetailView.waitForExistence(timeout: 5), "Date detail view should appear when tapping date with doses")
 
         // THEN: Detail view shows dose information (not empty state)
         let doseList = app.descendants(matching: .any)["dose-list"]
         let emptyState = app.descendants(matching: .any)["empty-state"]
-
-        print("🔍 DEBUG: Dose list exists: \(doseList.exists)")
-        print("🔍 DEBUG: Empty state exists: \(emptyState.exists)")
 
         XCTAssertTrue(doseList.waitForExistence(timeout: 3), "Dose list should be visible in detail view for date with doses")
         XCTAssertFalse(emptyState.exists, "Empty state should not appear when doses exist")
 
         // THEN: Verify we can see dose rows in the detail view
         let detailDoseRows = app.descendants(matching: .any).matching(identifier: "dose-detail-row")
-        print("🔍 DEBUG: Found \(detailDoseRows.count) dose detail rows")
         XCTAssertGreaterThan(detailDoseRows.count, 0, "Should show dose detail rows for the created doses")
 
         // Close the detail view
         let doneButton = app.buttons["Done"]
-        print("🔍 DEBUG: Done button exists: \(doneButton.exists)")
         XCTAssertTrue(doneButton.exists, "Done button should be available")
         doneButton.tap()
 
