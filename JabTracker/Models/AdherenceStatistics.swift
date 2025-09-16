@@ -240,38 +240,53 @@ struct AdherenceStatisticsCalculator {
         let daysWithDoses = Set(dosesByDay.keys)
 
         // Calculate streaks
-        var currentStreak = 0
         var longestStreak = 0
         var tempStreak = 0
-        var isActive = false
+
+        // Track the most recent streak (for current streak calculation)
+        var mostRecentStreakCount = 0
+        var mostRecentStreakEndsToday = false
+        var mostRecentStreakEndsYesterday = false
 
         // Iterate through each day in the period
         var currentDate = calendar.startOfDay(for: periodStart)
         let endDate = calendar.startOfDay(for: periodEnd)
+        let today = calendar.startOfDay(for: Date())
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
 
         while currentDate <= endDate {
             if daysWithDoses.contains(currentDate) {
                 tempStreak += 1
                 longestStreak = max(longestStreak, tempStreak)
 
-                // Check if this is part of current streak (ending today)
-                if calendar.isDateInToday(currentDate) {
-                    currentStreak = tempStreak
-                    isActive = true
-                } else if calendar.isDateInYesterday(currentDate) {
-                    currentStreak = tempStreak
+                // Track if this streak includes today or yesterday
+                if currentDate == today {
+                    mostRecentStreakCount = tempStreak
+                    mostRecentStreakEndsToday = true
+                    mostRecentStreakEndsYesterday = false
+                } else if currentDate == yesterday {
+                    mostRecentStreakCount = tempStreak
+                    mostRecentStreakEndsYesterday = true
+                    mostRecentStreakEndsToday = false  // Will be updated if today also has a dose
                 }
             } else {
-                // Streak broken
+                // Streak broken - reset
                 tempStreak = 0
-                if calendar.isDateInToday(currentDate) {
-                    currentStreak = 0
-                    isActive = false
+                // If we hit today without a dose, clear the recent streak flags
+                if currentDate == today {
+                    if !mostRecentStreakEndsYesterday {
+                        mostRecentStreakCount = 0
+                    }
+                    mostRecentStreakEndsToday = false
                 }
             }
 
             currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
         }
+
+        // Determine current streak and active status
+        let currentStreak = (mostRecentStreakEndsToday || mostRecentStreakEndsYesterday) ? mostRecentStreakCount : 0
+        let isActive = mostRecentStreakEndsToday
 
         return (currentStreak, longestStreak, isActive)
     }
