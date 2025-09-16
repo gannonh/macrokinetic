@@ -81,7 +81,6 @@ created: 2025-01-22T04:47:23Z
 
 # Specific UI test class (RECOMMENDED)
 ./scripts/test.sh ui 1 OnboardingUITests
-./scripts/test.sh ui 1 AuthenticationUITests
 
 # Run specific UI test method (RECOMMENDED)
 ./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow

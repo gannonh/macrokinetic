@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-12T16:35:25Z
-version: 1.1
+last_updated: 2025-09-16T22:39:56Z
+version: 1.2
 author: Claude Code PM System
 ---
 
@@ -94,5 +94,12 @@ JabTracker/
 - **Reusable components**: Design system components for consistency
 - **Test colocation**: Tests organized to mirror source structure
 
+## Calendar Feature Structure Insights (Issue #42)
+- **Calendar feature modularization**: Implemented across Views/ViewModels/Tests structure following established patterns
+- **Stream-based development organization**: Complex UI features benefit from parallel development streams (UI, Statistics, Integration)
+- **Test utilities enhancement**: Enhanced TestUtilities with calendar-specific debugging for improved E2E testing reliability
+- **SwiftLint configuration management**: Different code patterns require careful SwiftLint rule management to prevent framework conflicts
+
 ## Update History
+- 2025-09-16T22:39:56Z: Added calendar feature structure insights from Issue #42 development
 - 2025-09-12T16:35:25Z: Added PM system structure details (231+ files, hooks, settings), dose-tracking epic organization

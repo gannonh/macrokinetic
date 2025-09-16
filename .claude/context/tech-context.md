@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-15T18:21:44Z
-version: 1.3
+last_updated: 2025-09-16T22:39:56Z
+version: 1.4
 author: Claude Code PM System
 ---
 
@@ -113,6 +113,13 @@ author: Claude Code PM System
 - **Element Targeting**: SwiftUI accessibility hierarchy doesn't match visual structure - requires debug-first approach
 - **Test Reliability**: Complex element targeting needs systematic debugging with TestUtilities.debugElements()
 
+### SwiftUI Calendar Integration (Issue #42 Learnings)
+- **SwiftUI Calendar Rendering**: Native Calendar components in XCUITest environment require specialized element finding
+- **XCUIElementQuery vs Array**: XCUIElementQuery doesn't have `.isEmpty` property but Array does - causes compilation errors
+- **SwiftLint Integration Conflicts**: Remove `empty_count` rule to prevent UI testing framework compatibility issues
+- **Accessibility Identifier Reliability**: Complex SwiftUI hierarchies may have unreliable accessibility identifiers requiring fallback strategies
+
 ## Update History
+- 2025-09-16T22:39:56Z: Added SwiftUI calendar integration patterns from Issue #42, XCUIElementQuery limitations
 - 2025-09-15T18:21:44Z: Added testing framework insights from Issue #41, SwiftUI accessibility hierarchy patterns
 - 2025-09-12T16:35:25Z: Added Claude Code PM system (CCPM) details - 49 commands, agent system, workflow integration
