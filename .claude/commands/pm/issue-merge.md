@@ -1,39 +1,53 @@
 ---
 allowed-tools: Read, Write
-description: Merge completed issue from branch to main using GitHub Pull Request workflow
-argument-hint: Issue number (e.g., 42)
+description: Merge completed PR from branch to main using GitHub Pull Request workflow
+argument-hint: [pr-number]
+model: Claude Sonnet 4
 ---
 
-# Issue Merge
+# PR Merge
 
-Merge completed issue from branch to main using GitHub Pull Request workflow.
+Merge completed PR from branch to main using GitHub Pull Request workflow.
 
 ## Quick Check
 
-1. **Determine issue name***
+1. **Check PR status:**
    ```bash
-   issue_name=$(gh issue view $ARGUMENTS --json title -q .title | tr ' ' '-')
-   echo "Issue branch name: issue/${issue_name}"
+   gh pr view $ARGUMENTS --json state,isDraft,headRefName -q '.state + " (draft: " + (.isDraft|tostring) + ") - Branch: " + .headRefName' || echo "❌ PR #$ARGUMENTS not found"
    ```
 
-2. **Verify branch exists:**
+2. **Get branch name from PR:**
    ```bash
-   git branch | grep "issue/{issue_name}" || echo "❌ No branch for issue: $ARGUMENTS"
-   ```
-
-3. **Check PR status:**
-   ```bash
-   gh pr view issue/{issue_name} --json state,isDraft -q '.state + " (draft: " + (.isDraft|tostring) + ")"' || echo "❌ No PR found for issue branch"
+   branch_name=$(gh pr view $ARGUMENTS --json headRefName -q .headRefName)
+   echo "📋 PR #$ARGUMENTS uses branch: $branch_name"
    ```
 
 ## Instructions
+
+The merge process is multi-step. It is possible the user is starting from Step 1, or resuming from a later step in the process. Therefore, your first task is to ask te user what step they would like to start from:
+
+```bash
+echo "At which step would you like to start? (1-7)"
+echo "1. Pre-Merge Validation"
+echo "2. Run Checks & Fix Issues"
+echo "3. Mark PR as Ready for Review"
+echo "4. Request Review"
+echo "5. Merge After Approval"
+echo "6. Post-Merge Cleanup"
+echo "7. Next Steps"
+```
+
+Based on the user's response, proceed to that step and continue through the remaining steps in order.
 
 ### 1. Pre-Merge Validation
 
 Check current branch status:
 ```bash
-# Ensure we're on the issue branch
-git checkout issue/{issue_name}
+# Get branch name from PR
+branch_name=$(gh pr view $ARGUMENTS --json headRefName -q .headRefName)
+
+# Ensure we're on the PR branch
+git checkout $branch_name
 
 # Check for uncommitted changes
 if [[ $(git status --porcelain) ]]; then
@@ -45,7 +59,7 @@ fi
 
 # Update branch with latest changes
 git fetch origin
-git push origin issue/{issue_name}
+git push origin $branch_name
 git status -sb
 ```
 
@@ -67,94 +81,107 @@ git status -sb
 
 If PR is still a draft:
 ```bash
-gh pr ready issue/{issue_name}
-echo "✅ PR marked as ready for review"
-```bash
-# Convert draft to ready PR
-gh pr ready issue/{issue_name}
-echo "✅ PR marked as ready for review"
+gh pr ready $ARGUMENTS
+echo "✅ PR #$ARGUMENTS marked as ready for review"
 ```
 
 ### 4. Request Review
 
 ```bash
-# PR should already exist from issue-start
 # Request review from team members
-gh pr review issue/{issue_name} --request-reviewer @username
+gh pr review $ARGUMENTS --request-reviewer @username
 
 # Check PR status and reviews
 gh pr status
-gh pr view issue/{issue_name}
+gh pr view $ARGUMENTS
 
 echo "🔍 Waiting for code review approval..."
-echo "Monitor PR at: $(gh pr view issue/{issue_name} --json url -q .url)"
+echo "Monitor PR at: $(gh pr view $ARGUMENTS --json url -q .url)"
 ```
 
 ### 5. Merge After Approval
 
 After receiving approval:
 ```bash
-# Get PR number
-pr_number=$(gh pr view issue/{issue_name} --json number -q .number)
-
 # Merge PR with squash
-gh pr merge $pr_number --squash --delete-branch
+gh pr merge $ARGUMENTS --squash --delete-branch
 
-echo "✅ PR #$pr_number merged and branch deleted"
+echo "✅ PR #$ARGUMENTS merged and branch deleted"
 ```
 
 ### 6. Post-Merge Cleanup
 
 After merge completes:
 ```bash
+# Get branch name for cleanup
+branch_name=$(gh pr view $ARGUMENTS --json headRefName -q .headRefName)
+
 # Switch to main and update
 git checkout main
 git pull origin main
 
 # Verify merge completed
 if git log --oneline -5 | grep -q "#$ARGUMENTS"; then
-  echo "✅ Issue #$ARGUMENTS successfully merged to main"
+  echo "✅ PR #$ARGUMENTS successfully merged to main"
 else
-  echo "❌ Issue #$ARGUMENTS not found in main branch history"
+  echo "❌ PR #$ARGUMENTS not found in main branch history"
   exit 1
 fi
 
-# Clean up local branch
-git branch -d issue/{issue_name}
-echo "✅ Local branch deleted: issue/{issue_name}"
+# Clean up local branch (if it exists)
+if git branch | grep -q "$branch_name"; then
+  git branch -d $branch_name
+  echo "✅ Local branch deleted: $branch_name"
+else
+  echo "ℹ️ Local branch $branch_name already deleted"
+fi
 ```
 
 ### 7. Next Steps
 
 ```bash
-echo "
-🎯 Next: Close the issue
-  Run: /pm:issue-close $ARGUMENTS
+# Extract issue number from PR title (format: "Issue #42: Title")
+issue_number=$(gh pr view $ARGUMENTS --json title -q .title | sed -n 's/.*Issue #\([0-9]*\):.*/\1/p')
+
+if [ -n "$issue_number" ]; then
+  echo "
+🎯 Next: Close the associated issue
+  Run: /pm:issue-close $issue_number
 
 This will:
-  - Close GitHub issue #$ARGUMENTS
+  - Close GitHub issue #$issue_number
   - Update epic progress
   - Capture learnings
 "
+else
+  echo "
+ℹ️ No associated issue found in PR title
+PR #$ARGUMENTS has been merged successfully
+"
+fi
 ```
 
 ### 8. Final Output
 
-```
-✅ Issue #$ARGUMENTS Merge Complete
+```bash
+echo "
+✅ PR #$ARGUMENTS Merge Complete
 
 Pull Request:
-  PR #$pr_number: Merged ✓
-  Branch: issue/{issue_name} → main (deleted)
+  PR #$ARGUMENTS: Merged ✓
+  Branch: $branch_name → main (deleted)
 
 Status:
   ✓ PR reviewed and approved
   ✓ Merged with squash commit
   ✓ Branch cleaned up
   ✓ Tests passed
+"
 
-Next Step:
-  Run: /pm:issue-close $ARGUMENTS
+# Show next step if issue number was found
+if [ -n "$issue_number" ]; then
+  echo "Next Step: Run /pm:issue-close $issue_number"
+fi
 ```
 
 ## PR Review Guidelines
