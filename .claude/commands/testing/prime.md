@@ -1,10 +1,12 @@
 ---
+description: Prepare and prime the testing environment by detecting test framework and validating dependencies.
+argument-hint: Additional context or preferences (optional)
 allowed-tools: Read, Write, LS
 ---
 
 # Prime Testing Environment
 
-This command prepares the testing environment by detecting the test framework, validating dependencies, and configuring the test-runner agent for optimal test execution.
+This command prepares the testing environment by detecting the test framework, and validating dependencies.
 
 ## Preflight Checklist
 
@@ -179,42 +181,6 @@ created: [Use REAL datetime from: date -u +"%Y-%m-%dT%H:%M:%SZ"]
 - Wait for each test to complete
 ```
 
-### 4. Configure Test-Runner Agent
-
-Prepare agent context based on framework:
-
-```markdown
-# Test-Runner Agent Configuration
-
-## Project Testing Setup
-- Framework: {framework}
-- Test Location: {directories}
-- Total Tests: {count}
-- Last Run: Never
-
-## Execution Rules
-1. Always use the test-runner agent from `.claude/agents/test-runner.md`
-2. Run with maximum verbosity for debugging
-3. No mock services - use real implementations
-4. Execute tests sequentially - no parallel execution
-5. Capture complete output including stack traces
-6. If test fails, analyze test structure before assuming code issue
-7. Report detailed failure analysis with context
-
-## Test Command Templates
-- Full Suite: `{full_command}`
-- Single File: `{single_file_command}`
-- Pattern Match: `{pattern_command}`
-- Watch Mode: `{watch_command}` (if available)
-
-## Common Issues to Check
-- Environment variables properly set
-- Test database/services running
-- Dependencies installed
-- Proper file permissions
-- Clean test state between runs
-```
-
 ### 5. Validation Steps
 
 After configuration:
@@ -238,12 +204,6 @@ After configuration:
   - Pattern: {test_file_pattern}
   - Directories: {test_directories}
   - Utilities: {test_helpers}
-
-🤖 Agent Configuration:
-  ✅ Test-runner agent configured
-  ✅ Verbose output enabled
-  ✅ Sequential execution set
-  ✅ Real services (no mocks)
 
 ⚡ Ready Commands:
   - Run all tests: /testing:run

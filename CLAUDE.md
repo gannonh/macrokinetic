@@ -14,18 +14,6 @@ The file-analyzer agent is an expert in extracting and summarizing critical info
 
 The code-analyzer agent is an expert in code analysis, logic tracing, and vulnerability detection. It provides concise, actionable summaries that preserve essential information while dramatically reducing context usage.
 
-### 3. Always use the test-runner sub-agent to run tests and analyze the test results.
-
-Using the test-runner agent ensures:
-
-- Full test output is captured for debugging
-- Main conversation stays clean and focused
-- Context usage is optimized
-- All issues are properly surfaced
-- No approval dialogs interrupt the workflow
-
-**IMPORTANT**: DO NOT use test-runner to write or fix failing tests. Use it only to run tests and analyze results.
-
 ## Philosophy
 
 ### Error Handling
