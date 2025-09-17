@@ -11,6 +11,7 @@ git checkout main
 git pull origin main
 
 # Create branch for issue
+# where {name} is [issue-number]-[issue-name], e.g. 1234-add-login
 git checkout -b issue/{name}
 git push -u origin issue/{name}
 ```

@@ -17,9 +17,17 @@ Begin work on a GitHub issue with parallel agents based on work stream analysis.
 
 1. **Get issue details:**
    ```bash
-   gh issue view $ARGUMENTS --json state,title,labels,body
+   issue_data=$(gh issue view $ARGUMENTS --json state,title,labels,body)
+   issue_title=$(echo "$issue_data" | jq -r '.title')
+
+   if [ $? -ne 0 ] || [ -z "$issue_title" ]; then
+     echo "❌ Cannot access issue #$ARGUMENTS. Check number or run: gh auth login"
+     exit 1
+   fi
+
+   echo "📝 Issue #$ARGUMENTS: $issue_title"
+   echo "$issue_data"
    ```
-   If it fails: "❌ Cannot access issue #$ARGUMENTS. Check number or run: gh auth login"
 
 2. **Find local task file:**
    - First check if `.claude/epics/*/$ARGUMENTS.md` exists (new naming)
@@ -40,8 +48,12 @@ Begin work on a GitHub issue with parallel agents based on work stream analysis.
 
 Create a new branch for this specific issue:
 ```bash
-# Extract issue name from task file or create descriptive name
-issue_name={extracted_from_task_file_or_derived_from_title}
+# Use issue title captured in Quick Check to construct branch name
+# Convert title to branch-friendly format (lowercase, replace spaces/special chars with hyphens)
+# Example: Issue #42 "Calendar Integration" becomes "42-calendar-integration"
+issue_name="$ARGUMENTS-$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
+
+echo "🌿 Branch name: issue/$issue_name"
 
 # Ensure main is up to date
 git checkout main

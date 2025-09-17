@@ -1,8 +1,8 @@
 ---
-allowed-tools: Read, Write
+allowed-tools: Read, Write, Bash(gh pr view:*), Bash(branch_name:*), Bash(echo:*)
 description: Merge completed PR from branch to main using GitHub Pull Request workflow
 argument-hint: [pr-number]
-model: Claude Sonnet 4
+model: claude-sonnet-4-20250514
 ---
 
 # PR Merge
@@ -27,14 +27,15 @@ Merge completed PR from branch to main using GitHub Pull Request workflow.
 The merge process is multi-step. It is possible the user is starting from Step 1, or resuming from a later step in the process. Therefore, your first task is to ask te user what step they would like to start from:
 
 ```bash
-echo "At which step would you like to start? (1-7)"
+echo "At which step would you like to start? (1-8)"
 echo "1. Pre-Merge Validation"
 echo "2. Run Checks & Fix Issues"
 echo "3. Mark PR as Ready for Review"
 echo "4. Request Review"
-echo "5. Merge After Approval"
-echo "6. Post-Merge Cleanup"
-echo "7. Next Steps"
+echo "5. Document PR Comments & Action Items"
+echo "6. Merge After Approval"
+echo "7. Post-Merge Cleanup"
+echo "8. Next Steps"
 ```
 
 Based on the user's response, proceed to that step and continue through the remaining steps in order.
@@ -87,19 +88,134 @@ echo "✅ PR #$ARGUMENTS marked as ready for review"
 
 ### 4. Request Review
 
+Ask user to requests reviewers on github, monitor status, then resume this merge process from Step 5 once he comments are in. 
+
+Format as follows:
+
+---
+Step 4: Request Review
+
+  Action Required:
+  1. Go to the PR URL: https://github.com/gannonh/jab-tracker-ios/pull/$ARGUMENTS
+  2. Request reviewers from your team members
+  3. Monitor the PR for review comments and approvals
+  4. Once all reviews are completed, come back and resume this merge process from Step 5: `/pm:issue-merge $ARGUMENTS`
+---
+
+
+### 5. Document PR Comments & Action Items
+
+Get Current DateTime
+- Run: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
+- Store for updating `created_at` field in modified files
+
+Extract issue number and download PR comments to create action documentation:
 ```bash
-# Request review from team members
-gh pr review $ARGUMENTS --request-reviewer @username
+# Extract issue number from PR title (format: "Issue #42: Title")
+issue_number=$(gh pr view $ARGUMENTS --json title -q .title | sed -n 's/.*Issue #\([0-9]*\):.*/\1/p')
 
-# Check PR status and reviews
-gh pr status
-gh pr view $ARGUMENTS
+if [ -z "$issue_number" ]; then
+  echo "❌ Cannot extract issue number from PR title"
+  echo "Expected format: 'Issue #XX: Description'"
+  gh pr view $ARGUMENTS --json title -q .title
+  exit 1
+fi
 
-echo "🔍 Waiting for code review approval..."
-echo "Monitor PR at: $(gh pr view $ARGUMENTS --json url -q .url)"
+# Find epic directory
+epic_dir=""
+for dir in .claude/epics/*/; do
+  if [ -d "$dir" ]; then
+    epic_dir="$dir"
+    break
+  fi
+done
+
+if [ -z "$epic_dir" ]; then
+  echo "❌ No epic directory found in .claude/epics/"
+  exit 1
+fi
+
+# Create issue documentation file
+issue_doc_file="${epic_dir}${issue_number}-review.md"
+
+echo "📝 Creating issue documentation: $issue_doc_file"
+
+# Download PR comments and create documentation
+cat > "$issue_doc_file" << EOF
+# Issue #${issue_number} - PR Comments & Action Items
+
+**PR**: #${ARGUMENTS}
+**Date**: $created_at
+**Epic**: $(basename "$epic_dir")
+
+## PR Summary
+
+$(gh pr view $ARGUMENTS --json title,body -q '.title + "\n\n" + .body')
+
+## Comments & Reviews
+
+$(gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | "### Comment by @" + .author.login + " (" + .createdAt + ")\n\n" + .body + "\n"')
+
+$(gh api repos/:owner/:repo/pulls/$ARGUMENTS/reviews --jq '.[] | "### Review by @" + .user.login + " (" + .submitted_at + ")\n\n**State**: " + .state + "\n\n" + .body + "\n"')
+
+## Action Items to Resolve
+
+<!-- Template for documenting actions needed before merge -->
+
+### Code Changes Required
+- [ ] **Action Item 1**: Description of required change
+  - **Context**: Reference to specific comment/review
+  - **Priority**: High/Medium/Low
+  - **Files affected**: List of files
+
+- [ ] **Action Item 2**: Description of required change
+  - **Context**: Reference to specific comment/review
+  - **Priority**: High/Medium/Low
+  - **Files affected**: List of files
+
+### Documentation Updates
+- [ ] **Doc Update 1**: Description of documentation change needed
+  - **Context**: Reference to comment requesting clarification
+  - **Files to update**: List of documentation files
+
+### Testing Requirements
+- [ ] **Test Addition 1**: Description of additional test coverage needed
+  - **Context**: Reference to review feedback
+  - **Test files**: List of test files to modify/create
+
+### Questions to Resolve
+- [ ] **Question 1**: Description of unresolved question
+  - **Context**: Reference to specific comment thread
+  - **Stakeholder**: Who needs to provide answer
+
+## Completion Checklist
+
+- [ ] All code changes implemented and tested
+- [ ] Documentation updates completed
+- [ ] Additional tests added and passing
+- [ ] All questions resolved with stakeholders
+- [ ] Final review approval received
+- [ ] Ready for merge
+
+## Notes
+
+<!-- Add any additional context, decisions made, or important information -->
+
+EOF
+
+echo "✅ Issue documentation created: $issue_doc_file"
+echo ""
+echo "📋 Next steps:"
+echo "1. Review the downloaded comments and action items"
+echo "2. Edit $issue_doc_file to add specific action items"
+echo "3. Address all action items before proceeding to merge"
+echo "4. Update checkboxes as items are completed"
+echo ""
+echo "📖 To view the documentation:"
+echo "   cat $issue_doc_file"
 ```
 
-### 5. Merge After Approval
+### 6. Merge After Approval
 
 After receiving approval:
 ```bash
@@ -109,7 +225,7 @@ gh pr merge $ARGUMENTS --squash --delete-branch
 echo "✅ PR #$ARGUMENTS merged and branch deleted"
 ```
 
-### 6. Post-Merge Cleanup
+### 7. Post-Merge Cleanup
 
 After merge completes:
 ```bash
@@ -137,7 +253,7 @@ else
 fi
 ```
 
-### 7. Next Steps
+### 8. Next Steps
 
 ```bash
 # Extract issue number from PR title (format: "Issue #42: Title")
@@ -161,7 +277,7 @@ PR #$ARGUMENTS has been merged successfully
 fi
 ```
 
-### 8. Final Output
+### 9. Final Output
 
 ```bash
 echo "
