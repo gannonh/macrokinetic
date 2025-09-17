@@ -135,10 +135,10 @@ class AuthenticationManager: NSObject, ObservableObject {
 
             try context.save()
             Self.logger.info("""
-                ✅ AuthenticationManager: App data reset successfully - \
-                Deleted \(users.count) users, \(profiles.count) profiles, \
-                \(doses.count) doses, \(titrations.count) titrations
-                """)
+            ✅ AuthenticationManager: App data reset successfully - \
+            Deleted \(users.count) users, \(profiles.count) profiles, \
+            \(doses.count) doses, \(titrations.count) titrations
+            """)
         } catch {
             Self.logger.error("Failed to reset app data: \(error, privacy: .public)")
         }

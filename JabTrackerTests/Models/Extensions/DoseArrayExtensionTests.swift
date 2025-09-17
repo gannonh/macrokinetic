@@ -3,15 +3,14 @@
 //  JabTrackerTests
 //
 
-import Testing
 import Foundation
-import SwiftData
 @testable import JabTracker
+import SwiftData
+import Testing
 
 @MainActor
 @Suite("Dose Array Extension Tests")
 struct DoseArrayExtensionTests {
-
     // MARK: - Helper Methods
 
     private func createTestDoses(in context: ModelContext) -> [Dose] {
@@ -23,8 +22,7 @@ struct DoseArrayExtensionTests {
 
         let dose1 = Dose(
             amount: 1.0,
-            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 15)) ?? Date()
-        )
+            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 15)) ?? Date())
         dose1.site = "Left arm"
         dose1.notes = "Morning dose"
         dose1.medication = semaglutide
@@ -32,8 +30,7 @@ struct DoseArrayExtensionTests {
 
         let dose2 = Dose(
             amount: 2.5,
-            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 16)) ?? Date()
-        )
+            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 16)) ?? Date())
         dose2.site = "Right thigh"
         dose2.notes = "Evening dose"
         dose2.skipped = true
@@ -42,16 +39,14 @@ struct DoseArrayExtensionTests {
 
         let dose3 = Dose(
             amount: 0.5,
-            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 17)) ?? Date()
-        )
+            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 17)) ?? Date())
         dose3.site = "Abdomen"
         dose3.medication = semaglutide
         context.insert(dose3)
 
         let dose4 = Dose(
             amount: 1.5,
-            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 18)) ?? Date()
-        )
+            timestamp: calendar.date(from: DateComponents(year: 2024, month: 1, day: 18)) ?? Date())
         dose4.site = "Left arm"
         dose4.notes = "Reduced dose"
         dose4.medication = semaglutide
@@ -65,10 +60,10 @@ struct DoseArrayExtensionTests {
     // MARK: - Filtering Tests
 
     @Test("Filtered method works with search text")
-    func testFilteredWithSearchText() throws {
+    func filteredWithSearchText() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
 
         let morningResults = doses.filtered(searchText: "morning")
         #expect(morningResults.count == 1)
@@ -82,10 +77,10 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Filtered method works with medication filter")
-    func testFilteredWithMedication() throws {
+    func filteredWithMedication() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
 
         let semaglutideResults = doses.filtered(medication: "semaglutide")
         #expect(semaglutideResults.count == 3)
@@ -98,10 +93,10 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Filtered method works with injection site filter")
-    func testFilteredWithInjectionSite() throws {
+    func filteredWithInjectionSite() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
 
         let leftArmResults = doses.filtered(injectionSite: "Left arm")
         #expect(leftArmResults.count == 2)
@@ -114,14 +109,15 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Filtered method works with date range filter")
-    func testFilteredWithDateRange() throws {
+    func filteredWithDateRange() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let calendar = Calendar.current
 
         guard let startDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 16)),
-              let endDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 17)) else {
+              let endDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 17))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -132,10 +128,10 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Filtered method works with skipped filter")
-    func testFilteredWithSkippedFilter() throws {
+    func filteredWithSkippedFilter() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
 
         let includingSkipped = doses.filtered(includeSkipped: true)
         #expect(includingSkipped.count == 4)
@@ -145,88 +141,87 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Filtered method works with amount range filter")
-    func testFilteredWithAmountRange() throws {
+    func filteredWithAmountRange() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
 
-        let lowDoseRange = 0.5...1.5
+        let lowDoseRange = 0.5 ... 1.5
         let lowDoseResults = doses.filtered(amountRange: lowDoseRange)
         #expect(lowDoseResults.count == 3) // 1.0, 0.5, 1.5
 
-        let highDoseRange = 2.0...3.0
+        let highDoseRange = 2.0 ... 3.0
         let highDoseResults = doses.filtered(amountRange: highDoseRange)
         #expect(highDoseResults.count == 1) // 2.5
     }
 
     @Test("Filtered method works with multiple filters")
-    func testFilteredWithMultipleFilters() throws {
+    func filteredWithMultipleFilters() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
 
         let results = doses.filtered(
             searchText: "arm",
             medication: "semaglutide",
-            includeSkipped: false
-        )
+            includeSkipped: false)
         #expect(results.count == 2) // Both left arm semaglutide doses, excluding skipped
     }
 
     // MARK: - Sorting Tests
 
     @Test("Sort by timestamp ascending works correctly")
-    func testSortByTimestampAscending() throws {
+    func sortByTimestampAscending() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let sorted = doses.sortedByTimestamp(ascending: true)
 
         #expect(sorted.count == 4)
         // Should be sorted from earliest to latest (Jan 15, 16, 17, 18)
-        for index in 0..<sorted.count - 1 {
+        for index in 0 ..< sorted.count - 1 {
             #expect(sorted[index].timestamp <= sorted[index + 1].timestamp)
         }
     }
 
     @Test("Sort by timestamp descending works correctly")
-    func testSortByTimestampDescending() throws {
+    func sortByTimestampDescending() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let sorted = doses.sortedByTimestamp(ascending: false)
 
         #expect(sorted.count == 4)
         // Should be sorted from latest to earliest (Jan 18, 17, 16, 15)
-        for index in 0..<sorted.count - 1 {
+        for index in 0 ..< sorted.count - 1 {
             #expect(sorted[index].timestamp >= sorted[index + 1].timestamp)
         }
     }
 
     @Test("Sort by amount ascending works correctly")
-    func testSortByAmountAscending() throws {
+    func sortByAmountAscending() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let sorted = doses.sortedByAmount(ascending: true)
 
         #expect(sorted.count == 4)
         // Should be sorted from smallest to largest amount (0.5, 1.0, 1.5, 2.5)
-        for index in 0..<sorted.count - 1 {
+        for index in 0 ..< sorted.count - 1 {
             #expect(sorted[index].amount <= sorted[index + 1].amount)
         }
     }
 
     @Test("Sort by amount descending works correctly")
-    func testSortByAmountDescending() throws {
+    func sortByAmountDescending() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let sorted = doses.sortedByAmount(ascending: false)
 
         #expect(sorted.count == 4)
         // Should be sorted from largest to smallest amount (2.5, 1.5, 1.0, 0.5)
-        for index in 0..<sorted.count - 1 {
+        for index in 0 ..< sorted.count - 1 {
             #expect(sorted[index].amount >= sorted[index + 1].amount)
         }
     }
@@ -234,10 +229,10 @@ struct DoseArrayExtensionTests {
     // MARK: - Grouping Tests
 
     @Test("Group by date works correctly")
-    func testGroupByDate() throws {
+    func groupByDate() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let grouped = doses.groupedByDate()
 
         #expect(grouped.count == 4) // 4 different dates
@@ -252,9 +247,10 @@ struct DoseArrayExtensionTests {
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
 
-        for index in 0..<grouped.count - 1 {
+        for index in 0 ..< grouped.count - 1 {
             guard let firstDate = formatter.date(from: grouped[index].0),
-                  let secondDate = formatter.date(from: grouped[index + 1].0) else {
+                  let secondDate = formatter.date(from: grouped[index + 1].0)
+            else {
                 Issue.record("Failed to parse dates in grouped results")
                 continue
             }
@@ -263,13 +259,14 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Group by date with multiple doses per day")
-    func testGroupByDateMultipleDosesPerDay() throws {
+    func groupByDateMultipleDosesPerDay() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
         guard let sameDay = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15)),
-              let sameDayEvening = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 18)) else {
+              let sameDayEvening = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 18))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -300,7 +297,7 @@ struct DoseArrayExtensionTests {
     func testMedicationCounts() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let counts = doses.medicationCounts
 
         #expect(counts["semaglutide"] == 3)
@@ -309,7 +306,7 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Medication counts handle nil medication")
-    func testMedicationCountsWithNilMedication() throws {
+    func medicationCountsWithNilMedication() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -338,7 +335,7 @@ struct DoseArrayExtensionTests {
     func testInjectionSiteCounts() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
-        let doses = createTestDoses(in: context)
+        let doses = self.createTestDoses(in: context)
         let counts = doses.injectionSiteCounts
 
         #expect(counts["Left arm"] == 2)
@@ -348,7 +345,7 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Injection site counts handle nil site")
-    func testInjectionSiteCountsWithNilSite() throws {
+    func injectionSiteCountsWithNilSite() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -373,7 +370,7 @@ struct DoseArrayExtensionTests {
     // MARK: - Edge Cases
 
     @Test("Empty array filtering works correctly")
-    func testEmptyArrayFiltering() throws {
+    func emptyArrayFiltering() throws {
         let emptyDoses: [Dose] = []
 
         let filtered = emptyDoses.filtered(searchText: "test")
@@ -393,7 +390,7 @@ struct DoseArrayExtensionTests {
     }
 
     @Test("Single dose array works correctly")
-    func testSingleDoseArray() throws {
+    func singleDoseArray() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 

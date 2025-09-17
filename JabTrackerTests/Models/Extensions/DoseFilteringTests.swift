@@ -3,19 +3,18 @@
 //  JabTrackerTests
 //
 
-import Testing
 import Foundation
-import SwiftData
 @testable import JabTracker
+import SwiftData
+import Testing
 
 @MainActor
 @Suite("Dose Filtering Tests")
 struct DoseFilteringTests {
-
     // MARK: - Text Search Tests
 
     @Test("Text search matches notes")
-    func testTextSearchInNotes() throws {
+    func textSearchInNotes() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -31,7 +30,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Text search matches injection site")
-    func testTextSearchInSite() throws {
+    func textSearchInSite() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -47,15 +46,14 @@ struct DoseFilteringTests {
     }
 
     @Test("Text search matches medication names")
-    func testTextSearchInMedication() throws {
+    func textSearchInMedication() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let medication = MedicationProfile(
             genericName: "semaglutide",
             brandName: "Ozempic",
-            currentDose: 1.0
-        )
+            currentDose: 1.0)
         context.insert(medication)
 
         let dose = Dose(amount: 1.0, timestamp: Date())
@@ -70,7 +68,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Text search matches dose amount")
-    func testTextSearchInAmount() throws {
+    func textSearchInAmount() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -84,7 +82,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Text search matches formatted date")
-    func testTextSearchInDate() throws {
+    func textSearchInDate() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -105,7 +103,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Text search with nil medication")
-    func testTextSearchWithNilMedication() throws {
+    func textSearchWithNilMedication() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -122,14 +120,15 @@ struct DoseFilteringTests {
     // MARK: - Date Filtering Tests
 
     @Test("Date range filtering works correctly")
-    func testDateRangeFiltering() throws {
+    func dateRangeFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
         guard let baseDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15)),
               let startDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 10)),
-              let endDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 20)) else {
+              let endDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 20))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -145,7 +144,8 @@ struct DoseFilteringTests {
 
         // Test out of range
         guard let earlyDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 5)),
-              let lateDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 25)) else {
+              let lateDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 25))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -155,14 +155,15 @@ struct DoseFilteringTests {
     }
 
     @Test("Same date checking works correctly")
-    func testSameDateChecking() throws {
+    func sameDateChecking() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
         guard let date = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 10)),
               let sameDay = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 18)),
-              let differentDay = calendar.date(from: DateComponents(year: 2024, month: 1, day: 16)) else {
+              let differentDay = calendar.date(from: DateComponents(year: 2024, month: 1, day: 16))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -177,14 +178,15 @@ struct DoseFilteringTests {
     }
 
     @Test("Week filtering works correctly")
-    func testWeekFiltering() throws {
+    func weekFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
         guard let monday = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15)), // Monday
               let wednesday = calendar.date(from: DateComponents(year: 2024, month: 1, day: 17)), // Wednesday
-              let nextWeek = calendar.date(from: DateComponents(year: 2024, month: 1, day: 22)) else { // Next Monday
+              let nextWeek = calendar.date(from: DateComponents(year: 2024, month: 1, day: 22))
+        else { // Next Monday
             Issue.record("Failed to create test dates")
             return
         }
@@ -199,14 +201,15 @@ struct DoseFilteringTests {
     }
 
     @Test("Month filtering works correctly")
-    func testMonthFiltering() throws {
+    func monthFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
         guard let january15 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15)),
               let january30 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 30)),
-              let february1 = calendar.date(from: DateComponents(year: 2024, month: 2, day: 1)) else {
+              let february1 = calendar.date(from: DateComponents(year: 2024, month: 2, day: 1))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -223,7 +226,7 @@ struct DoseFilteringTests {
     // MARK: - Medication Filtering Tests
 
     @Test("Medication type filtering works correctly")
-    func testMedicationTypeFiltering() throws {
+    func medicationTypeFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -254,7 +257,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Brand filtering works correctly")
-    func testBrandFiltering() throws {
+    func brandFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -277,7 +280,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Multiple medication filtering works correctly")
-    func testMultipleMedicationFiltering() throws {
+    func multipleMedicationFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -317,7 +320,7 @@ struct DoseFilteringTests {
     // MARK: - Site Filtering Tests
 
     @Test("Injection site filtering works correctly")
-    func testInjectionSiteFiltering() throws {
+    func injectionSiteFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -342,7 +345,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Multiple injection site filtering works correctly")
-    func testMultipleInjectionSiteFiltering() throws {
+    func multipleInjectionSiteFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -375,7 +378,7 @@ struct DoseFilteringTests {
     // MARK: - Dose Amount Filtering Tests
 
     @Test("Amount range filtering works correctly")
-    func testAmountRangeFiltering() throws {
+    func amountRangeFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -397,7 +400,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Amount equals with tolerance works correctly")
-    func testAmountEqualsWithTolerance() throws {
+    func amountEqualsWithTolerance() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -415,7 +418,7 @@ struct DoseFilteringTests {
     // MARK: - Status Filtering Tests
 
     @Test("Completion status filtering works correctly")
-    func testCompletionStatusFiltering() throws {
+    func completionStatusFiltering() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -436,7 +439,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Photo attachment detection works correctly")
-    func testPhotoAttachmentDetection() throws {
+    func photoAttachmentDetection() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -454,7 +457,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Notes detection works correctly")
-    func testNotesDetection() throws {
+    func notesDetection() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -479,14 +482,15 @@ struct DoseFilteringTests {
     // MARK: - Time-based Filtering Tests
 
     @Test("Morning dose detection works correctly")
-    func testMorningDoseDetection() throws {
+    func morningDoseDetection() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
         guard let morningTime = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 8)),
               let afternoonTime = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 14)),
-              let noonTime = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 12)) else {
+              let noonTime = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 12))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -505,14 +509,15 @@ struct DoseFilteringTests {
     }
 
     @Test("Evening dose detection works correctly")
-    func testEveningDoseDetection() throws {
+    func eveningDoseDetection() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
         guard let eveningTime = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 19)),
               let afternoonTime = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 14)),
-              let sixPM = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 18)) else {
+              let sixPM = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 18))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
@@ -531,7 +536,7 @@ struct DoseFilteringTests {
     }
 
     @Test("Weekend dose detection works correctly")
-    func testWeekendDoseDetection() throws {
+    func weekendDoseDetection() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -539,7 +544,8 @@ struct DoseFilteringTests {
         // January 13, 2024 is a Saturday, January 14 is Sunday, January 15 is Monday
         guard let saturday = calendar.date(from: DateComponents(year: 2024, month: 1, day: 13)),
               let sunday = calendar.date(from: DateComponents(year: 2024, month: 1, day: 14)),
-              let monday = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15)) else {
+              let monday = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15))
+        else {
             Issue.record("Failed to create test dates")
             return
         }
