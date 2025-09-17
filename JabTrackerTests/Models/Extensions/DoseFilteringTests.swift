@@ -89,7 +89,9 @@ struct DoseFilteringTests {
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
-        guard let january = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)) else {
+        guard let january = calendar.date(
+            from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)
+        ) else {
             Issue.record("Failed to create test date")
             return
         }
@@ -581,7 +583,9 @@ struct DoseFilteringTests {
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
-        guard let testDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)) else {
+        guard let testDate = calendar.date(
+            from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)
+        ) else {
             Issue.record("Failed to create test date")
             return
         }
@@ -603,7 +607,9 @@ struct DoseFilteringTests {
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
-        guard let testDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)) else {
+        guard let testDate = calendar.date(
+            from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)
+        ) else {
             Issue.record("Failed to create test date")
             return
         }
@@ -625,7 +631,9 @@ struct DoseFilteringTests {
         let context = controller.container.mainContext
 
         let calendar = Calendar.current
-        guard let testDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)) else {
+        guard let testDate = calendar.date(
+            from: DateComponents(year: 2024, month: 1, day: 15, hour: 10, minute: 30)
+        ) else {
             Issue.record("Failed to create test date")
             return
         }
