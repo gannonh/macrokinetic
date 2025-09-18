@@ -1,0 +1,170 @@
+//
+//  PKEngineUITests.swift
+//  JabTrackerUITests
+//
+//  E2E acceptance tests for pharmacokinetics concentration display
+//  These tests define the "done" criteria for the concentration display feature
+//
+
+import XCTest
+
+@MainActor
+final class PKEngineUITests: XCTestCase {
+
+    private var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        continueAfterFailure = false
+
+        app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launch()
+    }
+
+    override func tearDownWithError() throws {
+        app = nil
+        try super.tearDownWithError()
+    }
+
+    // MARK: - Concentration Display E2E Acceptance Tests
+
+    /// Acceptance Test: Dashboard shows current drug concentration in real-time
+    /// Given: User has logged doses for a medication
+    /// When: User views the dashboard
+    /// Then: Current concentration level is displayed accurately
+    /// And: Concentration updates when new doses are added
+    func testCurrentConcentrationDisplayOnDashboard() throws {
+        // TODO: Implement E2E test for current concentration display
+        // 1. Navigate to onboarding and set up user with semaglutide medication
+        // 2. Log initial dose through quick dose entry
+        // 3. Navigate to dashboard (home tab)
+        // 4. Verify concentration card is visible with proper accessibility identifiers
+        // 5. Verify current concentration value is displayed (should be > 0)
+        // 6. Log another dose and verify concentration updates
+        // 7. Wait and verify concentration decreases over time (simulated time passage)
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+
+    /// Acceptance Test: Peak and trough levels are calculated and displayed correctly
+    /// Given: User has an active medication with dose history
+    /// When: User views concentration details on dashboard
+    /// Then: Peak level timing and value are shown
+    /// And: Trough level timing and value are shown
+    /// And: Peak occurs at medication-specific time after injection
+    func testPeakAndTroughLevelCalculations() throws {
+        // TODO: Implement E2E test for peak/trough level display
+        // 1. Set up user with semaglutide (7-day dosing, specific peak time)
+        // 2. Log a dose and note the timestamp
+        // 3. Navigate to dashboard concentration card
+        // 4. Verify peak level shows correct time (4-16 hours for semaglutide)
+        // 5. Verify peak level value accounts for bioavailability
+        // 6. Verify next trough level is calculated correctly
+        // 7. Test with different medications to ensure medication-specific timing
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+
+    /// Acceptance Test: Steady-state progress is shown as percentage with helpful context
+    /// Given: User has been taking medication for multiple weeks
+    /// When: User views the concentration card
+    /// Then: Steady-state progress is shown as percentage (0-100%)
+    /// And: Clear explanation of what steady-state means
+    /// And: Typical timeframe to reach steady-state is indicated
+    func testSteadyStateProgressDisplay() throws {
+        // TODO: Implement E2E test for steady-state progress
+        // 1. Set up user with regular dosing pattern over multiple weeks
+        // 2. Navigate to dashboard concentration display
+        // 3. Verify steady-state progress shows as percentage
+        // 4. Verify progress increases with consistent dosing
+        // 5. Verify helpful text explains steady-state concept
+        // 6. Test edge case: irregular dosing affects steady-state progress
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+
+    /// Acceptance Test: Concentration levels display in user-friendly format with visual indicators
+    /// Given: User has current concentration data
+    /// When: User views concentration information
+    /// Then: Concentration values are formatted appropriately (2 decimal places)
+    /// And: Visual indicators show if levels are in therapeutic range
+    /// And: Units are clearly displayed
+    /// And: Color coding helps interpret levels (low/normal/high)
+    func testConcentrationDisplayFormatting() throws {
+        // TODO: Implement E2E test for concentration display formatting
+        // 1. Set up user with known concentration levels
+        // 2. Navigate to concentration display
+        // 3. Verify concentration values show 2 decimal places
+        // 4. Verify units are clearly labeled
+        // 5. Verify visual indicators (colors/icons) for level interpretation
+        // 6. Test accessibility of color coding (VoiceOver descriptions)
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+
+    /// Acceptance Test: Concentration card integrates seamlessly with dashboard layout
+    /// Given: Dashboard displays multiple cards and information
+    /// When: User views the dashboard
+    /// Then: Concentration card fits well within overall layout
+    /// And: Card can be tapped for more detailed information
+    /// And: Card shows summary info at glance (current level, next dose timing)
+    /// And: Card updates smoothly without disrupting other UI elements
+    func testConcentrationCardDashboardIntegration() throws {
+        // TODO: Implement E2E test for dashboard integration
+        // 1. Set up user with complete medication profile
+        // 2. Navigate to dashboard
+        // 3. Verify concentration card is positioned appropriately
+        // 4. Verify card shows key information at a glance
+        // 5. Test tapping card for detailed view (if implemented)
+        // 6. Verify card doesn't interfere with other dashboard elements
+        // 7. Test card updates without layout disruption
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+
+    /// Acceptance Test: Multiple medications display separate concentration calculations
+    /// Given: User has multiple active medications
+    /// When: User views dashboard concentration information
+    /// Then: Each medication shows separate concentration data
+    /// And: Calculations are independent per medication
+    /// And: User can distinguish between different medication levels
+    func testMultipleMedicationConcentrations() throws {
+        // TODO: Implement E2E test for multiple medication handling
+        // 1. Set up user with multiple active medications (e.g., semaglutide + tirzepatide)
+        // 2. Log doses for both medications
+        // 3. Navigate to dashboard
+        // 4. Verify separate concentration displays for each medication
+        // 5. Verify calculations are independent (no cross-contamination)
+        // 6. Verify clear labeling to distinguish medications
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+
+    /// Acceptance Test: Performance - concentration calculations complete quickly
+    /// Given: User has extensive dose history (50+ doses)
+    /// When: User navigates to dashboard
+    /// Then: Concentration calculations complete within 50ms
+    /// And: Dashboard loads smoothly without lag
+    /// And: Updates are responsive during dose entry
+    func testConcentrationCalculationPerformance() throws {
+        // TODO: Implement E2E test for calculation performance
+        // 1. Set up user with large dose history (simulate 50+ doses)
+        // 2. Measure time for dashboard to display concentration data
+        // 3. Verify calculations complete quickly (< 50ms requirement)
+        // 4. Test responsiveness during dose entry workflow
+        // 5. Verify smooth updates without UI blocking
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+
+    /// Acceptance Test: Error handling when concentration data is unavailable
+    /// Given: User has no dose history or incomplete medication setup
+    /// When: User views dashboard concentration area
+    /// Then: Helpful message explains why concentration data is unavailable
+    /// And: Clear guidance on how to enable concentration tracking
+    /// And: No crashes or empty states without explanation
+    func testConcentrationErrorStates() throws {
+        // TODO: Implement E2E test for error/empty states
+        // 1. Set up user with no medication profiles
+        // 2. Navigate to dashboard
+        // 3. Verify helpful message about setting up medications
+        // 4. Test with incomplete medication setup (no doses)
+        // 5. Verify guidance leads user to appropriate setup flow
+        // 6. Test with corrupted/invalid dose data
+        throw XCTSkip("E2E acceptance test stub - implementation pending")
+    }
+}
