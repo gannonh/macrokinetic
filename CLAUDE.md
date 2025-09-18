@@ -25,7 +25,6 @@ The code-analyzer agent is an expert in code analysis, logic tracing, and vulner
 
 ### Testing
 
-- Always use the test-runner agent to execute tests.
 - Do not use mock services for anything ever.
 - Do not move on to the next test until the current test is complete.
 - If the test fails, consider checking if the test is structured correctly before deciding we need to refactor the codebase.
@@ -74,10 +73,15 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 
 ### Convenience Scripts
 
+#### Building
+
 ```bash
 # Build project
 ./scripts/build.sh
+```
+#### Testing
 
+```bash
 # Run tests with automatic logging to ./logs directory
 ./scripts/test.sh unit 1              # Unit tests with logging
 ./scripts/test.sh ui 1 OnboardingUITests  # Run specific UI test class (RECOMMENDED)
@@ -92,10 +96,10 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 
 # View test results
 cat logs/latest/output.txt            # Latest test output
+```
+#### Fulll CI Check Suite
 
-# Generate documentation
-./scripts/docs.sh
-
+```bash
 # Run full CI check suite (recommended before PR merge)
 ./scripts/check-all.sh --skip-ui   # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
 ```
