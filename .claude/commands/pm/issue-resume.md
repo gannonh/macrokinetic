@@ -146,45 +146,71 @@ Task:
 
     Branch: issue/{issue_name}
     Your stream: {stream_name}
-    
-    RESUMING CONTEXT:
-    - Previous work completed: {summary_of_last_work}
-    - Current state: {current_stream_status}
-    - Files in progress: {list_of_modified_files}
-    - Last session notes: {last_progress_notes}
-    
-    Your continuation scope:
-    - Files to continue working on: {file_patterns}
-    - Work to complete: {remaining_work_description}
-    - Blockers to resolve: {any_known_blockers}
-    
+
+    Your scope:
+    - Files to modify: {file_patterns}
+    - Work to complete: {stream_description}
+
     Requirements:
     1. Read full task from: .claude/epics/{epic_name}/{task_file}
-    2. Review your stream progress: .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
-    3. Check git status on branch: git status, git diff
-    4. Continue from where you left off - don't restart completed work
-    5. Commit frequently with format: "Issue #$ARGUMENTS: {specific change}"
-    6. Update progress in: .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
-    7. Add new files to coverage-config.json
-    8. Follow coordination rules in rules/agent-coordination.md
+    2. Work ONLY in your assigned files in the current directory
+    3. Commit frequently with format: "Issue #$1: {specific change}"
+    4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$1/stream-{X}.md
+    5. Add new files to coverage-config.json
+    6. Follow coordination rules in /rules/agent-coordination.md
+    7. For user facing features/components, stub E2E acceptance tests that define "done"
+    8. Write tests but DO NOT run them (to avoid conflicts with other streams)
 
-    CONTINUATION STRATEGY:
-    - If tests were written but not run: Resume with test execution
-    - If implementation was partial: Continue implementation from last commit
-    - If blocked: Attempt to resolve blockers or coordinate with other streams
-    - If ready for testing: Begin integration testing phase
+    Typical workflow:
+    1. Stub E2E acceptance tests (criteria only) for your feature scope (defines user-facing success)
+       - Commit: "Issue #$1: add E2E acceptance criteria for {feature}"
+    2. Write failing integration/unit tests (defines component contracts)  
+       - Commit: "Issue #$1: add unit tests for {feature}"
+    3. Implement minimal code to satisfy the unit/integration tests
+       - Commit: "Issue #$1: implement {feature}"
+    4. Mark in progress file: "ready_for_testing: true"
     
-    TDD Continuation Guidelines:
-    - Check what tests exist and their status
-    - Resume from appropriate TDD phase (Red/Green/Refactor)
-    - Don't re-write existing working tests
-    - Continue with next failing test or implementation
+    Test Writing Guidelines:
+    - E2E tests: Define user-facing acceptance criteria (XCUITest)
+    - Integration tests: Define component interactions
+    - Unit tests: Define individual component behavior
+    - ALL streams write E2E tests for their features first
+    - DO NOT run tests (coordinator will handle this)
+    - For unit tests write actual tests but do not run them.
+    - For E2E tests, stub non-functional test methods that use comments to descrtibe the intended behavior. 
+      Example:
+
+      // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
+      func testNameOfTestMethod() throws {
+         // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
+         //            2. Don't make assumptions! Look at the actual implementation.
+         //            3. For most operations reuse or create new, reusable TestUtilities methods.
+
+         // GIVEN: A dose exists in history
+
+         // WHEN: User swipes left on dose row
+
+         // THEN: Edit action appears and functions correctly
+
+         // THEN: Dose entry sheet opens with pre-populated data
+      }
     
+    Coordination Checkpoint:
+    - Update your stream file with "ready_for_testing: true"
+    - List which test files you created
+    - Wait for coordinator to run full test suite
+    - Fix any issues found during coordination
+
     Coordination Notes:
     - Check if other streams have made progress that affects your work
     - Update your stream file with any coordination needs
     - Mark dependencies resolved if other streams completed required work
     
+    If you need to modify files outside your scope:
+    - Check if another stream owns them
+    - Wait if necessary
+    - Update your progress file with coordination notes
+        
     Resume your stream's work and update status appropriately.
 ```
 

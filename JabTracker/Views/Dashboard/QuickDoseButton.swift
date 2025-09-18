@@ -8,13 +8,33 @@ import SwiftUI
 
 /// Self-contained SwiftUI component for quick dose entry with smart defaults
 /// Presents as a sheet from the Add tab button for streamlined dose logging
+/// Enhanced with pharmacokinetics integration for automatic dashboard updates
 struct QuickDoseButton: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var viewModel = QuickDoseViewModel()
+    @StateObject private var pkEngine = PharmacokineticsEngine()
+    @StateObject private var doseService: DoseService
     @State private var showingQuickDoseSheet = false
     @State private var showingSuccessMessage = false
+
+    // Dashboard update callbacks
+    let onDoseSaved: (() -> Void)?
+    let onCalculationsUpdated: (() -> Void)?
+
+    // MARK: - Initialization
+
+    init(
+        onDoseSaved: (() -> Void)? = nil,
+        onCalculationsUpdated: (() -> Void)? = nil
+    ) {
+        self.onDoseSaved = onDoseSaved
+        self.onCalculationsUpdated = onCalculationsUpdated
+
+        let pkEngine = PharmacokineticsEngine()
+        self._doseService = StateObject(wrappedValue: DoseService(pkEngine: pkEngine))
+    }
 
     var body: some View {
         Button(action: {
@@ -28,7 +48,10 @@ struct QuickDoseButton: View {
                content: {
                    QuickDoseSheet(
                        viewModel: self.viewModel,
-                       showingSuccessMessage: self.$showingSuccessMessage)
+                       doseService: self.doseService,
+                       showingSuccessMessage: self.$showingSuccessMessage,
+                       onDoseSaved: self.onDoseSaved,
+                       onCalculationsUpdated: self.onCalculationsUpdated)
                })
         .onAppear {
             self.viewModel.loadSmartDefaults(context: self.modelContext)
@@ -59,22 +82,37 @@ struct QuickDoseButton: View {
 }
 
 /// Sheet component for streamlined dose entry with minimal required fields
+/// Enhanced with pharmacokinetics integration and dose service coordination
 struct QuickDoseSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
     @ObservedObject var viewModel: QuickDoseViewModel
+    @ObservedObject var doseService: DoseService
     @Binding var showingSuccessMessage: Bool
+
+    // Dashboard update callbacks
+    let onDoseSaved: (() -> Void)?
+    let onCalculationsUpdated: (() -> Void)?
 
     // Edit mode support
     let editingDose: DoseEditData?
     let onSave: ((DoseEditData) -> Void)?
     let onCancel: (() -> Void)?
 
-    // Convenience initializer for create mode (existing behavior)
-    init(viewModel: QuickDoseViewModel, showingSuccessMessage: Binding<Bool>) {
+    // Convenience initializer for create mode with PK integration
+    init(
+        viewModel: QuickDoseViewModel,
+        doseService: DoseService,
+        showingSuccessMessage: Binding<Bool>,
+        onDoseSaved: (() -> Void)? = nil,
+        onCalculationsUpdated: (() -> Void)? = nil
+    ) {
         self.viewModel = viewModel
+        self.doseService = doseService
         self._showingSuccessMessage = showingSuccessMessage
+        self.onDoseSaved = onDoseSaved
+        self.onCalculationsUpdated = onCalculationsUpdated
         self.editingDose = nil
         self.onSave = nil
         self.onCancel = nil
@@ -86,9 +124,13 @@ struct QuickDoseSheet: View {
         self.onSave = onSave
         self.onCancel = onCancel
 
-        // Create a temporary view model for edit mode
+        // Create a temporary view model and dose service for edit mode
         self.viewModel = QuickDoseViewModel()
+        let pkEngine = PharmacokineticsEngine()
+        self.doseService = DoseService(pkEngine: pkEngine)
         self._showingSuccessMessage = .constant(false)
+        self.onDoseSaved = nil
+        self.onCalculationsUpdated = nil
     }
 
     private var isEditMode: Bool {
@@ -191,7 +233,7 @@ struct QuickDoseSheet: View {
                             }
                         }
                     }
-                    .disabled(!self.viewModel.canSaveDose)
+                    .disabled(!self.viewModel.canSaveDose || self.doseService.isProcessingDose)
                     .accessibilityIdentifier("quick-dose-save-button")
                     .accessibilityLabel("Save dose")
                 }
@@ -228,8 +270,18 @@ struct QuickDoseSheet: View {
 
     @MainActor
     private func saveDose() async {
+        guard let profile = self.viewModel.selectedMedicationProfile else { return }
+
         do {
-            try await self.viewModel.saveDose(context: self.modelContext)
+            // Save dose through dose service (which handles PK integration)
+            _ = try await self.doseService.saveDose(
+                amount: self.viewModel.doseAmount,
+                timestamp: self.viewModel.doseTime,
+                medicationProfile: profile,
+                site: self.viewModel.selectedInjectionSite.isEmpty ? nil : self.viewModel.selectedInjectionSite,
+                notes: self.viewModel.notes.isEmpty ? nil : self.viewModel.notes,
+                context: self.modelContext
+            )
 
             // Provide haptic feedback for successful save
             let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -240,27 +292,40 @@ struct QuickDoseSheet: View {
                 self.showingSuccessMessage = true
             }
 
+            // Trigger callbacks for dashboard updates
+            self.onDoseSaved?()
+            self.onCalculationsUpdated?()
+
             // Dismiss sheet
             self.dismiss()
 
         } catch {
-            // Error is handled by viewModel and displayed in UI
-            print("Error saving dose: \(error)")
+            // Error is handled by doseService and displayed in UI
+            print("Error saving dose with PK integration: \(error)")
         }
     }
 }
 
 #Preview {
-    QuickDoseButton()
-        .modelContainer(DataController.preview.container)
+    QuickDoseButton(
+        onDoseSaved: { print("Dose saved") },
+        onCalculationsUpdated: { print("Calculations updated") }
+    )
+    .modelContainer(DataController.preview.container)
 }
 
 #Preview("Sheet") {
     @Previewable @State var showingSuccess = false
     let viewModel = QuickDoseViewModel()
+    let pkEngine = PharmacokineticsEngine()
+    let doseService = DoseService(pkEngine: pkEngine)
 
     return QuickDoseSheet(
         viewModel: viewModel,
-        showingSuccessMessage: $showingSuccess)
-        .modelContainer(DataController.preview.container)
+        doseService: doseService,
+        showingSuccessMessage: $showingSuccess,
+        onDoseSaved: { print("Dose saved") },
+        onCalculationsUpdated: { print("Calculations updated") }
+    )
+    .modelContainer(DataController.preview.container)
 }

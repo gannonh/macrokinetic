@@ -9,15 +9,33 @@
 import SwiftUI
 
 /// Main card component for displaying concentration information on the dashboard
+/// Enhanced with real-time updates when dose data changes
 struct ConcentrationCard: View {
     let user: User
     let medicationProfile: MedicationProfile
     @ObservedObject var pkEngine: PharmacokineticsEngine
 
+    // Optional dose service for real-time updates
+    @ObservedObject var doseService: DoseService?
+
     @State private var currentConcentration: Double = 0.0
     @State private var peakLevel: (level: Double, time: Date)?
     @State private var troughLevel: (level: Double, time: Date)?
     @State private var steadyStateProgress: Double = 0.0
+
+    // MARK: - Initialization
+
+    init(
+        user: User,
+        medicationProfile: MedicationProfile,
+        pkEngine: PharmacokineticsEngine,
+        doseService: DoseService? = nil
+    ) {
+        self.user = user
+        self.medicationProfile = medicationProfile
+        self.pkEngine = pkEngine
+        self.doseService = doseService
+    }
 
     var body: some View {
         DesignCard {
@@ -40,6 +58,9 @@ struct ConcentrationCard: View {
             updateConcentrationData()
         }
         .onChange(of: medicationProfile.doses) { _, _ in
+            updateConcentrationData()
+        }
+        .onChange(of: doseService?.lastDoseUpdateTime) { _, _ in
             updateConcentrationData()
         }
     }
@@ -289,7 +310,8 @@ struct ConcentrationCard: View {
             ConcentrationCard(
                 user: user,
                 medicationProfile: medicationProfile,
-                pkEngine: PharmacokineticsEngine()
+                pkEngine: PharmacokineticsEngine(),
+                doseService: nil // Optional for preview
             )
         }
         .padding()
