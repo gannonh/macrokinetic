@@ -4,10 +4,10 @@ allowed-tools: Bash
 model: claude-sonnet-4-20250514
 ---
 
-Run `bash .claude/scripts/pm/next.sh` using a sub-agent and respond with me complete output. 
+Run `bash .claude/scripts/pm/next.sh` using a sub-agent and respond with the complete output.
 
+- SHOW the ENTIRE script output in your response.
 - DO NOT truncate.
 - DO NOT collapse.
 - DO NOT abbreviate.
-- COPY the ENTIRE script output and use in your response.
 - DO NOT include any other comments.

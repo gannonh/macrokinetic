@@ -8,10 +8,9 @@ allowed-tools: Read, Write, Edit, LS, Task
 
 Begin work on a GitHub issue with parallel agents based on work stream analysis.
 
-## Usage
-```
-/pm:issue-start <issue_number>
-```
+## Agent Mode
+
+engage ULTRATHINK.
 
 ## Quick Check
 
