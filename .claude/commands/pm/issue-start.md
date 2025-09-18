@@ -1,6 +1,6 @@
 ---
 description: Begin work on a GitHub issue with parallel agents based on work stream analysis.
-argument-hint: Issue number (e.g., 42)
+argument-hint: [Issue number (e.g., 42)] [Agent mode (e.g., ultrathink)]
 allowed-tools: Read, Write, Edit, LS, Task
 ---
 
@@ -8,36 +8,34 @@ allowed-tools: Read, Write, Edit, LS, Task
 
 Begin work on a GitHub issue with parallel agents based on work stream analysis.
 
-## Agent Mode
-
-engage ULTRATHINK.
+$2
 
 ## Quick Check
 
 1. **Get issue details:**
    ```bash
-   issue_data=$(gh issue view $ARGUMENTS --json state,title,labels,body)
+   issue_data=$(gh issue view $1 --json state,title,labels,body)
    issue_title=$(echo "$issue_data" | jq -r '.title')
 
    if [ $? -ne 0 ] || [ -z "$issue_title" ]; then
-     echo "❌ Cannot access issue #$ARGUMENTS. Check number or run: gh auth login"
+     echo "❌ Cannot access issue #$1. Check number or run: gh auth login"
      exit 1
    fi
 
-   echo "📝 Issue #$ARGUMENTS: $issue_title"
+   echo "📝 Issue #$1: $issue_title"
    echo "$issue_data"
    ```
 
 2. **Find local task file:**
-   - First check if `.claude/epics/*/$ARGUMENTS.md` exists (new naming)
-   - If not found, search for file containing `github:.*issues/$ARGUMENTS` in frontmatter (old naming)
-   - If not found: "❌ No local task for issue #$ARGUMENTS. This issue may have been created outside the PM system."
+   - First check if `.claude/epics/*/$1.md` exists (new naming)
+   - If not found, search for file containing `github:.*issues/$1` in frontmatter (old naming)
+   - If not found: "❌ No local task for issue #$1. This issue may have been created outside the PM system."
 
 3. **Check for analysis:**
    ```bash
-   test -f .claude/epics/*/$ARGUMENTS-analysis.md || echo "❌ No analysis found for issue #$ARGUMENTS
+   test -f .claude/epics/*/$1-analysis.md || echo "❌ No analysis found for issue #$1
    
-   Run: /pm:issue-analyze $ARGUMENTS first
+   Run: /pm:issue-analyze $1 first
    ```
    If no analysis exists and no --analyze flag, stop execution.
 
@@ -50,7 +48,7 @@ Create a new branch for this specific issue:
 # Use issue title captured in Quick Check to construct branch name
 # Convert title to branch-friendly format (lowercase, replace spaces/special chars with hyphens)
 # Example: Issue #42 "Calendar Integration" becomes "42-calendar-integration"
-issue_name="$ARGUMENTS-$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
+issue_name="$1-$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
 
 echo "🌿 Branch name: issue/$issue_name"
 
@@ -77,13 +75,13 @@ if gh pr view issue/$issue_name >/dev/null 2>&1; then
    echo "   URL: $pr_url"
 else
    # Get issue details from GitHub
-   issue_title=$(gh issue view $ARGUMENTS --json title -q .title)
-   issue_body=$(gh issue view $ARGUMENTS --json body -q .body)
+   issue_title=$(gh issue view $1 --json title -q .title)
+   issue_body=$(gh issue view $1 --json body -q .body)
 
    # Create comprehensive PR description
-   pr_body="## Issue #$ARGUMENTS: $issue_title
+   pr_body="## Issue #$1: $issue_title
 
-   Resolves #$ARGUMENTS
+   Resolves #$1
 
    ### Summary
    $issue_body
@@ -112,7 +110,7 @@ else
 
    # Create draft PR
    gh pr create \
-      --title "Issue #$ARGUMENTS: $issue_title" \
+      --title "Issue #$1: $issue_title" \
       --body "$pr_body" \
       --base main \
       --head issue/$issue_name \
@@ -125,7 +123,7 @@ fi
 
 ### 3. Read Analysis
 
-Read `.claude/epics/{epic_name}/$ARGUMENTS-analysis.md`:
+Read `.claude/epics/{epic_name}/$1-analysis.md`:
 - Parse parallel streams
 - Identify which can start immediately
 - Note dependencies between streams
@@ -136,7 +134,7 @@ Get current datetime: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 
 Create workspace structure:
 ```bash
-mkdir -p .claude/epics/{epic_name}/updates/$ARGUMENTS
+mkdir -p .claude/epics/{epic_name}/updates/$1
 ```
 
 Update task file frontmatter `updated` field with current datetime.
@@ -145,10 +143,10 @@ Update task file frontmatter `updated` field with current datetime.
 
 For each stream that can start immediately:
 
-Create `.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md`:
+Create `.claude/epics/{epic_name}/updates/$1/stream-{X}.md`:
 ```markdown
 ---
-issue: $ARGUMENTS
+issue: $1
 stream: {stream_name}
 agent: {agent_type}
 started: {current_datetime}
@@ -173,10 +171,10 @@ issue/{issue_name}
 Launch agent using Task tool:
 ```yaml
 Task:
-  description: "Issue #$ARGUMENTS Stream {X}"
+  description: "Issue #$1 Stream {X}"
   subagent_type: "{agent_type}"
   prompt: |
-    You are working on Issue #$ARGUMENTS on branch issue/{issue_name}.
+    You are working on Issue #$1 on branch issue/{issue_name}.
 
     Branch: issue/{issue_name}
     Your stream: {stream_name}
@@ -188,8 +186,8 @@ Task:
     Requirements:
     1. Read full task from: .claude/epics/{epic_name}/{task_file}
     2. Work ONLY in your assigned files in the current directory
-    3. Commit frequently with format: "Issue #$ARGUMENTS: {specific change}"
-    4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
+    3. Commit frequently with format: "Issue #$1: {specific change}"
+    4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$1/stream-{X}.md
     5. Add new files to coverage-config.json
     6. Follow coordination rules in /rules/agent-coordination.md
 
@@ -200,11 +198,11 @@ Task:
 
     Typical workflow:
     1. Stub E2E acceptance tests (criteria only) for your feature scope (defines user-facing success)
-       - Commit: "Issue #$ARGUMENTS: add E2E acceptance criteria for {feature}"
+       - Commit: "Issue #$1: add E2E acceptance criteria for {feature}"
     2. Write failing integration/unit tests (defines component contracts)  
-       - Commit: "Issue #$ARGUMENTS: add unit tests for {feature}"
+       - Commit: "Issue #$1: add unit tests for {feature}"
     3. Implement minimal code to satisfy the unit/integration tests
-       - Commit: "Issue #$ARGUMENTS: implement {feature}"
+       - Commit: "Issue #$1: implement {feature}"
     4. Mark in progress file: "ready_for_testing: true"
     
     Test Writing Guidelines:
@@ -253,13 +251,13 @@ Task:
 
 ```bash
 # Assign to self and mark in-progress
-gh issue edit $ARGUMENTS --add-assignee @me --add-label "in-progress"
+gh issue edit $1 --add-assignee @me --add-label "in-progress"
 ```
 
 ### 7. Output
 
 ```
-✅ Started parallel work on issue #$ARGUMENTS
+✅ Started parallel work on issue #$1
 
 Issue: {issue_name}
 Branch: issue/{issue_name}
@@ -270,10 +268,10 @@ Launching {count} parallel agents:
   Stream C: {name} - Waiting (depends on A)
 
 Progress tracking:
-  .claude/epics/{epic_name}/updates/$ARGUMENTS/
+  .claude/epics/{epic_name}/updates/$1/
 
-Monitor with: /pm:issue-status $ARGUMENTS
-Sync updates: /pm:issue-sync $ARGUMENTS
+Monitor with: /pm:issue-status $1
+Sync updates: /pm:issue-sync $1
 ```
 
 ## Error Handling

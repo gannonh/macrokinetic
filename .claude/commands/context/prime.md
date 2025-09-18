@@ -1,4 +1,5 @@
 ---
+description: Load essential project context for a new agent session
 allowed-tools: Read, LS
 ---
 
