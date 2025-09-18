@@ -1,6 +1,6 @@
 ---
 description: Begin work on a GitHub issue with parallel agents based on work stream analysis.
-argument-hint: [Issue number (e.g., 42)] [Agent mode (e.g., ultrathink)]
+argument-hint: [Issue number] [Agent mode (optional)]
 allowed-tools: Read, Write, Edit, LS, Task
 ---
 
@@ -14,16 +14,7 @@ $2
 
 1. **Get issue details:**
    ```bash
-   issue_data=$(gh issue view $1 --json state,title,labels,body)
-   issue_title=$(echo "$issue_data" | jq -r '.title')
-
-   if [ $? -ne 0 ] || [ -z "$issue_title" ]; then
-     echo "❌ Cannot access issue #$1. Check number or run: gh auth login"
-     exit 1
-   fi
-
-   echo "📝 Issue #$1: $issue_title"
-   echo "$issue_data"
+   gh issue view 45 --json state,title,labels,body
    ```
 
 2. **Find local task file:**
@@ -193,7 +184,7 @@ Task:
 
     IMPORTANT - Outside-In TDD flow:
     
-    - Follow Outside-In TDD: Start with E2E acceptance tests that define "done"
+    - Follow Outside-In TDD: Stub E2E acceptance tests that define "done"
     - Write tests but DO NOT run them (to avoid conflicts with other streams)
 
     Typical workflow:
@@ -216,7 +207,7 @@ Task:
       Example:
 
       // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
-      func test_doseHistory_swipeActionsEditDose() throws {
+      func testNameOfTestMethod() throws {
          // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
          //            2. Don't make assumptions! Look at the actual implementation.
          //            3. For most operations reuse or create new, reusable TestUtilities methods.

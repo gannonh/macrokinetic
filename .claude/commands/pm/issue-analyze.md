@@ -1,4 +1,6 @@
 ---
+description: Analyze a GitHub issue to identify parallel work streams for efficient execution.
+argument-hint: [Issue number] [Agent mode (optional)]
 allowed-tools: Read, Write, LS
 ---
 
@@ -6,21 +8,18 @@ allowed-tools: Read, Write, LS
 
 Analyze an issue to identify parallel work streams for maximum efficiency.
 
-## Usage
-```
-/pm:issue-analyze <issue_number>
-```
+$2
 
 ## Quick Check
 
 1. **Find local task file:**
-   - First check if `.claude/epics/*/$ARGUMENTS.md` exists (new naming convention)
-   - If not found, search for file containing `github:.*issues/$ARGUMENTS` in frontmatter (old naming)
-   - If not found: "❌ No local task for issue #$ARGUMENTS. Run: /pm:import first"
+   - First check if `.claude/epics/*/$1.md` exists (new naming convention)
+   - If not found, search for file containing `github:.*issues/$1` in frontmatter (old naming)
+   - If not found: "❌ No local task for issue #$1. Run: /pm:import first"
 
 2. **Check for existing analysis:**
    ```bash
-   test -f .claude/epics/*/$ARGUMENTS-analysis.md && echo "⚠️ Analysis already exists. Overwrite? (yes/no)"
+   test -f .claude/epics/*/$1-analysis.md && echo "⚠️ Analysis already exists. Overwrite? (yes/no)"
    ```
 
 ## Instructions
@@ -29,7 +28,7 @@ Analyze an issue to identify parallel work streams for maximum efficiency.
 
 Get issue details from GitHub:
 ```bash
-gh issue view $ARGUMENTS --json title,body,labels
+gh issue view $1 --json title,body,labels
 ```
 
 Read local task file to understand:
@@ -60,18 +59,18 @@ Analyze the issue to identify independent work that can run in parallel:
 
 Get current datetime: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 
-Create `.claude/epics/{epic_name}/$ARGUMENTS-analysis.md`:
+Create `.claude/epics/{epic_name}/$1-analysis.md`:
 
 ```markdown
 ---
-issue: $ARGUMENTS
+issue: $1
 title: {issue_title}
 analyzed: {current_datetime}
 estimated_hours: {total_hours}
 parallelization_factor: {1.0-5.0}
 ---
 
-# Parallel Work Analysis: Issue #$ARGUMENTS
+# Parallel Work Analysis: Issue #$1
 
 ## Overview
 {Brief description of what needs to be done}
@@ -159,7 +158,7 @@ Ensure:
 ### 5. Output
 
 ```
-✅ Analysis complete for issue #$ARGUMENTS
+✅ Analysis complete for issue #$1
 
 Identified {count} parallel work streams:
   Stream A: {name} ({hours}h)
@@ -173,7 +172,7 @@ Parallelization potential: {factor}x speedup
 Files at risk of conflict:
   {list shared files if any}
 
-Next: Start work with /pm:issue-start $ARGUMENTS
+Next: Start work with /pm:issue-start $1
 ```
 
 ## Important Notes
