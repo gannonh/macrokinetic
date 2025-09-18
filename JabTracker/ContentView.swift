@@ -84,17 +84,86 @@ struct ContentView: View {
 }
 
 struct DashboardView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var users: [User]
+    @StateObject private var pkEngine = PharmacokineticsEngine()
+
     var body: some View {
         NavigationStack {
-            VStack {
-                Text("Dashboard")
-                    .font(.largeTitle)
-                    .bold()
-                Text("Welcome to JabTracker")
-                    .foregroundColor(.secondary)
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    if let currentUser = users.first {
+                        concentrationSection(for: currentUser)
+                    } else {
+                        noUserSection
+                    }
+                }
+                .padding()
             }
             .navigationTitle("Home")
+            .accessibilityIdentifier("dashboard-view")
         }
+    }
+
+    // MARK: - Concentration Section
+
+    @ViewBuilder
+    private func concentrationSection(for user: User) -> some View {
+        if let medicationProfiles = user.medicationProfiles,
+           !medicationProfiles.isEmpty {
+            ForEach(medicationProfiles.sorted(by: { $0.startDate > $1.startDate })) { profile in
+                ConcentrationCard(
+                    user: user,
+                    medicationProfile: profile,
+                    pkEngine: pkEngine
+                )
+                .accessibilityIdentifier("concentration-card-\(profile.medicationName)")
+            }
+        } else {
+            noMedicationSection
+        }
+    }
+
+    // MARK: - Empty States
+
+    private var noUserSection: some View {
+        DesignCard {
+            VStack(spacing: 16) {
+                Image(systemName: "person.crop.circle")
+                    .font(.system(size: 48))
+                    .foregroundColor(.secondary)
+
+                Text("Set up your profile")
+                    .font(DesignTokens.Typography.headline)
+
+                Text("Complete onboarding to start tracking your medication concentrations")
+                    .font(DesignTokens.Typography.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+        }
+        .accessibilityIdentifier("no-user-message")
+    }
+
+    private var noMedicationSection: some View {
+        DesignCard {
+            VStack(spacing: 16) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 48))
+                    .foregroundColor(.secondary)
+
+                Text("Add medication profiles")
+                    .font(DesignTokens.Typography.headline)
+
+                Text("Set up your medications in Settings to view concentration tracking")
+                    .font(DesignTokens.Typography.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+        }
+        .accessibilityIdentifier("no-medication-message")
     }
 }
 
