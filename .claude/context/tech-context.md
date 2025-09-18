@@ -77,7 +77,7 @@ author: Claude Code PM System
 - **Git**: Version control with GitHub integration
 - **Claude Code**: AI-assisted development with comprehensive PM system (CCPM)
   - **PM Commands**: 49 command implementations for epic/issue management
-  - **Agent System**: Specialized agents (code-analyzer, file-analyzer, test-runner)
+  - **Agent System**: Specialized agents (code-analyzer, file-analyzer)
   - **Context Management**: Automated documentation and project tracking
   - **Workflow Integration**: GitHub issue sync, epic decomposition, parallel execution
 - **MCP Servers**: Context7 (library docs), Perplexity (research), XcodeBuildMCP (simulator automation)

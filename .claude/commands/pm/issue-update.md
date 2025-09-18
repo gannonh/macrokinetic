@@ -174,9 +174,9 @@ Files updated:
   .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-*.md
   .claude/epics/{epic_name}/execution-status.md
 
-Next: Run /context:update to propagate learnings or /pm:epic-status {epic_name}
-Sync: Run /pm:issue-sync $ARGUMENTS to push updates to GitHub
-Resume: To resume work on the issue run /pm:issue-resume $ARGUMENTS
+- Next: Run /context:update to propagate learnings or /pm:epic-status {epic_name}
+- Sync: Run /pm:issue-sync $ARGUMENTS to push updates to GitHub
+- Resume: To resume work on the issue run /pm:issue-resume $ARGUMENTS
 ```
 
 ## Context Analysis Guidelines
