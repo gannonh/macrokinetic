@@ -46,9 +46,15 @@ epic: dose-tracking
 - **Status Change**: Calendar integration completed - all acceptance criteria met
 - **Integration Impact**: Full calendar functionality available in History tab with dose indicators, month navigation, and statistics
 
+## Deferred Issues
+- **Issue #43 - Photo Attachments** 🚫 DEFERRED (2025-09-18T17:47:42Z)
+  - Reason: Feature is not required for MVP
+  - Moved from: Queued Issues (was blocked on Task 003)
+- **Issue #44 - Search & Filter Enhancements** 🚫 DEFERRED (2025-09-18T18:32:07Z)
+  - Reason: 95% of feature completed with #41. Remaining enhancements not crucial for MVP.
+  - Moved from: Queued Issues
+
 ## Queued Issues (Blocked - Missing Dependencies)
-- **Issue #43 - Photo Attachments** - Waiting for Task 003 (Dose Entry Form)
-- **Issue #44 - Search & Filters** - Waiting for Task 004 (History List View)  
 - **Issue #45 - PK Engine Integration** - Waiting for Tasks 001 & 002 (Quick Entry & Manual Entry)
 - **Issue #46 - Testing Suite** - Waiting for Tasks 001-004 (all core UI functionality)
 

@@ -97,14 +97,14 @@ author: Claude Code PM System
 3. **Dashboard Integration** - Add dose tracking widgets and visualization
 
 ## Active Epic Status
-**Dose Tracking Epic**: 56% complete (5/9 tasks)
+**Dose Tracking Epic**: 71% complete (5/7 active tasks)
 - ✅ #38 - Data Layer Extensions (CLOSED)
 - ✅ #39 - Quick Dose Entry (CLOSED)
 - ✅ #40 - Dose Entry Form (CLOSED - covered by #39)
 - ✅ #41 - History List View (CLOSED - simplified quick dose approach)
 - ✅ #42 - Calendar Integration (CLOSED)
-- 🔲 #43 - Photo Attachments (may be deprecated)
-- 🔲 #44 - Search & Filters
+- 🚫 #43 - Photo Attachments (DEFERRED - not required for MVP)
+- 🚫 #44 - Search & Filter Enhancements (DEFERRED - 95% complete with #41, remaining enhancements not crucial for MVP)
 - 🔲 #45 - PK Engine Integration
 - 🔲 #46 - Testing Suite
 
@@ -135,6 +135,8 @@ author: Claude Code PM System
 - **Stream-based progress tracking**: Parallel development coordination requires systematic progress updates
 
 ## Update History
+- 2025-09-18T18:32:07Z: Issue #44 deferred (95% complete with #41, remaining enhancements not crucial for MVP), epic progress updated to 71%
+- 2025-09-18T17:47:42Z: Issue #43 deferred (photo attachments not required for MVP), epic progress updated to 63%
 - 2025-09-16T22:39:56Z: Issue #42 completion, calendar integration learnings, SwiftUI testing patterns
 - 2025-09-15T18:21:44Z: Issue #41 completion, E2E testing learnings, simplified quick dose architecture
 - 2025-09-12T16:35:25Z: Updated with Issue #39 completion and Issue #40 closure, dose tracking epic progress to 33%
