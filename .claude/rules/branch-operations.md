@@ -129,8 +129,8 @@ gh pr view 12
 
 3. **Merge via GitHub PR** (after approval):
 ```bash
-# Merge PR #12 only after review approval
-gh pr merge 12 --squash --delete-branch
+# Merge PR #12 using rebase merge (preserves commit history)
+gh pr merge 12 --rebase --delete-branch
 ```
 
 4. **Alternative: Manual merge** (if needed):

@@ -1,15 +1,13 @@
 ---
-allowed-tools: Read, Write, LS
+description: Mark an issue as complete and close it on GitHub
+argument-hint: issue number (e.g., 42)
+allowed-tools: Bash, Read, Write, LS
+model: claude-sonnet-4-20250514
 ---
 
 # Issue Close
 
 Mark an issue as complete and close it on GitHub.
-
-## Usage
-```
-/pm:issue-close <issue_number> [completion_notes]
-```
 
 ## Instructions
 

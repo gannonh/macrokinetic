@@ -219,8 +219,8 @@ echo "   cat $issue_doc_file"
 
 After receiving approval:
 ```bash
-# Merge PR with squash
-gh pr merge $ARGUMENTS --squash --delete-branch
+# Merge PR with rebase (preserves individual commits)
+gh pr merge $ARGUMENTS --rebase --delete-branch
 
 echo "✅ PR #$ARGUMENTS merged and branch deleted"
 ```
@@ -326,15 +326,21 @@ When reviewing the created PR:
 
 ## GitHub Merge Options
 
-Recommend using **"Squash and merge"** for epic branches:
-- Creates clean commit history
-- Preserves epic context in commit message
-- Easier to revert if needed
+**Using "Rebase and merge" (default strategy):**
+- Preserves individual commit history for development traceability
+- Enables checkout to any point in development history
+- Maintains clean linear history without merge commits
+- Allows granular rollback of specific changes
+- Better for debugging and development analysis
+
+**Alternative merge strategies (if needed):**
+- **Squash merge**: Clean single commit (use for very messy branches)
+- **Regular merge**: Preserves branch structure (use for collaborative branches)
 
 ## Important Notes
 
 - PR should already exist from /pm:issue-start
 - Always wait for review approval before merging
-- Use squash merge to keep main branch clean
+- Use rebase merge to preserve development history while keeping main branch linear
 - Run /pm:issue-close after merge to close the issue
 - Consider CI/CD pipeline requirements
