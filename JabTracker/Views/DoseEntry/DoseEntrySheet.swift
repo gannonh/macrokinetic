@@ -74,23 +74,42 @@ struct DoseEntrySheet: View {
         NavigationStack {
             Form {
                 // Medication Selection Section
-                medicationSection
+                DoseEntryFormSections.MedicationSection(
+                    selectedMedicationProfile: $selectedMedicationProfile,
+                    medicationProfiles: medicationProfiles,
+                    errorMessage: errorMessage,
+                    serviceError: doseService.lastError
+                )
 
                 // Dose Details Section
-                doseDetailsSection
+                DoseEntryFormSections.DoseDetailsSection(
+                    doseAmount: $doseAmount,
+                    selectedInjectionSite: $selectedInjectionSite,
+                    isSkipped: $isSkipped,
+                    dosePhotoData: $dosePhotoData,
+                    selectedPhotoItem: $selectedPhotoItem
+                )
 
                 // Timing Section
-                timingSection
+                DoseEntryFormSections.TimingSection(doseTime: $doseTime)
 
                 // Additional Information Section
-                additionalInfoSection
+                DoseEntryFormSections.AdditionalInfoSection(notes: $notes)
 
                 // Photo Section
-                photoSection
+                DoseEntryPhotoSection(
+                    dosePhotoData: $dosePhotoData,
+                    selectedPhotoItem: $selectedPhotoItem,
+                    showingPhotoOptions: $showingPhotoOptions,
+                    isSkipped: isSkipped
+                )
 
                 // PK Integration Info
                 if let selectedProfile = selectedMedicationProfile {
-                    pkIntegrationSection(for: selectedProfile)
+                    DoseEntryPKSection(
+                        medicationProfile: selectedProfile,
+                        isSkipped: isSkipped
+                    )
                 }
             }
             .navigationTitle(mode == .create ? "Add Dose" : "Edit Dose")
@@ -120,192 +139,6 @@ struct DoseEntrySheet: View {
         .accessibilityIdentifier("dose-entry-sheet")
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
-    }
-
-    // MARK: - Form Sections
-
-    @ViewBuilder
-    private var medicationSection: some View {
-        Section {
-            Picker("Medication", selection: $selectedMedicationProfile) {
-                ForEach(medicationProfiles, id: \.id) { profile in
-                    Text("\(profile.brandName) (\(profile.currentDose, specifier: "%.2f") mg)")
-                        .tag(profile as MedicationProfile?)
-                }
-            }
-            .accessibilityIdentifier("dose-entry-medication-picker")
-
-            if medicationProfiles.isEmpty {
-                Text("No medication profiles found")
-                    .foregroundColor(.secondary)
-                    .italic()
-                    .accessibilityIdentifier("no-medications-message")
-            }
-        } header: {
-            Text("Medication")
-        } footer: {
-            if let error = errorMessage {
-                Text(error)
-                    .foregroundColor(.red)
-                    .accessibilityIdentifier("dose-entry-error")
-            }
-
-            if let serviceError = doseService.lastError {
-                Text(serviceError.localizedDescription)
-                    .foregroundColor(.red)
-                    .accessibilityIdentifier("dose-service-error")
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var doseDetailsSection: some View {
-        Section {
-            // Dose Amount
-            HStack {
-                Text("Amount")
-                Spacer()
-                TextField("Amount", value: $doseAmount, format: .number.precision(.fractionLength(2)))
-                    .multilineTextAlignment(.trailing)
-                    .keyboardType(.decimalPad)
-                    .accessibilityIdentifier("dose-entry-amount-field")
-                Text("mg")
-                    .foregroundColor(.secondary)
-            }
-
-            // Injection Site
-            if !isSkipped {
-                Picker("Injection Site", selection: $selectedInjectionSite) {
-                    ForEach(DoseDefaults.allInjectionSites, id: \.self) { site in
-                        Text(site).tag(site)
-                    }
-                }
-                .accessibilityIdentifier("dose-entry-site-picker")
-            }
-
-            // Skipped toggle
-            Toggle("Missed/Skipped Dose", isOn: $isSkipped)
-                .accessibilityIdentifier("dose-entry-skipped-toggle")
-                .onChange(of: isSkipped) { _, skipped in
-                    if skipped {
-                        selectedInjectionSite = ""
-                        dosePhotoData = nil
-                        selectedPhotoItem = nil
-                    }
-                }
-        } header: {
-            Text("Dose Details")
-        } footer: {
-            if isSkipped {
-                Text("Skipped doses are recorded for tracking but don't affect concentration calculations")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .accessibilityIdentifier("skipped-dose-explanation")
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var timingSection: some View {
-        Section {
-            DatePicker(
-                "Date & Time",
-                selection: $doseTime,
-                displayedComponents: [.date, .hourAndMinute]
-            )
-            .accessibilityIdentifier("dose-entry-datetime-picker")
-        } header: {
-            Text("Timing")
-        }
-    }
-
-    @ViewBuilder
-    private var additionalInfoSection: some View {
-        Section {
-            TextField("Notes (Optional)", text: $notes, axis: .vertical)
-                .lineLimit(3...6)
-                .accessibilityIdentifier("dose-entry-notes")
-        } header: {
-            Text("Additional Information")
-        }
-    }
-
-    @ViewBuilder
-    private var photoSection: some View {
-        if !isSkipped {
-            Section {
-                if let photoData = dosePhotoData, let uiImage = UIImage(data: photoData) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 200)
-                            .cornerRadius(8)
-                            .accessibilityIdentifier("dose-entry-photo-preview")
-
-                        Button("Change Photo") {
-                            showingPhotoOptions = true
-                        }
-                        .accessibilityIdentifier("dose-entry-change-photo")
-
-                        Button("Remove Photo", role: .destructive) {
-                            dosePhotoData = nil
-                            selectedPhotoItem = nil
-                        }
-                        .accessibilityIdentifier("dose-entry-remove-photo")
-                    }
-                } else {
-                    Button("Add Photo") {
-                        showingPhotoOptions = true
-                    }
-                    .accessibilityIdentifier("dose-entry-add-photo")
-                }
-            } header: {
-                Text("Photo (Optional)")
-            }
-            .photosPicker(isPresented: $showingPhotoOptions, selection: $selectedPhotoItem, matching: .images)
-            .onChange(of: selectedPhotoItem) { _, newItem in
-                Task {
-                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        dosePhotoData = data
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func pkIntegrationSection(for profile: MedicationProfile) -> some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .foregroundColor(.blue)
-                    Text("Pharmacokinetics Impact")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    Spacer()
-                }
-
-                if !isSkipped, let medication = profile.medication {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("• Peak concentration in ~\(Int(medication.peakTimeHours)) hours")
-                        Text("• Calculations will update dashboard automatically")
-                        Text("• Half-life: \(medication.halfLifeDays, specifier: "%.1f") days")
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                } else if isSkipped {
-                    Text("Skipped doses don't affect concentration calculations")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .italic()
-                }
-            }
-        } header: {
-            Text("Impact Preview")
-        }
-        .accessibilityIdentifier("pk-impact-section")
     }
 
     // MARK: - Computed Properties
