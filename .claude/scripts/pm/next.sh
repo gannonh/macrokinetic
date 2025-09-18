@@ -9,6 +9,7 @@ echo ""
 
 # Find tasks that are open and have no dependencies or whose dependencies are closed
 found=0
+deferred_count=0
 
 for epic_dir in .claude/epics/*/; do
   [ -d "$epic_dir" ] || continue
@@ -29,8 +30,16 @@ for epic_dir in .claude/epics/*/; do
       continue
     fi
 
-    # Check if task is open
+    # Check task status
     status=$(grep "^status:" "$task_file" | head -1 | sed 's/^status: *//')
+
+    # Skip deferred tasks but count them
+    if [ "$status" = "deferred" ]; then
+      ((deferred_count++))
+      continue
+    fi
+
+    # Skip other non-open tasks
     [ "$status" != "open" ] && [ -n "$status" ] && continue
 
     # Check dependencies
@@ -57,9 +66,15 @@ if [ $found -eq 0 ]; then
   echo "💡 Suggestions:"
   echo "  • Check blocked tasks: /pm:blocked"
   echo "  • View all tasks: /pm:epic-list"
+  if [ $deferred_count -gt 0 ]; then
+    echo "  • Review deferred tasks: /pm:issue-edit {issue_number} to reactivate"
+  fi
 fi
 
 echo ""
 echo "📊 Summary: $found tasks ready to start"
+if [ $deferred_count -gt 0 ]; then
+  echo "🚫 Deferred: $deferred_count tasks postponed (excluded from next task selection)"
+fi
 
 exit 0
