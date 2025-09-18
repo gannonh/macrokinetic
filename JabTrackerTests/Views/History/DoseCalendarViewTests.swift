@@ -17,7 +17,10 @@ struct DoseCalendarViewTests {
         // GIVEN: A specific date for testing
         let calendar = Calendar.current
         let components = DateComponents(year: 2024, month: 9, day: 15)
-        let testDate = calendar.date(from: components)!
+        guard let testDate = calendar.date(from: components) else {
+            Issue.record("Failed to create test date from components")
+            return
+        }
 
         // WHEN: DoseCalendarView is initialized with test data
         let calendarView = DoseCalendarView()
@@ -35,7 +38,10 @@ struct DoseCalendarViewTests {
     func calendarViewHandlesMonthNavigation() async throws {
         // GIVEN: A calendar view model with a specific date
         let calendar = Calendar.current
-        let september2024 = calendar.date(from: DateComponents(year: 2024, month: 9, day: 15))!
+        guard let september2024 = calendar.date(from: DateComponents(year: 2024, month: 9, day: 15)) else {
+            Issue.record("Failed to create September 2024 test date")
+            return
+        }
         let testViewModel = TestCalendarViewModel(currentDate: september2024)
 
         // WHEN: User navigates to next month
@@ -60,7 +66,10 @@ struct DoseCalendarViewTests {
     func calendarViewGeneratesCorrectDaysForMonth() throws {
         // GIVEN: February 2024 (leap year) for testing
         let calendar = Calendar.current
-        let february2024 = calendar.date(from: DateComponents(year: 2024, month: 2, day: 1))!
+        guard let february2024 = calendar.date(from: DateComponents(year: 2024, month: 2, day: 1)) else {
+            Issue.record("Failed to create February 2024 test date")
+            return
+        }
         let testViewModel = TestCalendarViewModel(currentDate: february2024)
 
         // WHEN: Calendar generates days for the month
@@ -72,8 +81,11 @@ struct DoseCalendarViewTests {
         #expect(actualDays.count == 29) // Leap year February has 29 days
 
         // Verify first and last days are correct
-        let firstDay = actualDays.first!
-        let lastDay = actualDays.last!
+        guard let firstDay = actualDays.first,
+              let lastDay = actualDays.last else {
+            Issue.record("Failed to get first or last day from actual days")
+            return
+        }
         #expect(calendar.component(.day, from: firstDay) == 1)
         #expect(calendar.component(.day, from: lastDay) == 29)
         #expect(calendar.component(.month, from: firstDay) == 2)
@@ -87,7 +99,10 @@ struct DoseCalendarViewTests {
         // GIVEN: Sample doses on specific dates
         let calendar = Calendar.current
         let today = Date()
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
+            Issue.record("Failed to create yesterday date")
+            return
+        }
 
         let doses = [
             createMockDose(timestamp: today),
@@ -120,8 +135,11 @@ struct DoseCalendarViewTests {
         // GIVEN: Multiple doses on the same day
         let calendar = Calendar.current
         let today = Date()
-        let todayMorning = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: today)!
-        let todayEvening = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: today)!
+        guard let todayMorning = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: today),
+              let todayEvening = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: today) else {
+            Issue.record("Failed to create morning or evening test dates")
+            return
+        }
 
         let doses = [
             createMockDose(timestamp: todayMorning),
@@ -154,7 +172,10 @@ struct DoseCalendarViewTests {
         #expect(isToday == true)
 
         // AND: Yesterday should not be today
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: now) else {
+            Issue.record("Failed to create yesterday date for today test")
+            return
+        }
         let isYesterdayToday = calendar.isDateInToday(yesterday)
         #expect(isYesterdayToday == false)
     }
@@ -231,6 +252,6 @@ private class TestCalendarViewModel {
 
     func dosesForDate(_ date: Date) -> [Dose] {
         // Simplified for testing - in real implementation would filter from allDoses
-        return []
+        []
     }
 }

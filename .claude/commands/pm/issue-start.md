@@ -130,7 +130,31 @@ mkdir -p .claude/epics/{epic_name}/updates/$1
 
 Update task file frontmatter `updated` field with current datetime.
 
-### 5. Launch Parallel Agents
+### 5. Launch Parallel Agents using TDD
+
+**TDD Approach for Parallel Streams**: Each agent practices proper Test-Driven Development:
+- **Backend agents**: Write failing unit tests → implement code → refactor (Red-Green-Refactor)
+- **Frontend agents**: Stub E2E acceptance tests → write unit tests → implement UI → refactor
+- **Integration agents**: Write integration tests → implement integrations → refactor
+- **No separate testing stream needed** - each agent owns their domain's tests
+- **CRITICAL**: Agents write tests but DO NOT run them to avoid simulator conflicts
+
+**Why No Test Execution**: Parallel agents avoid running tests simultaneously because they compete for the same simulators, causing conflicts and unreliable results. As coordinator, you and the User will run the full test suite after all streams complete their implementation work.
+
+This eliminates redundant testing streams since each specialist writes tests for their own implementation domain.
+
+For this stage, first present to the user your plan for launching agents to ensure alignment. Example:
+
+---
+🚀 Launch plan for parallel agents for issue #$1
+
+[your plan for each agent and rationale]
+
+Please let me know if I may proceed or if you would like to discuss further before proceeding.
+
+---
+
+Proceed with launching agents only after user confirmation.
 
 For each stream that can start immediately:
 
@@ -148,6 +172,7 @@ status: in_progress
 
 ## Scope
 {stream_description}
+- **REMINDER**: Follow TDD approach (write tests but DO NOT run them)
 
 ## Branch
 issue/{issue_name}
@@ -181,11 +206,8 @@ Task:
     4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$1/stream-{X}.md
     5. Add new files to coverage-config.json
     6. Follow coordination rules in /rules/agent-coordination.md
-
-    IMPORTANT - Outside-In TDD flow:
-    
-    - Follow Outside-In TDD: Stub E2E acceptance tests that define "done"
-    - Write tests but DO NOT run them (to avoid conflicts with other streams)
+    7. For user facing features/components, stub E2E acceptance tests that define "done"
+    8. Write tests but DO NOT run them (to avoid conflicts with other streams)
 
     Typical workflow:
     1. Stub E2E acceptance tests (criteria only) for your feature scope (defines user-facing success)
@@ -220,9 +242,6 @@ Task:
 
          // THEN: Dose entry sheet opens with pre-populated data
       }
-    
-    Outside-In TDD Flow:
-    E2E Tests (written/non-functional - red) → Unit Tests (written/functional - red) → Implementation → [Coordination Point] → Tests Run (green) → Refactor (as needed)
     
     Coordination Checkpoint:
     - Update your stream file with "ready_for_testing: true"
