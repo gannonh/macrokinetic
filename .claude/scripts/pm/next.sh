@@ -17,6 +17,18 @@ for epic_dir in .claude/epics/*/; do
   for task_file in "$epic_dir"[0-9]*.md; do
     [ -f "$task_file" ] || continue
 
+    # Skip analysis and review files
+    task_basename=$(basename "$task_file")
+    if [[ "$task_basename" == *"-analysis.md" ]] || [[ "$task_basename" == *"-review.md" ]]; then
+      continue
+    fi
+
+    # Skip files without frontmatter
+    if ! grep -q "^---$" "$task_file"; then
+      echo "⚠️  Skipping $task_basename: Missing YAML frontmatter (run /pm:validate-tasks to fix)"
+      continue
+    fi
+
     # Check if task is open
     status=$(grep "^status:" "$task_file" | head -1 | sed 's/^status: *//')
     [ "$status" != "open" ] && [ -n "$status" ] && continue

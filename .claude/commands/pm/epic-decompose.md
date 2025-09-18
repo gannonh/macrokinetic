@@ -30,7 +30,9 @@ Do not bother the user with preflight checks progress ("I'm not going to ..."). 
 
 2. **Check for existing tasks:**
    - Check if any numbered task files (001.md, 002.md, etc.) already exist in `.claude/epics/$ARGUMENTS/`
-   - If tasks exist, list them and ask: "⚠️ Found {count} existing tasks. Delete and recreate all tasks? (yes/no)"
+   - Check if existing tasks have proper YAML frontmatter format
+   - If tasks exist with inconsistent formats, suggest: "⚠️ Found {count} existing tasks with mixed formats. Run /pm:validate-tasks $ARGUMENTS first to fix format issues"
+   - If tasks exist with proper format, ask: "⚠️ Found {count} existing tasks. Delete and recreate all tasks? (yes/no)"
    - Only proceed with explicit 'yes' confirmation
    - If user says no, suggest: "View existing tasks with: /pm:epic-show $ARGUMENTS"
 
@@ -222,11 +224,48 @@ After successfully creating tasks:
    - Total estimated effort
 3. Suggest next step: "Ready to sync to GitHub? Run: /pm:epic-sync $ARGUMENTS"
 
+## Format Validation
+
+Before creating new tasks, validate existing task format consistency:
+
+```bash
+# Check for format inconsistencies
+mixed_formats=false
+yaml_count=0
+markdown_count=0
+
+for task_file in .claude/epics/$ARGUMENTS/[0-9][0-9][0-9].md; do
+  [ -f "$task_file" ] || continue
+
+  # Skip analysis files
+  if [[ "$(basename "$task_file")" == *"-analysis.md" ]] || [[ "$(basename "$task_file")" == *"-review.md" ]]; then
+    continue
+  fi
+
+  if grep -q "^---$" "$task_file"; then
+    ((yaml_count++))
+  else
+    ((markdown_count++))
+  fi
+done
+
+if [ $yaml_count -gt 0 ] && [ $markdown_count -gt 0 ]; then
+  echo "❌ Mixed task formats detected:"
+  echo "   YAML frontmatter: $yaml_count tasks"
+  echo "   Markdown format: $markdown_count tasks"
+  echo ""
+  echo "Fix with: /pm:validate-tasks $ARGUMENTS"
+  echo "Then run: /pm:epic-decompose $ARGUMENTS"
+  exit 1
+fi
+```
+
 ## Error Recovery
 
 If any step fails:
 - If task creation partially completes, list which tasks were created
 - Provide option to clean up partial tasks
 - Never leave the epic in an inconsistent state
+- If format validation fails, suggest running /pm:validate-tasks first
 
 Aim for tasks that can be completed in 1-3 days each. Break down larger tasks into smaller, manageable pieces for the "$ARGUMENTS" epic.
