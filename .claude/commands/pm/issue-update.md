@@ -8,11 +8,6 @@ allowed-tools: Read, Write, Edit, LS
 
 Update issue progress files with current session context and work completed.
 
-## Usage
-```
-/pm:issue-update <issue_number> [update_notes]
-```
-
 ## Instructions
 
 ### 1. Find Local Task File

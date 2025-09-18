@@ -43,10 +43,10 @@ If comments span multiple files:
 Launch parallel sub-agents using Task tool:
 ```yaml
 Task:
-  description: "CodeRabbit fixes for {filename}"
+  description: "pr review fixes for {filename}"
   subagent_type: "general-purpose"
   prompt: |
-    Review and apply CodeRabbit suggestions for {filename}.
+    Review and apply pr review suggestions for {filename}.
     
     Comments to evaluate:
     {relevant_comments_for_this_file}
@@ -63,7 +63,9 @@ Task:
        - Ignored: {list with reasons}
        - Changes made: {brief description}
     
-    Use discretion - CodeRabbit lacks full context.
+    Use discretion - reviewer lacks full context.
+
+    IMPORTANT: Given that you are operating in parallel with other agents, do not run build or test commands as they may conflict with other agents. Only make code changes.
 ```
 
 ### 3. Consolidate Results
@@ -119,3 +121,4 @@ Only apply if all answers are "yes" or the benefit clearly outweighs risks.
 - Explain decisions briefly to maintain audit trail
 - Batch related changes for efficiency
 - Use parallel agents for multi-file reviews to save time
+- Avoid running build/test commands in parallel agents to prevent conflicts
