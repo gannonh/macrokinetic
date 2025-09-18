@@ -363,7 +363,7 @@ enum TestUtilities {
         }
 
         // Enter new text if provided
-        if let newText = newText {
+        if let newText {
             textField.typeText(newText)
         }
     }
@@ -374,15 +374,19 @@ enum TestUtilities {
     ///   - app: The XCUIApplication instance
     ///   - searchTerm: Optional search term to filter elements (searches identifiers)
     ///   - prefix: Optional prefix for debug output (default: "🔍 DEBUG")
-    static func debugElements(in app: XCUIApplication, containing searchTerm: String? = nil, prefix: String = "🔍 DEBUG") {
+    static func debugElements(
+        in app: XCUIApplication,
+        containing searchTerm: String? = nil,
+        prefix: String = "🔍 DEBUG"
+    ) {
         print("\(prefix): === ACCESSIBILITY HIERARCHY DEBUG ===")
 
         // Print common element types with their identifiers
-        let tables = app.tables.allElementsBoundByIndex.map { $0.identifier }
-        let scrollViews = app.scrollViews.allElementsBoundByIndex.map { $0.identifier }
-        let collectionViews = app.collectionViews.allElementsBoundByIndex.map { $0.identifier }
-        let buttons = app.buttons.allElementsBoundByIndex.map { $0.identifier }
-        let textFields = app.textFields.allElementsBoundByIndex.map { $0.identifier }
+        let tables = app.tables.allElementsBoundByIndex.map(\.identifier)
+        let scrollViews = app.scrollViews.allElementsBoundByIndex.map(\.identifier)
+        let collectionViews = app.collectionViews.allElementsBoundByIndex.map(\.identifier)
+        let buttons = app.buttons.allElementsBoundByIndex.map(\.identifier)
+        let textFields = app.textFields.allElementsBoundByIndex.map(\.identifier)
 
         print("\(prefix): Tables: \(tables)")
         print("\(prefix): ScrollViews: \(scrollViews)")
@@ -391,11 +395,11 @@ enum TestUtilities {
         print("\(prefix): TextFields: \(textFields)")
 
         // If search term provided, show all matching elements with their types
-        if let searchTerm = searchTerm {
+        if let searchTerm {
             let matchingElements = app.descendants(matching: .any)
                 .matching(NSPredicate(format: "identifier CONTAINS %@", searchTerm))
                 .allElementsBoundByIndex
-                .map { "\(elementTypeName(from: $0.elementType)):\($0.identifier)" }
+                .map { "\(self.elementTypeName(from: $0.elementType)):\($0.identifier)" }
 
             print("\(prefix): Elements containing '\(searchTerm)': \(matchingElements)")
         }
@@ -505,7 +509,7 @@ enum TestUtilities {
             return // Already there, no need to navigate
         }
 
-        navigateToTab(app, tabName: "Settings", timeout: timeout)
+        self.navigateToTab(app, tabName: "Settings", timeout: timeout)
 
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: timeout),
@@ -527,9 +531,8 @@ enum TestUtilities {
         genericName: String = "semaglutide",
         brandName: String = "Ozempic",
         dose: String = "0.25",
-        timeout: TimeInterval = 3
-    ) -> String {
-        navigateToMedicationProfiles(app, timeout: timeout)
+        timeout: TimeInterval = 3) -> String {
+        self.navigateToMedicationProfiles(app, timeout: timeout)
 
         // Tap the + button in the navigation bar to add a new profile
         let addButton = app.navigationBars["Medication Profiles"].buttons["Add"]
@@ -581,27 +584,27 @@ enum TestUtilities {
         let profileCell = app.buttons[profileIdentifier]
         XCTAssertTrue(profileCell.waitForExistence(timeout: timeout),
                       "Created profile should appear in list")
-        
+
         return profileIdentifier
     }
 
     /// Delete a medication profile by its identifier
     /// - Parameters:
-    ///   - app: The XCUIApplication instance  
+    ///   - app: The XCUIApplication instance
     ///   - profileIdentifier: The accessibility identifier of the profile to delete
     ///   - timeout: Maximum time to wait for UI elements (default: 3 seconds)
     static func deleteMedicationProfile(_ app: XCUIApplication, profileIdentifier: String, timeout: TimeInterval = 3) {
         let profileCell = app.buttons[profileIdentifier]
         XCTAssertTrue(profileCell.exists, "Profile \(profileIdentifier) should exist before deletion")
-        
+
         // Swipe to delete (standard iOS pattern)
         profileCell.swipeLeft()
-        
+
         let deleteButton = app.buttons["Delete"]
         XCTAssertTrue(deleteButton.waitForExistence(timeout: timeout),
                       "Delete button should appear after swipe")
         deleteButton.tap()
-        
+
         // Verify profile is removed
         XCTAssertFalse(profileCell.waitForExistence(timeout: 1),
                        "Profile should be deleted and no longer exist")
@@ -621,8 +624,7 @@ enum TestUtilities {
         _ app: XCUIApplication,
         injectionSite: String? = nil,
         notes: String? = nil,
-        timeout: TimeInterval = 3
-    ) -> Bool {
+        timeout: TimeInterval = 3) -> Bool {
         // Tap Add tab to open Quick Dose Sheet
         let addTab = app.tabBars.buttons["Add"]
         XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
@@ -633,7 +635,7 @@ enum TestUtilities {
         XCTAssertTrue(quickDoseSheet.waitForExistence(timeout: timeout), "Quick dose sheet should open")
 
         // Set injection site if provided
-        if let injectionSite = injectionSite {
+        if let injectionSite {
             let sitePicker = app.pickers["quick-dose-site-picker"]
             if sitePicker.exists {
                 sitePicker.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: injectionSite)
@@ -641,7 +643,7 @@ enum TestUtilities {
         }
 
         // Add notes if provided
-        if let notes = notes {
+        if let notes {
             let notesField = app.textFields["quick-dose-notes"]
             if notesField.exists {
                 notesField.tap()
@@ -675,14 +677,14 @@ enum TestUtilities {
         _ app: XCUIApplication,
         count: Int = 3,
         delay: TimeInterval = 0.5,
-        timeout: TimeInterval = 3
-    ) {
-        for i in 0..<count {
-            let success = createTestDose(app, notes: "Test dose \(i+1)", timeout: timeout)
-            XCTAssertTrue(success, "Should successfully create test dose \(i+1)")
+        timeout: TimeInterval = 3)
+    {
+        for index in 0 ..< count {
+            let success = self.createTestDose(app, notes: "Test dose \(index + 1)", timeout: timeout)
+            XCTAssertTrue(success, "Should successfully create test dose \(index + 1)")
 
             // Add delay for different timestamps
-            if i < count - 1 {
+            if index < count - 1 {
                 Thread.sleep(forTimeInterval: delay)
             }
         }

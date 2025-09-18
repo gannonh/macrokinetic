@@ -142,9 +142,10 @@ struct AuthenticationDatabaseIntegrationTests {
                 "Authentication state should be determined after check")
 
         // If no UI testing flags are set, the user should remain and be set as current user
-        if !ProcessInfo.processInfo.arguments.contains("--reset-app-data") &&
-           !ProcessInfo.processInfo.arguments.contains("--ui-testing") &&
-           ProcessInfo.processInfo.environment["UI_TESTING"] != "true" {
+        if !ProcessInfo.processInfo.arguments.contains("--reset-app-data"),
+           !ProcessInfo.processInfo.arguments.contains("--ui-testing"),
+           ProcessInfo.processInfo.environment["UI_TESTING"] != "true"
+        {
             #expect(authManager.currentUser != nil, "Should set current user when existing user found")
             #expect(authManager.authenticationState == .authenticated, "Should be authenticated when user exists")
         }

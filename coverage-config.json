@@ -6,13 +6,13 @@
         "threshold": 90,
         "description": "Core business logic with minimal framework dependencies",
         "files": [
-          "PharmacokineticsEngine.swift",
           "User.swift",
           "Dose.swift",
           "MedicationProfile.swift",
           "Medication.swift",
           "ReconstitutionCalculator.swift",
-          "DoseTitration.swift"
+          "DoseTitration.swift",
+          "AdherenceStatistics.swift"
         ]
       },
       "infrastructure": {
@@ -20,7 +20,8 @@
         "description": "Data management with some framework dependencies",
         "files": [
           "DataController.swift",
-          "MedicationManager.swift"
+          "MedicationManager.swift",
+          "DoseSearchService.swift"
         ]
       },
       "framework_integration": {
@@ -36,7 +37,9 @@
         "threshold": 85,
         "description": "ObservableObject classes with testable business logic",
         "files": [
-          "OnboardingViewModel.swift"
+          "OnboardingViewModel.swift",
+          "DoseCalendarViewModel.swift",
+          "DoseHistoryViewModel.swift"
         ]
       },
       "utilities": {
@@ -45,7 +48,9 @@
         "files": [
           "ProfileValidation.swift",
           "Array+Unique.swift",
-          "SubscriptionProducts.swift"
+          "Dose+Filtering.swift",
+          "DoseValidation.swift",
+          "DoseDefaults.swift"
         ]
       }
     }

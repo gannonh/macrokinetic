@@ -67,14 +67,6 @@ created: 2025-01-22T04:47:23Z
 - **Automatic Logging**: All test runs save to ./logs with timestamped directories
 - **Log Access**: `cat logs/latest/output.txt` or `open logs/latest/results.xcresult`
 
-## Test-Runner Agent Configuration
-- Use test-runner agent for all test executions
-- Maximum verbosity enabled for debugging
-- Sequential execution (no parallel testing)
-- Real services - no mocking
-- Complete output capture including stack traces  
-- Test structure validation before assuming code issues
-- Coverage analysis when requested
 
 ## Special Test Cases
 - **Manual Authentication Tests**: Excluded from automated runs, require real Apple ID interaction
@@ -89,7 +81,6 @@ created: 2025-01-22T04:47:23Z
 
 # Specific UI test class (RECOMMENDED)
 ./scripts/test.sh ui 1 OnboardingUITests
-./scripts/test.sh ui 1 AuthenticationUITests
 
 # Run specific UI test method (RECOMMENDED)
 ./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow
@@ -105,15 +96,46 @@ created: 2025-01-22T04:47:23Z
 
 # View latest test results
 cat logs/latest/output.txt
-open logs/latest/results.xcresult
 
 # ⚠️ AVOID unless final verification (very slow):
 # ./scripts/test.sh ui 1              # ALL UI tests - takes 10+ minutes
 # ./scripts/test.sh all 1 --coverage   # ALL tests with coverage - very slow
 ```
 
+## E2E Testing Element Targeting (CRITICAL)
+
+**Element targeting is the #1 challenge in E2E testing.** When tests fail to find elements:
+
+### Debug-First Approach
+```swift
+// ALWAYS start with debugging the accessibility hierarchy
+TestUtilities.debugElements(in: app, containing: "dose-history")
+
+// Example output reveals actual element types:
+// 🔍 DEBUG: Tables: []
+// 🔍 DEBUG: ScrollViews: []
+// 🔍 DEBUG: CollectionViews: ["dose-history-view"]
+```
+
+### Common SwiftUI → Accessibility Mismatches
+- **SwiftUI List** → renders as **CollectionView** (not Table)
+- **NavigationStack** → renders as **CollectionView** (not ScrollView)
+- **Form toggles** → require coordinate-based tapping, not direct `.tap()`
+- **XCUIElementQuery** → has `.count` property, not `.isEmpty` (SwiftLint auto-fix breaks this)
+
+### Essential Utilities
+- **`TestUtilities.debugElements()`** - Debug accessibility hierarchy
+- **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
+- Use **debug output** to identify correct element types before writing selectors
+
+### Systematic Process
+1. Test fails to find element → Add `TestUtilities.debugElements()`
+2. Analyze debug output → Identify actual element type and identifier
+3. Update test selector → Use correct element type (collectionViews/tables/buttons)
+4. Remove debug code → Clean up after fixing selector
+5. Document learning → Update style guide for future reference
+
 ## Test Execution Notes
-- Always use test-runner agent for consistent output formatting
 - All test runs automatically log to `./logs/{test_type}_YYYY-MM-DD_HH-MM-SS/`
 - Latest test results always available via `logs/latest` symlink
 - Swift Testing framework handles unit tests with modern syntax

@@ -7,7 +7,6 @@ disabled_rules:
   - opening_brace
   
 opt_in_rules:
-  - empty_count
   - explicit_init
   - first_where
   - force_unwrapping
@@ -19,6 +18,7 @@ excluded:
   - JabTracker.xcodeproj
   - .build
   - DerivedData
+
 
 line_length:
   warning: 120

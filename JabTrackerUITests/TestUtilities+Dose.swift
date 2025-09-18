@@ -8,7 +8,6 @@
 import XCTest
 
 extension TestUtilities {
-
     /// Creates multiple doses through the UI for testing dose history functionality
     /// - Parameters:
     ///   - app: The XCUIApplication instance
@@ -21,27 +20,27 @@ extension TestUtilities {
         let saveButton = app.buttons["quick-dose-save-button"]
         let successIndicator = app.staticTexts["dose-logged-success"]
 
-        for i in 0..<count {
+        for index in 0 ..< count {
             // Navigate to Add tab
             addTab.tap()
 
             // Wait for medication picker and save button
             XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3),
-                         "Medication picker should exist for dose \(i + 1)")
+                          "Medication picker should exist for dose \(index + 1)")
             XCTAssertTrue(saveButton.exists && saveButton.isEnabled,
-                         "Save button should be enabled for dose \(i + 1)")
+                          "Save button should be enabled for dose \(index + 1)")
 
             // Save the dose
             saveButton.tap()
 
             // Wait for success indicator and dismissal
             XCTAssertTrue(successIndicator.waitForExistence(timeout: 3),
-                         "Success indicator should appear for dose \(i + 1)")
+                          "Success indicator should appear for dose \(index + 1)")
             XCTAssertTrue(successIndicator.waitForNonExistence(timeout: 3),
-                         "Success indicator should dismiss for dose \(i + 1)")
+                          "Success indicator should dismiss for dose \(index + 1)")
 
             // Add delay between doses for different timestamps (except after last dose)
-            if i < count - 1 {
+            if index < count - 1 {
                 Thread.sleep(forTimeInterval: delay)
             }
         }
@@ -63,8 +62,8 @@ extension TestUtilities {
         medicationProfiles: Int = 1,
         medicationName: String = "semaglutide",
         brandName: String = "Ozempic",
-        dose: String = "0.25"
-    ) -> XCUIApplication {
+        dose: String = "0.25") -> XCUIApplication
+    {
         // Create medication profiles using the standard method
         // The navigateToMedicationProfiles will check if we're already there
         if medicationProfiles >= 1 {
@@ -74,19 +73,19 @@ extension TestUtilities {
         if medicationProfiles >= 2 {
             // The second call will see we're already on Medication Profiles screen and not navigate again
             // Use the createMedicationProfileWithDefaults to avoid dose selection issues
-            createMedicationProfileWithDefaults(app, genericName: "tirzepatide", brandName: "Mounjaro")
+            self.createMedicationProfileWithDefaults(app, genericName: "tirzepatide", brandName: "Mounjaro")
         }
 
         if medicationProfiles >= 3 {
-            createMedicationProfileWithDefaults(app, genericName: "liraglutide", brandName: "Victoza")
+            self.createMedicationProfileWithDefaults(app, genericName: "liraglutide", brandName: "Victoza")
         }
 
         if medicationProfiles >= 4 {
-            createMedicationProfileWithDefaults(app, genericName: "dulaglutide", brandName: "Trulicity")
+            self.createMedicationProfileWithDefaults(app, genericName: "dulaglutide", brandName: "Trulicity")
         }
 
         // Create multiple doses (will be associated with the first medication profile by default)
-        createMultipleDoses(in: app, count: doseCount)
+        self.createMultipleDoses(in: app, count: doseCount)
 
         return app
     }
@@ -100,8 +99,7 @@ extension TestUtilities {
         _ app: XCUIApplication,
         genericName: String,
         brandName: String,
-        timeout: TimeInterval = 3
-    ) {
+        timeout: TimeInterval = 3) {
         navigateToMedicationProfiles(app, timeout: timeout)
 
         // Tap the + button in the navigation bar to add a new profile
@@ -141,28 +139,49 @@ extension TestUtilities {
         saveButton.tap()
 
         // Wait for the profile to appear in the list (don't verify specific dose in identifier)
-        let profileCell = app.buttons.matching(NSPredicate(format: "identifier CONTAINS %@", "medication-profile-\(genericName)")).firstMatch
+        let profileCell = app.buttons.matching(
+            NSPredicate(format: "identifier CONTAINS %@", "medication-profile-\(genericName)")
+        ).firstMatch
         XCTAssertTrue(profileCell.waitForExistence(timeout: timeout),
                       "Created profile should appear in list")
     }
 
-    /// Navigates to History tab and waits for history view to load
+    /// Navigates to History tab and waits for history content to load
     /// - Parameters:
     ///   - app: The XCUIApplication instance
-    ///   - timeout: Timeout for history view to appear (default: 5 seconds)
-    /// - Returns: The history view element
+    ///   - timeout: Timeout for history content to appear (default: 3 seconds)
+    /// - Returns: The visible history content element (list or calendar)
     @discardableResult
-    static func navigateToHistoryView(in app: XCUIApplication, timeout: TimeInterval = 5) -> XCUIElement {
+    static func navigateToHistoryView(in app: XCUIApplication, timeout: TimeInterval = 3) -> XCUIElement {
         // Navigate to History tab
         let historyTab = app.tabBars.element.buttons["History"]
         historyTab.tap()
 
-        // Wait for history view to load
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(historyView.waitForExistence(timeout: timeout),
-                     "History view should appear")
+        // Wait for the segmented control to appear (this indicates HistoryView is loaded)
+        let segmentedControl = app.segmentedControls["history-view-mode-picker"]
+        XCTAssertTrue(segmentedControl.waitForExistence(timeout: timeout),
+                      "History view segmented control should appear within \(timeout) seconds")
 
-        return historyView
+        // By default, HistoryView starts in list mode, so wait for list view
+        let listView = app.descendants(matching: .any)["dose-history-list"]
+        if listView.waitForExistence(timeout: 2) {
+            return listView
+        }
+
+        // If list view doesn't appear quickly, check if we're in calendar mode and switch
+        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        if calendarView.exists {
+            let listToggle = segmentedControl.buttons["history-list-toggle"]
+            if listToggle.exists {
+                listToggle.tap()
+                XCTAssertTrue(listView.waitForExistence(timeout: 2),
+                              "List view should appear after switching from calendar")
+                return listView
+            }
+        }
+
+        XCTFail("Could not navigate to history list view within \(timeout) seconds")
+        return listView // This will be non-existent, but satisfies return requirement
     }
 
     /// Gets dose rows from the history list
@@ -173,7 +192,7 @@ extension TestUtilities {
     static func getDoseRows(from app: XCUIApplication, minimumCount: Int = 1) -> XCUIElementQuery {
         let doseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertGreaterThanOrEqual(doseRows.count, minimumCount,
-                                   "Should have at least \(minimumCount) dose row(s)")
+                                    "Should have at least \(minimumCount) dose row(s)")
         return doseRows
     }
 }

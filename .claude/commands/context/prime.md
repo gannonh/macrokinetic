@@ -44,16 +44,17 @@ Load context files in priority order for optimal understanding:
 1. `project-overview.md` - High-level understanding of the project
 2. `project-brief.md` - Core purpose and goals
 3. `tech-context.md` - Technical stack and dependencies
+4. `testing-config.md` - Testing framework and setup
 
 **Priority 2 - Current State (load second):**
-4. `progress.md` - Current status and recent work
-5. `project-structure.md` - Directory and file organization
+5. `progress.md` - Current status and recent work
+6. `project-structure.md` - Directory and file organization
 
 **Priority 3 - Deep Context (load third):**
-6. `system-patterns.md` - Architecture and design patterns
-7. `product-context.md` - User needs and requirements
-8. `project-style-guide.md` - Coding conventions
-9. `project-vision.md` - Long-term direction
+7. `system-patterns.md` - Architecture and design patterns
+8. `product-context.md` - User needs and requirements
+9. `project-style-guide.md` - Coding conventions
+10. `project-vision.md` - Long-term direction
 
 ### 2. Validation During Loading
 

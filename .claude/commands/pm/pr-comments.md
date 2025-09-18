@@ -1,17 +1,17 @@
 ---
+description: Process PR review comments with context-aware discretion
+argument-hint: path to PR comments file or paste comments directly
 allowed-tools: Task, Read, Edit, MultiEdit, Write, LS, Grep
+model: inherit
 ---
 
-# CodeRabbit Review Handler
+# PR Review Handler
 
-Process CodeRabbit review comments with context-aware discretion.
+Process PR review comments with context-aware discretion.
 
-## Usage
-```
-/code-rabbit
-```
+## Comments to Process
 
-Then paste one or more CodeRabbit comments.
+Process the following PR comments: $ARGUMENTS
 
 ## Instructions
 
@@ -19,7 +19,7 @@ Then paste one or more CodeRabbit comments.
 
 Inform the user:
 ```
-I'll review the CodeRabbit comments with discretion, as CodeRabbit doesn't have access to the entire codebase and may not understand the full context.
+I'll review the PR comments with discretion, as the reviewer doesn't have access to the entire codebase and may not understand the full context.
 
 For each comment, I'll:
 - Evaluate if it's valid given our codebase context
@@ -43,10 +43,10 @@ If comments span multiple files:
 Launch parallel sub-agents using Task tool:
 ```yaml
 Task:
-  description: "CodeRabbit fixes for {filename}"
+  description: "pr review fixes for {filename}"
   subagent_type: "general-purpose"
   prompt: |
-    Review and apply CodeRabbit suggestions for {filename}.
+    Review and apply pr review suggestions for {filename}.
     
     Comments to evaluate:
     {relevant_comments_for_this_file}
@@ -63,7 +63,9 @@ Task:
        - Ignored: {list with reasons}
        - Changes made: {brief description}
     
-    Use discretion - CodeRabbit lacks full context.
+    Use discretion - reviewer lacks full context.
+
+    IMPORTANT: Given that you are operating in parallel with other agents, do not run build or test commands as they may conflict with other agents. Only make code changes.
 ```
 
 ### 3. Consolidate Results
@@ -94,6 +96,7 @@ Overall: {X}/{Y} suggestions applied
 
 ### 5. Common Patterns to Accept
 
+- **Invalid Tests** (wrong assertions, missing cases, always passing, false confidence)
 - **Actual bugs** (null checks, error handling)
 - **Security vulnerabilities** (unless false positive)
 - **Resource leaks** (unclosed connections, memory leaks)
@@ -113,8 +116,9 @@ Only apply if all answers are "yes" or the benefit clearly outweighs risks.
 
 ## Important Notes
 
-- CodeRabbit is helpful but lacks context
+- Comments are helpful but lack context
 - Trust your understanding of the codebase over generic suggestions
 - Explain decisions briefly to maintain audit trail
 - Batch related changes for efficiency
 - Use parallel agents for multi-file reviews to save time
+- Avoid running build/test commands in parallel agents to prevent conflicts

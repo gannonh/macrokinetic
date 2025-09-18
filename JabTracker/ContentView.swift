@@ -8,9 +8,9 @@ struct ContentView: View {
     @State private var showingQuickDoseSheet = false
     @State private var showingSuccessMessage = false
     @State private var selectedTab = "home"
-    
+
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: self.$selectedTab) {
             DashboardView()
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
@@ -43,24 +43,23 @@ struct ContentView: View {
                 .tag("settings")
         }
         .accessibilityIdentifier("main-tab-view")
-        .sheet(isPresented: $showingQuickDoseSheet, content: {
+        .sheet(isPresented: self.$showingQuickDoseSheet, content: {
             QuickDoseSheet(
-                viewModel: quickDoseViewModel,
-                showingSuccessMessage: $showingSuccessMessage
-            )
+                viewModel: self.quickDoseViewModel,
+                showingSuccessMessage: self.$showingSuccessMessage)
         })
-        .onChange(of: selectedTab) { oldValue, newValue in
+        .onChange(of: self.selectedTab) { oldValue, newValue in
             if newValue == "add" {
-                showingQuickDoseSheet = true
+                self.showingQuickDoseSheet = true
                 // Reset tab selection to previous tab so + doesn't stay selected
-                selectedTab = oldValue
+                self.selectedTab = oldValue
             }
         }
         .onAppear {
-            quickDoseViewModel.loadSmartDefaults(context: modelContext)
+            self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)
         }
         .overlay(alignment: .top) {
-            if showingSuccessMessage {
+            if self.showingSuccessMessage {
                 Text("Dose logged successfully!")
                     .font(.caption)
                     .foregroundColor(.white)
@@ -75,7 +74,7 @@ struct ContentView: View {
                         // Auto-dismiss success message after 2 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             withAnimation {
-                                showingSuccessMessage = false
+                                self.showingSuccessMessage = false
                             }
                         }
                     }

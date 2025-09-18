@@ -1,5 +1,8 @@
 ---
+description: Check the status of epics in the project management system
+argument-hint: epic name (e.g., "user-authentication")
 allowed-tools: Bash
+model: inherit
 ---
 
 Run `bash .claude/scripts/pm/epic-status.sh $ARGUMENTS` using the bash tool and show me the complete stdout printed to the console.

@@ -1,12 +1,12 @@
 ---
 description: Run the test suite or specific tests using the configured test-runner agent.
 argument-hint: Optional test target (file path, pattern, or suite name)
-allowed-tools: Read, Write, LS, Task
+allowed-tools: Read, LS, Task
 ---
 
 # Run Tests
 
-Execute tests with the configured test-runner agent.
+Execute tests per `.claude/context/testing-config.md`.
 
 ## Usage
 ```
@@ -23,7 +23,7 @@ Where `test_target` can be:
 
 ```bash
 # Check if testing is configured
-test -f .claude/testing-config.md || echo "❌ Testing not configured. Run /testing:prime first"
+test -f .claude/context/testing-config.md || echo "❌ Testing not configured. Run /testing:prime first"
 ```
 
 If test target provided, verify it exists and determine literal filepath/test pattern/method name: {test_target}
@@ -37,7 +37,7 @@ If test target provided, verify it exists and determine literal filepath/test pa
 
 ### 1. Determine Test Command
 
-Based on `.claude/testing-config.md` and target:
+Based on `.claude/context/testing-config.md` and target:
 - No arguments → Run full test suite from config
 - File path → Run specific test file
 - Pattern → Run tests matching pattern
@@ -101,9 +101,10 @@ Failed:
 - Timeout → Kill process and report: "❌ Tests timed out after {time}s"
 - No tests found → "❌ No tests found matching: $ARGUMENTS"
 
-## Important Notes
+## IMPORTANT REMINDERS
 
 - Always use test-runner agent for analysis
 - No mocking - real services only
 - Check test structure if failures occur
 - Keep output focused on failures
+- By far the most common cause of UI test failures is incorrect accessibility identifiers or labels. Use the debug methods in `JabTrackerUITests/TestUtilities.swift` to inspect the view hierarchy and verify identifiers.

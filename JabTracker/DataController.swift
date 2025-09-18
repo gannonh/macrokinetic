@@ -58,7 +58,7 @@ class DataController: ObservableObject {
         context.insert(sampleUser)
         context.insert(sampleMedication)
         context.insert(sampleDose)
-        
+
         // Set relationships after insertion to avoid duplicate registration
         sampleDose.user = sampleUser
         sampleDose.medication = sampleMedication
@@ -88,8 +88,8 @@ class DataController: ObservableObject {
         let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
         let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
 
-        // CloudKit enabled ONLY for CloudKit integration tests (not regular UI tests)
-        let shouldEnableCloudKit = isCloudKitTesting && !isUITesting && !isTestEnvironment
+        // CloudKit enabled ONLY for CloudKit integration tests (not regular unit tests)
+        let shouldEnableCloudKit = isCloudKitTesting && !isTestEnvironment
 
         let configuration = ModelConfiguration(
             schema: schema,

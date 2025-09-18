@@ -118,9 +118,11 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 /pm:issue-update 1234    # Update progress and capture session work
 /pm:issue-resume 1234    # Resume work on in-progress issues
 /pm:issue-sync 1234      # Push progress updates to GitHub
-/pm:issue-merge 1234     # Mark PR ready → review → merge to main
-/pm:issue-close 1234     # Close issue + update epic progress
-/pm:epic-close epic-name # Close epic when all issues complete
+/context:update          # Propagate learnings
+/pm:issue-merge 1234        # Mark PR ready → review → merge to main
+/pm:issue-close 1234        # Close issue + update epic progress
+/pm:epic-refresh epic-name  # Update epic progress from tasks
+/pm:epic-close epic-name    # Close epic when all issues complete
 ```
 
 **Issue/Branch/PR Workflow:** Each issue gets its own branch and pull request for focused development and review. Specialized agents implement features while maintaining comprehensive progress tracking and audit trails. Use `issue-update` to capture progress during development and `issue-resume` to continue work after breaks.
