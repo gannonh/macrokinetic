@@ -118,7 +118,7 @@ final class DoseHistoryBasicUITests: XCTestCase {
         XCTAssertTrue(sheetDismissed, "Edit sheet should dismiss after saving changes")
 
         // Verify we're back on the History view and the dose row still exists
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        let historyView = app.collectionViews["dose-history-list"]
         XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should return to history view")
 
         // Verify the dose row still exists after edit

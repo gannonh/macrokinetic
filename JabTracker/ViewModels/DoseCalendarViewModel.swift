@@ -98,27 +98,25 @@ class DoseCalendarViewModel: ObservableObject {
     }
 
     /// Load dose data from SwiftData context (fallback method)
-    func loadData(context: ModelContext) {
-        Task { @MainActor in
-            do {
-                self.isLoading = true
-                self.errorMessage = nil
+    func loadData(context: ModelContext) async {
+        do {
+            self.isLoading = true
+            self.errorMessage = nil
 
-                // Create fetch descriptor for all doses
-                let descriptor = FetchDescriptor<Dose>(
-                    sortBy: [SortDescriptor(\Dose.timestamp, order: .forward)]
-                )
+            // Create fetch descriptor for all doses
+            let descriptor = FetchDescriptor<Dose>(
+                sortBy: [SortDescriptor(\Dose.timestamp, order: .forward)]
+            )
 
-                // Fetch all doses
-                self.allDoses = try context.fetch(descriptor)
-                self.updateCalendarData()
+            // Fetch all doses
+            self.allDoses = try context.fetch(descriptor)
+            self.updateCalendarData()
 
-                self.isLoading = false
+            self.isLoading = false
 
-            } catch {
-                self.errorMessage = "Failed to load dose data: \(error.localizedDescription)"
-                self.isLoading = false
-            }
+        } catch {
+            self.errorMessage = "Failed to load dose data: \(error.localizedDescription)"
+            self.isLoading = false
         }
     }
 
@@ -159,7 +157,7 @@ class DoseCalendarViewModel: ObservableObject {
     }
 
     /// Check if date has any doses
-    func hasdoses(for date: Date) -> Bool {
+    func hasDoses(for date: Date) -> Bool {
         !self.doses(for: date).isEmpty
     }
 

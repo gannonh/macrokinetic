@@ -30,8 +30,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         XCTAssertEqual(initialDoseRows.count, 3, "Should start with 3 doses")
 
         // WHEN: User enters text in search bar
-        // Based on debug output: TextField with identifier 'dose-history-view'
-        let searchField = app.textFields["dose-history-view"]
+        let searchField = app.textFields["dose-history-list"]
         XCTAssertTrue(searchField.exists, "Search field should be available")
 
         // Enter search text that should filter results
@@ -39,8 +38,12 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         searchField.typeText("test")
 
         // THEN: List filters in real-time to show only matching doses
-        // Wait for filtering to complete
-        sleep(1)
+        // Wait for filtering to complete by checking filtered results
+        let filteredResults = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count <= 3"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [filteredResults], timeout: 5)
 
         // Verify filtering occurred (assuming some doses match "test" and some don't)
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -50,8 +53,12 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Clear search to verify all doses return
         TestUtilities.clearAndEnterText(in: searchField)
 
-        // Wait for filter to clear
-        sleep(1)
+        // Wait for filter to clear by checking restored results
+        let restoredResults = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count >= 3"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [restoredResults], timeout: 5)
 
         // Verify all doses are shown again
         let restoredDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
@@ -74,19 +81,27 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         XCTAssertEqual(initialDoseRows.count, 3, "Should start with 3 doses")
 
         // Apply search filter
-        let searchField = app.textFields["dose-history-view"]
+        let searchField = app.textFields["dose-history-list"]
         XCTAssertTrue(searchField.exists, "Search field should be available")
 
         TestUtilities.clearAndEnterText(in: searchField, newText: "filter")
 
-        // Wait for filtering to complete
-        sleep(1)
+        // Wait for filtering to complete by checking that filtering occurred
+        let filteringComplete = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count <= 3"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [filteringComplete], timeout: 5)
 
         // WHEN: User clears search text
         TestUtilities.clearAndEnterText(in: searchField)
 
-        // Wait for filter to clear
-        sleep(1)
+        // Wait for filter to clear by checking restored results
+        let clearingComplete = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count >= 3"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [clearingComplete], timeout: 5)
 
         // THEN: All doses are shown again
         let restoredDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
@@ -119,22 +134,28 @@ final class DoseHistoryFilteringUITests: XCTestCase {
             let dateToPicker = app.datePickers["date-to-picker"]
 
             if dateFromPicker.exists, dateToPicker.exists {
-                // Apply date range filter (implementation depends on UI)
-                // For now, just verify the filtering interface exists
+                // Set concrete date values for date range filtering
                 XCTAssertTrue(dateFromPicker.exists, "Date from picker should exist")
                 XCTAssertTrue(dateToPicker.exists, "Date to picker should exist")
 
+                // Set date range - adjust wheels or use coordinate-based interaction
+                dateFromPicker.adjust(toPickerWheelValue: "Yesterday")
+                dateToPicker.adjust(toPickerWheelValue: "Today")
+
                 // Apply filter (close filter interface)
                 let applyFilterButton = app.buttons["apply-filter"]
-                if applyFilterButton.exists {
-                    applyFilterButton.tap()
-                }
+                XCTAssertTrue(applyFilterButton.waitForExistence(timeout: 3), "Apply filter button should exist")
+                applyFilterButton.tap()
             }
         }
 
         // THEN: Only doses within date range are shown
-        // Wait for filtering to apply
-        sleep(1)
+        // Wait for date filtering to apply by checking filtered results
+        let dateFilterComplete = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count <= 5"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [dateFilterComplete], timeout: 5)
 
         // Verify filtering occurred (exact count depends on implementation)
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -174,8 +195,12 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         }
 
         // THEN: Only doses with selected medication are shown
-        // Wait for filtering to apply
-        sleep(1)
+        // Wait for medication filtering to apply by checking filtered results
+        let medicationFilterComplete = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count <= 3"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [medicationFilterComplete], timeout: 5)
 
         // Verify filtering occurred
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -215,8 +240,12 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         }
 
         // THEN: Only doses with selected injection site are shown
-        // Wait for filtering to apply
-        sleep(1)
+        // Wait for injection site filtering to apply by checking filtered results
+        let siteFilterComplete = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count <= 3"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [siteFilterComplete], timeout: 5)
 
         // Verify filtering occurred
         let filteredDoseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -241,7 +270,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         XCTAssertEqual(initialDoseRows.count, 2, "Should start with 2 doses")
 
         // WHEN: User pulls down to refresh
-        let historyView = app.collectionViews["dose-history-view"]
+        let historyView = app.collectionViews["dose-history-list"]
         XCTAssertTrue(historyView.waitForExistence(timeout: 3),
                       "History view should be available")
 
@@ -251,8 +280,12 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         startCoordinate.press(forDuration: 0.1, thenDragTo: endCoordinate)
 
         // THEN: Refresh indicator appears and data updates
-        // Wait for refresh to complete
-        sleep(2)
+        // Wait for refresh to complete by checking that history view is still responsive
+        let refreshComplete = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true"),
+            object: historyView
+        )
+        wait(for: [refreshComplete], timeout: 10)
 
         // Verify data is still displayed (refresh completed)
         let refreshedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 2)

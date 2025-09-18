@@ -20,27 +20,27 @@ extension TestUtilities {
         let saveButton = app.buttons["quick-dose-save-button"]
         let successIndicator = app.staticTexts["dose-logged-success"]
 
-        for i in 0 ..< count {
+        for index in 0 ..< count {
             // Navigate to Add tab
             addTab.tap()
 
             // Wait for medication picker and save button
             XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3),
-                          "Medication picker should exist for dose \(i + 1)")
+                          "Medication picker should exist for dose \(index + 1)")
             XCTAssertTrue(saveButton.exists && saveButton.isEnabled,
-                          "Save button should be enabled for dose \(i + 1)")
+                          "Save button should be enabled for dose \(index + 1)")
 
             // Save the dose
             saveButton.tap()
 
             // Wait for success indicator and dismissal
             XCTAssertTrue(successIndicator.waitForExistence(timeout: 3),
-                          "Success indicator should appear for dose \(i + 1)")
+                          "Success indicator should appear for dose \(index + 1)")
             XCTAssertTrue(successIndicator.waitForNonExistence(timeout: 3),
-                          "Success indicator should dismiss for dose \(i + 1)")
+                          "Success indicator should dismiss for dose \(index + 1)")
 
             // Add delay between doses for different timestamps (except after last dose)
-            if i < count - 1 {
+            if index < count - 1 {
                 Thread.sleep(forTimeInterval: delay)
             }
         }
@@ -99,8 +99,7 @@ extension TestUtilities {
         _ app: XCUIApplication,
         genericName: String,
         brandName: String,
-        timeout: TimeInterval = 3)
-    {
+        timeout: TimeInterval = 3) {
         navigateToMedicationProfiles(app, timeout: timeout)
 
         // Tap the + button in the navigation bar to add a new profile
@@ -140,7 +139,9 @@ extension TestUtilities {
         saveButton.tap()
 
         // Wait for the profile to appear in the list (don't verify specific dose in identifier)
-        let profileCell = app.buttons.matching(NSPredicate(format: "identifier CONTAINS %@", "medication-profile-\(genericName)")).firstMatch
+        let profileCell = app.buttons.matching(
+            NSPredicate(format: "identifier CONTAINS %@", "medication-profile-\(genericName)")
+        ).firstMatch
         XCTAssertTrue(profileCell.waitForExistence(timeout: timeout),
                       "Created profile should appear in list")
     }

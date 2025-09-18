@@ -85,8 +85,7 @@ struct DoseCalendarViewModelTests {
         try self.context.save()
 
         // When: Loading data from context
-        self.viewModel.loadData(context: self.context)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await self.viewModel.loadData(context: self.context)
 
         // Then: Data is loaded and processed
         #expect(self.viewModel.allDoses.count == 2, "Should load all doses from context")
@@ -100,8 +99,7 @@ struct DoseCalendarViewModelTests {
         // Note: In real scenario, this might involve network errors or corrupt data
 
         // When: Loading data with potential error
-        self.viewModel.loadData(context: self.context)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await self.viewModel.loadData(context: self.context)
 
         // Then: Error handling is graceful (no crash)
         // Note: Specific error simulation would require more complex setup
@@ -291,8 +289,8 @@ struct DoseCalendarViewModelTests {
         self.viewModel.setDoses([todayDose])
 
         // When: Checking dose presence
-        let hasToday = self.viewModel.hasdoses(for: today)
-        let hasTomorrow = self.viewModel.hasdoses(for: tomorrow)
+        let hasToday = self.viewModel.hasDoses(for: today)
+        let hasTomorrow = self.viewModel.hasDoses(for: tomorrow)
 
         // Then: Presence is detected correctly
         #expect(hasToday == true, "Should detect dose for today")

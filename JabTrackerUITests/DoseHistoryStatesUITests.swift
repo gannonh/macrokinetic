@@ -32,22 +32,23 @@ final class DoseHistoryStatesUITests: XCTestCase {
             NSPredicate(format: "label CONTAINS 'Start tracking'")
         ).firstMatch
 
-        // Check for empty state elements
-        if emptyStateView.waitForExistence(timeout: 3) {
-            XCTAssertTrue(emptyStateView.exists, "Empty state message should be displayed")
-        } else if emptyStateTitle.waitForExistence(timeout: 3) {
-            XCTAssertTrue(emptyStateTitle.exists, "Empty state title should be displayed")
-        } else if emptyStateDescription.waitForExistence(timeout: 3) {
-            XCTAssertTrue(emptyStateDescription.exists, "Empty state description should be displayed")
-        } else {
-            // Verify no dose rows exist
-            let doseRows = app.buttons.matching(identifier: "dose-history-row")
-            XCTAssertEqual(doseRows.count, 0, "No dose rows should exist in empty state")
-        }
+        // Check for empty state elements independently with proper waits
+        let emptyStateExists = emptyStateView.waitForExistence(timeout: 3)
+        let titleExists = emptyStateTitle.waitForExistence(timeout: 3)
+        let descriptionExists = emptyStateDescription.waitForExistence(timeout: 3)
+
+        // Verify at least one empty state element exists
+        let hasEmptyStateElement = emptyStateExists || titleExists || descriptionExists
+        XCTAssertTrue(hasEmptyStateElement, "At least one empty state element should be displayed")
+
+        // Verify no dose rows exist separately
+        let doseRows = app.buttons.matching(identifier: "dose-history-row")
+        XCTAssertEqual(doseRows.count, 0, "No dose rows should exist in empty state")
 
         // Verify we're still on the History view
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should be on history view")
+        // In empty state, there may not be a collection view, but there should be elements with dose-history-list identifier
+        let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
+        XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements indicating we're on history view")
     }
 
     func test_doseHistory_addFirstDose() throws {
@@ -108,9 +109,16 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
         // THEN: Dose should be displayed in history
         // Verify we're back on history view
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(historyView.waitForExistence(timeout: 3),
-                      "Should return to history view after adding dose")
+        let historyView = app.collectionViews["dose-history-list"]
+        let historyViewExists = historyView.waitForExistence(timeout: 3)
+
+        // If collection view doesn't exist, check for any dose-history-list elements
+        if !historyViewExists {
+            let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
+            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
+        } else {
+            XCTAssertTrue(historyViewExists, "Should return to history view after adding dose")
+        }
 
         // Verify the dose is now displayed (no more empty state)
         let doseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -137,8 +145,12 @@ final class DoseHistoryStatesUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
 
         // WHEN: User views history list
-        // Wait for list to load
-        sleep(1)
+        // Wait for list to load by checking for dose rows
+        let listLoaded = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count >= 5"),
+            object: app.buttons.matching(identifier: "dose-history-row")
+        )
+        wait(for: [listLoaded], timeout: 10)
 
         // THEN: Doses are grouped by date with section headers
         // Look for date section headers
@@ -252,8 +264,16 @@ final class DoseHistoryStatesUITests: XCTestCase {
         cancelButton.tap()
 
         // Verify we're back on the History view
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should return to history view after canceling edit")
+        let historyView = app.collectionViews["dose-history-list"]
+        let historyViewExists = historyView.waitForExistence(timeout: 3)
+
+        // If collection view doesn't exist, check for any dose-history-list elements
+        if !historyViewExists {
+            let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
+            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
+        } else {
+            XCTAssertTrue(historyViewExists, "Should return to history view after canceling edit")
+        }
     }
 
     func test_doseHistory_visualIndicatorsForPhotosAndSkippedDoses() throws {
@@ -277,8 +297,12 @@ final class DoseHistoryStatesUITests: XCTestCase {
         if skipButton.waitForExistence(timeout: 3) {
             skipButton.tap()
 
-            // Wait for skip status to update
-            sleep(1)
+            // Wait for skip status to update by checking for skipped indicator
+            let skipStatusUpdated = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "exists == true"),
+                object: app.images["skipped-dose-indicator"]
+            )
+            wait(for: [skipStatusUpdated], timeout: 5)
 
             // THEN: Skipped dose styling is applied appropriately
             let skippedIndicator = app.images["skipped-dose-indicator"]
@@ -317,9 +341,16 @@ final class DoseHistoryStatesUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
 
         // Measure time to load history list
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(historyView.waitForExistence(timeout: 10),
-                      "History view should load within reasonable time")
+        let historyView = app.collectionViews["dose-history-list"]
+        let historyViewExists = historyView.waitForExistence(timeout: 10)
+
+        // If collection view doesn't exist, check for any dose-history-list elements
+        if !historyViewExists {
+            let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
+            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements within reasonable time")
+        } else {
+            XCTAssertTrue(historyViewExists, "History view should load within reasonable time")
+        }
 
         let loadTime = Date().timeIntervalSince(startTime)
 

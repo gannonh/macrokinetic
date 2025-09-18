@@ -374,7 +374,11 @@ enum TestUtilities {
     ///   - app: The XCUIApplication instance
     ///   - searchTerm: Optional search term to filter elements (searches identifiers)
     ///   - prefix: Optional prefix for debug output (default: "🔍 DEBUG")
-    static func debugElements(in app: XCUIApplication, containing searchTerm: String? = nil, prefix: String = "🔍 DEBUG") {
+    static func debugElements(
+        in app: XCUIApplication,
+        containing searchTerm: String? = nil,
+        prefix: String = "🔍 DEBUG"
+    ) {
         print("\(prefix): === ACCESSIBILITY HIERARCHY DEBUG ===")
 
         // Print common element types with their identifiers
@@ -527,8 +531,7 @@ enum TestUtilities {
         genericName: String = "semaglutide",
         brandName: String = "Ozempic",
         dose: String = "0.25",
-        timeout: TimeInterval = 3) -> String
-    {
+        timeout: TimeInterval = 3) -> String {
         self.navigateToMedicationProfiles(app, timeout: timeout)
 
         // Tap the + button in the navigation bar to add a new profile
@@ -621,8 +624,7 @@ enum TestUtilities {
         _ app: XCUIApplication,
         injectionSite: String? = nil,
         notes: String? = nil,
-        timeout: TimeInterval = 3) -> Bool
-    {
+        timeout: TimeInterval = 3) -> Bool {
         // Tap Add tab to open Quick Dose Sheet
         let addTab = app.tabBars.buttons["Add"]
         XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
@@ -677,12 +679,12 @@ enum TestUtilities {
         delay: TimeInterval = 0.5,
         timeout: TimeInterval = 3)
     {
-        for i in 0 ..< count {
-            let success = self.createTestDose(app, notes: "Test dose \(i + 1)", timeout: timeout)
-            XCTAssertTrue(success, "Should successfully create test dose \(i + 1)")
+        for index in 0 ..< count {
+            let success = self.createTestDose(app, notes: "Test dose \(index + 1)", timeout: timeout)
+            XCTAssertTrue(success, "Should successfully create test dose \(index + 1)")
 
             // Add delay for different timestamps
-            if i < count - 1 {
+            if index < count - 1 {
                 Thread.sleep(forTimeInterval: delay)
             }
         }
