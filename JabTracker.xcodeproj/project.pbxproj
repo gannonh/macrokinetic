@@ -112,7 +112,6 @@
 		B000368714C479D72A1E41B7 /* JabTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */; };
 		B309C0C8A3D10EF6A3D29181 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37ACF21E9EFEA5E217BE6385 /* SubscriptionManager.swift */; };
 		B3AC659BAE369ADF5A39BDDE /* MonthlyStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D0A0FA309830D40F9CECA3 /* MonthlyStatsView.swift */; };
-		B3D49A862E810525E9B8A213 /* DoseHistoryUITests.swift.backup in Resources */ = {isa = PBXBuildFile; fileRef = F3E8CF02D49452F7B2A9D749 /* DoseHistoryUITests.swift.backup */; };
 		B75439369EF479C6C7679BEF /* JabTrackerStoreKit.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 6E8F25682AB8F7F1EEDB80C2 /* JabTrackerStoreKit.storekit */; };
 		B7F847D147FC19610B2514ED /* DoseHistoryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3746484A8C6A3EB3F4E98CB7 /* DoseHistoryRow.swift */; };
 		BA31440BC731D9DCE897FAE2 /* DoseCalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB1FE9FBC4A3EEF509C518A /* DoseCalendarViewModel.swift */; };
@@ -161,7 +160,6 @@
 		F55D33FC517BE359F05C333C /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */; };
 		F6DABF5FFAA7B073D31CFF18 /* AuthenticationDelegateMethodTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B10446D868275C35DDCC8E /* AuthenticationDelegateMethodTests.swift */; };
 		F6F8AA08B511F3FDF37C27B4 /* Dose+Filtering.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC53F4AA7A76F686436ECEC /* Dose+Filtering.swift */; };
-		F9FA7604768DFBA4859AA724 /* CalendarIntegrationUITests.swift.backup in Resources */ = {isa = PBXBuildFile; fileRef = 975315FEED512489D9A17E9B /* CalendarIntegrationUITests.swift.backup */; };
 		FA0BADBD0D919E552528B1C6 /* DoseTitrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 959E77138F934F2BABE2D6C4 /* DoseTitrationTests.swift */; };
 		FB791237B443E2959C3CD9BE /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7150A995B6D4936C3556044A /* PersistenceTests.swift */; };
 		FEC4842A548B2AAD5A4625A2 /* ManualAuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CA19BCF65A3BA0D292D435 /* ManualAuthenticationUITests.swift */; };
@@ -285,7 +283,6 @@
 		94C046C9CE67D30EEA5AF3C0 /* BiometricAuthManagerCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManagerCoreTests.swift; sourceTree = "<group>"; };
 		959E77138F934F2BABE2D6C4 /* DoseTitrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseTitrationTests.swift; sourceTree = "<group>"; };
 		9636B2D1B47D1281AE836554 /* CalendarIntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarIntegrationUITests.swift; sourceTree = "<group>"; };
-		975315FEED512489D9A17E9B /* CalendarIntegrationUITests.swift.backup */ = {isa = PBXFileReference; path = CalendarIntegrationUITests.swift.backup; sourceTree = "<group>"; };
 		982A546060F21F198D83B193 /* DataControllerBasicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerBasicTests.swift; sourceTree = "<group>"; };
 		982BEC8C7EF1C6A76703D2FF /* SubscriptionManagerMoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerMoreTests.swift; sourceTree = "<group>"; };
 		98447312C9BA4AA09459C90B /* SubscriptionUITermsPrivacyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUITermsPrivacyTests.swift; sourceTree = "<group>"; };
@@ -342,7 +339,6 @@
 		EE66B10C09A23B18DE262674 /* CardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardComponents.swift; sourceTree = "<group>"; };
 		F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewTests.swift; sourceTree = "<group>"; };
 		F34F27A0FE76AB78F5C77DB6 /* JabTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JabTracker.entitlements; sourceTree = "<group>"; };
-		F3E8CF02D49452F7B2A9D749 /* DoseHistoryUITests.swift.backup */ = {isa = PBXFileReference; path = DoseHistoryUITests.swift.backup; sourceTree = "<group>"; };
 		F78094472F5DE7764EA9C5CA /* CalendarDisplayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDisplayUITests.swift; sourceTree = "<group>"; };
 		FAC5025DB7552ECF121A4C89 /* OnboardingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingUITests.swift; sourceTree = "<group>"; };
 		FCDC5B0C0A508F16597EEF3E /* DoseHistoryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryViewModelTests.swift; sourceTree = "<group>"; };
@@ -664,7 +660,6 @@
 				2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */,
 				F78094472F5DE7764EA9C5CA /* CalendarDisplayUITests.swift */,
 				9636B2D1B47D1281AE836554 /* CalendarIntegrationUITests.swift */,
-				975315FEED512489D9A17E9B /* CalendarIntegrationUITests.swift.backup */,
 				43308032C5E6351BCCFBB56C /* CalendarNavigationUITests.swift */,
 				3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */,
 				B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */,
@@ -675,7 +670,6 @@
 				A8B1890A105E3B71CA2894BF /* DoseHistoryFilteringUITests.swift */,
 				70180F35345EC1042DDF12C1 /* DoseHistoryStatesUITests.swift */,
 				B12AE5BFDB7B73AE434ED4A5 /* DoseHistorySwipeActionsUITests.swift */,
-				F3E8CF02D49452F7B2A9D749 /* DoseHistoryUITests.swift.backup */,
 				468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */,
 				93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */,
 				45CA19BCF65A3BA0D292D435 /* ManualAuthenticationUITests.swift */,
@@ -862,8 +856,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				81648DADD41FA3A7E06A79E2 /* .swiftlint.yml in Resources */,
-				F9FA7604768DFBA4859AA724 /* CalendarIntegrationUITests.swift.backup in Resources */,
-				B3D49A862E810525E9B8A213 /* DoseHistoryUITests.swift.backup in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

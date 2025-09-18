@@ -39,6 +39,37 @@ This allows for early feedback and tracks progress on the issue.
 
 ## Working in Branches
 
+### Determine current issue number
+
+Try these methods in order until you find the issue number:
+
+1. **Branch name** (check first):
+   ```bash
+   git branch --show-current
+   ```
+   - Look for patterns like `issue-42`, `issue/42`, `feat/issue-42-description`
+   - Extract: `git branch --show-current | grep -oE 'issue-?[0-9]+' | grep -oE '[0-9]+'`
+
+2. **PR name/description** (if branch has an open PR):
+   ```bash
+   gh pr view --json title,body,number
+   ```
+   - Check PR title for `#42` or `issue #42`
+   - Check PR body for linked issues
+   - The PR itself might be the issue number
+
+3. **Recent commits** (if not found above):
+   ```bash
+   git log --oneline -10 | grep -i "issue\|#"
+   ```
+   - Look for patterns like `#42`, `issue #42`, `fixes #42`, `closes #42`
+   - Extract: `git log --oneline -10 | grep -oE '#[0-9]+' | head -1 | tr -d '#'`
+
+4. **If still unsure, ask the user**:
+   - "I couldn't determine the issue number from the branch name, PR, or recent commits. What issue number should I use?"
+   - This ensures accuracy rather than guessing
+
+
 ### Agent Commits
 - Agents commit directly to the branch
 - Use small, focused commits
