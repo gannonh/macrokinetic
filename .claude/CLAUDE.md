@@ -23,7 +23,6 @@ The code-analyzer agent is an expert in code analysis, logic tracing, and vulner
 
 ### Testing
 
-- Always use the test-runner agent to execute tests.
 - Do not use mock services for anything ever.
 - Do not move on to the next test until the current test is complete.
 - If the test fails, consider checking if the test is structured correctly before deciding we need to refactor the codebase.

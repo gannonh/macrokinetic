@@ -1,6 +1,6 @@
 ---
-description: Run the test suite or specific tests using the configured test-runner agent.
-argument-hint: Optional test target (file path, pattern, or suite name)
+description: Run the test suite or specific tests.
+argument-hint: [test-target] [additional-context]
 allowed-tools: Read, LS, Task
 ---
 
@@ -8,16 +8,9 @@ allowed-tools: Read, LS, Task
 
 Execute tests per `.claude/context/testing-config.md`.
 
-## Usage
-```
-/testing:run [test_target]
-```
+Test Target (if any): $1
 
-Where `test_target` can be:
-- Empty (run all tests)
-- Test file path
-- Test pattern
-- Test suite name
+Additional Context (if any): $2
 
 ## Quick Check
 
@@ -29,13 +22,14 @@ test -f .claude/context/testing-config.md || echo "❌ Testing not configured. R
 If test target provided, verify it exists and determine literal filepath/test pattern/method name: {test_target}
 
 **IMPORTANT** 
-- `$ARGUMENTS` may or may not be a literal file path
-- Unless otherwise mentioned in `$ARGUMENTS`, assume the test should be run **in the current branch**.
-- It is your job to determine and verify correct `{test_target}` based on the provided arguments: `$ARGUMENTS`
+- `$1` may or may not be a literal file path
+- It is your job to determine and verify correct `{test_target}` based on the provided arguments: `$1`
 
 ## Instructions
 
 ### 1. Determine Test Command
+
+Read testing configuration from `.claude/context/testing-config.md` in its entirety.
 
 Based on `.claude/context/testing-config.md` and target:
 - No arguments → Run full test suite from config
@@ -44,17 +38,13 @@ Based on `.claude/context/testing-config.md` and target:
 
 ### 2. Execute Tests
 
-Use the test-runner agent from `.claude/agents/test-runner.md`:
-
-```markdown
-Execute tests for: `{test_target}` (or "all" if empty)
+Run tests with verbose output.
 
 Requirements:
 - Run with verbose output for debugging
 - No mocks - use real services
 - Capture full output including stack traces
 - If test fails, check test structure before assuming code issue
-```
 
 ### 3. Monitor Execution
 
@@ -99,11 +89,10 @@ Failed:
 
 - Test command fails → "❌ Test execution failed: {error}. Check test framework is installed."
 - Timeout → Kill process and report: "❌ Tests timed out after {time}s"
-- No tests found → "❌ No tests found matching: $ARGUMENTS"
+- No tests found → "❌ No tests found matching: $1"
 
 ## IMPORTANT REMINDERS
 
-- Always use test-runner agent for analysis
 - No mocking - real services only
 - Check test structure if failures occur
 - Keep output focused on failures
