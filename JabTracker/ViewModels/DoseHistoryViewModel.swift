@@ -338,20 +338,6 @@ class DoseHistoryViewModel: ObservableObject {
     }
 }
 
-// MARK: - Supporting Types
-
-/// Data structure for passing dose edit information
-struct DoseEditData: Identifiable {
-    let id: UUID
-    var amount: Double
-    var timestamp: Date
-    var site: String?
-    var notes: String?
-    var imageData: Data?
-    var skipped: Bool
-    var medicationProfile: MedicationProfile?
-}
-
 // MARK: - Error Types
 
 enum DoseHistoryError: LocalizedError {

@@ -24,7 +24,8 @@
         "files": [
           "DataController.swift",
           "MedicationManager.swift",
-          "DoseSearchService.swift"
+          "DoseSearchService.swift",
+          "DoseService.swift"
         ]
       },
       "framework_integration": {
@@ -64,6 +65,10 @@
       "SwiftUI Views",
       "View modifiers",
       "SwiftUI-specific presentation logic"
+    ],
+    "files": [
+      "QuickDoseEntry.swift",
+      "DoseEntrySheet.swift"
     ]
   },
   "special_testing_notes": {

@@ -149,39 +149,12 @@ class QuickDoseViewModel: ObservableObject {
 
     // MARK: - Dose Saving
 
-    /// Saves the current dose with smart defaults to the data store
-    func saveDose(context: ModelContext) async throws {
-        guard let profile = selectedMedicationProfile else {
-            throw QuickDoseError.noMedicationProfile
-        }
-
-        guard self.canSaveDose else {
-            throw QuickDoseError.invalidDoseData
-        }
-
-        // Create new dose with current values
-        let newDose = Dose(
-            amount: doseAmount,
-            timestamp: doseTime,
-            site: selectedInjectionSite,
-            notes: notes.isEmpty ? nil : self.notes,
-            imageData: nil, // Quick dose entry doesn't support photos
-            skipped: false,
-            user: nil, // Will be set when user relationship is established
-            medication: profile)
-
-        // Insert into context
-        context.insert(newDose)
-
-        // Save context
-        try context.save()
-
-        // Reset form for next use
-        self.resetForm()
-    }
+    // NOTE: Dose saving is now handled by DoseService for PK integration
+    // This method is deprecated in favor of DoseService.saveDose()
+    // Keeping the form reset method for convenience
 
     /// Resets form to initial state after successful save
-    private func resetForm() {
+    func resetForm() {
         self.notes = ""
         self.doseTime = Date()
         // Keep medication selection and injection site rotation for convenience
