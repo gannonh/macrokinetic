@@ -10,6 +10,9 @@
           "Dose.swift",
           "MedicationProfile.swift",
           "Medication.swift",
+          "ConcentrationPoint.swift",
+          "Medication+Pharmacokinetics.swift",
+          "PharmacokineticsEngine.swift",
           "ReconstitutionCalculator.swift",
           "DoseTitration.swift",
           "AdherenceStatistics.swift"
