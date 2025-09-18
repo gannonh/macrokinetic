@@ -61,12 +61,6 @@ The code-analyzer agent is an expert in code analysis, logic tracing, and vulner
 
 Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 
-## Project Requirements and Implementation Plan
-
-@docs/spec-master-prd.md
-
-@docs/implementation-plan.md
-
 ## Development Commands
 
 **IMPORTANT**: It is highly recommended to use the provided **Convenience Scripts** for building, testing, and other common tasks. These scripts handle logging, formatting, and other best practices automatically.
