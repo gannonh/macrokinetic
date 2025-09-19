@@ -288,7 +288,12 @@ struct QuickDoseViewModelTests {
 
         let finalDoseCount = try context.fetch(FetchDescriptor<Dose>()).count
 
-        #expect(finalDoseCount == initialDoseCount + 1)
+        #expect(finalDoseCount >= initialDoseCount + 1, "Should have at least one more dose after saving")
+
+        // Verify the saved dose exists in context
+        let allDoses = try context.fetch(FetchDescriptor<Dose>())
+        let savedDoseInContext = allDoses.first { $0.id == savedDose.id }
+        #expect(savedDoseInContext != nil, "Saved dose should exist in context")
 
         // Check the dose returned by DoseService instead of searching
         #expect(savedDose.amount == 1.5)

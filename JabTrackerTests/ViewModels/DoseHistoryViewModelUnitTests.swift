@@ -170,16 +170,16 @@ struct DoseHistoryViewModelUnitTests {
 
         let calendar = Calendar.current
         let today = Date()
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
 
         let todayMorning = self.createTestDose(
-            timestamp: calendar.date(bySettingHour: 9, minute: 0, second: 0, of: today)!,
+            timestamp: try #require(calendar.date(bySettingHour: 9, minute: 0, second: 0, of: today)),
             notes: "morning")
         let todayEvening = self.createTestDose(
-            timestamp: calendar.date(bySettingHour: 18, minute: 0, second: 0, of: today)!,
+            timestamp: try #require(calendar.date(bySettingHour: 18, minute: 0, second: 0, of: today)),
             notes: "evening")
         let yesterdayDose = self.createTestDose(
-            timestamp: calendar.date(bySettingHour: 10, minute: 0, second: 0, of: yesterday)!,
+            timestamp: try #require(calendar.date(bySettingHour: 10, minute: 0, second: 0, of: yesterday)),
             notes: "yesterday")
 
         viewModel.filteredDoses = [todayMorning, todayEvening, yesterdayDose]
@@ -295,8 +295,8 @@ struct DoseHistoryViewModelUnitTests {
 
         let calendar = Calendar.current
         let today = Date()
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-        let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: today)!
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let twoDaysAgo = try #require(calendar.date(byAdding: .day, value: -2, to: today))
 
         let doses = [
             createTestDose(timestamp: today, notes: "today"),
@@ -411,6 +411,11 @@ struct DoseHistoryViewModelUnitTests {
         let editData = viewModel.getDoseForEditing(dose)
 
         // Then: Edit data matches dose
+        #expect(editData != nil)
+        guard let editData = editData else {
+            #expect(Bool(false), "editData should not be nil")
+            return
+        }
         #expect(editData.id == dose.id)
         #expect(editData.amount == dose.amount)
         #expect(editData.timestamp == dose.timestamp)
