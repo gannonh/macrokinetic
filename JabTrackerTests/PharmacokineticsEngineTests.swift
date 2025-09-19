@@ -170,9 +170,7 @@ struct PharmacokineticsEngineTests {
         let expected = dose1Remaining + dose2Remaining + dose3Remaining
         let tolerance = 0.01
 
-        #expect(abs(concentration - expected) < tolerance,
-                "Multiple dose concentration should be sum of decayed doses, " +
-                "got \(concentration), expected \(expected)")
+        #expect(abs(concentration - expected) < tolerance)
     }
 
     @Test("Escalating dose pattern")
