@@ -84,7 +84,7 @@ struct DoseHistoryViewModelErrorTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // When: Filtering by injection site
-        self.viewModel.selectedSiteFilter = "Thigh"
+        self.viewModel.selectedInjectionSiteFilter = "Thigh"
 
         // Then: Only dose with matching site is shown, nil site doesn't crash
         #expect(self.viewModel.filteredDoses.count == 1)

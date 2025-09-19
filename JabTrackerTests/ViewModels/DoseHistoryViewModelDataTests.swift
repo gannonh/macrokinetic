@@ -49,9 +49,9 @@ struct DoseHistoryViewModelDataTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Newer dose should be first (reverse chronological)
-        #expect(self.viewModel.doses.count == 2)
-        #expect(self.viewModel.doses.first?.amount == 2.0)
-        #expect(self.viewModel.doses.last?.amount == 1.0)
+        #expect(self.viewModel.filteredDoses.count == 2)
+        #expect(self.viewModel.filteredDoses.first?.amount == 2.0)
+        #expect(self.viewModel.filteredDoses.last?.amount == 1.0)
     }
 
     @Test("ViewModel loads data asynchronously")
@@ -66,8 +66,8 @@ struct DoseHistoryViewModelDataTests {
 
         // Then: Data should be loaded
         try await Task.sleep(nanoseconds: 100_000_000)
-        #expect(self.viewModel.doses.count == 1)
-        #expect(self.viewModel.doses.first?.amount == 1.0)
+        #expect(self.viewModel.filteredDoses.count == 1)
+        #expect(self.viewModel.filteredDoses.first?.amount == 1.0)
     }
 
     @Test("ViewModel handles empty data gracefully")
@@ -78,7 +78,7 @@ struct DoseHistoryViewModelDataTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Should handle empty data gracefully
-        #expect(self.viewModel.doses.isEmpty)
+        #expect(self.viewModel.filteredDoses.isEmpty)
     }
 
     @Test("ViewModel refreshes data correctly")
@@ -90,18 +90,18 @@ struct DoseHistoryViewModelDataTests {
 
         self.viewModel.loadData(context: self.context)
         try await Task.sleep(nanoseconds: 100_000_000)
-        #expect(self.viewModel.doses.count == 1)
+        #expect(self.viewModel.filteredDoses.count == 1)
 
         // When: Add another dose and refresh
         let newDose = self.createTestDose(timestamp: Date().addingTimeInterval(3600), amount: 2.0)
         self.context.insert(newDose)
         try self.context.save()
 
-        self.viewModel.refreshData()
+        await self.viewModel.refreshData(context: self.context)
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Should have both doses
-        #expect(self.viewModel.doses.count == 2)
+        #expect(self.viewModel.filteredDoses.count == 2)
     }
 
     @Test("ViewModel manages loading state")
@@ -117,7 +117,7 @@ struct DoseHistoryViewModelDataTests {
 
         // Then: Loading state should be managed appropriately
         try await Task.sleep(nanoseconds: 100_000_000)
-        #expect(self.viewModel.doses.count == 1)
+        #expect(self.viewModel.filteredDoses.count == 1)
     }
 
     @Test("ViewModel updates when dose is added")
@@ -125,18 +125,18 @@ struct DoseHistoryViewModelDataTests {
         // Given: Initial empty state
         self.viewModel.loadData(context: self.context)
         try await Task.sleep(nanoseconds: 100_000_000)
-        #expect(self.viewModel.doses.isEmpty)
+        #expect(self.viewModel.filteredDoses.isEmpty)
 
         // When: Dose is added
         let dose = self.createTestDose(timestamp: Date(), amount: 1.0)
         self.context.insert(dose)
         try self.context.save()
-        self.viewModel.refreshData()
+        await self.viewModel.refreshData(context: self.context)
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: ViewModel should update
-        #expect(self.viewModel.doses.count == 1)
-        #expect(self.viewModel.doses.first?.amount == 1.0)
+        #expect(self.viewModel.filteredDoses.count == 1)
+        #expect(self.viewModel.filteredDoses.first?.amount == 1.0)
     }
 
     // MARK: - Helper Methods
@@ -148,9 +148,9 @@ struct DoseHistoryViewModelDataTests {
         return Dose(
             amount: amount,
             timestamp: timestamp,
-            medication: medicationProfile,
             site: "Thigh",
-            notes: "Test dose"
+            notes: "Test dose",
+            medication: medicationProfile
         )
     }
 
@@ -159,8 +159,8 @@ struct DoseHistoryViewModelDataTests {
         currentDose: Double = 1.0
     ) -> MedicationProfile {
         MedicationProfile(
-            genericName: medication.genericName,
-            brandName: medication.brandName,
+            genericName: medication.rawValue,
+            brandName: "Test Brand",
             currentDose: currentDose,
             startDate: Date(),
             medicationType: medication.rawValue
@@ -169,10 +169,9 @@ struct DoseHistoryViewModelDataTests {
 
     private func createTestUser(name: String = "Test User", email: String = "test@example.com") -> User {
         User(
-            appleUserId: "test-apple-id",
-            name: name,
             email: email,
-            isOnboardingComplete: true
+            name: name,
+            appleUserId: "test-apple-id"
         )
     }
 }

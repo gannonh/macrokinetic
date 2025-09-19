@@ -54,8 +54,8 @@ struct DoseHistoryViewModelComputedTests {
         let medications = self.viewModel.availableMedications
 
         // Then: Should include both medication types
-        #expect(medications.contains(.semaglutide))
-        #expect(medications.contains(.tirzepatide))
+        #expect(medications.contains("semaglutide"))
+        #expect(medications.contains("tirzepatide"))
         #expect(medications.count == 2)
     }
 
@@ -101,7 +101,7 @@ struct DoseHistoryViewModelComputedTests {
 
         // When: Clear search but add site filter
         self.viewModel.searchText = ""
-        self.viewModel.selectedSiteFilter = "Thigh"
+        self.viewModel.selectedInjectionSiteFilter = "Thigh"
         #expect(self.viewModel.hasActiveFilters == true)
 
         // When: Clear all filters
@@ -127,15 +127,15 @@ struct DoseHistoryViewModelComputedTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // When: Request dose counts per date
-        let doseCounts = self.viewModel.doseCountsPerDate
+        let doseCounts = self.viewModel.groupedDosesByDate
 
         // Then: Should group doses by date
         let calendar = Calendar.current
         let targetDay = calendar.startOfDay(for: targetDate)
         let otherDay = calendar.startOfDay(for: otherDate)
 
-        #expect(doseCounts[targetDay] == 3)
-        #expect(doseCounts[otherDay] == 1)
+        #expect(doseCounts[targetDay]?.count == 3)
+        #expect(doseCounts[otherDay]?.count == 1)
     }
 
     @Test("ViewModel provides doses for specific date")
@@ -159,7 +159,7 @@ struct DoseHistoryViewModelComputedTests {
 
         // When: Request doses for target date
         let targetDay = calendar.startOfDay(for: targetDate)
-        let dosesForDate = self.viewModel.dosesForDate(targetDay)
+        let dosesForDate = self.viewModel.groupedDosesByDate[targetDay] ?? []
 
         // Then: Should return only doses from that day
         #expect(dosesForDate.count == 2)
@@ -211,9 +211,9 @@ struct DoseHistoryViewModelComputedTests {
         return Dose(
             amount: amount,
             timestamp: timestamp,
-            medication: medicationProfile,
             site: site,
-            notes: notes
+            notes: notes,
+            medication: medicationProfile
         )
     }
 
@@ -222,8 +222,8 @@ struct DoseHistoryViewModelComputedTests {
         currentDose: Double = 1.0
     ) -> MedicationProfile {
         MedicationProfile(
-            genericName: medication.genericName,
-            brandName: medication.brandName,
+            genericName: medication.rawValue,
+            brandName: "Test Brand",
             currentDose: currentDose,
             startDate: Date(),
             medicationType: medication.rawValue
@@ -232,10 +232,9 @@ struct DoseHistoryViewModelComputedTests {
 
     private func createTestUser(name: String = "Test User", email: String = "test@example.com") -> User {
         User(
-            appleUserId: "test-apple-id",
-            name: name,
             email: email,
-            isOnboardingComplete: true
+            name: name,
+            appleUserId: "test-apple-id"
         )
     }
 }

@@ -6,8 +6,10 @@ model: claude-sonnet-4-20250514
 ---
 
 # Commit Changes
-
-1. Read branch operations rules in their ENTIRETY `.claude/rules/branch-operations.md`.
-2. Commit changes following `.claude/rules/branch-operations.md` rules.
+```bash
+git add {files}
+git commit -m "Issue #{number}: {change}"
+```
+**IMPORTANT**: Fix all SwiftLint violations if encountered.
 
 Issue number (if provided): $ARGUMENTS
