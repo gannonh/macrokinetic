@@ -492,7 +492,10 @@ enum TestUtilities {
         saveButton.tap()
 
         // Verify profile created and return its identifier
-        let profileIdentifier = "medication-profile-\(genericName)-\(brandName.lowercased())-\(dose)mg"
+        let doseFormatted = String(format: "%.2f", Double(dose) ?? 0.0)
+        let profileIdentifier = "medication-profile-\(genericName)-\(brandName.lowercased())-\(doseFormatted)mg"
+
+
         let profileCell = app.buttons[profileIdentifier]
         XCTAssertTrue(profileCell.waitForExistence(timeout: timeout),
                       "Created profile should appear in list")

@@ -19,7 +19,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: self.$selectedTab) {
-            DashboardView()
+            DashboardView(doseService: self.doseService)
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
@@ -99,6 +99,7 @@ struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
     @State private var pkEngine = PharmacokineticsEngine()
+    let doseService: DoseService
 
     var body: some View {
         NavigationStack {
@@ -112,6 +113,7 @@ struct DashboardView: View {
                 }
                 .padding()
             }
+            .accessibilityIdentifier("dashboard-scroll-view")
             .navigationTitle("Home")
             .accessibilityIdentifier("dashboard-view")
         }
@@ -126,7 +128,8 @@ struct DashboardView: View {
             ConcentrationList(
                 user: user,
                 medicationProfiles: medicationProfiles,
-                pkEngine: pkEngine
+                pkEngine: pkEngine,
+                doseService: doseService
             )
         } else {
             noMedicationSection
@@ -182,21 +185,19 @@ struct ConcentrationList: View {
     let user: User
     let medicationProfiles: [MedicationProfile]
     let pkEngine: PharmacokineticsEngine
+    let doseService: DoseService
 
     var body: some View {
-        // Temporarily commented out due to SwiftUI ForEach compilation issue
-        // TODO: Fix ForEach binding confusion in ContentView
-        Text("Concentration cards temporarily disabled due to SwiftUI compilation issue")
-            .foregroundColor(.secondary)
-        // let sortedProfiles = medicationProfiles.sorted(by: { $0.startDate > $1.startDate })
-        // ForEach(sortedProfiles, id: \.id) { profile in
-        //     ConcentrationCard(
-        //         user: user,
-        //         medicationProfile: profile,
-        //         pkEngine: pkEngine
-        //     )
-        //     .accessibilityIdentifier("concentration-card-\(profile.medicationName)")
-        // }
+        let sortedProfiles = medicationProfiles.sorted(by: { $0.startDate > $1.startDate })
+        ForEach(Array(sortedProfiles.enumerated()), id: \.element.id) { index, profile in
+            ConcentrationCard(
+                user: user,
+                medicationProfile: profile,
+                pkEngine: pkEngine,
+                doseService: doseService
+            )
+            .accessibilityIdentifier("concentration-card-\(profile.genericName)")
+        }
     }
 }
 

@@ -70,11 +70,19 @@ final class PKEngineUITests: XCTestCase {
         // 2. Navigate to dashboard (home tab)
         TestUtilities.navigateToTab(app, tabName: "Home")
 
+        // DEBUG: Check if we can see multiple concentration cards (indicating multiple profiles)
+        let allConcentrationCards = app.descendants(matching: .any).matching(NSPredicate(format: "identifier CONTAINS 'concentration-card'"))
+        print("🐛 DEBUG: Found \(allConcentrationCards.count) concentration cards on dashboard")
+        for i in 0..<allConcentrationCards.count {
+            let card = allConcentrationCards.element(boundBy: i)
+            print("🐛 DEBUG: Card \(i) identifier: \(card.identifier)")
+        }
+
         // 3. Verify concentration card is visible with proper accessibility identifiers
         let concentrationCard = app.scrollViews["dashboard-scroll-view"]
-            .otherElements["concentration-card"]
+            .otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
-                      "Concentration card should be visible on dashboard")
+                      "Concentration card for Semaglutide should be visible on dashboard")
 
         // 4. Verify current concentration value is displayed (should be > 0)
         let concentrationValue = concentrationCard.staticTexts["current-concentration-value"]

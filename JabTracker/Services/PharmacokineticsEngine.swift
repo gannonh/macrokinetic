@@ -42,8 +42,10 @@ final class PharmacokineticsEngine {
             guard timeElapsedHours >= 0 else { return sum }
 
             // Calculate concentration from this dose at current time
+            // Apply bioavailability to get the effective dose concentration
+            let effectiveDoseConcentration = dose.amount * medication.subcutaneousBioavailability
             let concentrationFromDose = medication.concentrationAtTime(
-                initialConcentration: dose.amount,
+                initialConcentration: effectiveDoseConcentration,
                 timeElapsedHours: timeElapsedHours
             )
 
