@@ -88,7 +88,7 @@ final class DoseService {
                 notes: notes,
                 imageData: imageData,
                 skipped: skipped,
-                user: nil, // Will be set through medication profile relationship
+                user: medicationProfile.user, // Explicitly set user from medication profile
                 medication: medicationProfile
             )
 

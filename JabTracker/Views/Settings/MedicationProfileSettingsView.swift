@@ -16,8 +16,15 @@ struct MedicationProfileSettingsView: View {
     @State private var showingError = false
     @State private var errorMessage = ""
 
-    private var medicationManager: MedicationManager {
-        MedicationManager(modelContext: self.modelContext)
+    @State private var medicationManager: MedicationManager?
+
+    private func getMedicationManager() -> MedicationManager {
+        if let manager = medicationManager {
+            return manager
+        }
+        let manager = MedicationManager(modelContext: modelContext)
+        medicationManager = manager
+        return manager
     }
 
     var body: some View {
@@ -70,7 +77,7 @@ struct MedicationProfileSettingsView: View {
             }
             .sheet(isPresented: self.$showingAddProfile) {
                 if let currentUser = authManager.currentUser {
-                    AddMedicationProfileView(medicationManager: self.medicationManager, currentUser: currentUser)
+                    AddMedicationProfileView(medicationManager: self.getMedicationManager(), currentUser: currentUser)
                 }
             }
             .alert("Error", isPresented: self.$showingError) {
@@ -348,9 +355,11 @@ struct MedicationProfileDetailView: View {
     @State private var showingReconstitutionCalculator = false
     @State private var showingDoseTitration = false
     @Environment(\.modelContext) private var modelContext
+    @State private var medicationManager: MedicationManager
 
-    private var medicationManager: MedicationManager {
-        MedicationManager(modelContext: self.modelContext)
+    init(profile: MedicationProfile) {
+        self.profile = profile
+        self._medicationManager = State(wrappedValue: MedicationManager(modelContext: DataController.shared.container.mainContext))
     }
 
     var body: some View {

@@ -29,6 +29,7 @@ struct ConcentrationDisplay: View {
             Text("units")
                 .font(DesignTokens.Typography.caption)
                 .foregroundColor(.secondary)
+                .accessibilityIdentifier("concentration-unit")
 
             // Visual level indicator (only for current level)
             if isCurrentLevel {

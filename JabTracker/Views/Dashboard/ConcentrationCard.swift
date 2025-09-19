@@ -106,6 +106,12 @@ struct ConcentrationCard: View {
             )
             .accessibilityIdentifier("current-concentration-value")
 
+            // Last updated timestamp
+            Text("Updated \(Date().formatted(date: .omitted, time: .shortened))")
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
+                .accessibilityIdentifier("concentration-last-updated")
+
             if currentConcentration == 0.0 {
                 Text("No recent doses recorded")
                     .font(DesignTokens.Typography.caption)
