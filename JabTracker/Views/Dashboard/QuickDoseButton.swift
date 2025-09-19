@@ -226,9 +226,12 @@ struct QuickDoseSheet: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
+                        print("🔍 QuickDoseSheet: Save button tapped!")
                         if self.isEditMode {
+                            print("🔍 QuickDoseSheet: Handling edit save")
                             self.handleEditSave()
                         } else {
+                            print("🔍 QuickDoseSheet: Handling new dose save")
                             Task {
                                 await self.saveDose()
                             }
@@ -273,7 +276,17 @@ struct QuickDoseSheet: View {
 
     @MainActor
     private func saveDose() async {
-        guard let profile = self.viewModel.selectedMedicationProfile else { return }
+        guard let profile = self.viewModel.selectedMedicationProfile else {
+            print("🔍 QuickDoseSheet.saveDose: No selected medication profile")
+            return
+        }
+
+        print("🔍 QuickDoseSheet.saveDose called with:")
+        print("  - amount: \(self.viewModel.doseAmount)")
+        let siteDescription = self.viewModel.selectedInjectionSite.isEmpty ?
+            "nil" : self.viewModel.selectedInjectionSite
+        print("  - site: \(siteDescription)")
+        print("  - notes: \(self.viewModel.notes.isEmpty ? "nil" : self.viewModel.notes)")
 
         do {
             // Save dose through dose service (which handles PK integration)
@@ -285,6 +298,8 @@ struct QuickDoseSheet: View {
                 notes: self.viewModel.notes.isEmpty ? nil : self.viewModel.notes,
                 context: self.modelContext
             )
+
+            print("🔍 QuickDoseSheet.saveDose: Successfully saved dose")
 
             // Provide haptic feedback for successful save
             let impactFeedback = UIImpactFeedbackGenerator(style: .medium)

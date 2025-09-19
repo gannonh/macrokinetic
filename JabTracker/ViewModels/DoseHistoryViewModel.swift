@@ -286,6 +286,9 @@ class DoseHistoryViewModel: ObservableObject {
 
     /// Duplicate a dose (create new dose with same data but current timestamp)
     func duplicateDose(_ dose: Dose, context: ModelContext) throws {
+        print("🔍 DoseHistoryViewModel.duplicateDose called!")
+        print("🔍 Original dose - amount: \(dose.amount), site: \(dose.site ?? "nil"), notes: \(dose.notes ?? "nil")")
+
         let newDose = Dose(
             amount: dose.amount,
             timestamp: Date(), // Use current timestamp
@@ -296,8 +299,13 @@ class DoseHistoryViewModel: ObservableObject {
             user: dose.user,
             medication: dose.medication)
 
+        print("🔍 DoseHistoryViewModel: Creating duplicate dose with ID: \(newDose.id), site: \(newDose.site ?? "nil")")
+
         context.insert(newDose)
+        print("🔍 DoseHistoryViewModel: Inserted duplicate dose into context")
+
         try context.save()
+        print("🔍 DoseHistoryViewModel: Saved duplicate dose to context")
 
         // Add to local array and refresh
         self.allDoses.insert(newDose, at: 0) // Insert at beginning since it has current timestamp

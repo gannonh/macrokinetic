@@ -35,15 +35,81 @@ final class PKEngineUITests: XCTestCase {
     /// Then: Current concentration level is displayed accurately
     /// And: Concentration updates when new doses are added
     func testCurrentConcentrationDisplayOnDashboard() throws {
-        // TODO: Implement E2E test for current concentration display
-        // 1. Navigate to onboarding and set up user with semaglutide medication
-        // 2. Log initial dose through quick dose entry
-        // 3. Navigate to dashboard (home tab)
-        // 4. Verify concentration card is visible with proper accessibility identifiers
-        // 5. Verify current concentration value is displayed (should be > 0)
-        // 6. Log another dose and verify concentration updates
-        // 7. Wait and verify concentration decreases over time (simulated time passage)
-        throw XCTSkip("E2E acceptance test stub - implementation pending")
+        // 1. Set up test environment with medication profile and NO initial doses
+        // We'll manually create a single dose to isolate the duplication issue
+        TestUtilities.setupDoseHistoryTest(
+            app: app,
+            doseCount: 0, // Start with no doses
+            medicationProfiles: 1,
+            medicationName: "semaglutide",
+            brandName: "Ozempic",
+            dose: "1.0"
+        )
+
+        // Navigate to History to verify we start with 0 doses
+        TestUtilities.navigateToTab(app, tabName: "History")
+        let historyView = TestUtilities.navigateToHistoryView(in: app)
+
+        // Debug: Print current dose count before adding any doses
+        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 0)
+        print("🐛 DEBUG: Starting dose count: \(doseRows.count)")
+
+        // Create exactly 1 dose and verify count
+        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+
+        // Navigate back to History and check dose count
+        TestUtilities.navigateToTab(app, tabName: "History")
+        _ = TestUtilities.navigateToHistoryView(in: app)
+        let updatedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 0)
+        print("🐛 DEBUG: After creating 1 dose, actual count: \(updatedDoseRows.count)")
+
+        // This should be 1, but if it's 2, we've confirmed the bug
+        XCTAssertEqual(updatedDoseRows.count, 1,
+                       "Creating 1 dose should result in exactly 1 dose, not \(updatedDoseRows.count)")
+
+        // 2. Navigate to dashboard (home tab)
+        TestUtilities.navigateToTab(app, tabName: "Home")
+
+        // 3. Verify concentration card is visible with proper accessibility identifiers
+        let concentrationCard = app.scrollViews["dashboard-scroll-view"]
+            .otherElements["concentration-card"]
+        XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
+                      "Concentration card should be visible on dashboard")
+
+        // 4. Verify current concentration value is displayed (should be > 0)
+        let concentrationValue = concentrationCard.staticTexts["current-concentration-value"]
+        XCTAssertTrue(concentrationValue.exists,
+                      "Current concentration value should be displayed")
+
+        // Extract and validate concentration value
+        let concentrationText = concentrationValue.label
+        XCTAssertFalse(concentrationText.isEmpty,
+                       "Concentration value should not be empty")
+        XCTAssertFalse(concentrationText.contains("0.00"),
+                       "Concentration should be greater than 0 after dose")
+
+        // 5. Log another dose and verify concentration updates
+        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+
+        // Return to dashboard and verify concentration updated
+        TestUtilities.navigateToTab(app, tabName: "Home")
+
+        let updatedConcentrationValue = concentrationCard.staticTexts["current-concentration-value"]
+        XCTAssertTrue(updatedConcentrationValue.waitForExistence(timeout: 3),
+                      "Updated concentration should appear")
+
+        let updatedConcentrationText = updatedConcentrationValue.label
+        XCTAssertNotEqual(concentrationText, updatedConcentrationText,
+                          "Concentration should update after adding third dose")
+
+        // 6. Verify concentration metadata is displayed
+        let concentrationUnit = concentrationCard.staticTexts["concentration-unit"]
+        XCTAssertTrue(concentrationUnit.exists,
+                      "Concentration unit should be displayed")
+
+        let lastUpdated = concentrationCard.staticTexts["concentration-last-updated"]
+        XCTAssertTrue(lastUpdated.exists,
+                      "Last updated timestamp should be displayed")
     }
 
     /// Acceptance Test: Peak and trough levels are calculated and displayed correctly

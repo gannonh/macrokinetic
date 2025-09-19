@@ -29,6 +29,10 @@ final class Dose {
         user: User? = nil,
         medication: MedicationProfile? = nil)
     {
+        print("🔍 Dose.init called with amount: \(amount), site: \(site ?? "nil"), notes: \(notes ?? "nil")")
+        print("🔍 Dose.init stacktrace:")
+        Thread.callStackSymbols.prefix(5).forEach { print("🔍   \($0)") }
+
         self.amount = amount
         self.timestamp = timestamp
         self.site = site
@@ -37,5 +41,7 @@ final class Dose {
         self.skipped = skipped
         self.user = user
         self.medication = medication
+
+        print("🔍 Dose.init completed - ID: \(self.id)")
     }
 }
