@@ -189,7 +189,7 @@ struct ConcentrationList: View {
 
     var body: some View {
         let sortedProfiles = medicationProfiles.sorted(by: { $0.startDate > $1.startDate })
-        ForEach(Array(sortedProfiles.enumerated()), id: \.element.id) { index, profile in
+        ForEach(Array(sortedProfiles.enumerated()), id: \.element.id) { _, profile in
             ConcentrationCard(
                 user: user,
                 medicationProfile: profile,

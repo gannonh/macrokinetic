@@ -58,7 +58,7 @@ struct MedicationProfileSettingsView: View {
                             MedicationProfileRow(profile: profile)
                                 .accessibilityIdentifier(
                                     "medication-profile-\(profile.medicationType.lowercased())-" +
-                                        "\(profile.brandName.lowercased())-\(String(format: "%.2f", profile.currentDose))mg"
+                                    "\(profile.brandName.lowercased())-\(String(format: "%.2f", profile.currentDose))mg"
                                 )
                         }
                         .onDelete(perform: self.deleteProfiles)
@@ -359,7 +359,9 @@ struct MedicationProfileDetailView: View {
 
     init(profile: MedicationProfile) {
         self.profile = profile
-        self._medicationManager = State(wrappedValue: MedicationManager(modelContext: DataController.shared.container.mainContext))
+        self._medicationManager = State(
+            wrappedValue: MedicationManager(modelContext: DataController.shared.container.mainContext)
+        )
     }
 
     var body: some View {
@@ -374,23 +376,44 @@ struct MedicationProfileDetailView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             DetailRow(title: "Medication", value: self.profile.medicationType.capitalized)
                             DetailRow(title: "Brand", value: self.profile.brandName)
-                            DetailRow(title: "Current Dose", value: "\(String(format: "%.2f", self.profile.currentDose)) mg")
-                            DetailRow(title: "Start Date", value: self.profile.startDate.formatted(date: .abbreviated, time: .omitted))
-                            DetailRow(title: "Preferred Sites", value: self.profile.preferredInjectionSites.joined(separator: ", "))
+                            DetailRow(
+                                title: "Current Dose",
+                                value: "\(String(format: "%.2f", self.profile.currentDose)) mg"
+                            )
+                            DetailRow(
+                                title: "Start Date",
+                                value: self.profile.startDate.formatted(date: .abbreviated, time: .omitted)
+                            )
+                            DetailRow(
+                                title: "Preferred Sites",
+                                value: self.profile.preferredInjectionSites.joined(separator: ", ")
+                            )
 
                             // Show reconstitution data for compounded medications
                             if self.profile.isCompounded {
                                 if let concentration = self.profile.concentration {
-                                    DetailRow(title: "Concentration", value: "\(String(format: "%.2f", concentration)) mg/ml")
+                                    DetailRow(
+                                        title: "Concentration",
+                                        value: "\(String(format: "%.2f", concentration)) mg/ml"
+                                    )
                                 }
                                 if let unitsPerDose = self.profile.unitsPerDose {
-                                    DetailRow(title: "Dose in Units", value: "\(String(format: "%.1f", unitsPerDose)) units")
+                                    DetailRow(
+                                        title: "Dose in Units",
+                                        value: "\(String(format: "%.1f", unitsPerDose)) units"
+                                    )
                                 }
                             }
 
                             if let medication = Medication(rawValue: profile.medicationType) {
-                                DetailRow(title: "Half-life", value: "\(String(format: "%.1f", medication.halfLifeDays)) days")
-                                DetailRow(title: "Frequency", value: medication.frequency == .daily ? "Daily" : "Weekly")
+                                DetailRow(
+                                    title: "Half-life",
+                                    value: "\(String(format: "%.1f", medication.halfLifeDays)) days"
+                                )
+                                DetailRow(
+                                    title: "Frequency",
+                                    value: medication.frequency == .daily ? "Daily" : "Weekly"
+                                )
                             }
                         }
                     }
