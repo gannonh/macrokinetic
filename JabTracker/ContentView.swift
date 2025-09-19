@@ -58,10 +58,13 @@ struct ContentView: View {
                 showingSuccessMessage: self.$showingSuccessMessage)
         })
         .onChange(of: self.selectedTab) { oldValue, newValue in
+            print("🔍 ContentView: Tab changed from \(oldValue) to \(newValue)")
             if newValue == "add" {
+                print("🔍 ContentView: Add tab selected, showing QuickDoseSheet")
                 self.showingQuickDoseSheet = true
                 // Reset tab selection to previous tab so + doesn't stay selected
                 self.selectedTab = oldValue
+                print("🔍 ContentView: Reset tab selection back to \(oldValue)")
             }
         }
         .onAppear {

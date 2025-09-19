@@ -61,6 +61,8 @@ final class DoseService {
         imageData: Data? = nil,
         context: ModelContext
     ) async throws -> Dose {
+        print("🔍 DoseService.saveDose called with amount: \(amount), site: \(site ?? "nil"), notes: \(notes ?? "nil")")
+
         isProcessingDose = true
         lastError = nil
 
@@ -73,7 +75,9 @@ final class DoseService {
             try validateDoseParameters(
                 amount: amount,
                 timestamp: timestamp,
-                medicationProfile: medicationProfile
+                medicationProfile: medicationProfile,
+                site: site,
+                notes: notes
             )
 
             // Create new dose
@@ -88,9 +92,14 @@ final class DoseService {
                 medication: medicationProfile
             )
 
+            print("🔍 DoseService: Creating dose with ID: \(newDose.id), site: \(newDose.site ?? "nil")")
+
             // Insert and save to database
             context.insert(newDose)
+            print("🔍 DoseService: Inserted dose into context")
+
             try context.save()
+            print("🔍 DoseService: Saved context successfully")
 
             // Trigger PK engine recalculation
             await triggerPKRecalculation(for: medicationProfile)
@@ -143,7 +152,9 @@ final class DoseService {
             try validateDoseParameters(
                 amount: editData.amount,
                 timestamp: editData.timestamp,
-                medicationProfile: editData.medicationProfile
+                medicationProfile: editData.medicationProfile,
+                site: editData.site,
+                notes: editData.notes
             )
 
             // Update dose properties
@@ -255,11 +266,15 @@ final class DoseService {
     ///   - amount: Dose amount to validate
     ///   - timestamp: Dose timestamp to validate
     ///   - medicationProfile: Associated medication profile
+    ///   - site: Injection site (for validation consistency)
+    ///   - notes: User notes (for validation consistency)
     /// - Throws: DoseServiceError for invalid parameters
     private func validateDoseParameters(
         amount: Double,
         timestamp: Date,
-        medicationProfile: MedicationProfile
+        medicationProfile: MedicationProfile,
+        site: String? = nil,
+        notes: String? = nil
     ) throws {
         // Validate dose amount
         guard amount >= 0 else {
@@ -288,7 +303,9 @@ final class DoseService {
             }
 
             let doses = medicationProfile.doses ?? []
-            let tempDose = Dose(amount: amount, timestamp: timestamp, medication: medicationProfile)
+            // Create temporary dose for validation WITHOUT setting the medication relationship
+            // to prevent it from being accidentally persisted
+            let tempDose = Dose(amount: amount, timestamp: timestamp, site: site, notes: notes)
             let dosesForValidation = doses + [tempDose]
 
             if !pkEngine.validateCalculationInputs(doses: dosesForValidation, medication: medication) {

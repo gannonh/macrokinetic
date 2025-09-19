@@ -568,7 +568,7 @@ enum TestUtilities {
                       "Dose picker should exist")
         dosePicker.tap()
 
-        let doseOption = app.buttons["add-dose-option-\(dose)"]
+        let doseOption = app.buttons["add-dose-option-\(String(format: "%.2f", Double(dose) ?? 0.0))"]
         XCTAssertTrue(doseOption.waitForExistence(timeout: timeout),
                       "Dose option \(dose) should exist")
         doseOption.tap()
