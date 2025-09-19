@@ -14,27 +14,27 @@ import Testing
 struct DoseHistoryViewTests {
     // MARK: - Test Infrastructure
 
-    private func createTestModelContext() -> ModelContext {
+    private func createTestModelContext() throws -> ModelContext {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        let container = try! ModelContainer(for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+        let container = try ModelContainer(for: User.self, Dose.self, MedicationProfile.self, configurations: config)
         return ModelContext(container)
     }
 
-    private func createTestUser(context: ModelContext) -> User {
+    private func createTestUser(context: ModelContext) throws -> User {
         let user = User(email: "test@example.com", name: "Test User")
         context.insert(user)
-        try! context.save()
+        try context.save()
         return user
     }
 
-    private func createTestMedicationProfile(context: ModelContext, user: User) -> MedicationProfile {
+    private func createTestMedicationProfile(context: ModelContext, user: User) throws -> MedicationProfile {
         let profile = MedicationProfile(
             genericName: "Semaglutide",
             brandName: "Ozempic",
             currentDose: 1.0)
         profile.user = user
         context.insert(profile)
-        try! context.save()
+        try context.save()
         return profile
     }
 
@@ -47,7 +47,7 @@ struct DoseHistoryViewTests {
         site: String? = "Thigh",
         notes: String? = "Test dose",
         skipped: Bool = false,
-        hasPhoto: Bool = false) -> Dose
+        hasPhoto: Bool = false) throws -> Dose
     {
         let dose = Dose(
             amount: amount,
@@ -59,7 +59,7 @@ struct DoseHistoryViewTests {
             user: user,
             medication: medication)
         context.insert(dose)
-        try! context.save()
+        try context.save()
         return dose
     }
 
@@ -67,13 +67,19 @@ struct DoseHistoryViewTests {
 
     @Test("DoseHistoryViewModel loads data correctly")
     func viewModelLoadData() async throws {
-        let context = self.createTestModelContext()
-        let user = self.createTestUser(context: context)
-        let medication = self.createTestMedicationProfile(context: context, user: user)
+        let context = try self.createTestModelContext()
+        let user = try self.createTestUser(context: context)
+        let medication = try self.createTestMedicationProfile(context: context, user: user)
 
         // Create test doses
-        let dose1 = self.createTestDose(context: context, user: user, medication: medication, amount: 1.0)
-        let dose2 = self.createTestDose(context: context, user: user, medication: medication, amount: 0.5, timestamp: Date().addingTimeInterval(-86400))
+        let dose1 = try self.createTestDose(context: context, user: user, medication: medication, amount: 1.0)
+        let dose2 = try self.createTestDose(
+            context: context,
+            user: user,
+            medication: medication,
+            amount: 0.5,
+            timestamp: Date().addingTimeInterval(-86400)
+        )
 
         let viewModel = await DoseHistoryViewModel()
 
@@ -97,14 +103,29 @@ struct DoseHistoryViewTests {
 
     @Test("DoseHistoryViewModel search functionality works")
     func viewModelSearch() async throws {
-        let context = self.createTestModelContext()
-        let user = self.createTestUser(context: context)
-        let medication = self.createTestMedicationProfile(context: context, user: user)
+        let context = try self.createTestModelContext()
+        let user = try self.createTestUser(context: context)
+        let medication = try self.createTestMedicationProfile(context: context, user: user)
 
         // Create test doses with different notes
-        let dose1 = self.createTestDose(context: context, user: user, medication: medication, notes: "Morning injection")
-        let dose2 = self.createTestDose(context: context, user: user, medication: medication, notes: "Evening dose")
-        let dose3 = self.createTestDose(context: context, user: user, medication: medication, notes: "Weekly medication")
+        let dose1 = try self.createTestDose(
+            context: context,
+            user: user,
+            medication: medication,
+            notes: "Morning injection"
+        )
+        let dose2 = try self.createTestDose(
+            context: context,
+            user: user,
+            medication: medication,
+            notes: "Evening dose"
+        )
+        let dose3 = try self.createTestDose(
+            context: context,
+            user: user,
+            medication: medication,
+            notes: "Weekly medication"
+        )
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -140,9 +161,9 @@ struct DoseHistoryViewTests {
 
     @Test("DoseHistoryViewModel filters work correctly")
     func viewModelFilters() async throws {
-        let context = self.createTestModelContext()
-        let user = self.createTestUser(context: context)
-        let medication1 = self.createTestMedicationProfile(context: context, user: user)
+        let context = try self.createTestModelContext()
+        let user = try self.createTestUser(context: context)
+        let medication1 = try self.createTestMedicationProfile(context: context, user: user)
 
         let medication2 = MedicationProfile(
             genericName: "Tirzepatide",
@@ -150,12 +171,18 @@ struct DoseHistoryViewTests {
             currentDose: 2.5)
         medication2.user = user
         context.insert(medication2)
-        try! context.save()
+        try context.save()
 
         // Create doses with different properties
-        let dose1 = self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
-        let dose2 = self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
-        let dose3 = self.createTestDose(context: context, user: user, medication: medication1, site: "Arm", skipped: true)
+        let dose1 = try self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
+        let dose2 = try self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
+        let dose3 = try self.createTestDose(
+            context: context,
+            user: user,
+            medication: medication1,
+            site: "Arm",
+            skipped: true
+        )
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -200,11 +227,11 @@ struct DoseHistoryViewTests {
 
     @Test("DoseHistoryViewModel CRUD operations work")
     func viewModelCRUD() async throws {
-        let context = self.createTestModelContext()
-        let user = self.createTestUser(context: context)
-        let medication = self.createTestMedicationProfile(context: context, user: user)
+        let context = try self.createTestModelContext()
+        let user = try self.createTestUser(context: context)
+        let medication = try self.createTestMedicationProfile(context: context, user: user)
 
-        let dose = self.createTestDose(context: context, user: user, medication: medication)
+        let dose = try self.createTestDose(context: context, user: user, medication: medication)
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -245,19 +272,24 @@ struct DoseHistoryViewTests {
 
     @Test("DoseHistoryViewModel grouped doses work correctly")
     func viewModelGroupedDoses() async throws {
-        let context = self.createTestModelContext()
-        let user = self.createTestUser(context: context)
-        let medication = self.createTestMedicationProfile(context: context, user: user)
+        let context = try self.createTestModelContext()
+        let user = try self.createTestUser(context: context)
+        let medication = try self.createTestMedicationProfile(context: context, user: user)
 
         let today = Date()
         let yesterday = today.addingTimeInterval(-86400)
         let twoDaysAgo = today.addingTimeInterval(-172_800)
 
         // Create doses on different dates
-        let dose1 = self.createTestDose(context: context, user: user, medication: medication, timestamp: today)
-        let dose2 = self.createTestDose(context: context, user: user, medication: medication, timestamp: today.addingTimeInterval(-3600))
-        let dose3 = self.createTestDose(context: context, user: user, medication: medication, timestamp: yesterday)
-        let dose4 = self.createTestDose(context: context, user: user, medication: medication, timestamp: twoDaysAgo)
+        let dose1 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: today)
+        let dose2 = try self.createTestDose(
+            context: context,
+            user: user,
+            medication: medication,
+            timestamp: today.addingTimeInterval(-3600)
+        )
+        let dose3 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: yesterday)
+        let dose4 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: twoDaysAgo)
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -354,22 +386,22 @@ struct DoseHistoryViewTests {
 
     @Test("DoseHistoryViewModel available medications and sites work")
     func viewModelAvailableData() async throws {
-        let context = self.createTestModelContext()
-        let user = self.createTestUser(context: context)
+        let context = try self.createTestModelContext()
+        let user = try self.createTestUser(context: context)
 
-        let medication1 = self.createTestMedicationProfile(context: context, user: user)
+        let medication1 = try self.createTestMedicationProfile(context: context, user: user)
         let medication2 = MedicationProfile(
             genericName: "Tirzepatide",
             brandName: "Mounjaro",
             currentDose: 2.5)
         medication2.user = user
         context.insert(medication2)
-        try! context.save()
+        try context.save()
 
         // Create doses with different properties
-        let dose1 = self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
-        let dose2 = self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
-        let dose3 = self.createTestDose(context: context, user: user, medication: medication1, site: "Arm")
+        let dose1 = try self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
+        let dose2 = try self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
+        let dose3 = try self.createTestDose(context: context, user: user, medication: medication1, site: "Arm")
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -394,11 +426,11 @@ struct DoseHistoryViewTests {
 
     @Test("DoseHistoryViewModel refresh functionality works")
     func viewModelRefresh() async throws {
-        let context = self.createTestModelContext()
-        let user = self.createTestUser(context: context)
-        let medication = self.createTestMedicationProfile(context: context, user: user)
+        let context = try self.createTestModelContext()
+        let user = try self.createTestUser(context: context)
+        let medication = try self.createTestMedicationProfile(context: context, user: user)
 
-        let dose = self.createTestDose(context: context, user: user, medication: medication)
+        let dose = try self.createTestDose(context: context, user: user, medication: medication)
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -426,6 +458,9 @@ struct DoseEditDataTests {
     func doseEditDataInit() {
         let id = UUID()
         let timestamp = Date()
+        let medicationProfile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic")
 
         let editData = DoseEditData(
             id: id,
@@ -435,7 +470,7 @@ struct DoseEditDataTests {
             notes: "Test notes",
             imageData: nil,
             skipped: false,
-            medicationProfile: nil)
+            medicationProfile: medicationProfile)
 
         #expect(editData.id == id)
         #expect(editData.amount == 1.5)
@@ -444,7 +479,7 @@ struct DoseEditDataTests {
         #expect(editData.notes == "Test notes")
         #expect(editData.imageData == nil)
         #expect(editData.skipped == false)
-        #expect(editData.medicationProfile == nil)
+        #expect(editData.medicationProfile === medicationProfile)
     }
 }
 
