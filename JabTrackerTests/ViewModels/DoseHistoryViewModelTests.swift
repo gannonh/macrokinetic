@@ -38,7 +38,7 @@ struct DoseHistoryViewModelTests {
         // When: Initialized
         // Then: Should have proper default state
         #expect(self.viewModel.searchText.isEmpty)
-        #expect(self.viewModel.selectedSiteFilter.isEmpty)
+        #expect(self.viewModel.selectedInjectionSiteFilter == nil)
         #expect(self.viewModel.selectedMedicationFilter == nil)
         #expect(self.viewModel.filterStartDate == nil)
         #expect(self.viewModel.filterEndDate == nil)

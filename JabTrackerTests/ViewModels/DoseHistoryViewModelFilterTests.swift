@@ -121,11 +121,7 @@ struct DoseHistoryViewModelFilterTests {
 
         // When: Filter to today only
         self.viewModel.filterStartDate = Calendar.current.startOfDay(for: today)
-        self.viewModel.filterEndDate = Calendar.current.date(
-            byAdding: .day,
-            value: 1,
-            to: Calendar.current.startOfDay(for: today)
-        )
+        self.viewModel.filterEndDate = Calendar.current.startOfDay(for: today)
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Should show only today's dose
@@ -153,7 +149,7 @@ struct DoseHistoryViewModelFilterTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // When: Filter by semaglutide
-        self.viewModel.selectedMedicationFilter = .semaglutide
+        self.viewModel.selectedMedicationFilter = "semaglutide"
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Should show only semaglutide dose
@@ -175,7 +171,7 @@ struct DoseHistoryViewModelFilterTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // When: Filter by "Thigh"
-        self.viewModel.selectedSiteFilter = "Thigh"
+        self.viewModel.selectedInjectionSiteFilter = "Thigh"
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Should show only thigh injections
@@ -203,12 +199,8 @@ struct DoseHistoryViewModelFilterTests {
 
         // When: Apply multiple filters (today + thigh + search for "morning")
         self.viewModel.filterStartDate = Calendar.current.startOfDay(for: today)
-        self.viewModel.filterEndDate = Calendar.current.date(
-            byAdding: .day,
-            value: 1,
-            to: Calendar.current.startOfDay(for: today)
-        )
-        self.viewModel.selectedSiteFilter = "Thigh"
+        self.viewModel.filterEndDate = Calendar.current.startOfDay(for: today)
+        self.viewModel.selectedInjectionSiteFilter = "Thigh"
         self.viewModel.searchText = "morning"
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -236,8 +228,8 @@ struct DoseHistoryViewModelFilterTests {
 
         // Apply filters
         self.viewModel.searchText = "morning"
-        self.viewModel.selectedSiteFilter = "Thigh"
-        self.viewModel.selectedMedicationFilter = .semaglutide
+        self.viewModel.selectedInjectionSiteFilter = "Thigh"
+        self.viewModel.selectedMedicationFilter = "semaglutide"
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // When: Clear all filters
@@ -247,7 +239,7 @@ struct DoseHistoryViewModelFilterTests {
         // Then: Should show all doses and clear filter state
         #expect(self.viewModel.filteredDoses.count == 2)
         #expect(self.viewModel.searchText.isEmpty)
-        #expect(self.viewModel.selectedSiteFilter.isEmpty)
+        #expect(self.viewModel.selectedInjectionSiteFilter == nil)
         #expect(self.viewModel.selectedMedicationFilter == nil)
         #expect(self.viewModel.filterStartDate == nil)
         #expect(self.viewModel.filterEndDate == nil)
@@ -267,9 +259,9 @@ struct DoseHistoryViewModelFilterTests {
         return Dose(
             amount: amount,
             timestamp: timestamp,
-            medication: medicationProfile,
             site: site,
-            notes: notes
+            notes: notes,
+            medication: medicationProfile
         )
     }
 
@@ -278,8 +270,8 @@ struct DoseHistoryViewModelFilterTests {
         currentDose: Double = 1.0
     ) -> MedicationProfile {
         MedicationProfile(
-            genericName: medication.genericName,
-            brandName: medication.brandName,
+            genericName: medication.rawValue,
+            brandName: "Test Brand",
             currentDose: currentDose,
             startDate: Date(),
             medicationType: medication.rawValue
@@ -288,10 +280,9 @@ struct DoseHistoryViewModelFilterTests {
 
     private func createTestUser(name: String = "Test User", email: String = "test@example.com") -> User {
         User(
-            appleUserId: "test-apple-id",
-            name: name,
             email: email,
-            isOnboardingComplete: true
+            name: name,
+            appleUserId: "test-apple-id"
         )
     }
 }
