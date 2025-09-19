@@ -46,6 +46,12 @@ epic: dose-tracking
 - **Status Change**: Calendar integration completed - all acceptance criteria met
 - **Integration Impact**: Full calendar functionality available in History tab with dose indicators, month navigation, and statistics
 
+#### Issue #45 - 2025-09-19
+- **Session Summary**: Stream A test validation phase - working through SwiftData relationship issues in PK engine tests
+- **Components Updated**: Stream A (PK engine tests partially fixed), Stream B & C status updated to awaiting dependency
+- **Status Change**: IN PROGRESS - Sequential stream test validation approach established
+- **Integration Impact**: Clear validation sequence defined: Stream A → Stream B → Stream C → E2E tests
+
 ## Deferred Issues
 - **Issue #43 - Photo Attachments** 🚫 DEFERRED (2025-09-18T17:47:42Z)
   - Reason: Feature is not required for MVP
@@ -54,8 +60,22 @@ epic: dose-tracking
   - Reason: 95% of feature completed with #41. Remaining enhancements not crucial for MVP.
   - Moved from: Queued Issues
 
+## In Progress Issues
+
+### Issue #45 - PK Engine Integration
+**Status**: IN PROGRESS - Stream A Test Validation Phase
+**Started**: 2025-09-18T19:07:32Z
+**Branch**: issue/45-pk-engine-integration
+
+**Current Work**: Sequential stream test validation and refactoring - currently working through Stream A test fixes.
+
+**Current Approach**:
+- Stream A: IN PROGRESS - Fixing SwiftData relationship issues in PK engine tests, implementing direct engine calls
+- Stream B: AWAITING - Stream B test validation will begin after Stream A is complete
+- Stream C: AWAITING - Stream C test validation will begin after Stream A and B are complete
+- E2E acceptance tests will be executed last after all stream validations are complete
+
 ## Queued Issues (Blocked - Missing Dependencies)
-- **Issue #45 - PK Engine Integration** - Waiting for Tasks 001 & 002 (Quick Entry & Manual Entry)
 - **Issue #46 - Testing Suite** - Waiting for Tasks 001-004 (all core UI functionality)
 
 ## Missing Critical Dependencies
