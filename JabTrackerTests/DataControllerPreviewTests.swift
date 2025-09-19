@@ -226,8 +226,3 @@ struct DataControllerPreviewTests {
         #expect(dose.medication?.id == medication.id, "Dose medication should match fetched medication")
     }
 }
-
-// Custom error for cleaner test failures
-enum TestError: Error {
-    case noSampleData(String)
-}

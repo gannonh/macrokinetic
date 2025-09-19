@@ -305,8 +305,12 @@ class DoseHistoryViewModel: ObservableObject {
     }
 
     /// Get dose for editing - returns dose data that can be used to pre-populate edit form
-    func getDoseForEditing(_ dose: Dose) -> DoseEditData {
-        DoseEditData(
+    func getDoseForEditing(_ dose: Dose) -> DoseEditData? {
+        guard let medication = dose.medication else {
+            return nil
+        }
+
+        return DoseEditData(
             id: dose.id,
             amount: dose.amount,
             timestamp: dose.timestamp,
@@ -314,7 +318,7 @@ class DoseHistoryViewModel: ObservableObject {
             notes: dose.notes,
             imageData: dose.imageData,
             skipped: dose.skipped,
-            medicationProfile: dose.medication)
+            medicationProfile: medication)
     }
 
     /// Update a dose after editing

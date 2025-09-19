@@ -15,8 +15,8 @@ struct QuickDoseEntry: View {
     @Environment(\.modelContext) private var modelContext
 
     // PK Engine and Dose Service
-    @StateObject private var pkEngine = PharmacokineticsEngine()
-    @StateObject private var doseService: DoseService
+    @State private var pkEngine: PharmacokineticsEngine
+    @State private var doseService: DoseService
 
     // UI State
     @State private var showingQuickDoseSheet = false
@@ -36,9 +36,10 @@ struct QuickDoseEntry: View {
         self.onDoseSaved = onDoseSaved
         self.onCalculationsUpdated = onCalculationsUpdated
 
-        // Initialize dose service with PK engine
+        // Initialize PK engine and dose service
         let pkEngine = PharmacokineticsEngine()
-        self._doseService = StateObject(wrappedValue: DoseService(pkEngine: pkEngine))
+        self._pkEngine = State(wrappedValue: pkEngine)
+        self._doseService = State(wrappedValue: DoseService(pkEngine: pkEngine))
     }
 
     var body: some View {
@@ -123,7 +124,7 @@ private struct QuickDoseEntrySheet: View {
     @Environment(\.modelContext) private var modelContext
 
     // Dependencies
-    @ObservedObject var doseService: DoseService
+    let doseService: DoseService
 
     // Event handlers
     let onDoseSaved: () -> Void
@@ -295,17 +296,6 @@ private struct QuickDoseEntrySheet: View {
         }
 
         isSubmitting = false
-    }
-}
-
-// MARK: - QuickDoseViewModel Extension
-
-private extension QuickDoseViewModel {
-    /// Resets form to initial state after successful save
-    func resetForm() {
-        notes = ""
-        doseTime = Date()
-        // Keep medication selection and injection site rotation for convenience
     }
 }
 
