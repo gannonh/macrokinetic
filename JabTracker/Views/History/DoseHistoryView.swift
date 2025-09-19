@@ -11,14 +11,22 @@ import SwiftUI
 struct DoseHistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Dose.timestamp, order: .reverse) private var allDoses: [Dose]
-    @StateObject private var viewModel = DoseHistoryViewModel()
+    @State private var viewModel = DoseHistoryViewModel()
     @State private var showingSearchAndFilter = false
     @State private var showingDeleteConfirmation = false
     @State private var doseToDelete: Dose?
     @State private var editingDose: DoseEditData?
     @State private var showingNewDoseSheet = false
     @State private var showingSuccessMessage = false
-    @StateObject private var quickDoseViewModel = QuickDoseViewModel()
+    @State private var quickDoseViewModel = QuickDoseViewModel()
+    @State private var pkEngine = PharmacokineticsEngine()
+    @State private var doseService: DoseService
+
+    init() {
+        let engine = PharmacokineticsEngine()
+        self._pkEngine = State(wrappedValue: engine)
+        self._doseService = State(wrappedValue: DoseService(pkEngine: engine))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -52,22 +60,12 @@ struct DoseHistoryView: View {
             self.searchAndFilterSheet
         }
         .sheet(item: self.$editingDose) { editData in
-            QuickDoseSheet(
-                editingDose: editData,
-                onSave: { updatedDose in
-                    // Update the dose with edited data
-                    if let originalDose = allDoses.first(where: { $0.id == editData.id }) {
-                        try? self.viewModel.updateDose(originalDose, with: updatedDose, context: self.modelContext)
-                    }
-                    self.editingDose = nil
-                },
-                onCancel: {
-                    self.editingDose = nil
-                })
+            self.editDoseSheet(for: editData)
         }
         .sheet(isPresented: self.$showingNewDoseSheet) {
             QuickDoseSheet(
                 viewModel: self.quickDoseViewModel,
+                doseService: self.doseService,
                 showingSuccessMessage: self.$showingSuccessMessage)
         }
         .onAppear {
@@ -277,6 +275,25 @@ struct DoseHistoryView: View {
                     }
                 }
         }
+    }
+
+    private func editDoseSheet(for editData: DoseEditData) -> some View {
+        QuickDoseSheet(
+            editingDose: editData,
+            onSave: { updatedDose in
+                self.handleDoseUpdate(editData: editData, updatedDose: updatedDose)
+            },
+            onCancel: {
+                self.editingDose = nil
+            })
+    }
+
+    private func handleDoseUpdate(editData: DoseEditData, updatedDose: DoseEditData) {
+        // Update the dose with edited data
+        if let originalDose = self.viewModel.allDoses.first(where: { $0.id == editData.id }) {
+            try? self.viewModel.updateDose(originalDose, with: updatedDose, context: self.modelContext)
+        }
+        self.editingDose = nil
     }
 }
 

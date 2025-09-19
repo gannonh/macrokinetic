@@ -14,8 +14,8 @@ struct QuickDoseButton: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var viewModel = QuickDoseViewModel()
-    @StateObject private var pkEngine = PharmacokineticsEngine()
-    @StateObject private var doseService: DoseService
+    @State private var pkEngine: PharmacokineticsEngine
+    @State private var doseService: DoseService
     @State private var showingQuickDoseSheet = false
     @State private var showingSuccessMessage = false
 
@@ -33,7 +33,8 @@ struct QuickDoseButton: View {
         self.onCalculationsUpdated = onCalculationsUpdated
 
         let pkEngine = PharmacokineticsEngine()
-        self._doseService = StateObject(wrappedValue: DoseService(pkEngine: pkEngine))
+        self._pkEngine = State(wrappedValue: pkEngine)
+        self._doseService = State(wrappedValue: DoseService(pkEngine: pkEngine))
     }
 
     var body: some View {
@@ -88,7 +89,7 @@ struct QuickDoseSheet: View {
     @Environment(\.modelContext) private var modelContext
 
     @ObservedObject var viewModel: QuickDoseViewModel
-    @ObservedObject var doseService: DoseService
+    let doseService: DoseService
     @Binding var showingSuccessMessage: Bool
 
     // Dashboard update callbacks
@@ -252,7 +253,9 @@ struct QuickDoseSheet: View {
     }
 
     private func handleEditSave() {
-        guard let editData = editingDose, let onSave else { return }
+        guard let editData = editingDose,
+              let onSave,
+              let selectedProfile = self.viewModel.selectedMedicationProfile else { return }
 
         // Create updated dose data from current view model state
         let updatedDose = DoseEditData(
@@ -263,7 +266,7 @@ struct QuickDoseSheet: View {
             notes: self.viewModel.notes.isEmpty ? nil : self.viewModel.notes,
             imageData: editData.imageData, // Keep existing image data
             skipped: editData.skipped, // Keep existing skipped status
-            medicationProfile: self.viewModel.selectedMedicationProfile)
+            medicationProfile: selectedProfile)
 
         onSave(updatedDose)
     }

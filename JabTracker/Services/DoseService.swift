@@ -128,9 +128,10 @@ final class DoseService {
 
         do {
             // Fetch existing dose
+            let doseId = editData.id
             let doseDescriptor = FetchDescriptor<Dose>(
                 predicate: #Predicate<Dose> { dose in
-                    dose.id == editData.id
+                    dose.id == doseId
                 }
             )
 
@@ -359,33 +360,13 @@ enum DoseServiceError: LocalizedError, Equatable {
 // MARK: - Supporting Types
 
 /// Data structure for dose editing operations
-public struct DoseEditData {
-    public let id: UUID
-    public let amount: Double
-    public let timestamp: Date
-    public let site: String?
-    public let notes: String?
-    public let imageData: Data?
-    public let skipped: Bool
-    public let medicationProfile: MedicationProfile
-
-    public init(
-        id: UUID,
-        amount: Double,
-        timestamp: Date,
-        site: String?,
-        notes: String?,
-        imageData: Data?,
-        skipped: Bool,
-        medicationProfile: MedicationProfile
-    ) {
-        self.id = id
-        self.amount = amount
-        self.timestamp = timestamp
-        self.site = site
-        self.notes = notes
-        self.imageData = imageData
-        self.skipped = skipped
-        self.medicationProfile = medicationProfile
-    }
+struct DoseEditData: Identifiable {
+    let id: UUID
+    let amount: Double
+    let timestamp: Date
+    let site: String?
+    let notes: String?
+    let imageData: Data?
+    let skipped: Bool
+    let medicationProfile: MedicationProfile
 }

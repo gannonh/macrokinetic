@@ -13,10 +13,10 @@ import SwiftUI
 struct ConcentrationCard: View {
     let user: User
     let medicationProfile: MedicationProfile
-    @ObservedObject var pkEngine: PharmacokineticsEngine
+    let pkEngine: PharmacokineticsEngine
 
     // Optional dose service for real-time updates
-    @ObservedObject var doseService: DoseService?
+    let doseService: DoseService?
 
     @State private var currentConcentration: Double = 0.0
     @State private var peakLevel: (level: Double, time: Date)?
@@ -265,56 +265,32 @@ struct ConcentrationCard: View {
 // MARK: - Preview
 
 #Preview {
-    let container = DataController.preview.container
-    let context = container.mainContext
+    @Previewable @State var container = DataController.preview.container
 
-    // Create preview data
-    let user = User(
-        appleUserId: "preview-user",
-        email: "preview@example.com",
-        name: "Preview User"
+    ConcentrationCard(
+        user: createPreviewUser(),
+        medicationProfile: createPreviewMedicationProfile(),
+        pkEngine: PharmacokineticsEngine(),
+        doseService: nil
     )
-
-    let medicationProfile = MedicationProfile(
-        user: user,
-        medicationName: "semaglutide",
-        dosage: 1.0,
-        frequency: .weekly,
-        startDate: Date().addingTimeInterval(-30 * 24 * 3600)
-    )
-
-    // Add some sample doses
-    let dose1 = Dose(
-        medicationProfile: medicationProfile,
-        amount: 1.0,
-        timestamp: Date().addingTimeInterval(-7 * 24 * 3600),
-        injectionSite: .abdomen,
-        notes: "Weekly dose"
-    )
-
-    let dose2 = Dose(
-        medicationProfile: medicationProfile,
-        amount: 1.0,
-        timestamp: Date().addingTimeInterval(-24 * 3600),
-        injectionSite: .thigh,
-        notes: "Recent dose"
-    )
-
-    context.insert(user)
-    context.insert(medicationProfile)
-    context.insert(dose1)
-    context.insert(dose2)
-
-    return ScrollView {
-        VStack(spacing: 16) {
-            ConcentrationCard(
-                user: user,
-                medicationProfile: medicationProfile,
-                pkEngine: PharmacokineticsEngine(),
-                doseService: nil // Optional for preview
-            )
-        }
-        .padding()
-    }
+    .padding()
     .modelContainer(container)
+}
+
+private func createPreviewUser() -> User {
+    User(
+        email: "preview@example.com",
+        name: "Preview User",
+        appleUserId: "preview-user"
+    )
+}
+
+private func createPreviewMedicationProfile() -> MedicationProfile {
+    MedicationProfile(
+        genericName: "semaglutide",
+        brandName: "Ozempic",
+        currentDose: 1.0,
+        startDate: Date().addingTimeInterval(-30 * 24 * 3600),
+        medicationType: "semaglutide"
+    )
 }

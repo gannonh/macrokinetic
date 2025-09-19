@@ -17,7 +17,7 @@ struct DoseEntrySheet: View {
     @Environment(\.modelContext) private var modelContext
 
     // PK Engine and Dose Service
-    @StateObject private var doseService: DoseService
+    @State private var doseService: DoseService
 
     // Mode: create or edit
     private let mode: Mode
@@ -67,7 +67,7 @@ struct DoseEntrySheet: View {
         self.onCalculationsUpdated = onCalculationsUpdated
 
         let engine = pkEngine ?? PharmacokineticsEngine()
-        self._doseService = StateObject(wrappedValue: DoseService(pkEngine: engine))
+        self._doseService = State(wrappedValue: DoseService(pkEngine: engine))
     }
 
     var body: some View {
@@ -299,21 +299,21 @@ extension DoseEntrySheet {
 
     // Create sample data for editing preview
     let user = User(
-        appleUserId: "preview-user",
         email: "preview@example.com",
-        name: "Preview User"
+        name: "Preview User",
+        appleUserId: "preview-user"
     )
 
     let medicationProfile = MedicationProfile(
-        user: user,
-        medicationName: "semaglutide",
-        dosage: 1.0,
-        frequency: .weekly,
-        startDate: Date().addingTimeInterval(-30 * 24 * 3600)
+        genericName: "semaglutide",
+        brandName: "Ozempic",
+        currentDose: 1.0,
+        startDate: Date().addingTimeInterval(-30 * 24 * 3600),
+        medicationType: "semaglutide"
     )
 
-    context.insert(user)
-    context.insert(medicationProfile)
+    // context.insert(user)
+    // context.insert(medicationProfile)
 
     let editData = DoseEditData(
         id: UUID(),
@@ -326,7 +326,7 @@ extension DoseEntrySheet {
         medicationProfile: medicationProfile
     )
 
-    return DoseEntrySheet.edit(
+    DoseEntrySheet.edit(
         dose: editData,
         onDoseSaved: { print("Dose updated") },
         onCalculationsUpdated: { print("Calculations updated") }

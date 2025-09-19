@@ -83,4 +83,5 @@ final class MedicationProfile {
             self.medicationType = newValue?.rawValue ?? ""
         }
     }
+
 }
