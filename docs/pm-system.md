@@ -114,13 +114,16 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 ### 5. Execution Phase
 
 ```bash
-/pm:issue-start 1234     # Create issue branch + draft PR + launch agents
-/pm:issue-update 1234    # Update progress and capture session work
-/pm:issue-resume 1234    # Resume work on in-progress issues
-/pm:issue-sync 1234      # Push progress updates to GitHub
+/pm:issue-start issue-number     # Create issue branch + draft PR + launch agents
+/pm:issue-update issue-number    # Update progress and capture session work
+/pm:issue-resume issue-number    # Resume work on in-progress issues
+/pm:issue-sync issue-number      # Push progress updates to GitHub
 /context:update          # Propagate learnings
-/pm:issue-merge 1234        # Mark PR ready → review → merge to main
-/pm:issue-close 1234        # Close issue + update epic progress
+/pm:pr-merge issue-number        # Mark PR ready → review → merge to main
+/qa:tq issue-number         # Run test quality analysis and post as PR comment
+/pm:pr-comments path-or-paste  # Process PR review comments with context-aware discretion
+/pm:pr-merge issue-number        # Resume merge process after reviews
+/pm:issue-close issue-number        # Close issue + update epic progress
 /pm:epic-refresh epic-name  # Update epic progress from tasks
 /pm:epic-close epic-name    # Close epic when all issues complete
 ```

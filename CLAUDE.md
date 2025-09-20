@@ -55,15 +55,13 @@ The code-analyzer agent is an expert in code analysis, logic tracing, and vulner
 - NO MIXED CONCERNS - Don't put validation logic inside API handlers, database queries inside UI components, etc. instead of proper separation
 - NO RESOURCE LEAKS - Don't forget to close database connections, clear timeouts, remove event listeners, or clean up file handles
 
-## Outside-In TDD Flow
-
-**E2E Tests (Red) → Integration/Unit Tests (Red) → Implementation (Blue) → Integration/Unit Tests (Green) → E2E Tests (Green)**
-
-Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
-
-## Development Commands
+## Development & Testing 
 
 **IMPORTANT**: It is highly recommended to use the provided **Convenience Scripts** for building, testing, and other common tasks. These scripts handle logging, formatting, and other best practices automatically.
+
+### Testing Configuration & Guidelines
+
+@.claude/context/testing-config.md
 
 ### Convenience Scripts
 
@@ -255,72 +253,6 @@ xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name
 ./scripts/docs.sh
 ```
 
-### Coverage Policy & Reporting
-
-- Coverage config: `coverage-config.json`
-- 
-```bash
-# Enable coverage in Xcode scheme (already configured)
-# codeCoverageEnabled = "YES" in JabTracker.xcscheme
-
-# Check coverage policy compliance (RECOMMENDED)
-./scripts/check-coverage.sh
-
-# Run tests with coverage (automatically enabled)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
-
-# View coverage in Xcode UI:
-# 1. Run tests with coverage enabled
-# 2. Open Report Navigator (⌘9) 
-# 3. Select test result -> Coverage tab
-
-# Generate code coverage reports (EASY WAY - use test script)
-./scripts/test.sh unit 1 --coverage     # Unit tests with coverage
-
-# COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
-./scripts/coverage-detail.sh                    # Full coverage report
-./scripts/coverage-detail.sh DataController     # Specific file coverage
-./scripts/coverage-detail.sh AuthenticationManager  # Specific file coverage
-./scripts/coverage-json.sh --summary           # Quick file overview sorted by coverage
-./scripts/coverage-json.sh --functions         # Show uncovered functions only
-./scripts/coverage-json.sh DataController      # JSON data for specific file
-
-# Manual coverage generation (if needed)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -enableCodeCoverage YES -resultBundlePath /tmp/coverage.xcresult -only-testing:JabTrackerTests
-xcrun xccov view --report /tmp/coverage.xcresult
-
-# Raw xccov commands (coverage-detail.sh and coverage-json.sh are easier)
-xcrun xccov view --report --json /tmp/coverage.xcresult | jq
-xcrun xccov view --file-list /tmp/coverage.xcresult
-```
-
-**Coverage Policy (5-Tier System):**
-- **Tier 1 - Pure Business Logic (90%)**: PharmacokineticsEngine, Models (User, Dose, MedicationProfile, Medication), ReconstitutionCalculator, DoseTitration
-- **Tier 2 - Infrastructure (62%)**: DataController, MedicationManager
-- **Tier 3 - Framework Integration (42%)**: AuthenticationManager, BiometricAuthManager, SubscriptionManager
-- **Tier 4 - View Models (85%)**: OnboardingViewModel
-- **Tier 5 - Utilities (75%)**: ProfileValidation, Array+Unique, SubscriptionProducts
-- **SwiftUI Views**: No coverage requirements (view bodies cannot be unit tested)
-- **Overall Coverage**: ~20% (informational only, not a requirement)
-
-#### Coverage Analysis Tips
-
-**Understanding xccov Output:**
-- Coverage shows function-level and line-level detail
-- `0.00% (0/X)` means completely uncovered function with X executable lines
-- Private methods need indirect testing through public methods that call them
-- Async methods may need `Task.sleep()` waits in tests for proper coverage
-
-**Current Coverage Gaps (as of Session 8):**
-- **AuthenticationManager**: 39% (below 42% threshold) - needs additional credential handling tests
-- **PharmacokineticsEngine**: Not yet implemented - future core requirement
-- **SubscriptionProducts**: Not found in coverage report - check test inclusion
-
-**Common Coverage Issues:**
-- Result bundle not found: Run tests with `--coverage` first
-- Private method coverage: Use public methods that invoke them
-- Async method coverage: Add `Task.sleep()` waits in tests
-- Delegate method coverage: Create proper mock controllers/requests
 
 ### XcodeGen Project Regeneration
 This project uses XcodeGen for project file management. **Important**: When adding new Swift files (especially test files), you must regenerate the Xcode project:
