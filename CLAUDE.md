@@ -87,7 +87,6 @@ list_sims()
 
 @.claude/context/system-patterns.md
 
-
 ## Security Implementation Guidelines
 
 - Never log sensitive authentication credentials in production code
