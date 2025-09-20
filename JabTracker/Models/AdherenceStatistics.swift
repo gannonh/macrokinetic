@@ -8,6 +8,13 @@
 
 import Foundation
 
+/// Result of streak calculations
+struct StreakResult {
+    let current: Int
+    let longest: Int
+    let isActive: Bool
+}
+
 /// Comprehensive adherence statistics for a given time period
 struct AdherenceStatistics {
     // MARK: - Basic Statistics
@@ -162,16 +169,26 @@ enum AdherenceStatisticsCalculator {
         let doseAmounts = takenDoses.map(\.amount)
         let averageDose = doseAmounts.isEmpty ? 0.0 : doseAmounts.reduce(0, +) / Double(doseAmounts.count)
         let totalMedicationAmount = doseAmounts.reduce(0, +)
-        let doseRange = doseAmounts.isEmpty ? nil : (min: doseAmounts.min()!, max: doseAmounts.max()!)
+        let doseRange: (min: Double, max: Double)? = {
+            guard !doseAmounts.isEmpty,
+                  let minDose = doseAmounts.min(),
+                  let maxDose = doseAmounts.max() else {
+                return nil
+            }
+            return (min: minDose, max: maxDose)
+        }()
 
         // Site distribution
         let siteDistribution = self.calculateSiteDistribution(doses: takenDoses)
 
         // Streak calculations
-        let (currentStreak, longestStreak, isCurrentStreakActive) = self.calculateStreaks(
+        let streakResult = self.calculateStreaks(
             doses: takenDoses,
             periodStart: periodStart,
             periodEnd: periodEnd)
+        let currentStreak = streakResult.current
+        let longestStreak = streakResult.longest
+        let isCurrentStreakActive = streakResult.isActive
 
         return AdherenceStatistics(
             totalDoses: totalDoses,
@@ -196,7 +213,11 @@ enum AdherenceStatisticsCalculator {
         frequency: DoseFrequency) -> Int
     {
         let calendar = Calendar.current
-        let dayCount = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: periodStart), to: Calendar.current.startOfDay(for: periodEnd)).day ?? 0
+        let dayCount = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: periodStart),
+            to: calendar.startOfDay(for: periodEnd)
+        ).day ?? 0
 
         switch frequency {
         case .daily:
@@ -215,7 +236,7 @@ enum AdherenceStatisticsCalculator {
     private static func calculateStreaks(
         doses: [Dose],
         periodStart: Date,
-        periodEnd: Date) -> (current: Int, longest: Int, isActive: Bool)
+        periodEnd: Date) -> StreakResult
     {
         // Sort doses by date
         let sortedDoses = doses.sorted { $0.timestamp < $1.timestamp }
@@ -242,7 +263,9 @@ enum AdherenceStatisticsCalculator {
         var currentDate = calendar.startOfDay(for: periodStart)
         let endDate = calendar.startOfDay(for: periodEnd)
         let today = calendar.startOfDay(for: Date())
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
+            return StreakResult(current: 0, longest: 0, isActive: false)
+        }
 
         while currentDate <= endDate {
             if daysWithDoses.contains(currentDate) {
@@ -278,6 +301,6 @@ enum AdherenceStatisticsCalculator {
         let currentStreak = (mostRecentStreakEndsToday || mostRecentStreakEndsYesterday) ? mostRecentStreakCount : 0
         let isActive = mostRecentStreakEndsToday
 
-        return (currentStreak, longestStreak, isActive)
+        return StreakResult(current: currentStreak, longest: longestStreak, isActive: isActive)
     }
 }
