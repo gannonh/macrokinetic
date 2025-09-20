@@ -14,7 +14,7 @@ $2
 
 1. **Get issue details:**
    ```bash
-   gh issue view 45 --json state,title,labels,body
+   gh issue view $1 --json state,title,labels,body
    ```
 
 2. **Find local task file:**
@@ -137,11 +137,14 @@ Update task file frontmatter `updated` field with current datetime.
 - **Frontend agents**: Stub E2E acceptance tests → write unit tests → implement UI → refactor
 - **Integration agents**: Write integration tests → implement integrations → refactor
 - **No separate testing stream needed** - each agent owns their domain's tests
-- **CRITICAL**: Agents write tests but DO NOT run them to avoid simulator conflicts
+- **Simulator Isolation**: Each agent gets assigned a dedicated simulator (1, 2, or 3) for isolated testing
 
-**Why No Test Execution**: Parallel agents avoid running tests simultaneously because they compete for the same simulators, causing conflicts and unreliable results. As coordinator, you and the User will run the full test suite after all streams complete their implementation work.
+**Simulator Assignment**: Agents are assigned simulators sequentially to avoid conflicts:
+- Stream A: Simulator 1 (iPhone 15) - UUID: 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB
+- Stream B: Simulator 2 (iPhone 15 Pro Max) - UUID: BFE552DA-1CB4-4736-821D-270EC6307512
+- Stream C: Simulator 3 (iPhone SE 3rd gen) - UUID: FF190E2B-E6A1-461F-BEAF-E9A827038FA1
 
-This eliminates redundant testing streams since each specialist writes tests for their own implementation domain.
+This eliminates redundant testing streams since each specialist writes tests for their own implementation domain and can run them immediately for TDD feedback.
 
 For this stage, first present to the user your plan for launching agents to ensure alignment. Example:
 
@@ -166,16 +169,25 @@ stream: {stream_name}
 agent: {agent_type}
 started: {current_datetime}
 status: in_progress
+simulator: {X}
+simulator_uuid: {simulator_uuid}
+test_command: "./scripts/test.sh unit {X}"
 ---
 
 # Stream {X}: {stream_name}
 
 ## Scope
 {stream_description}
-- **REMINDER**: Follow TDD approach (write tests but DO NOT run them)
+- **REMINDER**: Follow TDD approach with immediate test feedback
 
 ## Branch
 issue/{issue_name}
+
+## Testing
+- **Assigned Simulator**: {X} ({simulator_name})
+- **Simulator UUID**: {simulator_uuid}
+- **Test Command**: `./scripts/test.sh unit {X}`
+- **UI Test Command**: `./scripts/test.sh ui {X} {TestClassName}`
 
 ## Files
 {file_patterns}
@@ -190,71 +202,112 @@ Task:
   description: "Issue #$1 Stream {X}"
   subagent_type: "{agent_type}"
   prompt: |
-    You are working on Issue #$1 on branch issue/{issue_name}.
+      You are working on Issue #$1 on branch issue/{issue_name}.
 
-    Branch: issue/{issue_name}
-    Your stream: {stream_name}
+      Branch: issue/{issue_name}
+      Your stream: {stream_name}
 
-    Your scope:
-    - Files to modify: {file_patterns}
-    - Work to complete: {stream_description}
+      Your scope:
+      - Files to modify: {file_patterns}
+      - Work to complete: {stream_description}
 
-    Requirements:
-    1. Read full task from: .claude/epics/{epic_name}/{task_file}
-    2. Work ONLY in your assigned files in the current directory
-    3. Commit frequently with format: "Issue #$1: {specific change}"
-    4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$1/stream-{X}.md
-    5. Add new files to coverage-config.json
-    6. Follow coordination rules in /rules/agent-coordination.md
-    7. For user facing features/components, stub E2E acceptance tests that define "done"
-    8. Write tests but DO NOT run them (to avoid conflicts with other streams)
+      Requirements:
+      1. Read full task from: .claude/epics/{epic_name}/{task_file}
+      2. Work ONLY in your assigned files in the current directory
+      3. Commit frequently with format: "Issue #$1: {specific change}"
+      4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$1/stream-{X}.md
+      5. Add new files to coverage-config.json
+      6. Follow coordination rules in /rules/agent-coordination.md
+      7. For user facing features/components, stub E2E acceptance tests that define "done"
+      8. **ASSIGNED SIMULATOR**: {X} ({simulator_name})
+      9. **TEST COMMAND**: ./scripts/test.sh unit {X}
+      10. **UI TEST COMMAND**: ./scripts/test.sh ui {X} {TestClassName}
 
-    Typical workflow:
-    1. Stub E2E acceptance tests (criteria only) for your feature scope (defines user-facing success)
-       - Commit: "Issue #$1: add E2E acceptance criteria for {feature}"
-    2. Write failing integration/unit tests (defines component contracts)  
-       - Commit: "Issue #$1: add unit tests for {feature}"
-    3. Implement minimal code to satisfy the unit/integration tests
-       - Commit: "Issue #$1: implement {feature}"
-    4. Mark in progress file: "ready_for_testing: true"
-    
-    Test Writing Guidelines:
-    - E2E tests: Define user-facing acceptance criteria (XCUITest)
-    - Integration tests: Define component interactions
-    - Unit tests: Define individual component behavior
-    - ALL streams write E2E tests for their features first
-    - DO NOT run tests (coordinator will handle this)
-    - For unit tests write actual tests but do not run them.
-    - For E2E tests, stub non-functional test methods that use comments to descrtibe the intended behavior. 
-      Example:
+      Outside-In TDD Flow
+
+      Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
+
+      1. Stub E2E acceptance test to define user-facing success (criteria only)
 
       // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
-      func testNameOfTestMethod() throws {
-         // IMPORTANT: 1. Follow patterns established with prior tests in this file ☝️
-         //            2. Don't make assumptions! Look at the actual implementation.
-         //            3. For most operations reuse or create new, reusable TestUtilities methods.
+         func testNameOfTestMethod() throws {
+            // GIVEN: A dose exists in history
+            // WHEN: User swipes left on dose row
+            // THEN: Edit action appears and functions correctly
+            // THEN: Dose entry sheet opens with pre-populated data
+         }
 
-         // GIVEN: A dose exists in history
 
-         // WHEN: User swipes left on dose row
+      2. Write failing unit tests that test isolated business logic and component contracts
+      3. Implement minimal code to satisfy the unit tests
+      4. Run unit tests to verify correctness
+      5. Write failing integration tests that verify component interactions
+      6. Implement minimal code to satisfy the integration tests
+      7. Run integration tests to verify correctness
+      8. Write full E2E tests that verify the entire user flow
 
-         // THEN: Edit action appears and functions correctly
+      E2E Testing Element Targeting (CRITICAL)
 
-         // THEN: Dose entry sheet opens with pre-populated data
-      }
+      Element targeting is the primary challenge in E2E testing.
+
+      Before writing the actual e2e tests, FIRST use `TestUtilities.debugElements()` to print and inspect the actual accessibility hierarchy. SwiftUI often renders elements differently than expected (e.g. List → CollectionView).
+
+      Debug-First Approach
+
+      1. Print the hierarchy FIRST
+      
+      // ALWAYS start with debugging the accessibility hierarchy
+      TestUtilities.debugElements(in: app, containing: "dose-history")
+
+         // Example output reveals actual element types:
+         // 🔍 DEBUG: Tables: []
+         // 🔍 DEBUG: ScrollViews: []
+         // 🔍 DEBUG: CollectionViews: ["dose-history-view"]
+
+      2. Read the raw logs to understand the actual element types and identifiers:
+
+      cat logs/latest/raw_output.txt | grep "DEBUG"
+
+      Common SwiftUI → Accessibility Mismatches
+      - **SwiftUI List** → renders as **CollectionView** (not Table)
+      - **NavigationStack** → renders as **CollectionView** (not ScrollView)
+      - **Form toggles** → require coordinate-based tapping, not direct `.tap()`
+      - **XCUIElementQuery** → has `.count` property, not `.isEmpty` (SwiftLint auto-fix breaks this)
+
+      ### Essential Utilities
+      - **`TestUtilities.debugElements()`** - Debug accessibility hierarchy
+      - **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
+      - Use **debug output** to identify correct element types before writing selectors
+
+      ### Systematic Process
+      1. Test fails to find element → Add `TestUtilities.debugElements()`
+      2. Analyze debug output → Identify actual element type and identifier
+      3. Update test selector → Use correct element type (collectionViews/tables/buttons)
+      4. Remove debug code → Clean up after fixing selector
+      5. Document learning → Update style guide for future reference
+
+      ## Test Execution Notes
+      - All test runs automatically log to `./logs/{test_type}_YYYY-MM-DD_HH-MM-SS/`
+      - Latest test results always available via `logs/latest` symlink
+      - Swift Testing framework handles unit tests with modern syntax
+      - UI tests use XCUITest with accessibility-based element selection
+      - **PREFER specific UI test classes** over running all UI tests (performance)
+      - Coverage reports saved to test log directory and `/tmp/jab-tracker-coverage.xcresult`
+      - Manual authentication tests require Xcode for interactive Apple ID flow
+      - Log files include: `raw_output.txt`, `results.xcresult`, `coverage.json` (if --coverage used)
     
-    Coordination Checkpoint:
-    - Update your stream file with "ready_for_testing: true"
-    - List which test files you created
-    - Wait for coordinator to run full test suite
-    - Fix any issues found during coordination
-    
-    If you need to modify files outside your scope:
-    - Check if another stream owns them
-    - Wait if necessary
-    - Update your progress file with coordination notes
-    
-    Complete your stream's work and mark as completed when done.
+      Coordination Checkpoint:
+      - Update your stream file with "ready_for_testing: true"
+      - List which test files you created and their test results
+      - Report any test failures or issues discovered during TDD
+      - Continue TDD cycles until your stream's tests are green
+      
+      If you need to modify files outside your scope:
+      - Check if another stream owns them
+      - Wait if necessary
+      - Update your progress file with coordination notes
+      
+      Complete your stream's work and mark as completed when done.
 ```
 
 ### 6. GitHub Assignment
