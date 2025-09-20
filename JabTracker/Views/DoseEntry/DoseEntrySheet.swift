@@ -6,9 +6,9 @@
 //  Supports creating new doses, editing existing doses, and triggering dashboard updates
 //
 
+import PhotosUI
 import SwiftData
 import SwiftUI
-import PhotosUI
 
 /// Comprehensive dose entry sheet with pharmacokinetics engine integration
 /// Supports both creating new doses and editing existing doses with automatic PK updates
@@ -31,7 +31,7 @@ struct DoseEntrySheet: View {
     @State private var medicationProfiles: [MedicationProfile] = []
     @State private var selectedMedicationProfile: MedicationProfile?
     @State private var doseAmount: Double = 0.0
-    @State private var doseTime: Date = Date()
+    @State private var doseTime: Date = .init()
     @State private var selectedInjectionSite: String = ""
     @State private var notes: String = ""
     @State private var isSkipped: Bool = false
@@ -59,8 +59,8 @@ struct DoseEntrySheet: View {
         editingDose: DoseEditData? = nil,
         pkEngine: PharmacokineticsEngine? = nil,
         onDoseSaved: (() -> Void)? = nil,
-        onCalculationsUpdated: (() -> Void)? = nil
-    ) {
+        onCalculationsUpdated: (() -> Void)? = nil)
+    {
         self.mode = mode
         self.editingDose = editingDose
         self.onDoseSaved = onDoseSaved
@@ -75,65 +75,61 @@ struct DoseEntrySheet: View {
             Form {
                 // Medication Selection Section
                 DoseEntryFormSections.MedicationSection(
-                    selectedMedicationProfile: $selectedMedicationProfile,
-                    medicationProfiles: medicationProfiles,
-                    errorMessage: errorMessage,
-                    serviceError: doseService.lastError
-                )
+                    selectedMedicationProfile: self.$selectedMedicationProfile,
+                    medicationProfiles: self.medicationProfiles,
+                    errorMessage: self.errorMessage,
+                    serviceError: self.doseService.lastError)
 
                 // Dose Details Section
                 DoseEntryFormSections.DoseDetailsSection(
-                    doseAmount: $doseAmount,
-                    selectedInjectionSite: $selectedInjectionSite,
-                    isSkipped: $isSkipped,
-                    dosePhotoData: $dosePhotoData,
-                    selectedPhotoItem: $selectedPhotoItem
-                )
+                    doseAmount: self.$doseAmount,
+                    selectedInjectionSite: self.$selectedInjectionSite,
+                    isSkipped: self.$isSkipped,
+                    dosePhotoData: self.$dosePhotoData,
+                    selectedPhotoItem: self.$selectedPhotoItem)
 
                 // Timing Section
-                DoseEntryFormSections.TimingSection(doseTime: $doseTime)
+                DoseEntryFormSections.TimingSection(doseTime: self.$doseTime)
 
                 // Additional Information Section
-                DoseEntryFormSections.AdditionalInfoSection(notes: $notes)
+                DoseEntryFormSections.AdditionalInfoSection(notes: self.$notes)
 
                 // Photo Section
                 DoseEntryPhotoSection(
-                    dosePhotoData: $dosePhotoData,
-                    selectedPhotoItem: $selectedPhotoItem,
-                    showingPhotoOptions: $showingPhotoOptions,
-                    isSkipped: isSkipped
-                )
+                    dosePhotoData: self.$dosePhotoData,
+                    selectedPhotoItem: self.$selectedPhotoItem,
+                    showingPhotoOptions: self.$showingPhotoOptions,
+                    isSkipped: self.isSkipped)
 
                 // PK Integration Info
                 if let selectedProfile = selectedMedicationProfile {
                     DoseEntryPKSection(
                         medicationProfile: selectedProfile,
-                        isSkipped: isSkipped
-                    )
+                        isSkipped: self.isSkipped)
                 }
             }
-            .navigationTitle(mode == .create ? "Add Dose" : "Edit Dose")
+            .navigationTitle(self.mode == .create ? "Add Dose" : "Edit Dose")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        self.dismiss()
                     }
                     .accessibilityIdentifier("dose-entry-cancel")
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(mode == .create ? "Save" : "Update") {
+                    Button(self.mode == .create ? "Save" : "Update") {
                         Task {
-                            await saveDose()
+                            await self.saveDose()
                         }
                     }
-                    .disabled(!canSaveDose || isSubmitting)
+                    .disabled(!self.canSaveDose || self.isSubmitting)
                     .accessibilityIdentifier("dose-entry-save")
                 }
             }
             .onAppear {
-                loadData()
+                self.loadData()
             }
         }
         .accessibilityIdentifier("dose-entry-sheet")
@@ -144,10 +140,10 @@ struct DoseEntrySheet: View {
     // MARK: - Computed Properties
 
     private var canSaveDose: Bool {
-        guard selectedMedicationProfile != nil else { return false }
-        guard doseAmount > 0 || isSkipped else { return false }
-        guard !selectedInjectionSite.isEmpty || isSkipped else { return false }
-        guard !doseService.isProcessingDose else { return false }
+        guard self.selectedMedicationProfile != nil else { return false }
+        guard self.doseAmount > 0 || self.isSkipped else { return false }
+        guard !self.selectedInjectionSite.isEmpty || self.isSkipped else { return false }
+        guard !self.doseService.isProcessingDose else { return false }
         return true
     }
 
@@ -158,36 +154,35 @@ struct DoseEntrySheet: View {
             do {
                 // Fetch medication profiles
                 let profileDescriptor = FetchDescriptor<MedicationProfile>()
-                medicationProfiles = try modelContext.fetch(profileDescriptor)
+                self.medicationProfiles = try self.modelContext.fetch(profileDescriptor)
 
-                if mode == .edit, let editData = editingDose {
+                if self.mode == .edit, let editData = editingDose {
                     // Load editing data
-                    selectedMedicationProfile = editData.medicationProfile
-                    doseAmount = editData.amount
-                    doseTime = editData.timestamp
-                    selectedInjectionSite = editData.site ?? ""
-                    notes = editData.notes ?? ""
-                    isSkipped = editData.skipped
-                    dosePhotoData = editData.imageData
+                    self.selectedMedicationProfile = editData.medicationProfile
+                    self.doseAmount = editData.amount
+                    self.doseTime = editData.timestamp
+                    self.selectedInjectionSite = editData.site ?? ""
+                    self.notes = editData.notes ?? ""
+                    self.isSkipped = editData.skipped
+                    self.dosePhotoData = editData.imageData
                 } else {
                     // Set defaults for new dose
-                    selectedMedicationProfile = medicationProfiles.first
+                    self.selectedMedicationProfile = self.medicationProfiles.first
                     if let profile = selectedMedicationProfile {
-                        doseAmount = profile.currentDose
-                        selectedInjectionSite = DoseDefaults.nextRecommendedSite(
+                        self.doseAmount = profile.currentDose
+                        self.selectedInjectionSite = DoseDefaults.nextRecommendedSite(
                             for: profile.medication ?? .semaglutide,
                             recentDoses: Array((profile.doses ?? []).suffix(5)),
-                            preferredSites: profile.preferredInjectionSites
-                        )
+                            preferredSites: profile.preferredInjectionSites)
                     }
                 }
 
-                if medicationProfiles.isEmpty {
-                    errorMessage = "No medication profiles found. Please create a medication profile first."
+                if self.medicationProfiles.isEmpty {
+                    self.errorMessage = "No medication profiles found. Please create a medication profile first."
                 }
 
             } catch {
-                errorMessage = "Failed to load medication profiles: \(error.localizedDescription)"
+                self.errorMessage = "Failed to load medication profiles: \(error.localizedDescription)"
             }
         }
     }
@@ -198,53 +193,51 @@ struct DoseEntrySheet: View {
     private func saveDose() async {
         guard let profile = selectedMedicationProfile else { return }
 
-        isSubmitting = true
-        errorMessage = nil
+        self.isSubmitting = true
+        self.errorMessage = nil
 
         do {
-            if mode == .edit, let editData = editingDose {
+            if self.mode == .edit, let editData = editingDose {
                 // Update existing dose
                 let updatedEditData = DoseEditData(
                     id: editData.id,
-                    amount: doseAmount,
-                    timestamp: doseTime,
-                    site: isSkipped ? nil : selectedInjectionSite,
-                    notes: notes.isEmpty ? nil : notes,
-                    imageData: dosePhotoData,
-                    skipped: isSkipped,
-                    medicationProfile: profile
-                )
+                    amount: self.doseAmount,
+                    timestamp: self.doseTime,
+                    site: self.isSkipped ? nil : self.selectedInjectionSite,
+                    notes: self.notes.isEmpty ? nil : self.notes,
+                    imageData: self.dosePhotoData,
+                    skipped: self.isSkipped,
+                    medicationProfile: profile)
 
-                try await doseService.updateDose(with: updatedEditData, context: modelContext)
+                try await self.doseService.updateDose(with: updatedEditData, context: self.modelContext)
             } else {
                 // Create new dose
-                _ = try await doseService.saveDose(
-                    amount: doseAmount,
-                    timestamp: doseTime,
+                _ = try await self.doseService.saveDose(
+                    amount: self.doseAmount,
+                    timestamp: self.doseTime,
                     medicationProfile: profile,
-                    site: isSkipped ? nil : selectedInjectionSite,
-                    notes: notes.isEmpty ? nil : notes,
-                    skipped: isSkipped,
-                    imageData: dosePhotoData,
-                    context: modelContext
-                )
+                    site: self.isSkipped ? nil : self.selectedInjectionSite,
+                    notes: self.notes.isEmpty ? nil : self.notes,
+                    skipped: self.isSkipped,
+                    imageData: self.dosePhotoData,
+                    context: self.modelContext)
             }
 
             // Success - trigger callbacks and dismiss
-            onDoseSaved?()
-            onCalculationsUpdated?()
+            self.onDoseSaved?()
+            self.onCalculationsUpdated?()
 
             // Haptic feedback
             let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
             impactFeedback.impactOccurred()
 
-            dismiss()
+            self.dismiss()
 
         } catch {
-            errorMessage = "Failed to save dose: \(error.localizedDescription)"
+            self.errorMessage = "Failed to save dose: \(error.localizedDescription)"
         }
 
-        isSubmitting = false
+        self.isSubmitting = false
     }
 }
 
@@ -255,15 +248,14 @@ extension DoseEntrySheet {
     static func create(
         pkEngine: PharmacokineticsEngine? = nil,
         onDoseSaved: (() -> Void)? = nil,
-        onCalculationsUpdated: (() -> Void)? = nil
-    ) -> DoseEntrySheet {
+        onCalculationsUpdated: (() -> Void)? = nil) -> DoseEntrySheet
+    {
         DoseEntrySheet(
             mode: .create,
             editingDose: nil,
             pkEngine: pkEngine,
             onDoseSaved: onDoseSaved,
-            onCalculationsUpdated: onCalculationsUpdated
-        )
+            onCalculationsUpdated: onCalculationsUpdated)
     }
 
     /// Create sheet for editing existing dose
@@ -271,15 +263,14 @@ extension DoseEntrySheet {
         dose: DoseEditData,
         pkEngine: PharmacokineticsEngine? = nil,
         onDoseSaved: (() -> Void)? = nil,
-        onCalculationsUpdated: (() -> Void)? = nil
-    ) -> DoseEntrySheet {
+        onCalculationsUpdated: (() -> Void)? = nil) -> DoseEntrySheet
+    {
         DoseEntrySheet(
             mode: .edit,
             editingDose: dose,
             pkEngine: pkEngine,
             onDoseSaved: onDoseSaved,
-            onCalculationsUpdated: onCalculationsUpdated
-        )
+            onCalculationsUpdated: onCalculationsUpdated)
     }
 }
 
@@ -288,9 +279,8 @@ extension DoseEntrySheet {
 #Preview("Create Dose") {
     DoseEntrySheet.create(
         onDoseSaved: { print("Dose saved") },
-        onCalculationsUpdated: { print("Calculations updated") }
-    )
-    .modelContainer(DataController.preview.container)
+        onCalculationsUpdated: { print("Calculations updated") })
+        .modelContainer(DataController.preview.container)
 }
 
 #Preview("Edit Dose") {
@@ -301,16 +291,14 @@ extension DoseEntrySheet {
     let user = User(
         email: "preview@example.com",
         name: "Preview User",
-        appleUserId: "preview-user"
-    )
+        appleUserId: "preview-user")
 
     let medicationProfile = MedicationProfile(
         genericName: "semaglutide",
         brandName: "Ozempic",
         currentDose: 1.0,
         startDate: Date().addingTimeInterval(-30 * 24 * 3600),
-        medicationType: "semaglutide"
-    )
+        medicationType: "semaglutide")
 
     // context.insert(user)
     // context.insert(medicationProfile)
@@ -323,13 +311,11 @@ extension DoseEntrySheet {
         notes: "Preview dose for editing",
         imageData: nil,
         skipped: false,
-        medicationProfile: medicationProfile
-    )
+        medicationProfile: medicationProfile)
 
     DoseEntrySheet.edit(
         dose: editData,
         onDoseSaved: { print("Dose updated") },
-        onCalculationsUpdated: { print("Calculations updated") }
-    )
-    .modelContainer(container)
+        onCalculationsUpdated: { print("Calculations updated") })
+        .modelContainer(container)
 }

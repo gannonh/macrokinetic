@@ -82,7 +82,8 @@ struct DoseCalendarViewTests {
 
         // Verify first and last days are correct
         guard let firstDay = actualDays.first,
-              let lastDay = actualDays.last else {
+              let lastDay = actualDays.last
+        else {
             Issue.record("Failed to get first or last day from actual days")
             return
         }
@@ -136,7 +137,8 @@ struct DoseCalendarViewTests {
         let calendar = Calendar.current
         let today = Date()
         guard let todayMorning = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: today),
-              let todayEvening = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: today) else {
+              let todayEvening = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: today)
+        else {
             Issue.record("Failed to create morning or evening test dates")
             return
         }
@@ -209,7 +211,7 @@ private class TestCalendarViewModel {
     var monthYearString: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: currentDate)
+        return formatter.string(from: self.currentDate)
     }
 
     var daysInMonth: [Date?] {
@@ -219,8 +221,8 @@ private class TestCalendarViewModel {
             return []
         }
 
-        let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
-        let paddingDays = firstWeekday - calendar.firstWeekday
+        let firstWeekday = self.calendar.component(.weekday, from: firstOfMonth)
+        let paddingDays = firstWeekday - self.calendar.firstWeekday
 
         var days: [Date?] = Array(repeating: nil, count: paddingDays)
 
@@ -240,17 +242,17 @@ private class TestCalendarViewModel {
 
     func previousMonth() {
         if let newDate = calendar.date(byAdding: .month, value: -1, to: currentDate) {
-            currentDate = newDate
+            self.currentDate = newDate
         }
     }
 
     func nextMonth() {
         if let newDate = calendar.date(byAdding: .month, value: 1, to: currentDate) {
-            currentDate = newDate
+            self.currentDate = newDate
         }
     }
 
-    func dosesForDate(_ date: Date) -> [Dose] {
+    func dosesForDate(_: Date) -> [Dose] {
         // Simplified for testing - in real implementation would filter from allDoses
         []
     }

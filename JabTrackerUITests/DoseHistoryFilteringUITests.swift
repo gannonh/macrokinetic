@@ -41,8 +41,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for filtering to complete by checking filtered results
         let filteredResults = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count <= 3"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [filteredResults], timeout: 5)
 
         // Verify filtering occurred (assuming some doses match "test" and some don't)
@@ -56,8 +55,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for filter to clear by checking restored results
         let restoredResults = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count >= 3"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [restoredResults], timeout: 5)
 
         // Verify all doses are shown again
@@ -89,8 +87,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for filtering to complete by checking that filtering occurred
         let filteringComplete = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count <= 3"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [filteringComplete], timeout: 5)
 
         // WHEN: User clears search text
@@ -99,8 +96,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for filter to clear by checking restored results
         let clearingComplete = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count >= 3"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [clearingComplete], timeout: 5)
 
         // THEN: All doses are shown again
@@ -153,8 +149,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for date filtering to apply by checking filtered results
         let dateFilterComplete = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count <= 5"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [dateFilterComplete], timeout: 5)
 
         // Verify filtering occurred (exact count depends on implementation)
@@ -198,8 +193,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for medication filtering to apply by checking filtered results
         let medicationFilterComplete = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count <= 3"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [medicationFilterComplete], timeout: 5)
 
         // Verify filtering occurred
@@ -243,8 +237,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for injection site filtering to apply by checking filtered results
         let siteFilterComplete = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count <= 3"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [siteFilterComplete], timeout: 5)
 
         // Verify filtering occurred
@@ -283,8 +276,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // Wait for refresh to complete by checking that history view is still responsive
         let refreshComplete = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == true"),
-            object: historyView
-        )
+            object: historyView)
         wait(for: [refreshComplete], timeout: 10)
 
         // Verify data is still displayed (refresh completed)

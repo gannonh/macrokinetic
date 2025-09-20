@@ -150,28 +150,25 @@ struct DoseHistoryViewModelDataTests {
             timestamp: timestamp,
             site: "Thigh",
             notes: "Test dose",
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
     }
 
     private func createTestMedicationProfile(
         medication: Medication = .semaglutide,
-        currentDose: Double = 1.0
-    ) -> MedicationProfile {
+        currentDose: Double = 1.0) -> MedicationProfile
+    {
         MedicationProfile(
             genericName: medication.rawValue,
             brandName: "Test Brand",
             currentDose: currentDose,
             startDate: Date(),
-            medicationType: medication.rawValue
-        )
+            medicationType: medication.rawValue)
     }
 
     private func createTestUser(name: String = "Test User", email: String = "test@example.com") -> User {
         User(
             email: email,
             name: name,
-            appleUserId: "test-apple-id"
-        )
+            appleUserId: "test-apple-id")
     }
 }

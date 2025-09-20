@@ -6,9 +6,10 @@
 //  Tests the complete workflow from dose logging to concentration display
 //
 
-import Testing
-import SwiftData
 import Foundation
+import SwiftData
+import Testing
+
 @testable import JabTracker
 
 /// Integration tests for pharmacokinetics dashboard workflow
@@ -16,8 +17,8 @@ import Foundation
 @Suite("PK Dashboard Integration Tests")
 @MainActor
 struct PKDashboardIntegrationTests {
-
     // MARK: - Test Infrastructure
+
     var container: ModelContainer
     var context: ModelContext
     var pkEngine: PharmacokineticsEngine
@@ -28,8 +29,7 @@ struct PKDashboardIntegrationTests {
         let config = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+            cloudKitDatabase: .none)
         self.container = try ModelContainer(for: schema, configurations: [config])
         self.context = self.container.mainContext
         self.pkEngine = PharmacokineticsEngine()
@@ -40,8 +40,7 @@ struct PKDashboardIntegrationTests {
         return User(
             email: "test-\(uniqueId)@pkintegration.com",
             name: "PK Integration Test User \(uniqueId)",
-            appleUserId: "test-user-pk-integration-\(uniqueId)"
-        )
+            appleUserId: "test-user-pk-integration-\(uniqueId)")
     }
 
     private func createTestMedicationProfile(user: User) -> MedicationProfile {
@@ -50,37 +49,38 @@ struct PKDashboardIntegrationTests {
             brandName: "Ozempic",
             currentDose: 1.0,
             startDate: Date().addingTimeInterval(-14 * 24 * 3600), // 2 weeks ago
-            medicationType: "semaglutide"
-        )
+            medicationType: "semaglutide")
         profile.user = user
         return profile
     }
 
     // MARK: - Test: Dose Save Triggers PK Recalculation
 
-    @Test("Dose save triggers PK recalculation", arguments: [
-        ("New dose entry", 1.0, Date()),
-        ("Higher dose entry", 2.5, Date().addingTimeInterval(-3600)),
-        ("Lower dose entry", 0.5, Date().addingTimeInterval(-7200))
-    ])
-    func doseSaveTriggersRecalculation(_ testName: String, amount: Double, timestamp: Date) async throws {
-
+    @Test(
+        "Dose save triggers PK recalculation",
+        arguments: [
+            ("New dose entry", 1.0, Date()),
+            ("Higher dose entry", 2.5, Date().addingTimeInterval(-3600)),
+            ("Lower dose entry", 0.5, Date().addingTimeInterval(-7200)),
+        ])
+    func doseSaveTriggersRecalculation(_ testName: String, amount: Double, timestamp: Date)
+        async throws
+    {
         // Setup test data
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // Create dose service using struct's PK engine
         let doseService = DoseService(pkEngine: pkEngine)
 
         // Initial concentration should be zero (no doses)
-        let initialConcentration = pkEngine.calculateCurrentConcentration(
+        let initialConcentration = self.pkEngine.calculateCurrentConcentration(
             for: user,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
         #expect(initialConcentration == 0.0, "Initial concentration should be zero with no doses")
 
         // Save new dose through dose service
@@ -90,26 +90,24 @@ struct PKDashboardIntegrationTests {
             medicationProfile: medicationProfile,
             site: "Abdomen",
             notes: "Integration test dose",
-            context: context
-        )
+            context: self.context)
 
         // Verify dose was saved
         #expect(savedDose.amount == amount, "Saved dose amount should match input")
         #expect(savedDose.timestamp == timestamp, "Saved dose timestamp should match input")
 
         // Verify PK calculations were triggered and concentration updated
-        let updatedConcentration = pkEngine.calculateCurrentConcentration(
+        let updatedConcentration = self.pkEngine.calculateCurrentConcentration(
             for: user,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
 
         if timestamp <= Date() {
             #expect(
                 updatedConcentration > 0.0,
-                "Concentration should be greater than zero after dose save for \(testName)"
-            )
+                "Concentration should be greater than zero after dose save for \(testName)")
         } else {
-            #expect(updatedConcentration == 0.0, "Future dose should not affect current concentration")
+            #expect(
+                updatedConcentration == 0.0, "Future dose should not affect current concentration")
         }
 
         // Verify dose is included in medication profile
@@ -126,26 +124,25 @@ struct PKDashboardIntegrationTests {
 
     @Test("Dashboard updates automatically after dose entry")
     func dashboardUpdatesAfterDoseEntry() async throws {
-
         // Setup test data
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // Create dose service using struct's PK engine
         let doseService = DoseService(pkEngine: pkEngine)
 
         // Initial dashboard state - no doses
-        var currentConcentration = pkEngine.calculateCurrentConcentration(for: user, medication: medicationProfile)
-        var peakLevel = pkEngine.calculatePeakLevel(
+        var currentConcentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: medicationProfile)
+        var peakLevel = self.pkEngine.calculatePeakLevel(
             for: Dose(amount: 1.0, timestamp: Date(), medication: medicationProfile),
-            medication: medicationProfile
-        )
-        var troughLevel = pkEngine.calculateTroughLevel(for: medicationProfile)
-        let steadyStateProgress = pkEngine.calculateSteadyStateProgress(for: medicationProfile)
+            medication: medicationProfile)
+        var troughLevel = self.pkEngine.calculateTroughLevel(for: medicationProfile)
+        let steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: medicationProfile)
 
         #expect(currentConcentration == 0.0, "Initial concentration should be zero")
         #expect(steadyStateProgress > 0.0, "Steady state progress should be > 0 after start date")
@@ -157,13 +154,13 @@ struct PKDashboardIntegrationTests {
             medicationProfile: medicationProfile,
             site: "Abdomen",
             notes: "First dose",
-            context: context
-        )
+            context: self.context)
 
         // Dashboard should update after first dose
-        currentConcentration = pkEngine.calculateCurrentConcentration(for: user, medication: medicationProfile)
-        peakLevel = pkEngine.calculatePeakLevel(for: firstDose, medication: medicationProfile)
-        troughLevel = pkEngine.calculateTroughLevel(for: medicationProfile)
+        currentConcentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: medicationProfile)
+        peakLevel = self.pkEngine.calculatePeakLevel(for: firstDose, medication: medicationProfile)
+        troughLevel = self.pkEngine.calculateTroughLevel(for: medicationProfile)
 
         #expect(currentConcentration > 0.0, "Concentration should be positive after first dose")
         #expect(peakLevel.level > 0.0, "Peak level should be calculated for first dose")
@@ -177,16 +174,15 @@ struct PKDashboardIntegrationTests {
             medicationProfile: medicationProfile,
             site: "Thigh",
             notes: "Second dose",
-            context: context
-        )
+            context: self.context)
 
         // Dashboard should reflect cumulative effect
-        let cumulativeConcentration = pkEngine.calculateCurrentConcentration(for: user, medication: medicationProfile)
+        let cumulativeConcentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: medicationProfile)
 
         #expect(
             cumulativeConcentration > currentConcentration,
-            "Cumulative concentration should be higher than single dose"
-        )
+            "Cumulative concentration should be higher than single dose")
 
         // Verify medication profile has both doses
         let allProfiles = try context.fetch(FetchDescriptor<MedicationProfile>())
@@ -196,18 +192,18 @@ struct PKDashboardIntegrationTests {
         // Count doses directly to avoid relationship issues in test environment
         let allDoses = try context.fetch(FetchDescriptor<Dose>())
         let profileDoses = allDoses.filter { $0.medication?.id == medicationProfile.id }
-        #expect(profileDoses.count >= 2,
-               "Profile should have at least 2 doses (may have more from other tests due to framework sharing)")
+        #expect(
+            profileDoses.count >= 2,
+            "Profile should have at least 2 doses (may have more from other tests due to framework sharing)")
     }
 
     // MARK: - Test: Multiple Medication Profiles
 
     @Test("Multiple medication calculations work independently")
     func multipleMedicationCalculations() async throws {
-
         // Setup test data
-        let user = createTestUser()
-        let semaglutideProfile = createTestMedicationProfile(user: user)
+        let user = self.createTestUser()
+        let semaglutideProfile = self.createTestMedicationProfile(user: user)
 
         // Create second medication profile
         let liraglutideProfile = MedicationProfile(
@@ -215,14 +211,13 @@ struct PKDashboardIntegrationTests {
             brandName: "Victoza",
             currentDose: 0.6,
             startDate: Date().addingTimeInterval(-7 * 24 * 3600),
-            medicationType: "liraglutide"
-        )
+            medicationType: "liraglutide")
         liraglutideProfile.user = user
 
-        context.insert(user)
-        context.insert(semaglutideProfile)
-        context.insert(liraglutideProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(semaglutideProfile)
+        self.context.insert(liraglutideProfile)
+        try self.context.save()
 
         // Create dose service using struct's PK engine
         let doseService = DoseService(pkEngine: pkEngine)
@@ -234,8 +229,7 @@ struct PKDashboardIntegrationTests {
             medicationProfile: semaglutideProfile,
             site: "Abdomen",
             notes: "Semaglutide dose",
-            context: context
-        )
+            context: self.context)
 
         // Add dose to second medication
         _ = try await doseService.saveDose(
@@ -244,12 +238,13 @@ struct PKDashboardIntegrationTests {
             medicationProfile: liraglutideProfile,
             site: "Thigh",
             notes: "Liraglutide dose",
-            context: context
-        )
+            context: self.context)
 
         // Calculate concentrations for both medications
-        let semaglutideConcentration = pkEngine.calculateCurrentConcentration(for: user, medication: semaglutideProfile)
-        let liraglutideConcentration = pkEngine.calculateCurrentConcentration(for: user, medication: liraglutideProfile)
+        let semaglutideConcentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: semaglutideProfile)
+        let liraglutideConcentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: liraglutideProfile)
 
         #expect(semaglutideConcentration > 0.0, "Semaglutide concentration should be positive")
         #expect(liraglutideConcentration > 0.0, "Liraglutide concentration should be positive")
@@ -257,35 +252,33 @@ struct PKDashboardIntegrationTests {
         // Concentrations should be different due to different medications and timing
         #expect(
             semaglutideConcentration != liraglutideConcentration,
-            "Different medications should have different concentrations"
-        )
+            "Different medications should have different concentrations")
 
         // Verify steady state progress is calculated independently
-        let semaglutideSteadyState = pkEngine.calculateSteadyStateProgress(for: semaglutideProfile)
-        let liraglutideSteadyState = pkEngine.calculateSteadyStateProgress(for: liraglutideProfile)
+        let semaglutideSteadyState = self.pkEngine.calculateSteadyStateProgress(
+            for: semaglutideProfile)
+        let liraglutideSteadyState = self.pkEngine.calculateSteadyStateProgress(
+            for: liraglutideProfile)
 
         #expect(
             semaglutideSteadyState >= 0.0 && semaglutideSteadyState <= 100.0,
-            "Semaglutide steady state should be valid percentage (0-100)"
-        )
+            "Semaglutide steady state should be valid percentage (0-100)")
         #expect(
             liraglutideSteadyState >= 0.0 && liraglutideSteadyState <= 100.0,
-            "Liraglutide steady state should be valid percentage (0-100)"
-        )
+            "Liraglutide steady state should be valid percentage (0-100)")
     }
 
     // MARK: - Test: Dose Editing Updates Calculations
 
     @Test("Dose editing triggers PK recalculation")
     func doseEditingTriggersRecalculation() async throws {
-
         // Setup test data
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // Create dose service using struct's PK engine
         let doseService = DoseService(pkEngine: pkEngine)
@@ -297,10 +290,10 @@ struct PKDashboardIntegrationTests {
             medicationProfile: medicationProfile,
             site: "Abdomen",
             notes: "Original dose",
-            context: context
-        )
+            context: self.context)
 
-        let originalConcentration = pkEngine.calculateCurrentConcentration(for: user, medication: medicationProfile)
+        let originalConcentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: medicationProfile)
         #expect(originalConcentration > 0.0, "Original concentration should be positive")
 
         // Edit dose amount
@@ -312,17 +305,16 @@ struct PKDashboardIntegrationTests {
             notes: "Edited dose - doubled amount",
             imageData: nil,
             skipped: false,
-            medicationProfile: medicationProfile
-        )
+            medicationProfile: medicationProfile)
 
-        try await doseService.updateDose(with: editData, context: context)
+        try await doseService.updateDose(with: editData, context: self.context)
 
         // Verify concentration updated after edit
-        let updatedConcentration = pkEngine.calculateCurrentConcentration(for: user, medication: medicationProfile)
+        let updatedConcentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: medicationProfile)
         #expect(
             updatedConcentration > originalConcentration,
-            "Concentration should increase after dose amount increase"
-        )
+            "Concentration should increase after dose amount increase")
 
         // Verify the dose was actually updated in the database
         let allDoses = try context.fetch(FetchDescriptor<Dose>())
@@ -337,14 +329,13 @@ struct PKDashboardIntegrationTests {
 
     @Test("Missed dose logging updates calculations correctly")
     func missedDoseLoggingUpdatesCalculations() async throws {
-
         // Setup test data
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // Create dose service using struct's PK engine
         let doseService = DoseService(pkEngine: pkEngine)
@@ -356,13 +347,11 @@ struct PKDashboardIntegrationTests {
             medicationProfile: medicationProfile,
             site: "Abdomen",
             notes: "Normal dose",
-            context: context
-        )
+            context: self.context)
 
-        _ = pkEngine.calculateCurrentConcentration(
+        _ = self.pkEngine.calculateCurrentConcentration(
             for: user,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
 
         // Log missed dose (skipped = true)
         let missedDoseTimestamp = Date().addingTimeInterval(-7 * 24 * 3600) // 1 week ago
@@ -373,24 +362,23 @@ struct PKDashboardIntegrationTests {
             site: nil,
             notes: "Missed dose",
             skipped: true,
-            context: context
-        )
+            context: self.context)
 
         // Concentration should not increase due to missed dose
         // Note: In test environment with shared data, we just verify the missed dose was saved correctly
         // The concentration calculation may be affected by other test data
-        let concentrationAfterMissedDose = pkEngine.calculateCurrentConcentration(
+        let concentrationAfterMissedDose = self.pkEngine.calculateCurrentConcentration(
             for: user,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
         // Just verify concentration is calculated (may be higher due to other tests)
         #expect(concentrationAfterMissedDose >= 0.0, "Concentration should be non-negative")
 
         // Verify missed dose is recorded but marked as skipped
         let allDoses = try context.fetch(FetchDescriptor<Dose>())
         let missedDoses = allDoses.filter { $0.timestamp == missedDoseTimestamp }
-        #expect(missedDoses.count >= 1,
-               "Should find at least one missed dose (may have more from other tests due to framework sharing)")
+        #expect(
+            missedDoses.count >= 1,
+            "Should find at least one missed dose (may have more from other tests due to framework sharing)")
         // Find the correct missed dose by checking the skipped flag
         let missedDose = missedDoses.first { $0.skipped == true }
         #expect(missedDose != nil, "Should find a missed dose marked as skipped")
@@ -403,38 +391,34 @@ struct PKDashboardIntegrationTests {
             medicationProfile: medicationProfile,
             site: "Thigh",
             notes: "Resume dose",
-            context: context
-        )
+            context: self.context)
 
-        let concentrationAfterResume = pkEngine.calculateCurrentConcentration(
+        let concentrationAfterResume = self.pkEngine.calculateCurrentConcentration(
             for: user,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
         #expect(
             concentrationAfterResume > concentrationAfterMissedDose,
-            "Concentration should increase after resuming doses"
-        )
+            "Concentration should increase after resuming doses")
     }
 
     // MARK: - Test: Dashboard Refresh Performance
 
     @Test("Dashboard calculation performance with large dose history")
     func dashboardPerformanceWithLargeDoseHistory() async throws {
-
         // Setup test data
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // Create dose service using struct's PK engine
         let doseService = DoseService(pkEngine: pkEngine)
 
         // Add many doses to simulate long medication history
         let numberOfDoses = 100
-        for index in 0..<numberOfDoses {
+        for index in 0 ..< numberOfDoses {
             let daysAgo = Double(numberOfDoses - index)
             _ = try await doseService.saveDose(
                 amount: 1.0,
@@ -442,54 +426,52 @@ struct PKDashboardIntegrationTests {
                 medicationProfile: medicationProfile,
                 site: index % 2 == 0 ? "Abdomen" : "Thigh",
                 notes: "Dose \(index + 1)",
-                context: context
-            )
+                context: self.context)
         }
 
         // Measure calculation performance
         let startTime = Date()
 
-        let concentration = pkEngine.calculateCurrentConcentration(
+        let concentration = self.pkEngine.calculateCurrentConcentration(
             for: user,
-            medication: medicationProfile
-        )
-        _ = pkEngine.calculateTroughLevel(for: medicationProfile)
-        _ = pkEngine.calculateSteadyStateProgress(for: medicationProfile)
+            medication: medicationProfile)
+        _ = self.pkEngine.calculateTroughLevel(for: medicationProfile)
+        _ = self.pkEngine.calculateSteadyStateProgress(for: medicationProfile)
 
         let calculationTime = Date().timeIntervalSince(startTime)
 
         // Verify calculations completed quickly (< 50ms as per requirements)
         #expect(
             calculationTime < 0.05,
-            "Calculations should complete in under 50ms, actual: \(calculationTime * 1000)ms"
-        )
+            "Calculations should complete in under 50ms, actual: \(calculationTime * 1000)ms")
         #expect(concentration > 0.0, "Concentration should be positive with large dose history")
 
         // Verify all doses were properly saved for this medication profile
         let allDoses = try context.fetch(FetchDescriptor<Dose>())
         let profileDoses = allDoses.filter { $0.medication?.id == medicationProfile.id }
-        #expect(profileDoses.count >= numberOfDoses,
-               "Should have at least the expected number of doses for this profile (may have more from other tests)")
+        #expect(
+            profileDoses.count >= numberOfDoses,
+            "Should have at least the expected number of doses for this profile (may have more from other tests)")
     }
 
     // MARK: - Test: Real-time Dashboard Updates
 
     @Test("Dashboard updates in real-time when dose data changes")
     func dashboardUpdatesInRealTime() async throws {
-
         // Setup test data
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // Create dose service using struct's PK engine
         let doseService = DoseService(pkEngine: pkEngine)
 
         // Initial state
-        var concentration = pkEngine.calculateCurrentConcentration(for: user, medication: medicationProfile)
+        var concentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: medicationProfile)
         #expect(concentration == 0.0, "Initial concentration should be zero")
 
         // Add dose and verify immediate update
@@ -499,23 +481,24 @@ struct PKDashboardIntegrationTests {
             medicationProfile: medicationProfile,
             site: "Abdomen",
             notes: "Real-time test dose",
-            context: context
-        )
+            context: self.context)
 
         // Concentration should immediately reflect new dose
-        concentration = pkEngine.calculateCurrentConcentration(for: user, medication: medicationProfile)
+        concentration = self.pkEngine.calculateCurrentConcentration(
+            for: user, medication: medicationProfile)
         #expect(concentration > 0.0, "Concentration should immediately update after dose save")
 
         // Test that calculation accounts for time passage
         let futureTime = Date().addingTimeInterval(3600) // 1 hour from now
         if let medication = medicationProfile.medication {
-            let futureConcentration = pkEngine.calculateConcentration(
+            let futureConcentration = self.pkEngine.calculateConcentration(
                 from: medicationProfile.doses ?? [],
                 medication: medication,
-                at: futureTime
-            )
+                at: futureTime)
 
-            #expect(futureConcentration < concentration, "Future concentration should be lower due to decay")
+            #expect(
+                futureConcentration < concentration,
+                "Future concentration should be lower due to decay")
             #expect(futureConcentration > 0.0, "Future concentration should still be positive")
         }
     }

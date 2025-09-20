@@ -42,7 +42,7 @@ extension TestUtilities {
         case .popover: return "Popover"
         case .scrollView: return "ScrollView"
         case .scrollBar: return "ScrollBar"
-        default: return tableElementTypeName(from: elementType)
+        default: return self.tableElementTypeName(from: elementType)
         }
     }
 
@@ -58,7 +58,7 @@ extension TestUtilities {
         case .collectionView: return "CollectionView"
         case .grid: return "Grid"
         case .cell: return "Cell"
-        default: return layoutElementTypeName(from: elementType)
+        default: return self.layoutElementTypeName(from: elementType)
         }
     }
 
@@ -81,7 +81,7 @@ extension TestUtilities {
         if let inputType = inputControlElementTypeName(from: elementType) {
             return inputType
         }
-        return indicatorElementTypeName(from: elementType)
+        return self.indicatorElementTypeName(from: elementType)
     }
 
     /// Button element types
@@ -95,7 +95,7 @@ extension TestUtilities {
         case .popUpButton: return "PopUpButton"
         case .menuButton: return "MenuButton"
         case .toolbarButton: return "ToolbarButton"
-        default: return arrowElementTypeName(from: elementType)
+        default: return self.arrowElementTypeName(from: elementType)
         }
     }
 
@@ -119,7 +119,7 @@ extension TestUtilities {
         case .handle: return "Handle"
         case .stepper: return "Stepper"
         case .comboBox: return "ComboBox"
-        default: return pickerElementTypeName(from: elementType)
+        default: return self.pickerElementTypeName(from: elementType)
         }
     }
 
@@ -164,7 +164,7 @@ extension TestUtilities {
         if let barType = navigationBarElementTypeName(from: elementType) {
             return barType
         }
-        return menuElementTypeName(from: elementType)
+        return self.menuElementTypeName(from: elementType)
     }
 
     /// Navigation bar element types
@@ -201,7 +201,7 @@ extension TestUtilities {
         if let mediaType = mediaElementTypeName(from: elementType) {
             return mediaType
         }
-        return accessoryElementTypeName(from: elementType)
+        return self.accessoryElementTypeName(from: elementType)
     }
 
     /// Dialog element types

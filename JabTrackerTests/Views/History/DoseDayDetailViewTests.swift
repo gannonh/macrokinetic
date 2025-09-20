@@ -9,6 +9,10 @@
 import SwiftUI
 import Testing
 
+enum TestError: Error {
+    case invalidTestData(String)
+}
+
 struct DoseDayDetailViewTests {
     // MARK: - Date Display Tests
 
@@ -17,7 +21,9 @@ struct DoseDayDetailViewTests {
         // GIVEN: A specific date
         let calendar = Calendar.current
         let components = DateComponents(year: 2024, month: 9, day: 15)
-        let date = calendar.date(from: components)!
+        guard let date = calendar.date(from: components) else {
+            throw TestError.invalidTestData("Failed to create test date")
+        }
         let doses: [Dose] = []
 
         // WHEN: DoseDayDetailView formats the date
@@ -69,9 +75,15 @@ struct DoseDayDetailViewTests {
         // GIVEN: Multiple doses on the same date
         let calendar = Calendar.current
         let date = Date()
-        let morningTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: date)!
-        let afternoonTime = calendar.date(bySettingHour: 14, minute: 0, second: 0, of: date)!
-        let eveningTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: date)!
+        guard let morningTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: date) else {
+            throw TestError.invalidTestData("Failed to create morning time")
+        }
+        guard let afternoonTime = calendar.date(bySettingHour: 14, minute: 0, second: 0, of: date) else {
+            throw TestError.invalidTestData("Failed to create afternoon time")
+        }
+        guard let eveningTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: date) else {
+            throw TestError.invalidTestData("Failed to create evening time")
+        }
 
         let doses = [
             createMockDose(timestamp: eveningTime, amount: 3.0), // Out of order
@@ -178,7 +190,9 @@ struct DoseDayDetailViewTests {
         // GIVEN: A dose at a specific time
         let calendar = Calendar.current
         let date = Date()
-        let specificTime = calendar.date(bySettingHour: 14, minute: 30, second: 0, of: date)!
+        guard let specificTime = calendar.date(bySettingHour: 14, minute: 30, second: 0, of: date) else {
+            throw TestError.invalidTestData("Failed to create specific time")
+        }
         let dose = self.createMockDose(timestamp: specificTime)
 
         // WHEN: DoseDetailRow formats the time
@@ -282,12 +296,12 @@ private class TestDayDetailViewModel {
     }
 
     var navigationTitle: String {
-        if calendar.isDateInToday(date) {
+        if self.calendar.isDateInToday(self.date) {
             return "Today"
         } else {
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
-            return formatter.string(from: date)
+            return formatter.string(from: self.date)
         }
     }
 
@@ -295,11 +309,11 @@ private class TestDayDetailViewModel {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return formatter.string(from: date)
+        return formatter.string(from: self.date)
     }
 
     var sortedDoses: [Dose] {
-        doses.sorted { $0.timestamp < $1.timestamp }
+        self.doses.sorted { $0.timestamp < $1.timestamp }
     }
 }
 
@@ -314,7 +328,7 @@ private class TestDoseDetailRowModel {
     var timeString: String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
-        return formatter.string(from: dose.timestamp)
+        return formatter.string(from: self.dose.timestamp)
     }
 
     func siteColor(for site: String) -> Color {

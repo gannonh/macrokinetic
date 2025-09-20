@@ -10,7 +10,6 @@ import Observation
 /// Implements exponential decay models for GLP-1 receptor agonists
 @Observable
 final class PharmacokineticsEngine {
-
     // MARK: - Initialization
 
     init() {}
@@ -27,8 +26,8 @@ final class PharmacokineticsEngine {
     func calculateConcentration(
         from doses: [Dose],
         medication: Medication,
-        at currentTime: Date
-    ) -> Double {
+        at currentTime: Date) -> Double
+    {
         // Filter out skipped doses and future doses
         let validDoses = doses.filter { dose in
             !dose.skipped && dose.timestamp <= currentTime
@@ -46,8 +45,7 @@ final class PharmacokineticsEngine {
             let effectiveDoseConcentration = dose.amount * medication.subcutaneousBioavailability
             let concentrationFromDose = medication.concentrationAtTime(
                 initialConcentration: effectiveDoseConcentration,
-                timeElapsedHours: timeElapsedHours
-            )
+                timeElapsedHours: timeElapsedHours)
 
             return sum + concentrationFromDose
         }
@@ -61,17 +59,16 @@ final class PharmacokineticsEngine {
     ///   - medicationProfile: The specific medication profile to analyze
     /// - Returns: Current drug concentration for this medication
     func calculateCurrentConcentration(
-        for user: User,
-        medication medicationProfile: MedicationProfile
-    ) -> Double {
+        for _: User,
+        medication medicationProfile: MedicationProfile) -> Double
+    {
         guard let medication = medicationProfile.medication else { return 0.0 }
 
         let doses = medicationProfile.doses ?? []
-        return calculateConcentration(
+        return self.calculateConcentration(
             from: doses,
             medication: medication,
-            at: Date()
-        )
+            at: Date())
     }
 
     // MARK: - Peak Level Calculations
@@ -83,8 +80,8 @@ final class PharmacokineticsEngine {
     /// - Returns: Tuple containing peak level and the time it occurs
     func calculatePeakLevel(
         for dose: Dose,
-        medication medicationProfile: MedicationProfile
-    ) -> (level: Double, time: Date) {
+        medication medicationProfile: MedicationProfile) -> (level: Double, time: Date)
+    {
         guard let medication = medicationProfile.medication else {
             return (level: 0.0, time: dose.timestamp)
         }
@@ -108,7 +105,8 @@ final class PharmacokineticsEngine {
     ) -> (level: Double, time: Date) {
         guard let medication = medicationProfile.medication,
               let doses = medicationProfile.doses,
-              !doses.isEmpty else {
+              !doses.isEmpty
+        else {
             return (level: 0.0, time: Date())
         }
 
@@ -124,11 +122,10 @@ final class PharmacokineticsEngine {
         let troughTime = nextDoseTime.addingTimeInterval(-3600) // 1 hour before next dose
 
         // Calculate concentration at trough time from all historical doses
-        let troughLevel = calculateConcentration(
+        let troughLevel = self.calculateConcentration(
             from: doses,
             medication: medication,
-            at: troughTime
-        )
+            at: troughTime)
 
         return (level: troughLevel, time: troughTime)
     }
@@ -158,8 +155,8 @@ final class PharmacokineticsEngine {
     /// - Returns: Array of concentration points showing projected levels
     func projectFutureLevels(
         for medicationProfile: MedicationProfile,
-        days: Int
-    ) -> [ConcentrationPoint] {
+        days: Int) -> [ConcentrationPoint]
+    {
         guard let medication = medicationProfile.medication else { return [] }
 
         let currentTime = Date()
@@ -169,11 +166,10 @@ final class PharmacokineticsEngine {
         var allDoses = medicationProfile.doses ?? []
 
         // Add projected future doses based on current dosing schedule
-        let projectedDoses = generateProjectedDoses(
+        let projectedDoses = self.generateProjectedDoses(
             for: medicationProfile,
             from: currentTime,
-            to: projectionEndTime
-        )
+            to: projectionEndTime)
         allDoses.append(contentsOf: projectedDoses)
 
         // Generate concentration points at regular intervals
@@ -183,16 +179,14 @@ final class PharmacokineticsEngine {
 
         var currentProjectionTime = currentTime
         while currentProjectionTime <= projectionEndTime {
-            let concentration = calculateConcentration(
+            let concentration = self.calculateConcentration(
                 from: allDoses,
                 medication: medication,
-                at: currentProjectionTime
-            )
+                at: currentProjectionTime)
 
             projectionPoints.append(ConcentrationPoint(
                 date: currentProjectionTime,
-                concentration: concentration
-            ))
+                concentration: concentration))
 
             currentProjectionTime = currentProjectionTime.addingTimeInterval(intervalHours * 3600)
         }
@@ -211,8 +205,8 @@ final class PharmacokineticsEngine {
     private func generateProjectedDoses(
         for medicationProfile: MedicationProfile,
         from startTime: Date,
-        to endTime: Date
-    ) -> [Dose] {
+        to endTime: Date) -> [Dose]
+    {
         guard let medication = medicationProfile.medication else { return [] }
 
         var projectedDoses: [Dose] = []
@@ -231,8 +225,7 @@ final class PharmacokineticsEngine {
             let projectedDose = Dose(
                 amount: medicationProfile.currentDose,
                 timestamp: nextDoseTime,
-                medication: medicationProfile
-            )
+                medication: medicationProfile)
             projectedDoses.append(projectedDose)
 
             nextDoseTime = nextDoseTime.addingTimeInterval(dosingIntervalSeconds)
@@ -252,8 +245,8 @@ extension PharmacokineticsEngine {
     /// - Returns: True if inputs are valid, false otherwise
     func validateCalculationInputs(
         doses: [Dose],
-        medication: Medication
-    ) -> Bool {
+        medication: Medication) -> Bool
+    {
         // Check medication pharmacokinetics are valid
         guard medication.hasValidPharmacokinetics else { return false }
 
@@ -274,9 +267,9 @@ extension PharmacokineticsEngine {
     /// - Returns: Error message if validation fails, nil if valid
     func getValidationError(
         doses: [Dose],
-        medication: Medication
-    ) -> String? {
-        if !validateCalculationInputs(doses: doses, medication: medication) {
+        medication: Medication) -> String?
+    {
+        if !self.validateCalculationInputs(doses: doses, medication: medication) {
             if let pkError = medication.pharmacokineticValidationError {
                 return pkError
             }
@@ -301,20 +294,19 @@ extension PharmacokineticsEngine {
         from doses: [Dose],
         medication: Medication,
         at currentTime: Date,
-        concentrationCutoff: Double = 0.001
-    ) -> Double {
+        concentrationCutoff _: Double = 0.001) -> Double
+    {
         // Filter doses that could still contribute meaningfully
         let cutoffTime = currentTime.addingTimeInterval(-10 * medication.halfLifeDays * 24 * 3600)
         let recentDoses = doses.filter { dose in
             !dose.skipped &&
-            dose.timestamp <= currentTime &&
-            dose.timestamp >= cutoffTime
+                dose.timestamp <= currentTime &&
+                dose.timestamp >= cutoffTime
         }
 
-        return calculateConcentration(
+        return self.calculateConcentration(
             from: recentDoses,
             medication: medication,
-            at: currentTime
-        )
+            at: currentTime)
     }
 }

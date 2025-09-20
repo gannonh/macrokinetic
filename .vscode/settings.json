@@ -1,17 +1,7 @@
 {
-  "emeraldwalk.runonsave": {
-    "commands": [
-      {
-        "match": "\\.swift$",
-        "cmd": "/opt/homebrew/bin/swiftformat ${file}"
-      }
-    ]
-  },
-  "files.associations": {
-    "*.swift": "swift"
-  },
-  "swift.formatting.enable": true,
-  "terminal.integrated.env.osx": {
-    "PATH": "/opt/homebrew/bin:${env:PATH}"
-  }
+    "[swift]": {
+        "editor.defaultFormatter": "sweetpad.sweetpad",
+        "editor.formatOnSave": true
+    },
+    "sweetpad.testing.configuration": "Debug"
 }
