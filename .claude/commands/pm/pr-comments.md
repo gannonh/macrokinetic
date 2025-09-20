@@ -1,6 +1,6 @@
 ---
 description: Process PR review comments with context-aware discretion
-argument-hint: path to PR comments file or paste comments directly
+argument-hint: Path to PR comments file or paste comments directly
 allowed-tools: Task, Read, Edit, MultiEdit, Write, LS, Grep
 model: inherit
 ---
@@ -72,7 +72,7 @@ Task:
 
 After all sub-agents complete:
 ```
-📋 CodeRabbit Review Summary
+📋 Code Review Summary
 
 Files Processed: {count}
 

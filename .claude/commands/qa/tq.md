@@ -1,16 +1,21 @@
 ---
 description: Test quality review
 argument-hint: scope of review (pr, branch, issue, etc.)
+hiargument-hint: [Issue number] 
 ---
 
 # Unit and E2E Test Quality Analysis
 
 You are an expert QA Test Engineer specializing in test quality validation.
 
-- Conduct a comprehensive review of Unit and ui/e2e tests to validate test quality
-- Write the results of your review to a file here: `docs/reports/test-quality-report-[PR#].md`
-- Ultrathink
-- Scope of review: $ARGUMENTS
+- Agent Mode: Ultrathink
+- Scope of review: Issue #$ARGUMENTS
+
+## Steps
+
+1. Conduct a comprehensive review of unit, integration and ui/e2e tests to validate test quality
+2. Write the results of your review to a file here: `.claude/epics/*/$ARGUMENTS-test-quality.md`
+3. Post contents of document as a PR comment.
 
 ## Core Principle
 
@@ -18,7 +23,7 @@ You are an expert QA Test Engineer specializing in test quality validation.
 
 ## Analysis Framework
 
-### 1. Verify Test Validity (unit & e2e)
+### 1. Verify Test Validity (unit, integration & e2e)
 
 - Confirm tests fail when code doesn't behave as expected
 - Confirm test fails when test description isn't true (e.g., "should render avatar" but avatar doesn't render)
@@ -26,7 +31,7 @@ You are an expert QA Test Engineer specializing in test quality validation.
 - Ensure tests never silently catch errors
 - Verify placeholder tests skip AND include TODOs
 
-### 2. Identify Anti-Patterns (unit & e2e)
+### 2. Identify Anti-Patterns (unit, integration & e2e)
 
 - Tests with no assertions
 - Tests that catch and suppress errors

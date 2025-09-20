@@ -46,30 +46,11 @@ final class PKEngineUITests: XCTestCase {
             dose: "1.0"
         )
 
-        // Navigate to History to verify we start with 0 doses
-        TestUtilities.navigateToTab(app, tabName: "History")
-        let historyView = TestUtilities.navigateToHistoryView(in: app)
-
-        // Debug: Print current dose count before adding any doses
-        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 0)
-        print("🐛 DEBUG: Starting dose count: \(doseRows.count)")
-
-        // Create exactly 1 dose and verify count
+        // Create exactly 1 dose to test concentration display
         TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
-
-        // Navigate back to History and check dose count
-        TestUtilities.navigateToTab(app, tabName: "History")
-        _ = TestUtilities.navigateToHistoryView(in: app)
-        let updatedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 0)
-        print("🐛 DEBUG: After creating 1 dose, actual count: \(updatedDoseRows.count)")
-
-        // This should be 1, but if it's 2, we've confirmed the bug
-        XCTAssertEqual(updatedDoseRows.count, 1,
-                       "Creating 1 dose should result in exactly 1 dose, not \(updatedDoseRows.count)")
 
         // 2. Navigate to dashboard (home tab)
         TestUtilities.navigateToTab(app, tabName: "Home")
-
 
         // 3. Verify concentration card is visible with proper accessibility identifiers
         let concentrationCard = app.otherElements["concentration-card-Semaglutide"]

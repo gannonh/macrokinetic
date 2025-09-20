@@ -4,7 +4,7 @@ test_command: ./scripts/test.sh
 created: 2025-01-22T04:47:23Z
 ---
 
-# Testing Configuration
+# Test Driven Development
 
 ## Framework
 - Type: Xcode with Swift Testing + XCUITest  
@@ -20,7 +20,7 @@ created: 2025-01-22T04:47:23Z
 - Naming Pattern: *Tests.swift
 
 ## Test Categories
-### Unit Tests (Swift Testing Framework)
+### Unit & Integration Tests (Swift Testing Framework)
 - **Authentication**: AuthenticationManager*, BiometricAuth*, Authentication*
 - **Data Management**: DataController*, MedicationManager*, Persistence*  
 - **Models**: User*, Medication*, DoseTitration*, ReconstitutionCalculator*
@@ -45,7 +45,7 @@ created: 2025-01-22T04:47:23Z
 - **Run with Simulator Reset**: `./scripts/test.sh ui 1 OnboardingUITests --reset`
 - **Help**: `./scripts/test.sh --help`
 
-### New Logging Flags
+### Logging Flags
 - **No Logging**: `./scripts/test.sh unit 1 --no-log`
 - **Log Only (Silent)**: `./scripts/test.sh unit 1 --log-only`
 
@@ -101,12 +101,111 @@ cat logs/latest/raw_output.txt
 # ./scripts/test.sh ui 1              # ALL UI tests - takes 10+ minutes
 # ./scripts/test.sh all 1 --coverage   # ALL tests with coverage - very slow
 ```
+---
+
+## Coverage Policy & Reporting
+
+- Coverage config: `coverage-config.json`
+  
+```bash
+# Enable coverage in Xcode scheme (already configured)
+# codeCoverageEnabled = "YES" in JabTracker.xcscheme
+
+# Check coverage policy compliance (RECOMMENDED)
+./scripts/check-coverage.sh
+
+# Run tests with coverage (automatically enabled)
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
+
+# View coverage in Xcode UI:
+# 1. Run tests with coverage enabled
+# 2. Open Report Navigator (⌘9) 
+# 3. Select test result -> Coverage tab
+
+# Generate code coverage reports (EASY WAY - use test script)
+./scripts/test.sh unit 1 --coverage     # Unit tests with coverage
+
+# COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
+./scripts/coverage-detail.sh                    # Full coverage report
+./scripts/coverage-detail.sh DataController     # Specific file coverage
+./scripts/coverage-detail.sh AuthenticationManager  # Specific file coverage
+./scripts/coverage-json.sh --summary           # Quick file overview sorted by coverage
+./scripts/coverage-json.sh --functions         # Show uncovered functions only
+./scripts/coverage-json.sh DataController      # JSON data for specific file
+
+# Manual coverage generation (if needed)
+xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -enableCodeCoverage YES -resultBundlePath /tmp/coverage.xcresult -only-testing:JabTrackerTests
+xcrun xccov view --report /tmp/coverage.xcresult
+
+# Raw xccov commands (coverage-detail.sh and coverage-json.sh are easier)
+xcrun xccov view --report --json /tmp/coverage.xcresult | jq
+xcrun xccov view --file-list /tmp/coverage.xcresult
+```
+
+**Coverage Policy (5-Tier System):**
+- **Tier 1 - Pure Business Logic (90%)**: PharmacokineticsEngine, Models (User, Dose, MedicationProfile, Medication), ReconstitutionCalculator, DoseTitration
+- **Tier 2 - Infrastructure (62%)**: DataController, MedicationManager
+- **Tier 3 - Framework Integration (42%)**: AuthenticationManager, BiometricAuthManager, SubscriptionManager
+- **Tier 4 - View Models (85%)**: OnboardingViewModel
+- **Tier 5 - Utilities (75%)**: ProfileValidation, Array+Unique, SubscriptionProducts
+- **SwiftUI Views**: No coverage requirements (view bodies cannot be unit tested)
+- **Overall Coverage**: ~20% (informational only, not a requirement)
+
+#### Coverage Analysis Tips
+
+**Understanding xccov Output:**
+- Coverage shows function-level and line-level detail
+- `0.00% (0/X)` means completely uncovered function with X executable lines
+- Private methods need indirect testing through public methods that call them
+- Async methods may need `Task.sleep()` waits in tests for proper coverage
+
+**Current Coverage Gaps (as of Session 8):**
+- **AuthenticationManager**: 39% (below 42% threshold) - needs additional credential handling tests
+- **PharmacokineticsEngine**: Not yet implemented - future core requirement
+- **SubscriptionProducts**: Not found in coverage report - check test inclusion
+
+**Common Coverage Issues:**
+- Result bundle not found: Run tests with `--coverage` first
+- Private method coverage: Use public methods that invoke them
+- Async method coverage: Add `Task.sleep()` waits in tests
+- Delegate method coverage: Create proper mock controllers/requests
+
+
+## Outside-In TDD Flow
+
+Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
+
+ 1. Stub E2E acceptance test to define user-facing success (criteria only)
+
+```swift
+ // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
+      func testNameOfTestMethod() throws {
+         // GIVEN: A dose exists in history
+         // WHEN: User swipes left on dose row
+         // THEN: Edit action appears and functions correctly
+         // THEN: Dose entry sheet opens with pre-populated data
+      }
+```
+
+2. Write failing unit tests that test isolated business logic and component contracts
+3. Implement minimal code to satisfy the unit tests
+4. Run unit tests to verify correctness
+5. Write failing integration tests that verify component interactions
+6. Implement minimal code to satisfy the integration tests
+7. Run integration tests to verify correctness
+8. Write full E2E tests that verify the entire user flow
+---
 
 ## E2E Testing Element Targeting (CRITICAL)
 
-**Element targeting is the #1 challenge in E2E testing.** When tests fail to find elements:
+**Element targeting is the #1 challenge in E2E testing.** 
+
+Before writing the actual e2e tests, FIRST use `TestUtilities.debugElements()` to print and inspect the actual accessibility hierarchy. SwiftUI often renders elements differently than expected (e.g. List → CollectionView).
 
 ### Debug-First Approach
+
+1. Print the hierarchy FIRST:
+
 ```swift
 // ALWAYS start with debugging the accessibility hierarchy
 TestUtilities.debugElements(in: app, containing: "dose-history")
@@ -115,6 +214,12 @@ TestUtilities.debugElements(in: app, containing: "dose-history")
 // 🔍 DEBUG: Tables: []
 // 🔍 DEBUG: ScrollViews: []
 // 🔍 DEBUG: CollectionViews: ["dose-history-view"]
+```
+
+2. Read the raw logs to understand the actual element types and identifiers:
+
+```bash
+cat logs/latest/raw_output.txt | grep "DEBUG"
 ```
 
 ### Common SwiftUI → Accessibility Mismatches

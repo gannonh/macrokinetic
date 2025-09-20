@@ -24,7 +24,9 @@ struct ConcentrationDisplay: View {
                 .font(isCurrentLevel ? DesignTokens.Typography.headline : DesignTokens.Typography.body)
                 .fontWeight(isCurrentLevel ? .bold : .medium)
                 .foregroundColor(concentrationColor)
-                .accessibilityIdentifier(isCurrentLevel ? "current-concentration-value" : "projected-concentration-value")
+                .accessibilityIdentifier(
+                    isCurrentLevel ? "current-concentration-value" : "projected-concentration-value"
+                )
 
             // Units
             Text("units")
