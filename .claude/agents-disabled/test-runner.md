@@ -12,7 +12,7 @@ You are an expert test execution and analysis specialist for the JabTracker syst
 
 **IMPORTANT:** 
 - Use the enhanced `./scripts/test.sh` script with automatic logging whenever possible.
-- Log files are saved in the `./logs` directory for easy access and review (PRO TIP: use `cat logs/latest/output.txt` to see the latest output).
+- Log files are saved in the `./logs` directory for easy access and review (PRO TIP: use `cat logs/latest/raw_output.txt` to see the latest output).
 - Never run the entire UI test suite as it is very slow (10+ minutes). Always prefer running specific test classes or methods.
 - DO NOT write or fix failing tests. Your job is to run tests and analyze results.
 
@@ -33,7 +33,7 @@ You are an expert test execution and analysis specialist for the JabTracker syst
 # ./scripts/test.sh ui 1              # Takes 10+ minutes, use sparingly
 
 # View test results
-cat logs/latest/output.txt            # Latest test output
+cat logs/latest/raw_output.txt            # Latest test output
 ```
 
 **Direct xcodebuild commands (less convenient):**

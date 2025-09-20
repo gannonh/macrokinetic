@@ -65,7 +65,7 @@ created: 2025-01-22T04:47:23Z
 - **Launch Arguments**: --ui-testing (auth bypass), --reset-app-data, --force-onboarding
 - **Coverage**: Available via xccov with --coverage flag
 - **Automatic Logging**: All test runs save to ./logs with timestamped directories
-- **Log Access**: `cat logs/latest/output.txt` or `open logs/latest/results.xcresult`
+- **Log Access**: `cat logs/latest/raw_output.txt` or `open logs/latest/results.xcresult`
 
 
 ## Special Test Cases
@@ -95,7 +95,7 @@ created: 2025-01-22T04:47:23Z
 ./scripts/test.sh unit 1 --coverage --log-only
 
 # View latest test results
-cat logs/latest/output.txt
+cat logs/latest/raw_output.txt
 
 # ⚠️ AVOID unless final verification (very slow):
 # ./scripts/test.sh ui 1              # ALL UI tests - takes 10+ minutes
@@ -143,4 +143,4 @@ TestUtilities.debugElements(in: app, containing: "dose-history")
 - **PREFER specific UI test classes** over running all UI tests (performance)
 - Coverage reports saved to test log directory and `/tmp/jab-tracker-coverage.xcresult`
 - Manual authentication tests require Xcode for interactive Apple ID flow
-- Log files include: `output.txt`, `results.xcresult`, `coverage.json` (if --coverage used)
+- Log files include: `raw_output.txt`, `results.xcresult`, `coverage.json` (if --coverage used)

@@ -259,17 +259,28 @@ run_tests() {
     fi
 
     if [ "$ENABLE_LOGGING" = true ]; then
+        # Create a raw log file for complete output
+        RAW_LOG_FILE="$LOG_DIR/raw_output.txt"
+
         if [ "$LOG_ONLY" = true ]; then
-            # Log only - suppress console output, strip ANSI codes for clean log file
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify | sed 's/\x1b\[[0-9;]*m//g' > "$LOG_FILE" 2>&1
+            # Log only - capture raw output
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 > "$RAW_LOG_FILE"
+            # Process with xcbeautify for the main log file
+            cat "$RAW_LOG_FILE" | xcbeautify > "$LOG_FILE" 2>&1
         else
-            # Log and display - show colored output on console, save clean text to file
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | xcbeautify | tee >(sed 's/\x1b\[[0-9;]*m//g' > "$LOG_FILE")
+            # Log and display - tee raw output to file while piping to xcbeautify for display
+            # This preserves real-time output while capturing everything
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | \
+                tee "$RAW_LOG_FILE" | \
+                xcbeautify --renderer terminal
+            # Also save beautified version for easier reading
+            cat "$RAW_LOG_FILE" | xcbeautify > "$LOG_FILE" 2>&1
         fi
         TEST_EXIT_CODE=${PIPESTATUS[0]}
     else
-        # No logging
-        xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH | xcbeautify
+        # No logging - use xcbeautify with terminal renderer for real-time output
+        xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | \
+            xcbeautify --renderer terminal
         TEST_EXIT_CODE=${PIPESTATUS[0]}
     fi
 }
@@ -337,7 +348,8 @@ if [ "$ENABLE_LOGGING" = true ]; then
     fi
     echo ""
     echo "📂 Log files saved to: $LOG_DIR/"
-    echo "   • Test output: $LOG_FILE"
+    echo "   • Formatted output: $LOG_FILE"
+    echo "   • Raw output (with debug logs): $LOG_DIR/raw_output.txt"
     echo "   • Result bundle: $XCRESULT_PATH"
     if [ "$ENABLE_COVERAGE" = true ] && [ -f "$LOG_DIR/coverage.json" ]; then
         echo "   • Coverage data: $LOG_DIR/coverage.json"
