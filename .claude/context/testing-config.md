@@ -29,10 +29,11 @@ created: 2025-01-22T04:47:23Z
 - **Business Logic**: OnboardingViewModel*, SubscriptionManager*, PricingCalculator*
 - **Medical Calculations**: Pharmacokinetics*, ProfileValidation*
 
-### UI Tests (XCUITest Framework)  
+### UI Tests (XCUITest Framework)
 - **Authentication Flow**: AuthenticationUITests, ManualAuthenticationUITests
 - **Onboarding**: OnboardingUITests
 - **Medication Management**: MedicationProfile*UITests
+- **Pharmacokinetics Engine**: PKEngineUITests (8 E2E acceptance tests)
 - **Subscription Flow**: SubscriptionUI*Tests
 - **Design System**: DesignSystemUITests
 - **CloudKit Integration**: CloudKitIntegrationUITests
@@ -41,6 +42,7 @@ created: 2025-01-22T04:47:23Z
 
 - **Run Unit Tests**: `./scripts/test.sh unit 1` (RECOMMENDED)
 - **Run Specific UI Test Class**: `./scripts/test.sh ui 1 OnboardingUITests` (RECOMMENDED)
+- **Run PKEngine E2E Tests**: `./scripts/test.sh ui 1 PKEngineUITests` (RECOMMENDED)
 - **Run Specific UI Test Method**: `./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow` (RECOMMENDED)
 - **Run Specific Test File**: `./scripts/test.sh {unit|ui} 1 {TestFileName}`
 - **Run with Coverage**: `./scripts/test.sh unit 1 --coverage`

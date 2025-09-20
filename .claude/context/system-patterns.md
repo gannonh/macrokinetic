@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-16T22:39:56Z
-version: 1.2
+last_updated: 2025-09-20T16:38:18Z
+version: 1.3
 author: Claude Code PM System
 ---
 
@@ -88,13 +88,22 @@ Individual Test Methods (testUserCreation, testDoseCalculation)
 - **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
 - Use **debug output** to identify correct element types before writing selectors
 
-### E2E Testing Patterns (Issues #41 & #42 Learnings)
+### E2E Testing Patterns (Issues #41, #42 & #45 Learnings)
 - **SwiftData Relationship Testing**: Critical pattern for tests accessing relationships (dose.medication, user.doses) - must use proper ModelContainer with CloudKit disabled
 - **Test Container Setup**: ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` prevents CloudKit relationship validation errors
 - **Context Management**: Always insert models into context BEFORE setting relationships, then save context
 - **E2E Element Targeting**: TestUtilities.debugElements() is essential for identifying correct element types and selectors
 - **Text Field Utilities**: TestUtilities.clearAndEnterText() provides reliable text field interaction across all tests
 - **Debug Utilities**: Comprehensive element type mapping and accessibility hierarchy debugging prevents guesswork
+
+### PKEngine E2E Testing Patterns (Issue #45)
+- **Debug-first approach mandatory**: Always use TestUtilities.debugElements() before writing element selectors
+- **Multiple element handling**: Use `.element(boundBy:)` indexing when multiple elements share accessibility identifiers
+- **SwiftUI rendering reality**: Lists render as CollectionViews in XCUITest, not Tables - check actual element types
+- **Performance timeout adjustments**: E2E tests require 5-10s timeouts vs 50ms unit test expectations
+- **Accessibility identifier child elements**: When parent uses `.accessibilityElement(children: .ignore)`, child elements need explicit identifiers
+- **Quick Dose Sheet pattern**: Preferred UI pattern over individual dose buttons for streamlined dose entry workflows
+- **Real-time calculation validation**: Test concentration recalculation after dose entry with appropriate wait times
 
 ### SwiftUI Calendar Testing Patterns (Issue #42)
 - **Robust Element Finding**: Implement fallback logic for element targeting in dynamic UI components where accessibility identifiers may be unreliable

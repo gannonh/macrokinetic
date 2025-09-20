@@ -98,6 +98,17 @@ For each context file, determine if updates are needed:
   - Check: New linting rules, style decisions
   - Update: Convention changes, new patterns adopted
   - Include examples of new patterns
+
+#### `testing-config.md` - **Update if Testing Practices Changed**
+  - Check: New testing frameworks, coverage changes
+  - Update: Testing strategies, new tools
+  - Include coverage policies
+
+#### `development-commands.md` - **Update if Commands Changed**
+  - Check: New scripts, changed workflows
+  - Update: Command usage, new scripts added
+  - Include examples of new commands
+
 ### 2. Smart Update Strategy
 
 **For each file that needs updating:**
