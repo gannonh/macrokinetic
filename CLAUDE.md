@@ -89,7 +89,7 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
 # ./scripts/test.sh ui 1              # Takes 10+ minutes, use sparingly
 
 # View test results
-cat logs/latest/output.txt            # Latest test output
+cat logs/latest/raw_output.txt           # Latest test output
 ```
 #### Fulll CI Check Suite
 

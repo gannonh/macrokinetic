@@ -104,7 +104,6 @@ struct ConcentrationCard: View {
                 concentration: currentConcentration,
                 isCurrentLevel: true
             )
-            .accessibilityIdentifier("current-concentration-value")
 
             // Last updated timestamp
             Text("Updated \(Date().formatted(date: .omitted, time: .shortened))")
