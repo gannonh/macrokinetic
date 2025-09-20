@@ -2,11 +2,6 @@ import Foundation
 @testable import JabTracker
 import Testing
 
-enum TestError: Error {
-    case invalidMedicationProfile(String)
-    case noSampleData(String)
-}
-
 /// Comprehensive test suite for PharmacokineticsEngine
 /// Tests all core pharmacokinetic calculations for medical accuracy
 @Suite("PharmacokineticsEngine Tests")
@@ -616,9 +611,7 @@ struct PharmacokineticsEngineTests {
             // After exactly one half-life, concentration should be 0.5 * bioavailability
             let expectedConcentration = 0.5 * medication.subcutaneousBioavailability
             let tolerance = 0.01
-            #expect(abs(concentration - expectedConcentration) < tolerance,
-                    "\(medication.displayName) concentration after one half-life should be \(expectedConcentration), " +
-                    "got \(concentration)")
+            #expect(abs(concentration - expectedConcentration) < tolerance)
         }
     }
 
