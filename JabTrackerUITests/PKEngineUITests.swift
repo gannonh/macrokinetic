@@ -143,14 +143,18 @@ final class PKEngineUITests: XCTestCase {
                        "Concentration should be greater than 0, indicating bioavailability is applied")
 
         // 7. Verify projected concentration values are displayed (peak/trough calculations)
-        let projectedValues = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "projected-concentration-value"))
+        let projectedValues = app.staticTexts.matching(
+            NSPredicate(format: "identifier == %@", "projected-concentration-value")
+        )
         XCTAssertGreaterThan(projectedValues.count, 0,
-                            "At least one projected concentration value (peak or trough) should be displayed")
+                             "At least one projected concentration value (peak or trough) should be displayed")
 
         // 8. Verify concentration units are properly displayed
-        let concentrationUnits = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "concentration-unit"))
+        let concentrationUnits = app.staticTexts.matching(
+            NSPredicate(format: "identifier == %@", "concentration-unit")
+        )
         XCTAssertGreaterThan(concentrationUnits.count, 0,
-                            "Concentration units should be displayed for all concentration values")
+                             "Concentration units should be displayed for all concentration values")
     }
 
     /// Acceptance Test: Steady-state progress is shown as percentage with helpful context
@@ -160,14 +164,86 @@ final class PKEngineUITests: XCTestCase {
     /// And: Clear explanation of what steady-state means
     /// And: Typical timeframe to reach steady-state is indicated
     func testSteadyStateProgressDisplay() throws {
-        // TODO: Implement E2E test for steady-state progress
-        // 1. Set up user with regular dosing pattern over multiple weeks
-        // 2. Navigate to dashboard concentration display
-        // 3. Verify steady-state progress shows as percentage
-        // 4. Verify progress increases with consistent dosing
-        // 5. Verify helpful text explains steady-state concept
-        // 6. Test edge case: irregular dosing affects steady-state progress
-        throw XCTSkip("E2E acceptance test stub - implementation pending")
+        // 1. Set up test environment with semaglutide medication profile
+        TestUtilities.setupDoseHistoryTest(
+            app: app,
+            doseCount: 0, // Start with no doses, we'll add multiple to simulate regular dosing
+            medicationProfiles: 1,
+            medicationName: "semaglutide",
+            brandName: "Ozempic",
+            dose: "1.0"
+        )
+
+        // 2. Log multiple doses to simulate regular dosing pattern (for steady-state calculation)
+        TestUtilities.createMultipleDoses(in: app, count: 3, delay: 0)
+
+        // 3. Navigate to dashboard concentration display
+        TestUtilities.navigateToTab(app, tabName: "Home")
+
+        // Find the concentration card
+        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
+                      "Concentration card for Semaglutide should be visible on dashboard")
+
+        // 4. Verify steady-state header elements exist (label and percentage)
+        let steadyStateHeaders = app.staticTexts.matching(identifier: "steady-state-header")
+        XCTAssertGreaterThanOrEqual(steadyStateHeaders.count, 2,
+                                    "Should have steady-state label and percentage elements")
+
+        // Verify the label element exists
+        let steadyStateLabel = steadyStateHeaders.element(boundBy: 0)
+        XCTAssertTrue(steadyStateLabel.exists,
+                      "Steady-state label should be displayed")
+        XCTAssertEqual(steadyStateLabel.label, "Steady State Progress",
+                       "Steady-state label should show 'Steady State Progress'")
+
+        // Verify the percentage element exists
+        let steadyStatePercentage = steadyStateHeaders.element(boundBy: 1)
+        XCTAssertTrue(steadyStatePercentage.exists,
+                      "Steady-state percentage should be displayed")
+
+        // 5. Verify steady-state progress indicator exists
+        let steadyStateProgress = app.progressIndicators["steady-state-progress"]
+        XCTAssertTrue(steadyStateProgress.exists,
+                      "Steady-state progress indicator should be displayed")
+
+        // 6. Verify progress value is accessible and within valid range (0-100%)
+        let progressValue = steadyStateProgress.value as? String ?? ""
+        XCTAssertFalse(progressValue.isEmpty,
+                       "Progress indicator should have an accessible value")
+        XCTAssertTrue(progressValue.contains("percent"),
+                      "Progress value should contain 'percent' for accessibility")
+
+        // 7. Verify steady-state explanation text exists
+        let steadyStateExplanation = app.staticTexts["steady-state-explanation"]
+        XCTAssertTrue(steadyStateExplanation.exists,
+                      "Steady-state explanation should be displayed")
+
+        // 8. Verify explanation contains helpful timeframe information
+        let explanationText = steadyStateExplanation.label
+        XCTAssertFalse(explanationText.isEmpty,
+                       "Steady-state explanation should not be empty")
+        XCTAssertTrue(explanationText.contains("4-5 weeks") || explanationText.contains("achieved"),
+                      "Explanation should mention timeframe or achievement status")
+
+        // 9. Verify steady-state progress percentage is valid
+        // With 3 doses, progress should be 0% or greater but less than 100%
+        let percentageText = steadyStatePercentage.label
+        XCTAssertTrue(percentageText.contains("%"),
+                      "Percentage element should contain % symbol")
+
+        // Extract percentage value and validate range
+        let percentageComponents = percentageText.components(separatedBy: CharacterSet.decimalDigits.inverted)
+        let percentageValues = percentageComponents.compactMap { Int($0) }
+        XCTAssertFalse(percentageValues.isEmpty,
+                       "Should be able to extract percentage value")
+
+        if let percentage = percentageValues.first {
+            XCTAssertGreaterThanOrEqual(percentage, 0,
+                                        "Steady-state percentage should be at least 0%")
+            XCTAssertLessThanOrEqual(percentage, 100,
+                                     "Steady-state percentage should not exceed 100%")
+        }
     }
 
     /// Acceptance Test: Concentration levels display in user-friendly format with visual indicators
@@ -178,14 +254,111 @@ final class PKEngineUITests: XCTestCase {
     /// And: Units are clearly displayed
     /// And: Color coding helps interpret levels (low/normal/high)
     func testConcentrationDisplayFormatting() throws {
-        // TODO: Implement E2E test for concentration display formatting
-        // 1. Set up user with known concentration levels
-        // 2. Navigate to concentration display
-        // 3. Verify concentration values show 2 decimal places
-        // 4. Verify units are clearly labeled
-        // 5. Verify visual indicators (colors/icons) for level interpretation
-        // 6. Test accessibility of color coding (VoiceOver descriptions)
-        throw XCTSkip("E2E acceptance test stub - implementation pending")
+        // 1. Set up test environment with semaglutide medication profile
+        TestUtilities.setupDoseHistoryTest(
+            app: app,
+            doseCount: 0, // Start with no doses, we'll add one to get measurable concentration
+            medicationProfiles: 1,
+            medicationName: "semaglutide",
+            brandName: "Ozempic",
+            dose: "1.0"
+        )
+
+        // 2. Log a dose to generate concentration data for formatting validation
+        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+
+        // 3. Navigate to dashboard concentration display
+        TestUtilities.navigateToTab(app, tabName: "Home")
+
+        // Find the concentration card
+        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
+                      "Concentration card for Semaglutide should be visible on dashboard")
+
+        // 4. Verify current concentration value formatting (2 decimal places)
+        let currentConcentrationValue = app.staticTexts["current-concentration-value"]
+        XCTAssertTrue(currentConcentrationValue.exists,
+                      "Current concentration value should be displayed")
+
+        let currentValueText = currentConcentrationValue.label
+        XCTAssertFalse(currentValueText.isEmpty,
+                       "Current concentration value should not be empty")
+
+        // Verify 2 decimal place formatting (e.g., "1.23", "0.45", "12.00")
+        let decimalPattern = #"^\d+\.\d{2}$"#
+        let regex = try NSRegularExpression(pattern: decimalPattern)
+        let valueRange = NSRange(location: 0, length: currentValueText.utf16.count)
+        let hasDecimalFormat = regex.firstMatch(in: currentValueText, range: valueRange) != nil
+        XCTAssertTrue(hasDecimalFormat,
+                      "Current concentration should be formatted to 2 decimal places, got: '\(currentValueText)'")
+
+        // 5. Verify units are clearly displayed
+        let concentrationUnits = app.staticTexts.matching(identifier: "concentration-unit")
+        XCTAssertGreaterThan(concentrationUnits.count, 0,
+                             "At least one concentration unit should be displayed")
+
+        // Check first unit element
+        let firstUnit = concentrationUnits.element(boundBy: 0)
+        XCTAssertTrue(firstUnit.exists,
+                      "Concentration unit should be displayed")
+
+        let unitText = firstUnit.label
+        XCTAssertFalse(unitText.isEmpty,
+                       "Unit text should not be empty")
+        XCTAssertEqual(unitText, "units",
+                       "Unit should display 'units' as expected")
+
+        // 6. Verify projected concentration values (peak/trough) are also properly formatted
+        let projectedValues = app.staticTexts.matching(identifier: "projected-concentration-value")
+        XCTAssertGreaterThan(projectedValues.count, 0,
+                             "At least one projected concentration value should be displayed")
+
+        // Check formatting of first projected value
+        let firstProjectedValue = projectedValues.element(boundBy: 0)
+        XCTAssertTrue(firstProjectedValue.exists,
+                      "Projected concentration value should be displayed")
+
+        let projectedValueText = firstProjectedValue.label
+        XCTAssertFalse(projectedValueText.isEmpty,
+                       "Projected concentration value should not be empty")
+
+        // Verify projected values also use 2 decimal place formatting
+        let projectedValueRange = NSRange(location: 0, length: projectedValueText.utf16.count)
+        let projectedHasDecimalFormat = regex.firstMatch(in: projectedValueText, range: projectedValueRange) != nil
+        XCTAssertTrue(projectedHasDecimalFormat,
+                      "Projected concentration should be formatted to 2 decimal places, got: '\(projectedValueText)'")
+
+        // 7. Verify accessibility of concentration values for screen readers
+        // Current concentration accessibility
+        let currentAccessibilityLabel = currentConcentrationValue.label
+        XCTAssertFalse(currentAccessibilityLabel.isEmpty,
+                       "Current concentration should have accessibility label")
+
+        // 8. Verify visual indicators exist (ConcentrationDisplay should show level indicators)
+        // The ConcentrationDisplay component includes visual indicators for level interpretation
+        // These are implemented as accessibility-hidden images but affect overall accessibility value
+        let currentAccessibilityValue = currentConcentrationValue.value as? String ?? ""
+        if !currentAccessibilityValue.isEmpty {
+            // Accessibility value should contain level interpretation (e.g., "Normal level", "Low level", "High level")
+            let containsLevelDescription = currentAccessibilityValue.contains("level") ||
+                                           currentAccessibilityValue.contains("Normal") ||
+                                           currentAccessibilityValue.contains("Low") ||
+                                           currentAccessibilityValue.contains("High")
+            XCTAssertTrue(containsLevelDescription,
+                          "Accessibility value should describe concentration level for screen readers: " +
+                          "'\(currentAccessibilityValue)'")
+        }
+
+        // 9. Test that values are greater than 0 (indicating bioavailability calculations work)
+        if let currentValue = Double(currentValueText) {
+            XCTAssertGreaterThan(currentValue, 0.0,
+                                 "Current concentration should be greater than 0 after dose")
+        }
+
+        if let projectedValue = Double(projectedValueText) {
+            XCTAssertGreaterThan(projectedValue, 0.0,
+                                 "Projected concentration should be greater than 0")
+        }
     }
 
     /// Acceptance Test: Concentration card integrates seamlessly with dashboard layout
