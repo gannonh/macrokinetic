@@ -23,7 +23,7 @@ struct MedicationProfileSettingsView: View {
             return manager
         }
         let manager = MedicationManager(modelContext: modelContext)
-        medicationManager = manager
+        self.medicationManager = manager
         return manager
     }
 
@@ -378,42 +378,35 @@ struct MedicationProfileDetailView: View {
                             DetailRow(title: "Brand", value: self.profile.brandName)
                             DetailRow(
                                 title: "Current Dose",
-                                value: "\(String(format: "%.2f", self.profile.currentDose)) mg"
-                            )
+                                value: "\(String(format: "%.2f", self.profile.currentDose)) mg")
                             DetailRow(
                                 title: "Start Date",
-                                value: self.profile.startDate.formatted(date: .abbreviated, time: .omitted)
-                            )
+                                value: self.profile.startDate.formatted(date: .abbreviated, time: .omitted))
                             DetailRow(
                                 title: "Preferred Sites",
-                                value: self.profile.preferredInjectionSites.joined(separator: ", ")
-                            )
+                                value: self.profile.preferredInjectionSites.joined(separator: ", "))
 
                             // Show reconstitution data for compounded medications
                             if self.profile.isCompounded {
                                 if let concentration = self.profile.concentration {
                                     DetailRow(
                                         title: "Concentration",
-                                        value: "\(String(format: "%.2f", concentration)) mg/ml"
-                                    )
+                                        value: "\(String(format: "%.2f", concentration)) mg/ml")
                                 }
                                 if let unitsPerDose = self.profile.unitsPerDose {
                                     DetailRow(
                                         title: "Dose in Units",
-                                        value: "\(String(format: "%.1f", unitsPerDose)) units"
-                                    )
+                                        value: "\(String(format: "%.1f", unitsPerDose)) units")
                                 }
                             }
 
                             if let medication = Medication(rawValue: profile.medicationType) {
                                 DetailRow(
                                     title: "Half-life",
-                                    value: "\(String(format: "%.1f", medication.halfLifeDays)) days"
-                                )
+                                    value: "\(String(format: "%.1f", medication.halfLifeDays)) days")
                                 DetailRow(
                                     title: "Frequency",
-                                    value: medication.frequency == .daily ? "Daily" : "Weekly"
-                                )
+                                    value: medication.frequency == .daily ? "Daily" : "Weekly")
                             }
                         }
                     }

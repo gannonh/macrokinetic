@@ -6,8 +6,8 @@
 //  Handles photo picker, preview, and photo management functionality
 //
 
-import SwiftUI
 import PhotosUI
+import SwiftUI
 
 /// Photo section for dose entry with picker and preview functionality
 struct DoseEntryPhotoSection: View {
@@ -17,17 +17,17 @@ struct DoseEntryPhotoSection: View {
     let isSkipped: Bool
 
     var body: some View {
-        if !isSkipped {
+        if !self.isSkipped {
             Section {
-                photoContent
+                self.photoContent
             } header: {
                 Text("Photo (Optional)")
             }
-            .photosPicker(isPresented: $showingPhotoOptions, selection: $selectedPhotoItem, matching: .images)
-            .onChange(of: selectedPhotoItem) { _, newItem in
+            .photosPicker(isPresented: self.$showingPhotoOptions, selection: self.$selectedPhotoItem, matching: .images)
+            .onChange(of: self.selectedPhotoItem) { _, newItem in
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        dosePhotoData = data
+                        self.dosePhotoData = data
                     }
                 }
             }
@@ -46,19 +46,19 @@ struct DoseEntryPhotoSection: View {
                     .accessibilityIdentifier("dose-entry-photo-preview")
 
                 Button("Change Photo") {
-                    showingPhotoOptions = true
+                    self.showingPhotoOptions = true
                 }
                 .accessibilityIdentifier("dose-entry-change-photo")
 
                 Button("Remove Photo", role: .destructive) {
-                    dosePhotoData = nil
-                    selectedPhotoItem = nil
+                    self.dosePhotoData = nil
+                    self.selectedPhotoItem = nil
                 }
                 .accessibilityIdentifier("dose-entry-remove-photo")
             }
         } else {
             Button("Add Photo") {
-                showingPhotoOptions = true
+                self.showingPhotoOptions = true
             }
             .accessibilityIdentifier("dose-entry-add-photo")
         }

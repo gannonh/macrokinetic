@@ -203,8 +203,8 @@ struct DoseHistoryViewModelComputedTests {
         timestamp: Date,
         amount: Double,
         site: String = "Thigh",
-        notes: String = "Test dose"
-    ) -> Dose {
+        notes: String = "Test dose") -> Dose
+    {
         let medicationProfile = self.createTestMedicationProfile()
         self.context.insert(medicationProfile)
 
@@ -213,28 +213,25 @@ struct DoseHistoryViewModelComputedTests {
             timestamp: timestamp,
             site: site,
             notes: notes,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
     }
 
     private func createTestMedicationProfile(
         medication: Medication = .semaglutide,
-        currentDose: Double = 1.0
-    ) -> MedicationProfile {
+        currentDose: Double = 1.0) -> MedicationProfile
+    {
         MedicationProfile(
             genericName: medication.rawValue,
             brandName: "Test Brand",
             currentDose: currentDose,
             startDate: Date(),
-            medicationType: medication.rawValue
-        )
+            medicationType: medication.rawValue)
     }
 
     private func createTestUser(name: String = "Test User", email: String = "test@example.com") -> User {
         User(
             email: email,
             name: name,
-            appleUserId: "test-apple-id"
-        )
+            appleUserId: "test-apple-id")
     }
 }

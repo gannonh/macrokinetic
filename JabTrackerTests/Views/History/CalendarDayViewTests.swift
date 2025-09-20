@@ -9,6 +9,10 @@
 import SwiftUI
 import Testing
 
+enum TestError: Error {
+    case invalidTestData(String)
+}
+
 struct CalendarDayViewTests {
     // MARK: - Day Display Tests
 
@@ -17,7 +21,9 @@ struct CalendarDayViewTests {
         // GIVEN: A specific date and CalendarDayView
         let calendar = Calendar.current
         let components = DateComponents(year: 2024, month: 9, day: 15)
-        let date = calendar.date(from: components)!
+        guard let date = calendar.date(from: components) else {
+            throw TestError.invalidTestData("Failed to create test date")
+        }
         let doses: [Dose] = []
 
         // WHEN: CalendarDayView calculates day number
@@ -25,8 +31,7 @@ struct CalendarDayViewTests {
             date: date,
             doses: doses,
             isToday: false,
-            isSelected: false
-        )
+            isSelected: false)
 
         // THEN: Day number should be 15 from view's computed property
         #expect(testDayView.dayNumber == 15)
@@ -37,7 +42,9 @@ struct CalendarDayViewTests {
         // GIVEN: First day of a month
         let calendar = Calendar.current
         let components = DateComponents(year: 2024, month: 9, day: 1)
-        let date = calendar.date(from: components)!
+        guard let date = calendar.date(from: components) else {
+            throw TestError.invalidTestData("Failed to create test date")
+        }
 
         // WHEN: Getting day number
         let dayNumber = calendar.component(.day, from: date)
@@ -51,7 +58,9 @@ struct CalendarDayViewTests {
         // GIVEN: Last day of a month (September 30th)
         let calendar = Calendar.current
         let components = DateComponents(year: 2024, month: 9, day: 30)
-        let date = calendar.date(from: components)!
+        guard let date = calendar.date(from: components) else {
+            throw TestError.invalidTestData("Failed to create test date")
+        }
 
         // WHEN: Getting day number
         let dayNumber = calendar.component(.day, from: date)
@@ -83,8 +92,12 @@ struct CalendarDayViewTests {
         // GIVEN: A date with multiple doses
         let calendar = Calendar.current
         let date = Date()
-        let morning = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: date)!
-        let evening = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: date)!
+        guard let morning = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: date) else {
+            throw TestError.invalidTestData("Failed to create morning date")
+        }
+        guard let evening = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: date) else {
+            throw TestError.invalidTestData("Failed to create evening date")
+        }
 
         let doses = [
             createMockDose(timestamp: morning),
@@ -131,8 +144,7 @@ struct CalendarDayViewTests {
             date: today,
             doses: doses,
             isToday: true,
-            isSelected: false
-        )
+            isSelected: false)
 
         // THEN: View should reflect today styling properties
         #expect(testDayView.isToday == true)
@@ -145,8 +157,12 @@ struct CalendarDayViewTests {
         // GIVEN: Today and other dates
         let calendar = Calendar.current
         let today = Date()
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
+            throw TestError.invalidTestData("Failed to create yesterday date")
+        }
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else {
+            throw TestError.invalidTestData("Failed to create tomorrow date")
+        }
 
         // WHEN: Checking which dates are today
         let isTodayToday = calendar.isDateInToday(today)
@@ -173,8 +189,7 @@ struct CalendarDayViewTests {
             date: date,
             doses: [abdominalDose, thighDose, armDose],
             isToday: false,
-            isSelected: false
-        )
+            isSelected: false)
 
         // WHEN: CalendarDayView determines indicator colors for different sites
         let abdominalColor = testDayView.indicatorColor(for: abdominalDose)
@@ -213,8 +228,7 @@ struct CalendarDayViewTests {
             date: date,
             doses: doses,
             isToday: false,
-            isSelected: true
-        )
+            isSelected: true)
 
         // THEN: View should reflect selected styling
         #expect(selectedDayView.isSelected == true)
@@ -227,8 +241,7 @@ struct CalendarDayViewTests {
             date: date,
             doses: doses,
             isToday: false,
-            isSelected: false
-        )
+            isSelected: false)
 
         // THEN: View should reflect unselected styling
         #expect(unselectedDayView.isSelected == false)
@@ -269,13 +282,13 @@ private class TestCalendarDayViewModel {
     }
 
     var dayNumber: Int {
-        calendar.component(.day, from: date)
+        self.calendar.component(.day, from: self.date)
     }
 
     var backgroundColor: Color {
-        if isSelected {
+        if self.isSelected {
             return .accentColor.opacity(0.2)
-        } else if isToday {
+        } else if self.isToday {
             return .accentColor.opacity(0.1)
         } else {
             return Color.clear
@@ -283,9 +296,9 @@ private class TestCalendarDayViewModel {
     }
 
     var textColor: Color {
-        if isSelected {
+        if self.isSelected {
             return .accentColor
-        } else if isToday {
+        } else if self.isToday {
             return .accentColor
         } else {
             return .primary
@@ -293,9 +306,9 @@ private class TestCalendarDayViewModel {
     }
 
     var borderColor: Color {
-        if isSelected {
+        if self.isSelected {
             return .accentColor
-        } else if isToday {
+        } else if self.isToday {
             return .accentColor.opacity(0.5)
         } else {
             return Color.clear
@@ -303,9 +316,9 @@ private class TestCalendarDayViewModel {
     }
 
     var borderWidth: CGFloat {
-        if isSelected {
+        if self.isSelected {
             return 2
-        } else if isToday {
+        } else if self.isToday {
             return 1
         } else {
             return 0
@@ -315,14 +328,14 @@ private class TestCalendarDayViewModel {
     var accessibilityLabel: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        let dateString = formatter.string(from: date)
+        let dateString = formatter.string(from: self.date)
 
         var label = dateString
-        if isToday {
+        if self.isToday {
             label += ", today"
         }
-        if !doses.isEmpty {
-            label += ", \(doses.count) dose\(doses.count == 1 ? "" : "s")"
+        if !self.doses.isEmpty {
+            label += ", \(self.doses.count) dose\(self.doses.count == 1 ? "" : "s")"
         }
         return label
     }

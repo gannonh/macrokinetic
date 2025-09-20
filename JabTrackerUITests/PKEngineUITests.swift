@@ -10,20 +10,19 @@ import XCTest
 
 @MainActor
 final class PKEngineUITests: XCTestCase {
-
     private var app: XCUIApplication!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         continueAfterFailure = false
 
-        app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data"]
-        app.launch()
+        self.app = XCUIApplication()
+        self.app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        self.app.launch()
     }
 
     override func tearDownWithError() throws {
-        app = nil
+        self.app = nil
         try super.tearDownWithError()
     }
 
@@ -38,22 +37,21 @@ final class PKEngineUITests: XCTestCase {
         // 1. Set up test environment with medication profile and NO initial doses
         // We'll manually create a single dose to isolate the duplication issue
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0, // Start with no doses
             medicationProfiles: 1,
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // Create exactly 1 dose to test concentration display
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // 2. Navigate to dashboard (home tab)
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // 3. Verify concentration card is visible with proper accessibility identifiers
-        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        let concentrationCard = self.app.otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
                       "Concentration card for Semaglutide should be visible on dashboard")
 
@@ -70,10 +68,10 @@ final class PKEngineUITests: XCTestCase {
                        "Concentration should be greater than 0 after dose")
 
         // 5. Log another dose and verify concentration updates
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // Return to dashboard and verify concentration updated
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         let updatedConcentrationValue = concentrationCard.staticTexts["current-concentration-value"]
         XCTAssertTrue(updatedConcentrationValue.waitForExistence(timeout: 3),
@@ -102,37 +100,36 @@ final class PKEngineUITests: XCTestCase {
     func testPeakAndTroughLevelCalculations() throws {
         // 1. Set up test environment with semaglutide medication profile
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0, // Start with no doses, we'll add one manually
             medicationProfiles: 1,
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // 2. Log a dose and note the timestamp
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // 3. Navigate to dashboard concentration card
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // Find the concentration card
-        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        let concentrationCard = self.app.otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
                       "Concentration card for Semaglutide should be visible on dashboard")
 
         // 4. Verify peak level section is displayed
-        let peakLevelSection = app.staticTexts["peak-level-section"]
+        let peakLevelSection = self.app.staticTexts["peak-level-section"]
         XCTAssertTrue(peakLevelSection.exists,
                       "Peak level section should be displayed")
 
         // 5. Verify trough level section is displayed
-        let troughLevelSection = app.staticTexts["trough-level-section"]
+        let troughLevelSection = self.app.staticTexts["trough-level-section"]
         XCTAssertTrue(troughLevelSection.exists,
                       "Trough level section should be displayed")
 
         // 6. Verify current concentration is greater than 0 (indicating bioavailability is applied)
-        let concentrationValue = app.staticTexts["current-concentration-value"]
+        let concentrationValue = self.app.staticTexts["current-concentration-value"]
         XCTAssertTrue(concentrationValue.exists,
                       "Current concentration value should be displayed")
 
@@ -143,14 +140,14 @@ final class PKEngineUITests: XCTestCase {
                        "Concentration should be greater than 0, indicating bioavailability is applied")
 
         // 7. Verify projected concentration values are displayed (peak/trough calculations)
-        let projectedValues = app.staticTexts.matching(
+        let projectedValues = self.app.staticTexts.matching(
             NSPredicate(format: "identifier == %@", "projected-concentration-value")
         )
         XCTAssertGreaterThan(projectedValues.count, 0,
                              "At least one projected concentration value (peak or trough) should be displayed")
 
         // 8. Verify concentration units are properly displayed
-        let concentrationUnits = app.staticTexts.matching(
+        let concentrationUnits = self.app.staticTexts.matching(
             NSPredicate(format: "identifier == %@", "concentration-unit")
         )
         XCTAssertGreaterThan(concentrationUnits.count, 0,
@@ -166,27 +163,26 @@ final class PKEngineUITests: XCTestCase {
     func testSteadyStateProgressDisplay() throws {
         // 1. Set up test environment with semaglutide medication profile
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0, // Start with no doses, we'll add multiple to simulate regular dosing
             medicationProfiles: 1,
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // 2. Log multiple doses to simulate regular dosing pattern (for steady-state calculation)
-        TestUtilities.createMultipleDoses(in: app, count: 3, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 3, delay: 0)
 
         // 3. Navigate to dashboard concentration display
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // Find the concentration card
-        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        let concentrationCard = self.app.otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
                       "Concentration card for Semaglutide should be visible on dashboard")
 
         // 4. Verify steady-state header elements exist (label and percentage)
-        let steadyStateHeaders = app.staticTexts.matching(identifier: "steady-state-header")
+        let steadyStateHeaders = self.app.staticTexts.matching(identifier: "steady-state-header")
         XCTAssertGreaterThanOrEqual(steadyStateHeaders.count, 2,
                                     "Should have steady-state label and percentage elements")
 
@@ -203,7 +199,7 @@ final class PKEngineUITests: XCTestCase {
                       "Steady-state percentage should be displayed")
 
         // 5. Verify steady-state progress indicator exists
-        let steadyStateProgress = app.progressIndicators["steady-state-progress"]
+        let steadyStateProgress = self.app.progressIndicators["steady-state-progress"]
         XCTAssertTrue(steadyStateProgress.exists,
                       "Steady-state progress indicator should be displayed")
 
@@ -215,7 +211,7 @@ final class PKEngineUITests: XCTestCase {
                       "Progress value should contain 'percent' for accessibility")
 
         // 7. Verify steady-state explanation text exists
-        let steadyStateExplanation = app.staticTexts["steady-state-explanation"]
+        let steadyStateExplanation = self.app.staticTexts["steady-state-explanation"]
         XCTAssertTrue(steadyStateExplanation.exists,
                       "Steady-state explanation should be displayed")
 
@@ -256,27 +252,26 @@ final class PKEngineUITests: XCTestCase {
     func testConcentrationDisplayFormatting() throws {
         // 1. Set up test environment with semaglutide medication profile
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0, // Start with no doses, we'll add one to get measurable concentration
             medicationProfiles: 1,
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // 2. Log a dose to generate concentration data for formatting validation
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // 3. Navigate to dashboard concentration display
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // Find the concentration card
-        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        let concentrationCard = self.app.otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
                       "Concentration card for Semaglutide should be visible on dashboard")
 
         // 4. Verify current concentration value formatting (2 decimal places)
-        let currentConcentrationValue = app.staticTexts["current-concentration-value"]
+        let currentConcentrationValue = self.app.staticTexts["current-concentration-value"]
         XCTAssertTrue(currentConcentrationValue.exists,
                       "Current concentration value should be displayed")
 
@@ -293,7 +288,7 @@ final class PKEngineUITests: XCTestCase {
                       "Current concentration should be formatted to 2 decimal places, got: '\(currentValueText)'")
 
         // 5. Verify units are clearly displayed
-        let concentrationUnits = app.staticTexts.matching(identifier: "concentration-unit")
+        let concentrationUnits = self.app.staticTexts.matching(identifier: "concentration-unit")
         XCTAssertGreaterThan(concentrationUnits.count, 0,
                              "At least one concentration unit should be displayed")
 
@@ -309,7 +304,7 @@ final class PKEngineUITests: XCTestCase {
                        "Unit should display 'units' as expected")
 
         // 6. Verify projected concentration values (peak/trough) are also properly formatted
-        let projectedValues = app.staticTexts.matching(identifier: "projected-concentration-value")
+        let projectedValues = self.app.staticTexts.matching(identifier: "projected-concentration-value")
         XCTAssertGreaterThan(projectedValues.count, 0,
                              "At least one projected concentration value should be displayed")
 
@@ -341,12 +336,12 @@ final class PKEngineUITests: XCTestCase {
         if !currentAccessibilityValue.isEmpty {
             // Accessibility value should contain level interpretation (e.g., "Normal level", "Low level", "High level")
             let containsLevelDescription = currentAccessibilityValue.contains("level") ||
-                                           currentAccessibilityValue.contains("Normal") ||
-                                           currentAccessibilityValue.contains("Low") ||
-                                           currentAccessibilityValue.contains("High")
+                currentAccessibilityValue.contains("Normal") ||
+                currentAccessibilityValue.contains("Low") ||
+                currentAccessibilityValue.contains("High")
             XCTAssertTrue(containsLevelDescription,
                           "Accessibility value should describe concentration level for screen readers: " +
-                          "'\(currentAccessibilityValue)'")
+                              "'\(currentAccessibilityValue)'")
         }
 
         // 9. Test that values are greater than 0 (indicating bioavailability calculations work)
@@ -371,52 +366,51 @@ final class PKEngineUITests: XCTestCase {
     func testConcentrationCardDashboardIntegration() throws {
         // 1. Set up user with complete medication profile
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0,
             medicationProfiles: 1,
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // 2. Log a dose to generate concentration data
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // 3. Navigate to dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // 4. Verify dashboard layout includes concentration card
-        let dashboardView = app.scrollViews["dashboard-view"]
+        let dashboardView = self.app.scrollViews["dashboard-view"]
         XCTAssertTrue(dashboardView.waitForExistence(timeout: 5),
                       "Dashboard view should be accessible")
 
         // 5. Verify concentration card is positioned appropriately within dashboard
-        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        let concentrationCard = self.app.otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.exists,
                       "Concentration card should be visible on dashboard")
 
         // 6. Verify card shows key information at a glance
         // Card title
-        let cardTitle = app.staticTexts["concentration-card-title"]
+        let cardTitle = self.app.staticTexts["concentration-card-title"]
         XCTAssertTrue(cardTitle.exists,
                       "Concentration card should show title")
         XCTAssertEqual(cardTitle.label, "Drug Concentration",
                        "Card title should be 'Drug Concentration'")
 
         // Medication name
-        let medicationName = app.staticTexts["concentration-card-medication"]
+        let medicationName = self.app.staticTexts["concentration-card-medication"]
         XCTAssertTrue(medicationName.exists,
                       "Card should show medication name")
         XCTAssertTrue(medicationName.label.contains("Semaglutide"),
                       "Card should display the medication name")
 
         // Current concentration value
-        let currentValue = app.staticTexts["current-concentration-value"]
+        let currentValue = self.app.staticTexts["current-concentration-value"]
         XCTAssertTrue(currentValue.exists,
                       "Card should show current concentration at a glance")
 
         // Last updated timestamp
-        let lastUpdated = app.staticTexts["concentration-last-updated"]
+        let lastUpdated = self.app.staticTexts["concentration-last-updated"]
         XCTAssertTrue(lastUpdated.exists,
                       "Card should show when data was last updated")
 
@@ -426,17 +420,17 @@ final class PKEngineUITests: XCTestCase {
                       "Dashboard should remain interactive with concentration card present")
 
         // 8. Test card layout stability - add another dose and verify card updates properly
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // Return to dashboard and verify card updated without layout disruption
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // Verify concentration card still exists and is properly positioned
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 3),
                       "Concentration card should remain visible after data update")
 
         // Verify updated value is different (concentration should have changed)
-        let updatedValue = app.staticTexts["current-concentration-value"]
+        let updatedValue = self.app.staticTexts["current-concentration-value"]
         XCTAssertTrue(updatedValue.exists,
                       "Updated concentration value should be displayed")
 
@@ -462,32 +456,31 @@ final class PKEngineUITests: XCTestCase {
     func testMultipleMedicationConcentrations() throws {
         // 1. Set up user with multiple active medications (semaglutide + tirzepatide)
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0,
             medicationProfiles: 2, // Create 2 medication profiles
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // 2. Log doses for the first medication (semaglutide)
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // 3. Navigate to medication profiles to set up second medication
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToTab(self.app, tabName: "Settings")
 
         // Create second medication profile manually since setupDoseHistoryTest creates identical profiles
         // Navigate back to dashboard to check what concentration cards exist
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // 4. Verify separate concentration displays exist
         // Note: The test setup may create identical medication profiles, so we'll work with what's available
-        let dashboardView = app.scrollViews["dashboard-view"]
+        let dashboardView = self.app.scrollViews["dashboard-view"]
         XCTAssertTrue(dashboardView.waitForExistence(timeout: 5),
                       "Dashboard view should be accessible")
 
         // Find all concentration cards on dashboard
-        let allConcentrationCards = app.otherElements.matching(
+        let allConcentrationCards = self.app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH %@", "concentration-card-")
         )
 
@@ -506,7 +499,7 @@ final class PKEngineUITests: XCTestCase {
                       "Card identifier should follow concentration-card pattern")
 
         // 7. Verify calculation independence by checking concentration values
-        let concentrationValues = app.staticTexts.matching(identifier: "current-concentration-value")
+        let concentrationValues = self.app.staticTexts.matching(identifier: "current-concentration-value")
         XCTAssertGreaterThan(concentrationValues.count, 0,
                              "At least one concentration value should be displayed")
 
@@ -533,7 +526,7 @@ final class PKEngineUITests: XCTestCase {
         }
 
         // 9. Verify clear labeling to distinguish medications
-        let medicationLabels = app.staticTexts.matching(identifier: "concentration-card-medication")
+        let medicationLabels = self.app.staticTexts.matching(identifier: "concentration-card-medication")
         XCTAssertGreaterThan(medicationLabels.count, 0,
                              "Medication labels should be displayed on concentration cards")
 
@@ -551,7 +544,7 @@ final class PKEngineUITests: XCTestCase {
         // (concentrationValues already defined above)
 
         // Test that concentration values are numeric and properly formatted
-        for index in 0..<min(concentrationValues.count, 2) {
+        for index in 0 ..< min(concentrationValues.count, 2) {
             let valueElement = concentrationValues.element(boundBy: index)
             if valueElement.exists {
                 let valueText = valueElement.label
@@ -578,37 +571,36 @@ final class PKEngineUITests: XCTestCase {
     func testConcentrationCalculationPerformance() throws {
         // 1. Set up user with medication profile for performance testing
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0, // Start with no doses, we'll add many for performance testing
             medicationProfiles: 1,
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // 2. Create extensive dose history (simulate 50+ doses scenario)
         // Note: Creating 50+ actual doses in UI test would be very slow
         // Instead, we'll create a reasonable number and test performance characteristics
         let largeDoseCount = 10 // Practical number for E2E test performance
-        TestUtilities.createMultipleDoses(in: app, count: largeDoseCount, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: largeDoseCount, delay: 0)
 
         // 3. Measure dashboard navigation and concentration display performance
         let startTime = Date()
 
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // 4. Verify dashboard loads without noticeable lag
-        let dashboardView = app.scrollViews["dashboard-view"]
+        let dashboardView = self.app.scrollViews["dashboard-view"]
         XCTAssertTrue(dashboardView.waitForExistence(timeout: 5),
                       "Dashboard should load within reasonable time")
 
         // 5. Verify concentration card appears promptly
-        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        let concentrationCard = self.app.otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 3),
                       "Concentration card should appear promptly with large dose history")
 
         // 6. Verify concentration calculations complete and display data
-        let currentConcentrationValue = app.staticTexts["current-concentration-value"]
+        let currentConcentrationValue = self.app.staticTexts["current-concentration-value"]
         XCTAssertTrue(currentConcentrationValue.waitForExistence(timeout: 2),
                       "Current concentration value should be calculated and displayed quickly")
 
@@ -623,10 +615,10 @@ final class PKEngineUITests: XCTestCase {
         let doseEntryStartTime = Date()
 
         // Add another dose and measure update responsiveness
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // Return to dashboard and verify quick update
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // Verify concentration value updates promptly
         XCTAssertTrue(currentConcentrationValue.waitForExistence(timeout: 2),
@@ -644,15 +636,15 @@ final class PKEngineUITests: XCTestCase {
                       "Dashboard should remain interactive during concentration calculations")
 
         // 11. Verify all concentration elements are present (no calculation timeouts)
-        let steadyStateProgress = app.progressIndicators["steady-state-progress"]
+        let steadyStateProgress = self.app.progressIndicators["steady-state-progress"]
         XCTAssertTrue(steadyStateProgress.exists,
                       "Complex calculations (steady-state) should complete without timeout")
 
-        let peakLevelSection = app.staticTexts["peak-level-section"]
+        let peakLevelSection = self.app.staticTexts["peak-level-section"]
         XCTAssertTrue(peakLevelSection.exists,
                       "Peak level calculations should complete without timeout")
 
-        let troughLevelSection = app.staticTexts["trough-level-section"]
+        let troughLevelSection = self.app.staticTexts["trough-level-section"]
         XCTAssertTrue(troughLevelSection.exists,
                       "Trough level calculations should complete without timeout")
 
@@ -673,24 +665,23 @@ final class PKEngineUITests: XCTestCase {
     func testConcentrationErrorStates() throws {
         // 1. Test scenario: User with medication profile but no doses
         TestUtilities.setupDoseHistoryTest(
-            app: app,
+            app: self.app,
             doseCount: 0, // No doses - should trigger empty state
             medicationProfiles: 1,
             medicationName: "semaglutide",
             brandName: "Ozempic",
-            dose: "1.0"
-        )
+            dose: "1.0")
 
         // 2. Navigate to dashboard to observe empty state handling
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // 3. Verify concentration card appears even with no doses
-        let concentrationCard = app.otherElements["concentration-card-Semaglutide"]
+        let concentrationCard = self.app.otherElements["concentration-card-Semaglutide"]
         XCTAssertTrue(concentrationCard.waitForExistence(timeout: 5),
                       "Concentration card should appear even with no dose data")
 
         // 4. Verify helpful message explains why concentration data is unavailable
-        let noDosesMessage = app.staticTexts["no-doses-message"]
+        let noDosesMessage = self.app.staticTexts["no-doses-message"]
         XCTAssertTrue(noDosesMessage.exists,
                       "Should display helpful message when no doses are recorded")
 
@@ -701,7 +692,7 @@ final class PKEngineUITests: XCTestCase {
                       "Message should explain that no recent doses were recorded")
 
         // 5. Verify concentration value shows 0.00 for no doses (not empty or error)
-        let currentConcentrationValue = app.staticTexts["current-concentration-value"]
+        let currentConcentrationValue = self.app.staticTexts["current-concentration-value"]
         XCTAssertTrue(currentConcentrationValue.exists,
                       "Concentration value should still be displayed even with no doses")
 
@@ -711,23 +702,23 @@ final class PKEngineUITests: XCTestCase {
 
         // 6. Verify no crashes occur with empty dose data
         // Test that all concentration card elements are present and don't crash
-        let cardTitle = app.staticTexts["concentration-card-title"]
+        let cardTitle = self.app.staticTexts["concentration-card-title"]
         XCTAssertTrue(cardTitle.exists,
                       "Card title should be displayed even with no doses")
 
-        let medicationName = app.staticTexts["concentration-card-medication"]
+        let medicationName = self.app.staticTexts["concentration-card-medication"]
         XCTAssertTrue(medicationName.exists,
                       "Medication name should be displayed even with no doses")
 
-        let lastUpdated = app.staticTexts["concentration-last-updated"]
+        let lastUpdated = self.app.staticTexts["concentration-last-updated"]
         XCTAssertTrue(lastUpdated.exists,
                       "Last updated timestamp should be displayed")
 
         // 7. Test recovery from empty state by adding a dose
-        TestUtilities.createMultipleDoses(in: app, count: 1, delay: 0)
+        TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
         // Return to dashboard and verify concentration updates properly
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // 8. Verify concentration updates correctly after dose entry
         XCTAssertTrue(currentConcentrationValue.waitForExistence(timeout: 3),
@@ -738,13 +729,13 @@ final class PKEngineUITests: XCTestCase {
                           "Concentration should be greater than 0.00 after adding dose")
 
         // 9. Verify no doses message disappears after adding doses
-        let noDosesMessageAfterDose = app.staticTexts["no-doses-message"]
+        let noDosesMessageAfterDose = self.app.staticTexts["no-doses-message"]
         XCTAssertFalse(noDosesMessageAfterDose.exists,
                        "No doses message should disappear after adding doses")
 
         // 10. Test graceful handling of edge cases
         // Verify steady-state elements handle empty state gracefully
-        let steadyStateProgress = app.progressIndicators["steady-state-progress"]
+        let steadyStateProgress = self.app.progressIndicators["steady-state-progress"]
         XCTAssertTrue(steadyStateProgress.exists,
                       "Steady-state progress should be displayed even with minimal dose data")
 
@@ -755,13 +746,13 @@ final class PKEngineUITests: XCTestCase {
 
         // 12. Test that error states don't break navigation
         // Verify dashboard navigation remains functional
-        let dashboardView = app.scrollViews["dashboard-view"]
+        let dashboardView = self.app.scrollViews["dashboard-view"]
         XCTAssertTrue(dashboardView.isHittable,
                       "Dashboard should remain interactive in all concentration states")
 
         // Verify tab navigation works correctly
-        TestUtilities.navigateToTab(app, tabName: "Settings")
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(self.app, tabName: "Settings")
+        TestUtilities.navigateToTab(self.app, tabName: "Home")
 
         // Final verification that concentration card is still functional
         XCTAssertTrue(concentrationCard.exists,

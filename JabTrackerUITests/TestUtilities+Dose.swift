@@ -99,7 +99,8 @@ extension TestUtilities {
         _ app: XCUIApplication,
         genericName: String,
         brandName: String,
-        timeout: TimeInterval = 3) {
+        timeout: TimeInterval = 3)
+    {
         navigateToMedicationProfiles(app, timeout: timeout)
 
         // Tap the + button in the navigation bar to add a new profile

@@ -39,8 +39,7 @@ struct DoseHistoryViewModelFilterTests {
         let dose3 = self.createTestDose(
             timestamp: Date().addingTimeInterval(7200),
             amount: 1.5,
-            notes: "Afternoon injection"
-        )
+            notes: "Afternoon injection")
 
         [dose1, dose2, dose3].forEach { self.context.insert($0) }
         try self.context.save()
@@ -176,7 +175,7 @@ struct DoseHistoryViewModelFilterTests {
 
         // Then: Should show only thigh injections
         #expect(self.viewModel.filteredDoses.count == 2)
-        self.viewModel.filteredDoses.forEach { dose in
+        for dose in self.viewModel.filteredDoses {
             #expect(dose.site == "Thigh")
         }
     }
@@ -217,8 +216,7 @@ struct DoseHistoryViewModelFilterTests {
             timestamp: Date().addingTimeInterval(3600),
             amount: 2.0,
             site: "Arm",
-            notes: "Evening dose"
-        )
+            notes: "Evening dose")
 
         [dose1, dose2].forEach { self.context.insert($0) }
         try self.context.save()
@@ -251,8 +249,8 @@ struct DoseHistoryViewModelFilterTests {
         timestamp: Date,
         amount: Double,
         site: String = "Thigh",
-        notes: String = "Test dose"
-    ) -> Dose {
+        notes: String = "Test dose") -> Dose
+    {
         let medicationProfile = self.createTestMedicationProfile()
         self.context.insert(medicationProfile)
 
@@ -261,28 +259,25 @@ struct DoseHistoryViewModelFilterTests {
             timestamp: timestamp,
             site: site,
             notes: notes,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
     }
 
     private func createTestMedicationProfile(
         medication: Medication = .semaglutide,
-        currentDose: Double = 1.0
-    ) -> MedicationProfile {
+        currentDose: Double = 1.0) -> MedicationProfile
+    {
         MedicationProfile(
             genericName: medication.rawValue,
             brandName: "Test Brand",
             currentDose: currentDose,
             startDate: Date(),
-            medicationType: medication.rawValue
-        )
+            medicationType: medication.rawValue)
     }
 
     private func createTestUser(name: String = "Test User", email: String = "test@example.com") -> User {
         User(
             email: email,
             name: name,
-            appleUserId: "test-apple-id"
-        )
+            appleUserId: "test-apple-id")
     }
 }

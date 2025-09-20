@@ -39,8 +39,9 @@ class BiometricAuthManager: ObservableObject {
                 "🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)"
             )
             // In UI testing mode, just store in memory since UserDefaults can be unreliable
-            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
-                ProcessInfo.processInfo.arguments.contains("--ui-testing")
+            let isUITesting =
+                ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+                    || ProcessInfo.processInfo.arguments.contains("--ui-testing")
 
             if !isUITesting {
                 UserDefaults.standard.set(self.isBiometricEnabled, forKey: "biometricAuthEnabled")
@@ -53,8 +54,9 @@ class BiometricAuthManager: ObservableObject {
 
     init() {
         // Detect testing environments for predictable behavior
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
-            ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        let isUITesting =
+            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+                || ProcessInfo.processInfo.arguments.contains("--ui-testing")
         let isUnitTesting = NSClassFromString("XCTestCase") != nil
 
         if isUITesting || isUnitTesting {
@@ -70,8 +72,9 @@ class BiometricAuthManager: ObservableObject {
 
     private func checkBiometricAvailability() {
         // In testing mode, provide predictable behavior
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true" ||
-            ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        let isUITesting =
+            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+                || ProcessInfo.processInfo.arguments.contains("--ui-testing")
         let isUnitTesting = NSClassFromString("XCTestCase") != nil
 
         if isUITesting || isUnitTesting {
@@ -84,7 +87,8 @@ class BiometricAuthManager: ObservableObject {
         let context = LAContext()
         var error: NSError?
 
-        let isAvailable = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+        let isAvailable = context.canEvaluatePolicy(
+            .deviceOwnerAuthenticationWithBiometrics, error: &error)
 
         Task { @MainActor in
             self.isAvailable = isAvailable
@@ -112,7 +116,8 @@ class BiometricAuthManager: ObservableObject {
         let context = LAContext()
         var error: NSError?
 
-        let canEvaluate = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+        let canEvaluate = context.canEvaluatePolicy(
+            .deviceOwnerAuthenticationWithBiometrics, error: &error)
 
         if canEvaluate {
             let type = self.biometricTypeFrom(context: context)

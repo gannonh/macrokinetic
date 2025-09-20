@@ -7,14 +7,13 @@
 //
 
 import Foundation
-import SwiftData
 import Observation
+import SwiftData
 
 /// Service layer for dose management with integrated pharmacokinetics calculations
 /// Coordinates between dose persistence and PK engine updates for real-time dashboard updates
 @Observable
 final class DoseService {
-
     // MARK: - Dependencies
 
     private let pkEngine: PharmacokineticsEngine
@@ -59,12 +58,12 @@ final class DoseService {
         notes: String? = nil,
         skipped: Bool = false,
         imageData: Data? = nil,
-        context: ModelContext
-    ) async throws -> Dose {
+        context: ModelContext) async throws -> Dose
+    {
         print("🔍 DoseService.saveDose called with amount: \(amount), site: \(site ?? "nil"), notes: \(notes ?? "nil")")
 
-        isProcessingDose = true
-        lastError = nil
+        self.isProcessingDose = true
+        self.lastError = nil
 
         defer {
             isProcessingDose = false
@@ -72,13 +71,12 @@ final class DoseService {
 
         do {
             // Validate dose parameters
-            try validateDoseParameters(
+            try self.validateDoseParameters(
                 amount: amount,
                 timestamp: timestamp,
                 medicationProfile: medicationProfile,
                 site: site,
-                notes: notes
-            )
+                notes: notes)
 
             // Create new dose
             let newDose = Dose(
@@ -89,8 +87,7 @@ final class DoseService {
                 imageData: imageData,
                 skipped: skipped,
                 user: medicationProfile.user, // Explicitly set user from medication profile
-                medication: medicationProfile
-            )
+                medication: medicationProfile)
 
             print("🔍 DoseService: Creating dose with ID: \(newDose.id), site: \(newDose.site ?? "nil")")
 
@@ -102,10 +99,10 @@ final class DoseService {
             print("🔍 DoseService: Saved context successfully")
 
             // Trigger PK engine recalculation
-            await triggerPKRecalculation(for: medicationProfile)
+            await self.triggerPKRecalculation(for: medicationProfile)
 
             // Update last operation timestamp for dashboard refresh
-            lastDoseUpdateTime = Date()
+            self.lastDoseUpdateTime = Date()
 
             return newDose
 
@@ -114,7 +111,7 @@ final class DoseService {
             throw error
         } catch {
             let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
-            lastError = wrappedError
+            self.lastError = wrappedError
             throw wrappedError
         }
     }
@@ -128,8 +125,8 @@ final class DoseService {
     /// - Throws: DoseServiceError for validation or persistence failures
     @MainActor
     func updateDose(with editData: DoseEditData, context: ModelContext) async throws {
-        isProcessingDose = true
-        lastError = nil
+        self.isProcessingDose = true
+        self.lastError = nil
 
         defer {
             isProcessingDose = false
@@ -149,13 +146,12 @@ final class DoseService {
             }
 
             // Validate updated parameters
-            try validateDoseParameters(
+            try self.validateDoseParameters(
                 amount: editData.amount,
                 timestamp: editData.timestamp,
                 medicationProfile: editData.medicationProfile,
                 site: editData.site,
-                notes: editData.notes
-            )
+                notes: editData.notes)
 
             // Update dose properties
             existingDose.amount = editData.amount
@@ -174,17 +170,17 @@ final class DoseService {
             try context.save()
 
             // Trigger PK recalculation for both old and new medication profiles
-            await triggerPKRecalculation(for: editData.medicationProfile)
+            await self.triggerPKRecalculation(for: editData.medicationProfile)
 
             // Update last operation timestamp
-            lastDoseUpdateTime = Date()
+            self.lastDoseUpdateTime = Date()
 
         } catch let error as DoseServiceError {
             lastError = error
             throw error
         } catch {
             let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
-            lastError = wrappedError
+            self.lastError = wrappedError
             throw wrappedError
         }
     }
@@ -198,8 +194,8 @@ final class DoseService {
     /// - Throws: DoseServiceError for persistence failures
     @MainActor
     func deleteDose(with doseId: UUID, context: ModelContext) async throws {
-        isProcessingDose = true
-        lastError = nil
+        self.isProcessingDose = true
+        self.lastError = nil
 
         defer {
             isProcessingDose = false
@@ -225,18 +221,18 @@ final class DoseService {
 
             // Trigger PK recalculation if medication profile exists
             if let profile = medicationProfile {
-                await triggerPKRecalculation(for: profile)
+                await self.triggerPKRecalculation(for: profile)
             }
 
             // Update last operation timestamp
-            lastDoseUpdateTime = Date()
+            self.lastDoseUpdateTime = Date()
 
         } catch let error as DoseServiceError {
             lastError = error
             throw error
         } catch {
             let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
-            lastError = wrappedError
+            self.lastError = wrappedError
             throw wrappedError
         }
     }
@@ -247,7 +243,7 @@ final class DoseService {
     /// This method can be called manually to refresh calculations without dose changes
     /// - Parameter medicationProfile: Profile to recalculate
     @MainActor
-    private func triggerPKRecalculation(for medicationProfile: MedicationProfile) async {
+    private func triggerPKRecalculation(for _: MedicationProfile) async {
         // Ensure PK engine has latest dose data
         // The engine will automatically use the updated doses when calculations are requested
 
@@ -256,7 +252,7 @@ final class DoseService {
         // Dashboard components will request fresh calculations when they update
 
         // Update the timestamp to signal dashboard components to refresh
-        lastDoseUpdateTime = Date()
+        self.lastDoseUpdateTime = Date()
     }
 
     // MARK: - Validation
@@ -274,8 +270,8 @@ final class DoseService {
         timestamp: Date,
         medicationProfile: MedicationProfile,
         site: String? = nil,
-        notes: String? = nil
-    ) throws {
+        notes: String? = nil) throws
+    {
         // Validate dose amount
         guard amount >= 0 else {
             throw DoseServiceError.invalidDoseAmount("Dose amount cannot be negative")
@@ -308,11 +304,11 @@ final class DoseService {
             let tempDose = Dose(amount: amount, timestamp: timestamp, site: site, notes: notes)
             let dosesForValidation = doses + [tempDose]
 
-            if !pkEngine.validateCalculationInputs(doses: dosesForValidation, medication: medication) {
+            if !self.pkEngine.validateCalculationInputs(doses: dosesForValidation, medication: medication) {
                 if let validationError = pkEngine.getValidationError(
                     doses: dosesForValidation,
-                    medication: medication
-                ) {
+                    medication: medication)
+                {
                     throw DoseServiceError.pkValidationFailure(validationError)
                 } else {
                     throw DoseServiceError.pkValidationFailure(
@@ -337,17 +333,17 @@ enum DoseServiceError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .invalidDoseAmount(let message):
+        case let .invalidDoseAmount(message):
             return "Invalid dose amount: \(message)"
-        case .invalidTimestamp(let message):
+        case let .invalidTimestamp(message):
             return "Invalid dose timing: \(message)"
-        case .invalidMedicationProfile(let message):
+        case let .invalidMedicationProfile(message):
             return "Invalid medication profile: \(message)"
         case .doseNotFound:
             return "Dose not found"
-        case .pkValidationFailure(let message):
+        case let .pkValidationFailure(message):
             return "Pharmacokinetic validation failed: \(message)"
-        case .persistenceFailure(let error):
+        case let .persistenceFailure(error):
             return "Failed to save dose: \(error.localizedDescription)"
         }
     }
@@ -356,15 +352,15 @@ enum DoseServiceError: LocalizedError, Equatable {
 
     static func == (lhs: DoseServiceError, rhs: DoseServiceError) -> Bool {
         switch (lhs, rhs) {
-        case (.invalidDoseAmount(let lhsMessage), .invalidDoseAmount(let rhsMessage)):
+        case let (.invalidDoseAmount(lhsMessage), .invalidDoseAmount(rhsMessage)):
             return lhsMessage == rhsMessage
-        case (.invalidTimestamp(let lhsMessage), .invalidTimestamp(let rhsMessage)):
+        case let (.invalidTimestamp(lhsMessage), .invalidTimestamp(rhsMessage)):
             return lhsMessage == rhsMessage
-        case (.invalidMedicationProfile(let lhsMessage), .invalidMedicationProfile(let rhsMessage)):
+        case let (.invalidMedicationProfile(lhsMessage), .invalidMedicationProfile(rhsMessage)):
             return lhsMessage == rhsMessage
         case (.doseNotFound, .doseNotFound):
             return true
-        case (.pkValidationFailure(let lhsMessage), .pkValidationFailure(let rhsMessage)):
+        case let (.pkValidationFailure(lhsMessage), .pkValidationFailure(rhsMessage)):
             return lhsMessage == rhsMessage
         case (.persistenceFailure, .persistenceFailure):
             return true // Simplified comparison for underlying errors

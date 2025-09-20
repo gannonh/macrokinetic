@@ -31,8 +31,8 @@ struct QuickDoseEntry: View {
 
     init(
         onDoseSaved: (() -> Void)? = nil,
-        onCalculationsUpdated: (() -> Void)? = nil
-    ) {
+        onCalculationsUpdated: (() -> Void)? = nil)
+    {
         self.onDoseSaved = onDoseSaved
         self.onCalculationsUpdated = onCalculationsUpdated
 
@@ -44,10 +44,10 @@ struct QuickDoseEntry: View {
 
     var body: some View {
         Button(action: {
-            showingQuickDoseSheet = true
+            self.showingQuickDoseSheet = true
         }, label: {
             HStack {
-                if isProcessing {
+                if self.isProcessing {
                     ProgressView()
                         .scaleEffect(0.8)
                 } else {
@@ -58,20 +58,19 @@ struct QuickDoseEntry: View {
             }
         })
         .buttonStyle(.borderedProminent)
-        .disabled(isProcessing)
+        .disabled(self.isProcessing)
         .accessibilityIdentifier("quick-dose-entry-button")
         .accessibilityLabel("Quick add dose with PK calculations")
-        .sheet(isPresented: $showingQuickDoseSheet) {
+        .sheet(isPresented: self.$showingQuickDoseSheet) {
             QuickDoseEntrySheet(
-                doseService: doseService,
-                onDoseSaved: handleDoseSaved,
+                doseService: self.doseService,
+                onDoseSaved: self.handleDoseSaved,
                 onCancel: {
-                    showingQuickDoseSheet = false
-                }
-            )
+                    self.showingQuickDoseSheet = false
+                })
         }
         .overlay(alignment: .top) {
-            if showingSuccessMessage {
+            if self.showingSuccessMessage {
                 Text("Dose logged successfully!")
                     .font(.caption)
                     .foregroundColor(.white)
@@ -86,14 +85,14 @@ struct QuickDoseEntry: View {
                         // Auto-dismiss success message after 2 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             withAnimation {
-                                showingSuccessMessage = false
+                                self.showingSuccessMessage = false
                             }
                         }
                     }
             }
         }
-        .onChange(of: doseService.isProcessingDose) { _, processing in
-            isProcessing = processing
+        .onChange(of: self.doseService.isProcessingDose) { _, processing in
+            self.isProcessing = processing
         }
     }
 
@@ -101,11 +100,11 @@ struct QuickDoseEntry: View {
 
     private func handleDoseSaved() {
         // Close sheet
-        showingQuickDoseSheet = false
+        self.showingQuickDoseSheet = false
 
         // Show success message
         withAnimation {
-            showingSuccessMessage = true
+            self.showingSuccessMessage = true
         }
 
         // Trigger haptic feedback
@@ -113,8 +112,8 @@ struct QuickDoseEntry: View {
         impactFeedback.impactOccurred()
 
         // Notify parent components
-        onDoseSaved?()
-        onCalculationsUpdated?()
+        self.onDoseSaved?()
+        self.onCalculationsUpdated?()
     }
 }
 
@@ -139,8 +138,8 @@ private struct QuickDoseEntrySheet: View {
             Form {
                 Section {
                     // Medication Selection
-                    Picker("Medication", selection: $viewModel.selectedMedicationProfile) {
-                        ForEach(viewModel.medicationProfiles, id: \.id) { profile in
+                    Picker("Medication", selection: self.$viewModel.selectedMedicationProfile) {
+                        ForEach(self.viewModel.medicationProfiles, id: \.id) { profile in
                             Text("\(profile.brandName) (\(profile.currentDose, specifier: "%.2f") mg)")
                                 .tag(profile as MedicationProfile?)
                         }
@@ -151,14 +150,14 @@ private struct QuickDoseEntrySheet: View {
                     HStack {
                         Text("Dose Amount")
                         Spacer()
-                        Text("\(viewModel.doseAmount, specifier: "%.2f") mg")
+                        Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("quick-dose-entry-amount")
                     }
 
                     // Injection Site Selection
-                    Picker("Injection Site", selection: $viewModel.selectedInjectionSite) {
-                        ForEach(viewModel.recommendedInjectionSites, id: \.self) { site in
+                    Picker("Injection Site", selection: self.$viewModel.selectedInjectionSite) {
+                        ForEach(self.viewModel.recommendedInjectionSites, id: \.self) { site in
                             Text(site).tag(site)
                         }
                     }
@@ -168,7 +167,7 @@ private struct QuickDoseEntrySheet: View {
                     HStack {
                         Text("Time")
                         Spacer()
-                        Text(viewModel.doseTime.formatted(date: .omitted, time: .shortened))
+                        Text(self.viewModel.doseTime.formatted(date: .omitted, time: .shortened))
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("quick-dose-entry-time")
                     }
@@ -190,7 +189,7 @@ private struct QuickDoseEntrySheet: View {
 
                 // Optional Notes Section
                 Section {
-                    TextField("Notes (Optional)", text: $viewModel.notes, axis: .vertical)
+                    TextField("Notes (Optional)", text: self.$viewModel.notes, axis: .vertical)
                         .lineLimit(2)
                         .accessibilityIdentifier("quick-dose-entry-notes")
                 } header: {
@@ -200,7 +199,7 @@ private struct QuickDoseEntrySheet: View {
                 // PK Integration Info Section
                 if let selectedProfile = viewModel.selectedMedicationProfile {
                     Section {
-                        pkIntegrationInfo(for: selectedProfile)
+                        self.pkIntegrationInfo(for: selectedProfile)
                     } header: {
                         Text("Pharmacokinetics Impact")
                     }
@@ -211,7 +210,7 @@ private struct QuickDoseEntrySheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        onCancel()
+                        self.onCancel()
                     }
                     .accessibilityIdentifier("quick-dose-entry-cancel")
                 }
@@ -219,15 +218,15 @@ private struct QuickDoseEntrySheet: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         Task {
-                            await saveDoseWithPKIntegration()
+                            await self.saveDoseWithPKIntegration()
                         }
                     }
-                    .disabled(!canSaveDose || isSubmitting)
+                    .disabled(!self.canSaveDose || self.isSubmitting)
                     .accessibilityIdentifier("quick-dose-entry-save")
                 }
             }
             .onAppear {
-                viewModel.loadSmartDefaults(context: modelContext)
+                self.viewModel.loadSmartDefaults(context: self.modelContext)
             }
         }
         .accessibilityIdentifier("quick-dose-entry-sheet")
@@ -262,7 +261,7 @@ private struct QuickDoseEntrySheet: View {
     // MARK: - Computed Properties
 
     private var canSaveDose: Bool {
-        viewModel.canSaveDose && !doseService.isProcessingDose
+        self.viewModel.canSaveDose && !self.doseService.isProcessingDose
     }
 
     // MARK: - Dose Saving with PK Integration
@@ -271,31 +270,30 @@ private struct QuickDoseEntrySheet: View {
     private func saveDoseWithPKIntegration() async {
         guard let profile = viewModel.selectedMedicationProfile else { return }
 
-        isSubmitting = true
+        self.isSubmitting = true
 
         do {
             // Save dose through dose service (which handles PK integration)
-            _ = try await doseService.saveDose(
-                amount: viewModel.doseAmount,
-                timestamp: viewModel.doseTime,
+            _ = try await self.doseService.saveDose(
+                amount: self.viewModel.doseAmount,
+                timestamp: self.viewModel.doseTime,
                 medicationProfile: profile,
-                site: viewModel.selectedInjectionSite.isEmpty ? nil : viewModel.selectedInjectionSite,
-                notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
-                context: modelContext
-            )
+                site: self.viewModel.selectedInjectionSite.isEmpty ? nil : self.viewModel.selectedInjectionSite,
+                notes: self.viewModel.notes.isEmpty ? nil : self.viewModel.notes,
+                context: self.modelContext)
 
             // Reset form for next use
-            viewModel.resetForm()
+            self.viewModel.resetForm()
 
             // Notify success
-            onDoseSaved()
+            self.onDoseSaved()
 
         } catch {
             // Error is handled by doseService and displayed in UI
             print("Error saving dose with PK integration: \(error)")
         }
 
-        isSubmitting = false
+        self.isSubmitting = false
     }
 }
 
@@ -304,7 +302,6 @@ private struct QuickDoseEntrySheet: View {
 #Preview {
     QuickDoseEntry(
         onDoseSaved: { print("Dose saved") },
-        onCalculationsUpdated: { print("Calculations updated") }
-    )
-    .modelContainer(DataController.preview.container)
+        onCalculationsUpdated: { print("Calculations updated") })
+        .modelContainer(DataController.preview.container)
 }

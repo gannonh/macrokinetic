@@ -36,18 +36,17 @@ struct ConcentrationCardTests {
     @Test("ConcentrationCard displays current concentration correctly")
     func concentrationCardDisplaysCurrentConcentration() async throws {
         // Given: User with medication profile and recent dose
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user, medication: .semaglutide)
-        let recentDose = createTestDose(
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
+        let recentDose = self.createTestDose(
             medicationProfile: medicationProfile,
             timestamp: Date().addingTimeInterval(-3600), // 1 hour ago
-            amount: 1.0
-        )
+            amount: 1.0)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        context.insert(recentDose)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        self.context.insert(recentDose)
+        try self.context.save()
 
         // Directly calculate using the engine's underlying method
         // (bypass relationship issues in test environment)
@@ -55,11 +54,10 @@ struct ConcentrationCardTests {
             throw TestError.invalidMedicationProfile("Missing medication")
         }
 
-        let currentConcentration = pkEngine.calculateConcentration(
+        let currentConcentration = self.pkEngine.calculateConcentration(
             from: [recentDose],
             medication: medication,
-            at: Date()
-        )
+            at: Date())
 
         // Then: Concentration should be positive (dose has effect)
         #expect(currentConcentration > 0.0, "Current concentration should be positive after recent dose")
@@ -91,18 +89,17 @@ struct ConcentrationCardTests {
     @Test("ConcentrationCard handles zero concentration gracefully")
     func concentrationCardHandlesZeroConcentration() async throws {
         // Given: User with no doses
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user, medication: .semaglutide)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // When: ConcentrationCard calculates concentration
-        let currentConcentration = pkEngine.calculateCurrentConcentration(
+        let currentConcentration = self.pkEngine.calculateCurrentConcentration(
             for: user,
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
 
         // Then: Should return 0.0 for no doses
         #expect(currentConcentration == 0.0, "No doses should result in zero concentration")
@@ -111,21 +108,20 @@ struct ConcentrationCardTests {
     @Test("ConcentrationCard calculates peak level timing correctly")
     func concentrationCardCalculatesPeakTiming() async throws {
         // Given: Dose with known medication (semaglutide peaks at 4-16 hours)
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user, medication: .semaglutide)
-        let dose = createTestDose(
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
+        let dose = self.createTestDose(
             medicationProfile: medicationProfile,
             timestamp: Date(),
-            amount: 1.0
-        )
+            amount: 1.0)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        context.insert(dose)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        self.context.insert(dose)
+        try self.context.save()
 
         // When: Calculating peak level
-        let peakResult = pkEngine.calculatePeakLevel(for: dose, medication: medicationProfile)
+        let peakResult = self.pkEngine.calculatePeakLevel(for: dose, medication: medicationProfile)
 
         // Then: Peak time should be after dose time
         #expect(peakResult.time > dose.timestamp, "Peak time should be after dose timestamp")
@@ -133,34 +129,34 @@ struct ConcentrationCardTests {
         // And: Peak level should account for bioavailability
         let expectedPeakLevel = dose.amount * Medication.semaglutide.subcutaneousBioavailability
         #expect(abs(peakResult.level - expectedPeakLevel) < 0.001,
-               "Peak level should account for bioavailability")
+                "Peak level should account for bioavailability")
 
         // And: Peak time should match medication's peak time (1 hour for semaglutide)
         let hoursUntilPeak = peakResult.time.timeIntervalSince(dose.timestamp) / 3600
         #expect(abs(hoursUntilPeak - Medication.semaglutide.peakTimeHours) < 0.001,
-               "Semaglutide peak should be \(Medication.semaglutide.peakTimeHours) hours after injection")
+                "Semaglutide peak should be \(Medication.semaglutide.peakTimeHours) hours after injection")
     }
 
     @Test("ConcentrationCard calculates trough level for next dose")
     func concentrationCardCalculatesTroughLevel() async throws {
         // Given: User with regular dosing pattern
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user, medication: .semaglutide)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
 
         // Add multiple doses to establish pattern
         let now = Date()
-        let dose1 = createTestDose(medicationProfile: medicationProfile,
-                                   timestamp: now.addingTimeInterval(-7 * 24 * 3600),
-                                   amount: 1.0)
-        let dose2 = createTestDose(medicationProfile: medicationProfile,
-                                   timestamp: now,
-                                   amount: 1.0)
+        let dose1 = self.createTestDose(medicationProfile: medicationProfile,
+                                        timestamp: now.addingTimeInterval(-7 * 24 * 3600),
+                                        amount: 1.0)
+        let dose2 = self.createTestDose(medicationProfile: medicationProfile,
+                                        timestamp: now,
+                                        amount: 1.0)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        context.insert(dose1)
-        context.insert(dose2)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        self.context.insert(dose1)
+        self.context.insert(dose2)
+        try self.context.save()
 
         // Manually calculate trough using engine's underlying method
         guard let medication = medicationProfile.medication else {
@@ -171,11 +167,10 @@ struct ConcentrationCardTests {
         let nextDoseTime = dose2.timestamp.addingTimeInterval(7 * 24 * 3600)
         let troughTime = nextDoseTime.addingTimeInterval(-3600) // 1 hour before next dose
 
-        let troughLevel = pkEngine.calculateConcentration(
+        let troughLevel = self.pkEngine.calculateConcentration(
             from: [dose1, dose2],
             medication: medication,
-            at: troughTime
-        )
+            at: troughTime)
 
         let troughResult = (level: troughLevel, time: troughTime)
 
@@ -186,50 +181,48 @@ struct ConcentrationCardTests {
         // And: Trough level should be positive but lower than current
         #expect(troughResult.level >= 0.0, "Trough level should not be negative")
 
-        let currentLevel = pkEngine.calculateConcentration(from: [dose1, dose2], medication: medication, at: now)
+        let currentLevel = self.pkEngine.calculateConcentration(from: [dose1, dose2], medication: medication, at: now)
         #expect(troughResult.level <= currentLevel, "Trough should be lower than current level")
     }
 
     @Test("ConcentrationCard calculates steady state progress")
     func concentrationCardCalculatesSteadyStateProgress() async throws {
         // Given: User with truly new medication profile (started today)
-        let user = createTestUser()
+        let user = self.createTestUser()
         let newMedicationProfile = MedicationProfile(
             genericName: Medication.semaglutide.displayName,
             brandName: "Test Brand",
             currentDose: 1.0,
             startDate: Date(), // Started today (truly new)
-            medicationType: Medication.semaglutide.rawValue
-        )
+            medicationType: Medication.semaglutide.rawValue)
         newMedicationProfile.user = user
 
-        context.insert(user)
-        context.insert(newMedicationProfile)
+        self.context.insert(user)
+        self.context.insert(newMedicationProfile)
 
         // Test with no doses (brand new profile) - returns percentage
-        var steadyStateProgress = pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
+        var steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
         #expect(steadyStateProgress < 5.0, "New medication should have minimal steady state progress (< 5%)")
 
         // Add doses over time to simulate progress
         let testTime = Date()
-        for week in 0..<8 { // 8 weeks of doses
-            let dose = createTestDose(
+        for week in 0 ..< 8 { // 8 weeks of doses
+            let dose = self.createTestDose(
                 medicationProfile: newMedicationProfile,
                 timestamp: testTime.addingTimeInterval(TimeInterval(-week * 7 * 24 * 3600)),
-                amount: 1.0
-            )
-            context.insert(dose)
+                amount: 1.0)
+            self.context.insert(dose)
         }
         // Update medication start date to match when actual dosing began (8 weeks ago)
         newMedicationProfile.startDate = testTime.addingTimeInterval(-7 * 7 * 24 * 3600) // 8 weeks ago
-        try context.save()
+        try self.context.save()
 
         // When: Calculating steady state progress
-        steadyStateProgress = pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
+        steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
 
         // Then: Progress should be between 0 and 100 (percentage)
         #expect(steadyStateProgress >= 0.0 && steadyStateProgress <= 100.0,
-               "Steady state progress should be between 0 and 100%")
+                "Steady state progress should be between 0 and 100%")
 
         // And: 8 weeks should show significant progress (semaglutide ~5 half-lives to steady state)
         #expect(steadyStateProgress > 50.0, "8 weeks should show substantial steady state progress")
@@ -238,37 +231,36 @@ struct ConcentrationCardTests {
     @Test("ConcentrationCard handles multiple medications independently")
     func concentrationCardHandlesMultipleMedications() async throws {
         // Given: User with two different medications
-        let user = createTestUser()
-        let semaglutideProfile = createTestMedicationProfile(user: user, medication: .semaglutide)
-        let tirzepatideProfile = createTestMedicationProfile(user: user, medication: .tirzepatide)
+        let user = self.createTestUser()
+        let semaglutideProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
+        let tirzepatideProfile = self.createTestMedicationProfile(user: user, medication: .tirzepatide)
 
         // Add doses to each medication
-        let semaglutideDose = createTestDose(medicationProfile: semaglutideProfile, amount: 1.0)
-        let tirzepatideDose = createTestDose(medicationProfile: tirzepatideProfile, amount: 2.5)
+        let semaglutideDose = self.createTestDose(medicationProfile: semaglutideProfile, amount: 1.0)
+        let tirzepatideDose = self.createTestDose(medicationProfile: tirzepatideProfile, amount: 2.5)
 
-        context.insert(user)
-        context.insert(semaglutideProfile)
-        context.insert(tirzepatideProfile)
-        context.insert(semaglutideDose)
-        context.insert(tirzepatideDose)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(semaglutideProfile)
+        self.context.insert(tirzepatideProfile)
+        self.context.insert(semaglutideDose)
+        self.context.insert(tirzepatideDose)
+        try self.context.save()
 
         // When: Calculating concentrations using direct method
         guard let semaglutideMed = semaglutideProfile.medication,
-              let tirzepatideMed = tirzepatideProfile.medication else {
+              let tirzepatideMed = tirzepatideProfile.medication
+        else {
             throw TestError.invalidMedicationProfile("Missing medication")
         }
 
-        let semaglutideConcentration = pkEngine.calculateConcentration(
+        let semaglutideConcentration = self.pkEngine.calculateConcentration(
             from: [semaglutideDose],
             medication: semaglutideMed,
-            at: Date()
-        )
-        let tirzepatideConcentration = pkEngine.calculateConcentration(
+            at: Date())
+        let tirzepatideConcentration = self.pkEngine.calculateConcentration(
             from: [tirzepatideDose],
             medication: tirzepatideMed,
-            at: Date()
-        )
+            at: Date())
 
         // Then: Concentrations should be independent
         #expect(semaglutideConcentration > 0.0, "Semaglutide should have positive concentration")
@@ -277,20 +269,20 @@ struct ConcentrationCardTests {
         // And: Different medications should have different concentration patterns
         // (due to different half-lives and bioavailability)
         #expect(semaglutideConcentration != tirzepatideConcentration,
-               "Different medications should have different concentrations")
+                "Different medications should have different concentrations")
     }
 
     @Test("ConcentrationCard projects future concentration levels")
     func concentrationCardProjectsFutureLevels() async throws {
         // Given: User with current medication and doses
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user, medication: .semaglutide)
-        let dose = createTestDose(medicationProfile: medicationProfile, amount: 1.0)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
+        let dose = self.createTestDose(medicationProfile: medicationProfile, amount: 1.0)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        context.insert(dose)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        self.context.insert(dose)
+        try self.context.save()
 
         // Manually project future levels using engine's underlying method
         guard let medication = medicationProfile.medication else {
@@ -305,11 +297,10 @@ struct ConcentrationCardTests {
         // Sample every 6 hours for 7 days
         var currentTime = now
         while currentTime <= endTime {
-            let concentration = pkEngine.calculateConcentration(
+            let concentration = self.pkEngine.calculateConcentration(
                 from: [dose],
                 medication: medication,
-                at: currentTime
-            )
+                at: currentTime)
             futureLevels.append(ConcentrationPoint(date: currentTime, concentration: concentration))
             currentTime = currentTime.addingTimeInterval(6 * 3600) // Sample every 6 hours
         }
@@ -321,9 +312,10 @@ struct ConcentrationCardTests {
         let sortedLevels = futureLevels.sorted { $0.date < $1.date }
         if sortedLevels.count >= 2,
            let firstLevel = sortedLevels.first,
-           let lastLevel = sortedLevels.last {
+           let lastLevel = sortedLevels.last
+        {
             #expect(lastLevel.concentration < firstLevel.concentration,
-                   "Concentration should decay over time without new doses")
+                    "Concentration should decay over time without new doses")
         }
 
         // And: All dates should be in the future or at current time
@@ -338,28 +330,28 @@ struct ConcentrationCardTests {
     @Test("ConcentrationCard determines display state based on data availability")
     func concentrationCardDeterminesDisplayState() async throws {
         // Test empty state
-        let user = createTestUser()
-        let medicationProfile = createTestMedicationProfile(user: user, medication: .semaglutide)
+        let user = self.createTestUser()
+        let medicationProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
 
-        context.insert(user)
-        context.insert(medicationProfile)
-        try context.save()
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
 
         // When: No doses available
         guard let medication = medicationProfile.medication else {
             throw TestError.invalidMedicationProfile("Missing medication")
         }
-        let emptyConcentration = pkEngine.calculateConcentration(from: [], medication: medication, at: Date())
+        let emptyConcentration = self.pkEngine.calculateConcentration(from: [], medication: medication, at: Date())
 
         // Then: Should handle empty state
         #expect(emptyConcentration == 0.0, "Empty state should show zero concentration")
 
         // When: Adding dose data
-        let dose = createTestDose(medicationProfile: medicationProfile, amount: 1.0)
-        context.insert(dose)
-        try context.save()
+        let dose = self.createTestDose(medicationProfile: medicationProfile, amount: 1.0)
+        self.context.insert(dose)
+        try self.context.save()
 
-        let activeConcentration = pkEngine.calculateConcentration(from: [dose], medication: medication, at: Date())
+        let activeConcentration = self.pkEngine.calculateConcentration(from: [dose], medication: medication, at: Date())
 
         // Then: Should show active state
         #expect(activeConcentration > 0.0, "Active state should show positive concentration")
@@ -377,11 +369,11 @@ struct ConcentrationCardTests {
 
         // Then: Should provide meaningful accessibility description
         #expect(accessibilityLabel.contains(testMedication.displayName),
-               "Accessibility label should include medication name")
+                "Accessibility label should include medication name")
         #expect(accessibilityLabel.contains("1.23"),
-               "Accessibility label should include formatted concentration")
+                "Accessibility label should include formatted concentration")
         #expect(accessibilityLabel.contains("concentration"),
-               "Accessibility label should include 'concentration' for context")
+                "Accessibility label should include 'concentration' for context")
     }
 
     // MARK: - Helper Methods
@@ -390,8 +382,7 @@ struct ConcentrationCardTests {
         User(
             email: "test@example.com",
             name: "Test User",
-            appleUserId: "test-user-\(UUID().uuidString)"
-        )
+            appleUserId: "test-user-\(UUID().uuidString)")
     }
 
     private func createTestMedicationProfile(user: User, medication: Medication) -> MedicationProfile {
@@ -400,8 +391,7 @@ struct ConcentrationCardTests {
             brandName: "Test Brand",
             currentDose: 1.0,
             startDate: Date().addingTimeInterval(-30 * 24 * 3600), // 30 days ago
-            medicationType: medication.rawValue
-        )
+            medicationType: medication.rawValue)
         profile.user = user
         return profile
     }
@@ -409,14 +399,13 @@ struct ConcentrationCardTests {
     private func createTestDose(
         medicationProfile: MedicationProfile,
         timestamp: Date = Date(),
-        amount: Double
-    ) -> Dose {
+        amount: Double) -> Dose
+    {
         Dose(
             amount: amount,
             timestamp: timestamp,
             site: "Abdomen",
             notes: "Test dose",
-            medication: medicationProfile
-        )
+            medication: medicationProfile)
     }
 }

@@ -20,12 +20,12 @@ struct ConcentrationDisplay: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             // Concentration value
-            Text(formattedConcentration)
-                .font(isCurrentLevel ? DesignTokens.Typography.headline : DesignTokens.Typography.body)
-                .fontWeight(isCurrentLevel ? .bold : .medium)
-                .foregroundColor(concentrationColor)
+            Text(self.formattedConcentration)
+                .font(self.isCurrentLevel ? DesignTokens.Typography.headline : DesignTokens.Typography.body)
+                .fontWeight(self.isCurrentLevel ? .bold : .medium)
+                .foregroundColor(self.concentrationColor)
                 .accessibilityIdentifier(
-                    isCurrentLevel ? "current-concentration-value" : "projected-concentration-value"
+                    self.isCurrentLevel ? "current-concentration-value" : "projected-concentration-value"
                 )
 
             // Units
@@ -35,25 +35,25 @@ struct ConcentrationDisplay: View {
                 .accessibilityIdentifier("concentration-unit")
 
             // Visual level indicator (only for current level)
-            if isCurrentLevel {
-                levelIndicator
+            if self.isCurrentLevel {
+                self.levelIndicator
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityDescription)
-        .accessibilityValue(accessibilityValue)
+        .accessibilityLabel(self.accessibilityDescription)
+        .accessibilityValue(self.accessibilityValue)
     }
 
     // MARK: - Computed Properties
 
     private var formattedConcentration: String {
-        String(format: "%.2f", concentration)
+        String(format: "%.2f", self.concentration)
     }
 
     private var concentrationColor: Color {
-        if concentration <= lowThreshold {
+        if self.concentration <= self.lowThreshold {
             return DesignTokens.Colors.warning
-        } else if concentration >= highThreshold {
+        } else if self.concentration >= self.highThreshold {
             return DesignTokens.Colors.danger
         } else {
             return .primary
@@ -62,12 +62,12 @@ struct ConcentrationDisplay: View {
 
     private var levelIndicator: some View {
         Group {
-            if concentration <= lowThreshold {
+            if self.concentration <= self.lowThreshold {
                 Image(systemName: "arrow.down.circle.fill")
                     .foregroundColor(DesignTokens.Colors.warning)
                     .font(.caption)
                     .accessibilityHidden(true)
-            } else if concentration >= highThreshold {
+            } else if self.concentration >= self.highThreshold {
                 Image(systemName: "arrow.up.circle.fill")
                     .foregroundColor(DesignTokens.Colors.danger)
                     .font(.caption)
@@ -82,7 +82,7 @@ struct ConcentrationDisplay: View {
     }
 
     private var accessibilityDescription: String {
-        let levelType = isCurrentLevel ? "Current" : "Projected"
+        let levelType = self.isCurrentLevel ? "Current" : "Projected"
         return "\(levelType) concentration level"
     }
 
@@ -90,9 +90,9 @@ struct ConcentrationDisplay: View {
         let formattedValue = "\(formattedConcentration) units"
         let levelDescription: String
 
-        if concentration <= lowThreshold {
+        if self.concentration <= self.lowThreshold {
             levelDescription = "Low level"
-        } else if concentration >= highThreshold {
+        } else if self.concentration >= self.highThreshold {
             levelDescription = "High level"
         } else {
             levelDescription = "Normal level"
@@ -128,7 +128,7 @@ extension ConcentrationDisplay {
                 ConcentrationDisplay(concentration: 0.05, isCurrentLevel: true) // Low
                 ConcentrationDisplay(concentration: 1.25, isCurrentLevel: true) // Normal
                 ConcentrationDisplay(concentration: 4.75, isCurrentLevel: true) // High
-                ConcentrationDisplay(concentration: 0.0, isCurrentLevel: true)  // Zero
+                ConcentrationDisplay(concentration: 0.0, isCurrentLevel: true) // Zero
             }
         }
 

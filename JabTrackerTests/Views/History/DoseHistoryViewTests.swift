@@ -78,8 +78,7 @@ struct DoseHistoryViewTests {
             user: user,
             medication: medication,
             amount: 0.5,
-            timestamp: Date().addingTimeInterval(-86400)
-        )
+            timestamp: Date().addingTimeInterval(-86400))
 
         let viewModel = await DoseHistoryViewModel()
 
@@ -112,20 +111,17 @@ struct DoseHistoryViewTests {
             context: context,
             user: user,
             medication: medication,
-            notes: "Morning injection"
-        )
+            notes: "Morning injection")
         let dose2 = try self.createTestDose(
             context: context,
             user: user,
             medication: medication,
-            notes: "Evening dose"
-        )
+            notes: "Evening dose")
         let dose3 = try self.createTestDose(
             context: context,
             user: user,
             medication: medication,
-            notes: "Weekly medication"
-        )
+            notes: "Weekly medication")
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -181,8 +177,7 @@ struct DoseHistoryViewTests {
             user: user,
             medication: medication1,
             site: "Arm",
-            skipped: true
-        )
+            skipped: true)
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -286,8 +281,7 @@ struct DoseHistoryViewTests {
             context: context,
             user: user,
             medication: medication,
-            timestamp: today.addingTimeInterval(-3600)
-        )
+            timestamp: today.addingTimeInterval(-3600))
         let dose3 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: yesterday)
         let dose4 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: twoDaysAgo)
 

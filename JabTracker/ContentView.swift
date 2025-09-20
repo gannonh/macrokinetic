@@ -106,9 +106,9 @@ struct DashboardView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     if let currentUser = users.first {
-                        concentrationSection(for: currentUser)
+                        self.concentrationSection(for: currentUser)
                     } else {
-                        noUserSection
+                        self.noUserSection
                     }
                 }
                 .padding()
@@ -124,15 +124,15 @@ struct DashboardView: View {
     @ViewBuilder
     private func concentrationSection(for user: User) -> some View {
         if let medicationProfiles = user.medicationProfiles,
-           !medicationProfiles.isEmpty {
+           !medicationProfiles.isEmpty
+        {
             ConcentrationList(
                 user: user,
                 medicationProfiles: medicationProfiles,
-                pkEngine: pkEngine,
-                doseService: doseService
-            )
+                pkEngine: self.pkEngine,
+                doseService: self.doseService)
         } else {
-            noMedicationSection
+            self.noMedicationSection
         }
     }
 
@@ -188,15 +188,14 @@ struct ConcentrationList: View {
     let doseService: DoseService
 
     var body: some View {
-        let sortedProfiles = medicationProfiles.sorted(by: { $0.startDate > $1.startDate })
+        let sortedProfiles = self.medicationProfiles.sorted(by: { $0.startDate > $1.startDate })
         ForEach(Array(sortedProfiles.enumerated()), id: \.element.id) { _, profile in
             ConcentrationCard(
-                user: user,
+                user: self.user,
                 medicationProfile: profile,
-                pkEngine: pkEngine,
-                doseService: doseService
-            )
-            .accessibilityIdentifier("concentration-card-\(profile.genericName)")
+                pkEngine: self.pkEngine,
+                doseService: self.doseService)
+                .accessibilityIdentifier("concentration-card-\(profile.genericName)")
         }
     }
 }

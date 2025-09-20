@@ -172,14 +172,14 @@ struct DoseHistoryViewModelUnitTests {
         let today = Date()
         let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
 
-        let todayMorning = self.createTestDose(
-            timestamp: try #require(calendar.date(bySettingHour: 9, minute: 0, second: 0, of: today)),
+        let todayMorning = try self.createTestDose(
+            timestamp: #require(calendar.date(bySettingHour: 9, minute: 0, second: 0, of: today)),
             notes: "morning")
-        let todayEvening = self.createTestDose(
-            timestamp: try #require(calendar.date(bySettingHour: 18, minute: 0, second: 0, of: today)),
+        let todayEvening = try self.createTestDose(
+            timestamp: #require(calendar.date(bySettingHour: 18, minute: 0, second: 0, of: today)),
             notes: "evening")
-        let yesterdayDose = self.createTestDose(
-            timestamp: try #require(calendar.date(bySettingHour: 10, minute: 0, second: 0, of: yesterday)),
+        let yesterdayDose = try self.createTestDose(
+            timestamp: #require(calendar.date(bySettingHour: 10, minute: 0, second: 0, of: yesterday)),
             notes: "yesterday")
 
         viewModel.filteredDoses = [todayMorning, todayEvening, yesterdayDose]
@@ -412,7 +412,7 @@ struct DoseHistoryViewModelUnitTests {
 
         // Then: Edit data matches dose
         #expect(editData != nil)
-        guard let editData = editData else {
+        guard let editData else {
             #expect(Bool(false), "editData should not be nil")
             return
         }

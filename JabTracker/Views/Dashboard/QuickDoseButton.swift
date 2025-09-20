@@ -27,8 +27,8 @@ struct QuickDoseButton: View {
 
     init(
         onDoseSaved: (() -> Void)? = nil,
-        onCalculationsUpdated: (() -> Void)? = nil
-    ) {
+        onCalculationsUpdated: (() -> Void)? = nil)
+    {
         self.onDoseSaved = onDoseSaved
         self.onCalculationsUpdated = onCalculationsUpdated
 
@@ -107,8 +107,8 @@ struct QuickDoseSheet: View {
         doseService: DoseService,
         showingSuccessMessage: Binding<Bool>,
         onDoseSaved: (() -> Void)? = nil,
-        onCalculationsUpdated: (() -> Void)? = nil
-    ) {
+        onCalculationsUpdated: (() -> Void)? = nil)
+    {
         self.viewModel = viewModel
         self.doseService = doseService
         self._showingSuccessMessage = showingSuccessMessage
@@ -296,8 +296,7 @@ struct QuickDoseSheet: View {
                 medicationProfile: profile,
                 site: self.viewModel.selectedInjectionSite.isEmpty ? nil : self.viewModel.selectedInjectionSite,
                 notes: self.viewModel.notes.isEmpty ? nil : self.viewModel.notes,
-                context: self.modelContext
-            )
+                context: self.modelContext)
 
             print("🔍 QuickDoseSheet.saveDose: Successfully saved dose")
 
@@ -327,9 +326,8 @@ struct QuickDoseSheet: View {
 #Preview {
     QuickDoseButton(
         onDoseSaved: { print("Dose saved") },
-        onCalculationsUpdated: { print("Calculations updated") }
-    )
-    .modelContainer(DataController.preview.container)
+        onCalculationsUpdated: { print("Calculations updated") })
+        .modelContainer(DataController.preview.container)
 }
 
 #Preview("Sheet") {
@@ -343,7 +341,6 @@ struct QuickDoseSheet: View {
         doseService: doseService,
         showingSuccessMessage: $showingSuccess,
         onDoseSaved: { print("Dose saved") },
-        onCalculationsUpdated: { print("Calculations updated") }
-    )
-    .modelContainer(DataController.preview.container)
+        onCalculationsUpdated: { print("Calculations updated") })
+        .modelContainer(DataController.preview.container)
 }

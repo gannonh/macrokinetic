@@ -277,11 +277,10 @@ struct QuickDoseViewModelTests {
         let savedDose = try await doseService.saveDose(
             amount: viewModel.doseAmount,
             timestamp: viewModel.doseTime,
-            medicationProfile: try #require(viewModel.selectedMedicationProfile),
+            medicationProfile: #require(viewModel.selectedMedicationProfile),
             site: viewModel.selectedInjectionSite,
             notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
-            context: context
-        )
+            context: context)
 
         // Reset form after successful save
         viewModel.resetForm()
@@ -320,11 +319,10 @@ struct QuickDoseViewModelTests {
         _ = try await doseService.saveDose(
             amount: viewModel.doseAmount,
             timestamp: viewModel.doseTime,
-            medicationProfile: try #require(viewModel.selectedMedicationProfile),
+            medicationProfile: #require(viewModel.selectedMedicationProfile),
             site: viewModel.selectedInjectionSite,
             notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
-            context: context
-        )
+            context: context)
 
         let savedDoses = try context.fetch(FetchDescriptor<Dose>())
         let savedDose = savedDoses.last
@@ -352,11 +350,10 @@ struct QuickDoseViewModelTests {
         _ = try await doseService.saveDose(
             amount: viewModel.doseAmount,
             timestamp: viewModel.doseTime,
-            medicationProfile: try #require(viewModel.selectedMedicationProfile),
+            medicationProfile: #require(viewModel.selectedMedicationProfile),
             site: viewModel.selectedInjectionSite,
             notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
-            context: context
-        )
+            context: context)
 
         // Reset form after successful save
         viewModel.resetForm()
@@ -391,11 +388,10 @@ struct QuickDoseViewModelTests {
             _ = try await doseService.saveDose(
                 amount: viewModel.doseAmount,
                 timestamp: viewModel.doseTime,
-                medicationProfile: try #require(viewModel.selectedMedicationProfile),
+                medicationProfile: #require(viewModel.selectedMedicationProfile),
                 site: viewModel.selectedInjectionSite,
                 notes: nil as String?,
-                context: context
-            )
+                context: context)
             #expect(Bool(false), "Should have thrown an error")
         } catch {
             // Should catch DoseService validation error for negative amount
@@ -433,7 +429,7 @@ struct QuickDoseViewModelTests {
         // Next dose should be approximately now (since last dose was 1 week ago)
         let timeDifference = abs(nextDoseTime.timeIntervalSinceNow)
         #expect(timeDifference < 24 * 60 * 60,
-               "Time difference should be within 24 hours, but was \(timeDifference / 3600) hours")
+                "Time difference should be within 24 hours, but was \(timeDifference / 3600) hours")
     }
 
     @Test("Is dose overdue detection")

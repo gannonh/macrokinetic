@@ -29,8 +29,8 @@ struct ConcentrationCard: View {
         user: User,
         medicationProfile: MedicationProfile,
         pkEngine: PharmacokineticsEngine,
-        doseService: DoseService? = nil
-    ) {
+        doseService: DoseService? = nil)
+    {
         self.user = user
         self.medicationProfile = medicationProfile
         self.pkEngine = pkEngine
@@ -41,27 +41,27 @@ struct ConcentrationCard: View {
         DesignCard {
             VStack(alignment: .leading, spacing: 16) {
                 // Header with medication name
-                headerView
+                self.headerView
 
                 // Current concentration display
-                currentConcentrationView
+                self.currentConcentrationView
 
                 // Peak and trough levels
-                peakTroughView
+                self.peakTroughView
 
                 // Steady state progress
-                steadyStateView
+                self.steadyStateView
             }
         }
         .accessibilityIdentifier("concentration-card")
         .onAppear {
-            updateConcentrationData()
+            self.updateConcentrationData()
         }
-        .onChange(of: medicationProfile.doses) { _, _ in
-            updateConcentrationData()
+        .onChange(of: self.medicationProfile.doses) { _, _ in
+            self.updateConcentrationData()
         }
-        .onChange(of: doseService?.lastDoseUpdateTime) { _, _ in
-            updateConcentrationData()
+        .onChange(of: self.doseService?.lastDoseUpdateTime) { _, _ in
+            self.updateConcentrationData()
         }
     }
 
@@ -101,9 +101,8 @@ struct ConcentrationCard: View {
                 .accessibilityIdentifier("current-level-label")
 
             ConcentrationDisplay(
-                concentration: currentConcentration,
-                isCurrentLevel: true
-            )
+                concentration: self.currentConcentration,
+                isCurrentLevel: true)
 
             // Last updated timestamp
             Text("Updated \(Date().formatted(date: .omitted, time: .shortened))")
@@ -111,7 +110,7 @@ struct ConcentrationCard: View {
                 .foregroundColor(.secondary)
                 .accessibilityIdentifier("concentration-last-updated")
 
-            if currentConcentration == 0.0 {
+            if self.currentConcentration == 0.0 {
                 Text("No recent doses recorded")
                     .font(DesignTokens.Typography.caption)
                     .foregroundColor(.secondary)
@@ -134,12 +133,11 @@ struct ConcentrationCard: View {
                     HStack {
                         ConcentrationDisplay(
                             concentration: peak.level,
-                            isCurrentLevel: false
-                        )
+                            isCurrentLevel: false)
 
                         Spacer()
 
-                        Text(timeDisplayText(for: peak.time))
+                        Text(self.timeDisplayText(for: peak.time))
                             .font(DesignTokens.Typography.caption)
                             .foregroundColor(.secondary)
                     }
@@ -156,12 +154,11 @@ struct ConcentrationCard: View {
                     HStack {
                         ConcentrationDisplay(
                             concentration: trough.level,
-                            isCurrentLevel: false
-                        )
+                            isCurrentLevel: false)
 
                         Spacer()
 
-                        Text(timeDisplayText(for: trough.time))
+                        Text(self.timeDisplayText(for: trough.time))
                             .font(DesignTokens.Typography.caption)
                             .foregroundColor(.secondary)
                     }
@@ -182,20 +179,20 @@ struct ConcentrationCard: View {
 
                 Spacer()
 
-                Text("\(Int(steadyStateProgress * 100))%")
+                Text("\(Int(self.steadyStateProgress * 100))%")
                     .font(DesignTokens.Typography.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(steadyStateProgress >= 0.95 ? DesignTokens.Colors.success : .primary)
+                    .foregroundColor(self.steadyStateProgress >= 0.95 ? DesignTokens.Colors.success : .primary)
             }
             .accessibilityIdentifier("steady-state-header")
 
-            ProgressView(value: steadyStateProgress, total: 1.0)
+            ProgressView(value: self.steadyStateProgress, total: 1.0)
                 .progressViewStyle(LinearProgressViewStyle())
-                .tint(steadyStateProgress >= 0.95 ? DesignTokens.Colors.success : DesignTokens.Colors.primary)
+                .tint(self.steadyStateProgress >= 0.95 ? DesignTokens.Colors.success : DesignTokens.Colors.primary)
                 .accessibilityIdentifier("steady-state-progress")
-                .accessibilityValue("\(Int(steadyStateProgress * 100)) percent")
+                .accessibilityValue("\(Int(self.steadyStateProgress * 100)) percent")
 
-            if steadyStateProgress < 0.95 {
+            if self.steadyStateProgress < 0.95 {
                 Text("Steady state typically reached after 4-5 weeks of consistent dosing")
                     .font(DesignTokens.Typography.caption)
                     .foregroundColor(.secondary)
@@ -214,23 +211,22 @@ struct ConcentrationCard: View {
     private func updateConcentrationData() {
         Task { @MainActor in
             // Calculate current concentration
-            currentConcentration = pkEngine.calculateCurrentConcentration(
-                for: user,
-                medication: medicationProfile
-            )
+            self.currentConcentration = self.pkEngine.calculateCurrentConcentration(
+                for: self.user,
+                medication: self.medicationProfile)
 
             // Calculate peak level from most recent dose
             if let lastDose = medicationProfile.doses?.max(by: { $0.timestamp < $1.timestamp }) {
-                peakLevel = pkEngine.calculatePeakLevel(for: lastDose, medication: medicationProfile)
+                self.peakLevel = self.pkEngine.calculatePeakLevel(for: lastDose, medication: self.medicationProfile)
             } else {
-                peakLevel = nil
+                self.peakLevel = nil
             }
 
             // Calculate trough level
-            troughLevel = pkEngine.calculateTroughLevel(for: medicationProfile)
+            self.troughLevel = self.pkEngine.calculateTroughLevel(for: self.medicationProfile)
 
             // Calculate steady state progress
-            steadyStateProgress = pkEngine.calculateSteadyStateProgress(for: medicationProfile)
+            self.steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: self.medicationProfile)
         }
     }
 
@@ -276,18 +272,16 @@ struct ConcentrationCard: View {
         user: createPreviewUser(),
         medicationProfile: createPreviewMedicationProfile(),
         pkEngine: PharmacokineticsEngine(),
-        doseService: nil
-    )
-    .padding()
-    .modelContainer(container)
+        doseService: nil)
+        .padding()
+        .modelContainer(container)
 }
 
 private func createPreviewUser() -> User {
     User(
         email: "preview@example.com",
         name: "Preview User",
-        appleUserId: "preview-user"
-    )
+        appleUserId: "preview-user")
 }
 
 private func createPreviewMedicationProfile() -> MedicationProfile {
@@ -296,6 +290,5 @@ private func createPreviewMedicationProfile() -> MedicationProfile {
         brandName: "Ozempic",
         currentDose: 1.0,
         startDate: Date().addingTimeInterval(-30 * 24 * 3600),
-        medicationType: "semaglutide"
-    )
+        medicationType: "semaglutide")
 }

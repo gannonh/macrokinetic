@@ -25,7 +25,7 @@ struct DoseEntryPKSection: View {
                     Spacer()
                 }
 
-                impactDetails
+                self.impactDetails
             }
         } header: {
             Text("Impact Preview")
@@ -35,7 +35,7 @@ struct DoseEntryPKSection: View {
 
     @ViewBuilder
     private var impactDetails: some View {
-        if !isSkipped, let medication = medicationProfile.medication {
+        if !self.isSkipped, let medication = medicationProfile.medication {
             VStack(alignment: .leading, spacing: 6) {
                 Text("• Peak concentration in ~\(Int(medication.peakTimeHours)) hours")
                 Text("• Calculations will update dashboard automatically")
@@ -43,7 +43,7 @@ struct DoseEntryPKSection: View {
             }
             .font(.caption)
             .foregroundColor(.secondary)
-        } else if isSkipped {
+        } else if self.isSkipped {
             Text("Skipped doses don't affect concentration calculations")
                 .font(.caption)
                 .foregroundColor(.secondary)

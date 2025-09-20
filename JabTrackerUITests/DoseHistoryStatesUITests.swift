@@ -46,9 +46,11 @@ final class DoseHistoryStatesUITests: XCTestCase {
         XCTAssertEqual(doseRows.count, 0, "No dose rows should exist in empty state")
 
         // Verify we're still on the History view
-        // In empty state, there may not be a collection view, but there should be elements with dose-history-list identifier
+        // In empty state, there may not be a collection view, but there should be elements with
+        // dose-history-list identifier
         let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
-        XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements indicating we're on history view")
+        XCTAssertTrue(historyElements.count > 0,
+                      "Should have dose-history-list elements indicating we're on history view")
     }
 
     func test_doseHistory_addFirstDose() throws {
@@ -148,8 +150,7 @@ final class DoseHistoryStatesUITests: XCTestCase {
         // Wait for list to load by checking for dose rows
         let listLoaded = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "count >= 5"),
-            object: app.buttons.matching(identifier: "dose-history-row")
-        )
+            object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [listLoaded], timeout: 10)
 
         // THEN: Doses are grouped by date with section headers
@@ -300,8 +301,7 @@ final class DoseHistoryStatesUITests: XCTestCase {
             // Wait for skip status to update by checking for skipped indicator
             let skipStatusUpdated = XCTNSPredicateExpectation(
                 predicate: NSPredicate(format: "exists == true"),
-                object: app.images["skipped-dose-indicator"]
-            )
+                object: app.images["skipped-dose-indicator"])
             wait(for: [skipStatusUpdated], timeout: 5)
 
             // THEN: Skipped dose styling is applied appropriately

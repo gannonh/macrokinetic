@@ -28,7 +28,7 @@ extension ConcentrationPoint: Comparable {
 // MARK: - Identifiable
 
 extension ConcentrationPoint: Identifiable {
-    var id: Date { date }
+    var id: Date { self.date }
 }
 
 // MARK: - Helper Properties
@@ -36,7 +36,7 @@ extension ConcentrationPoint: Identifiable {
 extension ConcentrationPoint {
     /// Returns a formatted string representation of the concentration for display
     var concentrationDisplay: String {
-        String(format: "%.2f", concentration)
+        String(format: "%.2f", self.concentration)
     }
 
     /// Returns a formatted string representation of the date for display
@@ -44,6 +44,6 @@ extension ConcentrationPoint {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter.string(from: self.date)
     }
 }
