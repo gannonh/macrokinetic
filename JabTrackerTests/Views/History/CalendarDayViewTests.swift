@@ -9,10 +9,6 @@
 import SwiftUI
 import Testing
 
-enum TestError: Error {
-    case invalidTestData(String)
-}
-
 struct CalendarDayViewTests {
     // MARK: - Day Display Tests
 
