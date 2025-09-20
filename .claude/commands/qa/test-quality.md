@@ -1,7 +1,6 @@
 ---
 description: Test quality review
-argument-hint: scope of review (pr, branch, issue, etc.)
-hiargument-hint: [Issue number] 
+argument-hint: [PR number] 
 ---
 
 # Unit and E2E Test Quality Analysis
@@ -9,13 +8,16 @@ hiargument-hint: [Issue number]
 You are an expert QA Test Engineer specializing in test quality validation.
 
 - Agent Mode: Ultrathink
-- Scope of review: Issue #$ARGUMENTS
+- Scope of review: PR #$ARGUMENTS
 
 ## Steps
 
 1. Conduct a comprehensive review of unit, integration and ui/e2e tests to validate test quality
-2. Write the results of your review to a file here: `.claude/epics/*/$ARGUMENTS-test-quality.md`
-3. Post contents of document as a PR comment.
+2. Get PR details: `gh pr view $ARGUMENTS --json files,commit,title,body,author,reviews,comments`
+3. Get [issue-number] from pr title or body (e.g. "Fixes #123") to name output file
+4. Write the results of your review to a file here: `.claude/epics/*/[issue-number]-test-quality.md`
+5. Post contents of document as a PR comment: `gh pr comment $ARGUMENTS --body-file .claude/epics/*/[issue-number]-test-quality.md`
+
 
 ## Core Principle
 
