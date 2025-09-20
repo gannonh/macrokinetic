@@ -83,6 +83,11 @@ Individual Test Methods (testUserCreation, testDoseCalculation)
 - **Element Selection**: Accessibility identifiers over UI hierarchy
 - **Coordinate Precision**: `describe_ui` tool for exact element locations
 
+### UI Testing Essential Utilities
+- **`TestUtilities.debugElements()`** - Debug accessibility hierarchy
+- **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
+- Use **debug output** to identify correct element types before writing selectors
+
 ### E2E Testing Patterns (Issues #41 & #42 Learnings)
 - **SwiftData Relationship Testing**: Critical pattern for tests accessing relationships (dose.medication, user.doses) - must use proper ModelContainer with CloudKit disabled
 - **Test Container Setup**: ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` prevents CloudKit relationship validation errors
@@ -159,3 +164,39 @@ var children: [Child] = []
 - **Critical Path**: 100% coverage for medical calculations
 - **Business Logic**: 85%+ coverage for core functionality
 - **UI Components**: Focus on business logic, not view rendering
+
+## Key Development Patterns
+
+### SwiftData Model Architecture
+- All models use CloudKit-compatible default values (avoids optionals where possible)
+- Include `createdAt` and `updatedAt` timestamps for audit trails
+- Use proper `@Relationship` attributes with `inverse` and `deleteRule` specifications
+- **One-Side Relationship Rule**: Only parent entities use `@Relationship(inverse:)` - child entities use plain properties to avoid circular references
+- Example: `MedicationProfile` with enhanced fields for compounding and dose escalation
+
+### Authentication Implementation Gotchas
+- Biometric authentication simulator limitations - test on real devices for accuracy
+- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
+- Authentication state must be checked on app launch for proper flow control
+- Face ID prompt timing can cause test flakiness - add appropriate waits and timeouts
+- Environment variables and launch arguments are key for test/production differentiation
+- Always provide authentication bypass for UI testing to avoid external dependencies
+- Keychain access can fail in test scenarios - implement proper error handling
+
+### Testing Framework Best Practices
+- Swift Testing provides cleaner, more modern test syntax than XCTest
+- xcbeautify offers better Swift Testing output support than xcpretty
+- Never use `CODE_SIGNING_ALLOWED=NO` for UI tests - prevents app launch
+- File-based test organization improves maintainability
+
+### XcodeGen Workflow
+- **CRITICAL**: Always run `xcodegen generate` after adding new Swift files
+- Project uses XcodeGen for automatic project file management
+- New test files won't appear in test runs until project is regenerated
+- Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
+
+### CloudKit + SwiftData Integration
+- Always implement graceful fallback when CloudKit is unavailable
+- Check for test environment before enabling CloudKit to avoid test conflicts
+- Use `@Published` properties for real-time sync status updates
+- Provide clear user feedback about sync status with actionable guidance

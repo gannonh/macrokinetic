@@ -20,6 +20,7 @@ created: 2025-01-22T04:47:23Z
 - Naming Pattern: *Tests.swift
 
 ## Test Categories
+
 ### Unit & Integration Tests (Swift Testing Framework)
 - **Authentication**: AuthenticationManager*, BiometricAuth*, Authentication*
 - **Data Management**: DataController*, MedicationManager*, Persistence*  
@@ -37,6 +38,7 @@ created: 2025-01-22T04:47:23Z
 - **CloudKit Integration**: CloudKitIntegrationUITests
 
 ## Commands (All tests automatically log to ./logs directory)
+
 - **Run Unit Tests**: `./scripts/test.sh unit 1` (RECOMMENDED)
 - **Run Specific UI Test Class**: `./scripts/test.sh ui 1 OnboardingUITests` (RECOMMENDED)
 - **Run Specific UI Test Method**: `./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow` (RECOMMENDED)
@@ -52,6 +54,27 @@ created: 2025-01-22T04:47:23Z
 ### ⚠️ AVOID (Very Slow - Use Only for Final Verification)
 - **All UI Tests**: `./scripts/test.sh ui 1` (takes 10+ minutes)
 - **All Tests**: `./scripts/test.sh all 1` (very long running)
+
+## Launch Arguments for Testing
+
+The app supports several launch arguments for testing and development:
+
+**`--ui-testing`**:
+- Bypasses real Sign in with Apple authentication
+- Creates mock user (`test@uitesting.com`, "UI Test User")
+- Used by XCUITest for reliable automated testing
+- Can be enabled in Xcode scheme for manual testing without authentication
+
+**`--reset-app-data`**:
+- Clears all SwiftData users from database on launch
+- Clears onboarding completion status from UserDefaults
+- Resets to fresh app state (like first-time install)
+- Useful for testing onboarding and first-run experiences
+
+**`--force-onboarding`**:
+- Forces onboarding flow to show even if user has completed it
+- Useful for repeatedly testing onboarding flow during development
+- Overrides normal onboarding completion logic
 
 ## Available Simulators
 1. **PRIMARY** iPhone 15,OS=17.5 (Default - UUID: 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB)
@@ -79,11 +102,12 @@ created: 2025-01-22T04:47:23Z
 # Quick unit test run (RECOMMENDED)
 ./scripts/test.sh unit 1
 
-# Specific UI test class (RECOMMENDED)
-./scripts/test.sh ui 1 OnboardingUITests
-
 # Run specific UI test method (RECOMMENDED)
 ./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow
+
+# Specific UI test class
+# ⚠️ May be slow if class has many tests - specific methods preferred
+./scripts/test.sh ui 1 OnboardingUITests
 
 # Specific test with coverage
 ./scripts/test.sh unit 1 AuthenticationManagerCoreTests --coverage
