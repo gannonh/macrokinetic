@@ -153,10 +153,6 @@ struct JabTrackerApp: App {
                     // Authentication failed - could be temporary, don't sign out immediately
                     print("🔐 JabTrackerApp: Biometric auth failed, continuing without biometric auth")
                     self.hasRecentBiometricAuth = true // Prevent retry loops
-
-                default:
-                    print("🔐 JabTrackerApp: Unknown biometric error, continuing without biometric auth")
-                    self.hasRecentBiometricAuth = true // Prevent retry loops
                 }
             } else {
                 // Unknown error type - be conservative but don't sign out

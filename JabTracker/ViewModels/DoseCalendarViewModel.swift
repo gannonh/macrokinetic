@@ -151,7 +151,7 @@ class DoseCalendarViewModel: ObservableObject {
     /// Get doses for a specific date
     func doses(for date: Date) -> [Dose] {
         let dayStart = Calendar.current.startOfDay(for: date)
-        let dayEnd = Calendar.current.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
+        _ = Calendar.current.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
 
         return self.dosesByDate[dayStart] ?? []
     }
