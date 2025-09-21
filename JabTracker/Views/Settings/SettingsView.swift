@@ -6,6 +6,12 @@ struct SettingsView: View {
     @ObservedObject private var dataController = DataController.shared
     // Use real environment for Settings so status reflects actual entitlements during UI tests
     @StateObject private var subscriptionManager = SubscriptionManager(isTestEnvironment: false)
+    @StateObject private var medicationManager: MedicationManager
+
+    init() {
+        let manager = MedicationManager(modelContext: DataController.shared.container.mainContext)
+        self._medicationManager = StateObject(wrappedValue: manager)
+    }
 
     var body: some View {
         NavigationStack {
@@ -21,7 +27,9 @@ struct SettingsView: View {
                                 .font(DesignTokens.Typography.headline)
                                 .accessibilityIdentifier("medication-management-header")
 
-                            NavigationLink(destination: MedicationProfileSettingsView()) {
+                            NavigationLink(
+                                destination: MedicationProfileSettingsView(medicationManager: self.medicationManager)
+                            ) {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Medication Profiles")

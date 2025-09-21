@@ -89,8 +89,13 @@ final class PharmacokineticsEngine {
         // Peak time is medication-specific time after injection
         let peakTime = dose.timestamp.addingTimeInterval(medication.peakTimeHours * 3600)
 
-        // Peak level accounts for bioavailability but assumes no other doses
-        let peakLevel = dose.amount * medication.subcutaneousBioavailability
+        // Peak level includes contribution from all doses, not just the single dose
+        // Calculate total concentration at peak time including all historical doses
+        let allDoses = medicationProfile.doses ?? []
+        let peakLevel = self.calculateConcentration(
+            from: allDoses,
+            medication: medication,
+            at: peakTime)
 
         return (level: peakLevel, time: peakTime)
     }

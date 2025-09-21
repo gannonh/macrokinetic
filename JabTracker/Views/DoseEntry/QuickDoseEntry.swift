@@ -271,6 +271,9 @@ private struct QuickDoseEntrySheet: View {
         guard let profile = viewModel.selectedMedicationProfile else { return }
 
         self.isSubmitting = true
+        defer {
+            self.isSubmitting = false
+        }
 
         do {
             // Save dose through dose service (which handles PK integration)
@@ -292,8 +295,6 @@ private struct QuickDoseEntrySheet: View {
             // Error is handled by doseService and displayed in UI
             print("Error saving dose with PK integration: \(error)")
         }
-
-        self.isSubmitting = false
     }
 }
 

@@ -19,9 +19,9 @@ import Testing
 struct PKDashboardIntegrationTests {
     // MARK: - Test Infrastructure
 
-    var container: ModelContainer
-    var context: ModelContext
-    var pkEngine: PharmacokineticsEngine
+    let container: ModelContainer
+    let context: ModelContext
+    let pkEngine: PharmacokineticsEngine
 
     init() throws {
         // Create isolated in-memory container for this test suite
@@ -189,12 +189,12 @@ struct PKDashboardIntegrationTests {
         let updatedProfile = allProfiles.first { $0.id == medicationProfile.id }
         #expect(updatedProfile != nil, "Should find the medication profile")
 
-        // Count doses directly to avoid relationship issues in test environment
-        let allDoses = try context.fetch(FetchDescriptor<Dose>())
+        // Count doses directly using dedicated test container to avoid sharing with other tests
+        let allDoses = try self.context.fetch(FetchDescriptor<Dose>())
         let profileDoses = allDoses.filter { $0.medication?.id == medicationProfile.id }
         #expect(
             profileDoses.count >= 2,
-            "Profile should have at least 2 doses (may have more from other tests due to framework sharing)")
+            "Profile should have at least 2 doses in isolated test container")
     }
 
     // MARK: - Test: Multiple Medication Profiles
@@ -378,7 +378,7 @@ struct PKDashboardIntegrationTests {
         let missedDoses = allDoses.filter { $0.timestamp == missedDoseTimestamp }
         #expect(
             missedDoses.count >= 1,
-            "Should find at least one missed dose (may have more from other tests due to framework sharing)")
+            "Should find at least one missed dose in isolated test container")
         // Find the correct missed dose by checking the skipped flag
         let missedDose = missedDoses.first { $0.skipped == true }
         #expect(missedDose != nil, "Should find a missed dose marked as skipped")
@@ -451,7 +451,7 @@ struct PKDashboardIntegrationTests {
         let profileDoses = allDoses.filter { $0.medication?.id == medicationProfile.id }
         #expect(
             profileDoses.count >= numberOfDoses,
-            "Should have at least the expected number of doses for this profile (may have more from other tests)")
+            "Should have at least the expected number of doses for this profile in isolated test container")
     }
 
     // MARK: - Test: Real-time Dashboard Updates
@@ -503,7 +503,3 @@ struct PKDashboardIntegrationTests {
         }
     }
 }
-
-// MARK: - Supporting Types
-
-/// Mock data structure for dose editing in integration tests

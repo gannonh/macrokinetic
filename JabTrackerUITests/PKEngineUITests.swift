@@ -466,15 +466,11 @@ final class PKEngineUITests: XCTestCase {
         // 2. Log doses for the first medication (semaglutide)
         TestUtilities.createMultipleDoses(in: self.app, count: 1, delay: 0)
 
-        // 3. Navigate to medication profiles to set up second medication
-        TestUtilities.navigateToTab(self.app, tabName: "Settings")
-
-        // Create second medication profile manually since setupDoseHistoryTest creates identical profiles
-        // Navigate back to dashboard to check what concentration cards exist
+        // 3. Navigate to dashboard to verify concentration cards for distinct medications
+        // Note: setupDoseHistoryTest with medicationProfiles: 2 creates semaglutide + tirzepatide profiles
         TestUtilities.navigateToTab(self.app, tabName: "Home")
 
-        // 4. Verify separate concentration displays exist
-        // Note: The test setup may create identical medication profiles, so we'll work with what's available
+        // 4. Verify separate concentration displays exist for distinct medications
         let dashboardView = self.app.scrollViews["dashboard-view"]
         XCTAssertTrue(dashboardView.waitForExistence(timeout: 5),
                       "Dashboard view should be accessible")

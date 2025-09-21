@@ -248,20 +248,25 @@ struct DoseHistoryViewTests {
         }
 
         // Find the duplicated dose
-        let duplicatedDose = await MainActor.run { viewModel.allDoses.first { $0.id != dose.id } }
+        let doseId = dose.id
+        let doseAmount = dose.amount
+        let doseSite = dose.site
+        let doseNotes = dose.notes
+        let duplicatedDose = await MainActor.run { viewModel.allDoses.first { $0.id != doseId } }
         #expect(duplicatedDose != nil)
-        #expect(duplicatedDose?.amount == dose.amount)
-        #expect(duplicatedDose?.site == dose.site)
-        #expect(duplicatedDose?.notes == dose.notes)
+        #expect(duplicatedDose?.amount == doseAmount)
+        #expect(duplicatedDose?.site == doseSite)
+        #expect(duplicatedDose?.notes == doseNotes)
         #expect(duplicatedDose?.skipped == false) // New dose should not be skipped
 
         // Test delete dose
         try await viewModel.deleteDose(dose, context: context)
         try await Task.sleep(nanoseconds: 50_000_000)
 
+        let deletedDoseId = doseId // Reuse the doseId we captured earlier
         await MainActor.run {
             #expect(viewModel.allDoses.count == initialCount) // Back to original count
-            #expect(!viewModel.allDoses.contains { $0.id == dose.id })
+            #expect(!viewModel.allDoses.contains { $0.id == deletedDoseId })
         }
     }
 
@@ -290,7 +295,9 @@ struct DoseHistoryViewTests {
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
-        let groupedDoses = await MainActor.run { viewModel.groupedDoses }
+        let groupedDoses = await MainActor.run {
+            viewModel.groupedDoses
+        }
 
         // Should have 3 date groups
         #expect(groupedDoses.count == 3)

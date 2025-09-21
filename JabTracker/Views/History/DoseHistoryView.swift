@@ -11,14 +11,14 @@ import SwiftUI
 struct DoseHistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Dose.timestamp, order: .reverse) private var allDoses: [Dose]
-    @State private var viewModel = DoseHistoryViewModel()
+    @StateObject private var viewModel = DoseHistoryViewModel()
     @State private var showingSearchAndFilter = false
     @State private var showingDeleteConfirmation = false
     @State private var doseToDelete: Dose?
     @State private var editingDose: DoseEditData?
     @State private var showingNewDoseSheet = false
     @State private var showingSuccessMessage = false
-    @State private var quickDoseViewModel = QuickDoseViewModel()
+    @StateObject private var quickDoseViewModel = QuickDoseViewModel()
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
 

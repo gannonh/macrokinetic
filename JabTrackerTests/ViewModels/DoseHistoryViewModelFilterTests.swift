@@ -137,8 +137,18 @@ struct DoseHistoryViewModelFilterTests {
         self.context.insert(semaglutideProfile)
         self.context.insert(tirzepatideProfile)
 
-        let dose1 = Dose(amount: 1.0, timestamp: Date(), medication: semaglutideProfile)
-        let dose2 = Dose(amount: 2.0, timestamp: Date().addingTimeInterval(3600), medication: tirzepatideProfile)
+        let dose1 = Dose(
+            amount: 1.0,
+            timestamp: Date(),
+            site: "Thigh",
+            notes: "Test dose",
+            medication: semaglutideProfile)
+        let dose2 = Dose(
+            amount: 2.0,
+            timestamp: Date().addingTimeInterval(3600),
+            site: "Thigh",
+            notes: "Test dose",
+            medication: tirzepatideProfile)
 
         self.context.insert(dose1)
         self.context.insert(dose2)

@@ -60,7 +60,9 @@ final class DoseService {
         imageData: Data? = nil,
         context: ModelContext) async throws -> Dose
     {
-        print("🔍 DoseService.saveDose called with amount: \(amount), site: \(site ?? "nil"), notes: \(notes ?? "nil")")
+        #if DEBUG
+            print("🔍 DoseService.saveDose called with amount: [REDACTED], site: [REDACTED], notes: [REDACTED]")
+        #endif
 
         self.isProcessingDose = true
         self.lastError = nil
@@ -89,14 +91,20 @@ final class DoseService {
                 user: medicationProfile.user, // Explicitly set user from medication profile
                 medication: medicationProfile)
 
-            print("🔍 DoseService: Creating dose with ID: \(newDose.id), site: \(newDose.site ?? "nil")")
+            #if DEBUG
+                print("🔍 DoseService: Creating dose with ID: \(newDose.id), site: [REDACTED]")
+            #endif
 
             // Insert and save to database
             context.insert(newDose)
-            print("🔍 DoseService: Inserted dose into context")
+            #if DEBUG
+                print("🔍 DoseService: Inserted dose into context")
+            #endif
 
             try context.save()
-            print("🔍 DoseService: Saved context successfully")
+            #if DEBUG
+                print("🔍 DoseService: Saved context successfully")
+            #endif
 
             // Trigger PK engine recalculation
             await self.triggerPKRecalculation(for: medicationProfile)
@@ -161,6 +169,9 @@ final class DoseService {
             existingDose.imageData = editData.imageData
             existingDose.skipped = editData.skipped
 
+            // Capture old medication profile before reassignment for PK recalculation
+            let oldMedicationProfile = existingDose.medication
+
             // Update medication profile if changed
             if existingDose.medication?.id != editData.medicationProfile.id {
                 existingDose.medication = editData.medicationProfile
@@ -171,6 +182,13 @@ final class DoseService {
 
             // Trigger PK recalculation for both old and new medication profiles
             await self.triggerPKRecalculation(for: editData.medicationProfile)
+
+            // If medication profile was changed, also recalculate for the old profile
+            if let oldProfile = oldMedicationProfile,
+               oldProfile.id != editData.medicationProfile.id
+            {
+                await self.triggerPKRecalculation(for: oldProfile)
+            }
 
             // Update last operation timestamp
             self.lastDoseUpdateTime = Date()
