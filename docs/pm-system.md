@@ -114,18 +114,19 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 ### 5. Execution Phase
 
 ```bash
-/pm:issue-start issue-number     # Create issue branch + draft PR + launch agents
-/pm:issue-update issue-number    # Update progress and capture session work
-/pm:issue-resume issue-number    # Resume work on in-progress issues
-/pm:issue-sync issue-number      # Push progress updates to GitHub
-/context:update          # Propagate learnings
-/pm:pr-merge issue-number        # Mark PR ready → review → merge to main
-/qa:tq issue-number         # Run test quality analysis and post as PR comment
-/pm:pr-comments path-or-paste  # Process PR review comments with context-aware discretion
-/pm:pr-merge issue-number        # Resume merge process after reviews
-/pm:issue-close issue-number        # Close issue + update epic progress
-/pm:epic-refresh epic-name  # Update epic progress from tasks
-/pm:epic-close epic-name    # Close epic when all issues complete
+/pm:issue-start issue-number    # Create issue branch + draft PR + launch agents
+/pm:issue-update issue-number   # Update progress and capture session work
+/pm:issue-resume issue-number   # Resume work on in-progress issues
+/pm:issue-sync issue-number     # Push progress updates to GitHub
+/context:update                 # Propagate learnings
+/pm:pr-merge issue-number       # Mark PR ready → review → merge to main
+/qa:tq issue-number             # Run test quality analysis and post as PR comment
+/pm:pr-comments path-or-paste   # Process PR review comments with context-aware discretion
+/pm:pr-merge issue-number       # Resume merge process after reviews
+/pm:issue-close issue-number    # Close issue + update epic progress
+/pm:epic-refresh epic-name      # Update epic progress from tasks
+/pm:sync                        # Full bidirectional sync with GitHub
+/pm:epic-close epic-name        # Close epic when all issues complete
 ```
 
 **Issue/Branch/PR Workflow:** Each issue gets its own branch and pull request for focused development and review. Specialized agents implement features while maintaining comprehensive progress tracking and audit trails. Use `issue-update` to capture progress during development and `issue-resume` to continue work after breaks.
