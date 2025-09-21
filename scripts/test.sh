@@ -62,6 +62,7 @@ show_usage() {
     echo ""
     echo "Note: Unit tests use file-based organization for Swift Testing compatibility."
     echo "      Each test file focuses on a specific feature area for efficient development workflow."
+    echo "      Log files include simulator identifier for parallel agent execution."
     exit 1
 }
 
@@ -131,25 +132,32 @@ if [ "$ENABLE_LOGGING" = true ]; then
     # Create timestamp for this test run
     TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 
-    # Determine log directory name
+    # Create simulator identifier for log naming (remove special characters and spaces)
+    SIMULATOR_ID=$(echo "$SELECTED_DEVICE" | sed 's/[^a-zA-Z0-9]/_/g' | sed 's/__*/_/g' | sed 's/^_\|_$//g')
+
+    # Determine log directory name with simulator identifier
     case "$TEST_TYPE" in
         "unit")
-            LOG_DIR="logs/unit_tests_${TIMESTAMP}"
+            LOG_DIR="logs/unit_tests_${SIMULATOR_ID}_${TIMESTAMP}"
             ;;
         "ui")
-            LOG_DIR="logs/ui_tests_${TIMESTAMP}"
+            LOG_DIR="logs/ui_tests_${SIMULATOR_ID}_${TIMESTAMP}"
             ;;
         "all")
-            LOG_DIR="logs/all_tests_${TIMESTAMP}"
+            LOG_DIR="logs/all_tests_${SIMULATOR_ID}_${TIMESTAMP}"
             ;;
     esac
 
     # Create log directory
     mkdir -p "$LOG_DIR"
 
-    # Update latest symlink
+    # Update latest symlink (keeping for backward compatibility, but now includes simulator)
     rm -f logs/latest
     ln -s "$(basename "$LOG_DIR")" logs/latest
+
+    # Create simulator-specific latest symlink for parallel agents
+    rm -f "logs/latest_${SIMULATOR_ID}"
+    ln -s "$(basename "$LOG_DIR")" "logs/latest_${SIMULATOR_ID}"
 
     LOG_FILE="$LOG_DIR/output.txt"
     XCRESULT_PATH="$LOG_DIR/results.xcresult"
@@ -356,6 +364,7 @@ if [ "$ENABLE_LOGGING" = true ]; then
     fi
     echo ""
     echo "💡 View latest logs: cat logs/latest/output.txt"
+    echo "💡 View simulator-specific logs: cat logs/latest_${SIMULATOR_ID}/output.txt"
     echo "💡 Open result bundle: open $XCRESULT_PATH"
 fi
 
