@@ -188,6 +188,13 @@ var children: [Child] = []
 - **Business Logic**: 85%+ coverage for core functionality
 - **UI Components**: Focus on business logic, not view rendering
 
+### SwiftData Relationship Testing Patterns (Added from Issue #53)
+- **Insert Order Critical**: Must insert parent entities (User, MedicationProfile) BEFORE child entities (Dose) to prevent duplicate registration crashes
+- **Test Container Setup**: Use DataController.testContainer() consistently instead of creating custom ModelContainers
+- **Relationship Management**: Let SwiftData handle inverse relationships automatically via property setters, never manually assign arrays
+- **CloudKit Test Environment**: Use ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` for tests
+- **Context Management**: Always insert models into context BEFORE setting relationships, then save context
+
 ## Key Development Patterns
 
 ### SwiftData Model Architecture

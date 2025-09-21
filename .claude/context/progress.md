@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-21T20:59:02Z
-version: 1.6
+last_updated: 2025-09-21T23:11:13Z
+version: 1.7
 author: Claude Code PM System
 ---
 
@@ -9,31 +9,31 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: main (returned to main after PR #50 merge)
-- **Last Commit**: 4bb9d5d - docs: master plans (documentation updates)
-- **Status**: Epic COMPLETE! Dose tracking epic closed with all core features implemented
+- **Branch**: issue/53-extend-swiftdata-models-for-analytics (working on analytics features)
+- **Last Commit**: 4dc2edf - Issue #53: Update progress tracking after crash fixes
+- **Status**: Analytics Epic Started - SwiftData model extensions for analytics complete, testing complete
 
 ## Recent Work (Last 10 Commits)
-1. **4bb9d5d** - docs: master plans (implementation plan and PRD updates)
-2. **45433ad** - chore: disable line_length rule in SwiftLint configuration
-3. **223cea8** - test: enhance tab navigation tests for Home, Add, History, Analytics, and Settings tabs
-4. **31bad21** - test: verify view model reference in DoseSearchAndFilterView creation test
-5. **702e8ba** - test: enhance UI tests for tab navigation and add dose functionality
-6. **e2a9f5b** - chore: exclude SwiftLint configuration file from JabTracker source paths
-7. **c519d62** - docs: update command syntax for PR and QA workflows in documentation
-8. **f49d10e** - fix: correct type name from MedicationFrequency to DoseFrequency
-9. **836b59e** - feat: complete SwiftLint configuration and violation resolution
-10. **2b38c75** - docs: streamline SwiftLint QA command steps for clarity and consistency
+1. **4dc2edf** - Issue #53: Update progress tracking after crash fixes (analytics epic progress)
+2. **b9c4ca9** - Issue #53: Verify MedicationAnalyticsTests - all 8 tests passing without crashes
+3. **dc5d2f2** - Issue #53: Fix all remaining SwiftData crashes in DoseAnalyticsTests
+4. **51a47c3** - Issue #53: Fix more duplicate registration crashes in DoseAnalyticsTests
+5. **0ce3311** - Issue #53: Fix duplicate registration crash in DoseAnalyticsTests
+6. **30a4e64** - Issue #53: Fix missing throws keywords in DoseAnalyticsTests
+7. **2d52381** - Issue #53: Fix SwiftData relationship crashes in DoseAnalyticsTests
+8. **6286a0b** - Issue #53: Stream C - Mark as completed with final test verification
+9. **30445ce** - Issue #53: Stream C - Update project file and add Stream A coordination file
+10. **fdb6e6d** - Issue #53: Stream C - Final test fixes: @MainActor and parameter order
 
 ## Current Working Directory Status
-- **Modified Files**: PM command documentation only (minor uncommitted changes)
+- **Modified Files**: .claude/epics/analytics/53.md (minor issue tracking updates)
 - **Recent Session Work**:
-  - ✅ EPIC COMPLETED: Dose tracking epic 100% complete with all core features
-  - ✅ Merged PR #50: PK Engine Integration into main branch
-  - ✅ Closed Issue #45: PK Engine Integration with comprehensive implementation
-  - ✅ Closed Issue #46: Testing Suite (as not_planned - TDD approach used instead)
-  - ✅ Closed Epic #37: Dose tracking epic with deferred tasks preserved as open issues
-  - ✅ Updated master documentation: implementation plan and PRD reflect completed features
+  - ✅ ISSUE #53 ANALYTICS MODELS: Extended SwiftData models for analytics (Streams A, B, C complete)
+  - ✅ Fixed all SwiftData duplicate registration crashes in test suite (19 DoseAnalyticsTests fixed)
+  - ✅ Verified all analytics tests passing: 19 + 8 + 11 = 38 tests total
+  - ✅ Established SwiftData relationship testing patterns (insert-user-first approach)
+  - ✅ Captured learnings about SwiftData relationship management and CloudKit compatibility
+  - 🔄 Stream D pending: Cross-model analytics integration (ready to start)
 
 ## Completed Major Features
 ✅ **Medication Profile Management** (Issue #35)
@@ -105,9 +105,10 @@ author: Claude Code PM System
 - Element targeting patterns for reliable UI automation
 
 ## Current Priorities
-1. **Analytics & Visualizations** - Next major feature (concentration timeline charts, insights dashboard)
-2. **Notifications System** - Smart dose reminders and milestone notifications
-3. **Export Functionality** - Healthcare provider reports and data export
+1. **🔄 Analytics Model Extensions** - Issue #53 in progress (Streams A,B,C complete, Stream D pending)
+2. **Analytics & Visualizations** - Next phase (concentration timeline charts, insights dashboard)
+3. **Notifications System** - Smart dose reminders and milestone notifications
+4. **Export Functionality** - Healthcare provider reports and data export
 
 ## Completed Epic Status
 **✅ Dose Tracking Epic: 100% COMPLETE** (Epic #37 CLOSED)
@@ -156,7 +157,16 @@ author: Claude Code PM System
 - **TDD adaptation**: Write tests but don't execute during parallel development to avoid simulator conflicts
 - **SwiftData relationship testing**: Requires proper ModelContainer configuration with CloudKit disabled for test environments
 
+## Lessons Learned (Recent - Issue #53)
+### SwiftData Relationship Testing Patterns
+- **Insert Order Critical**: Must insert parent entities (User, MedicationProfile) BEFORE child entities (Dose) to prevent duplicate registration crashes
+- **Test Container Setup**: Use DataController.testContainer() consistently instead of creating custom ModelContainers
+- **Relationship Management**: Let SwiftData handle inverse relationships automatically via property setters, never manually assign arrays
+- **CloudKit Compatibility**: All analytics fields must have non-optional defaults for CloudKit sync
+- **Parallel Stream Coordination**: Three agents successfully worked on separate model extensions simultaneously without conflicts
+
 ## Update History
+- 2025-09-21T23:11:13Z: Issue #53 analytics models - fixed all SwiftData test crashes, 38 analytics tests passing, established relationship testing patterns
 - 2025-09-21T20:59:02Z: 🎉 EPIC COMPLETE! Dose tracking epic 100% finished, all core features implemented, PR #50 merged, Issue #45 closed, documentation updated
 - 2025-09-20T16:38:18Z: Issue #45 major milestone - all 8 PKEngine E2E tests complete, MedicationManager bugs fixed, epic progress to 85%
 - 2025-09-18T18:32:07Z: Issue #44 deferred (95% complete with #41, remaining enhancements not crucial for MVP), epic progress updated to 71%
