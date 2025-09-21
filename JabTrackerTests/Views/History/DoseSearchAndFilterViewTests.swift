@@ -96,7 +96,7 @@ struct DoseSearchAndFilterViewTests {
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
-        let view = DoseSearchAndFilterView(viewModel: viewModel)
+        let _ = DoseSearchAndFilterView(viewModel: viewModel)
 
         // Wait for data to load
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -398,7 +398,7 @@ struct DoseSearchAndFilterViewTests {
         let viewModel = await createTestViewModel()
         await setupTestData(context: context, viewModel: viewModel)
 
-        let view = DoseSearchAndFilterView(viewModel: viewModel)
+        let _ = DoseSearchAndFilterView(viewModel: viewModel)
 
         // Test no date range
         await MainActor.run {
@@ -533,7 +533,7 @@ struct DoseSearchAndFilterViewTests {
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
-        let view = DoseSearchAndFilterView(viewModel: viewModel)
+        let _ = DoseSearchAndFilterView(viewModel: viewModel)
 
         await MainActor.run {
             #expect(viewModel.allDoses.isEmpty)
