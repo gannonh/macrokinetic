@@ -49,3 +49,15 @@ issue/53-extend-swiftdata-models-for-analytics
 - Day/week pattern analysis for medication schedules
 - Calendar-based date calculations for cross-timezone support
 - Robust User/MedicationProfile relationship handling
+
+### 2025-09-21 Session Update
+- **Work Completed**: Fixed all SwiftData duplicate registration crashes in DoseAnalyticsTests
+- **Files Modified**: JabTrackerTests/DoseAnalyticsTests.swift
+- **Issues Resolved**: Fixed 19 test crashes by applying insert-user-first pattern to prevent duplicate SwiftData registrations
+- **Testing Status**: All 19 DoseAnalyticsTests now passing without crashes
+- **Integration Status**: No conflicts with other streams, pattern established for relationship handling
+- **Key Fix**: Insert User and MedicationProfile BEFORE doses to avoid SwiftData auto-insert conflicts
+- **Commits**:
+  - 0acdaa0: Initial crash fixes for 4 tests
+  - 14e1e4e: Fixed remaining 15 tests with duplicate registration crashes
+- **Next Steps**: None - Stream A complete and all tests passing
