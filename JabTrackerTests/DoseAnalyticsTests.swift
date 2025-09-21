@@ -74,9 +74,9 @@ struct DoseAnalyticsTests {
 
     @Test("Analytics metadata can be set and retrieved")
     @MainActor
-    func analyticsMetadataSetAndGet() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func analyticsMetadataSetAndGet() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let expectedDate = Date().addingTimeInterval(-3600) // 1 hour ago
         let actualDate = Date()
@@ -246,13 +246,13 @@ struct DoseAnalyticsTests {
 
     @Test("daysSinceLastDose calculates correctly from user dose history")
     @MainActor
-    func daysSinceLastDoseCalculation() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func daysSinceLastDoseCalculation() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
-        user.medicationProfiles = [medication]
+        medication.user = user
 
         // Create dose from 3 days ago
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
@@ -265,8 +265,8 @@ struct DoseAnalyticsTests {
         currentDose.user = user
         currentDose.medication = medication
 
-        user.doses = [lastDose, currentDose]
-        medication.doses = [lastDose, currentDose]
+        // Don't manually assign to relationship arrays - SwiftData handles inverse relationships automatically
+        // When we set dose.user = user, SwiftData automatically updates user.doses collection
 
         context.insert(user)
         context.insert(medication)
@@ -280,9 +280,9 @@ struct DoseAnalyticsTests {
 
     @Test("daysSinceLastDose returns nil for first dose")
     @MainActor
-    func daysSinceLastDoseFirstDose() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func daysSinceLastDoseFirstDose() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
@@ -291,8 +291,7 @@ struct DoseAnalyticsTests {
         dose.user = user
         dose.medication = medication
 
-        user.doses = [dose]
-        medication.doses = [dose]
+        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
 
         context.insert(user)
         context.insert(medication)
@@ -305,9 +304,9 @@ struct DoseAnalyticsTests {
 
     @Test("isFirstDoseOfWeek identifies correctly")
     @MainActor
-    func firstDoseOfWeekIdentification() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func firstDoseOfWeekIdentification() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
@@ -327,8 +326,7 @@ struct DoseAnalyticsTests {
         tuesdayDose.user = user
         tuesdayDose.medication = medication
 
-        user.doses = [mondayDose, tuesdayDose]
-        medication.doses = [mondayDose, tuesdayDose]
+        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
 
         context.insert(user)
         context.insert(medication)
@@ -345,9 +343,9 @@ struct DoseAnalyticsTests {
 
     @Test("currentStreak calculates correctly for consecutive doses")
     @MainActor
-    func currentStreakConsecutiveDoses() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func currentStreakConsecutiveDoses() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
@@ -366,8 +364,7 @@ struct DoseAnalyticsTests {
             context.insert(dose)
         }
 
-        user.doses = doses
-        medication.doses = doses
+        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
 
         context.insert(user)
         context.insert(medication)
@@ -380,9 +377,9 @@ struct DoseAnalyticsTests {
 
     @Test("currentStreak breaks with skipped dose")
     @MainActor
-    func currentStreakWithSkippedDose() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func currentStreakWithSkippedDose() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
@@ -404,8 +401,7 @@ struct DoseAnalyticsTests {
             context.insert(dose)
         }
 
-        user.doses = doses
-        medication.doses = doses
+        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
 
         context.insert(user)
         context.insert(medication)
@@ -418,9 +414,9 @@ struct DoseAnalyticsTests {
 
     @Test("longestStreak calculates historical maximum")
     @MainActor
-    func longestStreakCalculation() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func longestStreakCalculation() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
@@ -458,8 +454,7 @@ struct DoseAnalyticsTests {
             context.insert(dose)
         }
 
-        user.doses = doses
-        medication.doses = doses
+        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
 
         context.insert(user)
         context.insert(medication)
@@ -538,9 +533,9 @@ struct DoseAnalyticsTests {
 
     @Test("streak calculations handle single dose correctly")
     @MainActor
-    func streakCalculationsSingleDose() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func streakCalculationsSingleDose() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
@@ -549,8 +544,7 @@ struct DoseAnalyticsTests {
         dose.user = user
         dose.medication = medication
 
-        user.doses = [dose]
-        medication.doses = [dose]
+        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
 
         context.insert(user)
         context.insert(medication)
@@ -567,9 +561,9 @@ struct DoseAnalyticsTests {
 
     @Test("analytics fields are CloudKit compatible")
     @MainActor
-    func cloudKitCompatibility() throws {
-        let container = try createTestModelContainer()
-        let context = container.mainContext
+    func cloudKitCompatibility() {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
 
         let dose = self.createTestDose()
         dose.expectedTimestamp = Date()
