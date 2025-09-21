@@ -88,6 +88,10 @@ struct DoseHistoryViewTests {
         // Wait for async operation
         try await Task.sleep(nanoseconds: 100_000_000)
 
+        // Extract dose IDs for Sendable compliance
+        let dose1Id = dose1.id
+        let dose2Id = dose2.id
+
         // Verify data is loaded
         await MainActor.run {
             #expect(viewModel.allDoses.count == 2)
@@ -95,8 +99,8 @@ struct DoseHistoryViewTests {
             #expect(viewModel.isLoading == false)
 
             // Verify sorting (newest first)
-            #expect(viewModel.filteredDoses.first?.id == dose1.id)
-            #expect(viewModel.filteredDoses.last?.id == dose2.id)
+            #expect(viewModel.filteredDoses.first?.id == dose1Id)
+            #expect(viewModel.filteredDoses.last?.id == dose2Id)
         }
     }
 
@@ -107,17 +111,17 @@ struct DoseHistoryViewTests {
         let medication = try self.createTestMedicationProfile(context: context, user: user)
 
         // Create test doses with different notes
-        let dose1 = try self.createTestDose(
+        let _ = try self.createTestDose(
             context: context,
             user: user,
             medication: medication,
             notes: "Morning injection")
-        let dose2 = try self.createTestDose(
+        let _ = try self.createTestDose(
             context: context,
             user: user,
             medication: medication,
             notes: "Evening dose")
-        let dose3 = try self.createTestDose(
+        let _ = try self.createTestDose(
             context: context,
             user: user,
             medication: medication,
@@ -170,9 +174,9 @@ struct DoseHistoryViewTests {
         try context.save()
 
         // Create doses with different properties
-        let dose1 = try self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
-        let dose2 = try self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
-        let dose3 = try self.createTestDose(
+        let _ = try self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
+        let _ = try self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
+        let _ = try self.createTestDose(
             context: context,
             user: user,
             medication: medication1,
@@ -252,12 +256,18 @@ struct DoseHistoryViewTests {
         let doseAmount = dose.amount
         let doseSite = dose.site
         let doseNotes = dose.notes
-        let duplicatedDose = await MainActor.run { viewModel.allDoses.first { $0.id != doseId } }
-        #expect(duplicatedDose != nil)
-        #expect(duplicatedDose?.amount == doseAmount)
-        #expect(duplicatedDose?.site == doseSite)
-        #expect(duplicatedDose?.notes == doseNotes)
-        #expect(duplicatedDose?.skipped == false) // New dose should not be skipped
+        let (duplicatedDoseExists, duplicatedAmount, duplicatedSite, duplicatedNotes, duplicatedSkipped) = await MainActor.run {
+            if let duplicate = viewModel.allDoses.first(where: { $0.id != doseId }) {
+                return (true, duplicate.amount, duplicate.site, duplicate.notes, duplicate.skipped)
+            } else {
+                return (false, 0.0, nil, nil, false)
+            }
+        }
+        #expect(duplicatedDoseExists == true)
+        #expect(duplicatedAmount == doseAmount)
+        #expect(duplicatedSite == doseSite)
+        #expect(duplicatedNotes == doseNotes)
+        #expect(duplicatedSkipped == false) // New dose should not be skipped
 
         // Test delete dose
         try await viewModel.deleteDose(dose, context: context)
@@ -281,39 +291,42 @@ struct DoseHistoryViewTests {
         let twoDaysAgo = today.addingTimeInterval(-172_800)
 
         // Create doses on different dates
-        let dose1 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: today)
-        let dose2 = try self.createTestDose(
+        let _ = try self.createTestDose(context: context, user: user, medication: medication, timestamp: today)
+        let _ = try self.createTestDose(
             context: context,
             user: user,
             medication: medication,
             timestamp: today.addingTimeInterval(-3600))
-        let dose3 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: yesterday)
-        let dose4 = try self.createTestDose(context: context, user: user, medication: medication, timestamp: twoDaysAgo)
+        let _ = try self.createTestDose(context: context, user: user, medication: medication, timestamp: yesterday)
+        let _ = try self.createTestDose(context: context, user: user, medication: medication, timestamp: twoDaysAgo)
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
-        let groupedDoses = await MainActor.run {
-            viewModel.groupedDoses
+        let (groupedDosesCount, firstGroupCount, firstDateString) = await MainActor.run {
+            let grouped = viewModel.groupedDoses
+            let firstGroup = grouped.first
+            return (
+                grouped.count,
+                firstGroup?.1.count ?? 0,
+                firstGroup?.0 ?? ""
+            )
         }
 
         // Should have 3 date groups
-        #expect(groupedDoses.count == 3)
+        #expect(groupedDosesCount == 3)
 
         // Verify grouping and sorting
-        let todayGroup = groupedDoses.first
-        #expect(todayGroup?.1.count == 2) // Two doses today
+        #expect(firstGroupCount == 2) // Two doses today
 
         // Verify dates are sorted descending (newest first)
-        let dates = groupedDoses.map(\.0)
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-
         let todayString = formatter.string(from: today)
-        #expect(dates.first == todayString)
+        #expect(firstDateString == todayString)
     }
 
     @Test("DoseHistoryViewModel error handling works")
@@ -400,9 +413,9 @@ struct DoseHistoryViewTests {
         try context.save()
 
         // Create doses with different properties
-        let dose1 = try self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
-        let dose2 = try self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
-        let dose3 = try self.createTestDose(context: context, user: user, medication: medication1, site: "Arm")
+        let _ = try self.createTestDose(context: context, user: user, medication: medication1, site: "Thigh")
+        let _ = try self.createTestDose(context: context, user: user, medication: medication2, site: "Abdomen")
+        let _ = try self.createTestDose(context: context, user: user, medication: medication1, site: "Arm")
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
@@ -431,7 +444,7 @@ struct DoseHistoryViewTests {
         let user = try self.createTestUser(context: context)
         let medication = try self.createTestMedicationProfile(context: context, user: user)
 
-        let dose = try self.createTestDose(context: context, user: user, medication: medication)
+        let _ = try self.createTestDose(context: context, user: user, medication: medication)
 
         let viewModel = await DoseHistoryViewModel()
         await viewModel.loadData(context: context)
