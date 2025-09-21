@@ -423,8 +423,13 @@ struct DoseAnalyticsTests {
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
+        medication.user = user
         let calendar = Calendar.current
         let today = Date()
+
+        // Insert user and medication FIRST to avoid duplicate registration
+        context.insert(user)
+        context.insert(medication)
 
         var doses: [Dose] = []
 
@@ -456,11 +461,6 @@ struct DoseAnalyticsTests {
             doses.append(dose)
             context.insert(dose)
         }
-
-        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
-
-        context.insert(user)
-        context.insert(medication)
 
         try context.save()
 
@@ -542,15 +542,15 @@ struct DoseAnalyticsTests {
 
         let user = self.createTestUser()
         let medication = self.createTestMedicationProfile()
+        medication.user = user
+
+        // Insert user and medication FIRST to avoid duplicate registration
+        context.insert(user)
+        context.insert(medication)
 
         let dose = self.createTestDose()
         dose.user = user
         dose.medication = medication
-
-        // SwiftData handles inverse relationships automatically when we set dose.user and dose.medication
-
-        context.insert(user)
-        context.insert(medication)
         context.insert(dose)
 
         try context.save()
