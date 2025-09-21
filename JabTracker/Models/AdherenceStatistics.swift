@@ -83,7 +83,8 @@ struct AdherenceStatistics {
 
     /// Duration of the period in days
     var periodDays: Int {
-        let components = Calendar.current.dateComponents([.day], from: self.periodStart, to: self.periodEnd)
+        let components = Calendar.current.dateComponents(
+            [.day], from: self.periodStart, to: self.periodEnd)
         return max(1, components.day ?? 1)
     }
 
@@ -167,7 +168,8 @@ enum AdherenceStatisticsCalculator {
 
         // Dose amount calculations
         let doseAmounts = takenDoses.map(\.amount)
-        let averageDose = doseAmounts.isEmpty ? 0.0 : doseAmounts.reduce(0, +) / Double(doseAmounts.count)
+        let averageDose =
+            doseAmounts.isEmpty ? 0.0 : doseAmounts.reduce(0, +) / Double(doseAmounts.count)
         let totalMedicationAmount = doseAmounts.reduce(0, +)
         let doseRange: (min: Double, max: Double)? = {
             guard !doseAmounts.isEmpty,
@@ -214,10 +216,11 @@ enum AdherenceStatisticsCalculator {
         frequency: DoseFrequency) -> Int
     {
         let calendar = Calendar.current
-        let dayCount = calendar.dateComponents(
-            [.day],
-            from: calendar.startOfDay(for: periodStart),
-            to: calendar.startOfDay(for: periodEnd)).day ?? 0
+        let dayCount =
+            calendar.dateComponents(
+                [.day],
+                from: calendar.startOfDay(for: periodStart),
+                to: calendar.startOfDay(for: periodEnd)).day ?? 0
 
         switch frequency {
         case .daily:
@@ -298,7 +301,8 @@ enum AdherenceStatisticsCalculator {
         }
 
         // Determine current streak and active status
-        let currentStreak = (mostRecentStreakEndsToday || mostRecentStreakEndsYesterday) ? mostRecentStreakCount : 0
+        let currentStreak =
+            (mostRecentStreakEndsToday || mostRecentStreakEndsYesterday) ? mostRecentStreakCount : 0
         let isActive = mostRecentStreakEndsToday
 
         return StreakResult(current: currentStreak, longest: longestStreak, isActive: isActive)

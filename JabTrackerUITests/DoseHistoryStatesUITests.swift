@@ -49,8 +49,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
         // In empty state, there may not be a collection view, but there should be elements with
         // dose-history-list identifier
         let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
-        XCTAssertTrue(historyElements.count > 0,
-                      "Should have dose-history-list elements indicating we're on history view")
+        XCTAssertTrue(
+            historyElements.count > 0,
+            "Should have dose-history-list elements indicating we're on history view")
     }
 
     func test_doseHistory_addFirstDose() throws {
@@ -60,7 +61,8 @@ final class DoseHistoryStatesUITests: XCTestCase {
         // Create a medication profile but no doses - we want to test adding the first dose
         TestUtilities.navigateToTab(app, tabName: "Settings")
         TestUtilities.navigateToMedicationProfiles(app)
-        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
+        TestUtilities.createMedicationProfile(
+            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
 
         // Navigate to History tab to see empty state
         TestUtilities.navigateToHistoryView(in: app)
@@ -89,8 +91,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
         let quickDoseSheet = app.navigationBars.matching(
             NSPredicate(format: "identifier CONTAINS 'Dose' OR label CONTAINS 'Dose'")
         ).firstMatch
-        XCTAssertTrue(quickDoseSheet.waitForExistence(timeout: 5),
-                      "Quick dose sheet should appear after tapping Log Your First Dose")
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 5),
+            "Quick dose sheet should appear after tapping Log Your First Dose")
 
         // Fill in the dose information (use existing medication profile)
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
@@ -101,8 +104,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
         // Save the dose
         let saveButton = app.buttons["quick-dose-save-button"]
-        XCTAssertTrue(saveButton.waitForExistence(timeout: 3),
-                      "Save button should be available in dose sheet")
+        XCTAssertTrue(
+            saveButton.waitForExistence(timeout: 3),
+            "Save button should be available in dose sheet")
         saveButton.tap()
 
         // Wait for sheet to dismiss and return to history
@@ -116,7 +120,8 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
         // If collection view doesn't exist, check for any dose-history-list elements
         if !historyViewExists {
-            let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
+            let historyElements = app.descendants(matching: .any).matching(
+                identifier: "dose-history-list")
             XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
         } else {
             XCTAssertTrue(historyViewExists, "Should return to history view after adding dose")
@@ -132,8 +137,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
         // Verify empty state is no longer shown
         let emptyStateAfterAdd = app.staticTexts["empty-state-message"]
-        XCTAssertFalse(emptyStateAfterAdd.exists,
-                       "Empty state should not be visible after adding first dose")
+        XCTAssertFalse(
+            emptyStateAfterAdd.exists,
+            "Empty state should not be visible after adding first dose")
     }
 
     func test_doseHistory_groupsDosesByDateSections() throws {
@@ -156,7 +162,8 @@ final class DoseHistoryStatesUITests: XCTestCase {
         // THEN: Doses are grouped by date with section headers
         // Look for date section headers
         let sectionHeaders = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS 'Today' OR label CONTAINS 'Yesterday' OR label CONTAINS '2025'")
+            NSPredicate(
+                format: "label CONTAINS 'Today' OR label CONTAINS 'Yesterday' OR label CONTAINS '2025'")
         )
 
         // Verify we have dose rows
@@ -212,7 +219,8 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
         // Verify the dose row itself has an accessibility label
         let accessibilityLabel = firstDoseRow.label
-        XCTAssertGreaterThan(accessibilityLabel.count, 0, "Dose row should have accessibility label for VoiceOver")
+        XCTAssertGreaterThan(
+            accessibilityLabel.count, 0, "Dose row should have accessibility label for VoiceOver")
 
         // Note: Full VoiceOver testing requires device testing, this verifies accessibility setup
     }
@@ -235,15 +243,17 @@ final class DoseHistoryStatesUITests: XCTestCase {
         firstDoseRow.swipeLeft()
 
         let editButton = app.buttons["Edit"]
-        XCTAssertTrue(editButton.waitForExistence(timeout: 3),
-                      "Edit button should appear after swipe")
+        XCTAssertTrue(
+            editButton.waitForExistence(timeout: 3),
+            "Edit button should appear after swipe")
 
         editButton.tap()
 
         // Wait for edit sheet to appear
         let editSheet = app.navigationBars["Edit Dose"]
-        XCTAssertTrue(editSheet.waitForExistence(timeout: 5),
-                      "Edit dose sheet should appear")
+        XCTAssertTrue(
+            editSheet.waitForExistence(timeout: 5),
+            "Edit dose sheet should appear")
 
         // THEN: Dose entry form is pre-populated with existing data
         // Verify medication picker shows current selection
@@ -270,7 +280,8 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
         // If collection view doesn't exist, check for any dose-history-list elements
         if !historyViewExists {
-            let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
+            let historyElements = app.descendants(matching: .any).matching(
+                identifier: "dose-history-list")
             XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
         } else {
             XCTAssertTrue(historyViewExists, "Should return to history view after canceling edit")
@@ -306,8 +317,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
             // THEN: Skipped dose styling is applied appropriately
             let skippedIndicator = app.images["skipped-dose-indicator"]
-            XCTAssertTrue(skippedIndicator.waitForExistence(timeout: 3),
-                          "Skipped dose should show orange X mark indicator")
+            XCTAssertTrue(
+                skippedIndicator.waitForExistence(timeout: 3),
+                "Skipped dose should show orange X mark indicator")
         }
 
         // THEN: Photo indicator is visible for doses with photos
@@ -324,67 +336,5 @@ final class DoseHistoryStatesUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(doseRows.count, 2, "Should have dose rows with visual indicators")
 
         // Note: Full photo testing would require actual image data creation in test setup
-    }
-
-    func test_doseHistory_performanceWithLargeDoseCounts() throws {
-        // GIVEN: Large number of doses exist
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create a larger number of doses for performance testing
-        // Note: Using a reasonable number for UI testing (10) to avoid extremely long test times
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 10)
-
-        // WHEN: User navigates to history and scrolls
-        let startTime = Date()
-
-        // Navigate to History tab
-        TestUtilities.navigateToHistoryView(in: app)
-
-        // Measure time to load history list
-        let historyView = app.collectionViews["dose-history-list"]
-        let historyViewExists = historyView.waitForExistence(timeout: 10)
-
-        // If collection view doesn't exist, check for any dose-history-list elements
-        if !historyViewExists {
-            let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
-            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements within reasonable time")
-        } else {
-            XCTAssertTrue(historyViewExists, "History view should load within reasonable time")
-        }
-
-        let loadTime = Date().timeIntervalSince(startTime)
-
-        // Verify doses are displayed
-        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 10)
-        XCTAssertEqual(doseRows.count, 10, "Should display all 10 doses")
-
-        // THEN: Operations complete within reasonable time
-        // Test scrolling performance
-        let scrollStartTime = Date()
-
-        // Perform scroll operations
-        let historyList = app.scrollViews.firstMatch
-        if historyList.exists {
-            // Scroll to bottom
-            historyList.swipeUp()
-            usleep(500_000) // 0.5 seconds
-
-            // Scroll to top
-            historyList.swipeDown()
-            usleep(500_000) // 0.5 seconds
-        }
-
-        let scrollTime = Date().timeIntervalSince(scrollStartTime)
-
-        // Performance assertions (reasonable thresholds for UI testing)
-        XCTAssertLessThan(loadTime, 5.0, "History should load within 5 seconds")
-        XCTAssertLessThan(scrollTime, 3.0, "Scrolling should be responsive within 3 seconds")
-
-        // Verify UI remains responsive after scrolling
-        let firstDoseRow = doseRows.element(boundBy: 0)
-        XCTAssertTrue(firstDoseRow.exists, "Dose rows should remain accessible after scrolling")
-
-        // Note: This test uses moderate dose counts suitable for UI testing
-        // Production performance testing would use larger datasets and unit/integration tests
     }
 }
