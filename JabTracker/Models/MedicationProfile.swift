@@ -172,7 +172,9 @@ extension MedicationProfile {
     ///   - endDate: End date for timeline
     ///   - context: ModelContext for database queries
     /// - Returns: Array of concentration points over time
-    func generateConcentrationTimeline(from startDate: Date, to endDate: Date, context _: ModelContext) -> [ConcentrationPoint] {
+    func generateConcentrationTimeline(
+        from startDate: Date, to endDate: Date, context _: ModelContext) -> [ConcentrationPoint]
+    {
         guard let med = medication,
               let medicationDoses = doses else { return [] }
 
