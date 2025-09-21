@@ -50,34 +50,61 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
     /// Get available doses for a specific brand of this medication
     /// Based on FDA-approved pen specifications and clinical documentation
     func availableDoses(for brand: String) -> [Double] {
-        switch (self, brand) {
-        // Semaglutide - brand-specific pen doses
-        case (.semaglutide, "Ozempic"):
+        switch self {
+        case .semaglutide:
+            return self.semaglutideDoses(for: brand)
+        case .tirzepatide:
+            return self.tirzepatideDoses(for: brand)
+        case .liraglutide:
+            return self.liraglutideDoses(for: brand)
+        case .dulaglutide:
+            return self.dulaglutideDoses(for: brand)
+        }
+    }
+
+    private func semaglutideDoses(for brand: String) -> [Double] {
+        switch brand {
+        case "Ozempic":
             return [0.25, 0.5, 1.0, 2.0] // Multi-dose adjustable pens
-        case (.semaglutide, "Wegovy"):
+        case "Wegovy":
             return [0.25, 0.5, 1.0, 1.7, 2.4] // Single-dose fixed pens
-        case (.semaglutide, "Generic"):
+        case "Generic":
             return [0.25, 0.5, 1.0, 1.5, 2.0, 2.5] // Compounded - flexible dosing
-        // Tirzepatide - all fixed-dose pens
-        case (.tirzepatide, "Mounjaro"):
+        default:
+            return self.defaultAvailableDoses
+        }
+    }
+
+    private func tirzepatideDoses(for brand: String) -> [Double] {
+        switch brand {
+        case "Mounjaro", "Zepbound":
             return [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] // Fixed-dose single-use pens
-        case (.tirzepatide, "Zepbound"):
-            return [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] // Fixed-dose single-use pens
-        case (.tirzepatide, "Generic"):
+        case "Generic":
             return [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] // Compounded - match clinical doses
-        // Liraglutide - dial-based dose selection
-        case (.liraglutide, "Victoza"):
+        default:
+            return self.defaultAvailableDoses
+        }
+    }
+
+    private func liraglutideDoses(for brand: String) -> [Double] {
+        switch brand {
+        case "Victoza":
             return [0.6, 1.2, 1.8] // Dial-selected doses
-        case (.liraglutide, "Saxenda"):
+        case "Saxenda":
             return [0.6, 1.2, 1.8, 2.4, 3.0] // Extended dial-selected doses
-        case (.liraglutide, "Generic"):
+        case "Generic":
             return [0.6, 1.2, 1.8, 2.4, 3.0] // Compounded - full range
-        // Dulaglutide - all fixed-dose auto-injectors
-        case (.dulaglutide, "Trulicity"):
+        default:
+            return self.defaultAvailableDoses
+        }
+    }
+
+    private func dulaglutideDoses(for brand: String) -> [Double] {
+        switch brand {
+        case "Trulicity":
             return [0.75, 1.5, 3.0, 4.5] // Fixed-dose auto-injectors
-        case (.dulaglutide, "Generic"):
+        case "Generic":
             return [0.75, 1.5, 3.0, 4.5] // Compounded - match clinical doses
-        // Fallback for unknown brands - use medication defaults
         default:
             return self.defaultAvailableDoses
         }

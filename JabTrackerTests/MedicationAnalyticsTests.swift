@@ -86,8 +86,8 @@ struct MedicationAnalyticsTests {
 
         // Add test doses
         let startDate = Calendar.current.date(byAdding: .day, value: -14, to: Date())!
-        for i in 0 ..< 10 {
-            let doseDate = Calendar.current.date(byAdding: .day, value: i * 7, to: startDate)!
+        for index in 0 ..< 10 {
+            let doseDate = Calendar.current.date(byAdding: .day, value: index * 7, to: startDate)!
             let dose = Dose(amount: 1.0, timestamp: doseDate)
             dose.user = user
             dose.medication = profile
