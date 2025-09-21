@@ -8,6 +8,8 @@ allowed-tools: Read, Write, LS
 
 Launch brainstorming for new product requirement document.
 
+**ULTRATHINK**
+
 ## Required Rules
 
 **IMPORTANT:** Before executing this command, read and follow:

@@ -8,10 +8,7 @@ argument-hint: Epic name (e.g., dose-tracking)
 
 Push epic and tasks to GitHub as issues.
 
-## Usage
-```
-/pm:epic-sync <feature_name>
-```
+**ULTRATHINK**
 
 ## Quick Check
 
@@ -419,8 +416,7 @@ echo "Synced: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> .claude/epics/$ARGUMENTS/gith
   - References updated: depends_on/conflicts_with now use issue IDs
 
 Next steps:
-  - Start epic development: /pm:epic-start $ARGUMENTS
-  - Or work on single issue: /pm:issue-start {issue_number}
+  - Start development: /pm:issue-start {issue_number}
   - View epic: https://github.com/{owner}/{repo}/issues/{epic_number}
 ```
 

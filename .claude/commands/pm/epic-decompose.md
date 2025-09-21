@@ -8,10 +8,7 @@ allowed-tools: Read, Write, LS, Task
 
 Break epic into concrete, actionable tasks.
 
-## Usage
-```
-/pm:epic-decompose <feature_name>
-```
+**ULTRATHINK**
 
 ## Required Rules
 

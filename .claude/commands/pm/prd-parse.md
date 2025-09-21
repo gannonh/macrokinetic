@@ -1,4 +1,6 @@
 ---
+description: Convert a Product Requirements Document (PRD) into a detailed technical implementation epic.
+argument-hint: <feature_name>
 allowed-tools: Read, Write, LS
 ---
 
@@ -6,10 +8,7 @@ allowed-tools: Read, Write, LS
 
 Convert PRD to technical implementation epic.
 
-## Usage
-```
-/pm:prd-parse <feature_name>
-```
+**ULTRATHINK**
 
 ## Required Rules
 
