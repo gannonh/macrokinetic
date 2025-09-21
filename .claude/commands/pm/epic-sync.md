@@ -416,7 +416,7 @@ echo "Synced: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> .claude/epics/$ARGUMENTS/gith
   - References updated: depends_on/conflicts_with now use issue IDs
 
 Next steps:
-  - Start development: /pm:issue-start {issue_number}
+  - Start development: /pm:issue-analyze {issue_number}
   - View epic: https://github.com/{owner}/{repo}/issues/{epic_number}
 ```
 

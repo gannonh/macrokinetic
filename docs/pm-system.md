@@ -114,6 +114,7 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 ### 5. Execution Phase
 
 ```bash
+/pm:issue-analyze issue-number  # Analyze an issue to identify parallel work streams for maximum efficiency.
 /pm:issue-start issue-number    # Create issue branch + draft PR + launch agents
 /pm:issue-update issue-number   # Update progress and capture session work
 /pm:issue-resume issue-number   # Resume work on in-progress issues
