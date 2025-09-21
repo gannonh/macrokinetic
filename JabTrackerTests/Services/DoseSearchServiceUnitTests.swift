@@ -7,9 +7,10 @@
 //
 
 import Foundation
-@testable import JabTracker
 import SwiftData
 import Testing
+
+@testable import JabTracker
 
 @MainActor
 struct DoseSearchServiceUnitTests {
@@ -78,12 +79,12 @@ struct DoseSearchServiceUnitTests {
     @Test("Search scope .amount works with numeric formatting")
     func searchScopeAmount() throws {
         // Given: Doses with different amounts
-        let dose1_0 = self.createTestDose(amount: 1.0)
-        let dose1_5 = self.createTestDose(amount: 1.5)
-        let dose2_0 = self.createTestDose(amount: 2.0)
-        let dose10_0 = self.createTestDose(amount: 10.0)
+        let doseOnePointZero = self.createTestDose(amount: 1.0)
+        let doseOnePointFive = self.createTestDose(amount: 1.5)
+        let doseTwoPointZero = self.createTestDose(amount: 2.0)
+        let doseTenPointZero = self.createTestDose(amount: 10.0)
 
-        let doses = [dose1_0, dose1_5, dose2_0, dose10_0]
+        let doses = [doseOnePointZero, doseOnePointFive, doseTwoPointZero, doseTenPointZero]
 
         // When: Searching for exact amount
         let exactResults = DoseSearchService.searchDoses(
@@ -111,9 +112,13 @@ struct DoseSearchServiceUnitTests {
     func searchScopeDate() throws {
         // Given: Doses with specific dates
         let calendar = Calendar.current
-        let jan1 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 10))!
-        let feb15 = calendar.date(from: DateComponents(year: 2024, month: 2, day: 15, hour: 14))!
-        let dec31 = calendar.date(from: DateComponents(year: 2023, month: 12, day: 31, hour: 20))!
+        guard let jan1 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 10)),
+              let feb15 = calendar.date(from: DateComponents(year: 2024, month: 2, day: 15, hour: 14)),
+              let dec31 = calendar.date(from: DateComponents(year: 2023, month: 12, day: 31, hour: 20))
+        else {
+            Issue.record("Failed to create test dates")
+            return
+        }
 
         let janDose = self.createTestDose(timestamp: jan1)
         let febDose = self.createTestDose(timestamp: feb15)
@@ -397,7 +402,10 @@ struct DoseSearchServiceUnitTests {
         let results = DoseSearchService.searchWithAdvancedQuery(doses: doses, query: searchQuery)
 
         // Then: Only fully matching dose is returned
-        #expect(results.count == 1, "Expected 1 result but got \(results.count). Medication names: \(doses.compactMap { $0.medication?.genericName })")
+        let medicationNames = doses.compactMap { $0.medication?.genericName }
+        #expect(
+            results.count == 1,
+            "Expected 1 result but got \(results.count). Medication names: \(medicationNames)")
 
         if !results.isEmpty {
             #expect(results[0].amount == 1.5)
