@@ -84,8 +84,8 @@ struct DoseSearchAndFilterViewTests {
         let viewModel = await createTestViewModel()
         let view = DoseSearchAndFilterView(viewModel: viewModel)
 
-        // Should not crash
-        #expect(view.viewModel === viewModel)
+        // Should not crash - verify view model reference
+        await #expect(view.viewModel === viewModel)
     }
 
     // MARK: - Search Functionality Tests
