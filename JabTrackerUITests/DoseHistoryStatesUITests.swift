@@ -313,7 +313,7 @@ final class DoseHistoryStatesUITests: XCTestCase {
         // THEN: Photo indicator is visible for doses with photos
         // Note: Creating doses with photos in UI tests is complex,
         // so we'll verify the photo indicator element exists in the UI hierarchy
-        let _ = app.images["dose-photo-indicator"]
+        _ = app.images["dose-photo-indicator"]
 
         // The photo indicator may not be visible without actual photo data,
         // but we can verify the accessibility identifier exists in the code

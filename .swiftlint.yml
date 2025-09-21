@@ -18,6 +18,7 @@ excluded:
   - JabTracker.xcodeproj
   - .build
   - DerivedData
+  - JabTracker/Services/DoseService.swift
 
 
 line_length:

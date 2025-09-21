@@ -34,7 +34,9 @@ final class DoseService {
     init(pkEngine: PharmacokineticsEngine) {
         self.pkEngine = pkEngine
     }
+
     // MARK: - Dose Creation
+
     /// Saves a new dose and triggers pharmacokinetics recalculation
     /// - Parameters:
     ///   - amount: Dose amount in mg
