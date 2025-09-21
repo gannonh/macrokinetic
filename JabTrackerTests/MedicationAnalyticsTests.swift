@@ -7,9 +7,10 @@
 //
 
 import Foundation
-@testable import JabTracker
 import SwiftData
 import Testing
+
+@testable import JabTracker
 
 @Suite("Medication Analytics Tests")
 struct MedicationAnalyticsTests {
@@ -19,14 +20,18 @@ struct MedicationAnalyticsTests {
     func medicationTherapeuticWindow() async throws {
         for medication in Medication.allCases {
             // Test that all medications have valid therapeutic ranges
-            #expect(medication.therapeuticMinConcentration > 0,
-                    "Medication \(medication.displayName) should have positive minimum therapeutic concentration")
-            #expect(medication.therapeuticMaxConcentration > medication.therapeuticMinConcentration,
-                    "Medication \(medication.displayName) should have max concentration greater than min")
-            #expect(medication.therapeuticWindow.lowerBound >= 0,
-                    "Medication \(medication.displayName) should have non-negative therapeutic window lower bound")
-            #expect(medication.therapeuticWindow.upperBound > medication.therapeuticWindow.lowerBound,
-                    "Medication \(medication.displayName) should have valid therapeutic window range")
+            #expect(
+                medication.therapeuticMinConcentration > 0,
+                "Medication \(medication.displayName) should have positive minimum therapeutic concentration")
+            #expect(
+                medication.therapeuticMaxConcentration > medication.therapeuticMinConcentration,
+                "Medication \(medication.displayName) should have max concentration greater than min")
+            #expect(
+                medication.therapeuticWindow.lowerBound >= 0,
+                "Medication \(medication.displayName) should have non-negative therapeutic window lower bound")
+            #expect(
+                medication.therapeuticWindow.upperBound > medication.therapeuticWindow.lowerBound,
+                "Medication \(medication.displayName) should have valid therapeutic window range")
         }
     }
 
@@ -34,17 +39,21 @@ struct MedicationAnalyticsTests {
     func medicationEffectivenessMetrics() async throws {
         for medication in Medication.allCases {
             // Test effectiveness calculation properties
-            #expect(medication.effectivenessFactors.count > 0,
-                    "Medication \(medication.displayName) should have effectiveness factors")
-            #expect(medication.baseEffectivenessScore >= 0.0 && medication.baseEffectivenessScore <= 1.0,
-                    "Medication \(medication.displayName) should have effectiveness score between 0.0 and 1.0")
+            #expect(
+                medication.effectivenessFactors.count > 0,
+                "Medication \(medication.displayName) should have effectiveness factors")
+            #expect(
+                medication.baseEffectivenessScore >= 0.0 && medication.baseEffectivenessScore <= 1.0,
+                "Medication \(medication.displayName) should have effectiveness score between 0.0 and 1.0")
 
             // Test that effectiveness can be calculated for a given concentration
-            let testConcentration = medication.therapeuticMinConcentration +
-                (medication.therapeuticMaxConcentration - medication.therapeuticMinConcentration) / 2
+            let testConcentration =
+                medication.therapeuticMinConcentration
+                    + (medication.therapeuticMaxConcentration - medication.therapeuticMinConcentration) / 2
             let effectiveness = medication.calculateEffectiveness(concentration: testConcentration)
-            #expect(effectiveness >= 0.0 && effectiveness <= 1.0,
-                    "Calculated effectiveness should be between 0.0 and 1.0")
+            #expect(
+                effectiveness >= 0.0 && effectiveness <= 1.0,
+                "Calculated effectiveness should be between 0.0 and 1.0")
         }
     }
 
@@ -52,16 +61,20 @@ struct MedicationAnalyticsTests {
     func medicationOnsetAndDuration() async throws {
         for medication in Medication.allCases {
             // Test onset time properties
-            #expect(medication.onsetTimeHours > 0,
-                    "Medication \(medication.displayName) should have positive onset time")
-            #expect(medication.onsetTimeHours < 72, // 3 days max seems reasonable
-                    "Medication \(medication.displayName) should have reasonable onset time")
+            #expect(
+                medication.onsetTimeHours > 0,
+                "Medication \(medication.displayName) should have positive onset time")
+            #expect(
+                medication.onsetTimeHours < 72, // 3 days max seems reasonable
+                "Medication \(medication.displayName) should have reasonable onset time")
 
             // Test duration properties
-            #expect(medication.effectiveDurationHours > 0,
-                    "Medication \(medication.displayName) should have positive effective duration")
-            #expect(medication.effectiveDurationHours > medication.onsetTimeHours,
-                    "Medication \(medication.displayName) duration should be longer than onset time")
+            #expect(
+                medication.effectiveDurationHours > 0,
+                "Medication \(medication.displayName) should have positive effective duration")
+            #expect(
+                medication.effectiveDurationHours > medication.onsetTimeHours,
+                "Medication \(medication.displayName) duration should be longer than onset time")
         }
     }
 
@@ -71,7 +84,8 @@ struct MedicationAnalyticsTests {
     @MainActor
     func medicationProfileAdherenceCalculation() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
+        let container = try ModelContainer(
+            for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
 
         // Create test data
@@ -105,15 +119,17 @@ struct MedicationAnalyticsTests {
             to: endDate,
             context: context)
 
-        #expect(adherence >= 0.0 && adherence <= 1.0,
-                "Adherence should be between 0.0 and 1.0")
+        #expect(
+            adherence >= 0.0 && adherence <= 1.0,
+            "Adherence should be between 0.0 and 1.0")
     }
 
     @Test("MedicationProfile should calculate effectiveness score")
     @MainActor
     func medicationProfileEffectivenessScore() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
+        let container = try ModelContainer(
+            for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
 
         // Create test profile
@@ -136,15 +152,17 @@ struct MedicationAnalyticsTests {
             adherence: testAdherence,
             timeOnMedicationDays: 30)
 
-        #expect(effectiveness >= 0.0 && effectiveness <= 1.0,
-                "Effectiveness score should be between 0.0 and 1.0")
+        #expect(
+            effectiveness >= 0.0 && effectiveness <= 1.0,
+            "Effectiveness score should be between 0.0 and 1.0")
     }
 
     @Test("MedicationProfile should provide time-based effectiveness insights")
     @MainActor
     func medicationProfileTimeBasedEffectiveness() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
+        let container = try ModelContainer(
+            for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
 
         // Create test profile
@@ -169,8 +187,9 @@ struct MedicationAnalyticsTests {
         // Test that insights are properly formatted
         for insight in timeBased {
             #expect(!insight.period.isEmpty, "Each insight should have a time period")
-            #expect(insight.effectivenessChange != nil || insight.note != nil,
-                    "Each insight should provide either effectiveness change or note")
+            #expect(
+                insight.effectivenessChange != nil || insight.note != nil,
+                "Each insight should provide either effectiveness change or note")
         }
     }
 
@@ -180,7 +199,8 @@ struct MedicationAnalyticsTests {
     @MainActor
     func medicationProfileConcentrationTimeline() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
+        let container = try ModelContainer(
+            for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
 
         // Create test data
@@ -202,7 +222,8 @@ struct MedicationAnalyticsTests {
         dose1.medication = profile
         context.insert(dose1)
 
-        let dose2 = Dose(amount: 1.0, timestamp: Calendar.current.date(byAdding: .day, value: 7, to: baseDate)!)
+        let dose2 = Dose(
+            amount: 1.0, timestamp: Calendar.current.date(byAdding: .day, value: 7, to: baseDate)!)
         dose2.user = user
         dose2.medication = profile
         context.insert(dose2)
@@ -238,8 +259,9 @@ struct MedicationAnalyticsTests {
         let therapeuticWindow = medication.therapeuticWindow
 
         // Verify that therapeutic window makes sense relative to half-life
-        #expect(therapeuticWindow.lowerBound > 0,
-                "Therapeutic window should have positive lower bound")
+        #expect(
+            therapeuticWindow.lowerBound > 0,
+            "Therapeutic window should have positive lower bound")
 
         // Test effectiveness calculation with pharmacokinetic data
         let testConcentration = medication.therapeuticMinConcentration
