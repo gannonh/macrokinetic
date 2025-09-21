@@ -227,7 +227,7 @@ Task:
 
       Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 
-      1. Stub E2E acceptance test to define user-facing success (criteria only)
+      1. E2E Acceptance Criteria: Stub E2E acceptance test to define user-facing success (criteria only)
 
       // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
          func testNameOfTestMethod() throws {
@@ -237,14 +237,13 @@ Task:
             // THEN: Dose entry sheet opens with pre-populated data
          }
 
-
-      2. Write failing unit tests that test isolated business logic and component contracts
-      3. Implement minimal code to satisfy the unit tests
-      4. Run unit tests to verify correctness
-      5. Write failing integration tests that verify component interactions
-      6. Implement minimal code to satisfy the integration tests
-      7. Run integration tests to verify correctness
-      8. Write full E2E tests that verify the entire user flow
+      2. Unit Tests (RED PHASE): Write failing unit tests that test isolated business logic and component contracts
+      3. Implementation: Minimal code to satisfy the unit tests
+      4. Unit Tests (GREEN PHASE): Run unit tests to verify correctness
+      5. Integration Tests (RED PHASE): Write failing integration tests that verify component interactions
+      6. Implementation: Implement minimal code to satisfy the integration tests
+      7. Integration Tests (GREEN PHASE): Run integration tests to verify correctness
+      8. E2E Tests (GREEN PHASE - ACCEPTANCE): Write full E2E tests that verify the entire user flow
 
       E2E Testing Element Targeting (CRITICAL)
 
