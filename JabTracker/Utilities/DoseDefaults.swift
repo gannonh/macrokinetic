@@ -230,7 +230,7 @@ enum DoseDefaults {
 
     /// Check if there's a dose in the current period based on frequency
     private static func checkForDoseInPeriod(
-        frequency: MedicationFrequency,
+        frequency: DoseFrequency,
         checkDate: Date,
         sortedDoses: [Dose],
         calendar: Calendar) -> Bool
@@ -254,7 +254,7 @@ enum DoseDefaults {
 
     /// Move to the previous period based on frequency
     private static func moveToPreviousPeriod(
-        frequency: MedicationFrequency,
+        frequency: DoseFrequency,
         currentDate: Date,
         calendar: Calendar) -> Date?
     {
