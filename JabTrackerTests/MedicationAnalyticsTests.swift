@@ -6,6 +6,7 @@
 //  concentration calculations, and pharmacokinetic properties.
 //
 
+import Foundation
 @testable import JabTracker
 import SwiftData
 import Testing
@@ -73,7 +74,7 @@ struct MedicationAnalyticsTests {
         let context = container.mainContext
 
         // Create test data
-        let user = User(appleUserId: "test-user", email: "test@example.com", fullName: "Test User")
+        let user = User(email: "test@example.com", name: "Test User", appleUserId: "test-user")
         context.insert(user)
 
         let profile = MedicationProfile(
@@ -114,7 +115,7 @@ struct MedicationAnalyticsTests {
         let context = container.mainContext
 
         // Create test profile
-        let user = User(appleUserId: "test-user", email: "test@example.com", fullName: "Test User")
+        let user = User(email: "test@example.com", name: "Test User", appleUserId: "test-user")
         context.insert(user)
 
         let profile = MedicationProfile(
@@ -144,7 +145,7 @@ struct MedicationAnalyticsTests {
         let context = container.mainContext
 
         // Create test profile
-        let user = User(appleUserId: "test-user", email: "test@example.com", fullName: "Test User")
+        let user = User(email: "test@example.com", name: "Test User", appleUserId: "test-user")
         context.insert(user)
 
         let profile = MedicationProfile(
@@ -179,7 +180,7 @@ struct MedicationAnalyticsTests {
         let context = container.mainContext
 
         // Create test data
-        let user = User(appleUserId: "test-user", email: "test@example.com", fullName: "Test User")
+        let user = User(email: "test@example.com", name: "Test User", appleUserId: "test-user")
         context.insert(user)
 
         let profile = MedicationProfile(
