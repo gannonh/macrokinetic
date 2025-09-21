@@ -34,33 +34,35 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 
 ## 2. Functional Requirements
 
-### 2.1 User Authentication & Onboarding
+### 2.1 User Authentication & Onboarding ✅
 
-#### 2.1.1 Account Management
+#### 2.1.1 Account Management ✅
 
-- **Sign In Methods**:
-  - Sign in with Apple (sole authentication method)
-  - Face ID/Touch ID for app access security
-- **Profile Information**:
-  - Name
-  - Email
-  - Date of birth
-  - Weight (with unit conversion between kg/lbs)
-  - Preferred units (kg/lbs)
-  - Time zone
+- ✅ **Sign In Methods** (COMPLETED):
+  - ✅ Sign in with Apple (sole authentication method)
+  - ✅ Face ID/Touch ID for app access security
+- ✅ **Profile Information** (COMPLETED):
+  - ✅ Name
+  - ✅ Email
+  - ✅ Date of birth
+  - ✅ Weight (with unit conversion between kg/lbs)
+  - ✅ Preferred units (kg/lbs)
+  - ✅ Time zone
 
-#### 2.1.2 Onboarding Flow
+#### 2.1.2 Onboarding Flow ✅
 
-- Welcome screens with app benefits
-- Medication selection wizard
-- Initial dose entry
-- Notification permissions request
-- HealthKit permissions
-- Optional: Import existing dose history
+- ✅ Welcome screens with app benefits (COMPLETED in PR #20)
+- ✅ Medication selection wizard (COMPLETED in PR #20)
+- ✅ Initial dose entry (COMPLETED in PR #20)
+- ✅ Notification permissions request (COMPLETED in PR #20)
+- ✅ HealthKit permissions (COMPLETED in PR #20)
+- Optional: Import existing dose history (Future enhancement)
 
-### 2.2 Medication Management
+### 2.2 Medication Management ✅
 
-#### 2.2.1 Supported Medications
+#### 2.2.1 Supported Medications ✅
+
+✅ **Complete Medication Enum Implementation** (COMPLETED):
 
 ```swift
 enum Medication: CaseIterable, Codable {
@@ -68,7 +70,7 @@ enum Medication: CaseIterable, Codable {
     case tirzepatide
     case liraglutide
     case dulaglutide
-    
+
     var brands: [String] {
         switch self {
         case .semaglutide: return ["Ozempic", "Wegovy", "Rybelsus (oral)"]
@@ -77,7 +79,7 @@ enum Medication: CaseIterable, Codable {
         case .dulaglutide: return ["Trulicity"]
         }
     }
-    
+
     var halfLifeDays: Double {
         switch self {
         case .semaglutide: return 7.0
@@ -86,7 +88,7 @@ enum Medication: CaseIterable, Codable {
         case .dulaglutide: return 4.7
         }
     }
-    
+
     var availableDoses: [Double] {
         switch self {
         case .semaglutide: return [0.25, 0.5, 1.0, 1.7, 2.0, 2.4]
@@ -95,7 +97,7 @@ enum Medication: CaseIterable, Codable {
         case .dulaglutide: return [0.75, 1.5, 3.0, 4.5]
         }
     }
-    
+
     var frequency: DoseFrequency {
         switch self {
         case .liraglutide: return .daily
@@ -115,39 +117,41 @@ enum Medication: CaseIterable, Codable {
 - ✅ Start date tracking (COMPLETE - DatePicker integration)
 - Set refill reminders (Future enhancement)
 
-### 2.3 Dose Tracking
+### 2.3 Dose Tracking ✅
 
-#### 2.3.1 Dose Entry
+#### 2.3.1 Dose Entry ✅
 
-- **Quick Add**: One-tap for scheduled doses
-- **Manual Entry**:
-  - Date and time picker
-  - Dose amount selector
-  - Injection site tracking
-  - Optional notes field
-  - Photo attachment via PhotosUI
-- **Missed Dose Handling**:
-  - Mark as skipped
-  - Reschedule options
-  - Smart recommendations
+- ✅ **Quick Add**: One-tap for scheduled doses (COMPLETED in dose-tracking epic)
+- ✅ **Manual Entry** (COMPLETED in dose-tracking epic):
+  - ✅ Date and time picker
+  - ✅ Dose amount selector
+  - ✅ Injection site tracking
+  - ✅ Optional notes field
+  - Photo attachment via PhotosUI (deferred to #43)
+- ✅ **Missed Dose Handling** (COMPLETED in dose-tracking epic):
+  - ✅ Mark as skipped
+  - ✅ Reschedule options
+  - ✅ Smart recommendations
 
-#### 2.3.2 Dose History
+#### 2.3.2 Dose History ✅
 
-- List view with filtering
-- Calendar view with dose indicators
-- Edit past entries
-- Swipe actions (edit/delete)
-- Search functionality
+- ✅ List view with filtering (COMPLETED in dose-tracking epic)
+- ✅ Calendar view with dose indicators (COMPLETED in dose-tracking epic)
+- ✅ Edit past entries (COMPLETED in dose-tracking epic)
+- ✅ Swipe actions (edit/delete) (COMPLETED in dose-tracking epic)
+- ✅ Search functionality (COMPLETED in dose-tracking epic)
 
-### 2.4 Concentration Monitoring
+### 2.4 Concentration Monitoring ✅
 
-#### 2.4.1 Pharmacokinetic Calculations
+#### 2.4.1 Pharmacokinetic Calculations ✅
+
+✅ **PharmacokineticsEngine Implementation Complete** (COMPLETED in PK Engine Integration #45):
 
 ```swift
 class PharmacokineticsEngine: ObservableObject {
     func calculateConcentration(doses: [Dose], medication: Medication, at date: Date) -> Double {
         let decayRate = pow(0.5, 1.0 / medication.halfLifeDays)
-        
+
         return doses.reduce(0.0) { total, dose in
             let daysSince = date.timeIntervalSince(dose.timestamp) / (24 * 60 * 60)
             guard daysSince >= 0 else { return total }
@@ -155,7 +159,7 @@ class PharmacokineticsEngine: ObservableObject {
             return total + remaining
         }
     }
-    
+
     func calculateSteadyState(dose: Double, medication: Medication) -> Double {
         let decayRate = pow(0.5, 1.0 / medication.halfLifeDays)
         let frequencyDays = medication.frequency == .daily ? 1.0 : 7.0
@@ -164,14 +168,14 @@ class PharmacokineticsEngine: ObservableObject {
 }
 ```
 
-#### 2.4.2 Display Metrics
+#### 2.4.2 Display Metrics ✅
 
-- Current concentration level
-- Peak concentration (post-dose)
-- Trough concentration (pre-dose)
-- Time to next dose
-- Percentage of steady-state achieved
-- Therapeutic range indicators
+- ✅ Current concentration level (COMPLETED - ConcentrationCard implementation)
+- ✅ Peak concentration (post-dose) (COMPLETED - Real-time calculations)
+- ✅ Trough concentration (pre-dose) (COMPLETED - Trough level tracking)
+- ✅ Time to next dose (COMPLETED - Scheduling integration)
+- ✅ Percentage of steady-state achieved (COMPLETED - Progress indicators)
+- ✅ Therapeutic range indicators (COMPLETED - Visual indicators)
 
 ### 2.5 Analytics & Visualizations
 
@@ -574,19 +578,19 @@ struct CKField {
 - Medication profile creation and management
 - Dose scheduling and tracking
 
-**Dose Tracking:**
-- Quick dose entry with one-tap functionality
-- Manual dose entry with detailed logging
-- Dose history with calendar view
-- Missed dose handling and rescheduling
+**Dose Tracking (COMPLETED in dose-tracking epic):**
+- ✅ Quick dose entry with one-tap functionality
+- ✅ Manual dose entry with detailed logging
+- ✅ Dose history with calendar view
+- ✅ Missed dose handling and rescheduling
 
 ### Phase 3: Advanced Analytics & Integration (6-8 weeks)
 
-**Pharmacokinetics & Analytics:**
-- Real-time drug concentration calculations
-- Concentration timeline visualization with Swift Charts
-- Adherence tracking and insights
-- Peak/trough level monitoring
+**Pharmacokinetics & Analytics (COMPLETED in PK Engine Integration #45):**
+- ✅ Real-time drug concentration calculations
+- ✅ Concentration timeline visualization with Swift Charts
+- ✅ Adherence tracking and insights
+- ✅ Peak/trough level monitoring
 
 **Data & Health Integration:**
 - Multiple medication support with enum-based definitions
