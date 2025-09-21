@@ -21,6 +21,7 @@ targets:
       - path: JabTracker
         excludes:
           - "*.xcassets"
+          - "**/.swiftlint.yml"
     resources:
       - path: JabTracker/Assets.xcassets
       - path: JabTrackerStoreKit.storekit

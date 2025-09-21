@@ -119,7 +119,6 @@
 		9FF4DFB3D52C64E7D28BF863 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F334A740DD8D72EDF1289 /* OnboardingCoordinator.swift */; };
 		A0C3ED42659EB9205C6E6747 /* SubscriptionUIBaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618AD6B4A0CBE4E64571B984 /* SubscriptionUIBaseTests.swift */; };
 		A2ADF45E5278900BFDDB6302 /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD08D16B26A7F9381D85BF2 /* AuthenticationManager.swift */; };
-		A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */; };
 		A2C793F4063834B3138C061B /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C74ED44FFF6344C1F7DD461 /* HistoryView.swift */; };
 		A7DFDE7FA5AF3CB9100B35DC /* DoseSearchAndFilterViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4BBA1255611FD1860F249B /* DoseSearchAndFilterViewTests.swift */; };
 		AA281B0FB3CB49E08C78FA6F /* AuthenticationUITestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067AD5EAC7C8406273E0DBE6 /* AuthenticationUITestingTests.swift */; };
@@ -255,7 +254,6 @@
 		44D0A0FA309830D40F9CECA3 /* MonthlyStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyStatsView.swift; sourceTree = "<group>"; };
 		4510F5E45EFDA72ABDBD1967 /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		45CA19BCF65A3BA0D292D435 /* ManualAuthenticationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualAuthenticationUITests.swift; sourceTree = "<group>"; };
-		468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerUITests.swift; sourceTree = "<group>"; };
 		4CDFE82FAF62F35CF78943E0 /* ProfileField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileField.swift; sourceTree = "<group>"; };
 		4F18B2F234252433B0A0D03A /* DataControllerInitializationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerInitializationTests.swift; sourceTree = "<group>"; };
 		522C00B809256C4EDA8C764C /* AuthenticationDelegateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDelegateTests.swift; sourceTree = "<group>"; };
@@ -736,7 +734,6 @@
 				A8B1890A105E3B71CA2894BF /* DoseHistoryFilteringUITests.swift */,
 				70180F35345EC1042DDF12C1 /* DoseHistoryStatesUITests.swift */,
 				B12AE5BFDB7B73AE434ED4A5 /* DoseHistorySwipeActionsUITests.swift */,
-				468AA95F832757BEEE5F5508 /* JabTrackerUITests.swift */,
 				93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */,
 				45CA19BCF65A3BA0D292D435 /* ManualAuthenticationUITests.swift */,
 				075FD0B11DBF46FEBC0100A9 /* MedicationProfileAdvancedUITests.swift */,
@@ -955,7 +952,6 @@
 				4A265FFACDFAD9FC8EA228D5 /* DoseHistoryFilteringUITests.swift in Sources */,
 				708C7B08C4CDFE81C89521CB /* DoseHistoryStatesUITests.swift in Sources */,
 				E2A02CFF486C1176925433DC /* DoseHistorySwipeActionsUITests.swift in Sources */,
-				A2BAF65571C6DAA51A0CBF0F /* JabTrackerUITests.swift in Sources */,
 				DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */,
 				FEC4842A548B2AAD5A4625A2 /* ManualAuthenticationUITests.swift in Sources */,
 				CEBFA768117B9D0C4B2E03E2 /* MedicationProfileAdvancedUITests.swift in Sources */,
