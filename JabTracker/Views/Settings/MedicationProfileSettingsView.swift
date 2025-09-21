@@ -6,6 +6,7 @@ struct MedicationProfileSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var authManager: AuthenticationManager
     @Query(sort: \MedicationProfile.startDate, order: .reverse) private var allMedicationProfiles: [MedicationProfile]
+    @ObservedObject var medicationManager: MedicationManager
 
     private var medicationProfiles: [MedicationProfile] {
         guard let currentUser = authManager.currentUser else { return [] }
@@ -16,15 +17,8 @@ struct MedicationProfileSettingsView: View {
     @State private var showingError = false
     @State private var errorMessage = ""
 
-    @State private var medicationManager: MedicationManager?
-
-    private func getMedicationManager() -> MedicationManager {
-        if let manager = medicationManager {
-            return manager
-        }
-        let manager = MedicationManager(modelContext: modelContext)
-        self.medicationManager = manager
-        return manager
+    init(medicationManager: MedicationManager) {
+        self.medicationManager = medicationManager
     }
 
     var body: some View {
@@ -55,10 +49,10 @@ struct MedicationProfileSettingsView: View {
                 } else {
                     Section("Your Medications") {
                         ForEach(self.medicationProfiles, id: \.id) { profile in
-                            MedicationProfileRow(profile: profile)
+                            MedicationProfileRow(profile: profile, medicationManager: self.medicationManager)
                                 .accessibilityIdentifier(
                                     "medication-profile-\(profile.medicationType.lowercased())-" +
-                                    "\(profile.brandName.lowercased())-\(String(format: "%.2f", profile.currentDose))mg"
+                                        "\(profile.brandName.lowercased())-\(String(format: "%.2f", profile.currentDose))mg"
                                 )
                         }
                         .onDelete(perform: self.deleteProfiles)
@@ -77,7 +71,7 @@ struct MedicationProfileSettingsView: View {
             }
             .sheet(isPresented: self.$showingAddProfile) {
                 if let currentUser = authManager.currentUser {
-                    AddMedicationProfileView(medicationManager: self.getMedicationManager(), currentUser: currentUser)
+                    AddMedicationProfileView(medicationManager: self.medicationManager, currentUser: currentUser)
                 }
             }
             .alert("Error", isPresented: self.$showingError) {
@@ -105,9 +99,12 @@ struct MedicationProfileSettingsView: View {
 
 struct MedicationProfileRow: View {
     let profile: MedicationProfile
+    let medicationManager: MedicationManager
 
     var body: some View {
-        NavigationLink(destination: MedicationProfileDetailView(profile: self.profile)) {
+        NavigationLink(
+            destination: MedicationProfileDetailView(profile: self.profile, medicationManager: self.medicationManager)
+        ) {
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -351,17 +348,15 @@ struct AddMedicationProfileView: View {
 
 struct MedicationProfileDetailView: View {
     let profile: MedicationProfile
+    @ObservedObject var medicationManager: MedicationManager
     @State private var showingEditSheet = false
     @State private var showingReconstitutionCalculator = false
     @State private var showingDoseTitration = false
     @Environment(\.modelContext) private var modelContext
-    @State private var medicationManager: MedicationManager
 
-    init(profile: MedicationProfile) {
+    init(profile: MedicationProfile, medicationManager: MedicationManager) {
         self.profile = profile
-        self._medicationManager = State(
-            wrappedValue: MedicationManager(modelContext: DataController.shared.container.mainContext)
-        )
+        self.medicationManager = medicationManager
     }
 
     var body: some View {
@@ -725,6 +720,9 @@ struct EditMedicationProfileView: View {
 }
 
 #Preview {
-    MedicationProfileSettingsView()
-        .modelContainer(DataController.preview.container)
+    let container = DataController.preview.container
+    let medicationManager = MedicationManager(modelContext: container.mainContext)
+
+    return MedicationProfileSettingsView(medicationManager: medicationManager)
+        .modelContainer(container)
 }

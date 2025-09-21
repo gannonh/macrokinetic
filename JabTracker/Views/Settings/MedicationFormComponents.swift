@@ -79,7 +79,9 @@ struct MedicationDosingSection: View {
                     ForEach(self.selectedMedication.availableDoses, id: \.self) { dose in
                         Text("\(String(format: "%.2f", dose)) mg")
                             .tag(dose)
-                            .accessibilityIdentifier("\(self.accessibilityPrefix)-dose-option-\(String(format: "%.2f", dose))")
+                            .accessibilityIdentifier(
+                                "\(self.accessibilityPrefix)-dose-option-\(String(format: "%.2f", dose))"
+                            )
                     }
                 }
                 .accessibilityIdentifier("\(self.accessibilityPrefix)-dose-picker")

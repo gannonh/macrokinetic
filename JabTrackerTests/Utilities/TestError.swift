@@ -17,15 +17,15 @@ enum TestError: Error, CustomStringConvertible {
 
     var description: String {
         switch self {
-        case .invalidTestData(let message):
+        case let .invalidTestData(message):
             return "Invalid test data: \(message)"
-        case .invalidMedicationProfile(let message):
+        case let .invalidMedicationProfile(message):
             return "Invalid medication profile: \(message)"
-        case .noSampleData(let message):
+        case let .noSampleData(message):
             return "No sample data: \(message)"
-        case .unexpectedNil(let message):
+        case let .unexpectedNil(message):
             return "Unexpected nil value: \(message)"
-        case .testSetupFailed(let message):
+        case let .testSetupFailed(message):
             return "Test setup failed: \(message)"
         }
     }

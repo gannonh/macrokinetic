@@ -172,7 +172,8 @@ enum AdherenceStatisticsCalculator {
         let doseRange: (min: Double, max: Double)? = {
             guard !doseAmounts.isEmpty,
                   let minDose = doseAmounts.min(),
-                  let maxDose = doseAmounts.max() else {
+                  let maxDose = doseAmounts.max()
+            else {
                 return nil
             }
             return (min: minDose, max: maxDose)
@@ -216,8 +217,7 @@ enum AdherenceStatisticsCalculator {
         let dayCount = calendar.dateComponents(
             [.day],
             from: calendar.startOfDay(for: periodStart),
-            to: calendar.startOfDay(for: periodEnd)
-        ).day ?? 0
+            to: calendar.startOfDay(for: periodEnd)).day ?? 0
 
         switch frequency {
         case .daily:

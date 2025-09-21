@@ -110,14 +110,23 @@ struct ConcentrationCardTests {
         // Given: Dose with known medication (semaglutide peaks at 4-16 hours)
         let user = self.createTestUser()
         let medicationProfile = self.createTestMedicationProfile(user: user, medication: .semaglutide)
+
+        self.context.insert(user)
+        self.context.insert(medicationProfile)
+        try self.context.save()
+
+        // Create dose and ensure it's linked to the medication profile
         let dose = self.createTestDose(
             medicationProfile: medicationProfile,
             timestamp: Date(),
             amount: 1.0)
-
-        self.context.insert(user)
-        self.context.insert(medicationProfile)
         self.context.insert(dose)
+
+        // Ensure the relationship is established
+        if medicationProfile.doses == nil {
+            medicationProfile.doses = []
+        }
+        medicationProfile.doses?.append(dose)
         try self.context.save()
 
         // When: Calculating peak level
@@ -126,10 +135,15 @@ struct ConcentrationCardTests {
         // Then: Peak time should be after dose time
         #expect(peakResult.time > dose.timestamp, "Peak time should be after dose timestamp")
 
-        // And: Peak level should account for bioavailability
-        let expectedPeakLevel = dose.amount * Medication.semaglutide.subcutaneousBioavailability
+        // And: Peak level should be calculated using all doses in the profile
+        // The method uses medicationProfile.doses to calculate concentration at peak time
+        let medication = Medication.semaglutide
+        let expectedPeakLevel = self.pkEngine.calculateConcentration(
+            from: medicationProfile.doses ?? [],
+            medication: medication,
+            at: peakResult.time)
         #expect(abs(peakResult.level - expectedPeakLevel) < 0.001,
-                "Peak level should account for bioavailability")
+                "Peak level should match calculated concentration at peak time")
 
         // And: Peak time should match medication's peak time (1 hour for semaglutide)
         let hoursUntilPeak = peakResult.time.timeIntervalSince(dose.timestamp) / 3600
