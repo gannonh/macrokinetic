@@ -263,9 +263,9 @@ Task:
          // 🔍 DEBUG: ScrollViews: []
          // 🔍 DEBUG: CollectionViews: ["dose-history-view"]
 
-      2. Read the raw logs to understand the actual element types and identifiers:
+      2. Read the raw logs to understand the actual element types and identifiers: logs/
 
-      cat logs/latest/raw_output.txt | grep "DEBUG"
+      cat logs/latest_SIMULATOR_ID/raw_output.txt | grep "DEBUG"
 
       Common SwiftUI → Accessibility Mismatches
       - **SwiftUI List** → renders as **CollectionView** (not Table)

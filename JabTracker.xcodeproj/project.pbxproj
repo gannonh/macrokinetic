@@ -28,6 +28,7 @@
 		1AC6C09C2605C2A2717A9416 /* SubscriptionManagerSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4405BED1AC09DED9184CE132 /* SubscriptionManagerSecurityTests.swift */; };
 		1C1F1C5BDDE9918A63F5108F /* PKDashboardIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFBB2AEA81ADDFA68959A6C /* PKDashboardIntegrationTests.swift */; };
 		1CB29176ACFA1192B30ADCF6 /* CalendarDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8214215372768B7456529178 /* CalendarDayView.swift */; };
+		1CC8DC64A1A77A66E65651CC /* AnalyticsServiceIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA9DA110557507873F712DE /* AnalyticsServiceIntegrationTests.swift */; };
 		1DC8EB6ECFCFE42AC5F986E2 /* DoseSearchServiceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDA1DE813A57DA3694E74303 /* DoseSearchServiceUnitTests.swift */; };
 		1E0D912C973F906C52EF582F /* DoseCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83944AE01C58D19D8AAEF994 /* DoseCalendarView.swift */; };
 		1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */; };
@@ -81,6 +82,7 @@
 		660575C2E93022B888FF4627 /* AdherenceStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB250F0FB4DE16CF063CA7F /* AdherenceStatistics.swift */; };
 		682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */; };
 		68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */; };
+		6B58365598CAC977D5C86F3A /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B7AE2951FEA60931B228ACB /* AnalyticsService.swift */; };
 		6D1110D677A82B0FDC706888 /* UserProfileViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */; };
 		6E803EE63051E97A55E968B9 /* DoseAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3823A15F5FCF1DCF1E5859 /* DoseAnalyticsTests.swift */; };
 		6F3061A524E0D5A90989C802 /* DoseTitrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2AFF8F01D51AA1930CFD7A2 /* DoseTitrationView.swift */; };
@@ -217,6 +219,7 @@
 		171F89549A289C654CA8F6B9 /* TestError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestError.swift; sourceTree = "<group>"; };
 		19090A1FF0084878E8E5E150 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
 		19288A54A3628E97CAAE3AFA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		1AA9DA110557507873F712DE /* AnalyticsServiceIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsServiceIntegrationTests.swift; sourceTree = "<group>"; };
 		1B7F23B9040185766D116EAD /* BiometricTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricTestingTests.swift; sourceTree = "<group>"; };
 		1C4BBA1255611FD1860F249B /* DoseSearchAndFilterViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseSearchAndFilterViewTests.swift; sourceTree = "<group>"; };
 		1CDAA0E6A2199F895649643B /* MedicationSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationSelectionView.swift; sourceTree = "<group>"; };
@@ -326,6 +329,7 @@
 		982BEC8C7EF1C6A76703D2FF /* SubscriptionManagerMoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerMoreTests.swift; sourceTree = "<group>"; };
 		98447312C9BA4AA09459C90B /* SubscriptionUITermsPrivacyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUITermsPrivacyTests.swift; sourceTree = "<group>"; };
 		994456F6ED1ED79F5C45296F /* AuthenticationResetAndEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationResetAndEdgeCaseTests.swift; sourceTree = "<group>"; };
+		9B7AE2951FEA60931B228ACB /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		A4973FBCC6CDF5FB31FCF549 /* DoseHistoryViewModelUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryViewModelUnitTests.swift; sourceTree = "<group>"; };
 		A6F1C2F84876E9254E17FF28 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		A7DB90AD3E5FB7CDFB201CC6 /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
@@ -456,6 +460,7 @@
 		5EE7526B96AE972EC9462251 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				9B7AE2951FEA60931B228ACB /* AnalyticsService.swift */,
 				C6B6CDF3795E3B15F9AB2AA1 /* DoseSearchService.swift */,
 				B586AE6F94F894FB215E2710 /* DoseService.swift */,
 				572438AA8526D5758975FA16 /* MedicationManager.swift */,
@@ -536,6 +541,7 @@
 			isa = PBXGroup;
 			children = (
 				BFDB67BEC9C56925232D2C3C /* .swiftlint.yml */,
+				1AA9DA110557507873F712DE /* AnalyticsServiceIntegrationTests.swift */,
 				DD8D1209E3EB9E079E0C5416 /* AuthenticationDatabaseIntegrationTests.swift */,
 				2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */,
 				63B10446D868275C35DDCC8E /* AuthenticationDelegateMethodTests.swift */,
@@ -991,6 +997,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD09578D575D43E963718987 /* AdherenceStatisticsTests.swift in Sources */,
+				1CC8DC64A1A77A66E65651CC /* AnalyticsServiceIntegrationTests.swift in Sources */,
 				72A9BEB2AE70FDDEE0272DD2 /* AuthenticationDatabaseIntegrationTests.swift in Sources */,
 				1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */,
 				F6DABF5FFAA7B073D31CFF18 /* AuthenticationDelegateMethodTests.swift in Sources */,
@@ -1069,6 +1076,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				660575C2E93022B888FF4627 /* AdherenceStatistics.swift in Sources */,
+				6B58365598CAC977D5C86F3A /* AnalyticsService.swift in Sources */,
 				3BACAC6358628D191F57BFB9 /* Array+Unique.swift in Sources */,
 				A2ADF45E5278900BFDDB6302 /* AuthenticationManager.swift in Sources */,
 				BFF5E7E70314E00D22E10A9B /* AuthenticationView.swift in Sources */,
