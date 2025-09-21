@@ -14,7 +14,8 @@ author: Claude Code PM System
 #### Naming Conventions
 ```swift
 // Classes and Structs: PascalCase
-class AuthenticationManager: ObservableObject
+@Observable class AuthenticationManager  // New pattern (iOS 17+)
+class LegacyViewModel: ObservableObject  // Legacy pattern (being migrated)
 struct MedicationProfile
 
 // Variables and Functions: camelCase
@@ -44,7 +45,8 @@ import HealthKit
 struct ContentView: View {
     
     // MARK: - Properties
-    @StateObject private var authManager = AuthenticationManager()
+    @State private var authManager = AuthenticationManager()  // For @Observable classes
+    @StateObject private var legacyVM = LegacyViewModel()    // For ObservableObject classes
     @State private var showingSettings = false
     
     // MARK: - Body
@@ -59,13 +61,51 @@ struct ContentView: View {
 }
 ```
 
+### Observable Pattern (iOS 17+ - Preferred for New Code)
+
+#### @Observable Classes
+```swift
+// ✅ CORRECT: Modern @Observable pattern
+@Observable
+class PharmacokineticsEngine {
+    var concentration: Double = 0.0  // All properties automatically observable
+    var lastCalculation: Date?
+
+    func recalculate() {
+        // No need for @Published
+    }
+}
+
+// In View:
+@State private var pkEngine = PharmacokineticsEngine()
+```
+
+#### Legacy ObservableObject Pattern (Being Migrated - Issue #51)
+```swift
+// ⚠️ LEGACY: Still in use but being migrated
+class DoseHistoryViewModel: ObservableObject {
+    @Published var doses: [Dose] = []
+    @Published var isLoading = false
+}
+
+// In View:
+@StateObject private var viewModel = DoseHistoryViewModel()
+```
+
+#### Property Wrapper Usage Guide
+- **@State**: Use for value types AND @Observable classes
+- **@StateObject**: Use for ObservableObject classes (view owns the object)
+- **@ObservedObject**: Use for ObservableObject classes (object passed in)
+- **@Bindable**: Use for two-way binding with @Observable classes
+
 ### SwiftUI Patterns
 
 #### View Structure
 ```swift
 struct MedicationListView: View {
-    // Properties first (StateObject, State, Binding, Environment)
-    @StateObject private var medicationManager = MedicationManager()
+    // Properties first (State for @Observable, StateObject for ObservableObject)
+    @State private var medicationManager = MedicationManager()  // If using @Observable
+    @StateObject private var legacyManager = LegacyManager()   // If using ObservableObject
     @State private var showingAddView = false
     
     var body: some View {
@@ -588,7 +628,7 @@ var doses: [Dose] = []
 ### Memory Management
 ```swift
 // Use weak references to prevent retain cycles
-class MedicationManager: ObservableObject {
+@Observable class MedicationManager {  // Preferred pattern
     weak var delegate: MedicationManagerDelegate?
     
     // Proper async/await usage
