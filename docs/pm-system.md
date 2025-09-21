@@ -119,10 +119,12 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 /pm:issue-resume issue-number   # Resume work on in-progress issues
 /pm:issue-sync issue-number     # Push progress updates to GitHub
 /context:update                 # Propagate learnings
-/pm:pr-merge issue-number       # Mark PR ready → review → merge to main
-/qa:tq issue-number             # Run test quality analysis and post as PR comment
+/pm:pr-merge pr-number          # Mark PR ready → review → merge to main
+/qa:test-quality pr-number      # Run test quality analysis and post as PR comment
+/qa:code-quality pr-number      # Run code quality analysis and post as PR comment
+/qa:swiftlint                   # Run SwiftLint and SwiftFormat QA workflow with test
 /pm:pr-comments path-or-paste   # Process PR review comments with context-aware discretion
-/pm:pr-merge issue-number       # Resume merge process after reviews
+/pm:pr-merge pr-number          # Resume merge process after reviews
 /pm:issue-close issue-number    # Close issue + update epic progress
 /pm:epic-refresh epic-name      # Update epic progress from tasks
 /pm:sync                        # Full bidirectional sync with GitHub
