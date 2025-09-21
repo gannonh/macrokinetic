@@ -23,7 +23,7 @@ struct DoseCalendarViewTests {
         }
 
         // WHEN: DoseCalendarView is initialized with test data
-        let _ = DoseCalendarView()
+        _ = DoseCalendarView()
 
         // Create a test view with known state
         let testViewModel = TestCalendarViewModel(currentDate: testDate)
@@ -165,7 +165,7 @@ struct DoseCalendarViewTests {
         // GIVEN: Current date
         let calendar = Calendar.current
         let now = Date()
-        let _ = calendar.startOfDay(for: now)
+        _ = calendar.startOfDay(for: now)
 
         // WHEN: Calendar determines if a date is today
         let isToday = calendar.isDateInToday(now)

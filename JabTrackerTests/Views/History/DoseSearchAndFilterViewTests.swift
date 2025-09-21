@@ -14,9 +14,9 @@ import Testing
 struct DoseSearchAndFilterViewTests {
     // MARK: - Test Infrastructure
 
-    private func createTestModelContext() -> ModelContext {
+    private func createTestModelContext() throws -> ModelContext {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        let container = try! ModelContainer(for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+        let container = try ModelContainer(for: User.self, Dose.self, MedicationProfile.self, configurations: config)
         return ModelContext(container)
     }
 
@@ -24,7 +24,7 @@ struct DoseSearchAndFilterViewTests {
         await DoseHistoryViewModel()
     }
 
-    private func setupTestData(context: ModelContext, viewModel: DoseHistoryViewModel) async {
+    private func setupTestData(context: ModelContext, viewModel: DoseHistoryViewModel) async throws {
         let user = User(email: "test@example.com", name: "Test User")
         context.insert(user)
 
@@ -71,7 +71,7 @@ struct DoseSearchAndFilterViewTests {
             medication: medication1)
         context.insert(dose3)
 
-        try! context.save()
+        try context.save()
 
         // Load data into view model
         await viewModel.loadData(context: context)
@@ -80,7 +80,7 @@ struct DoseSearchAndFilterViewTests {
     // MARK: - View Creation Tests
 
     @Test("DoseSearchAndFilterView can be created with view model")
-    func viewCreation() async {
+    func viewCreation() async throws {
         let viewModel = await createTestViewModel()
         let view = DoseSearchAndFilterView(viewModel: viewModel)
 
@@ -92,11 +92,11 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Search text binding works correctly")
     func searchTextBinding() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
-        let _ = DoseSearchAndFilterView(viewModel: viewModel)
+        _ = DoseSearchAndFilterView(viewModel: viewModel)
 
         // Wait for data to load
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -123,9 +123,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Clear search functionality works")
     func clearSearchFunctionality() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -146,9 +146,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Medication filter works correctly")
     func medicationFilter() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -175,9 +175,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Injection site filter works correctly")
     func injectionSiteFilter() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -205,9 +205,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Show skipped doses toggle works")
     func showSkippedDosesToggle() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -232,9 +232,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Date range filters work correctly")
     func dateRangeFilters() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -285,9 +285,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Active filters detection works correctly")
     func activeFiltersDetection() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -348,9 +348,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Clear all filters functionality works")
     func testClearAllFilters() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -394,11 +394,11 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Date range display text formats correctly")
     func dateRangeDisplayText() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
-        let _ = DoseSearchAndFilterView(viewModel: viewModel)
+        _ = DoseSearchAndFilterView(viewModel: viewModel)
 
         // Test no date range
         await MainActor.run {
@@ -444,9 +444,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Multiple filters work together correctly")
     func multipleFiltersInteraction() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -463,7 +463,10 @@ struct DoseSearchAndFilterViewTests {
         await MainActor.run {
             #expect(viewModel.filteredDoses.count == 1)
 
-            let matchingDose = viewModel.filteredDoses.first!
+            guard let matchingDose = viewModel.filteredDoses.first else {
+                Issue.record("Expected to find a matching dose")
+                return
+            }
             #expect(matchingDose.medication?.genericName == "Semaglutide")
             #expect(matchingDose.site == "Thigh")
             #expect(matchingDose.notes?.localizedCaseInsensitiveContains("morning") == true)
@@ -472,9 +475,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Conflicting filters produce empty results")
     func conflictingFilters() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -496,9 +499,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Filter state persists during view lifecycle")
     func filterStatePersistence() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -525,7 +528,7 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Empty data set handling")
     func emptyDataSetHandling() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
 
         // Don't setup any test data
@@ -533,7 +536,7 @@ struct DoseSearchAndFilterViewTests {
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
-        let _ = DoseSearchAndFilterView(viewModel: viewModel)
+        _ = DoseSearchAndFilterView(viewModel: viewModel)
 
         await MainActor.run {
             #expect(viewModel.allDoses.isEmpty)
@@ -546,7 +549,7 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Special characters in search text")
     func specialCharactersInSearch() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
 
         // Create test data with special characters
@@ -568,7 +571,7 @@ struct DoseSearchAndFilterViewTests {
             user: user,
             medication: medication)
         context.insert(dose)
-        try! context.save()
+        try context.save()
 
         await viewModel.loadData(context: context)
 
@@ -599,9 +602,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Very long search text handling")
     func veryLongSearchText() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -622,9 +625,9 @@ struct DoseSearchAndFilterViewTests {
 
     @Test("Date range edge cases")
     func dateRangeEdgeCases() async throws {
-        let context = self.createTestModelContext()
+        let context = try self.createTestModelContext()
         let viewModel = await createTestViewModel()
-        await setupTestData(context: context, viewModel: viewModel)
+        try await setupTestData(context: context, viewModel: viewModel)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
