@@ -4,9 +4,10 @@
 //
 
 import Foundation
-@testable import JabTracker
 import SwiftData
 import Testing
+
+@testable import JabTracker
 
 /// Unit tests for Dose model analytics extensions and computed properties
 @Suite("Dose Analytics Tests")
@@ -16,7 +17,8 @@ struct DoseAnalyticsTests {
     @MainActor
     func createTestModelContainer() throws -> ModelContainer {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        return try ModelContainer(for: Dose.self, User.self, MedicationProfile.self, configurations: config)
+        return try ModelContainer(
+            for: Dose.self, User.self, MedicationProfile.self, configurations: config)
     }
 
     @MainActor
@@ -398,8 +400,10 @@ struct DoseAnalyticsTests {
 
         // Create doses: today, yesterday (skipped), day before yesterday
         let todayDose = self.createTestDose(timestamp: today, skipped: false)
-        let yesterdayDose = self.createTestDose(timestamp: calendar.date(byAdding: .day, value: -1, to: today)!, skipped: true)
-        let dayBeforeDose = self.createTestDose(timestamp: calendar.date(byAdding: .day, value: -2, to: today)!, skipped: false)
+        let yesterdayDose = self.createTestDose(
+            timestamp: calendar.date(byAdding: .day, value: -1, to: today)!, skipped: true)
+        let dayBeforeDose = self.createTestDose(
+            timestamp: calendar.date(byAdding: .day, value: -2, to: today)!, skipped: false)
 
         doses = [todayDose, yesterdayDose, dayBeforeDose]
 
