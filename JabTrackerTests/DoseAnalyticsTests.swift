@@ -74,7 +74,7 @@ struct DoseAnalyticsTests {
 
     @Test("Analytics metadata can be set and retrieved")
     @MainActor
-    func analyticsMetadataSetAndGet() {
+    func analyticsMetadataSetAndGet() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -246,7 +246,7 @@ struct DoseAnalyticsTests {
 
     @Test("daysSinceLastDose calculates correctly from user dose history")
     @MainActor
-    func daysSinceLastDoseCalculation() {
+    func daysSinceLastDoseCalculation() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -280,7 +280,7 @@ struct DoseAnalyticsTests {
 
     @Test("daysSinceLastDose returns nil for first dose")
     @MainActor
-    func daysSinceLastDoseFirstDose() {
+    func daysSinceLastDoseFirstDose() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -304,7 +304,7 @@ struct DoseAnalyticsTests {
 
     @Test("isFirstDoseOfWeek identifies correctly")
     @MainActor
-    func firstDoseOfWeekIdentification() {
+    func firstDoseOfWeekIdentification() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -343,7 +343,7 @@ struct DoseAnalyticsTests {
 
     @Test("currentStreak calculates correctly for consecutive doses")
     @MainActor
-    func currentStreakConsecutiveDoses() {
+    func currentStreakConsecutiveDoses() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -377,7 +377,7 @@ struct DoseAnalyticsTests {
 
     @Test("currentStreak breaks with skipped dose")
     @MainActor
-    func currentStreakWithSkippedDose() {
+    func currentStreakWithSkippedDose() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -414,7 +414,7 @@ struct DoseAnalyticsTests {
 
     @Test("longestStreak calculates historical maximum")
     @MainActor
-    func longestStreakCalculation() {
+    func longestStreakCalculation() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -533,7 +533,7 @@ struct DoseAnalyticsTests {
 
     @Test("streak calculations handle single dose correctly")
     @MainActor
-    func streakCalculationsSingleDose() {
+    func streakCalculationsSingleDose() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
@@ -561,7 +561,7 @@ struct DoseAnalyticsTests {
 
     @Test("analytics fields are CloudKit compatible")
     @MainActor
-    func cloudKitCompatibility() {
+    func cloudKitCompatibility() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
 
