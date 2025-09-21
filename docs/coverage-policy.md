@@ -37,12 +37,13 @@ Due to SwiftUI's architecture limitations, traditional 80% overall coverage targ
 Real testing happens through integration tests and E2E testing.
 
 ### Tier 4: View Models (85% minimum required)
-**ObservableObject classes that contain testable business logic:**
+**@Observable and ObservableObject classes that contain testable business logic:**
 
-- Currently none defined (SwiftUI views handle state directly)
-- Future ViewModels should be added here as architecture evolves
+- ViewModels using `@Observable` (new pattern - preferred)
+- ViewModels using `ObservableObject` (legacy pattern - being migrated per Issue #51)
+- Examples: `OnboardingViewModel`, `DoseHistoryViewModel`, `QuickDoseViewModel`
 
-**Rationale:** View models contain presentation logic that's easily testable and critical for proper UI behavior.
+**Rationale:** View models contain presentation logic that's easily testable and critical for proper UI behavior. Both @Observable and ObservableObject patterns are testable.
 
 ### Tier 5: Utilities & Extensions (75% minimum required)
 **Helper functions, extensions, and utility classes:**
@@ -142,8 +143,9 @@ When adding new files:
    - Data persistence logic
    - Critical business rules
 
-2. **View Models**: Add to Tier 2 (85% requirement) if contains:
-   - ObservableObject with business logic
+2. **View Models**: Add to Tier 4 (85% requirement) if contains:
+   - @Observable class with business logic (preferred for new code)
+   - ObservableObject with business logic (legacy pattern)
    - Presentation state management
    - User interaction handling
 
@@ -157,7 +159,7 @@ When adding new files:
 ## Current Status
 
 **Business Logic Coverage:** Varies by file (see `./scripts/check-coverage.sh` output)
-**View Models:** None defined yet
+**View Models:** Multiple ViewModels exist using both @Observable and ObservableObject patterns
 **Overall App Coverage:** ~23% (informational only, not a requirement)
 
 ## Best Practices

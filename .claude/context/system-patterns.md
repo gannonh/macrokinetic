@@ -11,9 +11,9 @@ author: Claude Code PM System
 
 ### MVVM with SwiftUI
 - **Views**: SwiftUI declarative UI components
-- **ViewModels**: ObservableObject classes managing business logic
+- **ViewModels**: @Observable classes managing business logic (migrating from ObservableObject - see Issue #51)
 - **Models**: SwiftData entities with CloudKit sync
-- **Services**: Singleton managers for cross-cutting concerns
+- **Services**: @Observable classes for cross-cutting concerns
 
 ### Data Flow Architecture
 ```
@@ -127,11 +127,25 @@ Individual Test Methods (testUserCreation, testDoseCalculation)
 
 ## State Management Patterns
 
-### Published Properties
+### Observable Pattern (iOS 17+ - Preferred for New Code)
 ```swift
-@Published var isAuthenticated: Bool
-@Published var currentUser: User?
-@Published var syncStatus: CloudKitSyncStatus
+@Observable
+class ViewModel {
+    var isAuthenticated: Bool = false
+    var currentUser: User?
+    var syncStatus: CloudKitSyncStatus = .idle
+}
+// In View: @State private var viewModel = ViewModel()
+```
+
+### Legacy ObservableObject Pattern (Being Migrated - Issue #51)
+```swift
+class ViewModel: ObservableObject {
+    @Published var isAuthenticated: Bool
+    @Published var currentUser: User?
+    @Published var syncStatus: CloudKitSyncStatus
+}
+// In View: @StateObject private var viewModel = ViewModel()
 ```
 
 ### SwiftData Relationships
@@ -207,5 +221,14 @@ var children: [Child] = []
 ### CloudKit + SwiftData Integration
 - Always implement graceful fallback when CloudKit is unavailable
 - Check for test environment before enabling CloudKit to avoid test conflicts
-- Use `@Published` properties for real-time sync status updates
+- Use `@Published` properties for real-time sync status updates (or plain properties with @Observable)
 - Provide clear user feedback about sync status with actionable guidance
+
+### Observable Migration Strategy (Issue #51)
+- **NEW CODE**: Always use `@Observable` pattern for new ViewModels and Services
+- **EXISTING CODE**: Gradually migrate `ObservableObject` classes to `@Observable`
+- **VIEW PROPERTY WRAPPERS**:
+  - Use `@State` for `@Observable` classes
+  - Use `@StateObject`/`@ObservedObject` for `ObservableObject` classes
+- **BENEFITS**: Simpler syntax, better performance, automatic observation of all properties
+- **REQUIREMENTS**: iOS 17+ (already required by app)
