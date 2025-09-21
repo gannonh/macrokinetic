@@ -357,8 +357,8 @@ struct DoseAnalyticsTests {
         var doses: [Dose] = []
 
         // Create 5 consecutive daily doses (today back to 4 days ago)
-        for i in 0 ..< 5 {
-            let date = calendar.date(byAdding: .day, value: -i, to: today)!
+        for dayOffset in 0 ..< 5 {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: today)!
             let dose = self.createTestDose(timestamp: date)
             dose.user = user
             dose.medication = medication
@@ -431,8 +431,8 @@ struct DoseAnalyticsTests {
 
         // Create pattern: 3 consecutive doses, 1 skipped, 5 consecutive doses
         // This creates a longest streak of 5
-        for i in 0 ..< 3 {
-            let date = calendar.date(byAdding: .day, value: -(i + 6), to: today)!
+        for dayOffset in 0 ..< 3 {
+            let date = calendar.date(byAdding: .day, value: -(dayOffset + 6), to: today)!
             let dose = self.createTestDose(timestamp: date, skipped: false)
             dose.user = user
             dose.medication = medication
@@ -449,8 +449,8 @@ struct DoseAnalyticsTests {
         context.insert(skippedDose)
 
         // 5 consecutive doses (longest streak)
-        for i in 0 ..< 5 {
-            let date = calendar.date(byAdding: .day, value: -i, to: today)!
+        for dayOffset in 0 ..< 5 {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: today)!
             let dose = self.createTestDose(timestamp: date, skipped: false)
             dose.user = user
             dose.medication = medication
