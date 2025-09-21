@@ -1,0 +1,10 @@
+# SwiftLint Configuration for Services
+# Allows longer files for complex service classes requiring comprehensive medical logic
+
+file_length:
+  warning: 600  # Increased for complex service classes with comprehensive medical search/validation
+  error: 800
+
+type_body_length:
+  warning: 450  # Increased for service classes with extensive method collections
+  error: 600

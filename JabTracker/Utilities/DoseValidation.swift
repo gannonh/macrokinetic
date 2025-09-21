@@ -236,7 +236,9 @@ enum ValidationError: LocalizedError {
         switch self {
         case let .invalidDoseAmount(amount, medication, brand):
             let availableDoses = medication.availableDoses(for: brand).map { String($0) }.joined(separator: ", ")
-            return "Dose \(amount) mg is not available for \(medication.displayName) (\(brand)). Available doses: \(availableDoses) mg"
+            let medicationName = medication.displayName
+            return "Dose \(amount) mg is not available for \(medicationName) (\(brand)). " +
+                "Available doses: \(availableDoses) mg"
 
         case let .invalidDosePrecision(amount, medication):
             return "Dose \(amount) mg has invalid precision for \(medication.displayName). Use appropriate increments."

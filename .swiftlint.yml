@@ -1,4 +1,10 @@
 # SwiftLint Configuration
+#
+# Note: Additional SwiftLint configurations exist for specific directories:
+# - JabTracker/Services/.swiftlint.yml (allows longer files for complex service classes)
+# - JabTracker/Views/.swiftlint.yml (allows longer files for complex SwiftUI views)
+# - JabTrackerTests/.swiftlint.yml (allows test-specific patterns like force unwrapping)
+# - JabTrackerUITests/.swiftlint.yml (allows UI test-specific patterns)
 
 disabled_rules:
   - trailing_whitespace
@@ -36,6 +42,11 @@ file_length:
 function_body_length:
   warning: 50
   error: 80
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+  ignores_case_statements: false
 
 identifier_name:
   min_length: 

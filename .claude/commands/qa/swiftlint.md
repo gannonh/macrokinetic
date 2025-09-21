@@ -14,8 +14,11 @@ Run the complete SwiftLint and SwiftFormat quality assurance workflow with test 
 3. Verify all unit tests still pass: `./scripts/test.sh unit 1`
 4. Fix failing unit tests (if any) until all tests pass
 5. Run SwiftLint to check for remaining violations: `swiftlint`
-6. Fix ALL remaining violations manually
-7. Verify all unit tests still pass after manual fixes: `./scripts/test.sh unit 1`
+6. If violations are justified (e.g. complex medical logic), provide rationale and suggest either:
+   1. Add exceptions in code comments; or
+   2. Update .swiftlint.yml (generate or dir specific)
+7. Fix ALL remaining violations manually
+8. Verify all unit tests still pass after manual fixes: `./scripts/test.sh unit 1`
 
 ## Success Criteria
 

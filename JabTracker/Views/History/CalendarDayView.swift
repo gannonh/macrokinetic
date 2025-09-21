@@ -61,7 +61,9 @@ struct CalendarDayView: View {
                     .frame(height: 4)
             } else if self.doses.count == 1 {
                 // Single dose indicator
-                self.singleDoseIndicator(dose: self.doses.first!)
+                if let firstDose = self.doses.first {
+                    self.singleDoseIndicator(dose: firstDose)
+                }
             } else {
                 // Multiple doses indicator
                 self.multipleDoseIndicator()
@@ -208,7 +210,7 @@ struct CalendarDayView: View {
         }
 
         CalendarDayView(
-            date: calendar.date(byAdding: .day, value: 1, to: today)!,
+            date: calendar.date(byAdding: .day, value: 1, to: today) ?? today,
             doses: [],
             isToday: false,
             isSelected: false)
@@ -217,7 +219,7 @@ struct CalendarDayView: View {
         }
 
         CalendarDayView(
-            date: calendar.date(byAdding: .day, value: -1, to: today)!,
+            date: calendar.date(byAdding: .day, value: -1, to: today) ?? today,
             doses: [mockDose, mockDose],
             isToday: false,
             isSelected: true)

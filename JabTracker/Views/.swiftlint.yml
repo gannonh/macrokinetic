@@ -1,0 +1,6 @@
+# SwiftLint Configuration for Views
+# Allows longer files for complex SwiftUI views in medical apps
+
+file_length:
+  warning: 450  # Increased for complex SwiftUI views
+  error: 500

@@ -46,7 +46,7 @@ enum DoseDefaults {
         preferredSites: [String]? = nil) -> String
     {
         let sites = preferredSites ?? self.recommendedInjectionSites(for: medication)
-        guard !sites.isEmpty else { return self.allInjectionSites.first! }
+        guard !sites.isEmpty else { return self.allInjectionSites.first ?? "Abdomen" }
 
         // Get recent injection sites from last few doses
         let recentSites = recentDoses
@@ -54,14 +54,12 @@ enum DoseDefaults {
             .compactMap(\.site)
 
         // Find first site in rotation that wasn't recently used
-        for site in sites {
-            if !recentSites.contains(site) {
-                return site
-            }
+        for site in sites where !recentSites.contains(site) {
+            return site
         }
 
         // If all sites were recently used, return first in rotation
-        return sites.first!
+        return sites.first ?? "Abdomen"
     }
 
     // MARK: - Dose Timing Recommendations
@@ -209,41 +207,63 @@ enum DoseDefaults {
 
         // Work backwards from current date checking for doses
         while true {
-            let hasDoseInPeriod: Bool
-            let dateRange: DateInterval
-
-            switch frequency {
-            case .daily:
-                // Check if there's a dose on this day
-                let startOfDay = calendar.startOfDay(for: checkDate)
-                let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-                dateRange = DateInterval(start: startOfDay, end: endOfDay)
-
-            case .weekly:
-                // Check if there's a dose in this week
-                let weekInterval = calendar.dateInterval(of: .weekOfYear, for: checkDate)!
-                dateRange = weekInterval
-            }
-
-            hasDoseInPeriod = sortedDoses.contains { dose in
-                dateRange.contains(dose.timestamp) && !dose.skipped
-            }
+            let hasDoseInPeriod = self.checkForDoseInPeriod(
+                frequency: frequency,
+                checkDate: checkDate,
+                sortedDoses: sortedDoses,
+                calendar: calendar)
 
             if hasDoseInPeriod {
                 streak += 1
-                // Move to previous period
-                switch frequency {
-                case .daily:
-                    checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate)!
-                case .weekly:
-                    checkDate = calendar.date(byAdding: .weekOfYear, value: -1, to: checkDate)!
-                }
+                guard let newDate = moveToPreviousPeriod(
+                    frequency: frequency,
+                    currentDate: checkDate,
+                    calendar: calendar) else { break }
+                checkDate = newDate
             } else {
                 break
             }
         }
 
         return streak
+    }
+
+    /// Check if there's a dose in the current period based on frequency
+    private static func checkForDoseInPeriod(
+        frequency: MedicationFrequency,
+        checkDate: Date,
+        sortedDoses: [Dose],
+        calendar: Calendar) -> Bool
+    {
+        switch frequency {
+        case .daily:
+            let startOfDay = calendar.startOfDay(for: checkDate)
+            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return false }
+            let dateRange = DateInterval(start: startOfDay, end: endOfDay)
+            return sortedDoses.contains { dose in
+                dateRange.contains(dose.timestamp) && !dose.skipped
+            }
+
+        case .weekly:
+            guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: checkDate) else { return false }
+            return sortedDoses.contains { dose in
+                weekInterval.contains(dose.timestamp) && !dose.skipped
+            }
+        }
+    }
+
+    /// Move to the previous period based on frequency
+    private static func moveToPreviousPeriod(
+        frequency: MedicationFrequency,
+        currentDate: Date,
+        calendar: Calendar) -> Date?
+    {
+        switch frequency {
+        case .daily:
+            return calendar.date(byAdding: .day, value: -1, to: currentDate)
+        case .weekly:
+            return calendar.date(byAdding: .weekOfYear, value: -1, to: currentDate)
+        }
     }
 
     /// Get summary statistics for a medication profile

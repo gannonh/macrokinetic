@@ -27,12 +27,13 @@ gh issue view $ARGUMENTS --json title,body,labels
 ### 2. Interactive Edit
 
 Ask user what to edit:
-- Title
-- Description/Body
-- Labels
-- Acceptance criteria (local only)
-- Priority/Size (local only)
-- **Defer issue** (postpone indefinitely for future re-assessment)
+1. Title
+2. Description/Body
+3. Labels
+4. Acceptance criteria (local only)
+5. Priority/Size (local only)
+6. Defer issue (postpone indefinitely for future re-assessment)
+7. Close issue - As not planned or no longer needed (if complete use /pm:issue-close instead)
 
 ### 3. Update Local File
 

@@ -1,5 +1,11 @@
 disabled_rules:
   - function_body_length
+  - force_unwrapping
+  - force_try
+
+line_length:
+  warning: 150  # Longer lines acceptable for test assertions and setup
+  error: 200
 
 file_length:
   warning: 800
