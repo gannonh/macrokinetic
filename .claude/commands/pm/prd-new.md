@@ -1,15 +1,12 @@
 ---
+description: Create a new Product Requirements Document (PRD) through structured brainstorming.
+argument-hint: <feature_name>
 allowed-tools: Read, Write, LS
 ---
 
 # PRD New
 
 Launch brainstorming for new product requirement document.
-
-## Usage
-```
-/pm:prd-new <feature_name>
-```
 
 ## Required Rules
 

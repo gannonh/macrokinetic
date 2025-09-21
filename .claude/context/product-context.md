@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-16T22:39:56Z
-version: 1.3
+last_updated: 2025-09-21T20:59:02Z
+version: 1.4
 author: Claude Code PM System
 ---
 
@@ -80,19 +80,19 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - Injection site preferences and rotation
 - Start date and refill tracking
 
-### Dose Tracking
+### Dose Tracking ✅
 - ✅ **Quick one-tap dose entry** - Implemented via "+" tab button with QuickDoseSheet
-- Manual entry with full details (time, site, notes, photos) - Covered by quick entry
-- Missed dose handling and rescheduling
-- Historical dose review and editing
+- ✅ **Manual entry with full details** - Complete form with time, site, notes (photos deferred)
+- ✅ **Missed dose handling and rescheduling** - Skip dose functionality
+- ✅ **Historical dose review and editing** - Complete history list with swipe actions
 - ✅ **Calendar view with dose indicators** - Full calendar integration with monthly navigation, dose indicators, and statistics
 
-### Pharmacokinetic Monitoring
-- Real-time concentration calculations
-- Peak and trough level tracking
-- Steady-state progress monitoring
-- Therapeutic range indicators
-- Future concentration projections
+### Pharmacokinetic Monitoring ✅
+- ✅ **Real-time concentration calculations** - Complete PharmacokineticsEngine implementation
+- ✅ **Peak and trough level tracking** - ConcentrationCard dashboard display
+- ✅ **Steady-state progress monitoring** - Progress percentage with visual indicators
+- ✅ **Therapeutic range indicators** - Color-coded concentration displays
+- ✅ **Concentration projections** - Future level calculations
 
 ### Analytics and Insights
 - ✅ **Adherence percentage and streaks** - Monthly statistics with real-time calculations
@@ -143,6 +143,13 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Statistics integration creates valuable insights** - Monthly adherence rates, streak tracking, and dose distribution provide actionable healthcare data
 - **Seamless History tab integration maintains existing user workflow patterns** - Segmented control allows users to switch between list and calendar views without disrupting established habits
 
+## Product Insights from PK Engine Integration (Issue #45)
+- **Real-time pharmacokinetic calculations provide significant user value over basic dose tracking** - Concentration monitoring transforms the app from simple logging to medical insights
+- **Dashboard integration makes concentration data actionable for users** - ConcentrationCard displays current levels prominently for daily decision-making
+- **Comprehensive dose entry integration creates seamless user workflow** - Automatic recalculation after dose entry provides immediate feedback
+- **Medical accuracy requirements drive comprehensive testing approaches** - 8 E2E acceptance tests ensure calculation reliability for healthcare applications
+
 ## Update History
+- 2025-09-21T20:59:02Z: Epic complete! Updated all core feature status - dose tracking and pharmacokinetics fully implemented
 - 2025-09-16T22:39:56Z: Added calendar integration insights and updated dose tracking/analytics feature status
 - 2025-09-12T16:35:25Z: Updated dose tracking feature status - quick dose entry now implemented
