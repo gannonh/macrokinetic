@@ -68,6 +68,7 @@ struct MedicationAnalyticsTests {
     // MARK: - MedicationProfile Analytics Tests
 
     @Test("MedicationProfile should calculate adherence metrics")
+    @MainActor
     func medicationProfileAdherenceCalculation() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
@@ -109,6 +110,7 @@ struct MedicationAnalyticsTests {
     }
 
     @Test("MedicationProfile should calculate effectiveness score")
+    @MainActor
     func medicationProfileEffectivenessScore() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
@@ -139,6 +141,7 @@ struct MedicationAnalyticsTests {
     }
 
     @Test("MedicationProfile should provide time-based effectiveness insights")
+    @MainActor
     func medicationProfileTimeBasedEffectiveness() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
@@ -152,8 +155,8 @@ struct MedicationAnalyticsTests {
             genericName: "semaglutide",
             brandName: "Ozempic",
             currentDose: 1.0,
-            medicationType: "semaglutide",
-            startDate: Calendar.current.date(byAdding: .day, value: -30, to: Date())!)
+            startDate: Calendar.current.date(byAdding: .day, value: -30, to: Date())!,
+            medicationType: "semaglutide")
         profile.user = user
         context.insert(profile)
 
@@ -174,6 +177,7 @@ struct MedicationAnalyticsTests {
     // MARK: - Concentration Timeline Tests
 
     @Test("MedicationProfile should generate concentration timeline")
+    @MainActor
     func medicationProfileConcentrationTimeline() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: User.self, MedicationProfile.self, Dose.self, configurations: config)
@@ -231,7 +235,6 @@ struct MedicationAnalyticsTests {
         let medication = Medication.semaglutide
 
         // Test that therapeutic window aligns with pharmacokinetic properties
-        let halfLife = medication.halfLifeHours
         let therapeuticWindow = medication.therapeuticWindow
 
         // Verify that therapeutic window makes sense relative to half-life
