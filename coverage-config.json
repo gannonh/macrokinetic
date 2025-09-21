@@ -15,8 +15,7 @@
           "PharmacokineticsEngine.swift",
           "ReconstitutionCalculator.swift",
           "DoseTitration.swift",
-          "AdherenceStatistics.swift",
-          "UserAnalyticsTests.swift"
+          "AdherenceStatistics.swift"
         ]
       },
       "infrastructure": {

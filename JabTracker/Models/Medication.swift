@@ -137,3 +137,99 @@ enum Medication: String, CaseIterable, Codable, Identifiable {
         return Medication.allCases.first { $0.rawValue.lowercased() == lowercaseName }
     }
 }
+
+// MARK: - Analytics Properties
+
+extension Medication {
+    /// Therapeutic concentration range for effectiveness calculations
+    var therapeuticMinConcentration: Double {
+        switch self {
+        case .semaglutide: return 0.5 // ng/mL
+        case .tirzepatide: return 1.0 // ng/mL
+        case .liraglutide: return 2.0 // ng/mL
+        case .dulaglutide: return 0.8 // ng/mL
+        }
+    }
+
+    var therapeuticMaxConcentration: Double {
+        switch self {
+        case .semaglutide: return 15.0 // ng/mL
+        case .tirzepatide: return 25.0 // ng/mL
+        case .liraglutide: return 12.0 // ng/mL
+        case .dulaglutide: return 18.0 // ng/mL
+        }
+    }
+
+    /// Therapeutic window as a range for chart visualization
+    var therapeuticWindow: ClosedRange<Double> {
+        self.therapeuticMinConcentration ... self.therapeuticMaxConcentration
+    }
+
+    /// Base effectiveness score (0.0 to 1.0) representing medication's inherent efficacy
+    var baseEffectivenessScore: Double {
+        switch self {
+        case .semaglutide: return 0.85 // High efficacy
+        case .tirzepatide: return 0.90 // Highest efficacy (dual agonist)
+        case .liraglutide: return 0.75 // Moderate efficacy
+        case .dulaglutide: return 0.80 // Good efficacy
+        }
+    }
+
+    /// Factors that influence effectiveness for this medication
+    var effectivenessFactors: [String] {
+        switch self {
+        case .semaglutide:
+            return ["adherence", "timing", "dose_escalation", "injection_site_rotation"]
+        case .tirzepatide:
+            return ["adherence", "timing", "dose_escalation", "injection_site_rotation", "dual_receptor_activity"]
+        case .liraglutide:
+            return ["adherence", "timing", "injection_site_rotation", "daily_consistency"]
+        case .dulaglutide:
+            return ["adherence", "timing", "dose_escalation", "injection_site_rotation"]
+        }
+    }
+
+    /// Calculate effectiveness score based on current concentration
+    /// - Parameter concentration: Current medication concentration
+    /// - Returns: Effectiveness score from 0.0 to 1.0
+    func calculateEffectiveness(concentration: Double) -> Double {
+        guard concentration > 0 else { return 0.0 }
+
+        let windowRange = self.therapeuticWindow
+        let normalizedConcentration: Double
+
+        if concentration < windowRange.lowerBound {
+            // Below therapeutic range - linear scale from 0 to baseEffectivenessScore
+            normalizedConcentration = concentration / windowRange.lowerBound
+            return normalizedConcentration * self.baseEffectivenessScore * 0.5 // Reduced effectiveness below range
+        } else if concentration > windowRange.upperBound {
+            // Above therapeutic range - diminishing returns/side effects
+            let excessFactor = (concentration - windowRange.upperBound) / windowRange.upperBound
+            let penalty = min(excessFactor * 0.3, 0.6) // Max 60% penalty for very high concentrations
+            return max(self.baseEffectivenessScore * (1.0 - penalty), 0.1)
+        } else {
+            // Within therapeutic range - optimal effectiveness
+            return self.baseEffectivenessScore
+        }
+    }
+
+    /// Time to onset of therapeutic effect (hours)
+    var onsetTimeHours: Double {
+        switch self {
+        case .semaglutide: return 2.0 // Effects begin within hours
+        case .tirzepatide: return 4.0 // Slightly slower onset due to dual mechanism
+        case .liraglutide: return 1.0 // Faster onset, daily dosing
+        case .dulaglutide: return 8.0 // Slower onset, longer acting
+        }
+    }
+
+    /// Duration of effective therapeutic action (hours)
+    var effectiveDurationHours: Double {
+        switch self {
+        case .semaglutide: return 168.0 // 7 days
+        case .tirzepatide: return 120.0 // 5 days
+        case .liraglutide: return 24.0 // 1 day
+        case .dulaglutide: return 168.0 // 7 days
+        }
+    }
+}
