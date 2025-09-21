@@ -183,7 +183,7 @@ High-level task categories that will be created:
 - [deferred] #43 - Photo Attachments (deferred: 2025-09-18T17:47:42Z)
 - [deferred] #44 - Search & Filter Enhancements (deferred: 2025-09-18T18:32:07Z)
 - [ ] #45 - PK Engine Integration (parallel: false, depends on 38, 39)
-- [ ] #46 - Testing Suite (parallel: false, depends on 38-41)
+- [not-planned] #46 - Testing Suite (parallel: false, depends on 38-41)
 
 Total tasks: 9
 Parallel tasks: 6

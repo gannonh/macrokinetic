@@ -140,7 +140,8 @@ struct MonthlyStatsView: View {
                         .font(.title2)
                         .fontWeight(.semibold)
 
-                    Text("\(self.statistics.totalDoses - self.statistics.skippedDoses) of \(self.statistics.scheduledDoses) scheduled")
+                    let completedDoses = self.statistics.totalDoses - self.statistics.skippedDoses
+                    Text("\(completedDoses) of \(self.statistics.scheduledDoses) scheduled")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -239,7 +240,8 @@ struct MonthlyStatsView: View {
             self.sectionHeader("Injection Sites", icon: "location.fill", color: .purple)
 
             LazyVGrid(columns: self.detailedGridColumns, spacing: 8) {
-                ForEach(Array(self.statistics.siteDistribution.sorted(by: { $0.value > $1.value })), id: \.key) { site, count in
+                let sortedSites = self.statistics.siteDistribution.sorted(by: { $0.value > $1.value })
+                ForEach(Array(sortedSites), id: \.key) { site, count in
                     DetailStatRow(label: site, value: "\(count)")
                 }
             }

@@ -145,7 +145,8 @@ struct DoseTitrationView: View {
                 }
             } message: {
                 if let titration = titrationToDelete {
-                    Text("Are you sure you want to delete the titration to \(String(format: "%.2f", titration.toDose)) mg?")
+                    let doseText = String(format: "%.2f", titration.toDose)
+                    Text("Are you sure you want to delete the titration to \(doseText) mg?")
                 }
             }
         }

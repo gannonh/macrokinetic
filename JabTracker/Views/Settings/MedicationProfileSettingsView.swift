@@ -52,7 +52,8 @@ struct MedicationProfileSettingsView: View {
                             MedicationProfileRow(profile: profile, medicationManager: self.medicationManager)
                                 .accessibilityIdentifier(
                                     "medication-profile-\(profile.medicationType.lowercased())-" +
-                                        "\(profile.brandName.lowercased())-\(String(format: "%.2f", profile.currentDose))mg"
+                                        "\(profile.brandName.lowercased())-" +
+                                        "\(String(format: "%.2f", profile.currentDose))mg"
                                 )
                         }
                         .onDelete(perform: self.deleteProfiles)

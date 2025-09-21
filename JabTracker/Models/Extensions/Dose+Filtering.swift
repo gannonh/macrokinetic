@@ -157,7 +157,7 @@ extension Dose {
 
     /// Check if dose has notes
     var hasNotes: Bool {
-        notes != nil && !notes!.isEmpty
+        notes != nil && !(notes?.isEmpty ?? true)
     }
 
     // MARK: - Time-based Filtering
@@ -226,49 +226,62 @@ extension [Dose] {
         amountRange: ClosedRange<Double>? = nil) -> [Dose]
     {
         self.filter { dose in
-            // Search text filter
-            if let searchText, !searchText.isEmpty {
-                if !dose.matches(searchText: searchText) {
-                    return false
-                }
-            }
-
-            // Medication filter
-            if let medication {
-                if !dose.hasMedication(medication) {
-                    return false
-                }
-            }
-
-            // Injection site filter
-            if let injectionSite {
-                if !dose.hasInjectionSite(injectionSite) {
-                    return false
-                }
-            }
-
-            // Date range filter
-            if let dateRange {
-                if !dateRange.contains(dose.timestamp) {
-                    return false
-                }
-            }
-
-            // Skipped filter
-            if !includeSkipped, dose.skipped {
-                return false
-            }
-
-            // Amount range filter
-            if let amountRange {
-                if !amountRange.contains(dose.amount) {
-                    return false
-                }
-            }
-
-            return true
+            checkDoseMatches(
+                dose,
+                searchText: searchText,
+                medication: medication,
+                injectionSite: injectionSite,
+                dateRange: dateRange,
+                includeSkipped: includeSkipped,
+                amountRange: amountRange)
         }
     }
+
+    // swiftlint:disable function_parameter_count
+    /// Helper to check if dose matches all filtering criteria
+    private func checkDoseMatches(
+        _ dose: Dose,
+        searchText: String?,
+        medication: String?,
+        injectionSite: String?,
+        dateRange: DateInterval?,
+        includeSkipped: Bool,
+        amountRange: ClosedRange<Double>?) -> Bool
+    {
+        // Search text filter
+        if let searchText, !searchText.isEmpty, !dose.matches(searchText: searchText) {
+            return false
+        }
+
+        // Medication filter
+        if let medication, !dose.hasMedication(medication) {
+            return false
+        }
+
+        // Injection site filter
+        if let injectionSite, !dose.hasInjectionSite(injectionSite) {
+            return false
+        }
+
+        // Date range filter
+        if let dateRange, !dateRange.contains(dose.timestamp) {
+            return false
+        }
+
+        // Skipped filter
+        if !includeSkipped, dose.skipped {
+            return false
+        }
+
+        // Amount range filter
+        if let amountRange, !amountRange.contains(dose.amount) {
+            return false
+        }
+
+        return true
+    }
+
+    // swiftlint:enable function_parameter_count
 
     /// Sort doses by timestamp (most recent first by default)
     func sortedByTimestamp(ascending: Bool = false) -> [Dose] {

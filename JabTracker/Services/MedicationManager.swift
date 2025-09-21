@@ -36,7 +36,9 @@ class MedicationManager: ObservableObject {
                 let dose = String(format: "%.2f", currentDose)
                 let min = String(format: "%.2f", minDose)
                 let max = String(format: "%.2f", maxDose)
-                return "Dose \(dose) mg is outside the available range for \(medication.displayName). Valid range: \(min) - \(max) mg."
+                let displayName = medication.displayName
+                return "Dose \(dose) mg is outside the available range for \(displayName). " +
+                    "Valid range: \(min) - \(max) mg."
             case .profileNotFound:
                 return "Medication profile not found"
             case .invalidCompoundingSettings:
@@ -150,7 +152,9 @@ class MedicationManager: ObservableObject {
         }
     }
 
+    // swiftlint:disable cyclomatic_complexity function_body_length
     /// Update an existing medication profile
+    /// Complex medical validation logic requiring multiple parameter validation paths for patient safety
     func updateProfile(
         _ profile: MedicationProfile,
         medication: Medication? = nil,
@@ -249,6 +253,8 @@ class MedicationManager: ObservableObject {
         }
     }
 
+    // swiftlint:enable cyclomatic_complexity function_body_length
+
     /// Delete a medication profile
     func deleteProfile(_ profile: MedicationProfile) throws {
         self.modelContext.delete(profile)
@@ -305,7 +311,9 @@ class MedicationManager: ObservableObject {
     // MARK: - Reconstitution Helpers
 
     /// Calculate reconstitution for a compounded profile
-    func calculateReconstitution(for profile: MedicationProfile) throws -> ReconstitutionCalculator.ReconstitutionResult? {
+    func calculateReconstitution(for profile: MedicationProfile) throws
+        -> ReconstitutionCalculator.ReconstitutionResult?
+    {
         guard profile.isCompounded,
               let vialStrength = profile.vialStrength,
               let reconstitutionVolume = profile.reconstitutionVolume
