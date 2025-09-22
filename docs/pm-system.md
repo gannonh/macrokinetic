@@ -116,10 +116,10 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 ```bash
 /pm:issue-analyze issue-number  # Analyze an issue to identify parallel work streams for maximum efficiency.
 /pm:issue-start issue-number    # Create issue branch + draft PR + launch agents
-/pm:issue-update issue-number   # Update progress and capture session work
+/pm:issue-update issue-number   # Update progress and capture session work & learnings
 /pm:issue-resume issue-number   # Resume work on in-progress issues
 /pm:issue-sync issue-number     # Push progress updates to GitHub
-/context:update                 # Propagate learnings
+/context:update                 # Update progress and ropagate learnings
 /pm:pr-merge pr-number          # Mark PR ready → review → merge to main
 /qa:test-quality pr-number      # Run test quality analysis and post as PR comment
 /qa:code-quality pr-number      # Run code quality analysis and post as PR comment
@@ -128,6 +128,7 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 /pm:pr-merge pr-number          # Resume merge process after reviews
 /pm:issue-close issue-number    # Close issue + update epic progress
 /pm:epic-refresh epic-name      # Update epic progress from tasks
+/context:update                 # Update progress and ropagate learnings
 /pm:sync                        # Full bidirectional sync with GitHub
 /pm:epic-close epic-name        # Close epic when all issues complete
 ```

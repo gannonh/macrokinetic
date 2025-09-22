@@ -1,7 +1,7 @@
 ---
 description: Move to the next task in the project management workflow
 allowed-tools: Bash
-model: claude-sonnet-4-20250514
+model: sonnet
 ---
 
 Run `bash .claude/scripts/pm/next.sh` using a sub-agent and respond with the complete output.

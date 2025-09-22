@@ -1,12 +1,12 @@
 ---
-description: Update an issue with recent activity, progress, and context from the current session.
+description: Update an issue with recent activity, progress, and learnings from the current session.
 argument-hint: Issue number (e.g., 42)
 allowed-tools: Read, Write, Edit, LS
 ---
 
 # Issue Update
 
-Update issue progress files with current session context and work completed.
+Update progress and capture session work & learnings for issue #$ARGUMENTS.
 
 ## Instructions
 
