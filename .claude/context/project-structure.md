@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-16T22:39:56Z
-version: 1.2
+last_updated: 2025-09-22T14:31:53Z
+version: 1.3
 author: Claude Code PM System
 ---
 
@@ -55,6 +55,7 @@ JabTracker/
 │   ├── Settings/           # Settings and profile management
 │   └── Dashboard/          # Main dashboard views
 ├── Services/               # Business logic and services
+│   ├── AnalyticsService.swift        # Cross-model analytics coordination (NEW)
 │   ├── AuthenticationManager.swift
 │   ├── BiometricAuthManager.swift
 │   └── MedicationManager.swift
@@ -67,6 +68,7 @@ JabTracker/
 - **JabTrackerTests/**: Swift Testing framework unit tests
 - **JabTrackerUITests/**: XCUITest end-to-end testing
 - **File-based organization**: Tests organized by feature area
+- **Analytics Integration Tests**: AnalyticsServiceIntegrationTests.swift for cross-model testing (NEW)
 - **Mock utilities**: Shared test utilities and factories
 
 ## Build System
