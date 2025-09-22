@@ -3,85 +3,88 @@ import XCTest
 
 /// Tests for restore purchase edge cases and error handling
 final class SubscriptionUIRestorePurchaseTests: SubscriptionUIBaseTests {
-    // MARK: - Restore Purchase Edge Cases
+  // MARK: - Restore Purchase Edge Cases
 
-    @MainActor
-    func testRestoreWithNoPreviousPurchases() throws {
-        // EDGE CASE: Test restore when user has no previous purchases
-        let app = TestUtilities.launchAppWithConfiguration(
-            testMode: true,
-            resetData: true,
-            additionalArguments: ["--force-onboarding"])
+  @MainActor
+  func testRestoreWithNoPreviousPurchases() throws {
+    // EDGE CASE: Test restore when user has no previous purchases
+    let app = TestUtilities.launchAppWithConfiguration(
+      testMode: true,
+      resetData: true,
+      additionalArguments: ["--force-onboarding"])
 
-        self.completeOnboardingToSubscriptionScreen(app)
-        self.dismissSignInSimulationIfPresent(app)
+    self.completeOnboardingToSubscriptionScreen(app)
+    self.dismissSignInSimulationIfPresent(app)
 
-        // Clear any existing transactions to simulate no previous purchases
-        self.testSession?.clearTransactions()
+    // Clear any existing transactions to simulate no previous purchases
+    self.testSession?.clearTransactions()
 
-        let restoreButton = app.buttons["restore-purchases-button"]
-        XCTAssertTrue(restoreButton.waitForExistence(timeout: 3),
-                      "Restore purchases button should be available")
+    let restoreButton = app.buttons["restore-purchases-button"]
+    XCTAssertTrue(
+      restoreButton.waitForExistence(timeout: 3),
+      "Restore purchases button should be available")
 
-        restoreButton.tap()
+    restoreButton.tap()
 
-        // Should show alert indicating no purchases to restore
-        let restoreAlert = app.alerts["Restore Purchases"]
-        XCTAssertTrue(restoreAlert.waitForExistence(timeout: 5),
-                      "Should show restore purchases alert")
+    // Should show alert indicating no purchases to restore
+    let restoreAlert = app.alerts["Restore Purchases"]
+    XCTAssertTrue(
+      restoreAlert.waitForExistence(timeout: 5),
+      "Should show restore purchases alert")
 
-        // Dismiss alert
-        if restoreAlert.buttons["OK"].exists {
-            restoreAlert.buttons["OK"].tap()
-        }
-
-        // Should remain on subscription screen
-        XCTAssertTrue(
-            app.staticTexts["JabTracker Premium"].exists,
-            "Should remain on subscription screen after restore with no purchases")
+    // Dismiss alert
+    if restoreAlert.buttons["OK"].exists {
+      restoreAlert.buttons["OK"].tap()
     }
 
-    @MainActor
-    func testMultipleRestoreAttempts() throws {
-        // EDGE CASE: Test multiple restore attempts in succession
-        let app = TestUtilities.launchAppWithConfiguration(
-            testMode: true,
-            resetData: true,
-            additionalArguments: ["--force-onboarding"])
+    // Should remain on subscription screen
+    XCTAssertTrue(
+      app.staticTexts["JabTracker Premium"].exists,
+      "Should remain on subscription screen after restore with no purchases")
+  }
 
-        self.completeOnboardingToSubscriptionScreen(app)
-        self.dismissSignInSimulationIfPresent(app)
+  @MainActor
+  func testMultipleRestoreAttempts() throws {
+    // EDGE CASE: Test multiple restore attempts in succession
+    let app = TestUtilities.launchAppWithConfiguration(
+      testMode: true,
+      resetData: true,
+      additionalArguments: ["--force-onboarding"])
 
-        let restoreButton = app.buttons["restore-purchases-button"]
-        XCTAssertTrue(restoreButton.waitForExistence(timeout: 3))
+    self.completeOnboardingToSubscriptionScreen(app)
+    self.dismissSignInSimulationIfPresent(app)
 
-        // Attempt multiple restores rapidly
-        for attempt in 1 ... 3 {
-            print("🔄 Restore attempt \(attempt)")
+    let restoreButton = app.buttons["restore-purchases-button"]
+    XCTAssertTrue(restoreButton.waitForExistence(timeout: 3))
 
-            if !restoreButton.isEnabled {
-                // Wait for restore button to become enabled again
-                let enabled = XCTNSPredicateExpectation(
-                    predicate: NSPredicate(format: "isEnabled == true"),
-                    object: restoreButton)
-                XCTAssertEqual(XCTWaiter().wait(for: [enabled], timeout: 3), .completed,
-                               "Restore button should become enabled between attempts")
-            }
+    // Attempt multiple restores rapidly
+    for attempt in 1...3 {
+      print("🔄 Restore attempt \(attempt)")
 
-            restoreButton.tap()
+      if !restoreButton.isEnabled {
+        // Wait for restore button to become enabled again
+        let enabled = XCTNSPredicateExpectation(
+          predicate: NSPredicate(format: "isEnabled == true"),
+          object: restoreButton)
+        XCTAssertEqual(
+          XCTWaiter().wait(for: [enabled], timeout: 3), .completed,
+          "Restore button should become enabled between attempts")
+      }
 
-            let restoreAlert = app.alerts["Restore Purchases"]
-            if restoreAlert.waitForExistence(timeout: 3) {
-                restoreAlert.buttons["OK"].tap()
-            }
+      restoreButton.tap()
 
-            // Brief pause between attempts
-            Thread.sleep(forTimeInterval: 0.5)
-        }
+      let restoreAlert = app.alerts["Restore Purchases"]
+      if restoreAlert.waitForExistence(timeout: 3) {
+        restoreAlert.buttons["OK"].tap()
+      }
 
-        // App should remain stable after multiple restore attempts
-        XCTAssertTrue(
-            app.staticTexts["JabTracker Premium"].exists,
-            "App should remain stable after multiple restore attempts")
+      // Brief pause between attempts
+      Thread.sleep(forTimeInterval: 0.5)
     }
+
+    // App should remain stable after multiple restore attempts
+    XCTAssertTrue(
+      app.staticTexts["JabTracker Premium"].exists,
+      "App should remain stable after multiple restore attempts")
+  }
 }

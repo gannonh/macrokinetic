@@ -1,15 +1,15 @@
 ---
-description: Run the SwiftLint and SwiftFormat QA workflow with test verification.
+description: Run the SwiftLint and swift-format QA workflow with test verification.
 argument-hint: Additional context (optional)
 ---
 
 # SwiftLint QA Command
 
-Run the complete SwiftLint and SwiftFormat quality assurance workflow with test verification.
+Run the complete SwiftLint and swift-format quality assurance workflow with test verification.
 
 ## Steps
 
-1. Run SwiftFormat to apply automatic formatting: `swiftformat .`
+1. Run swift-format to apply automatic formatting: `swift-format --in-place --recursive .`
 2. Run SwiftLint with automatic fixes: `swiftlint --fix`
 3. Verify all unit tests still pass: `./scripts/test.sh unit 1`
 4. Fix failing unit tests (if any) until all tests pass
@@ -22,7 +22,7 @@ Run the complete SwiftLint and SwiftFormat quality assurance workflow with test 
 
 ## Success Criteria
 
-- SwiftFormat applies cleanly without errors
+- swift-format applies cleanly without errors
 - SwiftLint --fix completes without issues
 - All unit tests pass after automatic fixes
 - SwiftLint shows zero violations

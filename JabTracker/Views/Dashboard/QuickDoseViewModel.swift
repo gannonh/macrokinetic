@@ -10,197 +10,198 @@ import SwiftData
 /// Handles medication profile loading, smart default computation, and dose saving
 @MainActor
 class QuickDoseViewModel: ObservableObject {
-    // MARK: - Published Properties
+  // MARK: - Published Properties
 
-    @Published var medicationProfiles: [MedicationProfile] = []
-    @Published var selectedMedicationProfile: MedicationProfile? {
-        didSet {
-            self.updateDoseAmount()
-            self.updateRecommendedInjectionSites()
-        }
+  @Published var medicationProfiles: [MedicationProfile] = []
+  @Published var selectedMedicationProfile: MedicationProfile? {
+    didSet {
+      self.updateDoseAmount()
+      self.updateRecommendedInjectionSites()
     }
+  }
 
-    @Published var doseAmount: Double = 0.0
-    @Published var selectedInjectionSite: String = ""
-    @Published var doseTime: Date = .init()
-    @Published var notes: String = ""
+  @Published var doseAmount: Double = 0.0
+  @Published var selectedInjectionSite: String = ""
+  @Published var doseTime: Date = .init()
+  @Published var notes: String = ""
 
-    @Published var recommendedInjectionSites: [String] = []
-    @Published var errorMessage: String?
-    @Published var isLoading: Bool = false
+  @Published var recommendedInjectionSites: [String] = []
+  @Published var errorMessage: String?
+  @Published var isLoading: Bool = false
 
-    // MARK: - Computed Properties
+  // MARK: - Computed Properties
 
-    /// Determines if dose can be saved based on current state
-    var canSaveDose: Bool {
-        guard self.selectedMedicationProfile != nil else { return false }
-        guard self.doseAmount > 0 else { return false }
-        guard !self.selectedInjectionSite.isEmpty else { return false }
-        return true
-    }
+  /// Determines if dose can be saved based on current state
+  var canSaveDose: Bool {
+    guard self.selectedMedicationProfile != nil else { return false }
+    guard self.doseAmount > 0 else { return false }
+    guard !self.selectedInjectionSite.isEmpty else { return false }
+    return true
+  }
 
-    // MARK: - Initialization
+  // MARK: - Initialization
 
-    init() {
-        self.doseTime = Date()
-    }
+  init() {
+    self.doseTime = Date()
+  }
 
-    // MARK: - Smart Defaults Loading
+  // MARK: - Smart Defaults Loading
 
-    /// Loads smart defaults from user's medication profiles and dose history
-    func loadSmartDefaults(context: ModelContext) {
-        Task { @MainActor in
-            do {
-                self.isLoading = true
-                self.errorMessage = nil
+  /// Loads smart defaults from user's medication profiles and dose history
+  func loadSmartDefaults(context: ModelContext) {
+    Task { @MainActor in
+      do {
+        self.isLoading = true
+        self.errorMessage = nil
 
-                // Fetch all medication profiles for the current user
-                let profileDescriptor = FetchDescriptor<MedicationProfile>()
-                self.medicationProfiles = try context.fetch(profileDescriptor)
+        // Fetch all medication profiles for the current user
+        let profileDescriptor = FetchDescriptor<MedicationProfile>()
+        self.medicationProfiles = try context.fetch(profileDescriptor)
 
-                guard !self.medicationProfiles.isEmpty else {
-                    self.errorMessage = "No medication profiles found. Please create a medication profile first."
-                    self.isLoading = false
-                    return
-                }
-
-                // Select the most recent medication profile as default
-                self.selectedMedicationProfile = self.medicationProfiles.first
-
-                // Update dose amount from selected profile
-                self.updateDoseAmount()
-
-                // Get smart injection site recommendation
-                self.updateRecommendedInjectionSites()
-
-                self.isLoading = false
-
-            } catch {
-                self.errorMessage = "Failed to load medication profiles: \(error.localizedDescription)"
-                self.isLoading = false
-            }
-        }
-    }
-
-    /// Loads existing dose data for editing
-    func loadEditData(_ editData: DoseEditData, context: ModelContext) {
-        Task { @MainActor in
-            do {
-                self.isLoading = true
-                self.errorMessage = nil
-
-                // Fetch all medication profiles for the current user
-                let profileDescriptor = FetchDescriptor<MedicationProfile>()
-                self.medicationProfiles = try context.fetch(profileDescriptor)
-
-                // Set values from edit data
-                self.selectedMedicationProfile = editData.medicationProfile
-                self.doseAmount = editData.amount
-                self.doseTime = editData.timestamp
-                self.selectedInjectionSite = editData.site ?? ""
-                self.notes = editData.notes ?? ""
-
-                // Update recommended injection sites
-                self.updateRecommendedInjectionSites()
-
-                self.isLoading = false
-
-            } catch {
-                self.errorMessage = "Failed to load dose data: \(error.localizedDescription)"
-                self.isLoading = false
-            }
-        }
-    }
-
-    // MARK: - Smart Default Updates
-
-    /// Updates dose amount based on selected medication profile's current dose
-    private func updateDoseAmount() {
-        guard let profile = selectedMedicationProfile else {
-            self.doseAmount = 0.0
-            return
+        guard !self.medicationProfiles.isEmpty else {
+          self.errorMessage =
+            "No medication profiles found. Please create a medication profile first."
+          self.isLoading = false
+          return
         }
 
-        self.doseAmount = profile.currentDose
+        // Select the most recent medication profile as default
+        self.selectedMedicationProfile = self.medicationProfiles.first
+
+        // Update dose amount from selected profile
+        self.updateDoseAmount()
+
+        // Get smart injection site recommendation
+        self.updateRecommendedInjectionSites()
+
+        self.isLoading = false
+
+      } catch {
+        self.errorMessage = "Failed to load medication profiles: \(error.localizedDescription)"
+        self.isLoading = false
+      }
+    }
+  }
+
+  /// Loads existing dose data for editing
+  func loadEditData(_ editData: DoseEditData, context: ModelContext) {
+    Task { @MainActor in
+      do {
+        self.isLoading = true
+        self.errorMessage = nil
+
+        // Fetch all medication profiles for the current user
+        let profileDescriptor = FetchDescriptor<MedicationProfile>()
+        self.medicationProfiles = try context.fetch(profileDescriptor)
+
+        // Set values from edit data
+        self.selectedMedicationProfile = editData.medicationProfile
+        self.doseAmount = editData.amount
+        self.doseTime = editData.timestamp
+        self.selectedInjectionSite = editData.site ?? ""
+        self.notes = editData.notes ?? ""
+
+        // Update recommended injection sites
+        self.updateRecommendedInjectionSites()
+
+        self.isLoading = false
+
+      } catch {
+        self.errorMessage = "Failed to load dose data: \(error.localizedDescription)"
+        self.isLoading = false
+      }
+    }
+  }
+
+  // MARK: - Smart Default Updates
+
+  /// Updates dose amount based on selected medication profile's current dose
+  private func updateDoseAmount() {
+    guard let profile = selectedMedicationProfile else {
+      self.doseAmount = 0.0
+      return
     }
 
-    /// Updates recommended injection sites and selects smart default based on dose history
-    private func updateRecommendedInjectionSites() {
-        guard let profile = selectedMedicationProfile,
-              let medication = profile.medication
-        else {
-            self.recommendedInjectionSites = DoseDefaults.allInjectionSites
-            self.selectedInjectionSite = DoseDefaults.allInjectionSites.first ?? ""
-            return
-        }
+    self.doseAmount = profile.currentDose
+  }
 
-        // Get recommended sites for this medication
-        self.recommendedInjectionSites = DoseDefaults.recommendedInjectionSites(for: medication)
-
-        // Get recent doses for this medication profile
-        let recentDoses = (profile.doses ?? []).suffix(5) // Last 5 doses for rotation analysis
-
-        // Use DoseDefaults to get next recommended site based on rotation
-        self.selectedInjectionSite = DoseDefaults.nextRecommendedSite(
-            for: medication,
-            recentDoses: Array(recentDoses),
-            preferredSites: profile.preferredInjectionSites)
+  /// Updates recommended injection sites and selects smart default based on dose history
+  private func updateRecommendedInjectionSites() {
+    guard let profile = selectedMedicationProfile,
+      let medication = profile.medication
+    else {
+      self.recommendedInjectionSites = DoseDefaults.allInjectionSites
+      self.selectedInjectionSite = DoseDefaults.allInjectionSites.first ?? ""
+      return
     }
 
-    // MARK: - Dose Saving
+    // Get recommended sites for this medication
+    self.recommendedInjectionSites = DoseDefaults.recommendedInjectionSites(for: medication)
 
-    // NOTE: Dose saving is now handled by DoseService for PK integration
-    // This method is deprecated in favor of DoseService.saveDose()
-    // Keeping the form reset method for convenience
+    // Get recent doses for this medication profile
+    let recentDoses = (profile.doses ?? []).suffix(5)  // Last 5 doses for rotation analysis
 
-    /// Resets form to initial state after successful save
-    func resetForm() {
-        self.notes = ""
-        self.doseTime = Date()
-        // Keep medication selection and injection site rotation for convenience
-    }
+    // Use DoseDefaults to get next recommended site based on rotation
+    self.selectedInjectionSite = DoseDefaults.nextRecommendedSite(
+      for: medication,
+      recentDoses: Array(recentDoses),
+      preferredSites: profile.preferredInjectionSites)
+  }
 
-    // MARK: - Convenience Methods
+  // MARK: - Dose Saving
 
-    /// Gets the next scheduled dose time for the selected medication profile
-    func getNextScheduledDoseTime() -> Date? {
-        guard let profile = selectedMedicationProfile else { return nil }
+  // NOTE: Dose saving is now handled by DoseService for PK integration
+  // This method is deprecated in favor of DoseService.saveDose()
+  // Keeping the form reset method for convenience
 
-        return DoseDefaults.nextScheduledDose(
-            for: profile,
-            from: Date(),
-            doses: profile.doses)
-    }
+  /// Resets form to initial state after successful save
+  func resetForm() {
+    self.notes = ""
+    self.doseTime = Date()
+    // Keep medication selection and injection site rotation for convenience
+  }
 
-    /// Checks if a dose is overdue for the selected medication profile
-    func isDoseOverdue() -> Bool {
-        guard let profile = selectedMedicationProfile else { return false }
+  // MARK: - Convenience Methods
 
-        return DoseDefaults.isDoseOverdue(
-            for: profile,
-            currentDate: Date(),
-            gracePeriodHours: 2,
-            doses: profile.doses)
-    }
+  /// Gets the next scheduled dose time for the selected medication profile
+  func getNextScheduledDoseTime() -> Date? {
+    guard let profile = selectedMedicationProfile else { return nil }
+
+    return DoseDefaults.nextScheduledDose(
+      for: profile,
+      from: Date(),
+      doses: profile.doses)
+  }
+
+  /// Checks if a dose is overdue for the selected medication profile
+  func isDoseOverdue() -> Bool {
+    guard let profile = selectedMedicationProfile else { return false }
+
+    return DoseDefaults.isDoseOverdue(
+      for: profile,
+      currentDate: Date(),
+      gracePeriodHours: 2,
+      doses: profile.doses)
+  }
 }
 
 // MARK: - Error Types
 
 enum QuickDoseError: LocalizedError {
-    case noMedicationProfile
-    case invalidDoseData
-    case saveFailed(underlying: Error)
+  case noMedicationProfile
+  case invalidDoseData
+  case saveFailed(underlying: Error)
 
-    var errorDescription: String? {
-        switch self {
-        case .noMedicationProfile:
-            return "No medication profile selected"
-        case .invalidDoseData:
-            return "Invalid dose information provided"
-        case let .saveFailed(error):
-            return "Failed to save dose: \(error.localizedDescription)"
-        }
+  var errorDescription: String? {
+    switch self {
+    case .noMedicationProfile:
+      return "No medication profile selected"
+    case .invalidDoseData:
+      return "Invalid dose information provided"
+    case let .saveFailed(error):
+      return "Failed to save dose: \(error.localizedDescription)"
     }
+  }
 }
 
 // MARK: - Extensions
