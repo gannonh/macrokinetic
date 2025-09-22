@@ -87,12 +87,12 @@ else
     print_warning "SwiftLint not installed - skipping auto-fix"
 fi
 
-if command -v swiftformat &> /dev/null; then
-    echo -e "${BLUE}Running SwiftFormat auto-fix...${NC}"
-    swiftformat .
-    print_success "SwiftFormat auto-fix completed"
+if command -v swift-format &> /dev/null; then
+    echo -e "${BLUE}Running swift-format auto-fix...${NC}"
+    swift-format --in-place --recursive .
+    print_success "swift-format auto-fix completed"
 else
-    print_warning "SwiftFormat not installed - skipping auto-fix"
+    print_warning "swift-format not installed - skipping auto-fix"
 fi
 
 # Quick build check after auto-fix to catch any issues early
@@ -138,16 +138,16 @@ else
     print_warning "UI tests skipped with --skip-ui flag"
 fi
 
-# 5. SwiftFormat check (if available)
-print_header "5️⃣ SwiftFormat Style Check"
-if command -v swiftformat &> /dev/null; then
-    if ! run_check "SwiftFormat Check" "swiftformat --lint ."; then
+# 5. swift-format check (if available)
+print_header "5️⃣ swift-format Style Check"
+if command -v swift-format &> /dev/null; then
+    if ! run_check "swift-format Check" "swift-format lint --recursive ."; then
         ((FAILED_CHECKS++))
-        print_warning "Run 'swiftformat .' to fix formatting issues"
+        print_warning "Run 'swift-format --in-place --recursive .' to fix formatting issues"
     fi
 else
-    print_warning "SwiftFormat not installed - skipping format check"
-    print_warning "Install with: brew install swiftformat"
+    print_warning "swift-format not installed - skipping format check"
+    print_warning "Install with: brew install swift-format"
 fi
 
 # 6. Coverage Policy Check
@@ -178,7 +178,7 @@ else
     echo ""
     echo "Quick fixes:"
     echo "• SwiftLint issues: swiftlint --fix"
-    echo "• Format issues: swiftformat ."
+    echo "• Format issues: swift-format --in-place --recursive ."
     echo "• Re-run: ./scripts/check-all.sh"
     echo "• Skip slow UI tests: ./scripts/check-all.sh --skip-ui"
     echo ""

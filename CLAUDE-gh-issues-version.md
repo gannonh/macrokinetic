@@ -269,7 +269,7 @@ This script runs:
 **Pre-merge checklist:**
 1. Run `./scripts/check-all.sh`
 2. All checks must pass ✅
-3. Fix any issues with `swiftlint --fix` and `swiftformat .`
+3. Fix any issues with `swiftlint --fix` and `swift-format --in-place --recursive .`
 4. Re-run until all checks pass
 
 ### XcodeGen Project Regeneration
