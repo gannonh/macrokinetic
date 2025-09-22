@@ -65,9 +65,11 @@ struct UserAnalyticsTests {
         try context.save()
 
         // All analytics preference fields should have non-nil values for CloudKit
-        #expect(user.analyticsEnabled != nil, "Analytics enabled should not be nil for CloudKit")
+        #expect(user.analyticsEnabled == true || user.analyticsEnabled == false, "Analytics enabled should be a valid boolean for CloudKit")
         #expect(user.adherenceGoalDays > 0, "Adherence goal days should be positive for CloudKit")
-        #expect(user.analyticsReportingEnabled != nil, "Analytics reporting enabled should not be nil for CloudKit")
+        #expect(
+            user.analyticsReportingEnabled == true || user.analyticsReportingEnabled == false,
+            "Analytics reporting enabled should be a valid boolean for CloudKit")
         #expect(!user.preferredReportingFrequency.isEmpty, "Preferred reporting frequency should not be empty for CloudKit")
     }
 

@@ -140,7 +140,7 @@ extension Dose {
         guard let user,
               let medication,
               let userDoses = user.doses,
-              let medicationDoses = medication.doses
+              medication.doses != nil
         else {
             return nil
         }
@@ -166,7 +166,7 @@ extension Dose {
         guard let user,
               let medication,
               let userDoses = user.doses,
-              let medicationDoses = medication.doses
+              medication.doses != nil
         else {
             return true // Default to true if no relationship data
         }
@@ -194,7 +194,7 @@ extension Dose {
         guard let user,
               let medication,
               let userDoses = user.doses,
-              let medicationDoses = medication.doses
+              medication.doses != nil
         else {
             return 1 // Default to 1 for isolated dose
         }
@@ -242,7 +242,7 @@ extension Dose {
         guard let user,
               let medication,
               let userDoses = user.doses,
-              let medicationDoses = medication.doses
+              medication.doses != nil
         else {
             return 1 // Default to 1 for isolated dose
         }
