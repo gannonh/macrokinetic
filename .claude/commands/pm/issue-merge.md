@@ -13,13 +13,13 @@ Merge completed PR from branch to main using GitHub Pull Request workflow.
 
 1. **Check PR status:**
    ```bash
-   gh pr view $ARGUMENTS --json state,isDraft,headRefName -q '.state + " (draft: " + (.isDraft|tostring) + ") - Branch: " + .headRefName' || echo "❌ PR #$ARGUMENTS not found"
+   gh pr view $ARGUMENTS --json state,isDraft,headRefName -q '.state + " (draft: " + (.isDraft|tostring) + ") - Branch: " + .headRefName' || ❌ PR #$ARGUMENTS not found"
    ```
 
 2. **Get branch name from PR:**
    ```bash
    branch_name=$(gh pr view $ARGUMENTS --json headRefName -q .headRefName)
-   echo "📋 PR #$ARGUMENTS uses branch: $branch_name"
+   📋 PR #$ARGUMENTS uses branch: $branch_name"
    ```
 
 ## Instructions
@@ -27,15 +27,15 @@ Merge completed PR from branch to main using GitHub Pull Request workflow.
 The merge process is multi-step. It is possible the user is starting from Step 1, or resuming from a later step in the process. Therefore, your first task is to ask te user what step they would like to start from:
 
 ```bash
-echo "At which step would you like to start? (1-8)"
-echo "1. Pre-Merge Validation"
-echo "2. Run Checks & Fix Issues"
-echo "3. Mark PR as Ready for Review"
-echo "4. Request Review"
-echo "5. Document PR Comments & Action Items"
-echo "6. Merge After Approval"
-echo "7. Post-Merge Cleanup"
-echo "8. Next Steps"
+At which step would you like to start? (1-8)"
+1. Pre-Merge Validation"
+2. Run Checks & Fix Issues"
+3. Mark PR as Ready for Review"
+4. Request Review"
+5. Document PR Comments & Action Items"
+6. Merge After Approval"
+7. Post-Merge Cleanup"
+8. Next Steps"
 ```
 
 Based on the user's response, proceed to that step and continue through the remaining steps in order.
@@ -52,9 +52,9 @@ git checkout $branch_name
 
 # Check for uncommitted changes
 if [[ $(git status --porcelain) ]]; then
-  echo "⚠️ Uncommitted changes in branch:"
+  ⚠️ Uncommitted changes in branch:"
   git status --short
-  echo "Commit or stash changes before merging"
+  Commit or stash changes before merging"
   exit 1
 fi
 
@@ -84,7 +84,7 @@ git status -sb
 If PR is still a draft:
 ```bash
 gh pr ready $ARGUMENTS
-echo "✅ PR #$ARGUMENTS marked as ready for review"
+✅ PR #$ARGUMENTS marked as ready for review"
 ```
 
 ### 4. Request Reviews
@@ -120,8 +120,8 @@ Extract issue number and download PR comments to create action documentation:
 issue_number=$(gh pr view $ARGUMENTS --json title -q .title | sed -n 's/.*Issue #\([0-9]*\):.*/\1/p')
 
 if [ -z "$issue_number" ]; then
-  echo "❌ Cannot extract issue number from PR title"
-  echo "Expected format: 'Issue #XX: Description'"
+  ❌ Cannot extract issue number from PR title"
+  Expected format: 'Issue #XX: Description'"
   gh pr view $ARGUMENTS --json title -q .title
   exit 1
 fi
@@ -136,14 +136,14 @@ for dir in .claude/epics/*/; do
 done
 
 if [ -z "$epic_dir" ]; then
-  echo "❌ No epic directory found in .claude/epics/"
+  ❌ No epic directory found in .claude/epics/"
   exit 1
 fi
 
 # Create issue documentation file
 issue_doc_file="${epic_dir}${issue_number}-review.md"
 
-echo "📝 Creating issue documentation: $issue_doc_file"
+📝 Creating issue documentation: $issue_doc_file"
 
 # Download PR comments and create documentation
 cat > "$issue_doc_file" << EOF
@@ -207,18 +207,23 @@ $(gh api repos/:owner/:repo/pulls/$ARGUMENTS/reviews --jq '.[] | "### Review by 
 <!-- Add any additional context, decisions made, or important information -->
 
 EOF
-
-echo "✅ Issue documentation created: $issue_doc_file"
-echo ""
-echo "📋 Next steps:"
-echo "1. Review the downloaded comments and action items"
-echo "2. Edit $issue_doc_file to add specific action items"
-echo "3. Address all action items before proceeding to merge"
-echo "4. Update checkboxes as items are completed"
-echo ""
-echo "📖 To view the documentation:"
-echo "   cat $issue_doc_file"
 ```
+Let the user know that the pr review doc is ready for review:
+
+---
+
+✅ PR review documentation created: `$path_to_issue_doc_file`
+
+📋 Next steps:
+1. Review the downloaded comments and action items
+2. Edit $issue_doc_file to add specific action items
+3. Address all action items before proceeding to merge
+4. Update checkboxes as items are completed
+5. Address the documented issues: `/pm:pr-preocess $path_to_issue_doc_file`
+
+Return here or resume this merge process from Step 6 once ready to merge: `pm:pr-merge $ARGUMENTS`
+
+---
 
 ### 6. Merge After Approval
 
@@ -227,7 +232,7 @@ After receiving approval:
 # Merge PR with rebase (preserves individual commits)
 gh pr merge $ARGUMENTS --rebase --delete-branch
 
-echo "✅ PR #$ARGUMENTS merged and branch deleted"
+✅ PR #$ARGUMENTS merged and branch deleted"
 ```
 
 ### 7. Post-Merge Cleanup
@@ -243,18 +248,18 @@ git pull origin main
 
 # Verify merge completed
 if git log --oneline -5 | grep -q "#$ARGUMENTS"; then
-  echo "✅ PR #$ARGUMENTS successfully merged to main"
+  ✅ PR #$ARGUMENTS successfully merged to main"
 else
-  echo "❌ PR #$ARGUMENTS not found in main branch history"
+  ❌ PR #$ARGUMENTS not found in main branch history"
   exit 1
 fi
 
 # Clean up local branch (if it exists)
 if git branch | grep -q "$branch_name"; then
   git branch -d $branch_name
-  echo "✅ Local branch deleted: $branch_name"
+  ✅ Local branch deleted: $branch_name"
 else
-  echo "ℹ️ Local branch $branch_name already deleted"
+  ℹ️ Local branch $branch_name already deleted"
 fi
 ```
 
@@ -265,7 +270,7 @@ fi
 issue_number=$(gh pr view $ARGUMENTS --json title -q .title | sed -n 's/.*Issue #\([0-9]*\):.*/\1/p')
 
 if [ -n "$issue_number" ]; then
-  echo "
+  
 🎯 Next: Close the associated issue
   Run: /pm:issue-close $issue_number
 
@@ -275,7 +280,7 @@ This will:
   - Capture learnings
 "
 else
-  echo "
+  
 ℹ️ No associated issue found in PR title
 PR #$ARGUMENTS has been merged successfully
 "
@@ -285,7 +290,7 @@ fi
 ### 9. Final Output
 
 ```bash
-echo "
+
 ✅ PR #$ARGUMENTS Merge Complete
 
 Pull Request:
@@ -301,7 +306,7 @@ Status:
 
 # Show next step if issue number was found
 if [ -n "$issue_number" ]; then
-  echo "Next Step: Run /pm:issue-close $issue_number"
+  Next Step: Run /pm:issue-close $issue_number"
 fi
 ```
 
