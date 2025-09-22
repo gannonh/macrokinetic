@@ -189,10 +189,22 @@ var children: [Child] = []
 - **Business Logic**: 85%+ coverage for core functionality
 - **UI Components**: Focus on business logic, not view rendering
 
-### SwiftData Relationship Testing Patterns (Added from Issue #53)
+### ⚠️ CRITICAL: SwiftData Relationship Testing Anti-Patterns
+**NEVER assign arrays to SwiftData relationships in tests - this ALWAYS crashes:**
+
+```swift
+// ❌ CRASH: Never do this in tests
+medicationProfile.doses = existingDoses
+user.medicationProfiles = [profile1, profile2]
+
+// ✅ SAFE: Use individual setters or avoid relationships
+dose.medication = medicationProfile  // Individual setter OK
+// OR pass arrays directly to methods without using relationships
+```
+
+### SwiftData Relationship Testing Patterns (Refer to testing-config.md for full anti-patterns)
 - **Insert Order Critical**: Must insert parent entities (User, MedicationProfile) BEFORE child entities (Dose) to prevent duplicate registration crashes
 - **Test Container Setup**: Use DataController.testContainer() consistently instead of creating custom ModelContainers
-- **Relationship Management**: Let SwiftData handle inverse relationships automatically via property setters, never manually assign arrays
 - **CloudKit Test Environment**: Use ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` for tests
 - **Context Management**: Always insert models into context BEFORE setting relationships, then save context
 

@@ -167,12 +167,11 @@ author: Claude Code PM System
 - **SwiftData relationship testing**: Requires proper ModelContainer configuration with CloudKit disabled for test environments
 
 ## Lessons Learned (Recent - Issue #53)
-### SwiftData Relationship Testing Patterns
-- **Insert Order Critical**: Must insert parent entities (User, MedicationProfile) BEFORE child entities (Dose) to prevent duplicate registration crashes
-- **Test Container Setup**: Use DataController.testContainer() consistently instead of creating custom ModelContainers
-- **Relationship Management**: Let SwiftData handle inverse relationships automatically via property setters, never manually assign arrays
+### Analytics Implementation Patterns
 - **CloudKit Compatibility**: All analytics fields must have non-optional defaults for CloudKit sync
 - **Parallel Stream Coordination**: Three agents successfully worked on separate model extensions simultaneously without conflicts
+- **Performance Optimization**: Analytics calculations optimized for large datasets (700+ dose records)
+- **Medical Accuracy**: Therapeutic range analysis with concentration optimality scoring
 
 ## Update History
 - 2025-09-21T23:11:13Z: Issue #53 analytics models - fixed all SwiftData test crashes, 38 analytics tests passing, established relationship testing patterns

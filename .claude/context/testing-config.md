@@ -19,6 +19,36 @@ created: 2025-01-22T04:47:23Z
 - UI Test Files: 25 files found
 - Naming Pattern: *Tests.swift
 
+## ⚠️ CRITICAL TESTING ANTI-PATTERNS - AVOID AT ALL COSTS
+
+### SwiftData Relationship Crashes (MOST COMMON BUG)
+**NEVER assign arrays to SwiftData relationships in tests:**
+
+```swift
+// ❌ THIS WILL CRASH THE APP - NEVER DO THIS
+medicationProfile.doses = existingDoses
+user.medicationProfiles = [profile1, profile2]
+
+// ✅ CORRECT - Use individual property setters instead
+for dose in existingDoses {
+    dose.medication = medicationProfile  // Sets individual relationship
+}
+// OR avoid relationships entirely in test-only code
+_ = existingDoses  // Keep for test setup but don't assign to relationship
+```
+
+**Why this crashes:**
+- SwiftData uses computed properties with complex setter logic
+- Direct array assignment bypasses SwiftData's relationship management
+- Causes crashes in `@__swiftmacro_` generated code
+- Test environment makes this worse due to lack of proper ModelContext
+
+**Safe testing patterns:**
+1. **Pass arrays directly to engine methods** instead of using relationships
+2. **Use ModelContainer with proper context** when relationships are required
+3. **Comment why relationships are avoided** in test-only scenarios
+4. **Test relationship-dependent methods with empty profiles** to verify graceful handling
+
 ## Test Categories
 
 ### Unit & Integration Tests (Swift Testing Framework)

@@ -100,7 +100,7 @@ author: Claude Code PM System
 ### CloudKit vs Testing
 - **CloudKit Requirements**: All relationships need proper inverses, but tests should disable CloudKit entirely
 - **Test Environment Detection**: DataController properly detects test environment and disables CloudKit automatically
-- **SwiftData Testing**: Raw model creation without ModelContext causes crashes when accessing relationships
+- **SwiftData Testing**: Requires proper ModelContainer setup in tests (see testing-config.md for critical anti-patterns)
 
 ### SwiftUI Accessibility Hierarchy (Critical for UI Tests)
 - **List Rendering**: SwiftUI List renders as CollectionView (not Table/ScrollView as expected)
