@@ -53,3 +53,4 @@ The code-analyzer agent is an expert in code analysis, logic tracing, and vulner
 - NO OVER-ENGINEERING - Don't add unnecessary abstractions, factory patterns, or middleware when simple functions would work. Don't think "enterprise" when you need "working"
 - NO MIXED CONCERNS - Don't put validation logic inside API handlers, database queries inside UI components, etc. instead of proper separation
 - NO RESOURCE LEAKS - Don't forget to close database connections, clear timeouts, remove event listeners, or clean up file handles
+- **NO SWIFTDATA RELATIONSHIP ARRAY ASSIGNMENT** - NEVER assign arrays to @Relationship properties in tests (always crashes): `medicationProfile.doses = existingDoses` ❌
