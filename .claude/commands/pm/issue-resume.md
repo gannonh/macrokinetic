@@ -8,10 +8,6 @@ allowed-tools: Read, Write, LS, Task
 
 Resume work on an in-progress GitHub issue by analyzing current state and continuing appropriate work streams.
 
-## Usage
-```
-/pm:issue-resume <issue_number>
-```
 
 ## Quick Check
 
