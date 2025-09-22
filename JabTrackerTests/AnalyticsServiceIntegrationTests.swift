@@ -18,27 +18,24 @@ struct AnalyticsServiceIntegrationTests {
             appleUserId: "test-analytics-user")
     }
 
-    private func createTestMedicationProfile(medication: Medication, user: User) -> MedicationProfile {
+    private func createTestMedicationProfile(medication: Medication, user _: User) -> MedicationProfile {
         let profile = MedicationProfile(
             genericName: medication.displayName,
             brandName: medication.displayName,
             currentDose: 1.0)
-        // Set the medication and user relationships
+        // Set the medication relationship only - user relationship will be set later
         profile.medication = medication
-        profile.user = user
         return profile
     }
 
-    private func createTestDose(amount: Double, medicationProfile: MedicationProfile, user: User, daysAgo: Int = 0) -> Dose {
+    private func createTestDose(amount: Double, medicationProfile _: MedicationProfile, user _: User, daysAgo: Int = 0) -> Dose {
         let timestamp = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
         let dose = Dose(
             amount: amount,
             timestamp: timestamp,
             site: "abdomen",
             notes: "Test dose")
-        // Set relationships
-        dose.user = user
-        dose.medication = medicationProfile
+        // Relationships will be set after insertion into context
         return dose
     }
 
@@ -53,11 +50,13 @@ struct AnalyticsServiceIntegrationTests {
         let semaglutideProfile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
         let tirezepatideProfile = self.createTestMedicationProfile(medication: .tirzepatide, user: user)
 
+        // Insert user first to prevent duplicate registration
+        context.insert(user)
+
+        // Set user relationships after insertion
         semaglutideProfile.user = user
         tirezepatideProfile.user = user
 
-        // Insert user and profiles first to prevent duplicate registration
-        context.insert(user)
         context.insert(semaglutideProfile)
         context.insert(tirezepatideProfile)
 
@@ -66,6 +65,7 @@ struct AnalyticsServiceIntegrationTests {
         let dose2 = self.createTestDose(amount: 1.0, medicationProfile: semaglutideProfile, user: user, daysAgo: 14)
         let dose3 = self.createTestDose(amount: 2.5, medicationProfile: tirezepatideProfile, user: user, daysAgo: 10)
 
+        // Set dose relationships after creation
         dose1.user = user
         dose1.medication = semaglutideProfile
         dose2.user = user
@@ -99,10 +99,11 @@ struct AnalyticsServiceIntegrationTests {
         let semaglutideProfile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
         let tirezepatideProfile = self.createTestMedicationProfile(medication: .tirzepatide, user: user)
 
+        context.insert(user)
+
         semaglutideProfile.user = user
         tirezepatideProfile.user = user
 
-        context.insert(user)
         context.insert(semaglutideProfile)
         context.insert(tirezepatideProfile)
 
@@ -139,9 +140,9 @@ struct AnalyticsServiceIntegrationTests {
 
         let user = self.createTestUser()
         let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
-        profile.user = user
 
         context.insert(user)
+        profile.user = user
         context.insert(profile)
 
         // Create consistent dosing pattern
@@ -181,9 +182,9 @@ struct AnalyticsServiceIntegrationTests {
 
         let user = self.createTestUser()
         let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
-        profile.user = user
 
         context.insert(user)
+        profile.user = user
         context.insert(profile)
 
         // Create high adherence dose pattern
@@ -215,9 +216,9 @@ struct AnalyticsServiceIntegrationTests {
 
         let user = self.createTestUser()
         let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
-        profile.user = user
 
         context.insert(user)
+        profile.user = user
         context.insert(profile)
 
         // Create excellent adherence pattern
@@ -254,9 +255,9 @@ struct AnalyticsServiceIntegrationTests {
         let userWithoutDoses = self.createTestUser()
         userWithoutDoses.appleUserId = "user-without-doses"
         let emptyProfile = self.createTestMedicationProfile(medication: .semaglutide, user: userWithoutDoses)
-        emptyProfile.user = userWithoutDoses
 
         context.insert(userWithoutDoses)
+        emptyProfile.user = userWithoutDoses
         context.insert(emptyProfile)
 
         try context.save()
@@ -282,9 +283,9 @@ struct AnalyticsServiceIntegrationTests {
 
         let user = self.createTestUser()
         let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
-        profile.user = user
 
         context.insert(user)
+        profile.user = user
         context.insert(profile)
 
         // Create large dose history (100 doses over ~2 years)
@@ -316,9 +317,9 @@ struct AnalyticsServiceIntegrationTests {
 
         let user = self.createTestUser()
         let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
-        profile.user = user
 
         context.insert(user)
+        profile.user = user
         context.insert(profile)
 
         // Create consistent dose pattern
@@ -355,9 +356,9 @@ struct AnalyticsServiceIntegrationTests {
 
         let user = self.createTestUser()
         let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
-        profile.user = user
 
         context.insert(user)
+        profile.user = user
         context.insert(profile)
 
         // Create dose history
