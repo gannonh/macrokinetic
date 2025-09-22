@@ -135,6 +135,7 @@
 		B6FB53D414B720054887533F /* DoseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B586AE6F94F894FB215E2710 /* DoseService.swift */; };
 		B75439369EF479C6C7679BEF /* JabTrackerStoreKit.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 6E8F25682AB8F7F1EEDB80C2 /* JabTrackerStoreKit.storekit */; };
 		B7F847D147FC19610B2514ED /* DoseHistoryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3746484A8C6A3EB3F4E98CB7 /* DoseHistoryRow.swift */; };
+		B8573431ED2E978B221075FD /* DoseServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E19FC2EE1ABF5D64ED76E5 /* DoseServiceTests.swift */; };
 		BA31440BC731D9DCE897FAE2 /* DoseCalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB1FE9FBC4A3EEF509C518A /* DoseCalendarViewModel.swift */; };
 		BB0B0BE3932C0675496AC8AD /* SubscriptionManager+Testing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797DA89486FFE995221D6609 /* SubscriptionManager+Testing.swift */; };
 		BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92209045E4347373E0C9BCAB /* Colors+Extensions.swift */; };
@@ -143,6 +144,7 @@
 		C24A8A61EAB23384FC48562D /* SubscriptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D30809BE84F01DA83E83F4C /* SubscriptionUITests.swift */; };
 		C58F9C3E622882A3CAB09EC5 /* SubscriptionUINetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */; };
 		C5B289EC33F6AA3464E07D3C /* DoseHistoryViewModelErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1B06AAB60967FA3C0B9B69 /* DoseHistoryViewModelErrorTests.swift */; };
+		C9F23D6EEFCC2DCD7663E05D /* ConcentrationPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEACD58C8BE1C5D6E8C2F799 /* ConcentrationPointTests.swift */; };
 		CA7BF05CB17E6CCDED94DD59 /* ConcentrationPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3083E45DAAD0204F1AF4B5A5 /* ConcentrationPoint.swift */; };
 		CB0812C52EDE841D631C81B9 /* BiometricAuthManagerCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C046C9CE67D30EEA5AF3C0 /* BiometricAuthManagerCoreTests.swift */; };
 		CB16901B2FC9B0838A78D7EA /* DoseValidationAmountTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08C39CD2D716C0C6EBE0ED0 /* DoseValidationAmountTests.swift */; };
@@ -294,6 +296,7 @@
 		7150A995B6D4936C3556044A /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
 		7227717A4996106B834D8852 /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		72833DFDEE7BFE9D0870B3CA /* MedicationProfileEnhancementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileEnhancementTests.swift; sourceTree = "<group>"; };
+		73E19FC2EE1ABF5D64ED76E5 /* DoseServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseServiceTests.swift; sourceTree = "<group>"; };
 		73E2AEB8B2D7270CBDA42825 /* SubscriptionProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionProducts.swift; sourceTree = "<group>"; };
 		75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerCloudKitTests.swift; sourceTree = "<group>"; };
 		75C8E5789A19EFDB900D4476 /* DoseArrayExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseArrayExtensionTests.swift; sourceTree = "<group>"; };
@@ -374,6 +377,7 @@
 		DA98E9D9A3599F7678DB1C83 /* .swiftlint.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
 		DCB250F0FB4DE16CF063CA7F /* AdherenceStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceStatistics.swift; sourceTree = "<group>"; };
 		DD8D1209E3EB9E079E0C5416 /* AuthenticationDatabaseIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDatabaseIntegrationTests.swift; sourceTree = "<group>"; };
+		DEACD58C8BE1C5D6E8C2F799 /* ConcentrationPointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationPointTests.swift; sourceTree = "<group>"; };
 		E0DD385076B17502B720F566 /* ProfileValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileValidation.swift; sourceTree = "<group>"; };
 		E27D5ACAC4996BC70713166E /* JabTrackerUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E302221806254B729984868B /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
@@ -563,6 +567,7 @@
 				636E8EEE1932A0793EB3D786 /* DataControllerTests.swift */,
 				AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */,
 				AE3823A15F5FCF1DCF1E5859 /* DoseAnalyticsTests.swift */,
+				73E19FC2EE1ABF5D64ED76E5 /* DoseServiceTests.swift */,
 				959E77138F934F2BABE2D6C4 /* DoseTitrationTests.swift */,
 				CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */,
 				24B20942E8632D13C2463169 /* MedicationAnalyticsTests.swift */,
@@ -695,6 +700,7 @@
 			isa = PBXGroup;
 			children = (
 				4442B7182D0A1D85A9F16B37 /* AdherenceStatisticsTests.swift */,
+				DEACD58C8BE1C5D6E8C2F799 /* ConcentrationPointTests.swift */,
 				227529948C976B6948BCF070 /* Extensions */,
 			);
 			path = Models;
@@ -1013,6 +1019,7 @@
 				90660CC05AD50E39F853A144 /* ButtonStyleTests.swift in Sources */,
 				1A2C29BBD291697B06AE4CE6 /* CalendarDayViewTests.swift in Sources */,
 				53220A7C03E046CA5ABA716E /* ConcentrationCardTests.swift in Sources */,
+				C9F23D6EEFCC2DCD7663E05D /* ConcentrationPointTests.swift in Sources */,
 				4DCCEBCCBD61A49CFCEFE78B /* DataControllerBasicTests.swift in Sources */,
 				15DA362CB7875DA9908CBF18 /* DataControllerCloudKitTests.swift in Sources */,
 				AAC9B1752C6B3446E16410ED /* DataControllerInitializationTests.swift in Sources */,
@@ -1038,6 +1045,7 @@
 				A7DFDE7FA5AF3CB9100B35DC /* DoseSearchAndFilterViewTests.swift in Sources */,
 				4490C7B1D91077739A3AEE82 /* DoseSearchServiceTests.swift in Sources */,
 				1DC8EB6ECFCFE42AC5F986E2 /* DoseSearchServiceUnitTests.swift in Sources */,
+				B8573431ED2E978B221075FD /* DoseServiceTests.swift in Sources */,
 				FA0BADBD0D919E552528B1C6 /* DoseTitrationTests.swift in Sources */,
 				CB16901B2FC9B0838A78D7EA /* DoseValidationAmountTests.swift in Sources */,
 				19BF6B85906ED99E03FF332E /* DoseValidationComprehensiveTests.swift in Sources */,

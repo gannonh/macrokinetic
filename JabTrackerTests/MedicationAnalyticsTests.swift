@@ -195,6 +195,43 @@ struct MedicationAnalyticsTests {
     }
   }
 
+  @Test("MedicationProfile timeBasedEffectivenessInsights with nil medication")
+  @MainActor
+  func medicationProfileTimeBasedEffectivenessInsightsWithNilMedication() async throws {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+    let container = try ModelContainer(
+      for: User.self, MedicationProfile.self, Dose.self, configurations: config)
+    let context = container.mainContext
+
+    // Create test profile
+    let user = User(email: "test@example.com", name: "Test User", appleUserId: "test-user")
+    context.insert(user)
+
+    let profile = MedicationProfile(
+      genericName: "unknown",
+      brandName: "Unknown Brand",
+      currentDose: 1.0,
+      startDate: Calendar.current.date(byAdding: .day, value: -30, to: Date())!,
+      medicationType: "unknown")
+    profile.user = user
+    // Do NOT set medication - this will be nil
+    context.insert(profile)
+
+    try context.save()
+
+    // Test time-based effectiveness properties with nil medication
+    let timeBased = profile.timeBasedEffectivenessInsights
+    #expect(timeBased.count == 1, "Should provide one insight when medication is nil")
+
+    let insight = timeBased.first!
+    #expect(insight.period == "Unknown", "Period should be 'Unknown' when medication is nil")
+    #expect(
+      insight.effectivenessChange == nil,
+      "Effectiveness change should be nil when medication is nil")
+    #expect(
+      insight.note == "Medication type not set", "Note should indicate medication type not set")
+  }
+
   // MARK: - Concentration Timeline Tests
 
   @Test("MedicationProfile should generate concentration timeline")
