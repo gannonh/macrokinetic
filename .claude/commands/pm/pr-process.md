@@ -9,6 +9,8 @@ model: inherit
 
 Process PR review comments with context-aware discretion.
 
+**ULTRATHINK**
+
 ## Comments to Process
 
 Process the following PR comments: $ARGUMENTS
@@ -19,7 +21,7 @@ Process the following PR comments: $ARGUMENTS
 
 Inform the user:
 ```
-I'll review the PR comments with discretion, as the reviewer doesn't have access to the entire codebase and may not understand the full context.
+I'll review the PR comments with discretion, as the reviewer may not understand the full context.
 
 For each comment, I'll:
 - Evaluate if it's valid given our codebase context
