@@ -56,6 +56,7 @@ Load context files in priority order for optimal understanding:
 8. `product-context.md` - User needs and requirements
 9. `project-style-guide.md` - Coding conventions
 10. `project-vision.md` - Long-term direction
+11. `development-commands.md` - Common workflows and commands
 
 ### 2. Validation During Loading
 
