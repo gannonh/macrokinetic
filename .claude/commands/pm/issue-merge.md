@@ -66,8 +66,9 @@ git status -sb
 
 ### 2. Run Checks & Fix Issues
 
-1. Run final checks: `./scripts/check-all.sh --skip-ui`
-2. If ANY failures or violations:
+1. Make sure all new files are added to `coverage-config.json` if needed
+2. Run final checks: `./scripts/check-all.sh --skip-ui`
+3. If ANY failures or violations:
    - **⚠️ STOP MERGE PROCESS ⚠️**
    - Provide summary of issues found, eg:
      ```
@@ -76,7 +77,7 @@ git status -sb
      ❌ 1 security vulnerability
      ```
   - Fix all issues and proceed to next step
-3. If all checks pass, proceed to next step
+4. If all checks pass, proceed to next step
 
 ### 3. Mark PR as Ready for Review
 
