@@ -183,6 +183,11 @@ final class AnalyticsService {
             for: user,
             medication: profile)
 
+        // Ensure concentration is non-negative
+        guard currentConcentration >= 0.0 else {
+            return 0.0
+        }
+
         let therapeuticWindow = (profile.medication ?? .semaglutide).therapeuticWindow
 
         // Calculate how well the current concentration fits within therapeutic range
@@ -191,13 +196,15 @@ final class AnalyticsService {
             let rangePosition = (currentConcentration - therapeuticWindow.lowerBound) /
                 (therapeuticWindow.upperBound - therapeuticWindow.lowerBound)
             // Optimal around 0.6-0.8 of the range
-            return 1.0 - abs(rangePosition - 0.7) / 0.3
+            let optimality = 1.0 - abs(rangePosition - 0.7) / 0.3
+            return max(0.0, min(1.0, optimality))
         } else if currentConcentration < therapeuticWindow.lowerBound {
             // Below range - effectiveness decreases with distance from minimum
-            return max(0.0, currentConcentration / therapeuticWindow.lowerBound)
+            return max(0.0, min(1.0, currentConcentration / therapeuticWindow.lowerBound))
         } else {
             // Above range - potential for side effects, effectiveness may decrease
-            return max(0.0, 1.0 - (currentConcentration - therapeuticWindow.upperBound) / therapeuticWindow.upperBound)
+            let excessRatio = (currentConcentration - therapeuticWindow.upperBound) / therapeuticWindow.upperBound
+            return max(0.0, min(1.0, 1.0 - excessRatio))
         }
     }
 
