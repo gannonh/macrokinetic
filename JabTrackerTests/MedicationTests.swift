@@ -278,6 +278,83 @@ struct MedicationTests {
         maxDose > minDose, "Max dose should be greater than min dose for \(medication.rawValue)")
     }
   }
+
+  // MARK: - Pharmacokinetic Extension Tests
+
+  @Test("Fraction remaining after time elapsed calculation")
+  func fractionRemainingAfterTimeElapsed() throws {
+    // Test fraction remaining for semaglutide (7-day half-life)
+    let semaFractionAfter0 = Medication.semaglutide.fractionRemainingAfter(timeElapsedHours: 0)
+    #expect(semaFractionAfter0 == 1.0, "Should be 100% remaining at time 0")
+
+    let semaFractionAfterHalfLife = Medication.semaglutide.fractionRemainingAfter(
+      timeElapsedHours: 7 * 24)  // 7 days in hours
+    #expect(
+      abs(semaFractionAfterHalfLife - 0.5) < 0.01, "Should be ~50% remaining after one half-life")
+
+    // Test negative time (edge case)
+    let semaFractionNegative = Medication.semaglutide.fractionRemainingAfter(timeElapsedHours: -1)
+    #expect(semaFractionNegative == 1.0, "Should return 100% for negative time")
+
+    // Test tirzepatide (5-day half-life)
+    let tirzeFractionAfterHalfLife = Medication.tirzepatide.fractionRemainingAfter(
+      timeElapsedHours: 5 * 24)
+    #expect(
+      abs(tirzeFractionAfterHalfLife - 0.5) < 0.01, "Should be ~50% remaining after one half-life")
+
+    // Test liraglutide (short half-life)
+    let liraFractionAfterHalfLife = Medication.liraglutide.fractionRemainingAfter(
+      timeElapsedHours: 0.54 * 24)
+    #expect(
+      abs(liraFractionAfterHalfLife - 0.5) < 0.01, "Should be ~50% remaining after one half-life")
+  }
+
+  @Test("Relative potency factor for cross-medication comparison")
+  func relativePotencyFactor() throws {
+    // Test semaglutide as reference (1.0)
+    let semaPotency = Medication.semaglutide.relativePotencyFactor
+    #expect(semaPotency == 1.0, "Semaglutide should be reference potency of 1.0")
+
+    // Test tirzepatide (dual receptor agonist, higher potency)
+    let tirzePotency = Medication.tirzepatide.relativePotencyFactor
+    #expect(tirzePotency == 2.0, "Tirzepatide should have higher potency factor of 2.0")
+
+    // Test liraglutide (similar but daily)
+    let liraPotency = Medication.liraglutide.relativePotencyFactor
+    #expect(liraPotency == 0.8, "Liraglutide should have potency factor of 0.8")
+
+    // Test dulaglutide (similar to semaglutide)
+    let dulaPotency = Medication.dulaglutide.relativePotencyFactor
+    #expect(dulaPotency == 0.9, "Dulaglutide should have potency factor of 0.9")
+
+    // Verify all potency factors are positive
+    for medication in Medication.allCases {
+      let potency = medication.relativePotencyFactor
+      #expect(potency > 0, "Potency factor must be positive for \(medication.rawValue)")
+      #expect(potency <= 3.0, "Potency factor should be reasonable for \(medication.rawValue)")
+    }
+  }
+
+  @Test("Pharmacokinetic validation error handling")
+  func pharmacokineticValidationError() throws {
+    // Test that all current medications have valid pharmacokinetics (should return nil)
+    for medication in Medication.allCases {
+      let validationError = medication.pharmacokineticValidationError
+      #expect(
+        validationError == nil,
+        "Current medication \(medication.rawValue) should have valid pharmacokinetics")
+    }
+
+    // Test that hasValidPharmacokinetics returns true for all current medications
+    for medication in Medication.allCases {
+      let isValid = medication.hasValidPharmacokinetics
+      #expect(
+        isValid, "Current medication \(medication.rawValue) should have valid pharmacokinetics")
+    }
+
+    // Note: We can't easily test invalid pharmacokinetics without modifying the enum
+    // But we've verified that the validation methods work for valid cases
+  }
 }
 
 // MARK: - Helper Extension
