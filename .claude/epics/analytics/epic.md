@@ -2,7 +2,7 @@
 name: analytics
 status: backlog
 created: 2025-09-21T21:11:24Z
-progress: 0%
+progress: 5%
 prd: .claude/prds/analytics.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/52
 ---
@@ -76,7 +76,7 @@ High-level task categories that will be created:
 - **Critical path**: Analytics service foundation → Chart implementation → Export features
 
 ## Tasks Created
-- [ ] #53 - Extend SwiftData Models for Analytics (parallel: false)
+- [x] #53 - Extend SwiftData Models for Analytics (parallel: false)
 - [ ] #54 - Create AnalyticsService Core (parallel: false)
 - [ ] #55 - Build ChartDataProcessor (parallel: true)
 - [ ] #56 - Implement ConcentrationTimelineChart (parallel: false)
