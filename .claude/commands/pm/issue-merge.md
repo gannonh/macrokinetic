@@ -86,8 +86,13 @@ gh pr ready $ARGUMENTS
 echo "✅ PR #$ARGUMENTS marked as ready for review"
 ```
 
-### 4. Request Review
+### 4. Request Reviews
 
+#### 4.1 Deploy Review Agents
+
+Deploy code-quality and test-quality agents to the PR: $ARGUMENTS
+
+#### 4.2 Request GitHub Reviewers
 Ask user to requests reviewers on github, monitor status, then resume this merge process from Step 5 once he comments are in. 
 
 Format as follows:
@@ -101,7 +106,6 @@ Step 4: Request Review
   3. Monitor the PR for review comments and approvals
   4. Once all reviews are completed, come back and resume this merge process from Step 5: `/pm:issue-merge $ARGUMENTS`
 ---
-
 
 ### 5. Document PR Comments & Action Items
 
