@@ -15,16 +15,6 @@
       "env": {
         "PERPLEXITY_API_KEY": "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"
       }
-    },
-    "XcodeBuildMCP": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "xcodebuildmcp@latest"
-      ],
-      "env": {
-        "XCODEBUILDMCP_DYNAMIC_TOOLS": "false"
-      }
     }
   }
 }
