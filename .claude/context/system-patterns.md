@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-20T16:38:18Z
-version: 1.3
+last_updated: 2025-09-22T14:31:53Z
+version: 1.4
 author: Claude Code PM System
 ---
 
@@ -14,6 +14,7 @@ author: Claude Code PM System
 - **ViewModels**: @Observable classes managing business logic (migrating from ObservableObject - see Issue #51)
 - **Models**: SwiftData entities with CloudKit sync
 - **Services**: @Observable classes for cross-cutting concerns
+- **Analytics Service**: Centralized cross-model analytics coordination
 
 ### Data Flow Architecture
 ```
@@ -239,3 +240,33 @@ var children: [Child] = []
   - Use `@StateObject`/`@ObservedObject` for `ObservableObject` classes
 - **BENEFITS**: Simpler syntax, better performance, automatic observation of all properties
 - **REQUIREMENTS**: iOS 17+ (already required by app)
+
+## Analytics Service Patterns
+
+### Cross-Model Analytics Architecture
+- **Centralized Service**: AnalyticsService coordinates calculations across User, Dose, and MedicationProfile models
+- **PharmacokineticsEngine Integration**: Concentration calculations for therapeutic range analysis
+- **@Observable Pattern**: Real-time analytics updates with iOS 17+ observer pattern
+- **Performance-First Design**: Optimized for large datasets (700+ dose records)
+
+### Analytics Data Structures
+```swift
+struct UserAnalyticsSummary {
+    let overallAdherence: Double
+    let medicationEffectiveness: [MedicationEffectiveness]
+    let concentrationTrends: [ConcentrationTrend]
+    let adherenceInsights: [AdherenceInsight]
+}
+```
+
+### Medical Accuracy Patterns
+- **Therapeutic Range Analysis**: Concentration optimality scoring based on medication windows
+- **Multi-Factor Effectiveness**: `baseEffectiveness * adherenceFactor * concentrationOptimality`
+- **Insight Generation**: Priority-based actionable recommendations
+- **Edge Case Handling**: Graceful degradation for incomplete data
+
+### Testing Patterns for Analytics
+- **@MainActor Compliance**: Required for SwiftData ModelContext access in tests
+- **Relationship Setup**: Insert parent entities (User, MedicationProfile) before children (Dose)
+- **Test Isolation**: Use `DataController.testContainer().container` with CloudKit disabled
+- **Performance Testing**: Validate <1 second execution time for comprehensive analytics
