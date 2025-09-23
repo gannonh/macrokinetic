@@ -27,9 +27,7 @@
           "DoseSearchService.swift",
           "DoseService.swift",
           "ChartDataProcessor.swift",
-          "ChartDataProcessor+Filtering.swift",
-          "ChartDataProcessorPerformanceTests.swift",
-          "ChartDataProcessorIntegrationTests.swift"
+          "ChartDataProcessor+Filtering.swift"
         ]
       },
       "framework_integration": {
