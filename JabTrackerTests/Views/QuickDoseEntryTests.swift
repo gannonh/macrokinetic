@@ -84,7 +84,7 @@ struct QuickDoseEntryTests {
   @MainActor
   func canSaveDoseValidationWithDateRestrictions() async {
     let context = self.createTestContext()
-    let profile = self.createTestMedicationProfile(context: context)
+    _ = self.createTestMedicationProfile(context: context)
 
     let viewModel = QuickDoseViewModel()
     viewModel.loadSmartDefaults(context: context)
@@ -127,11 +127,13 @@ struct QuickDoseEntryTests {
 
     // Test date 30 days ago (should be valid)
     viewModel.doseDate = thirtyDaysAgo
+    viewModel.doseTime = thirtyDaysAgo  // Also set time to ensure consistent combined datetime
     #expect(viewModel.canSaveDose, "Should be able to save dose with date 30 days ago")
 
     // Test date 31 days ago (should be invalid)
     let moreThanThirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -31, to: Date())!
     viewModel.doseDate = moreThanThirtyDaysAgo
+    viewModel.doseTime = moreThanThirtyDaysAgo  // Also set time to ensure consistent combined datetime
     #expect(!viewModel.canSaveDose, "Should not be able to save dose with date 31 days ago")
   }
 

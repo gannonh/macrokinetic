@@ -57,7 +57,10 @@ class QuickDoseViewModel: ObservableObject {
     guard doseDateTime <= Date() else { return false }
     // Allow reasonable past dates (30 days back)
     let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-    guard doseDateTime >= thirtyDaysAgo else { return false }
+    // Use date-only comparison to avoid second-level precision issues
+    let doseDateOnly = Calendar.current.startOfDay(for: doseDateTime)
+    let thirtyDaysAgoDateOnly = Calendar.current.startOfDay(for: thirtyDaysAgo)
+    guard doseDateOnly >= thirtyDaysAgoDateOnly else { return false }
     return true
   }
 
