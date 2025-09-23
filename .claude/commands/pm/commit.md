@@ -2,7 +2,7 @@
 allowed-tools: Read, Write, Bash(gh pr view:*), Bash(echo:*), Bash(git add:*)
 description: Commit changes with a descriptive message
 argument-hint: Issue number (optional)
-model: claude-sonnet-4-20250514
+model: sonnet
 ---
 
 # Commit Changes
