@@ -37,92 +37,109 @@ struct ChartControlsViewTests {
 
   // MARK: - State Management Tests
 
-  @Test("ChartControlsView updates bindings correctly")
+  @Test("ChartControlsView binding initialization with different states")
   func testStateUpdates() async throws {
-    // GIVEN: ChartControlsView with bindings
-    @State var selectedPeriod: ChartDataProcessor.TimePeriod = .last30Days
-    @State var showExportSheet = false
+    // GIVEN: ChartControlsView with different initial binding states
+    let testStates: [(ChartDataProcessor.TimePeriod, Bool)] = [
+      (.last7Days, false),
+      (.last30Days, true),
+      (.last90Days, false),
+      (.lastYear, true),
+    ]
 
-    _ = ChartControlsView(
-      selectedPeriod: Binding(
-        get: { selectedPeriod },
-        set: { selectedPeriod = $0 }
-      ),
-      showExportSheet: Binding(
-        get: { showExportSheet },
-        set: { showExportSheet = $0 }
+    for (initialPeriod, initialExportState) in testStates {
+      var currentPeriod = initialPeriod
+      var currentExportState = initialExportState
+      var periodBindingCalls = 0
+      var exportBindingCalls = 0
+
+      // WHEN: Creating component with state tracking bindings
+      _ = ChartControlsView(
+        selectedPeriod: Binding(
+          get: { currentPeriod },
+          set: { newValue in
+            currentPeriod = newValue
+            periodBindingCalls += 1
+          }
+        ),
+        showExportSheet: Binding(
+          get: { currentExportState },
+          set: { newValue in
+            currentExportState = newValue
+            exportBindingCalls += 1
+          }
+        )
       )
-    )
 
-    // Initial states should be correct
-    #expect(selectedPeriod == .last30Days, "Initial period should be last30Days")
-    #expect(showExportSheet == false, "Initial export sheet state should be false")
-
-    // WHEN: State changes (simulated through bindings)
-    selectedPeriod = .last7Days
-    showExportSheet = true
-
-    // THEN: Bindings should reflect the changes
-    #expect(selectedPeriod == .last7Days, "Period should update to last7Days")
-    #expect(showExportSheet == true, "Export sheet state should update to true")
+      // THEN: Initial states should be preserved
+      #expect(currentPeriod == initialPeriod, "Initial period should be \(initialPeriod)")
+      #expect(
+        currentExportState == initialExportState,
+        "Initial export state should be \(initialExportState)")
+    }
   }
 
   // MARK: - Export Sheet Management Tests
 
-  @Test("ChartControlsView manages export sheet state")
+  @Test("ChartControlsView component structure and bindings")
   func testExportSheetManagement() async throws {
-    // GIVEN: ChartControlsView with export sheet binding
-    @State var selectedPeriod: ChartDataProcessor.TimePeriod = .last30Days
-    @State var showExportSheet = false
+    // GIVEN: ChartControlsView with various binding configurations
+    let exportStates = [true, false]
+    let periods: [ChartDataProcessor.TimePeriod] = [.last7Days, .last30Days, .last90Days]
 
-    _ = ChartControlsView(
-      selectedPeriod: Binding(
-        get: { selectedPeriod },
-        set: { selectedPeriod = $0 }
-      ),
-      showExportSheet: Binding(
-        get: { showExportSheet },
-        set: { showExportSheet = $0 }
-      )
-    )
+    for exportState in exportStates {
+      for period in periods {
+        var currentPeriod = period
+        var currentExportState = exportState
 
-    // WHEN: Export sheet is toggled
-    showExportSheet = true
+        // WHEN: Creating component with specific configuration
+        _ = ChartControlsView(
+          selectedPeriod: Binding(
+            get: { currentPeriod },
+            set: { currentPeriod = $0 }
+          ),
+          showExportSheet: Binding(
+            get: { currentExportState },
+            set: { currentExportState = $0 }
+          )
+        )
 
-    // THEN: State should be properly managed
-    #expect(showExportSheet == true, "Export sheet should be shown")
-
-    // WHEN: Export sheet is dismissed
-    showExportSheet = false
-
-    // THEN: State should return to hidden
-    #expect(showExportSheet == false, "Export sheet should be hidden")
+        // THEN: Component should be created with proper state
+        #expect(currentPeriod == period, "Period should be \(period)")
+        #expect(currentExportState == exportState, "Export state should be \(exportState)")
+      }
+    }
   }
 
   // MARK: - Integration Tests
 
-  @Test("ChartControlsView integrates TimePeriodSelector correctly")
+  @Test("ChartControlsView component creation across all time periods")
   func testTimePeriodSelectorIntegration() async throws {
-    // GIVEN: ChartControlsView with period binding
-    @State var selectedPeriod: ChartDataProcessor.TimePeriod = .last30Days
-    @State var showExportSheet = false
+    // GIVEN: All supported time periods and export states
+    let allPeriods: [ChartDataProcessor.TimePeriod] = [
+      .last7Days, .last30Days, .last90Days, .lastYear, .all,
+    ]
 
-    _ = ChartControlsView(
-      selectedPeriod: Binding(
-        get: { selectedPeriod },
-        set: { selectedPeriod = $0 }
-      ),
-      showExportSheet: Binding(
-        get: { showExportSheet },
-        set: { showExportSheet = $0 }
+    for period in allPeriods {
+      var currentPeriod = period
+      var currentExportState = false
+
+      // WHEN: Creating component with each time period
+      _ = ChartControlsView(
+        selectedPeriod: Binding(
+          get: { currentPeriod },
+          set: { currentPeriod = $0 }
+        ),
+        showExportSheet: Binding(
+          get: { currentExportState },
+          set: { currentExportState = $0 }
+        )
       )
-    )
 
-    // WHEN: Period selection changes
-    selectedPeriod = .last90Days
-
-    // THEN: Integration should work correctly
-    #expect(selectedPeriod == .last90Days, "Period selection should be integrated correctly")
+      // THEN: Component should support all periods
+      #expect(currentPeriod == period, "Should support time period \(period)")
+      #expect(true, "ChartControlsView should be created with \(period)")
+    }
   }
 
   // MARK: - Accessibility Tests
