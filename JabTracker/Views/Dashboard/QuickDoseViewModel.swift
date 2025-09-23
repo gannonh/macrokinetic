@@ -22,6 +22,7 @@ class QuickDoseViewModel: ObservableObject {
 
   @Published var doseAmount: Double = 0.0
   @Published var selectedInjectionSite: String = ""
+  @Published var doseDate: Date = .init()
   @Published var doseTime: Date = .init()
   @Published var notes: String = ""
 
@@ -31,18 +32,41 @@ class QuickDoseViewModel: ObservableObject {
 
   // MARK: - Computed Properties
 
+  /// Combined date and time for dose timestamp
+  var doseDateTime: Date {
+    let calendar = Calendar.current
+    let dateComponents = calendar.dateComponents([.year, .month, .day], from: doseDate)
+    let timeComponents = calendar.dateComponents([.hour, .minute], from: doseTime)
+
+    var combined = DateComponents()
+    combined.year = dateComponents.year
+    combined.month = dateComponents.month
+    combined.day = dateComponents.day
+    combined.hour = timeComponents.hour
+    combined.minute = timeComponents.minute
+
+    return calendar.date(from: combined) ?? Date()
+  }
+
   /// Determines if dose can be saved based on current state
   var canSaveDose: Bool {
     guard self.selectedMedicationProfile != nil else { return false }
     guard self.doseAmount > 0 else { return false }
     guard !self.selectedInjectionSite.isEmpty else { return false }
+    // Prevent future dates beyond today
+    guard doseDateTime <= Date() else { return false }
+    // Allow reasonable past dates (30 days back)
+    let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+    guard doseDateTime >= thirtyDaysAgo else { return false }
     return true
   }
 
   // MARK: - Initialization
 
   init() {
-    self.doseTime = Date()
+    let now = Date()
+    self.doseDate = now
+    self.doseTime = now
   }
 
   // MARK: - Smart Defaults Loading
@@ -97,6 +121,7 @@ class QuickDoseViewModel: ObservableObject {
         // Set values from edit data
         self.selectedMedicationProfile = editData.medicationProfile
         self.doseAmount = editData.amount
+        self.doseDate = editData.timestamp
         self.doseTime = editData.timestamp
         self.selectedInjectionSite = editData.site ?? ""
         self.notes = editData.notes ?? ""
@@ -157,7 +182,9 @@ class QuickDoseViewModel: ObservableObject {
   /// Resets form to initial state after successful save
   func resetForm() {
     self.notes = ""
-    self.doseTime = Date()
+    let now = Date()
+    self.doseDate = now
+    self.doseTime = now
     // Keep medication selection and injection site rotation for convenience
   }
 
