@@ -62,7 +62,11 @@ struct ChartDataProcessorIntegrationTests {
       context.insert(dose)
     }
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
     return IntegrationTestData(user: user, medicationProfile: medicationProfile, doses: doses)
   }
 
@@ -111,8 +115,8 @@ struct ChartDataProcessorIntegrationTests {
     #expect(concentrations.max()! < 100.0, "Maximum concentration should be realistic")
 
     // Verify dose markers align with concentration spikes
-    let doseTimestamps = Set(doseMarkers.map { $0.date })
-    let chartTimestamps = chartPoints.map { $0.date }
+    _ = Set(doseMarkers.map { $0.date })
+    _ = chartPoints.map { $0.date }
 
     for doseMarker in doseMarkers {
       let closestChartPoint = chartPoints.min(by: {
@@ -209,12 +213,12 @@ struct ChartDataProcessorIntegrationTests {
   func testAnalyticsServiceIntegration() throws {
     // GIVEN: Test data suitable for analytics calculations
     let testData = setupIntegrationTestData()
-    let (user, medicationProfile, doses) = (
+    let (user, _, doses) = (
       testData.user, testData.medicationProfile, testData.doses
     )
 
     // WHEN: Generating analytics summary (this should work with chart data)
-    let analyticsResult = analyticsService.calculateUserAnalytics(
+    _ = analyticsService.calculateUserAnalytics(
       user: user, context: ModelContext(container))
 
     // AND: Processing chart data for the same user/medication
@@ -240,7 +244,7 @@ struct ChartDataProcessorIntegrationTests {
   func testChartOptimizationPreservesAnalyticsInformation() throws {
     // GIVEN: Large dataset with analytics-relevant patterns
     let testData = setupIntegrationTestData()
-    let (user, medicationProfile, doses) = (
+    let (_, medicationProfile, doses) = (
       testData.user, testData.medicationProfile, testData.doses
     )
 
@@ -257,7 +261,7 @@ struct ChartDataProcessorIntegrationTests {
 
     // WHEN: Optimizing chart data for display
     let optimizedPoints = chartProcessor.optimizeDataDensity(concentrationPoints, maxPoints: 20)
-    let chartPoints = chartProcessor.transformConcentrationToChartData(optimizedPoints)
+    _ = chartProcessor.transformConcentrationToChartData(optimizedPoints)
 
     // THEN: Optimization preserves key analytics features
     #expect(optimizedPoints.count <= 20, "Should respect max points constraint")
@@ -330,7 +334,7 @@ struct ChartDataProcessorIntegrationTests {
 
     // WHEN: Running complete workflow
     // 1. Generate analytics
-    let analytics = analyticsService.calculateUserAnalytics(
+    _ = analyticsService.calculateUserAnalytics(
       user: user, context: ModelContext(container))
 
     // 2. Generate concentration timeline using PharmacokineticsEngine

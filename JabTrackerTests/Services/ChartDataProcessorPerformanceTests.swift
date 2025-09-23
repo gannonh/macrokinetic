@@ -57,7 +57,11 @@ struct ChartDataProcessorPerformanceTests {
       context.insert(dose)
     }
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
     return (doses, medicationProfile)
   }
 

@@ -324,7 +324,7 @@ extension ChartDataProcessor {
     // Preserve extreme concentration values if requested and we have room
     if preserveExtremes && optimizedPoints.count < targetDataPoints {
       let minConcentrationPoint = sortedPoints.min { $0.concentration < $1.concentration }
-      let maxConcentrationPoint = sortedPoints.max { $0.concentration < $1.concentration }
+      let maxConcentrationPoint = sortedPoints.max(by: { $0.concentration < $1.concentration })
 
       if let minPoint = minConcentrationPoint,
         !optimizedPoints.contains(where: { $0.id == minPoint.id }),

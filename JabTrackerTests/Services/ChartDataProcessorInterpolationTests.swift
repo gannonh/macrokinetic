@@ -19,8 +19,13 @@ struct ChartDataProcessorInterpolationTests {
   /// Create test container with in-memory storage
   private func createTestContainer() -> ModelContainer {
     let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-    return try! ModelContainer(
-      for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+    do {
+      return try ModelContainer(
+        for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+    } catch {
+      Issue.record("Failed to create test container: \(error)")
+      fatalError("Test container creation failed")
+    }
   }
 
   /// Create test user with medication profile for testing
@@ -45,7 +50,11 @@ struct ChartDataProcessorInterpolationTests {
     profile.user = user
     context.insert(profile)
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
     return (user, profile)
   }
 
@@ -72,7 +81,11 @@ struct ChartDataProcessorInterpolationTests {
       doses.append(dose)
     }
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
     return doses
   }
 
@@ -86,7 +99,7 @@ struct ChartDataProcessorInterpolationTests {
     let doses = createTestDoses(user: user, medication: medication, in: container)
 
     let processor = ChartDataProcessor()
-    let engine = PharmacokineticsEngine()
+    _ = PharmacokineticsEngine()
 
     // Generate concentration points from doses using PK engine
     let startDate = doses.first!.timestamp
@@ -143,7 +156,11 @@ struct ChartDataProcessorInterpolationTests {
     for dose in sparseDoses {
       context.insert(dose)
     }
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let processor = ChartDataProcessor()
 
@@ -193,7 +210,11 @@ struct ChartDataProcessorInterpolationTests {
     for dose in irregularDoses {
       context.insert(dose)
     }
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let processor = ChartDataProcessor()
 
@@ -282,7 +303,11 @@ struct ChartDataProcessorInterpolationTests {
       context.insert(dose)
       largeDoseSet.append(dose)
     }
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let processor = ChartDataProcessor()
 
@@ -360,7 +385,11 @@ struct ChartDataProcessorInterpolationTests {
     for dose in semaglutideDoses + tirzepatideDoses {
       context.insert(dose)
     }
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let processor = ChartDataProcessor()
 
@@ -419,7 +448,11 @@ struct ChartDataProcessorInterpolationTests {
       medication: medication
     )
     context.insert(singleDose)
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let singleDoseTimeline = processor.generateConcentrationTimeline(
       doses: [singleDose],

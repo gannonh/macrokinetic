@@ -2,6 +2,7 @@
 //  ChartData.swift
 //  JabTracker
 //
+// swiftlint:disable file_length
 
 import Foundation
 import SwiftUI
@@ -10,23 +11,23 @@ import SwiftUI
 
 /// Comprehensive chart configuration for concentration timeline visualization
 /// Encapsulates all chart appearance, behavior, and interaction settings
-struct ConcentrationChartConfiguration {
+public struct ConcentrationChartConfiguration {
   // Timeline and scale settings
-  let timeRange: TimeRange
-  let concentrationRange: ConcentrationRange
-  let interpolationSettings: InterpolationSettings
+  public let timeRange: TimeRange
+  public let concentrationRange: ConcentrationRange
+  public let interpolationSettings: InterpolationSettings
 
   // Visual appearance
-  let theme: ChartTheme
-  let gridSettings: GridSettings
-  let axisSettings: AxisSettings
+  public let theme: ChartTheme
+  public let gridSettings: GridSettings
+  public let axisSettings: AxisSettings
 
   // Interaction and animation
-  let interactionSettings: InteractionSettings
-  let animationSettings: AnimationSettings
+  public let interactionSettings: InteractionSettings
+  public let animationSettings: AnimationSettings
 
   /// Default configuration optimized for pharmacokinetic visualization
-  static let `default` = ConcentrationChartConfiguration(
+  public static let `default` = ConcentrationChartConfiguration(
     timeRange: TimeRange.automatic,
     concentrationRange: ConcentrationRange.automatic,
     interpolationSettings: InterpolationSettings.pharmacokinetic,
@@ -36,10 +37,30 @@ struct ConcentrationChartConfiguration {
     interactionSettings: InteractionSettings.default,
     animationSettings: AnimationSettings.smooth
   )
+
+  public init(
+    timeRange: TimeRange,
+    concentrationRange: ConcentrationRange,
+    interpolationSettings: InterpolationSettings,
+    theme: ChartTheme,
+    gridSettings: GridSettings,
+    axisSettings: AxisSettings,
+    interactionSettings: InteractionSettings,
+    animationSettings: AnimationSettings
+  ) {
+    self.timeRange = timeRange
+    self.concentrationRange = concentrationRange
+    self.interpolationSettings = interpolationSettings
+    self.theme = theme
+    self.gridSettings = gridSettings
+    self.axisSettings = axisSettings
+    self.interactionSettings = interactionSettings
+    self.animationSettings = animationSettings
+  }
 }
 
 /// Time range configuration for chart X-axis
-enum TimeRange {
+public enum TimeRange {
   case automatic
   case custom(startDate: Date, endDate: Date)
   case last24Hours
@@ -48,28 +69,56 @@ enum TimeRange {
   case lastQuarter
   case lastYear
 
-  func dateRange(relativeTo referenceDate: Date = Date()) -> (start: Date, end: Date) {
+  public func dateRange(relativeTo referenceDate: Date = Date()) -> (start: Date, end: Date) {
+    let calendar = Calendar.current
+
     switch self {
     case .automatic:
-      return (referenceDate.addingTimeInterval(-7 * 24 * 3600), referenceDate)
+      let startDate = calendar.date(byAdding: .day, value: -7, to: referenceDate) ?? referenceDate
+      return (startDate, referenceDate)
     case .custom(let start, let end):
       return (start, end)
     case .last24Hours:
-      return (referenceDate.addingTimeInterval(-24 * 3600), referenceDate)
+      let startDate = calendar.date(byAdding: .hour, value: -24, to: referenceDate) ?? referenceDate
+      return (startDate, referenceDate)
     case .lastWeek:
-      return (referenceDate.addingTimeInterval(-7 * 24 * 3600), referenceDate)
+      let startDate = calendar.date(byAdding: .day, value: -7, to: referenceDate) ?? referenceDate
+      return (startDate, referenceDate)
     case .lastMonth:
-      return (referenceDate.addingTimeInterval(-30 * 24 * 3600), referenceDate)
+      let startDate = calendar.date(byAdding: .month, value: -1, to: referenceDate) ?? referenceDate
+      return (startDate, referenceDate)
     case .lastQuarter:
-      return (referenceDate.addingTimeInterval(-90 * 24 * 3600), referenceDate)
+      let startDate = calendar.date(byAdding: .month, value: -3, to: referenceDate) ?? referenceDate
+      return (startDate, referenceDate)
     case .lastYear:
-      return (referenceDate.addingTimeInterval(-365 * 24 * 3600), referenceDate)
+      let startDate = calendar.date(byAdding: .year, value: -1, to: referenceDate) ?? referenceDate
+      return (startDate, referenceDate)
+    }
+  }
+
+  /// User-friendly display name for the time range
+  public var displayName: String {
+    switch self {
+    case .automatic:
+      return "Automatic"
+    case .custom:
+      return "Custom Range"
+    case .last24Hours:
+      return "Last 24 Hours"
+    case .lastWeek:
+      return "Last Week"
+    case .lastMonth:
+      return "Last Month"
+    case .lastQuarter:
+      return "Last Quarter"
+    case .lastYear:
+      return "Last Year"
     }
   }
 }
 
 /// Concentration range configuration for chart Y-axis
-enum ConcentrationRange {
+public enum ConcentrationRange {
   case automatic
   case custom(min: Double, max: Double)
   case therapeuticWindow(min: Double, max: Double, optimal: Double)
@@ -93,7 +142,7 @@ enum ConcentrationRange {
 }
 
 /// Interpolation algorithm settings for smooth curve generation
-struct InterpolationSettings {
+public struct InterpolationSettings {
   let type: InterpolationType
   let intervalHours: Double
   let smoothingFactor: Double
@@ -125,7 +174,7 @@ struct InterpolationSettings {
 }
 
 /// Chart visual theme configurations
-enum ChartTheme {
+public enum ChartTheme {
   case medical
   case consumer
   case professional
@@ -160,7 +209,7 @@ enum ChartTheme {
 }
 
 /// Grid line configuration for chart background
-struct GridSettings {
+public struct GridSettings {
   let showHorizontalGrid: Bool
   let showVerticalGrid: Bool
   let gridLineStyle: GridLineStyle
@@ -184,14 +233,14 @@ struct GridSettings {
   )
 }
 
-enum GridLineStyle {
+public enum GridLineStyle {
   case solid
   case dashed
   case dotted
 }
 
 /// Chart axis configuration and formatting
-struct AxisSettings {
+public struct AxisSettings {
   let timeAxisFormat: TimeAxisFormat
   let concentrationAxisFormat: ConcentrationAxisFormat
   let showAxisLabels: Bool
@@ -207,7 +256,7 @@ struct AxisSettings {
   )
 }
 
-enum TimeAxisFormat {
+public enum TimeAxisFormat {
   case adaptive  // Automatically choose based on time range
   case hourly
   case daily
@@ -215,7 +264,7 @@ enum TimeAxisFormat {
   case monthly
 }
 
-enum ConcentrationAxisFormat {
+public enum ConcentrationAxisFormat {
   case decimal
   case scientific
   case percentage
@@ -223,7 +272,7 @@ enum ConcentrationAxisFormat {
 }
 
 /// Chart interaction behavior settings
-struct InteractionSettings {
+public struct InteractionSettings {
   let enableZoom: Bool
   let enablePan: Bool
   let enableSelection: Bool
@@ -248,7 +297,7 @@ struct InteractionSettings {
 }
 
 /// Animation behavior for chart transitions and updates
-struct AnimationSettings {
+public struct AnimationSettings {
   let enableAnimations: Bool
   let duration: Double
   let animationType: AnimationType
@@ -276,7 +325,7 @@ struct AnimationSettings {
   )
 }
 
-enum AnimationType {
+public enum AnimationType {
   case linear
   case spring
   case easeIn
@@ -284,7 +333,7 @@ enum AnimationType {
   case easeInOut
 }
 
-enum EasingFunction {
+public enum EasingFunction {
   case linear
   case easeIn
   case easeOut
