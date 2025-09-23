@@ -1,4 +1,6 @@
 ---
+description: Edit epic details after creation.
+argument-hint: Epic name (e.g., dose-tracking)
 allowed-tools: Read, Write, LS
 ---
 
@@ -6,10 +8,7 @@ allowed-tools: Read, Write, LS
 
 Edit epic details after creation.
 
-## Usage
-```
-/pm:epic-edit <epic_name>
-```
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Instructions
 
