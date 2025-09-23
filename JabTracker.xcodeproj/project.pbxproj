@@ -32,6 +32,7 @@
 		1DC8EB6ECFCFE42AC5F986E2 /* DoseSearchServiceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDA1DE813A57DA3694E74303 /* DoseSearchServiceUnitTests.swift */; };
 		1E0D912C973F906C52EF582F /* DoseCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83944AE01C58D19D8AAEF994 /* DoseCalendarView.swift */; };
 		1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */; };
+		22FFEDD859C8DA50B26C0FB8 /* ChartDataProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF24FAF1F65F4ED96874B2B /* ChartDataProcessorTests.swift */; };
 		248733A6DBB8A6A34C2875AE /* ProfileValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23B2CB25BA56529BBA6E7DB /* ProfileValidationTests.swift */; };
 		25A2F23E527CB3DC6445A0EA /* DoseArrayExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C8E5789A19EFDB900D4476 /* DoseArrayExtensionTests.swift */; };
 		25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = E302221806254B729984868B /* DesignTokens.swift */; };
@@ -109,6 +110,7 @@
 		86BFBEB2E2BE5AEC1807DE71 /* ProfileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DD385076B17502B720F566 /* ProfileValidation.swift */; };
 		885F734D833B8271C9413C0B /* BiometricAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39713A893FA00DB342B6E55 /* BiometricAuthManager.swift */; };
 		8C4394182B8C8AB47223C342 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D9360EE9CBE29C1BF3DE26 /* User.swift */; };
+		8D7FE2B2E347E48E562CAF96 /* ChartDataProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E4377CE09B893651E0CA29 /* ChartDataProcessor.swift */; };
 		90660CC05AD50E39F853A144 /* ButtonStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCE8855C807D9F0241E8E43 /* ButtonStyleTests.swift */; };
 		93C1FA37A9F85C86E8524070 /* MedicationProfileSettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BE0C35C4D1108A2EF47550 /* MedicationProfileSettingsUITests.swift */; };
 		94C3EEF2B041C44C40DF4D6A /* DoseHistoryBasicUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A8E5148D1C6CE01AC95ADE /* DoseHistoryBasicUITests.swift */; };
@@ -351,6 +353,7 @@
 		B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationEdgeCaseTests.swift; sourceTree = "<group>"; };
 		B516236186681695C8B93C24 /* MedicationFormComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationFormComponents.swift; sourceTree = "<group>"; };
 		B586AE6F94F894FB215E2710 /* DoseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseService.swift; sourceTree = "<group>"; };
+		B5E4377CE09B893651E0CA29 /* ChartDataProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataProcessor.swift; sourceTree = "<group>"; };
 		B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeGen.swift; sourceTree = "<group>"; };
 		BDA1DE813A57DA3694E74303 /* DoseSearchServiceUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseSearchServiceUnitTests.swift; sourceTree = "<group>"; };
 		BFDA48FE08F3EF39CB1A0DA7 /* CalendarDayViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDayViewTests.swift; sourceTree = "<group>"; };
@@ -364,6 +367,7 @@
 		C6B6CDF3795E3B15F9AB2AA1 /* DoseSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseSearchService.swift; sourceTree = "<group>"; };
 		C6BE0C35C4D1108A2EF47550 /* MedicationProfileSettingsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileSettingsUITests.swift; sourceTree = "<group>"; };
 		C72F3C5B199657BB10D3361E /* ConcentrationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationCard.swift; sourceTree = "<group>"; };
+		CAF24FAF1F65F4ED96874B2B /* ChartDataProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataProcessorTests.swift; sourceTree = "<group>"; };
 		CCC53F4AA7A76F686436ECEC /* Dose+Filtering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dose+Filtering.swift"; sourceTree = "<group>"; };
 		CDC07DC6AC9A3098F3CF677D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerTests.swift; sourceTree = "<group>"; };
@@ -465,6 +469,7 @@
 			isa = PBXGroup;
 			children = (
 				9B7AE2951FEA60931B228ACB /* AnalyticsService.swift */,
+				B5E4377CE09B893651E0CA29 /* ChartDataProcessor.swift */,
 				C6B6CDF3795E3B15F9AB2AA1 /* DoseSearchService.swift */,
 				B586AE6F94F894FB215E2710 /* DoseService.swift */,
 				572438AA8526D5758975FA16 /* MedicationManager.swift */,
@@ -606,6 +611,7 @@
 		8F2BB516B718E72F583B8F63 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				CAF24FAF1F65F4ED96874B2B /* ChartDataProcessorTests.swift */,
 				6058E8712565D70612A917A5 /* DoseSearchServiceTests.swift */,
 				BDA1DE813A57DA3694E74303 /* DoseSearchServiceUnitTests.swift */,
 			);
@@ -1018,6 +1024,7 @@
 				523BC8DEDB62685FF5C39917 /* BiometricTestingTests.swift in Sources */,
 				90660CC05AD50E39F853A144 /* ButtonStyleTests.swift in Sources */,
 				1A2C29BBD291697B06AE4CE6 /* CalendarDayViewTests.swift in Sources */,
+				22FFEDD859C8DA50B26C0FB8 /* ChartDataProcessorTests.swift in Sources */,
 				53220A7C03E046CA5ABA716E /* ConcentrationCardTests.swift in Sources */,
 				C9F23D6EEFCC2DCD7663E05D /* ConcentrationPointTests.swift in Sources */,
 				4DCCEBCCBD61A49CFCEFE78B /* DataControllerBasicTests.swift in Sources */,
@@ -1093,6 +1100,7 @@
 				F55D33FC517BE359F05C333C /* ButtonStyles.swift in Sources */,
 				1CB29176ACFA1192B30ADCF6 /* CalendarDayView.swift in Sources */,
 				DB2729859B9AB311F4A8120D /* CardComponents.swift in Sources */,
+				8D7FE2B2E347E48E562CAF96 /* ChartDataProcessor.swift in Sources */,
 				BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */,
 				4136AAE981ECB4BDB595DE8C /* ConcentrationCard.swift in Sources */,
 				13E4999BABDDEDA1E2618DE1 /* ConcentrationDisplay.swift in Sources */,
