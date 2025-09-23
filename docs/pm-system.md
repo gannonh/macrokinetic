@@ -126,7 +126,7 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 /qa:test-quality [pr-number]    # Run test quality analysis and post as PR comment
 /qa:code-quality [pr-number]    # Run code quality analysis and post as PR comment
 /qa:swiftlint                   # Run SwiftLint and SwiftFormat QA workflow with test
-/pm:pr-comments [path-or-paste] # Process PR review comments with context-aware discretion
+/pm:pr-process [path-or-paste] # Process PR review comments with context-aware discretion
 /pm:pr-merge [pr-number]        # Resume merge process after reviews
 /pm:issue-close [issue-number]    # Close issue + update epic progress
 /pm:epic-refresh [epic-name]      # Update epic progress from tasks
