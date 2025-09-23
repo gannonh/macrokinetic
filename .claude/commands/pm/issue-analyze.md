@@ -36,13 +36,12 @@ We practice outside-in TDD:
 8. E2E Tests (GREEN PHASE - ACCEPTANCE): Write full E2E tests that verify the entire user flow
 
 **Important reminders**:
-- **TDD: STREAMS CONDUCT THEIR OWN TESTING AS PART OF THEIR DEVELOPMENT PROCESS**, therefore, in most cases, it does not make sense to have separate streams focused onlyon testing.
+- **TDD: STREAMS CONDUCT THEIR OWN TESTING AS PART OF THEIR DEVELOPMENT PROCESS**, therefore, in most cases, it does not make sense to have separate streams focused only on testing.
 - Not every development task or stream requires unit, integration and e2e tests. The type and amount of testing should be appropriate to the scope:
   - Isolated backend tasks may only need unit tests.
   - Backend tasks that integrate with other services may require both unit and integration tests.
   - Full features or user flows likely need all three levels of testing.
   - Be thoughtful and use your discretion to determine the right balance of testing for each stream.
-
 
 ## Instructions
 
@@ -59,7 +58,7 @@ Read local task file to understand:
 - Dependencies
 - Effort estimate
 
-### 2. Reassess the Scope of Work
+### 2. Reassess Scope of Work
 
 - Does the scope of work as defined in the issue and local task still make sense within the broader context of the project?
 - Has the work already been completed in a prior workstream?
