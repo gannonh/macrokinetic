@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-23T13:29:15Z
-version: 1.5
+last_updated: 2025-09-23T14:14:43Z
+version: 1.6
 author: Claude Code PM System
 ---
 
@@ -145,7 +145,26 @@ author: Claude Code PM System
 - **Build Integration**: No manual project file modifications needed for parallel stream development
 - **Test Target Management**: All test files properly categorized in unit vs UI test targets
 
+## Security & Crash Prevention (Issue #55 Security Fixes)
+
+### Swift Charts Security Patterns
+- **Swift Charts Crash Prevention**: Infinite/NaN values in chart data can crash Swift Charts rendering
+- **Data Validation Requirements**: Chart data must be validated for finite numbers before rendering
+- **Medical Grade Input Validation**: Healthcare applications require defensive programming at every data entry point
+- **Production Safety**: Charts must handle malformed data gracefully without crashing
+
+### SwiftLint Management for Large Files
+- **SwiftLint Type Body Length**: Large service classes require specific disable syntax (`// swiftlint:disable:next type_body_length`)
+- **Medical Service Classes**: ChartDataProcessor and similar services may exceed default line limits for comprehensive medical functionality
+- **Targeted Disables**: Use `swiftlint:disable:next` instead of blanket disables to maintain code quality standards
+
+### Testing Data Generation Patterns
+- **Test Data Generation**: Sparse vs dense data generation impacts interpolation algorithm testing effectiveness
+- **Medical Test Scenarios**: Edge cases in medical calculations require comprehensive test data patterns
+- **Vulnerability Testing**: Security testing requires intentionally invalid data to verify crash prevention
+
 ## Update History
+- 2025-09-23T14:14:43Z: Added Security & Crash Prevention section with Swift Charts security patterns, SwiftLint management, and testing patterns from Issue #55 security fixes
 - 2025-09-23T13:29:15Z: Added Medical Visualization section with Swift Charts integration patterns from Issue #55, XcodeGen project management insights
 - 2025-09-16T22:39:56Z: Added SwiftUI calendar integration patterns from Issue #42, XCUIElementQuery limitations
 - 2025-09-15T18:21:44Z: Added testing framework insights from Issue #41, SwiftUI accessibility hierarchy patterns
