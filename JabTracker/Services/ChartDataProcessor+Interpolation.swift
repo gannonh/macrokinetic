@@ -133,7 +133,11 @@ extension ChartDataProcessor {
     var currentTime = startDate
     var pointsGenerated = 0
 
-    while currentTime <= endDate && pointsGenerated < maxPoints {
+    // Defensive iteration cap to prevent infinite loops
+    let maxIterations = maxPoints * 2
+    var iterationCount = 0
+
+    while currentTime <= endDate && pointsGenerated < maxPoints && iterationCount < maxIterations {
       let concentration = engine.calculateConcentration(
         from: doses,
         medication: medication,
@@ -146,6 +150,7 @@ extension ChartDataProcessor {
           concentration: concentration
         ))
       pointsGenerated += 1
+      iterationCount += 1
 
       // Adaptive interval calculation
       let intervalMultiplier = calculateIntervalMultiplier(
@@ -191,15 +196,20 @@ extension ChartDataProcessor {
     let timeSinceDose = abs(currentTime.timeIntervalSince(closestDoseTime)) / 3600  // hours
 
     // Denser sampling in first few hours after dose (rapid concentration change)
+    let calculatedMultiplier: Double
     if timeSinceDose < 2 {
-      return 0.3  // Very dense sampling
+      calculatedMultiplier = 0.3  // Very dense sampling
     } else if timeSinceDose < 6 {
-      return 0.6  // Moderately dense sampling
+      calculatedMultiplier = 0.6  // Moderately dense sampling
     } else if timeSinceDose < 24 {
-      return 1.0  // Normal sampling
+      calculatedMultiplier = 1.0  // Normal sampling
     } else {
-      return 1.5  // Sparse sampling during stable periods
+      calculatedMultiplier = 1.5  // Sparse sampling during stable periods
     }
+
+    // Defensive minimum multiplier cap to prevent infinite loops
+    let minMultiplier = 0.1
+    return max(calculatedMultiplier, minMultiplier)
   }
 
   /// Transform advanced concentration timeline to enhanced chart data structure
@@ -316,7 +326,7 @@ extension ChartDataProcessor {
       configuration: configuration,
       metadata: ChartMetadata(
         title: "\(medication.displayName) Concentration Timeline",
-        subtitle: "\(timeRange)".capitalized
+        subtitle: timeRange.displayName
       )
     )
   }

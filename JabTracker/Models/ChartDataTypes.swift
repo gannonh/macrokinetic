@@ -11,7 +11,7 @@ import SwiftUI
 /// Enhanced chart point with interpolation metadata for pharmacokinetic concentration curves
 /// Supports Swift Charts LineMark with custom interpolation and styling capabilities
 struct AdvancedConcentrationPoint: Identifiable, Hashable {
-  let id = UUID()
+  let id: UUID
   let date: Date
   let concentration: Double
   let isInterpolated: Bool
@@ -32,6 +32,7 @@ struct AdvancedConcentrationPoint: Identifiable, Hashable {
     interpolationType: InterpolationType = .pharmacokinetic,
     confidenceInterval: ConfidenceInterval? = nil
   ) {
+    self.id = UUID()
     self.date = date
     self.concentration = concentration
     self.isInterpolated = isInterpolated
@@ -41,6 +42,7 @@ struct AdvancedConcentrationPoint: Identifiable, Hashable {
 
   /// Convenience initializer from basic ConcentrationPoint
   init(from point: ConcentrationPoint, interpolated: Bool = false) {
+    self.id = UUID()
     self.date = point.date
     self.concentration = point.concentration
     self.isInterpolated = interpolated
@@ -63,7 +65,7 @@ struct ConfidenceInterval: Hashable {
 }
 
 /// Types of interpolation algorithms available for concentration curves
-enum InterpolationType: String, CaseIterable {
+public enum InterpolationType: String, CaseIterable {
   case linear
   case pharmacokinetic  // Exponential decay-based
   case spline  // Cubic spline interpolation
@@ -93,7 +95,7 @@ enum InterpolationType: String, CaseIterable {
 /// Enhanced dose marker with additional visualization metadata for Swift Charts
 /// Supports different marker styles, colors, and interaction states
 struct AdvancedDoseMarker: Identifiable, Hashable {
-  let id = UUID()
+  let id: UUID
   let date: Date
   let amount: Double
   let isSkipped: Bool
@@ -117,6 +119,7 @@ struct AdvancedDoseMarker: Identifiable, Hashable {
     alertLevel: DoseAlertLevel = .normal,
     metadata: DoseMarkerMetadata = DoseMarkerMetadata()
   ) {
+    self.id = UUID()
     self.date = date
     self.amount = amount
     self.isSkipped = isSkipped
@@ -127,6 +130,7 @@ struct AdvancedDoseMarker: Identifiable, Hashable {
 
   /// Convenience initializer from basic Dose with intelligent style detection
   init(from dose: Dose) {
+    self.id = UUID()
     self.date = dose.timestamp
     self.amount = dose.amount
     self.isSkipped = dose.skipped

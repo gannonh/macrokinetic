@@ -19,8 +19,13 @@ struct ChartDataProcessorTests {
   /// Create test container with in-memory storage
   private func createTestContainer() -> ModelContainer {
     let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-    return try! ModelContainer(
-      for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+    do {
+      return try ModelContainer(
+        for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+    } catch {
+      Issue.record("Failed to create test container: \(error)")
+      fatalError("Test container creation failed")
+    }
   }
 
   /// Create test user with medication profile for testing
@@ -45,7 +50,11 @@ struct ChartDataProcessorTests {
     profile.user = user
     context.insert(profile)
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
     return (user, profile)
   }
 
@@ -71,7 +80,11 @@ struct ChartDataProcessorTests {
       doses.append(dose)
     }
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
     return doses.reversed()  // Return in chronological order
   }
 
@@ -180,7 +193,11 @@ struct ChartDataProcessorTests {
     skippedDose.user = profile.user
     context.insert(skippedDose)
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let processor = ChartDataProcessor()
     let allMarkers = processor.transformDosesToMarkerData([regularDose, skippedDose])
@@ -248,7 +265,11 @@ struct ChartDataProcessorTests {
       largeDoseSet.append(dose)
     }
 
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let processor = ChartDataProcessor()
 
@@ -508,7 +529,11 @@ struct ChartDataProcessorTests {
     testDose.user = user
     testDose.medication = profile
     context.insert(testDose)
-    try! context.save()
+    do {
+      try context.save()
+    } catch {
+      Issue.record("Failed to save context: \(error)")
+    }
 
     let timePeriod = ChartDataProcessor.TimePeriod.last7Days
 
