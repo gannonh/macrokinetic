@@ -9,6 +9,8 @@ model: claude-sonnet-4-20250514
 
 Merge completed PR from branch to main using GitHub Pull Request workflow.
 
+**ULTRATHINK**
+
 ## Quick Check
 
 1. **Check PR status:**
