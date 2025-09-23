@@ -17,7 +17,7 @@ struct ConcentrationTimelineChart: View {
 
   /// Current chart configuration for appearance and behavior
   var configuration: ConcentrationChartConfiguration {
-    dataset.configuration
+    currentConfiguration
   }
 
   /// Indicates whether to show empty state when no data is available
@@ -75,11 +75,11 @@ struct ConcentrationTimelineChart: View {
   var body: some View {
     VStack(spacing: 16) {
       if showsEmptyState {
-        EmptyChartView()
+        emptyChartView()
       } else {
-        ChartHeaderView()
-        ConcentrationChartView()
-        ChartControlsView()
+        chartHeaderView()
+        concentrationChartView()
+        chartControlsView()
       }
     }
     .background(configuration.theme.backgroundColor)
@@ -91,7 +91,7 @@ struct ConcentrationTimelineChart: View {
 
   /// Header view displaying chart title and metadata
   @ViewBuilder
-  private func ChartHeaderView() -> some View {
+  private func chartHeaderView() -> some View {
     VStack(alignment: .leading, spacing: 8) {
       Text(dataset.metadata.title)
         .font(DesignTokens.Typography.headline)
@@ -109,7 +109,8 @@ struct ConcentrationTimelineChart: View {
 
   /// Main chart view displaying concentration timeline and dose markers
   @ViewBuilder
-  private func ConcentrationChartView() -> some View {
+  // swiftlint:disable:next function_body_length
+  private func concentrationChartView() -> some View {
     Chart {
       // Concentration line series
       ForEach(processedConcentrationPoints) { point in
@@ -140,7 +141,7 @@ struct ConcentrationTimelineChart: View {
       if configuration.gridSettings.showHorizontalGrid
         || configuration.gridSettings.showVerticalGrid
       {
-        ChartGridBackground(proxy: proxy)
+        chartGridBackground(proxy: proxy)
       }
     }
     .chartXAxis {
@@ -182,7 +183,7 @@ struct ConcentrationTimelineChart: View {
 
   /// Grid background for the chart
   @ViewBuilder
-  private func ChartGridBackground(proxy: ChartProxy) -> some View {
+  private func chartGridBackground(proxy: ChartProxy) -> some View {
     Rectangle()
       .fill(configuration.theme.backgroundColor)
       .clipped()
@@ -190,21 +191,20 @@ struct ConcentrationTimelineChart: View {
 
   /// Controls for chart interaction (time period selection, zoom, etc.)
   @ViewBuilder
-  private func ChartControlsView() -> some View {
+  private func chartControlsView() -> some View {
     HStack {
-      TimePeriodSelector()
+      timePeriodSelector()
       Spacer()
-      ChartActionButtons()
+      chartActionButtons()
     }
     .padding(.horizontal)
   }
 
   /// Time period selection buttons
   @ViewBuilder
-  private func TimePeriodSelector() -> some View {
+  private func timePeriodSelector() -> some View {
     HStack(spacing: 8) {
-      ForEach([TimeRange.lastWeek, .lastMonth, .lastQuarter, .lastYear], id: \.displayName) {
-        timeRange in
+      ForEach([TimeRange.lastWeek, .lastMonth, .lastQuarter, .lastYear], id: \.displayName) { timeRange in
         Button(timeRange.displayName) {
           currentConfiguration = currentConfiguration.withTimeRange(timeRange)
         }
@@ -225,23 +225,29 @@ struct ConcentrationTimelineChart: View {
 
   /// Action buttons for chart controls
   @ViewBuilder
-  private func ChartActionButtons() -> some View {
+  private func chartActionButtons() -> some View {
     HStack(spacing: 12) {
-      Button(action: {
-        // Export functionality placeholder
-      }) {
-        Image(systemName: "square.and.arrow.up")
-          .font(.caption)
-      }
+      Button(
+        action: {
+          // Export functionality placeholder
+        },
+        label: {
+          Image(systemName: "square.and.arrow.up")
+            .font(.caption)
+        }
+      )
       .accessibilityLabel("Export chart")
       .accessibilityIdentifier("export-chart-button")
 
-      Button(action: {
-        // Reset zoom functionality placeholder
-      }) {
-        Image(systemName: "arrow.clockwise")
-          .font(.caption)
-      }
+      Button(
+        action: {
+          // Reset zoom functionality placeholder
+        },
+        label: {
+          Image(systemName: "arrow.clockwise")
+            .font(.caption)
+        }
+      )
       .accessibilityLabel("Reset chart view")
       .accessibilityIdentifier("reset-chart-button")
     }
@@ -249,7 +255,7 @@ struct ConcentrationTimelineChart: View {
 
   /// Empty state view when no data is available
   @ViewBuilder
-  private func EmptyChartView() -> some View {
+  private func emptyChartView() -> some View {
     VStack(spacing: 16) {
       Image(systemName: "chart.line.uptrend.xyaxis")
         .font(.system(size: 64))

@@ -72,7 +72,9 @@
       "QuickDoseEntry.swift",
       "DoseEntrySheet.swift",
       "TimePeriodSelector.swift",
-      "ChartControlsView.swift"
+      "ChartControlsView.swift",
+      "ConcentrationTimelineChart.swift",
+      "ChartConfiguration.swift"
     ]
   },
   "special_testing_notes": {
