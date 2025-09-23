@@ -207,17 +207,149 @@ struct ConcentrationList: View {
 // HistoryView moved to JabTracker/Views/History/HistoryView.swift
 
 struct AnalyticsView: View {
+  @Environment(\.modelContext) private var modelContext
+  @Query private var users: [User]
+  @State private var chartDataProcessor = ChartDataProcessor()
+  @State private var analyticsService = AnalyticsService()
+
   var body: some View {
     NavigationStack {
-      VStack {
-        Text("Analytics")
-          .font(.largeTitle)
-          .bold()
-        Text("Concentration levels and insights")
-          .foregroundColor(.secondary)
+      ScrollView {
+        LazyVStack(spacing: 16) {
+          if let currentUser = users.first,
+            let medicationProfiles = currentUser.medicationProfiles,
+            !medicationProfiles.isEmpty
+          {
+            concentrationChartSection(for: currentUser, profiles: medicationProfiles)
+          } else {
+            noDataSection
+          }
+        }
+        .padding()
       }
       .navigationTitle("Analytics")
+      .accessibilityIdentifier("analytics-view")
     }
+  }
+
+  // MARK: - Chart Section
+
+  @ViewBuilder
+  private func concentrationChartSection(for user: User, profiles: [MedicationProfile]) -> some View
+  {
+    VStack(spacing: 16) {
+      Text("Concentration Timeline")
+        .font(.headline)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      // Generate chart dataset from user data
+      if let chartDataset = generateChartDataset(for: user, profiles: profiles) {
+        ConcentrationTimelineChart(dataset: chartDataset)
+          .accessibilityIdentifier("analytics-concentration-chart")
+      } else {
+        chartLoadingView()
+      }
+    }
+    .padding()
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(Color(.systemBackground))
+        .shadow(radius: 2)
+    )
+  }
+
+  // MARK: - Empty States
+
+  private var noDataSection: some View {
+    VStack(spacing: 16) {
+      Image(systemName: "chart.line.uptrend.xyaxis")
+        .font(.system(size: 64))
+        .foregroundColor(.secondary)
+
+      Text("No Analytics Data")
+        .font(.headline)
+        .foregroundColor(.primary)
+
+      VStack(spacing: 8) {
+        Text("Start tracking doses to see your concentration timeline")
+          .font(.body)
+          .foregroundColor(.secondary)
+          .multilineTextAlignment(.center)
+
+        Text("Analytics will show medication concentration levels over time")
+          .font(.caption)
+          .foregroundColor(.secondary)
+          .multilineTextAlignment(.center)
+      }
+    }
+    .padding()
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(Color(.systemBackground))
+        .shadow(radius: 2)
+    )
+    .accessibilityIdentifier("no-analytics-data")
+  }
+
+  @ViewBuilder
+  private func chartLoadingView() -> some View {
+    VStack(spacing: 16) {
+      ProgressView()
+        .scaleEffect(1.2)
+
+      Text("Generating Concentration Chart...")
+        .font(.caption)
+        .foregroundColor(.secondary)
+    }
+    .frame(height: 300)
+    .frame(maxWidth: .infinity)
+    .background(
+      RoundedRectangle(cornerRadius: 8)
+        .fill(Color(.systemGray6))
+    )
+    .accessibilityIdentifier("chart-loading")
+  }
+
+  // MARK: - Data Generation
+
+  /// Generates chart dataset from user medication data
+  private func generateChartDataset(for user: User, profiles: [MedicationProfile])
+    -> ConcentrationChartDataset?
+  {
+    guard let primaryProfile = profiles.first,
+      let doses = primaryProfile.doses,
+      !doses.isEmpty
+    else {
+      return nil
+    }
+
+    // Convert SwiftData to chart data types
+    let advancedMarkers = doses.map { dose in
+      AdvancedDoseMarker(from: dose)
+    }
+
+    // Generate concentration points using ChartDataProcessor
+    let timeRange = (doses.map(\.timestamp).min() ?? Date())...(Date())
+    let concentrationPoints = chartDataProcessor.generateConcentrationTimeline(
+      for: primaryProfile,
+      timeRange: timeRange
+    )
+
+    // Convert ConcentrationPoint to AdvancedConcentrationPoint
+    let advancedPoints = concentrationPoints.map { point in
+      AdvancedConcentrationPoint(from: point)
+    }
+
+    let concentrationCurve = ConcentrationCurve(
+      points: advancedPoints,
+      medication: primaryProfile.genericName
+    )
+
+    return ConcentrationChartDataset(
+      concentrationCurves: [concentrationCurve],
+      doseMarkers: advancedMarkers,
+      configuration: .default
+    )
   }
 }
 

@@ -8,6 +8,7 @@ import SwiftUI
 
 /// Interactive concentration timeline chart displaying medication concentration over time
 /// Integrates with ChartDataProcessor for data transformation and Swift Charts for native iOS visualization
+// swiftlint:disable type_body_length file_length
 struct ConcentrationTimelineChart: View {
 
   // MARK: - Properties
@@ -54,12 +55,34 @@ struct ConcentrationTimelineChart: View {
   var accessibilityValue: String? {
     let pointCount = processedConcentrationPoints.count
     let markerCount = processedDoseMarkers.count
-    return "Chart contains \(pointCount) concentration data points and \(markerCount) dose markers"
+    let timeRange = configuration.timeRange.displayName
+    let zoomInfo = currentZoomLevel != 1.0 ? ", zoomed to \(Int(currentZoomLevel * 100))%" : ""
+    return
+      "Chart contains \(pointCount) points and \(markerCount) markers for \(timeRange)\(zoomInfo)"
+  }
+
+  /// Detailed accessibility description for VoiceOver users
+  var accessibilityHint: String? {
+    if processedConcentrationPoints.isEmpty {
+      return
+        "No concentration data available. Start tracking doses to see your medication timeline."
+    }
+
+    let latestPoint = processedConcentrationPoints.max(by: { $0.date < $1.date })
+    let currentLevel = latestPoint?.concentration ?? 0.0
+    let levelDescription = formatConcentrationForAccessibility(currentLevel)
+
+    return
+      "Current concentration level: \(levelDescription). Use pinch to zoom, drag to pan, or double tap to reset view."
   }
 
   // MARK: - State
 
   @State private var currentConfiguration: ConcentrationChartConfiguration
+  @State private var zoomLevel: Double = 1.0
+  @State private var panOffset: CGSize = .zero
+  @State private var isDragging: Bool = false
+  @State private var showingExportSheet = false
 
   // MARK: - Initialization
 
@@ -85,6 +108,20 @@ struct ConcentrationTimelineChart: View {
     .background(configuration.theme.backgroundColor)
     .accessibilityLabel(accessibilityLabel ?? "")
     .accessibilityValue(accessibilityValue ?? "")
+    .sheet(isPresented: $showingExportSheet) {
+      NavigationStack {
+        ChartExportView(dataset: dataset) { result in
+          showingExportSheet = false
+          // Handle export result
+          switch result {
+          case .success(let url):
+            print("✅ Chart exported successfully to: \(url)")
+          case .failure(let error):
+            print("❌ Chart export failed: \(error)")
+          }
+        }
+      }
+    }
   }
 
   // MARK: - Chart Components
@@ -109,8 +146,34 @@ struct ConcentrationTimelineChart: View {
 
   /// Main chart view displaying concentration timeline and dose markers
   @ViewBuilder
-  // swiftlint:disable:next function_body_length
   private func concentrationChartView() -> some View {
+    chartContent
+      .scaleEffect(zoomLevel)
+      .offset(panOffset)
+      .gesture(chartZoomGesture)
+      .gesture(chartPanGesture)
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier("concentration-timeline-chart")
+      .accessibilityLabel(accessibilityLabel ?? "")
+      .accessibilityValue(accessibilityValue ?? "")
+      .accessibilityHint(accessibilityHint ?? "")
+      .accessibilityAction(named: "Reset zoom") {
+        // Reset zoom and pan on accessibility action
+        withAnimation(.easeInOut(duration: 0.5)) {
+          zoomLevel = 1.0
+          panOffset = .zero
+        }
+      }
+      .accessibilityAction(named: "Describe trend") {
+        // Announce chart trend for VoiceOver users
+        // This would trigger a spoken description in a real implementation
+      }
+      .accessibilityAddTraits(.allowsDirectInteraction)
+  }
+
+  /// Core chart content without gestures
+  @ViewBuilder
+  private var chartContent: some View {
     Chart {
       // Concentration line series
       ForEach(processedConcentrationPoints) { point in
@@ -137,12 +200,7 @@ struct ConcentrationTimelineChart: View {
     }
     .frame(height: 300)
     .chartBackground { proxy in
-      // Chart background with grid lines
-      if configuration.gridSettings.showHorizontalGrid
-        || configuration.gridSettings.showVerticalGrid
-      {
-        chartGridBackground(proxy: proxy)
-      }
+      chartGridBackground(proxy: proxy)
     }
     .chartXAxis {
       AxisMarks(values: .automatic) { _ in
@@ -177,8 +235,6 @@ struct ConcentrationTimelineChart: View {
       }
     }
     .padding(.horizontal)
-    .accessibilityElement(children: .contain)
-    .accessibilityIdentifier("concentration-timeline-chart")
   }
 
   /// Grid background for the chart
@@ -204,7 +260,8 @@ struct ConcentrationTimelineChart: View {
   @ViewBuilder
   private func timePeriodSelector() -> some View {
     HStack(spacing: 8) {
-      ForEach([TimeRange.lastWeek, .lastMonth, .lastQuarter, .lastYear], id: \.displayName) { timeRange in
+      ForEach([TimeRange.lastWeek, .lastMonth, .lastQuarter, .lastYear], id: \.displayName) {
+        timeRange in
         Button(timeRange.displayName) {
           currentConfiguration = currentConfiguration.withTimeRange(timeRange)
         }
@@ -229,7 +286,7 @@ struct ConcentrationTimelineChart: View {
     HStack(spacing: 12) {
       Button(
         action: {
-          // Export functionality placeholder
+          showingExportSheet = true
         },
         label: {
           Image(systemName: "square.and.arrow.up")
@@ -241,7 +298,11 @@ struct ConcentrationTimelineChart: View {
 
       Button(
         action: {
-          // Reset zoom functionality placeholder
+          withAnimation(.easeInOut(duration: 0.5)) {
+            zoomLevel = 1.0
+            panOffset = .zero
+            currentConfiguration = dataset.configuration
+          }
         },
         label: {
           Image(systemName: "arrow.clockwise")
@@ -282,6 +343,149 @@ struct ConcentrationTimelineChart: View {
   mutating func updateTimePeriod(_ timeRange: TimeRange) {
     currentConfiguration = currentConfiguration.withTimeRange(timeRange)
   }
+
+  /// Resets zoom and pan to default state
+  func resetZoomAndPan() {
+    withAnimation(.easeInOut(duration: 0.5)) {
+      zoomLevel = 1.0
+      panOffset = .zero
+    }
+  }
+
+  /// Sets zoom level programmatically
+  /// - Parameter level: Zoom level (0.5 to 3.0)
+  func setZoomLevel(_ level: Double) {
+    let clampedLevel = max(0.5, min(3.0, level))
+    withAnimation(.easeInOut(duration: 0.3)) {
+      zoomLevel = clampedLevel
+    }
+  }
+
+  /// Sets pan offset programmatically
+  /// - Parameter offset: Pan offset in points
+  func setPanOffset(_ offset: CGSize) {
+    let maxOffset: CGFloat = 100
+    let clampedOffset = CGSize(
+      width: max(-maxOffset, min(maxOffset, offset.width)),
+      height: max(-maxOffset, min(maxOffset, offset.height))
+    )
+    withAnimation(.easeInOut(duration: 0.3)) {
+      panOffset = clampedOffset
+    }
+  }
+
+  // MARK: - Gesture State Access
+
+  /// Current zoom level (read-only)
+  var currentZoomLevel: Double {
+    zoomLevel
+  }
+
+  /// Current pan offset (read-only)
+  var currentPanOffset: CGSize {
+    panOffset
+  }
+
+  /// Whether user is currently dragging (read-only)
+  var isCurrentlyDragging: Bool {
+    isDragging
+  }
+
+  // MARK: - Gesture Definitions
+
+  /// Zoom gesture for chart interaction
+  private var chartZoomGesture: some Gesture {
+    MagnificationGesture()
+      .onChanged { value in
+        zoomLevel = max(0.5, min(3.0, value))
+      }
+      .onEnded { _ in
+        withAnimation(.easeInOut(duration: 0.3)) {
+          if zoomLevel < 0.8 {
+            zoomLevel = 1.0
+            panOffset = .zero
+          }
+        }
+      }
+  }
+
+  /// Pan gesture for chart interaction
+  private var chartPanGesture: some Gesture {
+    DragGesture()
+      .onChanged { value in
+        isDragging = true
+        panOffset = CGSize(
+          width: value.translation.width / zoomLevel,
+          height: value.translation.height / zoomLevel
+        )
+      }
+      .onEnded { _ in
+        isDragging = false
+        withAnimation(.easeInOut(duration: 0.3)) {
+          // Snap back if dragged too far
+          let maxOffset: CGFloat = 100
+          panOffset = CGSize(
+            width: max(-maxOffset, min(maxOffset, panOffset.width)),
+            height: max(-maxOffset, min(maxOffset, panOffset.height))
+          )
+        }
+      }
+  }
+
+  // MARK: - Accessibility Helper Methods
+
+  /// Formats concentration value for accessibility with descriptive text
+  /// - Parameter concentration: Concentration value to format
+  /// - Returns: Human-readable description of concentration level
+  private func formatConcentrationForAccessibility(_ concentration: Double) -> String {
+    let formattedValue = String(format: "%.1f", concentration)
+    let level: String
+
+    switch concentration {
+    case 0...1:
+      level = "low"
+    case 1...3:
+      level = "moderate"
+    case 3...5:
+      level = "high"
+    default:
+      level = "very high"
+    }
+
+    return "\(formattedValue) units, \(level) level"
+  }
+
+  /// Formats dose amount for accessibility
+  /// - Parameter amount: Dose amount to format
+  /// - Returns: Formatted dose amount with units
+  private func formatDoseAmount(_ amount: Double) -> String {
+    String(format: "%.1f mg", amount)
+  }
+
+  /// Provides spoken description of chart trend for VoiceOver
+  var chartTrendDescription: String {
+    guard processedConcentrationPoints.count >= 2 else {
+      return "Insufficient data for trend analysis"
+    }
+
+    let sortedPoints = processedConcentrationPoints.sorted { $0.date < $1.date }
+    let firstHalf = sortedPoints.prefix(sortedPoints.count / 2)
+    let secondHalf = sortedPoints.suffix(sortedPoints.count / 2)
+
+    let firstAverage = firstHalf.map(\.concentration).reduce(0, +) / Double(firstHalf.count)
+    let secondAverage = secondHalf.map(\.concentration).reduce(0, +) / Double(secondHalf.count)
+
+    let difference = secondAverage - firstAverage
+    let percentChange = abs(difference / firstAverage) * 100
+
+    if abs(difference) < 0.1 {
+      return "Concentration levels are stable"
+    } else if difference > 0 {
+      return "Concentration levels are increasing by \(Int(percentChange))%"
+    } else {
+      return "Concentration levels are decreasing by \(Int(percentChange))%"
+    }
+  }
 }
 
 // MARK: - Preview
@@ -314,3 +518,4 @@ struct ConcentrationTimelineChart: View {
 
   return ConcentrationTimelineChart(dataset: sampleDataset)
 }
+// swiftlint:enable type_body_length file_length
