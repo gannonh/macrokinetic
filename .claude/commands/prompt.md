@@ -4,16 +4,7 @@ argument-hint:
 allowed-tools: 
 ---
 
-1. Commit your work so far
+We need to add some feature scope to this issue. I realized that the quick add dose feature has a time field but no date field. I think the
+  assumption was that the user was logging for the moment, but we need the ability for the user to change the date if for example they they forgot to log. This occurred to me in the context of thinking about the e2e tests. There currently is no way to add doses over several weeks, which is needed to test the concentration timeline chart. So we need to add a date picker to the quick add dose sheet.
 
-2. For Acceptable Violations:
-
-  - Test File Line Length: Update .swiftlint.yml is test directories to allow longer lines
-  - Medical Logic Complexity: Add justification in code comments for complex medical logic and create exceptions in the file if possible or in .swiftlint.yml
-  - Service File Size: Add justification in code comments for complex medical logic and create exceptions in the file if possible or in .swiftlint.yml
-
-  3. Address the following violations:
-
-  - Test Variable Naming: Use camelCase (dose1Point5 instead of dose1_5)
-  - Break Down Large Functions: Extract helper methods from complex validation functions
-  - Service Decomposition: Consider breaking DoseSearchService into smaller, focused services
+  I think this should be a new stream. Thoughts?

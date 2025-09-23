@@ -1,44 +1,47 @@
-⏺ 🚀 Launch plan for parallel agents for issue #55
+ Plan to Complete Issue #56: Stream D + E2E Tests
 
-  Issue #55: Build ChartDataProcessor
-  - Branch: issue/55-build-chartdataprocessor ✅
-  - Draft PR: https://github.com/gannonh/jab-tracker-ios/pull/63 ✅
+     Stream D: Add Date Selection to QuickDoseEntry
 
-  Parallel Agent Launch Strategy
+     Files to modify:
+     1. QuickDoseEntry.swift - Add DatePicker for date selection
+     2. QuickDoseViewModel.swift - Add separate date/time properties
+     3. QuickDoseEntryTests.swift - Test date selection functionality
 
-  Based on the analysis, I'll launch agents in two phases for optimal parallelization:
+     Implementation details:
+     - Add DatePicker with .datePickerStyle(.compact) for date selection
+     - Keep current time picker for time selection
+     - Default to Date() (now) so no extra clicks needed for current logging
+     - Prevent future dates beyond today
+     - Allow reasonable past dates (e.g., 30 days back)
+     - Display both date and time in the UI
 
-  Phase 1 - Immediate Launch (Parallel):
-  - Stream A: Core Data Transformation Service (4h)
-    - Create ChartDataProcessor class structure
-    - Unit tests for basic transformation
-    - Simulator 1 (iPhone 15)
-  - Stream B: Chart Data Formatting & Interpolation (5h)
-    - Swift Charts data structures
-    - Concentration interpolation methods
-    - Simulator 2 (iPhone 15 Pro Max)
+     Complete E2E Tests Implementation
 
-  Phase 2 - Sequential Launch:
-  - Stream C: Time Period Filtering (3h)
-    - Starts after Stream A completes
-    - Filtering and aggregation extensions
-    - Simulator 3 (iPhone SE)
-  - Stream D: Performance Optimization (2h)
-    - Starts after Streams B & C complete
-    - Memory optimization and integration
-    - Simulator 1 (reuse after A completes)
+     Files to implement:
+     1. ConcentrationTimelineChartUITests.swift - 5 actual E2E tests
+     2. ChartControlsUITests.swift - 5 actual E2E tests
 
-  Rationale
+     E2E Testing Strategy:
+     1. Use debug-first approach for all element targeting:
+     // ALWAYS start with debugging the accessibility hierarchy
+     TestUtilities.debugElements(in: app, containing: "chart")
+     2. Create historical test data using new date picker
+     3. Navigate to Analytics tab and verify chart rendering
+     4. Test gestures, time periods, accessibility, performance
 
-  - Streams A & B have no dependencies and can work independently
-  - Stream C needs the core structure from A
-  - Stream D needs the combined work from B & C for optimization
-  - Each agent follows TDD with embedded testing (no separate test stream)
-  - Simulator isolation prevents test conflicts
+     Key E2E Test Cases:
+     - testConcentrationTimelineDisplaysCorrectly() - Verify chart renders with dose data over time
+     - testInteractiveChartFeatures() - Test zoom/pan gestures work
+     - testTimePeriodSelector() - Test 7d/30d/90d/1y selection changes chart
+     - testChartAccessibilityFeatures() - Verify VoiceOver describes trends
+     - testChartPerformanceWithLargeDatasets() - Test with 1+ year of dose data
 
-  Expected Timeline
+     Testing Pattern:
+     1. Use new date picker to create doses spanning multiple weeks
+     2. Navigate to Analytics tab
+     3. Debug element hierarchy first: TestUtilities.debugElements(in: app, containing: "chart")
+     4. Read raw logs: cat logs/latest/raw_output.txt | grep "DEBUG"
+     5. Use actual element types found (likely CollectionViews, not Tables)
+     6. Test chart interactions and verify concentration calculations
 
-  - Wall time: ~7 hours (vs 14 hours sequential)
-  - Efficiency gain: 50% time reduction
-
-  Please let me know if I may proceed with launching Streams A and B, or if you would like to discuss further before proceeding.
+     This completes Stream C properly with working E2E tests AND adds the critical date selection feature for both users and testing.
