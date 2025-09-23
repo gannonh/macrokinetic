@@ -1,127 +1,44 @@
-    - @claude[bot]:
-    Claude finished @gannonh's task —— https://github.com/gannonh/jab-tracker-ios/actions/runs/17623960354
+⏺ 🚀 Launch plan for parallel agents for issue #55
 
-    ---  Code Review: Medication Profile CRUD Implementation
+  Issue #55: Build ChartDataProcessor
+  - Branch: issue/55-build-chartdataprocessor ✅
+  - Draft PR: https://github.com/gannonh/jab-tracker-ios/pull/63 ✅
 
-    - I've completed my review of this PR implementing medication profile management. This is a substantial feature
-  addition with 91 changed files, ~9400 lines added, and comprehensive test coverage.
+  Parallel Agent Launch Strategy
 
-    Review Checklist
+  Based on the analysis, I'll launch agents in two phases for optimal parallelization:
 
-        - Read feature specification and requirements
-      - Review new models and data structures
-      - Review service layer implementation
-      - Review UI/UX implementation
-      - Check test coverage and quality
-      - Assess error handling and validation
-      - Check for security concerns
-      - Review code quality and architecture
+  Phase 1 - Immediate Launch (Parallel):
+  - Stream A: Core Data Transformation Service (4h)
+    - Create ChartDataProcessor class structure
+    - Unit tests for basic transformation
+    - Simulator 1 (iPhone 15)
+  - Stream B: Chart Data Formatting & Interpolation (5h)
+    - Swift Charts data structures
+    - Concentration interpolation methods
+    - Simulator 2 (iPhone 15 Pro Max)
 
-    🎯 Overall Assessment
+  Phase 2 - Sequential Launch:
+  - Stream C: Time Period Filtering (3h)
+    - Starts after Stream A completes
+    - Filtering and aggregation extensions
+    - Simulator 3 (iPhone SE)
+  - Stream D: Performance Optimization (2h)
+    - Starts after Streams B & C complete
+    - Memory optimization and integration
+    - Simulator 1 (reuse after A completes)
 
-    This is a high-quality implementation that demonstrates:
-        - Strong adherence to iOS/SwiftUI best practices
-      - Comprehensive test coverage (unit + UI tests)
-      - Medical accuracy in calculations and dose validation
-      - Clean architecture with proper separation of concerns
-      - Excellent error handling and user experience
+  Rationale
 
-    ✅ Strengths
+  - Streams A & B have no dependencies and can work independently
+  - Stream C needs the core structure from A
+  - Stream D needs the combined work from B & C for optimization
+  - Each agent follows TDD with embedded testing (no separate test stream)
+  - Simulator isolation prevents test conflicts
 
-        i. Medical Accuracy & Safety
-            - ReconstitutionCalculator uses standard pharmaceutical formulas with insulin unit conversions (U-100)
-        - Dose validation against brand-specific FDA-approved ranges
-        - Comprehensive error handling prevents unsafe calculations
-        - Test coverage validates edge cases and medical scenarios
-      ii. Architecture & Code Quality
-            - Clean MVVM-style architecture with MedicationManager service layer
-        - SwiftData models follow CloudKit best practices
-        - Proper use of SwiftUI property wrappers and environment
-        - Good separation between UI, business logic, and data layers
-      iii. Test Coverage
-            - 24 unit tests for MedicationManager
-        - 14 tests for ReconstitutionCalculator (96%+ coverage)
-        - 21 tests for DoseTitration model
-        - Comprehensive UI tests covering CRUD operations and calculators
-        - Tests validate medical accuracy and edge cases
-      iv. User Experience
-            - Clear empty states and onboarding guidance
-        - Contextual calculator tools based on medication type
-        - Proper loading states and error messages
-        - Accessibility identifiers throughout for testing
+  Expected Timeline
 
-    🔧 Areas for Improvement
+  - Wall time: ~7 hours (vs 14 hours sequential)
+  - Efficiency gain: 50% time reduction
 
-        i. Model Relationships - DoseTitration.swift:34
-      // Missing explicit relationship attribute
-  var medicationProfile: MedicationProfile?
-      i. Recommendation: Add @Relationship(inverse: \MedicationProfile.doseTitrations)
-      ii. UI Error Handling - MedicationProfileSettingsView.swift:98
-      } catch {
-      print("Failed to delete medication profile: \(error)")
-  }
-      ii. Issue: Delete errors aren't shown to users
-  Fix: Add an error alert similar to save operations
-      iii. File Organization - MedicationProfileSettingsView.swift (699 lines)
-            - Consider splitting into separate files for each view component
-        - Extract AddMedicationProfileView, EditMedicationProfileView, etc.
-      iv. Missing UI Tests
-            - No E2E test for updating existing profiles
-        - Limited testing of dose escalation timeline UI
-        - No tests for managing multiple profiles
-      v. Service Layer Enhancement - MedicationManager.swift
-            - Consider adding async/await support for better SwiftUI integration
-        - Add protocol abstraction for improved testability
-        - Batch operations could improve performance
-
-    🚨 Minor Issues
-
-        i. Validation Grace Period - DoseTitration.swift:62
-            - The 1-minute grace period for past dates in validateTitration() could be confusing
-        - Consider documenting the rationale or making it configurable
-      ii. Missing User Feedback
-            - No loading indicators during save/update operations
-        - Consider adding haptic feedback for successful actions
-      iii. Force Unwrapping Risk - Various locations
-            - Some optional chains could be more defensive
-        - Example: Profile detail view assumes relationships exist
-
-    💡 Suggestions for Enhancement
-
-        i. Add Loading Overlays
-      @State private var isSaving = false
-
-  // In save handler
-  isSaving = true
-  defer { isSaving = false }
-      ii. Implement Undo for Deletions
-            - Store recently deleted profiles temporarily
-        - Show undo toast after deletion
-      iii. Add View Models
-            - Extract complex state management from views
-        - Improve testability and reusability
-      iv. Enhanced Validation
-            - Validate doses against medication's available doses in DoseTitration
-        - Add maximum water volume validation in calculator
-
-    ✨ Commendable Patterns
-
-        - Excellent use of MedicationFormComponents for UI reusability
-      - Smart field reset when medication changes (prevents invalid states)
-      - Comprehensive common scenarios in calculator
-      - Clear separation of concerns in service layer
-      - Thoughtful accessibility implementation
-
-    🔒 Security Assessment
-
-    No security concerns identified:
-        - No sensitive data logging
-      - Proper data isolation per user
-      - No credential storage in this feature
-      - Safe medical calculations with validation
-
-    📋 Recommendation
-
-    APPROVE with minor revisions. This is a well-implemented feature that follows iOS best practices and maintains high
-  code quality. The medical calculations are accurate and safe. The suggested improvements are mostly organizational and UX
-   enhancements that can be addressed in follow-up PRs.
+  Please let me know if I may proceed with launching Streams A and B, or if you would like to discuss further before proceeding.

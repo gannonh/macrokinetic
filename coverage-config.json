@@ -25,7 +25,8 @@
           "DataController.swift",
           "MedicationManager.swift",
           "DoseSearchService.swift",
-          "DoseService.swift"
+          "DoseService.swift",
+          "ChartDataProcessor.swift"
         ]
       },
       "framework_integration": {
