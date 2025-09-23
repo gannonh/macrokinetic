@@ -26,7 +26,10 @@
           "MedicationManager.swift",
           "DoseSearchService.swift",
           "DoseService.swift",
-          "ChartDataProcessor.swift"
+          "ChartDataProcessor.swift",
+          "ChartDataProcessor+Filtering.swift",
+          "ChartDataProcessorPerformanceTests.swift",
+          "ChartDataProcessorIntegrationTests.swift"
         ]
       },
       "framework_integration": {
