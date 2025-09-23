@@ -20,7 +20,7 @@ for epic_dir in .claude/epics/*/; do
 
     # Skip analysis and review files
     task_basename=$(basename "$task_file")
-    if [[ "$task_basename" == *"-analysis.md" ]] || [[ "$task_basename" == *"-review.md" ]]; then
+    if [[ "$task_basename" == *"-analysis.md" ]] || [[ "$task_basename" == *"-review.md" ]] || [[ "$task_basename" == *"-code-quality.md" ]] || [[ "$task_basename" == *"-test-quality.md" ]]; then
       continue
     fi
 
@@ -56,6 +56,44 @@ for epic_dir in .claude/epics/*/; do
       [ "$parallel" = "true" ] && echo "   🔄 Can run in parallel"
       echo ""
       ((found++))
+    else
+      # Check if all dependencies are satisfied
+      dependencies_met=true
+
+      # Split dependencies by comma and check each one
+      IFS=',' read -ra dep_array <<< "$deps"
+      for dep in "${dep_array[@]}"; do
+        # Remove whitespace
+        dep=$(echo "$dep" | tr -d ' ')
+
+        # Find the dependency file in current epic
+        dep_file="$epic_dir$dep.md"
+
+        if [ -f "$dep_file" ]; then
+          dep_status=$(grep "^status:" "$dep_file" | head -1 | sed 's/^status: *//')
+          if [ "$dep_status" != "closed" ] && [ "$dep_status" != "completed" ]; then
+            dependencies_met=false
+            break
+          fi
+        else
+          # Dependency file not found - assume not met
+          dependencies_met=false
+          break
+        fi
+      done
+
+      # If all dependencies are satisfied, task is ready
+      if [ "$dependencies_met" = "true" ]; then
+        task_name=$(grep "^name:" "$task_file" | head -1 | sed 's/^name: *//')
+        task_num=$(basename "$task_file" .md)
+        parallel=$(grep "^parallel:" "$task_file" | head -1 | sed 's/^parallel: *//')
+
+        echo "✅ Ready: #$task_num - $task_name"
+        echo "   Epic: $epic_name"
+        [ "$parallel" = "true" ] && echo "   🔄 Can run in parallel"
+        echo ""
+        ((found++))
+      fi
     fi
   done
 done
