@@ -66,33 +66,19 @@ Update each relevant stream file with:
 - If ready for testing: `ready_for_testing: true`
 - If blocked: `status: blocked` with reason
 
-### 5. Update Execution Status
-
-If `.claude/epics/{epic_name}/execution-status.md` exists, update it with:
-
-**Add entry under appropriate issue:**
-```markdown
-#### Issue #$ARGUMENTS - {Date}
-- **Session Summary**: {high-level summary of work done}
-- **Components Updated**: {affected streams/files}
-- **Status Change**: {any status changes}
-- **Integration Impact**: {effects on other issues/streams}
-```
-
-### 6. Update Epic Progress (if significant changes)
+### 5. Update Epic Progress
 
 If major milestones were reached:
 - Check if issue acceptance criteria should be updated
 - Update overall epic progress in `epic.md` if appropriate
 - Note any new dependencies or blockers discovered
 
-### 7. Commit Changes
+### 6. Commit Changes
 
 ```bash
 # Add all updated progress files
 git add .claude/epics/{epic_name}/updates/$ARGUMENTS/
 git add .claude/epics/{epic_name}/$ARGUMENTS.md
-git add .claude/epics/{epic_name}/execution-status.md
 
 # Commit with descriptive message
 git commit -m "Issue #$ARGUMENTS: update progress tracking
@@ -102,7 +88,7 @@ git commit -m "Issue #$ARGUMENTS: update progress tracking
 - {any status changes}"
 ```
 
-### 8. Capture Session Learnings
+### 7. Capture Session Learnings
 
 Add learnings section to issue file if significant discoveries were made:
 
@@ -132,7 +118,7 @@ Update frontmatter:
 learnings_captured: false  # flag for context/update.md to process
 ```
 
-### 9. GitHub Sync (Optional)
+### 8. GitHub Sync (Optional)
 
 If significant progress made, optionally sync to GitHub:
 ```bash
@@ -151,7 +137,7 @@ echo "## Progress Update - $(date '+%Y-%m-%d')
 Updated: {timestamp}" | gh issue comment $ARGUMENTS --body-file -
 ```
 
-### 10. Output
+### 9. Output
 
 ```
 ✅ Updated issue #$ARGUMENTS progress
@@ -172,7 +158,6 @@ Learnings captured: {yes/no}
 Files updated:
   .claude/epics/{epic_name}/$ARGUMENTS.md
   .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-*.md
-  .claude/epics/{epic_name}/execution-status.md
 
 - Next: Run /context:update to propagate learnings or /pm:epic-status {epic_name}
 - Sync: Run /pm:issue-sync $ARGUMENTS to push updates to GitHub

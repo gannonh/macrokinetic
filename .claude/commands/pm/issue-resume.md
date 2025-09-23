@@ -54,7 +54,6 @@ git pull origin issue/{issue_name}
 
 #### Epic Context
 - Read `.claude/epics/{epic_name}/epic.md` - Overall epic goals and status
-- Read `.claude/epics/{epic_name}/execution-status.md` - Epic-wide progress and coordination
 
 #### Issue Context  
 - Read `.claude/epics/{epic_name}/$ARGUMENTS.md` - Full issue requirements and acceptance criteria

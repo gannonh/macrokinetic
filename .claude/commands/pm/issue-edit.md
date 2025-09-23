@@ -119,14 +119,6 @@ In the "Tasks Created" section, mark task as deferred:
 - [deferred] #{issue_number} - {task_name} (deferred: {timestamp})
 ```
 
-**Update execution-status.md:**
-Move from current section to new "Deferred Issues" section:
-```markdown
-## Deferred Issues
-- **Issue #{issue_number} - {task_name}** 🚫 DEFERRED ({timestamp})
-  - Reason: {deferred_reason}
-  - Moved from: {previous_section}
-```
 
 #### 5.5 Update Context Progress
 Update `.claude/context/progress.md`:
