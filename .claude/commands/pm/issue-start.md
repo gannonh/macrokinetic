@@ -361,6 +361,7 @@ Progress tracking:
   .claude/epics/{epic_name}/updates/$ARGUMENTS/
 
 Monitor with: /pm:issue-status $ARGUMENTS
+Update progress with: /pm:issue-update $ARGUMENTS
 Sync updates: /pm:issue-sync $ARGUMENTS
 ```
 
