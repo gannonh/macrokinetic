@@ -8,11 +8,9 @@ allowed-tools: Read, Write, Edit, Bash, LS
 
 Edit issue details locally and on GitHub.
 
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
+
 ## Instructions
-
-### Agent Mode
-
-engage ULTRATHINK.
 
 ### 1. Get Current Issue State
 

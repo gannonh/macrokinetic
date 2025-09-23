@@ -8,7 +8,7 @@ allowed-tools: Read, Write, LS
 
 Push local updates as GitHub issue comments for transparent audit trail.
 
-**ULTRATHINK**
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Required Rules
 

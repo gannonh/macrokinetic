@@ -8,7 +8,7 @@ allowed-tools: Read, Write, LS
 
 Analyze an issue to identify parallel work streams for maximum efficiency.
 
-**ULTRATHINK**
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Quick Check
 

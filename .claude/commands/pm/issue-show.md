@@ -1,15 +1,15 @@
 ---
+description: Display issue and sub-issues with detailed information.
 allowed-tools: Read, LS
+argument-hint: issue number (e.g., 42)
+model: inherit
 ---
 
 # Issue Show
 
 Display issue and sub-issues with detailed information.
 
-## Usage
-```
-/pm:issue-show <issue_number>
-```
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Instructions
 

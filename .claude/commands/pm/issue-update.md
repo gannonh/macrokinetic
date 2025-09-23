@@ -8,6 +8,8 @@ allowed-tools: Read, Write, Edit, LS
 
 Update progress and capture session work & learnings for issue #$ARGUMENTS.
 
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
+
 ## Instructions
 
 ### 1. Find Local Task File

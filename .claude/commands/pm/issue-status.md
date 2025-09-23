@@ -8,11 +8,6 @@ allowed-tools: Read, LS
 
 Check issue status (open/closed) and current state.
 
-## Usage
-```
-/pm:issue-status <issue_number>
-```
-
 ## Instructions
 
 You are checking the current status of a GitHub issue and providing a quick status report for: **Issue #$ARGUMENTS**

@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Edit, LS, Task
 
 Begin or resume work on a GitHub issue with parallel agents based on work stream analysis.
 
-**ULTRATHINK**
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Quick Check
 

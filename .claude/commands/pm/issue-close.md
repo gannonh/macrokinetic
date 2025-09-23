@@ -9,6 +9,8 @@ model: claude-sonnet-4-20250514
 
 Mark an issue as complete and close it on GitHub.
 
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
+
 ## Instructions
 
 ### 1. Verify PR is Merged

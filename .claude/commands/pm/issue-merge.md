@@ -9,7 +9,7 @@ model: claude-sonnet-4-20250514
 
 Merge completed PR from branch to main using GitHub Pull Request workflow.
 
-**ULTRATHINK**
+**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Quick Check
 
