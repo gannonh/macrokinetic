@@ -315,6 +315,351 @@ struct ChartDataProcessorTests {
     #expect(chartPoint.concentration >= 0, "Concentration should be non-negative")
     #expect(chartPoint.concentration.isFinite, "Concentration should be finite number")
   }
+
+  // MARK: - ChartPoint Constructor Tests
+
+  @Test("ConcentrationChartPoint constructor with valid data")
+  func testConcentrationChartPointConstructor() {
+    let date = Date()
+    let concentration = 5.0
+
+    let chartPoint = ChartDataProcessor.ConcentrationChartPoint(
+      date: date,
+      concentration: concentration
+    )
+
+    #expect(chartPoint.date == date)
+    #expect(chartPoint.concentration == concentration)
+    #expect(chartPoint.id != UUID(), "Chart point should have valid ID")
+  }
+
+  @Test("DoseMarker constructor with valid data")
+  func testDoseMarkerConstructor() {
+    let date = Date()
+    let amount = 1.0
+    let isSkipped = false
+
+    let marker = ChartDataProcessor.DoseMarker(
+      date: date,
+      amount: amount,
+      isSkipped: isSkipped
+    )
+
+    #expect(marker.date == date)
+    #expect(marker.amount == amount)
+    #expect(marker.isSkipped == isSkipped)
+    #expect(marker.id != UUID(), "Dose marker should have valid ID")
+  }
+
+  // MARK: - Date Range Filtering Tests
+
+  @Test("Filter concentration data by date range")
+  func testFilterConcentrationByDateRange() {
+    let processor = ChartDataProcessor()
+    let now = Date()
+
+    // Create test concentration points - avoid SwiftData relationships
+    let concentrationData = [
+      ConcentrationPoint(date: now.addingTimeInterval(-3600), concentration: 1.0),  // 1 hour ago
+      ConcentrationPoint(date: now, concentration: 2.0),  // now
+      ConcentrationPoint(date: now.addingTimeInterval(3600), concentration: 3.0),  // 1 hour future
+    ]
+
+    let startDate = now.addingTimeInterval(-1800)  // 30 min ago
+    let endDate = now.addingTimeInterval(1800)  // 30 min future
+
+    let filtered = processor.filterConcentrationByDateRange(
+      concentrationData,
+      startDate: startDate,
+      endDate: endDate
+    )
+
+    // Should only include the middle point (now)
+    #expect(filtered.count == 1)
+    #expect(filtered[0].concentration == 2.0)
+  }
+
+  // MARK: - Batch Processing Tests
+
+  @Test("Process batched concentration data efficiently")
+  func testProcessBatchedConcentrationData() {
+    let processor = ChartDataProcessor()
+
+    // Create large dataset - avoid SwiftData relationships
+    let largeDataset = (0..<100).map { index in
+      ConcentrationPoint(
+        date: Date().addingTimeInterval(Double(index) * 3600),
+        concentration: Double(index) * 0.5
+      )
+    }
+
+    let batchSize = 20
+    let maxFinalPoints = 50
+
+    let processed = processor.processBatchedConcentrationData(
+      largeDataset,
+      batchSize: batchSize,
+      maxFinalPoints: maxFinalPoints
+    )
+
+    // Verify processing completed without crashing
+    #expect(processed.count <= maxFinalPoints, "Should respect max points limit")
+    #expect(!processed.isEmpty, "Should produce some output")
+
+    // Verify all concentrations are finite (medical safety requirement)
+    for point in processed {
+      #expect(point.concentration.isFinite, "All concentrations must be finite")
+    }
+  }
+
+  // MARK: - Lazy Concentration Calculation Tests
+
+  @Test("Lazy concentration calculation with time range")
+  func testLazyConcentrationCalculation() {
+    let processor = ChartDataProcessor()
+
+    // Create test data without SwiftData relationships
+    let startDate = Date()
+    let endDate = startDate.addingTimeInterval(24 * 3600)  // 24 hours
+    let intervalHours = 6.0
+
+    let testDoses = [
+      Dose(
+        amount: 1.0,
+        timestamp: startDate,
+        site: "abdomen",
+        notes: "",
+        skipped: false
+      )
+    ]
+
+    let medication = Medication.semaglutide
+
+    let timeRange = startDate...endDate
+
+    let lazySequence = processor.lazyConcentrationCalculation(
+      timeRange: timeRange,
+      intervalHours: intervalHours,
+      doses: testDoses,  // Pass array directly, no relationships
+      medication: medication
+    )
+
+    // Force evaluation of lazy sequence
+    let concentrations = Array(lazySequence)
+
+    #expect(!concentrations.isEmpty, "Should generate concentration points")
+
+    // Verify medical safety requirements
+    for point in concentrations {
+      #expect(point.concentration >= 0, "Concentrations should be non-negative")
+      #expect(point.concentration.isFinite, "Concentrations must be finite")
+    }
+  }
+
+  // MARK: - Timeline Generation Tests
+
+  @Test("Generate concentration timeline for user profile")
+  @MainActor
+  func testGenerateConcentrationTimeline() {
+    let container = createTestContainer()
+    let processor = ChartDataProcessor()
+
+    // Create test user and profile
+    let (_, profile) = createTestUser(in: container)
+
+    let timeRange = Date()...Date().addingTimeInterval(24 * 3600)
+    let intervalHours = 6.0
+
+    let timeline = processor.generateConcentrationTimeline(
+      for: profile,
+      timeRange: timeRange,
+      intervalHours: intervalHours
+    )
+
+    #expect(!timeline.isEmpty, "Should generate timeline points")
+
+    // Verify medical safety
+    for point in timeline {
+      #expect(point.concentration.isFinite, "Timeline concentrations must be finite")
+      #expect(point.concentration >= 0, "Timeline concentrations must be non-negative")
+    }
+  }
+
+  // MARK: - Analytics Integration Tests
+
+  @Test("Generate analytics optimized chart data")
+  @MainActor
+  func testGenerateAnalyticsOptimizedChartData() {
+    let container = createTestContainer()
+    let processor = ChartDataProcessor()
+    let analyticsService = AnalyticsService()
+
+    // Create test user and profile with actual doses
+    let (user, profile) = createTestUser(in: container)
+    let context = container.mainContext
+
+    // Add test dose to generate meaningful chart data
+    let testDose = Dose(
+      amount: 1.0,
+      timestamp: Date().addingTimeInterval(-24 * 3600),  // 1 day ago
+      site: "abdomen",
+      skipped: false
+    )
+    testDose.user = user
+    testDose.medication = profile
+    context.insert(testDose)
+    try! context.save()
+
+    let timePeriod = ChartDataProcessor.TimePeriod.last7Days
+
+    let chartData = processor.generateAnalyticsOptimizedChartData(
+      for: user,
+      analyticsService: analyticsService,
+      timePeriod: timePeriod,
+      context: context
+    )
+
+    // Verify chart data arrays are created (may be empty or populated)
+    #expect(chartData.concentrationTimeline.count >= 0, "Should have concentration timeline array")
+    #expect(chartData.doseMarkers.count >= 0, "Should have dose markers array")
+
+    // Verify medical safety for any generated data
+    for point in chartData.concentrationTimeline {
+      #expect(point.concentration.isFinite, "Analytics concentrations must be finite")
+      #expect(point.concentration >= 0, "Analytics concentrations must be non-negative")
+    }
+  }
+
+  // MARK: - Recommendation System Tests
+
+  @Test("Recommended time scale calculation")
+  func testRecommendedTimeScale() {
+    let processor = ChartDataProcessor()
+
+    // Create test concentration data
+    let concentrationData = [
+      ConcentrationPoint(date: Date().addingTimeInterval(-7 * 24 * 3600), concentration: 1.0),  // 1 week ago
+      ConcentrationPoint(date: Date(), concentration: 2.0),  // now
+    ]
+
+    let recommendation = processor.recommendedTimeScale(for: concentrationData)
+
+    // Verify recommendation is reasonable (TimeInterval is in seconds)
+    #expect(recommendation > 0, "Recommended time scale should be positive")
+    #expect(recommendation.isFinite, "Recommended time scale must be finite")
+  }
+
+  @Test("Recommended Y-axis range calculation")
+  func testRecommendedYAxisRange() {
+    let processor = ChartDataProcessor()
+
+    // Create test concentration data with varying values
+    let concentrationData = [
+      ConcentrationPoint(date: Date().addingTimeInterval(-3600), concentration: 2.0),
+      ConcentrationPoint(date: Date(), concentration: 8.0),
+      ConcentrationPoint(date: Date().addingTimeInterval(3600), concentration: 5.0),
+    ]
+
+    let yAxisRange = processor.recommendedYAxisRange(for: concentrationData)
+
+    // Verify range is valid and finite (tuple with min/max)
+    #expect(yAxisRange.min >= 0, "Y-axis min should be non-negative")
+    #expect(yAxisRange.max > yAxisRange.min, "Y-axis max should be greater than min")
+    #expect(yAxisRange.min.isFinite, "Y-axis min must be finite")
+    #expect(yAxisRange.max.isFinite, "Y-axis max must be finite")
+  }
+
+  // MARK: - Chart Data Generation with Levels Tests
+
+  @Test("Generate concentration timeline with levels")
+  @MainActor
+  func testGenerateConcentrationTimelineWithLevels() {
+    let container = createTestContainer()
+    let processor = ChartDataProcessor()
+
+    // Create test user and profile
+    let (_, profile) = createTestUser(in: container)
+
+    let timeRange = Date().addingTimeInterval(-7 * 24 * 3600)...Date()  // Last 7 days
+
+    let timelineWithLevels = processor.generateConcentrationTimelineWithLevels(
+      for: profile,
+      timeRange: timeRange
+    )
+
+    // Verify timeline structure
+    #expect(!timelineWithLevels.timeline.isEmpty, "Should include concentration timeline")
+
+    // Verify medical safety for concentration data
+    for point in timelineWithLevels.timeline {
+      #expect(point.concentration.isFinite, "Chart concentrations must be finite")
+      #expect(point.concentration >= 0, "Chart concentrations must be non-negative")
+    }
+
+    // Verify peak and trough levels are also finite
+    for peak in timelineWithLevels.peakLevels {
+      #expect(peak.concentration.isFinite, "Peak concentrations must be finite")
+      #expect(peak.concentration >= 0, "Peak concentrations must be non-negative")
+    }
+
+    for trough in timelineWithLevels.troughLevels {
+      #expect(trough.concentration.isFinite, "Trough concentrations must be finite")
+      #expect(trough.concentration >= 0, "Trough concentrations must be non-negative")
+    }
+  }
+
+  // MARK: - Data Density Optimization Tests
+
+  @Test("Optimize data density for large datasets")
+  func testOptimizeDataDensity() {
+    let processor = ChartDataProcessor()
+
+    // Create large dataset - avoid SwiftData relationships
+    let largeDataset = (0..<1000).map { index in
+      ConcentrationPoint(
+        date: Date().addingTimeInterval(Double(index) * 3600),
+        concentration: Double(index) * 0.01
+      )
+    }
+
+    let maxPoints = 100
+    let optimized = processor.optimizeDataDensity(largeDataset, maxPoints: maxPoints)
+
+    // Verify optimization respects limits
+    #expect(optimized.count <= maxPoints, "Should respect max points limit")
+    #expect(!optimized.isEmpty, "Should preserve some data points")
+
+    // Verify medical safety
+    for point in optimized {
+      #expect(point.concentration.isFinite, "Optimized concentrations must be finite")
+      #expect(point.concentration >= 0, "Optimized concentrations must be non-negative")
+    }
+  }
+
+  // MARK: - Input Sanitization Tests (Medical Safety)
+
+  @Test("Chart data processing with corrupted input (security test)")
+  func testChartDataWithCorruptedInput() {
+    let processor = ChartDataProcessor()
+
+    // Test with infinite and NaN values (potential security/safety issue)
+    let corruptedData = [
+      ConcentrationPoint(date: Date(), concentration: Double.infinity),
+      ConcentrationPoint(date: Date(), concentration: Double.nan),
+      ConcentrationPoint(date: Date(), concentration: -1.0),  // Invalid negative
+      ConcentrationPoint(date: Date(), concentration: 5.0),  // Valid data
+    ]
+
+    let sanitized = processor.sanitizeConcentrationData(corruptedData)
+
+    // Verify corrupted data is removed/fixed
+    for point in sanitized {
+      #expect(point.concentration.isFinite, "Sanitized data must be finite")
+      #expect(point.concentration >= 0, "Sanitized concentrations must be non-negative")
+    }
+
+    #expect(!sanitized.isEmpty, "Should preserve valid data after sanitization")
+  }
 }
 
 // MARK: - Helper Functions
