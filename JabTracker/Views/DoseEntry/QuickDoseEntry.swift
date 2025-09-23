@@ -166,14 +166,24 @@ private struct QuickDoseEntrySheet: View {
           }
           .accessibilityIdentifier("quick-dose-entry-site-picker")
 
-          // Time Display
-          HStack {
-            Text("Time")
-            Spacer()
-            Text(self.viewModel.doseTime.formatted(date: .omitted, time: .shortened))
-              .foregroundColor(.secondary)
-              .accessibilityIdentifier("quick-dose-entry-time")
-          }
+          // Date Selection
+          DatePicker(
+            "Date",
+            selection: self.$viewModel.doseDate,
+            in: (Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...Date(),
+            displayedComponents: .date
+          )
+          .datePickerStyle(.compact)
+          .accessibilityIdentifier("quick-dose-entry-date-picker")
+
+          // Time Selection
+          DatePicker(
+            "Time",
+            selection: self.$viewModel.doseTime,
+            displayedComponents: .hourAndMinute
+          )
+          .datePickerStyle(.compact)
+          .accessibilityIdentifier("quick-dose-entry-time-picker")
         } header: {
           Text("Dose Details")
         } footer: {
@@ -282,7 +292,7 @@ private struct QuickDoseEntrySheet: View {
       // Save dose through dose service (which handles PK integration)
       _ = try await self.doseService.saveDose(
         amount: self.viewModel.doseAmount,
-        timestamp: self.viewModel.doseTime,
+        timestamp: self.viewModel.doseDateTime,
         medicationProfile: profile,
         site: self.viewModel.selectedInjectionSite.isEmpty
           ? nil : self.viewModel.selectedInjectionSite,

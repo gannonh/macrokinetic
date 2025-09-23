@@ -1,6 +1,6 @@
 ---
 description: Begin or resume work on a GitHub issue with parallel agents based on work stream analysis.
-argument-hint: [Issue number]
+argument-hint: [Issue number] [additional context (optional)]
 allowed-tools: Read, Write, Edit, LS, Task
 ---
 
@@ -10,22 +10,24 @@ Begin or resume work on a GitHub issue with parallel agents based on work stream
 
 **ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
+Additional context (if any): $2
+
 ## Quick Check
 
 1. **Get issue details:**
    ```bash
-   gh issue view $ARGUMENTS --json state,title,labels,body,assignees
+   gh issue view $1 --json state,title,labels,body,assignees
    ```
 
 2. **Find local task file:**
-   - First check if `.claude/epics/*/$ARGUMENTS.md` exists (new naming)
-   - If not found, search for file containing `github:.*issues/$ARGUMENTS` in frontmatter (old naming)
-   - If not found: "❌ No local task for issue #$ARGUMENTS. This issue may have been created outside the PM system."
+   - First check if `.claude/epics/*/$1.md` exists (new naming)
+   - If not found, search for file containing `github:.*issues/$1` in frontmatter (old naming)
+   - If not found: "❌ No local task for issue #$1. This issue may have been created outside the PM system."
 
 3. **Check work status:**
    ```bash
    # Check if issue branch already exists
-   if git branch -r | grep -q "origin/issue/.*$ARGUMENTS"; then
+   if git branch -r | grep -q "origin/issue/.*$1"; then
      echo "🔄 Found existing issue branch - RESUMING work"
      WORK_MODE="resume"
    else
@@ -34,17 +36,17 @@ Begin or resume work on a GitHub issue with parallel agents based on work stream
    fi
 
    # Check for existing progress tracking
-   if [ -d ".claude/epics/*/updates/$ARGUMENTS" ]; then
+   if [ -d ".claude/epics/*/updates/$1" ]; then
      echo "📊 Found existing progress tracking"
-     ls -la .claude/epics/*/updates/$ARGUMENTS/
+     ls -la .claude/epics/*/updates/$1/
    fi
    ```
 
 4. **Check for analysis:**
    ```bash
-   test -f .claude/epics/*/$ARGUMENTS-analysis.md || echo "❌ No analysis found for issue #$ARGUMENTS
+   test -f .claude/epics/*/$1-analysis.md || echo "❌ No analysis found for issue #$1
 
-   Run: /pm:issue-analyze $ARGUMENTS first
+   Run: /pm:issue-analyze $1 first
    ```
    If no analysis exists and no --analyze flag, stop execution.
 
@@ -57,7 +59,7 @@ Handle branch creation for new work or checkout existing branch for resume:
 # Use issue title captured in Quick Check to construct branch name
 # Convert title to branch-friendly format (lowercase, replace spaces/special chars with hyphens)
 # Example: Issue #42 "Calendar Integration" becomes "42-calendar-integration"
-issue_name="$ARGUMENTS-$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
+issue_name="$1-$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
 
 echo "🌿 Branch name: issue/$issue_name"
 
@@ -66,7 +68,7 @@ if [ "$WORK_MODE" = "resume" ]; then
    echo "🔄 Resuming work - checking out existing branch"
 
    # Find the actual branch name (in case of slight naming differences)
-   actual_branch=$(git branch -r | grep "origin/issue/.*$ARGUMENTS" | head -1 | sed 's/origin\///' | xargs)
+   actual_branch=$(git branch -r | grep "origin/issue/.*$1" | head -1 | sed 's/origin\///' | xargs)
 
    if [ -n "$actual_branch" ]; then
       echo "🔄 Found branch: $actual_branch"
@@ -77,7 +79,7 @@ if [ "$WORK_MODE" = "resume" ]; then
       echo "✅ Resumed branch: $actual_branch"
       issue_name=$(echo "$actual_branch" | sed 's/issue\///')
    else
-      echo "❌ Could not find existing branch for issue #$ARGUMENTS"
+      echo "❌ Could not find existing branch for issue #$1"
       exit 1
    fi
 else
@@ -120,21 +122,21 @@ if gh pr view "issue/$issue_name" >/dev/null 2>&1; then
    fi
 else
    # Get issue details from GitHub
-   issue_title=$(gh issue view $ARGUMENTS --json title -q .title)
-   issue_body=$(gh issue view $ARGUMENTS --json body -q .body)
+   issue_title=$(gh issue view $1 --json title -q .title)
+   issue_body=$(gh issue view $1 --json body -q .body)
 
    if [ "$WORK_MODE" = "start" ]; then
       # Create initial commit to enable PR creation (only for new work)
-      echo "Issue #$ARGUMENTS: Initialize branch for issue tracking" > init.md
+      echo "Issue #$1: Initialize branch for issue tracking" > init.md
       git add init.md
-      git commit -m "Issue #$ARGUMENTS: Initialize branch for issue tracking"
+      git commit -m "Issue #$1: Initialize branch for issue tracking"
       git push
    fi
 
    # Create comprehensive PR description
-   pr_body="## Issue #$ARGUMENTS: $issue_title
+   pr_body="## Issue #$1: $issue_title
 
-   Resolves #$ARGUMENTS
+   Resolves #$1
 
    ### Summary
    $issue_body
@@ -163,7 +165,7 @@ else
 
    # Create draft PR
    gh pr create \
-      --title "Issue #$ARGUMENTS: $issue_title" \
+      --title "Issue #$1: $issue_title" \
       --body "$pr_body" \
       --base main \
       --head "issue/$issue_name" \
@@ -176,7 +178,7 @@ fi
 
 ### 3. Read Analysis
 
-Read `.claude/epics/{epic_name}/$ARGUMENTS-analysis.md`:
+Read `.claude/epics/{epic_name}/$1-analysis.md`:
 - Parse parallel streams
 - Identify which can start immediately
 - Note dependencies between streams
@@ -188,18 +190,18 @@ Get current datetime: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 Handle progress tracking for start or resume:
 ```bash
 # Create workspace structure if it doesn't exist
-mkdir -p .claude/epics/{epic_name}/updates/$ARGUMENTS
+mkdir -p .claude/epics/{epic_name}/updates/$1
 
 if [ "$WORK_MODE" = "resume" ]; then
    echo "🔄 Resuming progress tracking"
 
    # Show existing stream files
-   if [ -d ".claude/epics/{epic_name}/updates/$ARGUMENTS" ]; then
+   if [ -d ".claude/epics/{epic_name}/updates/$1" ]; then
       echo "📊 Existing streams:"
-      ls -la .claude/epics/{epic_name}/updates/$ARGUMENTS/
+      ls -la .claude/epics/{epic_name}/updates/$1/
 
       # Check status of existing streams
-      for stream_file in .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-*.md; do
+      for stream_file in .claude/epics/{epic_name}/updates/$1/stream-*.md; do
          if [ -f "$stream_file" ]; then
             stream_name=$(basename "$stream_file")
             status=$(grep "^status:" "$stream_file" | cut -d' ' -f2 || echo "unknown")
@@ -234,7 +236,7 @@ This eliminates redundant testing streams since each specialist writes tests for
 Present to the user your plan for launching agents to ensure alignment. Example:
 
 ---
-🚀 Launch plan for parallel agents for issue #$ARGUMENTS
+🚀 Launch plan for parallel agents for issue #$1
 
 [your plan for each agent and rationale]
 
@@ -246,7 +248,7 @@ Please let me know if I may proceed or if you would like to discuss further befo
 Analyze existing stream status and determine next actions:
 
 ---
-🔄 Resume plan for issue #$ARGUMENTS
+🔄 Resume plan for issue #$1
 
 Current stream status:
 - Stream A: [status] - [next action needed]
@@ -263,10 +265,10 @@ Proceed with launching/resuming agents only after user confirmation.
 
 **For Starting New Work - Create Stream Files:**
 
-For new work or resumed work that requires a new Stream, create `.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md`:
+For new work or resumed work that requires a new Stream, create `.claude/epics/{epic_name}/updates/$1/stream-{X}.md`:
 ```markdown
 ---
-issue: $ARGUMENTS
+issue: $1
 stream: {stream_name}
 agent: {agent_type}
 started: {current_datetime}
@@ -311,10 +313,10 @@ For existing streams, update the stream file with resume information:
 Launch agent using Task tool:
 ```yaml
 Task:
-  description: "Issue #$ARGUMENTS Stream {X}"
+  description: "Issue #$1 Stream {X}"
   subagent_type: "{agent_type}"
   prompt: |
-      You are working on Issue #$ARGUMENTS on branch issue/{issue_name}.
+      You are working on Issue #$1 on branch issue/{issue_name}.
 
       Branch: issue/{issue_name}
       Your stream: {stream_name}
@@ -326,8 +328,8 @@ Task:
       Requirements:
       1. Read full task from: .claude/epics/{epic_name}/{task_file}
       2. Work ONLY in your assigned files in the current directory
-      3. Commit frequently with format: "Issue #$ARGUMENTS: {specific change}"
-      4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-{X}.md
+      3. Commit frequently with format: "Issue #$1: {specific change}"
+      4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$1/stream-{X}.md
       5. Add new files to coverage-config.json
       6. Follow coordination rules in /rules/agent-coordination.md
       7. For user facing features/components, stub E2E acceptance tests that define "done"
@@ -454,13 +456,13 @@ Task:
 ```bash
 if [ "$WORK_MODE" = "start" ]; then
    # Assign to self and mark in-progress for new work
-   gh issue edit $ARGUMENTS --add-assignee @me --add-label "in-progress"
-   echo "✅ Assigned issue #$ARGUMENTS to self and marked in-progress"
+   gh issue edit $1 --add-assignee @me --add-label "in-progress"
+   echo "✅ Assigned issue #$1 to self and marked in-progress"
 else
    # For resume, just confirm current assignment
-   current_assignee=$(gh issue view $ARGUMENTS --json assignees -q '.assignees[0].login // "unassigned"')
-   current_labels=$(gh issue view $ARGUMENTS --json labels -q '.labels[].name' | tr '\n' ',' | sed 's/,$//')
-   echo "✅ Issue #$ARGUMENTS currently assigned to: $current_assignee"
+   current_assignee=$(gh issue view $1 --json assignees -q '.assignees[0].login // "unassigned"')
+   current_labels=$(gh issue view $1 --json labels -q '.labels[].name' | tr '\n' ',' | sed 's/,$//')
+   echo "✅ Issue #$1 currently assigned to: $current_assignee"
    echo "   Current labels: $current_labels"
 fi
 ```
@@ -469,7 +471,7 @@ fi
 
 **For Starting New Work:**
 ```
-✅ Started parallel work on issue #$ARGUMENTS
+✅ Started parallel work on issue #$1
 
 Issue: {issue_name}
 Branch: issue/{issue_name}
@@ -480,16 +482,16 @@ Launching {count} parallel agents:
   Stream C: {name} - Waiting (depends on A)
 
 Progress tracking:
-  .claude/epics/{epic_name}/updates/$ARGUMENTS/
+  .claude/epics/{epic_name}/updates/$1/
 
-Monitor with: /pm:issue-status $ARGUMENTS
-Update progress with: /pm:issue-update $ARGUMENTS
-Sync updates: /pm:issue-sync $ARGUMENTS
+Monitor with: /pm:issue-status $1
+Update progress with: /pm:issue-update $1
+Sync updates: /pm:issue-sync $1
 ```
 
 **For Resuming Work:**
 ```
-🔄 Resumed parallel work on issue #$ARGUMENTS
+🔄 Resumed parallel work on issue #$1
 
 Issue: {issue_name}
 Branch: issue/{issue_name} (existing)
@@ -501,11 +503,11 @@ Resuming {count} agents:
   Stream C: {name} (Agent-3) ✓ Resumed
 
 Progress tracking:
-  .claude/epics/{epic_name}/updates/$ARGUMENTS/
+  .claude/epics/{epic_name}/updates/$1/
 
-Monitor with: /pm:issue-status $ARGUMENTS
-Update progress with: /pm:issue-update $ARGUMENTS
-Sync updates: /pm:issue-sync $ARGUMENTS
+Monitor with: /pm:issue-status $1
+Update progress with: /pm:issue-update $1
+Sync updates: /pm:issue-sync $1
 ```
 
 ## Error Handling
