@@ -36,9 +36,13 @@ We practice outside-in TDD:
 8. E2E Tests (GREEN PHASE - ACCEPTANCE): Write full E2E tests that verify the entire user flow
 
 **Important reminders**:
-- Streams conduct their own testing as part of their development process, therefore, in most cases, it does not make sense to have separate streams focused on testing.
-- Not every development task or stream includes UI components or integration points, therefore, the complete TDD process varies depending on scope.
-- In some cases it may (or may not) make sense to have integration streams that piece together the components developed in prior streams. In this case integration tests would obviously be decoupled from the prior stream's scope.
+- **TDD: STREAMS CONDUCT THEIR OWN TESTING AS PART OF THEIR DEVELOPMENT PROCESS**, therefore, in most cases, it does not make sense to have separate streams focused onlyon testing.
+- Not every development task or stream requires unit, integration and e2e tests. The type and amount of testing should be appropriate to the scope:
+  - Isolated backend tasks may only need unit tests.
+  - Backend tasks that integrate with other services may require both unit and integration tests.
+  - Full features or user flows likely need all three levels of testing.
+  - Be thoughtful and use your discretion to determine the right balance of testing for each stream.
+
 
 ## Instructions
 
@@ -55,7 +59,16 @@ Read local task file to understand:
 - Dependencies
 - Effort estimate
 
-### 2. Identify Parallel Work Streams
+### 2. Reassess the Scope of Work
+
+- Does the scope of work as defined in the issue and local task still make sense within the broader context of the project?
+- Has the work already been completed in a prior workstream?
+- Is the issue still relevant or does it need to be closed or redefined?
+- This is a crucial strategic assessment that requires big picture thinking.
+- It is perfectly ok to be unsure, and to suggest further discussion or additional research.
+- In any case, **if further discussion or a change of course is needed, present your findings to the human PM for review before proceeding.**
+
+### 3. Identify Parallel Work Streams
 
 Analyze the issue to identify independent work that can run in parallel:
 
@@ -73,7 +86,7 @@ Analyze the issue to identify independent work that can run in parallel:
 - What are the dependencies between changes?
 - Where might conflicts occur?
 
-### 3. Create Analysis File
+### 4. Create Analysis File
 
 Get current datetime: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 
@@ -135,7 +148,7 @@ parallelization_factor: {1.0-5.0}
 {List what must happen in order}:
 1. Database schema before API endpoints
 2. API types before UI components
-3. Core logic before tests
+3. Core logic before UI integration
 
 ## Conflict Risk Assessment
 - **Low Risk**: Streams work on different directories
@@ -164,7 +177,7 @@ Without parallel execution:
 {Any special considerations, warnings, or recommendations}
 ```
 
-### 4. Validate Analysis
+### 5. Validate Analysis
 
 Ensure:
 - All major work is covered by streams
@@ -173,10 +186,12 @@ Ensure:
 - Agent types match the work type
 - Time estimates are reasonable
 
-### 5. Output
+### 6. Output
 
 ```
 ✅ Analysis complete for issue #$ARGUMENTS
+
+The scope of work has been reassessed and validated.
 
 Identified {count} parallel work streams:
   Stream A: {name} ({hours}h)
@@ -200,3 +215,4 @@ Next: Start work with /pm:issue-start $ARGUMENTS
 - Consider agent expertise when assigning streams
 - Account for coordination overhead in estimates
 - Prefer clear separation over maximum parallelization
+- **REMEMBER:** TDD is outside-in, **streams should include testing as part of their scope**

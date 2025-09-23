@@ -36,8 +36,8 @@ When analyzing a PR, you will:
 
 6. **Save and Share Results**: 
    - Extract issue number from PR title or body (e.g., "Fixes #123")
-   - Write results to `.claude/epics/*/[issue-number]-code-quality.md`
-   - Post contents as PR comment using `gh pr comment [pr-number] --body-file .claude/epics/*/[issue-number]-code-quality.md`
+   - Write results to `.claude/epics/*/updates/[issue-number]/code-quality.md`
+   - Post contents as PR comment using `gh pr comment [pr-number] --body-file .claude/epics/*/updates/[issue-number]/code-quality.md`
 
 Your analysis should be thorough but practical, focusing on improvements that provide genuine value rather than pedantic changes. Prioritize suggestions that improve maintainability, readability, performance, or reduce technical debt. Always provide clear rationale for your recommendations and consider the cost-benefit of each suggested change.
 

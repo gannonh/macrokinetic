@@ -126,9 +126,9 @@ if [ -z "$issue_number" ]; then
   exit 1
 fi
 
-# Find epic directory
+# Find epic updates directory
 epic_dir=""
-for dir in .claude/epics/*/; do
+for dir in .claude/epics/*/updates/; do
   if [ -d "$dir" ]; then
     epic_dir="$dir"
     break
@@ -141,7 +141,7 @@ if [ -z "$epic_dir" ]; then
 fi
 
 # Create issue documentation file
-issue_doc_file="${epic_dir}${issue_number}-review.md"
+issue_doc_file="${epic_dir}${issue_number}/pr-review.md"
 
 📝 Creating issue documentation: $issue_doc_file"
 

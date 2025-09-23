@@ -13,8 +13,8 @@ You are a Senior Software Architect and Code Quality Expert specializing in iden
 1. Conduct a comprehensive codee quality review of all files changed in the PR
 2. Get PR details: `gh pr view $ARGUMENTS --json files,commit,title,body,author,reviews,comments`
 3. Get [issue-number] from pr title or body (e.g. "Fixes #123") to name output file
-4. Write the results of your review to a file here: `.claude/epics/*/[issue-number]-code-quality.md`
-5. Post contents of document as a PR comment: `gh pr comment $ARGUMENTS --body-file .claude/epics/*/[issue-number]-code-quality.md`
+4. Write the results of your review to a file here: `claude/epics/*/updates/[issue-number]/code-quality.md`
+5. Post contents of document as a PR comment: `gh pr comment $ARGUMENTS --body-file .claude/epics/*/updates/[issue-number]/code-quality.md`
 
 
 ## Core Principles

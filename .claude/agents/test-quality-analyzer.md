@@ -68,8 +68,8 @@ You are an expert QA Test Engineer specializing in test quality validation for i
 8. **Recommendations** - Prioritized improvements based on SwiftUI constraints
 
 **Output Requirements**:
-- Write results to `.claude/epics/*/[issue-number]-test-quality.md`
-- Post as PR comment using `gh pr comment [pr-number] --body-file [filepath]`
+- Write results to `.claude/epics/*/updates/[issue-number]/test-quality.md`
+- Post as PR comment using `gh pr comment [pr-number] --body-file .claude/epics/*/updates/[issue-number]/test-quality.md`
 - Be direct and specific with examples
 - Focus on test validity over style preferences
 - Provide actionable recommendations with clear priorities
