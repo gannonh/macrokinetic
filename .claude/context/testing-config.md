@@ -71,6 +71,7 @@ _ = existingDoses  // Keep for test setup but don't assign to relationship
 ## Commands (All tests automatically log to ./logs directory)
 
 - **Run Unit Tests**: `./scripts/test.sh unit 1` (RECOMMENDED)
+- **Run Specific Unit Test Suite**: `./scripts/test.sh unit 1 AuthenticationManagerCoreTests` (RECOMMENDED)
 - **Run Specific UI Test Class**: `./scripts/test.sh ui 1 OnboardingUITests` (RECOMMENDED)
 - **Run PKEngine E2E Tests**: `./scripts/test.sh ui 1 PKEngineUITests` (RECOMMENDED)
 - **Run Specific UI Test Method**: `./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow` (RECOMMENDED)
@@ -129,10 +130,27 @@ The app supports several launch arguments for testing and development:
 - **Coverage Policy**: 5-tier system with different thresholds per component type
 - **File-Based Organization**: Swift Testing uses file-based test structure for efficiency
 
+## Swift Testing Framework Limitations
+
+### Unit Test Targeting Support
+- ✅ **Target Level**: `./scripts/test.sh unit 1` (all unit tests)
+- ✅ **Suite Level**: `./scripts/test.sh unit 1 AuthenticationManagerCoreTests` (specific test suite)
+- ❌ **Method Level**: Swift Testing doesn't support individual method isolation
+
+### UI Test Targeting Support
+- ✅ **Target Level**: `./scripts/test.sh ui 1` (all UI tests)
+- ✅ **Class Level**: `./scripts/test.sh ui 1 OnboardingUITests` (specific test class)
+- ✅ **Method Level**: `./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow` (specific method)
+
+**Note**: Unlike XCTest, Swift Testing framework doesn't support running individual unit test methods. When you specify a method name for unit tests, the entire test suite will run. For granular testing, organize tests into focused test suites/classes.
+
 ## Common Test Commands (All automatically log to ./logs)
 ```bash
 # Quick unit test run (RECOMMENDED)
 ./scripts/test.sh unit 1
+
+# Run specific unit test suite (RECOMMENDED)
+./scripts/test.sh unit 1 AuthenticationManagerCoreTests
 
 # Run specific UI test method (RECOMMENDED)
 ./scripts/test.sh ui 1 OnboardingUITests/testCompleteOnboardingFlow

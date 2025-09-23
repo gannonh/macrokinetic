@@ -1,6 +1,8 @@
-## evelopment Commands
+## Development Commands
 
 ### Convenience Scripts
+
+**IMPORTANT**: It is highly recommended to use the provided **Convenience Scripts** for building, testing, and other common tasks. These scripts handle logging, formatting, and other best practices automatically.
 
 #### Building
 

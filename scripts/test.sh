@@ -197,8 +197,8 @@ build_test_target() {
     if [ -n "$test_file" ]; then
         case "$test_type" in
             "unit")
-                # For unit tests, we run the whole target since Swift Testing file targeting doesn't work reliably
-                echo "-only-testing:JabTrackerTests"
+                # Run specific unit test suite (Swift Testing supports suite-level targeting)
+                echo "-only-testing:JabTrackerTests/$test_file"
                 ;;
             "ui")
                 # Run specific UI test file
