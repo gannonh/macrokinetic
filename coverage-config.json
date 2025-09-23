@@ -70,7 +70,9 @@
     ],
     "files": [
       "QuickDoseEntry.swift",
-      "DoseEntrySheet.swift"
+      "DoseEntrySheet.swift",
+      "TimePeriodSelector.swift",
+      "ChartControlsView.swift"
     ]
   },
   "special_testing_notes": {

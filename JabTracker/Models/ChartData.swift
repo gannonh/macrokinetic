@@ -60,7 +60,7 @@ public struct ConcentrationChartConfiguration {
 }
 
 /// Time range configuration for chart X-axis
-public enum TimeRange {
+public enum TimeRange: Equatable {
   case automatic
   case custom(startDate: Date, endDate: Date)
   case last24Hours
@@ -164,6 +164,14 @@ public struct InterpolationSettings {
     confidenceIntervals: true
   )
 
+  /// Simple linear interpolation settings
+  static let linear = InterpolationSettings(
+    type: .linear,
+    intervalHours: 4.0,
+    smoothingFactor: 0.5,
+    confidenceIntervals: false
+  )
+
   /// Performance-optimized settings for large datasets
   static let performance = InterpolationSettings(
     type: .linear,
@@ -174,7 +182,7 @@ public struct InterpolationSettings {
 }
 
 /// Chart visual theme configurations
-public enum ChartTheme {
+public enum ChartTheme: Equatable {
   case medical
   case consumer
   case professional
