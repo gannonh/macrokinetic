@@ -1,10 +1,14 @@
 ---
-allowed-tools: Read, Write, LS
+description: Update project context documentation to reflect current state of the project.
+allowed-tools: Bash, Read, Write, LS
+argument-hint:
 ---
 
 # Update Context
 
 This command updates the project context documentation in `.claude/context/` to reflect the current state of the project. Run this at the end of each development session to keep context accurate.
+
+**ULTRATHINK**
 
 ## Required Rules
 

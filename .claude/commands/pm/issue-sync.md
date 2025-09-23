@@ -8,10 +8,7 @@ allowed-tools: Read, Write, LS
 
 Push local updates as GitHub issue comments for transparent audit trail.
 
-## Usage
-```
-/pm:issue-sync <issue_number>
-```
+**ULTRATHINK**
 
 ## Required Rules
 
@@ -279,7 +276,7 @@ This task is ready for review and can be closed.
 When updating epic progress:
 1. Count total tasks in epic directory
 2. Count tasks with `status: closed` in frontmatter
-3. Calculate: `progress = (closed_tasks / total_tasks) * 100`
+3. Calculate progress: `python3 -c "print(int(round((closed_tasks / total_tasks) * 100)))"`
 4. Round to nearest integer
 5. Update epic frontmatter only if percentage changed
 

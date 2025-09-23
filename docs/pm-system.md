@@ -50,6 +50,7 @@
 
 ### Maintenance Commands
 - `/pm:validate` - Check system integrity
+- `/pm:validate-tasks` - Validate and fix task file formats
 - `/pm:clean` - Archive completed work
 - `/pm:search` - Search across all content
 
@@ -114,23 +115,24 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 ### 5. Execution Phase
 
 ```bash
-/pm:issue-analyze issue-number  # Analyze an issue to identify parallel work streams for maximum efficiency.
-/pm:issue-start issue-number    # Create issue branch + draft PR + launch agents
-/pm:issue-update issue-number   # Update progress and capture session work & learnings
-/pm:issue-resume issue-number   # Resume work on in-progress issues
-/pm:issue-sync issue-number     # Push progress updates to GitHub
-/context:update                 # Update progress and ropagate learnings
-/pm:pr-merge pr-number          # Mark PR ready → review → merge to main
-/qa:test-quality pr-number      # Run test quality analysis and post as PR comment
-/qa:code-quality pr-number      # Run code quality analysis and post as PR comment
+/pm:issue-analyze [issue-number]  # Analyze an issue to identify parallel work streams for maximum efficiency.
+/pm:validate-tasks [epic-name]  # Validate and fix task file formats
+/pm:issue-start [issue-number]    # Create issue branch + draft PR + launch agents
+/pm:issue-update [issue-number]   # Update progress and capture session work & learnings
+/pm:issue-resume [issue-number]   # Resume work on in-progress issues
+/pm:issue-sync [issue-number]     # Push progress updates to GitHub
+/context:update                 # Update progress and propagate learnings
+/pm:pr-merge [pr-number]        # Mark PR ready → review → merge to main
+/qa:test-quality [pr-number]    # Run test quality analysis and post as PR comment
+/qa:code-quality [pr-number]    # Run code quality analysis and post as PR comment
 /qa:swiftlint                   # Run SwiftLint and SwiftFormat QA workflow with test
-/pm:pr-comments path-or-paste   # Process PR review comments with context-aware discretion
-/pm:pr-merge pr-number          # Resume merge process after reviews
-/pm:issue-close issue-number    # Close issue + update epic progress
-/pm:epic-refresh epic-name      # Update epic progress from tasks
-/context:update                 # Update progress and ropagate learnings
+/pm:pr-comments [path-or-paste] # Process PR review comments with context-aware discretion
+/pm:pr-merge [pr-number]        # Resume merge process after reviews
+/pm:issue-close [issue-number]    # Close issue + update epic progress
+/pm:epic-refresh [epic-name]      # Update epic progress from tasks
+/context:update                 # Update progress and propagate learnings
 /pm:sync                        # Full bidirectional sync with GitHub
-/pm:epic-close epic-name        # Close epic when all issues complete
+/pm:epic-close [epic-name]        # Close epic when all issues complete
 ```
 
 **Issue/Branch/PR Workflow:** Each issue gets its own branch and pull request for focused development and review. Specialized agents implement features while maintaining comprehensive progress tracking and audit trails. Use `issue-update` to capture progress during development and `issue-resume` to continue work after breaks.

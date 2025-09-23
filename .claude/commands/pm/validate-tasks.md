@@ -1,7 +1,7 @@
 ---
 description: Validate and fix task file formats, converting Markdown metadata to YAML frontmatter
 argument-hint: Epic name (optional - validates all epics if not provided)
-allowed-tools: Read, Write, LS
+allowed-tools: Bash, Read, Write, LS
 ---
 
 # Validate Tasks
