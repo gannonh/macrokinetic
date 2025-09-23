@@ -11,6 +11,7 @@ import SwiftData
 /// Data transformation service for converting SwiftData models to Swift Charts compatible structures
 /// Handles concentration timeline data, dose markers, and time period filtering for chart visualizations
 @Observable
+// swiftlint:disable:next type_body_length
 final class ChartDataProcessor {
 
   // MARK: - Initialization
@@ -27,7 +28,8 @@ final class ChartDataProcessor {
 
     init(date: Date, concentration: Double) {
       self.date = date
-      self.concentration = concentration
+      // Sanitize concentration to prevent infinite/NaN values that could crash charts
+      self.concentration = concentration.isFinite ? max(0, concentration) : 0
     }
 
     // Convenience initializer from ConcentrationPoint
@@ -46,7 +48,8 @@ final class ChartDataProcessor {
 
     init(date: Date, amount: Double, isSkipped: Bool = false) {
       self.date = date
-      self.amount = amount
+      // Sanitize amount to prevent invalid dose values
+      self.amount = amount.isFinite ? max(0, amount) : 0
       self.isSkipped = isSkipped
     }
 
@@ -126,7 +129,9 @@ final class ChartDataProcessor {
   func interpolateConcentrationData(_ points: [ConcentrationPoint], intervalHours: Double)
     -> [ConcentrationPoint]
   {
+    // Input validation to prevent crashes
     guard points.count >= 2 else { return points }
+    guard intervalHours > 0 && intervalHours.isFinite else { return points }
 
     let sortedPoints = points.sorted { $0.date < $1.date }
     var interpolatedPoints: [ConcentrationPoint] = []
@@ -140,7 +145,16 @@ final class ChartDataProcessor {
 
       // Calculate interpolated points between current and next
       let timeInterval = nextPoint.date.timeIntervalSince(currentPoint.date)
-      let numberOfInterpolations = Int(timeInterval / (intervalHours * 3600))
+
+      // Skip if time interval is invalid or negative
+      guard timeInterval > 0 && timeInterval.isFinite else { continue }
+
+      let intervalSeconds = intervalHours * 3600
+      let numberOfInterpolations = max(0, Int(timeInterval / intervalSeconds))
+
+      // Only interpolate if we need at least one interpolation point
+      // AND if the gap is larger than the desired interval
+      guard numberOfInterpolations > 0 && timeInterval > intervalSeconds else { continue }
 
       for step in 1..<numberOfInterpolations {
         let interpolationRatio = Double(step) / Double(numberOfInterpolations)

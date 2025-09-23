@@ -246,7 +246,11 @@ struct ChartDataProcessorInterpolationTests {
     #expect(chartPoints.count == concentrationPoints.count)
     #expect(chartPoints.allSatisfy { !$0.id.uuidString.isEmpty })  // Valid identifiers
     #expect(chartPoints.allSatisfy { $0.concentration >= 0 })  // Valid concentrations
-    #expect(chartPoints.allSatisfy { $0.date <= Date().addingTimeInterval(86400) })  // Valid dates
+
+    // Verify dates are reasonable (within our test timeline range)
+    let testStartDate = doses.first!.timestamp
+    let testEndDate = doses.last!.timestamp.addingTimeInterval(7 * 24 * 3600)
+    #expect(chartPoints.allSatisfy { $0.date >= testStartDate && $0.date <= testEndDate })
 
     // Verify data preservation in transformation
     for (index, chartPoint) in chartPoints.enumerated() {
@@ -298,7 +302,6 @@ struct ChartDataProcessorInterpolationTests {
     #expect(optimizedTimeline.allSatisfy { $0.concentration >= 0 })
 
     // Verify important features preserved despite optimization
-    let doseMarkers = processor.transformDosesToMarkerData(largeDoseSet)
     let optimizedMarkers = processor.processLargeDatasetEfficiently(largeDoseSet, maxMarkers: 50)
     #expect(optimizedMarkers.count <= 50)
     #expect(optimizedMarkers.count >= 10)  // Preserve key dose markers

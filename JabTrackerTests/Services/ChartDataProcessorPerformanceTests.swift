@@ -63,10 +63,11 @@ struct ChartDataProcessorPerformanceTests {
 
   /// Generate large concentration dataset for interpolation performance testing
   private func generateLargeConcentrationDataset(pointCount: Int) -> [ConcentrationPoint] {
-    let startDate = Date().addingTimeInterval(-Double(pointCount) * 3600)  // One point per hour
+    // Create sparse data: one point every 8 hours for interpolation testing
+    let startDate = Date().addingTimeInterval(-Double(pointCount) * 8 * 3600)
 
     return (0..<pointCount).map { index in
-      let date = startDate.addingTimeInterval(Double(index) * 3600)
+      let date = startDate.addingTimeInterval(Double(index) * 8 * 3600)  // 8-hour gaps
       // Generate realistic concentration curve with decay and new doses
       let concentration = 2.0 + sin(Double(index) * 0.1) * 1.5 + Double.random(in: -0.2...0.2)
       return ConcentrationPoint(date: date, concentration: max(0, concentration))
