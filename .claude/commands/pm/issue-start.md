@@ -69,6 +69,12 @@ else
    issue_title=$(gh issue view $ARGUMENTS --json title -q .title)
    issue_body=$(gh issue view $ARGUMENTS --json body -q .body)
 
+   # Create initial commit to enable PR creation
+   echo "Issue #$ARGUMENTS: Initialize branch for issue tracking" > init.md
+   git add init.md
+   git commit -m "Issue #$ARGUMENTS: Initialize branch for issue tracking"
+   git push
+
    # Create comprehensive PR description
    pr_body="## Issue #$ARGUMENTS: $issue_title
 
