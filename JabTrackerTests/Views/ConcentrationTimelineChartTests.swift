@@ -119,27 +119,47 @@ struct ConcentrationTimelineChartTests {
 
   // MARK: - Time Period Selection Tests
 
-  @Test("ConcentrationTimelineChart updates time period correctly")
+  @Test("ConcentrationTimelineChart processes different time ranges correctly")
   func testTimePeriodSelection() async {
-    // GIVEN: Chart with initial configuration
-    let dataset = createTestChartDataset()
-    var chart = ConcentrationTimelineChart(dataset: dataset)
+    // GIVEN: Chart dataset with different time range configurations
+    let baseDataset = createTestChartDataset()
 
-    // WHEN: Updating time period to last month
-    chart.updateTimePeriod(.lastMonth)
+    // WHEN: Creating chart with last month configuration
+    let lastMonthConfig = baseDataset.configuration.withTimeRange(.lastMonth)
+    let lastMonthDataset = ConcentrationChartDataset(
+      concentrationCurves: baseDataset.concentrationCurves,
+      doseMarkers: baseDataset.doseMarkers,
+      configuration: lastMonthConfig
+    )
+    let lastMonthChart = ConcentrationTimelineChart(dataset: lastMonthDataset)
 
-    // THEN: Chart configuration should be updated
-    #expect(chart.configuration.timeRange == .lastMonth, "Should update to last month time range")
+    // THEN: Chart should use last month time range
+    #expect(
+      lastMonthChart.configuration.timeRange == .lastMonth, "Should use last month time range")
 
-    // WHEN: Updating to custom time range
+    // WHEN: Creating chart with custom time range
     let startDate = Date().addingTimeInterval(-30 * 24 * 3600)
     let endDate = Date()
-    chart.updateTimePeriod(.custom(startDate: startDate, endDate: endDate))
+    let customConfig = baseDataset.configuration.withTimeRange(
+      .custom(startDate: startDate, endDate: endDate))
+    let customDataset = ConcentrationChartDataset(
+      concentrationCurves: baseDataset.concentrationCurves,
+      doseMarkers: baseDataset.doseMarkers,
+      configuration: customConfig
+    )
+    let customChart = ConcentrationTimelineChart(dataset: customDataset)
 
-    // THEN: Custom time range should be applied
+    // THEN: Chart should use custom time range
     #expect(
-      chart.configuration.timeRange == .custom(startDate: startDate, endDate: endDate),
+      customChart.configuration.timeRange == .custom(startDate: startDate, endDate: endDate),
       "Should use custom date range")
+
+    // THEN: Different time ranges should filter data differently
+    let automaticPoints = baseDataset.configuration.timeRange.dateRange()
+    let lastMonthPoints = lastMonthChart.configuration.timeRange.dateRange()
+    #expect(
+      automaticPoints.start != lastMonthPoints.start,
+      "Different time ranges should have different start dates")
   }
 
   // MARK: - Accessibility Tests
@@ -217,10 +237,22 @@ struct ConcentrationTimelineChartTests {
       medication: "semaglutide"
     )
 
+    // Use a configuration with longer time range to capture all test data
+    let largeTimeRangeConfig = ConcentrationChartConfiguration(
+      timeRange: .lastYear,  // Extended time range to capture all 1000 hours of test data
+      concentrationRange: .automatic,
+      interpolationSettings: .pharmacokinetic,
+      theme: .medical,
+      gridSettings: .default,
+      axisSettings: .default,
+      interactionSettings: .default,
+      animationSettings: .fast
+    )
+
     let largeDataset = ConcentrationChartDataset(
       concentrationCurves: [largeCurve],
       doseMarkers: [],
-      configuration: .default
+      configuration: largeTimeRangeConfig
     )
 
     // WHEN: Processing large dataset
