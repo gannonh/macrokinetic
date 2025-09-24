@@ -1,47 +1,53 @@
- Plan to Complete Issue #56: Stream D + E2E Tests
-
-     Stream D: Add Date Selection to QuickDoseEntry
-
-     Files to modify:
-     1. QuickDoseEntry.swift - Add DatePicker for date selection
-     2. QuickDoseViewModel.swift - Add separate date/time properties
-     3. QuickDoseEntryTests.swift - Test date selection functionality
-
-     Implementation details:
-     - Add DatePicker with .datePickerStyle(.compact) for date selection
-     - Keep current time picker for time selection
-     - Default to Date() (now) so no extra clicks needed for current logging
-     - Prevent future dates beyond today
-     - Allow reasonable past dates (e.g., 30 days back)
-     - Display both date and time in the UI
-
-     Complete E2E Tests Implementation
-
-     Files to implement:
-     1. ConcentrationTimelineChartUITests.swift - 5 actual E2E tests
-     2. ChartControlsUITests.swift - 5 actual E2E tests
-
-     E2E Testing Strategy:
-     1. Use debug-first approach for all element targeting:
-     // ALWAYS start with debugging the accessibility hierarchy
-     TestUtilities.debugElements(in: app, containing: "chart")
-     2. Create historical test data using new date picker
-     3. Navigate to Analytics tab and verify chart rendering
-     4. Test gestures, time periods, accessibility, performance
-
-     Key E2E Test Cases:
-     - testConcentrationTimelineDisplaysCorrectly() - Verify chart renders with dose data over time
-     - testInteractiveChartFeatures() - Test zoom/pan gestures work
-     - testTimePeriodSelector() - Test 7d/30d/90d/1y selection changes chart
-     - testChartAccessibilityFeatures() - Verify VoiceOver describes trends
-     - testChartPerformanceWithLargeDatasets() - Test with 1+ year of dose data
-
-     Testing Pattern:
-     1. Use new date picker to create doses spanning multiple weeks
-     2. Navigate to Analytics tab
-     3. Debug element hierarchy first: TestUtilities.debugElements(in: app, containing: "chart")
-     4. Read raw logs: cat logs/latest/raw_output.txt | grep "DEBUG"
-     5. Use actual element types found (likely CollectionViews, not Tables)
-     6. Test chart interactions and verify concentration calculations
-
-     This completes Stream C properly with working E2E tests AND adds the critical date selection feature for both users and testing.
+ Implementation Plan: Fix Duplicate Chart Label & Complete E2E Tests                                                                            │ │
+│ │                                                                                                                                                │ │
+│ │ 1. Fix Duplicate "Concentration Timeline" Labels ✋                                                                                             │ │
+│ │                                                                                                                                                │ │
+│ │ Problem: Two identical "Concentration Timeline" labels appear stacked on the Analytics tab                                                     │ │
+│ │ - First label: AnalyticsView section header (ContentView.swift:241)                                                                            │ │
+│ │ - Second label: ConcentrationTimelineChart internal header (displays dataset.metadata.title)                                                   │ │
+│ │                                                                                                                                                │ │
+│ │ Solution: Remove the AnalyticsView section header since the chart component already provides its own title                                     │ │
+│ │ - Remove lines 241-243 in ContentView.swift: Text("Concentration Timeline") section header                                                     │ │
+│ │ - Keep the chart's internal header which provides proper context within the chart component                                                    │ │
+│ │                                                                                                                                                │ │
+│ │ 2. Complete E2E Tests Implementation 🧪                                                                                                        │ │
+│ │                                                                                                                                                │ │
+│ │ Target files with stubbed tests:                                                                                                               │ │
+│ │                                                                                                                                                │ │
+│ │ ChartControlsUITests.swift (4 remaining tests)                                                                                                 │ │
+│ │                                                                                                                                                │ │
+│ │ - testChartControlsDisplayCorrectState() - Test control visual feedback and state changes                                                      │ │
+│ │ - testChartControlsAccessibility() - Test accessibility labels, hints, and announcements                                                       │ │
+│ │ - testMultipleTimePeriodSelection() - Test sequential time period selection behavior                                                           │ │
+│ │ - testDefaultTimePeriodSelection() - Test default 30d selection on chart load                                                                  │ │
+│ │                                                                                                                                                │ │
+│ │ ConcentrationTimelineChartUITests.swift (5 remaining tests)                                                                                    │ │
+│ │                                                                                                                                                │ │
+│ │ - testConcentrationTimelineDisplaysCorrectly() - Test basic chart rendering with concentration line                                            │ │
+│ │ - testInteractiveChartFeatures() - Test gesture interactions (zoom, pan)                                                                       │ │
+│ │ - testTimePeriodSelector() - Test time period changes (7d, 30d, 90d, 1y)                                                                       │ │
+│ │ - testChartAccessibilityFeatures() - Test VoiceOver navigation and announcements                                                               │ │
+│ │ - testChartPerformanceWithLargeDatasets() - Test 1+ year dataset performance                                                                   │ │
+│ │                                                                                                                                                │ │
+│ │ 3. Testing Approach 🔧                                                                                                                         │ │
+│ │                                                                                                                                                │ │
+│ │ Debug-first methodology:                                                                                                                       │ │
+│ │ - Use TestUtilities.debugElements() to identify actual element types and accessibility identifiers                                             │ │
+│ │ - Leverage existing TestUtilities.createHistoricalChartData() for test data setup                                                              │ │
+│ │ - Target accessibility identifier: "analytics-concentration-chart" (confirmed working)                                                         │ │
+│ │ - Follow established patterns from working Stream D implementation                                                                             │ │
+│ │                                                                                                                                                │ │
+│ │ 4. Technical Considerations 📋                                                                                                                 │ │
+│ │                                                                                                                                                │ │
+│ │ Chart Infrastructure Status:                                                                                                                   │ │
+│ │ - ✅ Chart displays concentration timeline with multi-week data                                                                                 │ │
+│ │ - ✅ Historical dose creation working (0, 7, 14, 21, 28 days ago)                                                                               │ │
+│ │ - ✅ DatePicker calendar dismissal resolved                                                                                                     │ │
+│ │ - ✅ Element targeting patterns established                                                                                                     │ │
+│ │                                                                                                                                                │ │
+│ │ Current Branch: issue/56-implement-concentrationtimelinechart                                                                                  │ │
+│ │ Testing Strategy: Follow TDD with immediate simulator feedback                                                                                 │ │
+│ │ Expected Timeline: ~4-6 hours for comprehensive E2E test implementation                                                                        │ │
+│ │                                                                                                                                                │ │
+│ │ This plan addresses both the immediate UI improvement (duplicate label fix) and completes the remaining acceptance criteria validation through │ │
+│ │  comprehensive E2E testing.   
