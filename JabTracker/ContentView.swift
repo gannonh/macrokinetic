@@ -238,14 +238,9 @@ struct AnalyticsView: View {
   private func concentrationChartSection(for user: User, profiles: [MedicationProfile]) -> some View
   {
     VStack(spacing: 16) {
-      Text("Concentration Timeline")
-        .font(.headline)
-        .frame(maxWidth: .infinity, alignment: .leading)
-
       // Generate chart dataset from user data
       if let chartDataset = generateChartDataset(for: user, profiles: profiles) {
         ConcentrationTimelineChart(dataset: chartDataset)
-          .accessibilityIdentifier("analytics-concentration-chart")
       } else {
         chartLoadingView()
       }
