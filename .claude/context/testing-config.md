@@ -249,7 +249,8 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 
 Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 
- 1. Stub E2E acceptance test to define user-facing success (criteria only)
+### 1. Stub E2E Acceptance Criteria (All Tests)
+First, create stub acceptance tests to define user-facing success criteria:
 
 ```swift
  // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
@@ -261,13 +262,58 @@ Each outer layer defines the acceptance criteria and contracts for the inner lay
       }
 ```
 
+### 2. Unit & Integration Test Development
 2. Write failing unit tests that test isolated business logic and component contracts
 3. Implement minimal code to satisfy the unit tests
 4. Run unit tests to verify correctness
 5. Write failing integration tests that verify component interactions
 6. Implement minimal code to satisfy the integration tests
 7. Run integration tests to verify correctness
-8. Write full E2E tests that verify the entire user flow
+
+### 3. Iterative E2E Test Implementation (CRITICAL PROCESS)
+
+**⚠️ NEVER write all E2E tests at once before running them - this causes major problems.**
+
+Follow this strict iterative process for E2E test development:
+
+#### Step-by-Step E2E Implementation Process:
+1. **Stub acceptance criteria** for all E2E tests to validate the feature (already done in step 1)
+2. **Pick ONE test** to implement first
+3. **Start with debug utilities** - Use `TestUtilities.debugElements()` to output elements hierarchy
+4. **Write the single test** - Implement only one complete test method
+5. **Run and verify** - `./scripts/test.sh ui 1 YourTestClass/testSpecificMethod`
+6. **Refactor if needed** - Fix element targeting, timing, or logic issues
+7. **Commit the test** - Save working test before moving on
+8. **Move to next test** - Repeat process for the next test method
+
+#### Debug-First E2E Pattern (Essential):
+```swift
+func testSpecificFeature() throws {
+    // Step 1: ALWAYS start with debugging elements
+    TestUtilities.debugElements(in: app, containing: "your-feature")
+
+    // Step 2: Read debug output from logs
+    // cat logs/latest/raw_output.txt | grep "DEBUG"
+
+    // Step 3: Write test based on actual element types found
+    // (not assumptions about SwiftUI → accessibility mapping)
+
+    // Step 4: Run this single test to verify it works
+    // ./scripts/test.sh ui 1 YourTestClass/testSpecificFeature
+}
+```
+
+#### Common E2E Implementation Mistakes:
+- ❌ Writing 5+ tests before running any
+- ❌ Assuming element types without debugging first
+- ❌ Batch testing multiple new methods
+- ❌ Skipping debug utilities and guessing selectors
+
+#### Correct E2E Development Flow:
+- ✅ One test at a time, debug-first approach
+- ✅ Run each test individually: `./scripts/test.sh ui 1 TestClass/testMethod`
+- ✅ Commit working tests before adding new ones
+- ✅ Use `TestUtilities.debugElements()` liberally during development
 ---
 
 ## E2E Testing Element Targeting (CRITICAL)

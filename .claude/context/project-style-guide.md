@@ -297,6 +297,43 @@ TestUtilities.clearAndEnterText(in: searchField, newText: "search") // Clear and
 4. **Remove debug code** → Clean up after fixing selector
 5. **Document learning** → Add findings to style guide for future reference
 
+### Iterative E2E Test Development Process
+
+**⚠️ CRITICAL: Never implement multiple E2E tests simultaneously - this leads to debugging chaos.**
+
+#### Required E2E Implementation Pattern:
+```swift
+// 1. FIRST: Create all test stubs with acceptance criteria
+func testFeatureA() throws {
+    // GIVEN: Setup conditions
+    // WHEN: User performs action
+    // THEN: Expected outcomes
+}
+
+func testFeatureB() throws {
+    // GIVEN: Setup conditions
+    // WHEN: User performs different action
+    // THEN: Expected outcomes
+}
+
+// 2. IMPLEMENT ONE TEST AT A TIME:
+```
+
+#### Step-by-Step Implementation (Per Test):
+1. **Pick single test** - Choose one test method to implement
+2. **Start with debug** - Add `TestUtilities.debugElements()` first
+3. **Write full test** - Complete the entire test method
+4. **Run individual test** - `./scripts/test.sh ui 1 TestClass/testSpecificMethod`
+5. **Fix issues** - Debug element targeting, timing, assertions
+6. **Commit test** - Save working test before moving on
+7. **Next test** - Repeat process for next test method
+
+#### E2E Development Anti-Patterns (AVOID):
+- ❌ **Batch Writing**: Implementing 3+ tests before running any
+- ❌ **Assumption-Based Targeting**: Guessing element types without debug output
+- ❌ **Multi-Test Debugging**: Trying to fix multiple broken tests simultaneously
+- ❌ **Partial Implementation**: Writing incomplete tests "to be finished later"
+
 #### Performance Optimization for E2E Tests
 ```swift
 // ❌ SLOW: Conditional waits for elements that may not exist
