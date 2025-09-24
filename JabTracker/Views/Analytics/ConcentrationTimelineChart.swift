@@ -58,7 +58,7 @@ struct ConcentrationTimelineChart: View {
     let timeRange = configuration.timeRange.displayName
     let zoomInfo = currentZoomLevel != 1.0 ? ", zoomed to \(Int(currentZoomLevel * 100))%" : ""
     return
-      "Chart contains \(pointCount) points and \(markerCount) markers for \(timeRange)\(zoomInfo)"
+      "Chart contains \(pointCount) concentration points and \(markerCount) dose markers for \(timeRange)\(zoomInfo)"
   }
 
   /// Detailed accessibility description for VoiceOver users
