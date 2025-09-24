@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-23T14:14:43Z
-version: 1.6
+last_updated: 2025-09-24T13:21:27Z
+version: 1.7
 author: Claude Code PM System
 ---
 
@@ -282,6 +282,12 @@ struct UserAnalyticsSummary {
 - **Relationship Setup**: Insert parent entities (User, MedicationProfile) before children (Dose)
 - **Test Isolation**: Use `DataController.testContainer().container` with CloudKit disabled
 - **Performance Testing**: Validate <1 second execution time for comprehensive analytics
+
+### SwiftUI Calendar & Modal Testing Patterns (Issue #56)
+- **SwiftUI Calendar Modal Dismissal**: Complex calendar popover dismissal solved by tapping form elements (Notes field) below the calendar - navigation bar tapping fails due to modal overlay coverage
+- **XCUITest Calendar Interaction**: SwiftUI DatePicker calendar requires element-based dismissal rather than coordinate-based tapping; successful pattern: tap accessible form fields outside calendar bounds
+- **Historical Data Creation Patterns**: `createHistoricalChartData()` demonstrates robust pattern for E2E test data with date calculation, calendar navigation, and dose creation across multiple time periods
+- **SwiftLint Test Complexity Management**: Medical test functions require `// swiftlint:disable cyclomatic_complexity` blocks for comprehensive E2E scenarios while maintaining code quality standards
 
 ## Parallel Development Patterns (Issue #55)
 

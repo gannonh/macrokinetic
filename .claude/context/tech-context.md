@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-23T14:14:43Z
-version: 1.6
+last_updated: 2025-09-24T13:21:27Z
+version: 1.7
 author: Claude Code PM System
 ---
 
@@ -163,7 +163,24 @@ author: Claude Code PM System
 - **Medical Test Scenarios**: Edge cases in medical calculations require comprehensive test data patterns
 - **Vulnerability Testing**: Security testing requires intentionally invalid data to verify crash prevention
 
+## DatePicker & Calendar Integration (Issue #56)
+
+### SwiftUI DatePicker Implementation Patterns
+- **Range-Restricted DatePicker**: `(Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...Date()` enables historical dose entry with safe unwrapping
+- **Modal Calendar Interaction**: DatePicker calendar requires element-based dismissal through accessible form fields rather than coordinate-based tapping
+- **Historical Data Entry**: 30-day historical dose entry enables patients to catch up on missed doses or correct entry errors
+
+### XCUITest Advanced Patterns
+- **Element Targeting Debug-First**: `TestUtilities.debugElements()` essential for calendar interaction discovery - revealed navigation bar inaccessibility during modal presentation
+- **Calendar Navigation Testing**: Complex E2E test data creation with date calculation, calendar navigation, and dose creation across multiple time periods
+- **E2E Test Performance**: Historical dose creation with calendar navigation achieves acceptable performance (~85 seconds for 5 doses) for comprehensive medical app validation
+
+### SwiftLint Integration Enhancements
+- **Pre-commit Integration**: Pre-commit hooks enable catch-and-fix workflow for violations (force unwrapping, for-where, cyclomatic complexity) during implementation
+- **Medical Test Complexity**: Medical test functions require `// swiftlint:disable cyclomatic_complexity` blocks for comprehensive E2E scenarios while maintaining code quality standards
+
 ## Update History
+- 2025-09-24T13:21:27Z: Added DatePicker & Calendar Integration section with SwiftUI DatePicker patterns, XCUITest calendar interaction, and SwiftLint integration enhancements from Issue #56
 - 2025-09-23T14:14:43Z: Added Security & Crash Prevention section with Swift Charts security patterns, SwiftLint management, and testing patterns from Issue #55 security fixes
 - 2025-09-23T13:29:15Z: Added Medical Visualization section with Swift Charts integration patterns from Issue #55, XcodeGen project management insights
 - 2025-09-16T22:39:56Z: Added SwiftUI calendar integration patterns from Issue #42, XCUIElementQuery limitations
