@@ -14,465 +14,465 @@ import Testing
 @Suite("ChartDataProcessor Interpolation Tests")
 struct ChartDataProcessorInterpolationTests {
 
-  // MARK: - Test Setup
+    // MARK: - Test Setup
 
-  /// Create test container with in-memory storage
-  private func createTestContainer() -> ModelContainer {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-    do {
-      return try ModelContainer(
-        for: User.self, Dose.self, MedicationProfile.self, configurations: config)
-    } catch {
-      Issue.record("Failed to create test container: \(error)")
-      fatalError("Test container creation failed")
-    }
-  }
-
-  /// Create test user with medication profile for testing
-  @MainActor
-  private func createTestUser(in container: ModelContainer) -> (User, MedicationProfile) {
-    let context = container.mainContext
-
-    let user = User(
-      email: "test@interpolation.com",
-      name: "Interpolation Test User",
-      appleUserId: "test-user-interpolation"
-    )
-    context.insert(user)
-
-    let profile = MedicationProfile(
-      genericName: "semaglutide",
-      brandName: "Ozempic",
-      currentDose: 1.0,
-      startDate: Date().addingTimeInterval(-30 * 24 * 3600),  // 30 days ago
-      medicationType: "semaglutide"
-    )
-    profile.user = user
-    context.insert(profile)
-
-    do {
-      try context.save()
-    } catch {
-      Issue.record("Failed to save context: \(error)")
-    }
-    return (user, profile)
-  }
-
-  /// Create test doses for concentration timeline
-  @MainActor
-  private func createTestDoses(
-    user: User, medication: MedicationProfile, in container: ModelContainer
-  ) -> [Dose] {
-    let context = container.mainContext
-    let baseDate = Date().addingTimeInterval(-7 * 24 * 3600)  // 7 days ago
-
-    var doses: [Dose] = []
-
-    // Create doses every 24 hours for 7 days (weekly semaglutide pattern)
-    for dayOffset in 0..<7 {
-      let doseDate = baseDate.addingTimeInterval(Double(dayOffset) * 24 * 3600)
-      let dose = Dose(
-        amount: 1.0,
-        timestamp: doseDate,
-        user: user,
-        medication: medication
-      )
-      context.insert(dose)
-      doses.append(dose)
+    /// Create test container with in-memory storage
+    private func createTestContainer() -> ModelContainer {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        do {
+            return try ModelContainer(
+                for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+        } catch {
+            Issue.record("Failed to create test container: \(error)")
+            fatalError("Test container creation failed")
+        }
     }
 
-    do {
-      try context.save()
-    } catch {
-      Issue.record("Failed to save context: \(error)")
-    }
-    return doses
-  }
+    /// Create test user with medication profile for testing
+    @MainActor
+    private func createTestUser(in container: ModelContainer) -> (User, MedicationProfile) {
+        let context = container.mainContext
 
-  // MARK: - Pharmacokinetic Interpolation Tests
+        let user = User(
+            email: "test@interpolation.com",
+            name: "Interpolation Test User",
+            appleUserId: "test-user-interpolation"
+        )
+        context.insert(user)
 
-  @Test("Exponential decay interpolation generates smooth concentration curves")
-  @MainActor
-  func testExponentialDecayInterpolation() async throws {
-    let container = createTestContainer()
-    let (user, medication) = createTestUser(in: container)
-    let doses = createTestDoses(user: user, medication: medication, in: container)
+        let profile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 1.0,
+            startDate: Date().addingTimeInterval(-30 * 24 * 3600),  // 30 days ago
+            medicationType: "semaglutide"
+        )
+        profile.user = user
+        context.insert(profile)
 
-    let processor = ChartDataProcessor()
-    _ = PharmacokineticsEngine()
-
-    // Generate concentration points from doses using PK engine
-    let startDate = doses.first!.timestamp
-    let endDate = doses.last!.timestamp.addingTimeInterval(7 * 24 * 3600)  // 7 days after last dose
-
-    let concentrationPoints = processor.generateConcentrationTimeline(
-      doses: doses,
-      medication: Medication.semaglutide,
-      startDate: startDate,
-      endDate: endDate,
-      intervalHours: 6  // 6-hour intervals for smooth curves
-    )
-
-    // Verify that interpolation creates smooth exponential decay
-    #expect(concentrationPoints.count > doses.count * 4)  // More points than original doses
-    #expect(concentrationPoints.allSatisfy { $0.concentration >= 0 })  // No negative concentrations
-
-    // Test exponential decay pattern between doses
-    let firstDoseTime = doses[0].timestamp
-    let secondDoseTime = doses[1].timestamp
-
-    let pointsBetweenFirstTwoDoses = concentrationPoints.filter { point in
-      point.date > firstDoseTime && point.date < secondDoseTime
+        do {
+            try context.save()
+        } catch {
+            Issue.record("Failed to save context: \(error)")
+        }
+        return (user, profile)
     }
 
-    // Verify concentrations decrease exponentially between doses
-    let concentrations = pointsBetweenFirstTwoDoses.map { $0.concentration }
-    for index in 1..<concentrations.count {
-      #expect(
-        concentrations[index] <= concentrations[index - 1], "Concentration should decay over time")
-    }
-  }
+    /// Create test doses for concentration timeline
+    @MainActor
+    private func createTestDoses(
+        user: User, medication: MedicationProfile, in container: ModelContainer
+    ) -> [Dose] {
+        let context = container.mainContext
+        let baseDate = Date().addingTimeInterval(-7 * 24 * 3600)  // 7 days ago
 
-  @Test("Handle missing data points with graceful interpolation")
-  @MainActor
-  func testMissingDataPointsInterpolation() async throws {
-    let container = createTestContainer()
-    let (user, medication) = createTestUser(in: container)
+        var doses: [Dose] = []
 
-    // Create sparse doses with gaps
-    let context = container.mainContext
-    let baseDate = Date().addingTimeInterval(-14 * 24 * 3600)  // 14 days ago
+        // Create doses every 24 hours for 7 days (weekly semaglutide pattern)
+        for dayOffset in 0..<7 {
+            let doseDate = baseDate.addingTimeInterval(Double(dayOffset) * 24 * 3600)
+            let dose = Dose(
+                amount: 1.0,
+                timestamp: doseDate,
+                user: user,
+                medication: medication
+            )
+            context.insert(dose)
+            doses.append(dose)
+        }
 
-    let sparseDoses = [
-      Dose(amount: 1.0, timestamp: baseDate, user: user, medication: medication),
-      Dose(
-        amount: 1.0, timestamp: baseDate.addingTimeInterval(7 * 24 * 3600), user: user,
-        medication: medication),  // 7 days later
-      Dose(
-        amount: 1.0, timestamp: baseDate.addingTimeInterval(14 * 24 * 3600), user: user,
-        medication: medication),  // 14 days later
-    ]
-
-    for dose in sparseDoses {
-      context.insert(dose)
-    }
-    do {
-      try context.save()
-    } catch {
-      Issue.record("Failed to save context: \(error)")
+        do {
+            try context.save()
+        } catch {
+            Issue.record("Failed to save context: \(error)")
+        }
+        return doses
     }
 
-    let processor = ChartDataProcessor()
+    // MARK: - Pharmacokinetic Interpolation Tests
 
-    let interpolatedTimeline = processor.generateConcentrationTimeline(
-      doses: sparseDoses,
-      medication: Medication.semaglutide,
-      startDate: baseDate,
-      endDate: baseDate.addingTimeInterval(21 * 24 * 3600),
-      intervalHours: 12  // 12-hour intervals
-    )
+    @Test("Exponential decay interpolation generates smooth concentration curves")
+    @MainActor
+    func testExponentialDecayInterpolation() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
+        let doses = createTestDoses(user: user, medication: medication, in: container)
 
-    // Verify interpolation fills gaps appropriately
-    #expect(interpolatedTimeline.count > sparseDoses.count * 10)  // Much denser than sparse input
-    #expect(interpolatedTimeline.allSatisfy { $0.concentration >= 0 })
+        let processor = ChartDataProcessor()
+        _ = PharmacokineticsEngine()
 
-    // Verify concentration accumulation at dose times
-    let doseConcentrations = interpolatedTimeline.filter { point in
-      sparseDoses.contains { abs(point.date.timeIntervalSince($0.timestamp)) < 3600 }
-    }
-    #expect(doseConcentrations.count == sparseDoses.count)
-  }
+        // Generate concentration points from doses using PK engine
+        let startDate = doses.first!.timestamp
+        let endDate = doses.last!.timestamp.addingTimeInterval(7 * 24 * 3600)  // 7 days after last dose
 
-  @Test("Irregular dose intervals maintain accurate concentration modeling")
-  @MainActor
-  func testIrregularDoseIntervals() async throws {
-    let container = createTestContainer()
-    let (user, medication) = createTestUser(in: container)
+        let concentrationPoints = processor.generateConcentrationTimeline(
+            doses: doses,
+            medication: Medication.semaglutide,
+            startDate: startDate,
+            endDate: endDate,
+            intervalHours: 6  // 6-hour intervals for smooth curves
+        )
 
-    // Create irregular dose pattern (missed doses, early doses)
-    let context = container.mainContext
-    let baseDate = Date().addingTimeInterval(-21 * 24 * 3600)  // 21 days ago
+        // Verify that interpolation creates smooth exponential decay
+        #expect(concentrationPoints.count > doses.count * 4)  // More points than original doses
+        #expect(concentrationPoints.allSatisfy { $0.concentration >= 0 })  // No negative concentrations
 
-    let irregularDoses = [
-      Dose(amount: 1.0, timestamp: baseDate, user: user, medication: medication),  // Day 0
-      Dose(
-        amount: 1.0, timestamp: baseDate.addingTimeInterval(5 * 24 * 3600), user: user,
-        medication: medication),  // Day 5 (2 days early)
-      // Missing dose on day 12
-      Dose(
-        amount: 1.0, timestamp: baseDate.addingTimeInterval(14 * 24 * 3600), user: user,
-        medication: medication),  // Day 14
-      Dose(
-        amount: 1.0, timestamp: baseDate.addingTimeInterval(22 * 24 * 3600), user: user,
-        medication: medication),  // Day 22 (1 day late)
-    ]
+        // Test exponential decay pattern between doses
+        let firstDoseTime = doses[0].timestamp
+        let secondDoseTime = doses[1].timestamp
 
-    for dose in irregularDoses {
-      context.insert(dose)
-    }
-    do {
-      try context.save()
-    } catch {
-      Issue.record("Failed to save context: \(error)")
+        let pointsBetweenFirstTwoDoses = concentrationPoints.filter { point in
+            point.date > firstDoseTime && point.date < secondDoseTime
+        }
+
+        // Verify concentrations decrease exponentially between doses
+        let concentrations = pointsBetweenFirstTwoDoses.map { $0.concentration }
+        for index in 1..<concentrations.count {
+            #expect(
+                concentrations[index] <= concentrations[index - 1], "Concentration should decay over time")
+        }
     }
 
-    let processor = ChartDataProcessor()
+    @Test("Handle missing data points with graceful interpolation")
+    @MainActor
+    func testMissingDataPointsInterpolation() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
 
-    let timeline = processor.generateConcentrationTimeline(
-      doses: irregularDoses,
-      medication: Medication.semaglutide,
-      startDate: baseDate,
-      endDate: baseDate.addingTimeInterval(28 * 24 * 3600),
-      intervalHours: 8
-    )
+        // Create sparse doses with gaps
+        let context = container.mainContext
+        let baseDate = Date().addingTimeInterval(-14 * 24 * 3600)  // 14 days ago
 
-    // Verify handling of irregular intervals
-    #expect(timeline.count > 60)  // Dense timeline despite irregular dosing
-    #expect(timeline.allSatisfy { $0.concentration >= 0 })
+        let sparseDoses = [
+            Dose(amount: 1.0, timestamp: baseDate, user: user, medication: medication),
+            Dose(
+                amount: 1.0, timestamp: baseDate.addingTimeInterval(7 * 24 * 3600), user: user,
+                medication: medication),  // 7 days later
+            Dose(
+                amount: 1.0, timestamp: baseDate.addingTimeInterval(14 * 24 * 3600), user: user,
+                medication: medication),  // 14 days later
+        ]
 
-    // Check for concentration peaks at irregular dose times
-    let peakTimes = irregularDoses.map { $0.timestamp }
-    for peakTime in peakTimes {
-      let nearbyPoints = timeline.filter { point in
-        abs(point.date.timeIntervalSince(peakTime)) < 4 * 3600  // Within 4 hours
-      }
-      #expect(!nearbyPoints.isEmpty, "Should have concentration data near dose times")
-    }
-  }
+        for dose in sparseDoses {
+            context.insert(dose)
+        }
+        do {
+            try context.save()
+        } catch {
+            Issue.record("Failed to save context: \(error)")
+        }
 
-  // MARK: - Swift Charts Data Structure Tests
+        let processor = ChartDataProcessor()
 
-  @Test("Transform concentration timeline to Swift Charts point format")
-  @MainActor
-  func testSwiftChartsDataTransformation() async throws {
-    let container = createTestContainer()
-    let (user, medication) = createTestUser(in: container)
-    let doses = createTestDoses(user: user, medication: medication, in: container)
+        let interpolatedTimeline = processor.generateConcentrationTimeline(
+            doses: sparseDoses,
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: baseDate.addingTimeInterval(21 * 24 * 3600),
+            intervalHours: 12  // 12-hour intervals
+        )
 
-    let processor = ChartDataProcessor()
+        // Verify interpolation fills gaps appropriately
+        #expect(interpolatedTimeline.count > sparseDoses.count * 10)  // Much denser than sparse input
+        #expect(interpolatedTimeline.allSatisfy { $0.concentration >= 0 })
 
-    // Generate concentration timeline
-    let concentrationPoints = processor.generateConcentrationTimeline(
-      doses: doses,
-      medication: Medication.semaglutide,
-      startDate: doses.first!.timestamp,
-      endDate: doses.last!.timestamp.addingTimeInterval(7 * 24 * 3600),
-      intervalHours: 4
-    )
-
-    // Transform to Swift Charts format
-    let chartPoints = processor.transformConcentrationToChartData(concentrationPoints)
-
-    // Verify Swift Charts compatibility
-    #expect(chartPoints.count == concentrationPoints.count)
-    #expect(chartPoints.allSatisfy { !$0.id.uuidString.isEmpty })  // Valid identifiers
-    #expect(chartPoints.allSatisfy { $0.concentration >= 0 })  // Valid concentrations
-
-    // Verify dates are reasonable (within our test timeline range)
-    let testStartDate = doses.first!.timestamp
-    let testEndDate = doses.last!.timestamp.addingTimeInterval(7 * 24 * 3600)
-    #expect(chartPoints.allSatisfy { $0.date >= testStartDate && $0.date <= testEndDate })
-
-    // Verify data preservation in transformation
-    for (index, chartPoint) in chartPoints.enumerated() {
-      let originalPoint = concentrationPoints[index]
-      #expect(chartPoint.date == originalPoint.date)
-      #expect(chartPoint.concentration == originalPoint.concentration)
-    }
-  }
-
-  @Test("Memory-efficient processing for large concentration datasets")
-  @MainActor
-  func testMemoryEfficientConcentrationProcessing() async throws {
-    let container = createTestContainer()
-    let (user, medication) = createTestUser(in: container)
-
-    // Create large dose dataset (3 months of daily dosing)
-    let context = container.mainContext
-    let baseDate = Date().addingTimeInterval(-90 * 24 * 3600)  // 90 days ago
-
-    var largeDoseSet: [Dose] = []
-    for dayOffset in 0..<90 {
-      let doseDate = baseDate.addingTimeInterval(Double(dayOffset) * 24 * 3600)
-      let dose = Dose(
-        amount: 1.0,
-        timestamp: doseDate,
-        user: user,
-        medication: medication
-      )
-      context.insert(dose)
-      largeDoseSet.append(dose)
-    }
-    do {
-      try context.save()
-    } catch {
-      Issue.record("Failed to save context: \(error)")
+        // Verify concentration accumulation at dose times
+        let doseConcentrations = interpolatedTimeline.filter { point in
+            sparseDoses.contains { abs(point.date.timeIntervalSince($0.timestamp)) < 3600 }
+        }
+        #expect(doseConcentrations.count == sparseDoses.count)
     }
 
-    let processor = ChartDataProcessor()
+    @Test("Irregular dose intervals maintain accurate concentration modeling")
+    @MainActor
+    func testIrregularDoseIntervals() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
 
-    // Test memory-efficient processing with density optimization
-    let optimizedTimeline = processor.generateConcentrationTimelineOptimized(
-      doses: largeDoseSet,
-      medication: Medication.semaglutide,
-      startDate: baseDate,
-      endDate: Date(),
-      maxPoints: 200,  // Limit for chart performance
-      adaptiveIntervals: true
-    )
+        // Create irregular dose pattern (missed doses, early doses)
+        let context = container.mainContext
+        let baseDate = Date().addingTimeInterval(-21 * 24 * 3600)  // 21 days ago
 
-    // Verify memory efficiency
-    #expect(optimizedTimeline.count <= 200)  // Respects max points limit
-    #expect(optimizedTimeline.count >= 50)  // Still provides meaningful resolution
-    #expect(optimizedTimeline.allSatisfy { $0.concentration >= 0 })
+        let irregularDoses = [
+            Dose(amount: 1.0, timestamp: baseDate, user: user, medication: medication),  // Day 0
+            Dose(
+                amount: 1.0, timestamp: baseDate.addingTimeInterval(5 * 24 * 3600), user: user,
+                medication: medication),  // Day 5 (2 days early)
+            // Missing dose on day 12
+            Dose(
+                amount: 1.0, timestamp: baseDate.addingTimeInterval(14 * 24 * 3600), user: user,
+                medication: medication),  // Day 14
+            Dose(
+                amount: 1.0, timestamp: baseDate.addingTimeInterval(22 * 24 * 3600), user: user,
+                medication: medication),  // Day 22 (1 day late)
+        ]
 
-    // Verify important features preserved despite optimization
-    let optimizedMarkers = processor.processLargeDatasetEfficiently(largeDoseSet, maxMarkers: 50)
-    #expect(optimizedMarkers.count <= 50)
-    #expect(optimizedMarkers.count >= 10)  // Preserve key dose markers
-  }
+        for dose in irregularDoses {
+            context.insert(dose)
+        }
+        do {
+            try context.save()
+        } catch {
+            Issue.record("Failed to save context: \(error)")
+        }
 
-  // MARK: - Complex Scenario Tests
+        let processor = ChartDataProcessor()
 
-  @Test("Multi-medication concentration timeline interpolation")
-  @MainActor
-  func testMultiMedicationInterpolation() async throws {
-    let container = createTestContainer()
-    let (user, _) = createTestUser(in: container)
+        let timeline = processor.generateConcentrationTimeline(
+            doses: irregularDoses,
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: baseDate.addingTimeInterval(28 * 24 * 3600),
+            intervalHours: 8
+        )
 
-    // Create two different medication profiles
-    let context = container.mainContext
+        // Verify handling of irregular intervals
+        #expect(timeline.count > 60)  // Dense timeline despite irregular dosing
+        #expect(timeline.allSatisfy { $0.concentration >= 0 })
 
-    let semaglutideProfile = MedicationProfile(
-      genericName: "semaglutide",
-      brandName: "Ozempic",
-      currentDose: 1.0,
-      startDate: Date().addingTimeInterval(-21 * 24 * 3600),
-      medicationType: "semaglutide"
-    )
-    semaglutideProfile.user = user
-    context.insert(semaglutideProfile)
-
-    let tirzepatideProfile = MedicationProfile(
-      genericName: "tirzepatide",
-      brandName: "Mounjaro",
-      currentDose: 5.0,
-      startDate: Date().addingTimeInterval(-14 * 24 * 3600),
-      medicationType: "tirzepatide"
-    )
-    tirzepatideProfile.user = user
-    context.insert(tirzepatideProfile)
-
-    // Create overlapping dose schedules
-    let baseDate = Date().addingTimeInterval(-14 * 24 * 3600)
-
-    let semaglutideDoses = [
-      Dose(amount: 1.0, timestamp: baseDate, user: user, medication: semaglutideProfile),
-      Dose(
-        amount: 1.0, timestamp: baseDate.addingTimeInterval(7 * 24 * 3600), user: user,
-        medication: semaglutideProfile),
-    ]
-
-    let tirzepatideDoses = [
-      Dose(
-        amount: 5.0, timestamp: baseDate.addingTimeInterval(1 * 24 * 3600), user: user,
-        medication: tirzepatideProfile),
-      Dose(
-        amount: 5.0, timestamp: baseDate.addingTimeInterval(8 * 24 * 3600), user: user,
-        medication: tirzepatideProfile),
-    ]
-
-    for dose in semaglutideDoses + tirzepatideDoses {
-      context.insert(dose)
-    }
-    do {
-      try context.save()
-    } catch {
-      Issue.record("Failed to save context: \(error)")
+        // Check for concentration peaks at irregular dose times
+        let peakTimes = irregularDoses.map { $0.timestamp }
+        for peakTime in peakTimes {
+            let nearbyPoints = timeline.filter { point in
+                abs(point.date.timeIntervalSince(peakTime)) < 4 * 3600  // Within 4 hours
+            }
+            #expect(!nearbyPoints.isEmpty, "Should have concentration data near dose times")
+        }
     }
 
-    let processor = ChartDataProcessor()
+    // MARK: - Swift Charts Data Structure Tests
 
-    // Generate separate timelines for each medication
-    let semaglutideTimeline = processor.generateConcentrationTimeline(
-      doses: semaglutideDoses,
-      medication: Medication.semaglutide,
-      startDate: baseDate,
-      endDate: baseDate.addingTimeInterval(14 * 24 * 3600),
-      intervalHours: 6
-    )
+    @Test("Transform concentration timeline to Swift Charts point format")
+    @MainActor
+    func testSwiftChartsDataTransformation() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
+        let doses = createTestDoses(user: user, medication: medication, in: container)
 
-    let tirzepatideTimeline = processor.generateConcentrationTimeline(
-      doses: tirzepatideDoses,
-      medication: Medication.tirzepatide,
-      startDate: baseDate,
-      endDate: baseDate.addingTimeInterval(14 * 24 * 3600),
-      intervalHours: 6
-    )
+        let processor = ChartDataProcessor()
 
-    // Verify separate medication timelines
-    #expect(semaglutideTimeline.count > 20)
-    #expect(tirzepatideTimeline.count > 20)
-    #expect(semaglutideTimeline.allSatisfy { $0.concentration >= 0 })
-    #expect(tirzepatideTimeline.allSatisfy { $0.concentration >= 0 })
+        // Generate concentration timeline
+        let concentrationPoints = processor.generateConcentrationTimeline(
+            doses: doses,
+            medication: Medication.semaglutide,
+            startDate: doses.first!.timestamp,
+            endDate: doses.last!.timestamp.addingTimeInterval(7 * 24 * 3600),
+            intervalHours: 4
+        )
 
-    // Test combined timeline processing
-    let combinedDoses = semaglutideDoses + tirzepatideDoses
-    let multiMedicationMarkers = processor.transformDosesToMarkerData(combinedDoses)
-    #expect(multiMedicationMarkers.count == 4)  // All doses represented as markers
-  }
+        // Transform to Swift Charts format
+        let chartPoints = processor.transformConcentrationToChartData(concentrationPoints)
 
-  @Test("Edge case handling for concentration interpolation")
-  @MainActor
-  func testInterpolationEdgeCases() async throws {
-    let container = createTestContainer()
-    let (user, medication) = createTestUser(in: container)
-    let processor = ChartDataProcessor()
+        // Verify Swift Charts compatibility
+        #expect(chartPoints.count == concentrationPoints.count)
+        #expect(chartPoints.allSatisfy { !$0.id.uuidString.isEmpty })  // Valid identifiers
+        #expect(chartPoints.allSatisfy { $0.concentration >= 0 })  // Valid concentrations
 
-    // Test empty dose array
-    let emptyTimeline = processor.generateConcentrationTimeline(
-      doses: [],
-      medication: Medication.semaglutide,
-      startDate: Date().addingTimeInterval(-24 * 3600),
-      endDate: Date(),
-      intervalHours: 6
-    )
-    #expect(emptyTimeline.isEmpty)
+        // Verify dates are reasonable (within our test timeline range)
+        let testStartDate = doses.first!.timestamp
+        let testEndDate = doses.last!.timestamp.addingTimeInterval(7 * 24 * 3600)
+        #expect(chartPoints.allSatisfy { $0.date >= testStartDate && $0.date <= testEndDate })
 
-    // Test single dose
-    let context = container.mainContext
-    let singleDose = Dose(
-      amount: 1.0,
-      timestamp: Date().addingTimeInterval(-12 * 3600),
-      user: user,
-      medication: medication
-    )
-    context.insert(singleDose)
-    do {
-      try context.save()
-    } catch {
-      Issue.record("Failed to save context: \(error)")
+        // Verify data preservation in transformation
+        for (index, chartPoint) in chartPoints.enumerated() {
+            let originalPoint = concentrationPoints[index]
+            #expect(chartPoint.date == originalPoint.date)
+            #expect(chartPoint.concentration == originalPoint.concentration)
+        }
     }
 
-    let singleDoseTimeline = processor.generateConcentrationTimeline(
-      doses: [singleDose],
-      medication: Medication.semaglutide,
-      startDate: Date().addingTimeInterval(-24 * 3600),
-      endDate: Date().addingTimeInterval(24 * 3600),
-      intervalHours: 6
-    )
-    #expect(singleDoseTimeline.count >= 8)  // Should interpolate around single dose
-    #expect(singleDoseTimeline.allSatisfy { $0.concentration >= 0 })
+    @Test("Memory-efficient processing for large concentration datasets")
+    @MainActor
+    func testMemoryEfficientConcentrationProcessing() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
 
-    // Test very short time range
-    let shortTimeline = processor.generateConcentrationTimeline(
-      doses: [singleDose],
-      medication: Medication.semaglutide,
-      startDate: singleDose.timestamp,
-      endDate: singleDose.timestamp.addingTimeInterval(3600),  // 1 hour range
-      intervalHours: 0.5  // 30-minute intervals
-    )
-    #expect(shortTimeline.count >= 2)
-    #expect(shortTimeline.allSatisfy { $0.concentration >= 0 })
-  }
+        // Create large dose dataset (3 months of daily dosing)
+        let context = container.mainContext
+        let baseDate = Date().addingTimeInterval(-90 * 24 * 3600)  // 90 days ago
+
+        var largeDoseSet: [Dose] = []
+        for dayOffset in 0..<90 {
+            let doseDate = baseDate.addingTimeInterval(Double(dayOffset) * 24 * 3600)
+            let dose = Dose(
+                amount: 1.0,
+                timestamp: doseDate,
+                user: user,
+                medication: medication
+            )
+            context.insert(dose)
+            largeDoseSet.append(dose)
+        }
+        do {
+            try context.save()
+        } catch {
+            Issue.record("Failed to save context: \(error)")
+        }
+
+        let processor = ChartDataProcessor()
+
+        // Test memory-efficient processing with density optimization
+        let optimizedTimeline = processor.generateConcentrationTimelineOptimized(
+            doses: largeDoseSet,
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: Date(),
+            maxPoints: 200,  // Limit for chart performance
+            adaptiveIntervals: true
+        )
+
+        // Verify memory efficiency
+        #expect(optimizedTimeline.count <= 200)  // Respects max points limit
+        #expect(optimizedTimeline.count >= 50)  // Still provides meaningful resolution
+        #expect(optimizedTimeline.allSatisfy { $0.concentration >= 0 })
+
+        // Verify important features preserved despite optimization
+        let optimizedMarkers = processor.processLargeDatasetEfficiently(largeDoseSet, maxMarkers: 50)
+        #expect(optimizedMarkers.count <= 50)
+        #expect(optimizedMarkers.count >= 10)  // Preserve key dose markers
+    }
+
+    // MARK: - Complex Scenario Tests
+
+    @Test("Multi-medication concentration timeline interpolation")
+    @MainActor
+    func testMultiMedicationInterpolation() async throws {
+        let container = createTestContainer()
+        let (user, _) = createTestUser(in: container)
+
+        // Create two different medication profiles
+        let context = container.mainContext
+
+        let semaglutideProfile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 1.0,
+            startDate: Date().addingTimeInterval(-21 * 24 * 3600),
+            medicationType: "semaglutide"
+        )
+        semaglutideProfile.user = user
+        context.insert(semaglutideProfile)
+
+        let tirzepatideProfile = MedicationProfile(
+            genericName: "tirzepatide",
+            brandName: "Mounjaro",
+            currentDose: 5.0,
+            startDate: Date().addingTimeInterval(-14 * 24 * 3600),
+            medicationType: "tirzepatide"
+        )
+        tirzepatideProfile.user = user
+        context.insert(tirzepatideProfile)
+
+        // Create overlapping dose schedules
+        let baseDate = Date().addingTimeInterval(-14 * 24 * 3600)
+
+        let semaglutideDoses = [
+            Dose(amount: 1.0, timestamp: baseDate, user: user, medication: semaglutideProfile),
+            Dose(
+                amount: 1.0, timestamp: baseDate.addingTimeInterval(7 * 24 * 3600), user: user,
+                medication: semaglutideProfile),
+        ]
+
+        let tirzepatideDoses = [
+            Dose(
+                amount: 5.0, timestamp: baseDate.addingTimeInterval(1 * 24 * 3600), user: user,
+                medication: tirzepatideProfile),
+            Dose(
+                amount: 5.0, timestamp: baseDate.addingTimeInterval(8 * 24 * 3600), user: user,
+                medication: tirzepatideProfile),
+        ]
+
+        for dose in semaglutideDoses + tirzepatideDoses {
+            context.insert(dose)
+        }
+        do {
+            try context.save()
+        } catch {
+            Issue.record("Failed to save context: \(error)")
+        }
+
+        let processor = ChartDataProcessor()
+
+        // Generate separate timelines for each medication
+        let semaglutideTimeline = processor.generateConcentrationTimeline(
+            doses: semaglutideDoses,
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: baseDate.addingTimeInterval(14 * 24 * 3600),
+            intervalHours: 6
+        )
+
+        let tirzepatideTimeline = processor.generateConcentrationTimeline(
+            doses: tirzepatideDoses,
+            medication: Medication.tirzepatide,
+            startDate: baseDate,
+            endDate: baseDate.addingTimeInterval(14 * 24 * 3600),
+            intervalHours: 6
+        )
+
+        // Verify separate medication timelines
+        #expect(semaglutideTimeline.count > 20)
+        #expect(tirzepatideTimeline.count > 20)
+        #expect(semaglutideTimeline.allSatisfy { $0.concentration >= 0 })
+        #expect(tirzepatideTimeline.allSatisfy { $0.concentration >= 0 })
+
+        // Test combined timeline processing
+        let combinedDoses = semaglutideDoses + tirzepatideDoses
+        let multiMedicationMarkers = processor.transformDosesToMarkerData(combinedDoses)
+        #expect(multiMedicationMarkers.count == 4)  // All doses represented as markers
+    }
+
+    @Test("Edge case handling for concentration interpolation")
+    @MainActor
+    func testInterpolationEdgeCases() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
+        let processor = ChartDataProcessor()
+
+        // Test empty dose array
+        let emptyTimeline = processor.generateConcentrationTimeline(
+            doses: [],
+            medication: Medication.semaglutide,
+            startDate: Date().addingTimeInterval(-24 * 3600),
+            endDate: Date(),
+            intervalHours: 6
+        )
+        #expect(emptyTimeline.isEmpty)
+
+        // Test single dose
+        let context = container.mainContext
+        let singleDose = Dose(
+            amount: 1.0,
+            timestamp: Date().addingTimeInterval(-12 * 3600),
+            user: user,
+            medication: medication
+        )
+        context.insert(singleDose)
+        do {
+            try context.save()
+        } catch {
+            Issue.record("Failed to save context: \(error)")
+        }
+
+        let singleDoseTimeline = processor.generateConcentrationTimeline(
+            doses: [singleDose],
+            medication: Medication.semaglutide,
+            startDate: Date().addingTimeInterval(-24 * 3600),
+            endDate: Date().addingTimeInterval(24 * 3600),
+            intervalHours: 6
+        )
+        #expect(singleDoseTimeline.count >= 8)  // Should interpolate around single dose
+        #expect(singleDoseTimeline.allSatisfy { $0.concentration >= 0 })
+
+        // Test very short time range
+        let shortTimeline = processor.generateConcentrationTimeline(
+            doses: [singleDose],
+            medication: Medication.semaglutide,
+            startDate: singleDose.timestamp,
+            endDate: singleDose.timestamp.addingTimeInterval(3600),  // 1 hour range
+            intervalHours: 0.5  // 30-minute intervals
+        )
+        #expect(shortTimeline.count >= 2)
+        #expect(shortTimeline.allSatisfy { $0.concentration >= 0 })
+    }
 }

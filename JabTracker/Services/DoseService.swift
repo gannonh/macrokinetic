@@ -14,395 +14,394 @@ import SwiftData
 /// Coordinates between dose persistence and PK engine updates for real-time dashboard updates
 @Observable
 final class DoseService {
-  // MARK: - Dependencies
+    // MARK: - Dependencies
 
-  private let pkEngine: PharmacokineticsEngine
+    private let pkEngine: PharmacokineticsEngine
 
-  // MARK: - Published State
+    // MARK: - Published State
 
-  /// Indicates if a dose operation is in progress
-  var isProcessingDose: Bool = false
+    /// Indicates if a dose operation is in progress
+    var isProcessingDose: Bool = false
 
-  /// Last error that occurred during dose operations
-  var lastError: DoseServiceError?
+    /// Last error that occurred during dose operations
+    var lastError: DoseServiceError?
 
-  /// Timestamp of last successful dose operation (for dashboard refresh triggers)
-  var lastDoseUpdateTime: Date?
+    /// Timestamp of last successful dose operation (for dashboard refresh triggers)
+    var lastDoseUpdateTime: Date?
 
-  // MARK: - Initialization
+    // MARK: - Initialization
 
-  init(pkEngine: PharmacokineticsEngine) {
-    self.pkEngine = pkEngine
-  }
-
-  // MARK: - Dose Creation
-
-  /// Saves a new dose and triggers pharmacokinetics recalculation
-  /// - Parameters:
-  ///   - amount: Dose amount in mg
-  ///   - timestamp: When the dose was administered
-  ///   - medicationProfile: Associated medication profile
-  ///   - site: Injection site (optional)
-  ///   - notes: User notes (optional)
-  ///   - skipped: Whether this dose was missed/skipped
-  ///   - imageData: Optional photo of injection (optional)
-  ///   - context: SwiftData model context for persistence
-  /// - Returns: The saved dose object
-  /// - Throws: DoseServiceError for validation or persistence failures
-  @MainActor
-  func saveDose(
-    amount: Double,
-    timestamp: Date,
-    medicationProfile: MedicationProfile,
-    site: String? = nil,
-    notes: String? = nil,
-    skipped: Bool = false,
-    imageData: Data? = nil,
-    context: ModelContext
-  ) async throws -> Dose {
-    #if DEBUG
-      print(
-        "🔍 DoseService.saveDose called with amount: [REDACTED], site: [REDACTED], notes: [REDACTED]"
-      )
-    #endif
-
-    self.isProcessingDose = true
-    self.lastError = nil
-
-    defer {
-      isProcessingDose = false
+    init(pkEngine: PharmacokineticsEngine) {
+        self.pkEngine = pkEngine
     }
 
-    do {
-      // Validate dose parameters
-      try self.validateDoseParameters(
-        amount: amount,
-        timestamp: timestamp,
-        medicationProfile: medicationProfile,
-        site: site,
-        notes: notes)
+    // MARK: - Dose Creation
 
-      // Create new dose
-      let newDose = Dose(
-        amount: amount,
-        timestamp: timestamp,
-        site: site,
-        notes: notes,
-        imageData: imageData,
-        skipped: skipped,
-        user: medicationProfile.user,  // Explicitly set user from medication profile
-        medication: medicationProfile)
+    /// Saves a new dose and triggers pharmacokinetics recalculation
+    /// - Parameters:
+    ///   - amount: Dose amount in mg
+    ///   - timestamp: When the dose was administered
+    ///   - medicationProfile: Associated medication profile
+    ///   - site: Injection site (optional)
+    ///   - notes: User notes (optional)
+    ///   - skipped: Whether this dose was missed/skipped
+    ///   - imageData: Optional photo of injection (optional)
+    ///   - context: SwiftData model context for persistence
+    /// - Returns: The saved dose object
+    /// - Throws: DoseServiceError for validation or persistence failures
+    @MainActor
+    func saveDose(
+        amount: Double,
+        timestamp: Date,
+        medicationProfile: MedicationProfile,
+        site: String? = nil,
+        notes: String? = nil,
+        skipped: Bool = false,
+        imageData: Data? = nil,
+        context: ModelContext
+    ) async throws -> Dose {
+        #if DEBUG
+            print(
+                "🔍 DoseService.saveDose called with amount: [REDACTED], site: [REDACTED], notes: [REDACTED]"
+            )
+        #endif
 
-      #if DEBUG
-        print("🔍 DoseService: Creating dose with ID: \(newDose.id), site: [REDACTED]")
-      #endif
+        self.isProcessingDose = true
+        self.lastError = nil
 
-      // Insert and save to database
-      context.insert(newDose)
-      #if DEBUG
-        print("🔍 DoseService: Inserted dose into context")
-      #endif
-
-      try context.save()
-      #if DEBUG
-        print("🔍 DoseService: Saved context successfully")
-      #endif
-
-      // Trigger PK engine recalculation
-      await self.triggerPKRecalculation(for: medicationProfile)
-
-      // Update last operation timestamp for dashboard refresh
-      self.lastDoseUpdateTime = Date()
-
-      return newDose
-
-    } catch let error as DoseServiceError {
-      lastError = error
-      throw error
-    } catch {
-      let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
-      self.lastError = wrappedError
-      throw wrappedError
-    }
-  }
-
-  // MARK: - Dose Updates
-
-  /// Updates an existing dose and recalculates pharmacokinetics
-  /// - Parameters:
-  ///   - editData: Updated dose information
-  ///   - context: SwiftData model context
-  /// - Throws: DoseServiceError for validation or persistence failures
-  @MainActor
-  func updateDose(with editData: DoseEditData, context: ModelContext) async throws {
-    self.isProcessingDose = true
-    self.lastError = nil
-
-    defer {
-      isProcessingDose = false
-    }
-
-    do {
-      // Fetch existing dose
-      let doseId = editData.id
-      let doseDescriptor = FetchDescriptor<Dose>(
-        predicate: #Predicate<Dose> { dose in
-          dose.id == doseId
+        defer {
+            isProcessingDose = false
         }
-      )
 
-      guard let existingDose = try context.fetch(doseDescriptor).first else {
-        throw DoseServiceError.doseNotFound
-      }
+        do {
+            // Validate dose parameters
+            try self.validateDoseParameters(
+                amount: amount,
+                timestamp: timestamp,
+                medicationProfile: medicationProfile,
+                site: site,
+                notes: notes)
 
-      // Validate updated parameters
-      try self.validateDoseParameters(
-        amount: editData.amount,
-        timestamp: editData.timestamp,
-        medicationProfile: editData.medicationProfile,
-        site: editData.site,
-        notes: editData.notes)
+            // Create new dose
+            let newDose = Dose(
+                amount: amount,
+                timestamp: timestamp,
+                site: site,
+                notes: notes,
+                imageData: imageData,
+                skipped: skipped,
+                user: medicationProfile.user,  // Explicitly set user from medication profile
+                medication: medicationProfile)
 
-      // Update dose properties
-      existingDose.amount = editData.amount
-      existingDose.timestamp = editData.timestamp
-      existingDose.site = editData.site
-      existingDose.notes = editData.notes
-      existingDose.imageData = editData.imageData
-      existingDose.skipped = editData.skipped
+            #if DEBUG
+                print("🔍 DoseService: Creating dose with ID: \(newDose.id), site: [REDACTED]")
+            #endif
 
-      // Capture old medication profile before reassignment for PK recalculation
-      let oldMedicationProfile = existingDose.medication
+            // Insert and save to database
+            context.insert(newDose)
+            #if DEBUG
+                print("🔍 DoseService: Inserted dose into context")
+            #endif
 
-      // Update medication profile if changed
-      if existingDose.medication?.id != editData.medicationProfile.id {
-        existingDose.medication = editData.medicationProfile
-      }
+            try context.save()
+            #if DEBUG
+                print("🔍 DoseService: Saved context successfully")
+            #endif
 
-      // Save changes
-      try context.save()
+            // Trigger PK engine recalculation
+            await self.triggerPKRecalculation(for: medicationProfile)
 
-      // Trigger PK recalculation for both old and new medication profiles
-      await self.triggerPKRecalculation(for: editData.medicationProfile)
+            // Update last operation timestamp for dashboard refresh
+            self.lastDoseUpdateTime = Date()
 
-      // If medication profile was changed, also recalculate for the old profile
-      if let oldProfile = oldMedicationProfile,
-        oldProfile.id != editData.medicationProfile.id
-      {
-        await self.triggerPKRecalculation(for: oldProfile)
-      }
+            return newDose
 
-      // Update last operation timestamp
-      self.lastDoseUpdateTime = Date()
-
-    } catch let error as DoseServiceError {
-      lastError = error
-      throw error
-    } catch {
-      let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
-      self.lastError = wrappedError
-      throw wrappedError
-    }
-  }
-
-  // MARK: - Dose Deletion
-
-  /// Deletes a dose and recalculates pharmacokinetics
-  /// - Parameters:
-  ///   - doseId: ID of dose to delete
-  ///   - context: SwiftData model context
-  /// - Throws: DoseServiceError for persistence failures
-  @MainActor
-  func deleteDose(with doseId: UUID, context: ModelContext) async throws {
-    self.isProcessingDose = true
-    self.lastError = nil
-
-    defer {
-      isProcessingDose = false
-    }
-
-    do {
-      // Fetch dose to delete
-      let doseDescriptor = FetchDescriptor<Dose>(
-        predicate: #Predicate<Dose> { dose in
-          dose.id == doseId
+        } catch let error as DoseServiceError {
+            lastError = error
+            throw error
+        } catch {
+            let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
+            self.lastError = wrappedError
+            throw wrappedError
         }
-      )
-
-      guard let doseToDelete = try context.fetch(doseDescriptor).first else {
-        throw DoseServiceError.doseNotFound
-      }
-
-      let medicationProfile = doseToDelete.medication
-
-      // Delete dose
-      context.delete(doseToDelete)
-      try context.save()
-
-      // Trigger PK recalculation if medication profile exists
-      if let profile = medicationProfile {
-        await self.triggerPKRecalculation(for: profile)
-      }
-
-      // Update last operation timestamp
-      self.lastDoseUpdateTime = Date()
-
-    } catch let error as DoseServiceError {
-      lastError = error
-      throw error
-    } catch {
-      let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
-      self.lastError = wrappedError
-      throw wrappedError
-    }
-  }
-
-  // MARK: - PK Engine Integration
-
-  /// Triggers pharmacokinetics recalculation for a medication profile
-  /// This method can be called manually to refresh calculations without dose changes
-  /// - Parameter medicationProfile: Profile to recalculate
-  @MainActor
-  private func triggerPKRecalculation(for _: MedicationProfile) async {
-    // Ensure PK engine has latest dose data
-    // The engine will automatically use the updated doses when calculations are requested
-
-    // Note: PK engine calculations are performed on-demand rather than cached
-    // This ensures calculations always reflect the current dose data
-    // Dashboard components will request fresh calculations when they update
-
-    // Update the timestamp to signal dashboard components to refresh
-    self.lastDoseUpdateTime = Date()
-  }
-
-  // MARK: - Validation
-
-  /// Validates dose parameters before saving or updating
-  /// - Parameters:
-  ///   - amount: Dose amount to validate
-  ///   - timestamp: Dose timestamp to validate
-  ///   - medicationProfile: Associated medication profile
-  ///   - site: Injection site (for validation consistency)
-  ///   - notes: User notes (for validation consistency)
-  /// - Throws: DoseServiceError for invalid parameters
-  private func validateDoseParameters(
-    amount: Double,
-    timestamp: Date,
-    medicationProfile: MedicationProfile,
-    site: String? = nil,
-    notes: String? = nil
-  ) throws {
-    // Validate dose amount
-    guard amount >= 0 else {
-      throw DoseServiceError.invalidDoseAmount("Dose amount cannot be negative")
     }
 
-    guard amount <= 1000 else {
-      throw DoseServiceError.invalidDoseAmount("Dose amount cannot exceed 1000mg")
-    }
+    // MARK: - Dose Updates
 
-    // Validate timestamp (allow future doses for scheduled entries)
-    let maxFutureTime = Date().addingTimeInterval(365 * 24 * 3600)  // 1 year in future
-    guard timestamp <= maxFutureTime else {
-      throw DoseServiceError.invalidTimestamp(
-        "Dose timestamp cannot be more than 1 year in the future")
-    }
+    /// Updates an existing dose and recalculates pharmacokinetics
+    /// - Parameters:
+    ///   - editData: Updated dose information
+    ///   - context: SwiftData model context
+    /// - Throws: DoseServiceError for validation or persistence failures
+    @MainActor
+    func updateDose(with editData: DoseEditData, context: ModelContext) async throws {
+        self.isProcessingDose = true
+        self.lastError = nil
 
-    // Validate medication profile has required information
-    guard medicationProfile.medication != nil else {
-      throw DoseServiceError.invalidMedicationProfile(
-        "Medication profile must have medication type set")
-    }
-
-    // Validate PK calculation inputs if not skipped dose
-    if amount > 0 {
-      guard let medication = medicationProfile.medication else {
-        throw DoseServiceError.invalidMedicationProfile("Missing medication for PK calculations")
-      }
-
-      let doses = medicationProfile.doses ?? []
-      // Create temporary dose for validation WITHOUT setting the medication relationship
-      // to prevent it from being accidentally persisted
-      let tempDose = Dose(amount: amount, timestamp: timestamp, site: site, notes: notes)
-      let dosesForValidation = doses + [tempDose]
-
-      if !self.pkEngine.validateCalculationInputs(doses: dosesForValidation, medication: medication)
-      {
-        if let validationError = pkEngine.getValidationError(
-          doses: dosesForValidation,
-          medication: medication)
-        {
-          throw DoseServiceError.pkValidationFailure(validationError)
-        } else {
-          throw DoseServiceError.pkValidationFailure(
-            "Invalid dose parameters for pharmacokinetic calculations"
-          )
+        defer {
+            isProcessingDose = false
         }
-      }
+
+        do {
+            // Fetch existing dose
+            let doseId = editData.id
+            let doseDescriptor = FetchDescriptor<Dose>(
+                predicate: #Predicate<Dose> { dose in
+                    dose.id == doseId
+                }
+            )
+
+            guard let existingDose = try context.fetch(doseDescriptor).first else {
+                throw DoseServiceError.doseNotFound
+            }
+
+            // Validate updated parameters
+            try self.validateDoseParameters(
+                amount: editData.amount,
+                timestamp: editData.timestamp,
+                medicationProfile: editData.medicationProfile,
+                site: editData.site,
+                notes: editData.notes)
+
+            // Update dose properties
+            existingDose.amount = editData.amount
+            existingDose.timestamp = editData.timestamp
+            existingDose.site = editData.site
+            existingDose.notes = editData.notes
+            existingDose.imageData = editData.imageData
+            existingDose.skipped = editData.skipped
+
+            // Capture old medication profile before reassignment for PK recalculation
+            let oldMedicationProfile = existingDose.medication
+
+            // Update medication profile if changed
+            if existingDose.medication?.id != editData.medicationProfile.id {
+                existingDose.medication = editData.medicationProfile
+            }
+
+            // Save changes
+            try context.save()
+
+            // Trigger PK recalculation for both old and new medication profiles
+            await self.triggerPKRecalculation(for: editData.medicationProfile)
+
+            // If medication profile was changed, also recalculate for the old profile
+            if let oldProfile = oldMedicationProfile,
+                oldProfile.id != editData.medicationProfile.id
+            {
+                await self.triggerPKRecalculation(for: oldProfile)
+            }
+
+            // Update last operation timestamp
+            self.lastDoseUpdateTime = Date()
+
+        } catch let error as DoseServiceError {
+            lastError = error
+            throw error
+        } catch {
+            let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
+            self.lastError = wrappedError
+            throw wrappedError
+        }
     }
-  }
+
+    // MARK: - Dose Deletion
+
+    /// Deletes a dose and recalculates pharmacokinetics
+    /// - Parameters:
+    ///   - doseId: ID of dose to delete
+    ///   - context: SwiftData model context
+    /// - Throws: DoseServiceError for persistence failures
+    @MainActor
+    func deleteDose(with doseId: UUID, context: ModelContext) async throws {
+        self.isProcessingDose = true
+        self.lastError = nil
+
+        defer {
+            isProcessingDose = false
+        }
+
+        do {
+            // Fetch dose to delete
+            let doseDescriptor = FetchDescriptor<Dose>(
+                predicate: #Predicate<Dose> { dose in
+                    dose.id == doseId
+                }
+            )
+
+            guard let doseToDelete = try context.fetch(doseDescriptor).first else {
+                throw DoseServiceError.doseNotFound
+            }
+
+            let medicationProfile = doseToDelete.medication
+
+            // Delete dose
+            context.delete(doseToDelete)
+            try context.save()
+
+            // Trigger PK recalculation if medication profile exists
+            if let profile = medicationProfile {
+                await self.triggerPKRecalculation(for: profile)
+            }
+
+            // Update last operation timestamp
+            self.lastDoseUpdateTime = Date()
+
+        } catch let error as DoseServiceError {
+            lastError = error
+            throw error
+        } catch {
+            let wrappedError = DoseServiceError.persistenceFailure(underlying: error)
+            self.lastError = wrappedError
+            throw wrappedError
+        }
+    }
+
+    // MARK: - PK Engine Integration
+
+    /// Triggers pharmacokinetics recalculation for a medication profile
+    /// This method can be called manually to refresh calculations without dose changes
+    /// - Parameter medicationProfile: Profile to recalculate
+    @MainActor
+    private func triggerPKRecalculation(for _: MedicationProfile) async {
+        // Ensure PK engine has latest dose data
+        // The engine will automatically use the updated doses when calculations are requested
+
+        // Note: PK engine calculations are performed on-demand rather than cached
+        // This ensures calculations always reflect the current dose data
+        // Dashboard components will request fresh calculations when they update
+
+        // Update the timestamp to signal dashboard components to refresh
+        self.lastDoseUpdateTime = Date()
+    }
+
+    // MARK: - Validation
+
+    /// Validates dose parameters before saving or updating
+    /// - Parameters:
+    ///   - amount: Dose amount to validate
+    ///   - timestamp: Dose timestamp to validate
+    ///   - medicationProfile: Associated medication profile
+    ///   - site: Injection site (for validation consistency)
+    ///   - notes: User notes (for validation consistency)
+    /// - Throws: DoseServiceError for invalid parameters
+    private func validateDoseParameters(
+        amount: Double,
+        timestamp: Date,
+        medicationProfile: MedicationProfile,
+        site: String? = nil,
+        notes: String? = nil
+    ) throws {
+        // Validate dose amount
+        guard amount >= 0 else {
+            throw DoseServiceError.invalidDoseAmount("Dose amount cannot be negative")
+        }
+
+        guard amount <= 1000 else {
+            throw DoseServiceError.invalidDoseAmount("Dose amount cannot exceed 1000mg")
+        }
+
+        // Validate timestamp (allow future doses for scheduled entries)
+        let maxFutureTime = Date().addingTimeInterval(365 * 24 * 3600)  // 1 year in future
+        guard timestamp <= maxFutureTime else {
+            throw DoseServiceError.invalidTimestamp(
+                "Dose timestamp cannot be more than 1 year in the future")
+        }
+
+        // Validate medication profile has required information
+        guard medicationProfile.medication != nil else {
+            throw DoseServiceError.invalidMedicationProfile(
+                "Medication profile must have medication type set")
+        }
+
+        // Validate PK calculation inputs if not skipped dose
+        if amount > 0 {
+            guard let medication = medicationProfile.medication else {
+                throw DoseServiceError.invalidMedicationProfile("Missing medication for PK calculations")
+            }
+
+            let doses = medicationProfile.doses ?? []
+            // Create temporary dose for validation WITHOUT setting the medication relationship
+            // to prevent it from being accidentally persisted
+            let tempDose = Dose(amount: amount, timestamp: timestamp, site: site, notes: notes)
+            let dosesForValidation = doses + [tempDose]
+
+            if !self.pkEngine.validateCalculationInputs(doses: dosesForValidation, medication: medication) {
+                if let validationError = pkEngine.getValidationError(
+                    doses: dosesForValidation,
+                    medication: medication)
+                {
+                    throw DoseServiceError.pkValidationFailure(validationError)
+                } else {
+                    throw DoseServiceError.pkValidationFailure(
+                        "Invalid dose parameters for pharmacokinetic calculations"
+                    )
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Error Types
 
 /// Errors that can occur during dose service operations
 enum DoseServiceError: LocalizedError, Equatable {
-  case invalidDoseAmount(String)
-  case invalidTimestamp(String)
-  case invalidMedicationProfile(String)
-  case doseNotFound
-  case pkValidationFailure(String)
-  case persistenceFailure(underlying: Error)
+    case invalidDoseAmount(String)
+    case invalidTimestamp(String)
+    case invalidMedicationProfile(String)
+    case doseNotFound
+    case pkValidationFailure(String)
+    case persistenceFailure(underlying: Error)
 
-  var errorDescription: String? {
-    switch self {
-    case let .invalidDoseAmount(message):
-      return "Invalid dose amount: \(message)"
-    case let .invalidTimestamp(message):
-      return "Invalid dose timing: \(message)"
-    case let .invalidMedicationProfile(message):
-      return "Invalid medication profile: \(message)"
-    case .doseNotFound:
-      return "Dose not found"
-    case let .pkValidationFailure(message):
-      return "Pharmacokinetic validation failed: \(message)"
-    case let .persistenceFailure(error):
-      return "Failed to save dose: \(error.localizedDescription)"
+    var errorDescription: String? {
+        switch self {
+        case let .invalidDoseAmount(message):
+            return "Invalid dose amount: \(message)"
+        case let .invalidTimestamp(message):
+            return "Invalid dose timing: \(message)"
+        case let .invalidMedicationProfile(message):
+            return "Invalid medication profile: \(message)"
+        case .doseNotFound:
+            return "Dose not found"
+        case let .pkValidationFailure(message):
+            return "Pharmacokinetic validation failed: \(message)"
+        case let .persistenceFailure(error):
+            return "Failed to save dose: \(error.localizedDescription)"
+        }
     }
-  }
 
-  // MARK: - Equatable
+    // MARK: - Equatable
 
-  static func == (lhs: DoseServiceError, rhs: DoseServiceError) -> Bool {
-    switch (lhs, rhs) {
-    case let (.invalidDoseAmount(lhsMessage), .invalidDoseAmount(rhsMessage)):
-      return lhsMessage == rhsMessage
-    case let (.invalidTimestamp(lhsMessage), .invalidTimestamp(rhsMessage)):
-      return lhsMessage == rhsMessage
-    case let (.invalidMedicationProfile(lhsMessage), .invalidMedicationProfile(rhsMessage)):
-      return lhsMessage == rhsMessage
-    case (.doseNotFound, .doseNotFound):
-      return true
-    case let (.pkValidationFailure(lhsMessage), .pkValidationFailure(rhsMessage)):
-      return lhsMessage == rhsMessage
-    case (.persistenceFailure, .persistenceFailure):
-      return true  // Simplified comparison for underlying errors
-    default:
-      return false
+    static func == (lhs: DoseServiceError, rhs: DoseServiceError) -> Bool {
+        switch (lhs, rhs) {
+        case let (.invalidDoseAmount(lhsMessage), .invalidDoseAmount(rhsMessage)):
+            return lhsMessage == rhsMessage
+        case let (.invalidTimestamp(lhsMessage), .invalidTimestamp(rhsMessage)):
+            return lhsMessage == rhsMessage
+        case let (.invalidMedicationProfile(lhsMessage), .invalidMedicationProfile(rhsMessage)):
+            return lhsMessage == rhsMessage
+        case (.doseNotFound, .doseNotFound):
+            return true
+        case let (.pkValidationFailure(lhsMessage), .pkValidationFailure(rhsMessage)):
+            return lhsMessage == rhsMessage
+        case (.persistenceFailure, .persistenceFailure):
+            return true  // Simplified comparison for underlying errors
+        default:
+            return false
+        }
     }
-  }
 }
 
 // MARK: - Supporting Types
 
 /// Data structure for dose editing operations
 struct DoseEditData: Identifiable {
-  let id: UUID
-  let amount: Double
-  let timestamp: Date
-  let site: String?
-  let notes: String?
-  let imageData: Data?
-  let skipped: Bool
-  let medicationProfile: MedicationProfile
+    let id: UUID
+    let amount: Double
+    let timestamp: Date
+    let site: String?
+    let notes: String?
+    let imageData: Data?
+    let skipped: Bool
+    let medicationProfile: MedicationProfile
 }

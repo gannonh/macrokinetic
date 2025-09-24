@@ -10,153 +10,153 @@ import SwiftUI
 
 /// Reusable component for displaying concentration values with consistent formatting
 struct ConcentrationDisplay: View {
-  let concentration: Double
-  let isCurrentLevel: Bool
+    let concentration: Double
+    let isCurrentLevel: Bool
 
-  // Concentration level thresholds for visual indicators
-  private let lowThreshold: Double = 0.1
-  private let highThreshold: Double = 3.0
+    // Concentration level thresholds for visual indicators
+    private let lowThreshold: Double = 0.1
+    private let highThreshold: Double = 3.0
 
-  var body: some View {
-    HStack(alignment: .firstTextBaseline, spacing: 4) {
-      // Concentration value
-      Text(self.formattedConcentration)
-        .font(self.isCurrentLevel ? DesignTokens.Typography.headline : DesignTokens.Typography.body)
-        .fontWeight(self.isCurrentLevel ? .bold : .medium)
-        .foregroundColor(self.concentrationColor)
-        .accessibilityIdentifier(
-          self.isCurrentLevel ? "current-concentration-value" : "projected-concentration-value"
-        )
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            // Concentration value
+            Text(self.formattedConcentration)
+                .font(self.isCurrentLevel ? DesignTokens.Typography.headline : DesignTokens.Typography.body)
+                .fontWeight(self.isCurrentLevel ? .bold : .medium)
+                .foregroundColor(self.concentrationColor)
+                .accessibilityIdentifier(
+                    self.isCurrentLevel ? "current-concentration-value" : "projected-concentration-value"
+                )
 
-      // Units
-      Text("units")
-        .font(DesignTokens.Typography.caption)
-        .foregroundColor(.secondary)
-        .accessibilityIdentifier("concentration-unit")
+            // Units
+            Text("units")
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
+                .accessibilityIdentifier("concentration-unit")
 
-      // Visual level indicator (only for current level)
-      if self.isCurrentLevel {
-        self.levelIndicator
-      }
-    }
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel(self.accessibilityDescription)
-    .accessibilityValue(self.accessibilityValue)
-  }
-
-  // MARK: - Computed Properties
-
-  private var formattedConcentration: String {
-    String(format: "%.2f", self.concentration)
-  }
-
-  private var concentrationColor: Color {
-    if self.concentration <= self.lowThreshold {
-      return DesignTokens.Colors.warning
-    } else if self.concentration >= self.highThreshold {
-      return DesignTokens.Colors.danger
-    } else {
-      return .primary
-    }
-  }
-
-  private var levelIndicator: some View {
-    Group {
-      if self.concentration <= self.lowThreshold {
-        Image(systemName: "arrow.down.circle.fill")
-          .foregroundColor(DesignTokens.Colors.warning)
-          .font(.caption)
-          .accessibilityHidden(true)
-      } else if self.concentration >= self.highThreshold {
-        Image(systemName: "arrow.up.circle.fill")
-          .foregroundColor(DesignTokens.Colors.danger)
-          .font(.caption)
-          .accessibilityHidden(true)
-      } else {
-        Image(systemName: "checkmark.circle.fill")
-          .foregroundColor(DesignTokens.Colors.success)
-          .font(.caption)
-          .accessibilityHidden(true)
-      }
-    }
-  }
-
-  private var accessibilityDescription: String {
-    let levelType = self.isCurrentLevel ? "Current" : "Projected"
-    return "\(levelType) concentration level"
-  }
-
-  private var accessibilityValue: String {
-    let formattedValue = "\(formattedConcentration) units"
-    let levelDescription: String
-
-    if self.concentration <= self.lowThreshold {
-      levelDescription = "Low level"
-    } else if self.concentration >= self.highThreshold {
-      levelDescription = "High level"
-    } else {
-      levelDescription = "Normal level"
+            // Visual level indicator (only for current level)
+            if self.isCurrentLevel {
+                self.levelIndicator
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(self.accessibilityDescription)
+        .accessibilityValue(self.accessibilityValue)
     }
 
-    return "\(formattedValue), \(levelDescription)"
-  }
+    // MARK: - Computed Properties
+
+    private var formattedConcentration: String {
+        String(format: "%.2f", self.concentration)
+    }
+
+    private var concentrationColor: Color {
+        if self.concentration <= self.lowThreshold {
+            return DesignTokens.Colors.warning
+        } else if self.concentration >= self.highThreshold {
+            return DesignTokens.Colors.danger
+        } else {
+            return .primary
+        }
+    }
+
+    private var levelIndicator: some View {
+        Group {
+            if self.concentration <= self.lowThreshold {
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundColor(DesignTokens.Colors.warning)
+                    .font(.caption)
+                    .accessibilityHidden(true)
+            } else if self.concentration >= self.highThreshold {
+                Image(systemName: "arrow.up.circle.fill")
+                    .foregroundColor(DesignTokens.Colors.danger)
+                    .font(.caption)
+                    .accessibilityHidden(true)
+            } else {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(DesignTokens.Colors.success)
+                    .font(.caption)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+
+    private var accessibilityDescription: String {
+        let levelType = self.isCurrentLevel ? "Current" : "Projected"
+        return "\(levelType) concentration level"
+    }
+
+    private var accessibilityValue: String {
+        let formattedValue = "\(formattedConcentration) units"
+        let levelDescription: String
+
+        if self.concentration <= self.lowThreshold {
+            levelDescription = "Low level"
+        } else if self.concentration >= self.highThreshold {
+            levelDescription = "High level"
+        } else {
+            levelDescription = "Normal level"
+        }
+
+        return "\(formattedValue), \(levelDescription)"
+    }
 }
 
 // MARK: - Concentration Level Extensions
 
 extension ConcentrationDisplay {
-  /// Creates a display for zero concentration with appropriate styling
-  static func empty(isCurrentLevel: Bool = true) -> ConcentrationDisplay {
-    ConcentrationDisplay(concentration: 0.0, isCurrentLevel: isCurrentLevel)
-  }
+    /// Creates a display for zero concentration with appropriate styling
+    static func empty(isCurrentLevel: Bool = true) -> ConcentrationDisplay {
+        ConcentrationDisplay(concentration: 0.0, isCurrentLevel: isCurrentLevel)
+    }
 
-  /// Creates a display for a specific concentration level
-  static func level(_ concentration: Double, isCurrentLevel: Bool = false) -> ConcentrationDisplay {
-    ConcentrationDisplay(concentration: concentration, isCurrentLevel: isCurrentLevel)
-  }
+    /// Creates a display for a specific concentration level
+    static func level(_ concentration: Double, isCurrentLevel: Bool = false) -> ConcentrationDisplay {
+        ConcentrationDisplay(concentration: concentration, isCurrentLevel: isCurrentLevel)
+    }
 }
 
 // MARK: - Preview
 
 #Preview("Concentration Display Examples") {
-  VStack(spacing: 24) {
-    VStack(alignment: .leading, spacing: 16) {
-      Text("Current Level Examples")
-        .font(DesignTokens.Typography.headline)
+    VStack(spacing: 24) {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Current Level Examples")
+                .font(DesignTokens.Typography.headline)
 
-      VStack(alignment: .leading, spacing: 8) {
-        ConcentrationDisplay(concentration: 0.05, isCurrentLevel: true)  // Low
-        ConcentrationDisplay(concentration: 1.25, isCurrentLevel: true)  // Normal
-        ConcentrationDisplay(concentration: 4.75, isCurrentLevel: true)  // High
-        ConcentrationDisplay(concentration: 0.0, isCurrentLevel: true)  // Zero
-      }
+            VStack(alignment: .leading, spacing: 8) {
+                ConcentrationDisplay(concentration: 0.05, isCurrentLevel: true)  // Low
+                ConcentrationDisplay(concentration: 1.25, isCurrentLevel: true)  // Normal
+                ConcentrationDisplay(concentration: 4.75, isCurrentLevel: true)  // High
+                ConcentrationDisplay(concentration: 0.0, isCurrentLevel: true)  // Zero
+            }
+        }
+
+        Divider()
+
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Projected Level Examples")
+                .font(DesignTokens.Typography.headline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ConcentrationDisplay(concentration: 0.85, isCurrentLevel: false)
+                ConcentrationDisplay(concentration: 2.1, isCurrentLevel: false)
+                ConcentrationDisplay(concentration: 0.3, isCurrentLevel: false)
+            }
+        }
+
+        Divider()
+
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Helper Constructors")
+                .font(DesignTokens.Typography.headline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ConcentrationDisplay.empty(isCurrentLevel: true)
+                ConcentrationDisplay.level(1.75, isCurrentLevel: true)
+                ConcentrationDisplay.level(0.45, isCurrentLevel: false)
+            }
+        }
     }
-
-    Divider()
-
-    VStack(alignment: .leading, spacing: 16) {
-      Text("Projected Level Examples")
-        .font(DesignTokens.Typography.headline)
-
-      VStack(alignment: .leading, spacing: 8) {
-        ConcentrationDisplay(concentration: 0.85, isCurrentLevel: false)
-        ConcentrationDisplay(concentration: 2.1, isCurrentLevel: false)
-        ConcentrationDisplay(concentration: 0.3, isCurrentLevel: false)
-      }
-    }
-
-    Divider()
-
-    VStack(alignment: .leading, spacing: 16) {
-      Text("Helper Constructors")
-        .font(DesignTokens.Typography.headline)
-
-      VStack(alignment: .leading, spacing: 8) {
-        ConcentrationDisplay.empty(isCurrentLevel: true)
-        ConcentrationDisplay.level(1.75, isCurrentLevel: true)
-        ConcentrationDisplay.level(0.45, isCurrentLevel: false)
-      }
-    }
-  }
-  .padding()
+    .padding()
 }
