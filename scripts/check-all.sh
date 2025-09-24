@@ -89,7 +89,7 @@ fi
 
 if command -v swift-format &> /dev/null; then
     echo -e "${BLUE}Running swift-format auto-fix...${NC}"
-    swift-format --in-place --recursive .
+    swift-format --configuration .swift-format --in-place --recursive .
     print_success "swift-format auto-fix completed"
 else
     print_warning "swift-format not installed - skipping auto-fix"
@@ -141,9 +141,9 @@ fi
 # 5. swift-format check (if available)
 print_header "5️⃣ swift-format Style Check"
 if command -v swift-format &> /dev/null; then
-    if ! run_check "swift-format Check" "swift-format lint --recursive ."; then
+    if ! run_check "swift-format Check" "swift-format --configuration .swift-format lint --recursive ."; then
         ((FAILED_CHECKS++))
-        print_warning "Run 'swift-format --in-place --recursive .' to fix formatting issues"
+        print_warning "Run 'swift-format --configuration .swift-format --in-place --recursive .' to fix formatting issues"
     fi
 else
     print_warning "swift-format not installed - skipping format check"
@@ -178,7 +178,7 @@ else
     echo ""
     echo "Quick fixes:"
     echo "• SwiftLint issues: swiftlint --fix"
-    echo "• Format issues: swift-format --in-place --recursive ."
+    echo "• Format issues: swift-format --configuration .swift-format --in-place --recursive ."
     echo "• Re-run: ./scripts/check-all.sh"
     echo "• Skip slow UI tests: ./scripts/check-all.sh --skip-ui"
     echo ""
