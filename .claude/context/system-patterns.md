@@ -97,6 +97,23 @@ Individual Test Methods (testUserCreation, testDoseCalculation)
 - **Text Field Utilities**: TestUtilities.clearAndEnterText() provides reliable text field interaction across all tests
 - **Debug Utilities**: Comprehensive element type mapping and accessibility hierarchy debugging prevents guesswork
 
+### Iterative E2E Testing Process (CRITICAL ANTI-PATTERN PREVENTION)
+**⚠️ NEVER write all E2E tests at once - this causes major implementation problems.**
+
+#### Correct E2E Development Process:
+1. **Stub all acceptance criteria** - Create test stubs with GIVEN/WHEN/THEN comments
+2. **One test at a time** - Pick one test method to implement fully
+3. **Debug-first approach** - Always start with `TestUtilities.debugElements()`
+4. **Single test verification** - Run: `./scripts/test.sh ui 1 TestClass/testMethod`
+5. **Commit working test** - Save progress before moving to next test
+6. **Iterate** - Repeat for each remaining test method
+
+#### E2E Implementation Anti-Patterns:
+- ❌ **Batch Implementation**: Writing 5+ tests before running any
+- ❌ **Element Guessing**: Assuming SwiftUI → accessibility mappings without debugging
+- ❌ **Multi-Test Execution**: Testing multiple new methods simultaneously
+- ❌ **Skip Debug Phase**: Writing selectors without `TestUtilities.debugElements()`
+
 ### PKEngine E2E Testing Patterns (Issue #45)
 - **Debug-first approach mandatory**: Always use TestUtilities.debugElements() before writing element selectors
 - **Multiple element handling**: Use `.element(boundBy:)` indexing when multiple elements share accessibility identifiers

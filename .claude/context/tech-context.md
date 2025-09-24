@@ -179,6 +179,25 @@ author: Claude Code PM System
 - **Pre-commit Integration**: Pre-commit hooks enable catch-and-fix workflow for violations (force unwrapping, for-where, cyclomatic complexity) during implementation
 - **Medical Test Complexity**: Medical test functions require `// swiftlint:disable cyclomatic_complexity` blocks for comprehensive E2E scenarios while maintaining code quality standards
 
+## E2E Testing Process Patterns (CRITICAL FOR AGENTS)
+
+### Iterative E2E Implementation (Anti-Batch-Writing Pattern)
+**⚠️ AGENTS: Never write all E2E tests simultaneously - this creates debugging chaos and wastes development time.**
+
+#### Required Agent E2E Process:
+1. **Acceptance Criteria Phase**: Stub all E2E tests with GIVEN/WHEN/THEN comments only
+2. **Single Test Implementation**: Pick ONE test method and implement fully
+3. **Debug-First Approach**: Always start with `TestUtilities.debugElements()`
+4. **Individual Test Execution**: Run `./scripts/test.sh ui 1 TestClass/testMethod`
+5. **Commit Working Test**: Save progress before implementing next test
+6. **Iterative Development**: Repeat for each remaining test method
+
+#### Agent Implementation Anti-Patterns:
+- ❌ **Batch E2E Writing**: Implementing 3+ E2E tests before running any
+- ❌ **Element Assumption**: Writing selectors without debug utility output
+- ❌ **Multi-Test Debugging**: Attempting to fix multiple broken E2E tests simultaneously
+- ❌ **Skip Verification**: Moving to next test before current test passes
+
 ## Update History
 - 2025-09-24T13:21:27Z: Added DatePicker & Calendar Integration section with SwiftUI DatePicker patterns, XCUITest calendar interaction, and SwiftLint integration enhancements from Issue #56
 - 2025-09-23T14:14:43Z: Added Security & Crash Prevention section with Swift Charts security patterns, SwiftLint management, and testing patterns from Issue #55 security fixes
