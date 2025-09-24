@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Write, Bash(gh pr view:*), Bash(branch_name:*), Bash(echo:*)
+allowed-tools: Read, Write, Bash(gh pr view:*), Bash(gh issue:*)
 description: Merge completed PR from branch to main using GitHub Pull Request workflow
 argument-hint: [pr-number]
 model: claude-sonnet-4-20250514
@@ -34,7 +34,7 @@ At which step would you like to start? (1-8)"
 2. Run Checks & Fix Issues"
 3. Mark PR as Ready for Review"
 4. Request Review"
-5. Document PR Comments & Action Items"
+5. Process PR Comments"
 6. Merge After Approval"
 7. Post-Merge Cleanup"
 8. Next Steps"
@@ -119,15 +119,18 @@ Step 4: Request Review
 I'll create a new GitHub issue for each PR comment. 
 ```
 
-2. Read all PR comments
+2. Create issues from comments
 ```bash
-gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | {body: .body, author: .author.login, createdAt: .createdAt}'
-```
+# Create new issue for each comment
+gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | {body: .body, author: .author.login, createdAt: .createdAt}' | while read -r comment; do
+  issue_title="PR #$ARGUMENTS - [issue-title]"
+  issue_body="Comment by $(echo "$comment" | jq -r .author) on $(echo "$comment" | jq -r .createdAt):\n\n$(echo "$comment" | jq -r .body)"
+  gh issue create --title "$issue_title" --body "$issue_body"
+done
 
-3. Create new issue for each comment
-```bash
-gh issue create --title "PR #$ARGUMENTS - [issue-title]" --body
 ```
+3. Evaluate and prioritize issues
+
 - Evaluate each new issue
 - Read the issue
 - Read the relevant code files for context
@@ -137,9 +140,22 @@ gh issue create --title "PR #$ARGUMENTS - [issue-title]" --body
   - [P2] Optional: Can be deferred until after merge
   - [P3] Low: Minor improvement, no immediate action needed
   - [wont-fix] Won't fix: Not applicable or not worth addressing
-- Comment on each issue with your evaluation and reasoning
+- Comment on each issue with your evaluation and reasoning:
+```
+**Priority Evaluation: [priority number] (priority-meaning)**
 
-**EVALUATION CRITERIA**
+**Rationale:**
+- **Is it correct?** [✅ Yes/❌ No] - (ex. SwiftLint rule conflicts are verified and cause development workflow issues)
+- **Is it relevant?** [✅ Yes/❌ No] - (ex. Directly affects daily development workflow and code consistency)
+- **Is it beneficial?** [✅ Yes/❌ No] - (ex. Fixing will eliminate auto-fix conflicts and improve developer experience)
+- **Is it safe?** [✅ Yes/❌ No] - (ex. Configuration changes are low-risk)
+
+**Impact:** [ex. HIGH - Development workflow efficiency, prevents continuous formatting conflicts.]
+
+[ex. This is a critical development infrastructure issue that should be resolved before merge to prevent ongoing developer friction.]
+```
+
+#### Evaluation Criteria
 
 **Common High Priority Patterns**
 - **Invalid Tests** (wrong assertions, missing cases, always passing, false confidence)
