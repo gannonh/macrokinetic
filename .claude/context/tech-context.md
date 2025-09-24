@@ -43,6 +43,12 @@ author: Claude Code PM System
 - **Design System**: Reusable components with accessibility
 - **TDD Approach**: Test-driven development with Red-Green-Refactor
 
+## AnalyticsService Architecture (Issue #54)
+- **Modern @Observable Architecture**: AnalyticsService successfully demonstrates @Observable pattern implementation for cross-model analytics coordination
+- **SwiftData ModelContext Integration**: Centralized analytics service architecture integrates seamlessly with SwiftData ModelContext for cross-model calculations
+- **Cross-Model Analytics Coordination**: Proven patterns for coordinating User, Dose, and MedicationProfile models through centralized service architecture
+- **Performance Optimization**: Analytics calculations optimized for large historical datasets (700+ dose records) through efficient SwiftData querying
+
 ## Data Architecture
 - **SwiftData Models**: CloudKit-compatible with default values
 - **Relationship Management**: Proper inverse relationships and cascade rules
@@ -197,6 +203,17 @@ author: Claude Code PM System
 - ❌ **Element Assumption**: Writing selectors without debug utility output
 - ❌ **Multi-Test Debugging**: Attempting to fix multiple broken E2E tests simultaneously
 - ❌ **Skip Verification**: Moving to next test before current test passes
+
+## E2E Testing & SwiftLint Integration (Issue #56 Session 2025-09-24)
+
+### SwiftLint Configuration Management
+- **SwiftLint Rule Conflict Resolution**: `closure_parameter_position` rule conflicts with disabled `opening_brace` rule - add to disabled_rules to resolve conflicts without compromising code quality
+- **XCUITest Element Query vs Array**: XCUIElementQuery has `.count` property but not `.isEmpty` - SwiftLint auto-fixes incorrectly convert to `.isEmpty` breaking UI tests
+- **SwiftLint Integration with E2E Development**: Pre-commit hooks catch violations during implementation - iterative fix workflow enables compliance without blocking development
+
+### SwiftUI Accessibility & E2E Testing Patterns
+- **SwiftUI Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
+- **E2E Performance Testing Patterns**: Medical E2E tests with multiple dose creation achieve ~85s for comprehensive validation - acceptable for healthcare app verification
 
 ## Update History
 - 2025-09-24T13:21:27Z: Added DatePicker & Calendar Integration section with SwiftUI DatePicker patterns, XCUITest calendar interaction, and SwiftLint integration enhancements from Issue #56
