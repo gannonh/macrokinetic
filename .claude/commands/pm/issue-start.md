@@ -345,10 +345,19 @@ Task:
 
       // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
          func testNameOfTestMethod() throws {
+            // ALWAYS start with debugging the accessibility hierarchy
+            // 🔍 DEBUG: Tables: []
+            // 🔍 DEBUG: ScrollViews: []
+            // 🔍 DEBUG: CollectionViews: ["dose-history-view"]
+
             // GIVEN: A dose exists in history
+
             // WHEN: User swipes left on dose row
+
             // THEN: Edit action appears and functions correctly
+
             // THEN: Dose entry sheet opens with pre-populated data
+            
          }
 
       2. Unit Tests (RED PHASE): Write failing unit tests that test isolated business logic and component contracts
