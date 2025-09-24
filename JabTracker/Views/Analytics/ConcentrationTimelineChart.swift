@@ -6,9 +6,9 @@
 import Charts
 import SwiftUI
 
+// swiftlint:disable type_body_length file_length
 /// Interactive concentration timeline chart displaying medication concentration over time
 /// Integrates with ChartDataProcessor for data transformation and Swift Charts for native iOS visualization
-// swiftlint:disable type_body_length file_length
 struct ConcentrationTimelineChart: View {
 
   // MARK: - Properties
@@ -106,8 +106,6 @@ struct ConcentrationTimelineChart: View {
       }
     }
     .background(configuration.theme.backgroundColor)
-    .accessibilityLabel(accessibilityLabel ?? "")
-    .accessibilityValue(accessibilityValue ?? "")
     .sheet(isPresented: $showingExportSheet) {
       NavigationStack {
         ChartExportView(dataset: dataset) { result in
