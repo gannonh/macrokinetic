@@ -1,7 +1,7 @@
 ---
 description: Begin or resume work on a GitHub issue with parallel agents based on work stream analysis.
 argument-hint: [Issue number] [additional context (optional)]
-allowed-tools: Read, Write, Edit, LS, Task
+allowed-tools: Bash, Read, Write, Edit, LS, Task
 ---
 
 # Issue Start/Resume
