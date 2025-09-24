@@ -1,109 +1,230 @@
-│ │ Architectural Refactoring Plan for PR #64                                                                                                      │ │
+ │ Complete Architectural Refactoring Plan for PR #64                                                                                             │ │
 │ │                                                                                                                                                │ │
-│ │ Critical Issues Identified                                                                                                                     │ │
+│ │ Critical Problems Found                                                                                                                        │ │
 │ │                                                                                                                                                │ │
-│ │ 1. Massive Business Logic in SwiftUI Views                                                                                                     │ │
+│ │ 1. Business logic embedded in SwiftUI Views - 519 lines in ConcentrationTimelineChart alone                                                    │ │
+│ │ 2. Untestable architecture - Only 8.54% coverage due to logic in View bodies                                                                   │ │
+│ │ 3. Coverage misconfiguration - Files incorrectly categorized as "excluded from coverage"                                                       │ │
+│ │ 4. No ViewModels for chart components violating MVVM pattern                                                                                   │ │
+│ │ 5. File I/O and async operations directly in Views                                                                                             │ │
 │ │                                                                                                                                                │ │
-│ │ - ConcentrationTimelineChart.swift: 519 lines with complex computed properties, data processing, and business logic                            │ │
-│ │ - ChartExportView.swift: 442 lines with export logic, file operations, and async processing                                                    │ │
-│ │ - DoseMarkerOverlay.swift: 259 lines with marker calculations and detail generation                                                            │ │
-│ │ - TimePeriodSelector.swift: 104 lines with period selection logic                                                                              │ │
+│ │ Complete Refactoring Plan (ALL BEFORE MERGE)                                                                                                   │ │
 │ │                                                                                                                                                │ │
-│ │ 2. Test Coverage Failure                                                                                                                       │ │
+│ │ Phase 1: Create ViewModels (2-3 hours)                                                                                                         │ │
 │ │                                                                                                                                                │ │
-│ │ - Files incorrectly placed in "exclusions" section of coverage-config.json                                                                     │ │
-│ │ - Critical business logic untestable due to being embedded in SwiftUI View bodies                                                              │ │
-│ │ - Only 8.54% coverage for ConcentrationTimelineChart (needs 75%)                                                                               │ │
+│ │ 1.1 ConcentrationChartViewModel ✅ (DONE)                                                                                                       │ │
 │ │                                                                                                                                                │ │
-│ │ 3. Architecture Violations                                                                                                                     │ │
+│ │ - Extracted data processing logic                                                                                                              │ │
+│ │ - Extracted accessibility calculations                                                                                                         │ │
+│ │ - Extracted gesture handling                                                                                                                   │ │
+│ │ - Made @Observable and testable                                                                                                                │ │
 │ │                                                                                                                                                │ │
-│ │ - Business logic mixed with presentation layer                                                                                                 │ │
-│ │ - No ViewModels for chart functionality                                                                                                        │ │
-│ │ - Computed properties doing heavy processing in Views                                                                                          │ │
-│ │ - File I/O and async operations directly in Views                                                                                              │ │
+│ │ 1.2 ChartExportViewModel (45 min)                                                                                                              │ │
 │ │                                                                                                                                                │ │
-│ │ Refactoring Plan                                                                                                                               │ │
+│ │ // Extract from ChartExportView:                                                                                                               │ │
+│ │ - Export state management                                                                                                                      │ │
+│ │ - Progress tracking                                                                                                                            │ │
+│ │ - Export configuration                                                                                                                         │ │
+│ │ - Async export operations                                                                                                                      │ │
+│ │ - File path generation                                                                                                                         │ │
 │ │                                                                                                                                                │ │
-│ │ Phase 1: Extract ViewModels (4-6 hours)                                                                                                        │ │
+│ │ 1.3 DoseMarkerViewModel (30 min)                                                                                                               │ │
 │ │                                                                                                                                                │ │
-│ │ 1.1 Create ConcentrationChartViewModel                                                                                                         │ │
+│ │ // Extract from DoseMarkerOverlay:                                                                                                             │ │
+│ │ - Marker detail generation                                                                                                                     │ │
+│ │ - Accessibility info calculations                                                                                                              │ │
+│ │ - Visual style computations                                                                                                                    │ │
+│ │ - Marker filtering logic                                                                                                                       │ │
 │ │                                                                                                                                                │ │
-│ │ - Move all computed properties from ConcentrationTimelineChart                                                                                 │ │
-│ │ - Extract data processing logic (processedConcentrationPoints, processedDoseMarkers)                                                           │ │
-│ │ - Extract gesture handling logic (zoom, pan)                                                                                                   │ │
-│ │ - Extract trend analysis and accessibility calculations                                                                                        │ │
-│ │ - Make it @Observable and testable                                                                                                             │ │
+│ │ 1.4 TimePeriodSelectorViewModel (30 min)                                                                                                       │ │
 │ │                                                                                                                                                │ │
-│ │ 1.2 Create ChartExportViewModel                                                                                                                │ │
+│ │ // Extract from TimePeriodSelector:                                                                                                            │ │
+│ │ - Period selection logic                                                                                                                       │ │
+│ │ - Date range calculations                                                                                                                      │ │
+│ │ - Configuration updates                                                                                                                        │ │
 │ │                                                                                                                                                │ │
-│ │ - Extract export logic from ChartExportView                                                                                                    │ │
-│ │ - Move file operations and async processing                                                                                                    │ │
-│ │ - Handle export configuration and progress tracking                                                                                            │ │
-│ │ - Separate ChartRenderer into its own service                                                                                                  │ │
-│ │                                                                                                                                                │ │
-│ │ 1.3 Create DoseMarkerViewModel                                                                                                                 │ │
-│ │                                                                                                                                                │ │
-│ │ - Extract marker detail generation                                                                                                             │ │
-│ │ - Move accessibility info calculations                                                                                                         │ │
-│ │ - Handle marker visual style computations                                                                                                      │ │
-│ │                                                                                                                                                │ │
-│ │ Phase 2: Create Service Layer (2-3 hours)                                                                                                      │ │
+│ │ Phase 2: Create Service Layer (1.5 hours)                                                                                                      │ │
 │ │                                                                                                                                                │ │
 │ │ 2.1 ChartRenderingService                                                                                                                      │ │
 │ │                                                                                                                                                │ │
-│ │ - Handle actual chart rendering to file                                                                                                        │ │
-│ │ - Manage export formats and quality settings                                                                                                   │ │
-│ │ - Provide testable file I/O operations                                                                                                         │ │
+│ │ // Responsibilities:                                                                                                                           │ │
+│ │ - Render chart to PDF/PNG/JPEG                                                                                                                 │ │
+│ │ - Handle export quality settings                                                                                                               │ │
+│ │ - Manage file system operations                                                                                                                │ │
+│ │ - Generate export metadata                                                                                                                     │ │
 │ │                                                                                                                                                │ │
 │ │ 2.2 ChartAccessibilityService                                                                                                                  │ │
 │ │                                                                                                                                                │ │
-│ │ - Generate accessibility descriptions                                                                                                          │ │
-│ │ - Format medical values for VoiceOver                                                                                                          │ │
+│ │ // Responsibilities:                                                                                                                           │ │
+│ │ - Generate VoiceOver descriptions                                                                                                              │ │
+│ │ - Format medical values for accessibility                                                                                                      │ │
 │ │ - Provide trend analysis descriptions                                                                                                          │ │
+│ │ - Generate chart summaries                                                                                                                     │ │
 │ │                                                                                                                                                │ │
-│ │ Phase 3: Update Views (2 hours)                                                                                                                │ │
+│ │ Phase 3: Update All Views (2 hours)                                                                                                            │ │
 │ │                                                                                                                                                │ │
-│ │ - Reduce Views to pure presentation layer                                                                                                      │ │
-│ │ - Inject ViewModels using @StateObject or @State                                                                                               │ │
-│ │ - Remove all business logic from View files                                                                                                    │ │
-│ │ - Use ViewModels for all computed values and actions                                                                                           │ │
+│ │ 3.1 ConcentrationTimelineChart                                                                                                                 │ │
 │ │                                                                                                                                                │ │
-│ │ Phase 4: Update Testing (2-3 hours)                                                                                                            │ │
+│ │ - Remove ALL business logic                                                                                                                    │ │
+│ │ - Use ConcentrationChartViewModel                                                                                                              │ │
+│ │ - Keep only SwiftUI view code                                                                                                                  │ │
+│ │ - Reduce from 519 to ~150 lines                                                                                                                │ │
 │ │                                                                                                                                                │ │
-│ │ - Write comprehensive unit tests for new ViewModels                                                                                            │ │
-│ │ - Test all extracted business logic                                                                                                            │ │
-│ │ - Update coverage-config.json to properly categorize files                                                                                     │ │
-│ │ - Ensure 75%+ coverage for utilities/ViewModels                                                                                                │ │
+│ │ 3.2 ChartExportView                                                                                                                            │ │
 │ │                                                                                                                                                │ │
-│ │ Phase 5: Fix Coverage Configuration (30 min)                                                                                                   │ │
+│ │ - Remove export logic                                                                                                                          │ │
+│ │ - Use ChartExportViewModel                                                                                                                     │ │
+│ │ - Keep only UI presentation                                                                                                                    │ │
+│ │ - Reduce from 442 to ~100 lines                                                                                                                │ │
 │ │                                                                                                                                                │ │
-│ │ - Move chart components from "exclusions" to appropriate tiers:                                                                                │ │
-│ │   - ViewModels → "view_models" tier (85% requirement)                                                                                          │ │
-│ │   - Services → "infrastructure" tier (62% requirement)                                                                                         │ │
-│ │   - Pure Views → remain in "exclusions"                                                                                                        │ │
+│ │ 3.3 DoseMarkerOverlay                                                                                                                          │ │
 │ │                                                                                                                                                │ │
-│ │ Implementation Priority                                                                                                                        │ │
+│ │ - Remove calculations                                                                                                                          │ │
+│ │ - Use DoseMarkerViewModel                                                                                                                      │ │
+│ │ - Pure presentation layer                                                                                                                      │ │
+│ │ - Reduce from 259 to ~80 lines                                                                                                                 │ │
 │ │                                                                                                                                                │ │
-│ │ IMMEDIATE (Before Merge):                                                                                                                      │ │
-│ │ 1. Extract ConcentrationChartViewModel with core logic                                                                                         │ │
-│ │ 2. Fix coverage-config.json categorization                                                                                                     │ │
-│ │ 3. Write tests for critical medical calculations                                                                                               │ │
+│ │ 3.4 TimePeriodSelector                                                                                                                         │ │
 │ │                                                                                                                                                │ │
-│ │ POST-MERGE (Technical Debt):                                                                                                                   │ │
-│ │ 1. Complete ViewModel extraction for all chart components                                                                                      │ │
-│ │ 2. Create service layer for rendering and accessibility                                                                                        │ │
-│ │ 3. Achieve full coverage compliance                                                                                                            │ │
+│ │ - Remove selection logic                                                                                                                       │ │
+│ │ - Use TimePeriodSelectorViewModel                                                                                                              │ │
+│ │ - UI only                                                                                                                                      │ │
+│ │ - Reduce from 104 to ~40 lines                                                                                                                 │ │
 │ │                                                                                                                                                │ │
-│ │ Expected Outcomes                                                                                                                              │ │
+│ │ Phase 4: Fix Coverage Configuration (30 min)                                                                                                   │ │
 │ │                                                                                                                                                │ │
-│ │ - Testable architecture: All business logic in ViewModels/Services                                                                             │ │
-│ │ - Coverage compliance: Meet tier requirements (85% for ViewModels)                                                                             │ │
-│ │ - Maintainable code: Clear separation of concerns                                                                                              │ │
-│ │ - Medical safety: Testable critical calculations                                                                                               │ │
+│ │ 4.1 Update coverage-config.json                                                                                                                │ │
 │ │                                                                                                                                                │ │
-│ │ Time Estimate                                                                                                                                  │ │
+│ │ {                                                                                                                                              │ │
+│ │   "view_models": {                                                                                                                             │ │
+│ │     "threshold": 85,                                                                                                                           │ │
+│ │     "files": [                                                                                                                                 │ │
+│ │       "ConcentrationChartViewModel.swift",                                                                                                     │ │
+│ │       "ChartExportViewModel.swift",                                                                                                            │ │
+│ │       "DoseMarkerViewModel.swift",                                                                                                             │ │
+│ │       "TimePeriodSelectorViewModel.swift"                                                                                                      │ │
+│ │     ]                                                                                                                                          │ │
+│ │   },                                                                                                                                           │ │
+│ │   "infrastructure": {                                                                                                                          │ │
+│ │     "threshold": 62,                                                                                                                           │ │
+│ │     "files": [                                                                                                                                 │ │
+│ │       "ChartRenderingService.swift",                                                                                                           │ │
+│ │       "ChartAccessibilityService.swift",                                                                                                       │ │
+│ │       "ChartDataProcessor.swift"                                                                                                               │ │
+│ │     ]                                                                                                                                          │ │
+│ │   },                                                                                                                                           │ │
+│ │   "utilities": {                                                                                                                               │ │
+│ │     "threshold": 75,                                                                                                                           │ │
+│ │     "files": [                                                                                                                                 │ │
+│ │       "ChartData.swift",                                                                                                                       │ │
+│ │       "ChartDataTypes.swift",                                                                                                                  │ │
+│ │       "ChartDataEnums.swift"                                                                                                                   │ │
+│ │     ]                                                                                                                                          │ │
+│ │   },                                                                                                                                           │ │
+│ │   "exclusions": {                                                                                                                              │ │
+│ │     "files": [                                                                                                                                 │ │
+│ │       // ONLY pure SwiftUI Views:                                                                                                              │ │
+│ │       "ConcentrationTimelineChart.swift",                                                                                                      │ │
+│ │       "ChartExportView.swift",                                                                                                                 │ │
+│ │       "DoseMarkerOverlay.swift",                                                                                                               │ │
+│ │       "TimePeriodSelector.swift",                                                                                                              │ │
+│ │       "ChartControlsView.swift",                                                                                                               │ │
+│ │       "ChartConfiguration.swift"                                                                                                               │ │
+│ │     ]                                                                                                                                          │ │
+│ │   }                                                                                                                                            │ │
+│ │ }                                                                                                                                              │ │
 │ │                                                                                                                                                │ │
-│ │ - Immediate fixes: 4-6 hours                                                                                                                   │ │
-│ │ - Complete refactoring: 10-15 hours total                                                                                                      │ │
+│ │ Phase 5: Write Comprehensive Tests (3-4 hours)                                                                                                 │ │
 │ │                                                                                                                                                │ │
-│ │ This architectural failure should not have passed review. We need to enforce MVVM patterns and prevent business logic in Views going forward. 
+│ │ 5.1 ConcentrationChartViewModelTests                                                                                                           │ │
+│ │                                                                                                                                                │ │
+│ │ - Test data processing logic                                                                                                                   │ │
+│ │ - Test accessibility calculations                                                                                                              │ │
+│ │ - Test gesture handling                                                                                                                        │ │
+│ │ - Test trend analysis                                                                                                                          │ │
+│ │ - Target: 90% coverage                                                                                                                         │ │
+│ │                                                                                                                                                │ │
+│ │ 5.2 ChartExportViewModelTests                                                                                                                  │ │
+│ │                                                                                                                                                │ │
+│ │ - Test export configuration                                                                                                                    │ │
+│ │ - Test progress tracking                                                                                                                       │ │
+│ │ - Test file operations                                                                                                                         │ │
+│ │ - Test error handling                                                                                                                          │ │
+│ │ - Target: 85% coverage                                                                                                                         │ │
+│ │                                                                                                                                                │ │
+│ │ 5.3 ChartRenderingServiceTests                                                                                                                 │ │
+│ │                                                                                                                                                │ │
+│ │ - Test render operations                                                                                                                       │ │
+│ │ - Test file formats                                                                                                                            │ │
+│ │ - Test quality settings                                                                                                                        │ │
+│ │ - Target: 75% coverage                                                                                                                         │ │
+│ │                                                                                                                                                │ │
+│ │ 5.4 ChartAccessibilityServiceTests                                                                                                             │ │
+│ │                                                                                                                                                │ │
+│ │ - Test description generation                                                                                                                  │ │
+│ │ - Test formatting                                                                                                                              │ │
+│ │ - Test trend descriptions                                                                                                                      │ │
+│ │ - Target: 85% coverage                                                                                                                         │ │
+│ │                                                                                                                                                │ │
+│ │ Phase 6: Integration & Verification (1 hour)                                                                                                   │ │
+│ │                                                                                                                                                │ │
+│ │ 6.1 Run Coverage Analysis                                                                                                                      │ │
+│ │                                                                                                                                                │ │
+│ │ - Verify all ViewModels meet 85% threshold                                                                                                     │ │
+│ │ - Verify services meet 62% threshold                                                                                                           │ │
+│ │ - Verify utilities meet 75% threshold                                                                                                          │ │
+│ │                                                                                                                                                │ │
+│ │ 6.2 Run Full Test Suite                                                                                                                        │ │
+│ │                                                                                                                                                │ │
+│ │ - Unit tests must pass                                                                                                                         │ │
+│ │ - UI tests must pass                                                                                                                           │ │
+│ │ - No regression in existing functionality                                                                                                      │ │
+│ │                                                                                                                                                │ │
+│ │ 6.3 Update XcodeGen                                                                                                                            │ │
+│ │                                                                                                                                                │ │
+│ │ - Run xcodegen generate to include new files                                                                                                   │ │
+│ │ - Verify project builds                                                                                                                        │ │
+│ │                                                                                                                                                │ │
+│ │ File Structure After Refactoring                                                                                                               │ │
+│ │                                                                                                                                                │ │
+│ │ JabTracker/                                                                                                                                    │ │
+│ │ ├── ViewModels/                                                                                                                                │ │
+│ │ │   ├── ConcentrationChartViewModel.swift (NEW) ✅                                                                                              │ │
+│ │ │   ├── ChartExportViewModel.swift (NEW)                                                                                                       │ │
+│ │ │   ├── DoseMarkerViewModel.swift (NEW)                                                                                                        │ │
+│ │ │   └── TimePeriodSelectorViewModel.swift (NEW)                                                                                                │ │
+│ │ ├── Services/                                                                                                                                  │ │
+│ │ │   ├── ChartRenderingService.swift (NEW)                                                                                                      │ │
+│ │ │   ├── ChartAccessibilityService.swift (NEW)                                                                                                  │ │
+│ │ │   └── ChartDataProcessor.swift (EXISTING)                                                                                                    │ │
+│ │ ├── Views/Analytics/                                                                                                                           │ │
+│ │ │   ├── ConcentrationTimelineChart.swift (REFACTORED)                                                                                          │ │
+│ │ │   ├── ChartExportView.swift (REFACTORED)                                                                                                     │ │
+│ │ │   ├── DoseMarkerOverlay.swift (REFACTORED)                                                                                                   │ │
+│ │ │   └── TimePeriodSelector.swift (REFACTORED)                                                                                                  │ │
+│ │ └── Models/                                                                                                                                    │ │
+│ │     └── ChartData.swift (EXISTING)                                                                                                             │ │
+│ │                                                                                                                                                │ │
+│ │ JabTrackerTests/                                                                                                                               │ │
+│ │ ├── ConcentrationChartViewModelTests.swift (NEW)                                                                                               │ │
+│ │ ├── ChartExportViewModelTests.swift (NEW)                                                                                                      │ │
+│ │ ├── DoseMarkerViewModelTests.swift (NEW)                                                                                                       │ │
+│ │ ├── TimePeriodSelectorViewModelTests.swift (NEW)                                                                                               │ │
+│ │ ├── ChartRenderingServiceTests.swift (NEW)                                                                                                     │ │
+│ │ └── ChartAccessibilityServiceTests.swift (NEW)                                                                                                 │ │
+│ │                                                                                                                                                │ │
+│ │ Success Criteria                                                                                                                               │ │
+│ │                                                                                                                                                │ │
+│ │ - ✅ ALL business logic extracted from Views                                                                                                    │ │
+│ │ - ✅ ViewModels achieve 85%+ coverage                                                                                                           │ │
+│ │ - ✅ Services achieve 62%+ coverage                                                                                                             │ │
+│ │ - ✅ All tests pass                                                                                                                             │ │
+│ │ - ✅ coverage-config.json correctly categorizes files                                                                                           │ │
+│ │ - ✅ Views reduced to pure presentation layer                                                                                                   │ │
+│ │ - ✅ Medical calculations fully tested                                                                                                          │ │
+│ │                                                                                                                                                │ │
+│ │ Total Time Estimate                                                                                                                            │ │
+│ │                                                                                                                                                │ │
+│ │ 10-12 hours of focused work                                                                                                                    │ │
+│ │                                                                                                                                                │ │
+│ │ This MUST be completed before merge to maintain architectural integrity and medical safety standards. 
