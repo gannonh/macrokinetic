@@ -1,53 +1,109 @@
- Implementation Plan: Fix Duplicate Chart Label & Complete E2E Tests                                                                            │ │
+│ │ Architectural Refactoring Plan for PR #64                                                                                                      │ │
 │ │                                                                                                                                                │ │
-│ │ 1. Fix Duplicate "Concentration Timeline" Labels ✋                                                                                             │ │
+│ │ Critical Issues Identified                                                                                                                     │ │
 │ │                                                                                                                                                │ │
-│ │ Problem: Two identical "Concentration Timeline" labels appear stacked on the Analytics tab                                                     │ │
-│ │ - First label: AnalyticsView section header (ContentView.swift:241)                                                                            │ │
-│ │ - Second label: ConcentrationTimelineChart internal header (displays dataset.metadata.title)                                                   │ │
+│ │ 1. Massive Business Logic in SwiftUI Views                                                                                                     │ │
 │ │                                                                                                                                                │ │
-│ │ Solution: Remove the AnalyticsView section header since the chart component already provides its own title                                     │ │
-│ │ - Remove lines 241-243 in ContentView.swift: Text("Concentration Timeline") section header                                                     │ │
-│ │ - Keep the chart's internal header which provides proper context within the chart component                                                    │ │
+│ │ - ConcentrationTimelineChart.swift: 519 lines with complex computed properties, data processing, and business logic                            │ │
+│ │ - ChartExportView.swift: 442 lines with export logic, file operations, and async processing                                                    │ │
+│ │ - DoseMarkerOverlay.swift: 259 lines with marker calculations and detail generation                                                            │ │
+│ │ - TimePeriodSelector.swift: 104 lines with period selection logic                                                                              │ │
 │ │                                                                                                                                                │ │
-│ │ 2. Complete E2E Tests Implementation 🧪                                                                                                        │ │
+│ │ 2. Test Coverage Failure                                                                                                                       │ │
 │ │                                                                                                                                                │ │
-│ │ Target files with stubbed tests:                                                                                                               │ │
+│ │ - Files incorrectly placed in "exclusions" section of coverage-config.json                                                                     │ │
+│ │ - Critical business logic untestable due to being embedded in SwiftUI View bodies                                                              │ │
+│ │ - Only 8.54% coverage for ConcentrationTimelineChart (needs 75%)                                                                               │ │
 │ │                                                                                                                                                │ │
-│ │ ChartControlsUITests.swift (4 remaining tests)                                                                                                 │ │
+│ │ 3. Architecture Violations                                                                                                                     │ │
 │ │                                                                                                                                                │ │
-│ │ - testChartControlsDisplayCorrectState() - Test control visual feedback and state changes                                                      │ │
-│ │ - testChartControlsAccessibility() - Test accessibility labels, hints, and announcements                                                       │ │
-│ │ - testMultipleTimePeriodSelection() - Test sequential time period selection behavior                                                           │ │
-│ │ - testDefaultTimePeriodSelection() - Test default 30d selection on chart load                                                                  │ │
+│ │ - Business logic mixed with presentation layer                                                                                                 │ │
+│ │ - No ViewModels for chart functionality                                                                                                        │ │
+│ │ - Computed properties doing heavy processing in Views                                                                                          │ │
+│ │ - File I/O and async operations directly in Views                                                                                              │ │
 │ │                                                                                                                                                │ │
-│ │ ConcentrationTimelineChartUITests.swift (5 remaining tests)                                                                                    │ │
+│ │ Refactoring Plan                                                                                                                               │ │
 │ │                                                                                                                                                │ │
-│ │ - testConcentrationTimelineDisplaysCorrectly() - Test basic chart rendering with concentration line                                            │ │
-│ │ - testInteractiveChartFeatures() - Test gesture interactions (zoom, pan)                                                                       │ │
-│ │ - testTimePeriodSelector() - Test time period changes (7d, 30d, 90d, 1y)                                                                       │ │
-│ │ - testChartAccessibilityFeatures() - Test VoiceOver navigation and announcements                                                               │ │
-│ │ - testChartPerformanceWithLargeDatasets() - Test 1+ year dataset performance                                                                   │ │
+│ │ Phase 1: Extract ViewModels (4-6 hours)                                                                                                        │ │
 │ │                                                                                                                                                │ │
-│ │ 3. Testing Approach 🔧                                                                                                                         │ │
+│ │ 1.1 Create ConcentrationChartViewModel                                                                                                         │ │
 │ │                                                                                                                                                │ │
-│ │ Debug-first methodology:                                                                                                                       │ │
-│ │ - Use TestUtilities.debugElements() to identify actual element types and accessibility identifiers                                             │ │
-│ │ - Leverage existing TestUtilities.createHistoricalChartData() for test data setup                                                              │ │
-│ │ - Target accessibility identifier: "analytics-concentration-chart" (confirmed working)                                                         │ │
-│ │ - Follow established patterns from working Stream D implementation                                                                             │ │
+│ │ - Move all computed properties from ConcentrationTimelineChart                                                                                 │ │
+│ │ - Extract data processing logic (processedConcentrationPoints, processedDoseMarkers)                                                           │ │
+│ │ - Extract gesture handling logic (zoom, pan)                                                                                                   │ │
+│ │ - Extract trend analysis and accessibility calculations                                                                                        │ │
+│ │ - Make it @Observable and testable                                                                                                             │ │
 │ │                                                                                                                                                │ │
-│ │ 4. Technical Considerations 📋                                                                                                                 │ │
+│ │ 1.2 Create ChartExportViewModel                                                                                                                │ │
 │ │                                                                                                                                                │ │
-│ │ Chart Infrastructure Status:                                                                                                                   │ │
-│ │ - ✅ Chart displays concentration timeline with multi-week data                                                                                 │ │
-│ │ - ✅ Historical dose creation working (0, 7, 14, 21, 28 days ago)                                                                               │ │
-│ │ - ✅ DatePicker calendar dismissal resolved                                                                                                     │ │
-│ │ - ✅ Element targeting patterns established                                                                                                     │ │
+│ │ - Extract export logic from ChartExportView                                                                                                    │ │
+│ │ - Move file operations and async processing                                                                                                    │ │
+│ │ - Handle export configuration and progress tracking                                                                                            │ │
+│ │ - Separate ChartRenderer into its own service                                                                                                  │ │
 │ │                                                                                                                                                │ │
-│ │ Current Branch: issue/56-implement-concentrationtimelinechart                                                                                  │ │
-│ │ Testing Strategy: Follow TDD with immediate simulator feedback                                                                                 │ │
-│ │ Expected Timeline: ~4-6 hours for comprehensive E2E test implementation                                                                        │ │
+│ │ 1.3 Create DoseMarkerViewModel                                                                                                                 │ │
 │ │                                                                                                                                                │ │
-│ │ This plan addresses both the immediate UI improvement (duplicate label fix) and completes the remaining acceptance criteria validation through │ │
-│ │  comprehensive E2E testing.   
+│ │ - Extract marker detail generation                                                                                                             │ │
+│ │ - Move accessibility info calculations                                                                                                         │ │
+│ │ - Handle marker visual style computations                                                                                                      │ │
+│ │                                                                                                                                                │ │
+│ │ Phase 2: Create Service Layer (2-3 hours)                                                                                                      │ │
+│ │                                                                                                                                                │ │
+│ │ 2.1 ChartRenderingService                                                                                                                      │ │
+│ │                                                                                                                                                │ │
+│ │ - Handle actual chart rendering to file                                                                                                        │ │
+│ │ - Manage export formats and quality settings                                                                                                   │ │
+│ │ - Provide testable file I/O operations                                                                                                         │ │
+│ │                                                                                                                                                │ │
+│ │ 2.2 ChartAccessibilityService                                                                                                                  │ │
+│ │                                                                                                                                                │ │
+│ │ - Generate accessibility descriptions                                                                                                          │ │
+│ │ - Format medical values for VoiceOver                                                                                                          │ │
+│ │ - Provide trend analysis descriptions                                                                                                          │ │
+│ │                                                                                                                                                │ │
+│ │ Phase 3: Update Views (2 hours)                                                                                                                │ │
+│ │                                                                                                                                                │ │
+│ │ - Reduce Views to pure presentation layer                                                                                                      │ │
+│ │ - Inject ViewModels using @StateObject or @State                                                                                               │ │
+│ │ - Remove all business logic from View files                                                                                                    │ │
+│ │ - Use ViewModels for all computed values and actions                                                                                           │ │
+│ │                                                                                                                                                │ │
+│ │ Phase 4: Update Testing (2-3 hours)                                                                                                            │ │
+│ │                                                                                                                                                │ │
+│ │ - Write comprehensive unit tests for new ViewModels                                                                                            │ │
+│ │ - Test all extracted business logic                                                                                                            │ │
+│ │ - Update coverage-config.json to properly categorize files                                                                                     │ │
+│ │ - Ensure 75%+ coverage for utilities/ViewModels                                                                                                │ │
+│ │                                                                                                                                                │ │
+│ │ Phase 5: Fix Coverage Configuration (30 min)                                                                                                   │ │
+│ │                                                                                                                                                │ │
+│ │ - Move chart components from "exclusions" to appropriate tiers:                                                                                │ │
+│ │   - ViewModels → "view_models" tier (85% requirement)                                                                                          │ │
+│ │   - Services → "infrastructure" tier (62% requirement)                                                                                         │ │
+│ │   - Pure Views → remain in "exclusions"                                                                                                        │ │
+│ │                                                                                                                                                │ │
+│ │ Implementation Priority                                                                                                                        │ │
+│ │                                                                                                                                                │ │
+│ │ IMMEDIATE (Before Merge):                                                                                                                      │ │
+│ │ 1. Extract ConcentrationChartViewModel with core logic                                                                                         │ │
+│ │ 2. Fix coverage-config.json categorization                                                                                                     │ │
+│ │ 3. Write tests for critical medical calculations                                                                                               │ │
+│ │                                                                                                                                                │ │
+│ │ POST-MERGE (Technical Debt):                                                                                                                   │ │
+│ │ 1. Complete ViewModel extraction for all chart components                                                                                      │ │
+│ │ 2. Create service layer for rendering and accessibility                                                                                        │ │
+│ │ 3. Achieve full coverage compliance                                                                                                            │ │
+│ │                                                                                                                                                │ │
+│ │ Expected Outcomes                                                                                                                              │ │
+│ │                                                                                                                                                │ │
+│ │ - Testable architecture: All business logic in ViewModels/Services                                                                             │ │
+│ │ - Coverage compliance: Meet tier requirements (85% for ViewModels)                                                                             │ │
+│ │ - Maintainable code: Clear separation of concerns                                                                                              │ │
+│ │ - Medical safety: Testable critical calculations                                                                                               │ │
+│ │                                                                                                                                                │ │
+│ │ Time Estimate                                                                                                                                  │ │
+│ │                                                                                                                                                │ │
+│ │ - Immediate fixes: 4-6 hours                                                                                                                   │ │
+│ │ - Complete refactoring: 10-15 hours total                                                                                                      │ │
+│ │                                                                                                                                                │ │
+│ │ This architectural failure should not have passed review. We need to enforce MVVM patterns and prevent business logic in Views going forward. 
