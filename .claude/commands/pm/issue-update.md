@@ -206,6 +206,8 @@ If any step fails, report clearly:
 - Focus on factual progress, not speculation
 - Include specific file names and line numbers when relevant
 - Note both completed work and discovered issues
+- INCLUDE CLEAR NEXT STEPS FOR EACH STREAM
 - Keep stream-specific updates in appropriate files
 - Follow `/rules/datetime.md` for timestamps
 - Use present tense for current status, past tense for completed work
+- ⚠️ **IMPORTANT** The primary goal is to provide a clear, accurate record of progress, learnings and next steps for the issue and its streams so that the next session can pick up seamlessly and have exactly the context needed to continue effectively.
