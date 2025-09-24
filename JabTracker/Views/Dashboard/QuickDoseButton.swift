@@ -178,26 +178,17 @@ struct QuickDoseSheet: View {
           .accessibilityIdentifier("quick-dose-site-picker")
           .accessibilityLabel("Select injection site")
 
-          // Time Display/Picker
-          if self.isEditMode {
-            // Date/Time picker for editing
-            DatePicker(
-              "Date",
-              selection: self.$viewModel.doseTime,
-              displayedComponents: [.date, .hourAndMinute]
-            )
-            .accessibilityIdentifier("quick-dose-datetime-picker")
-            .accessibilityLabel("Select dose date and time")
-          } else {
-            // Read-only time display for new doses
-            HStack {
-              Text("Time")
-              Spacer()
-              Text(self.viewModel.doseTime.formatted(date: .omitted, time: .shortened))
-                .foregroundColor(.secondary)
-                .accessibilityIdentifier("quick-dose-time")
-            }
-          }
+          // Date/Time picker for all doses (new and editing)
+          DatePicker(
+            "Date",
+            selection: self.$viewModel.doseTime,
+            in: (Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...Date(),
+            displayedComponents: [.date, .hourAndMinute]
+          )
+          .accessibilityIdentifier("quick-dose-datetime-picker")
+          .accessibilityLabel("Select dose date and time")
+          .accessibilityHint(
+            "Choose when the dose was administered. Defaults to current date and time.")
         } header: {
           Text("Dose Details")
         } footer: {
