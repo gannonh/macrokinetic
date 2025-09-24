@@ -17,5 +17,6 @@ final class CodeGenTests: XCTestCase {
   @MainActor
   func testCodeGen() throws {
     // record here
+
   }
 }

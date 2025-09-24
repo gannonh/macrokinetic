@@ -186,7 +186,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
     analyticsTab.tap()
 
     // Debug to find time period selector elements
-    TestUtilities.debugElements(in: app, containing: "period")
+    // Wait for time period controls to load
+    sleep(1)
 
     // WHEN: User selects different time periods (7d, 30d, 90d, 1y)
     // Look for time period buttons - use common patterns
@@ -237,7 +238,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
     XCTAssertFalse(chartElement.label.isEmpty, "Chart accessibility label should not be empty")
 
     // Look for dose markers with accessibility identifiers
-    TestUtilities.debugElements(in: app, containing: "dose")
+    // Wait for accessibility elements to load
+    sleep(1)
 
     // Check for dose marker accessibility
     let doseMarkers = app.buttons.matching(NSPredicate(format: "identifier CONTAINS 'dose-marker'"))

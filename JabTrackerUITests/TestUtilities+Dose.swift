@@ -217,4 +217,180 @@ extension TestUtilities {
       "Should have at least \(minimumCount) dose row(s)")
     return doseRows
   }
+
+  // swiftlint:disable cyclomatic_complexity
+  /// Creates doses with historical dates using the date picker for chart testing
+  /// Creates doses spanning multiple weeks for proper concentration timeline testing
+  /// - Parameters:
+  ///   - app: The XCUIApplication instance
+  ///   - count: Number of doses to create (default: 5)
+  static func createHistoricalChartData(in app: XCUIApplication, count: Int = 5) {
+    let addTab = app.tabBars.element.buttons["Add"]
+    let medicationPicker = app.buttons["quick-dose-medication-picker"]
+    let datePicker = app.datePickers["quick-dose-datetime-picker"]
+    let saveButton = app.buttons["quick-dose-save-button"]
+    let successIndicator = app.staticTexts["dose-logged-success"]
+
+    // Create doses at 0, 7, 14, 21, 28 days ago for good chart spread
+    let dayIntervals = [0, 7, 14, 21, 28]
+
+    for index in 0..<min(count, dayIntervals.count) {
+      let daysAgo = dayIntervals[index]
+
+      // Navigate to Add tab
+      addTab.tap()
+
+      // Wait for form elements to appear
+      XCTAssertTrue(
+        medicationPicker.waitForExistence(timeout: 3),
+        "Medication picker should exist for dose \(index + 1)")
+
+      // Set historical date using the date picker
+      if daysAgo > 0 {
+        XCTAssertTrue(
+          datePicker.waitForExistence(timeout: 3),
+          "Date picker should exist for dose \(index + 1)")
+
+        // Calculate target date (daysAgo days in the past)
+        let targetDate = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
+
+        // Tap the date picker to open it
+        datePicker.tap()
+
+        // Wait a moment for the calendar interface to appear
+        sleep(2)
+
+        // Calendar interface is now open
+
+        // Calculate target date components
+        let calendar = Calendar.current
+        let targetDateComponents = calendar.dateComponents([.day, .month, .year], from: targetDate)
+        let currentDateComponents = calendar.dateComponents([.day, .month, .year], from: Date())
+
+        guard let targetDay = targetDateComponents.day,
+          let targetMonth = targetDateComponents.month,
+          let targetYear = targetDateComponents.year,
+          let currentMonth = currentDateComponents.month,
+          let currentYear = currentDateComponents.year
+        else {
+          XCTFail("Could not extract date components for dose \(index + 1)")
+          return
+        }
+
+        print("🔍 DEBUG: Target date: \(targetDate)")
+        print("🔍 DEBUG: Target day: \(targetDay), month: \(targetMonth), year: \(targetYear)")
+        print("🔍 DEBUG: Current month: \(currentMonth), year: \(currentYear)")
+
+        // Navigate to the correct month if needed
+        if targetYear != currentYear || targetMonth != currentMonth {
+          // Need to navigate to a different month
+          let monthDifference = (targetYear - currentYear) * 12 + (targetMonth - currentMonth)
+
+          if monthDifference < 0 {
+            // Go backwards in time - tap left arrow
+            for _ in 0..<abs(monthDifference) {
+              let previousButton = app.buttons.matching(identifier: "Previous Month").firstMatch
+              if !previousButton.exists {
+                // Try generic left arrow or navigation
+                let leftArrow = app.buttons.element(matching: .button, identifier: "ChevronLeft")
+                if leftArrow.exists {
+                  leftArrow.tap()
+                } else {
+                  XCTFail("Could not find previous month navigation for dose \(index + 1)")
+                  return
+                }
+              } else {
+                previousButton.tap()
+              }
+              sleep(1)
+            }
+          }
+        }
+
+        // Select the specific day in the calendar
+        // Calendar buttons have full labels like "Monday, September 16" not just "16"
+        let monthName = DateFormatter().monthSymbols[targetMonth - 1]  // Month names array is 0-indexed
+        let targetDateLabelPattern = "\\w+, \(monthName) \(targetDay)"
+
+        print("🔍 DEBUG: Looking for day button with pattern: '\(targetDateLabelPattern)'")
+
+        // Find button with label matching the pattern
+        let dayButton = app.buttons.matching(
+          NSPredicate(format: "label MATCHES %@", targetDateLabelPattern)
+        ).firstMatch
+
+        print("🔍 DEBUG: Day button exists: \(dayButton.exists)")
+        if dayButton.exists {
+          print("🔍 DEBUG: Found day button with label: '\(dayButton.label)'")
+        } else {
+          print("🔍 DEBUG: Day button with pattern '\(targetDateLabelPattern)' not found")
+        }
+
+        XCTAssertTrue(
+          dayButton.waitForExistence(timeout: 3),
+          "Day \(targetDay) button should exist in calendar for dose \(index + 1)")
+        dayButton.tap()
+
+        print(
+          "📅 Setting dose \(index + 1) to \(daysAgo) days ago: \(targetDate) (day \(targetDay))")
+
+        // Wait a moment for the date selection to register
+        sleep(1)
+
+        // Dismiss the calendar by tapping outside of it
+        // Try multiple approaches to find what works
+
+        // First attempt: Tap the Notes field below the calendar to dismiss it
+        let notesField = app.textFields.matching(identifier: "quick-dose-notes").firstMatch
+        if notesField.exists {
+          notesField.tap()
+          print("🔍 DEBUG: Tapped Notes field to dismiss calendar")
+        } else {
+          // Second attempt: Tap the form/sheet background
+          // The calendar is a popover, so tapping the sheet behind it should dismiss
+          let sheets = app.sheets.firstMatch
+          if sheets.exists {
+            // Tap near the bottom of the sheet, below the calendar
+            let sheetCoordinate = sheets.coordinate(
+              withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+            sheetCoordinate.tap()
+            print("🔍 DEBUG: Tapped sheet background to dismiss calendar")
+          } else {
+            // Last resort: Tap at coordinates where "ADDITIONAL INFORMATION" section would be
+            // This is definitely outside the calendar area
+            let bottomCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.85))
+            bottomCoordinate.tap()
+            print("🔍 DEBUG: Tapped bottom area to dismiss calendar")
+          }
+        }
+
+        // Wait for calendar to fully dismiss
+        sleep(2)
+      }
+
+      // Save the dose
+      XCTAssertTrue(
+        saveButton.exists && saveButton.isEnabled,
+        "Save button should be enabled for dose \(index + 1)")
+
+      // Use coordinate-based tapping to bypass scroll issues
+      if saveButton.isHittable {
+        saveButton.tap()
+      } else {
+        // Force tap using coordinates
+        let coordinate = saveButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        coordinate.tap()
+        print("🔍 DEBUG: Used coordinate tap for save button")
+      }
+
+      // Wait for success indicator and dismissal
+      XCTAssertTrue(
+        successIndicator.waitForExistence(timeout: 3),
+        "Success indicator should appear for dose \(index + 1)")
+      XCTAssertTrue(
+        successIndicator.waitForNonExistence(timeout: 3),
+        "Success indicator should dismiss for dose \(index + 1)")
+    }
+  }
+  // swiftlint:enable cyclomatic_complexity
 }
