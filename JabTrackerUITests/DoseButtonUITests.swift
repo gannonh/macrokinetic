@@ -28,12 +28,12 @@ final class DoseButtonUITests: XCTestCase {
     // And: Sheet should have pre-populated smart defaults
     let doseAmountText = app.staticTexts["quick-dose-amount"]
     let injectionSitePicker = app.buttons["quick-dose-site-picker"]
-    let timeDisplay = app.staticTexts["quick-dose-time"]
+    let dateTimePicker = app.datePickers["quick-dose-datetime-picker"]
 
     XCTAssertTrue(medicationPicker.exists, "Medication picker should be visible")
     XCTAssertTrue(doseAmountText.exists, "Dose amount should be pre-populated")
     XCTAssertTrue(injectionSitePicker.exists, "Injection site picker should be visible")
-    XCTAssertTrue(timeDisplay.exists, "Current time should be displayed")
+    XCTAssertTrue(dateTimePicker.exists, "Date/time picker should be displayed")
   }
 
   @MainActor
@@ -102,8 +102,8 @@ final class DoseButtonUITests: XCTestCase {
     let doseAmountText = app.staticTexts["quick-dose-amount"]
     XCTAssertTrue(doseAmountText.exists, "Dose amount should be visible")
 
-    let timeDisplay = app.staticTexts["quick-dose-time"]
-    XCTAssertTrue(timeDisplay.exists, "Time display should be visible")
+    let dateTimePicker = app.datePickers["quick-dose-datetime-picker"]
+    XCTAssertTrue(dateTimePicker.exists, "Date/time picker should be visible")
   }
 
   @MainActor
@@ -162,72 +162,6 @@ final class DoseButtonUITests: XCTestCase {
       "No success message should appear when operation is cancelled")
   }
 
-  @MainActor
-  func testQuickDoseSheetSmartDefaults() throws {
-    let app = TestUtilities.launchAppWithTestMode()
-
-    // Given: User has existing medication profiles and dose history
-    TestUtilities.createMedicationProfile(
-      app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-
-    // When: User opens quick dose sheet
-    let addTab = app.tabBars.element.buttons["Add"]
-    addTab.tap()
-
-    // Verify sheet content is visible
-    let medicationPicker = app.buttons["quick-dose-medication-picker"]
-    XCTAssertTrue(medicationPicker.waitForExistence(timeout: 2))
-
-    // Then: Smart defaults should be applied
-    let doseAmountText = app.staticTexts["quick-dose-amount"]
-    let injectionSitePicker = app.buttons["quick-dose-site-picker"]
-
-    XCTAssertTrue(
-      medicationPicker.exists, "Medication should default to current medication profile")
-    XCTAssertTrue(doseAmountText.exists, "Dose amount should default to profile's current dose")
-    XCTAssertTrue(injectionSitePicker.exists, "Injection site should suggest next recommended site")
-
-    // Time should default to current time (within reasonable range)
-    let timeDisplay = app.staticTexts["quick-dose-time"]
-    XCTAssertTrue(timeDisplay.exists, "Time should be set to current time")
-  }
-
-  @MainActor
-  func testQuickDoseSheetStreamslinedInterface() throws {
-    let app = TestUtilities.launchAppWithTestMode()
-
-    // Given: User has a medication profile set up
-    TestUtilities.createMedicationProfile(
-      app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-
-    // When: User opens quick dose sheet
-    let addTab = app.tabBars.element.buttons["Add"]
-    addTab.tap()
-
-    // Verify sheet content is visible
-    let medicationPicker = app.buttons["quick-dose-medication-picker"]
-    XCTAssertTrue(medicationPicker.waitForExistence(timeout: 2))
-
-    // Then: Interface should be streamlined with minimal required fields
-    XCTAssertTrue(
-      app.buttons["quick-dose-medication-picker"].exists, "Medication picker is essential")
-    XCTAssertTrue(app.staticTexts["quick-dose-amount"].exists, "Dose amount display is essential")
-    XCTAssertTrue(
-      app.buttons["quick-dose-site-picker"].exists, "Injection site picker is essential")
-    XCTAssertTrue(app.staticTexts["quick-dose-time"].exists, "Time display is essential")
-
-    // Note: Save and Cancel buttons are in toolbar and tested separately
-
-    // Optional fields should be minimal or hidden in quick entry mode
-    // Notes field should be optional or not present for quick entry
-    let notesField = app.textViews["quick-dose-notes"]
-    if notesField.exists {
-      // If notes field exists, it should be clearly marked as optional
-      XCTAssertTrue(
-        notesField.placeholderValue?.contains("Optional") == true
-          || app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'optional'")).count
-            == 0,
-        "Notes field should be marked as optional if present")
-    }
-  }
+  // Note: Removed testQuickDoseSheetSmartDefaults and testQuickDoseSheetStreamslinedInterface
+  // as they duplicate functionality already covered in testQuickDoseButtonOpensSheetWithSmartDefaults
 }
