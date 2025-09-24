@@ -110,122 +110,91 @@ Step 4: Request Review
   4. Once all reviews are completed, come back and resume this merge process from Step 5: `/pm:issue-merge $ARGUMENTS`
 ---
 
-### 5. Document PR Comments & Action Items
+### 5. Process PR Comments
 
-Get Current DateTime
-- Run: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
-- Store for updating `created_at` field in modified files
+#### Instructions
 
-Extract issue number and download PR comments to create action documentation:
-```bash
-# Extract issue number from PR title (format: "Issue #42: Title")
-issue_number=$(gh pr view $ARGUMENTS --json title -q .title | sed -n 's/.*Issue #\([0-9]*\):.*/\1/p')
-
-if [ -z "$issue_number" ]; then
-  ❌ Cannot extract issue number from PR title"
-  Expected format: 'Issue #XX: Description'"
-  gh pr view $ARGUMENTS --json title -q .title
-  exit 1
-fi
-
-# Find epic updates directory
-epic_dir=""
-for dir in .claude/epics/*/updates/; do
-  if [ -d "$dir" ]; then
-    epic_dir="$dir"
-    break
-  fi
-done
-
-if [ -z "$epic_dir" ]; then
-  ❌ No epic directory found in .claude/epics/"
-  exit 1
-fi
-
-# Create issue documentation file
-issue_doc_file="${epic_dir}${issue_number}/pr-review.md"
-
-📝 Creating issue documentation: $issue_doc_file"
-
-# Download PR comments and create documentation
-cat > "$issue_doc_file" << EOF
-# Issue #${issue_number} - PR Comments & Action Items
-
-**PR**: #${ARGUMENTS}
-**Date**: $created_at
-**Epic**: $(basename "$epic_dir")
-
-## PR Summary
-
-$(gh pr view $ARGUMENTS --json title,body -q '.title + "\n\n" + .body')
-
-## Comments & Reviews
-
-$(gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | "### Comment by @" + .author.login + " (" + .createdAt + ")\n\n" + .body + "\n"')
-
-$(gh api repos/:owner/:repo/pulls/$ARGUMENTS/reviews --jq '.[] | "### Review by @" + .user.login + " (" + .submitted_at + ")\n\n**State**: " + .state + "\n\n" + .body + "\n"')
-
-## Action Items to Resolve
-
-<!-- Template for documenting actions needed before merge -->
-
-### Code Changes Required
-- [ ] **Action Item 1**: Description of required change
-  - **Context**: Reference to specific comment/review
-  - **Priority**: High/Medium/Low
-  - **Files affected**: List of files
-
-- [ ] **Action Item 2**: Description of required change
-  - **Context**: Reference to specific comment/review
-  - **Priority**: High/Medium/Low
-  - **Files affected**: List of files
-
-### Documentation Updates
-- [ ] **Doc Update 1**: Description of documentation change needed
-  - **Context**: Reference to comment requesting clarification
-  - **Files to update**: List of documentation files
-
-### Testing Requirements
-- [ ] **Test Addition 1**: Description of additional test coverage needed
-  - **Context**: Reference to review feedback
-  - **Test files**: List of test files to modify/create
-
-### Questions to Resolve
-- [ ] **Question 1**: Description of unresolved question
-  - **Context**: Reference to specific comment thread
-  - **Stakeholder**: Who needs to provide answer
-
-## Completion Checklist
-
-- [ ] All code changes implemented and tested
-- [ ] Documentation updates completed
-- [ ] Additional tests added and passing
-- [ ] All questions resolved with stakeholders
-- [ ] Final review approval received
-- [ ] Ready for merge
-
-## Notes
-
-<!-- Add any additional context, decisions made, or important information -->
-
-EOF
+1. Inform the user:
 ```
-Let the user know that the pr review doc is ready for review:
+I'll create a new GitHub issue for each PR comment. 
+```
 
----
+2. Read all PR comments
+```bash
+gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | {body: .body, author: .author.login, createdAt: .createdAt}'
+```
 
-✅ PR review documentation created: `$path_to_issue_doc_file`
+3. Create new issue for each comment
+```bash
+gh issue create --title "PR #$ARGUMENTS - [issue-title]" --body
+```
+- Evaluate each new issue
+- Read the issue
+- Read the relevant code files for context
+- Prioritize each issue based on severity and impact using GitHub labels:
+  - [P0] Critical: Must be fixed before merge
+  - [P1] Important: Should be fixed before merge
+  - [P2] Optional: Can be deferred until after merge
+  - [P3] Low: Minor improvement, no immediate action needed
+  - [wont-fix] Won't fix: Not applicable or not worth addressing
+- Comment on each issue with your evaluation and reasoning
 
-📋 Next steps:
-1. Review the downloaded comments and action items
-2. Edit $issue_doc_file to add specific action items
-3. Address all action items before proceeding to merge
-4. Update checkboxes as items are completed
-5. Address the documented issues: `/pm:pr-preocess $path_to_issue_doc_file`
+**EVALUATION CRITERIA**
 
-Return here or resume this merge process from Step 6 once ready to merge: `pm:pr-merge $ARGUMENTS`
+**Common High Priority Patterns**
+- **Invalid Tests** (wrong assertions, missing cases, always passing, false confidence)
+- **Actual bugs** (null checks, error handling)
+- **Security vulnerabilities** (unless false positive)
+- **Resource leaks** (unclosed connections, memory leaks)
+- **Type safety issues** (TypeScript/type hints)
+- **Logic errors** (off-by-one, incorrect conditions)
+- **Missing error handling** 
 
----
+**Common Low Priority Patterns**
+- **Style preferences** that conflict with project conventions
+- **Generic best practices** that don't apply to our specific use case
+- **Performance optimizations** for code that isn't performance-critical
+- **Accessibility suggestions** for internal tools
+- **Security warnings** for already-validated patterns
+- **Import reorganization** that would break our structure
+
+**Decision Framework**
+For each comment, consider:
+1. **Is it correct?** - Does the issue actually exist?
+2. **Is it relevant?** - Does it apply to our use case?
+3. **Is it beneficial?** - Will fixing it improve the code?
+4. **Is it safe?** - Could the change introduce problems?
+
+Issues are high priority only if all answers are "yes" or the benefit clearly outweighs risks.
+
+**Important Notes**
+- Comments are helpful but lack context
+- Trust your understanding of the codebase over generic suggestions
+- Explain decisions briefly to maintain audit trail
+- Standard issue grooming applies (close duplicates, non-issues, etc.)
+
+4. Present to the user
+```
+📋 Evaluation Summary
+
+Comments Processed: {count}
+  
+P0 Issues (must fix before merge): 
+- [link-to-new-issue-number]: {reason_for_priority}
+P1 Issues (should fix before merge):
+- [link-to-new-issue-number]: {reason_for_priority}
+P2 Issues (can defer until after merge):
+- [link-to-new-issue-number]: {reason_for_priority}
+P3 Issues (minor improvement):
+- [link-to-new-issue-number]: {reason_for_priority}
+Won't Fix Issues (safe to close-not-planned):
+- [link-to-new-issue-number]: {reason_for_priority}
+
+Next Steps:
+1. 📋 Review the issues created from PR comments
+2. 🛠️ Address all P0 and P1 issues before proceeding with the merge
+3. 🔄 Once all critical issues are resolved, resume this merge process from Step 6: `/pm:pr-merge $ARGUMENTS`
+```
 
 ### 6. Merge After Approval
 
