@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-24T13:21:27Z
-version: 1.7
+last_updated: 2025-09-24T18:23:44Z
+version: 1.8
 author: Claude Code PM System
 ---
 
@@ -277,6 +277,8 @@ dose.medication = medicationProfile  // Individual setter OK
 - **PharmacokineticsEngine Integration**: Concentration calculations for therapeutic range analysis
 - **@Observable Pattern**: Real-time analytics updates with iOS 17+ observer pattern
 - **Performance-First Design**: Optimized for large datasets (700+ dose records)
+- **SwiftData Relationship Testing**: Critical patterns for analytics calculations accessing relationships across multiple models
+- **Cross-Model Coordination**: AnalyticsService successfully coordinates User, Dose, and MedicationProfile models through centralized service architecture
 
 ### Analytics Data Structures
 ```swift
@@ -341,3 +343,16 @@ struct UserAnalyticsSummary {
 - **Crash Vulnerability Prevention**: Proactive identification and elimination of potential crash scenarios
 - **Medical Data Integrity**: Ensure calculations remain valid and finite throughout data processing pipeline
 - **Production Safety**: Apps must handle corrupted or malicious data without compromising patient safety
+
+## E2E Testing & Accessibility Patterns (Issue #56)
+
+### SwiftUI Accessibility Testing Patterns
+- **SwiftUI Accessibility Hierarchy Override Prevention**: Parent-level accessibility identifiers (`accessibilityIdentifier("analytics-concentration-chart")`) override all child button identifiers - remove parent identifiers to enable proper child element targeting
+- **Multiple Element Matching Solutions**: `.firstMatch` pattern essential for XCUITest when multiple elements share identifiers - prevents "Multiple matching elements found" errors in complex UI hierarchies
+- **E2E Test Debug-First Methodology**: Use `TestUtilities.debugElements()` at start of every failing test to identify actual element types and identifiers before writing selectors
+- **Export Sheet Handling in E2E Tests**: Export functionality changes accessibility context - use `app.sheets.firstMatch.swipeDown()` for dismissal and verify chart functionality after modal interactions
+
+### Medical App E2E Testing Excellence
+- **Comprehensive E2E Testing Implementation**: Systematic approach (display → interaction → time periods → accessibility → performance) covers all user acceptance criteria for medical applications
+- **Accessibility Debugging Workflow**: Parent accessibility override → child element debug → identifier removal → test validation enables systematic accessibility issue resolution
+- **E2E Test Verification Strategy**: Individual test method validation before full suite run prevents long debugging cycles in complex medical app testing
