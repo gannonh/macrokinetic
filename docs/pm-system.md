@@ -10,6 +10,7 @@
 - `/context:create` - Create initial context from project files
 - `/context:update` - Update context with recent changes
 - `/context:prime` - Prime context for specific tasks
+- `/context:add-learning` - Add arbitrary learning to context files
 
 ### PRD Commands
 - `/pm:prd-new` - Launch brainstorming for new product requirement
