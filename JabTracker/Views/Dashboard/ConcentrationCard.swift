@@ -11,291 +11,291 @@ import SwiftUI
 /// Main card component for displaying concentration information on the dashboard
 /// Enhanced with real-time updates when dose data changes
 struct ConcentrationCard: View {
-  let user: User
-  let medicationProfile: MedicationProfile
-  let pkEngine: PharmacokineticsEngine
+    let user: User
+    let medicationProfile: MedicationProfile
+    let pkEngine: PharmacokineticsEngine
 
-  // Optional dose service for real-time updates
-  let doseService: DoseService?
+    // Optional dose service for real-time updates
+    let doseService: DoseService?
 
-  @State private var currentConcentration: Double = 0.0
-  @State private var peakLevel: (level: Double, time: Date)?
-  @State private var troughLevel: (level: Double, time: Date)?
-  @State private var steadyStateProgress: Double = 0.0
+    @State private var currentConcentration: Double = 0.0
+    @State private var peakLevel: (level: Double, time: Date)?
+    @State private var troughLevel: (level: Double, time: Date)?
+    @State private var steadyStateProgress: Double = 0.0
 
-  // MARK: - Initialization
+    // MARK: - Initialization
 
-  init(
-    user: User,
-    medicationProfile: MedicationProfile,
-    pkEngine: PharmacokineticsEngine,
-    doseService: DoseService? = nil
-  ) {
-    self.user = user
-    self.medicationProfile = medicationProfile
-    self.pkEngine = pkEngine
-    self.doseService = doseService
-  }
-
-  var body: some View {
-    DesignCard {
-      VStack(alignment: .leading, spacing: 16) {
-        // Header with medication name
-        self.headerView
-
-        // Current concentration display
-        self.currentConcentrationView
-
-        // Peak and trough levels
-        self.peakTroughView
-
-        // Steady state progress
-        self.steadyStateView
-      }
+    init(
+        user: User,
+        medicationProfile: MedicationProfile,
+        pkEngine: PharmacokineticsEngine,
+        doseService: DoseService? = nil
+    ) {
+        self.user = user
+        self.medicationProfile = medicationProfile
+        self.pkEngine = pkEngine
+        self.doseService = doseService
     }
-    .accessibilityIdentifier("concentration-card")
-    .onAppear {
-      self.updateConcentrationData()
-    }
-    .onChange(of: self.medicationProfile.doses) { _, _ in
-      self.updateConcentrationData()
-    }
-    .onChange(of: self.doseService?.lastDoseUpdateTime) { _, _ in
-      self.updateConcentrationData()
-    }
-  }
 
-  // MARK: - Header View
+    var body: some View {
+        DesignCard {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header with medication name
+                self.headerView
 
-  private var headerView: some View {
-    HStack {
-      VStack(alignment: .leading, spacing: 4) {
-        Text("Drug Concentration")
-          .font(DesignTokens.Typography.headline)
-          .accessibilityIdentifier("concentration-card-title")
+                // Current concentration display
+                self.currentConcentrationView
 
-        if let medication = medicationProfile.medication {
-          Text(medication.displayName)
-            .font(DesignTokens.Typography.caption)
-            .foregroundColor(.secondary)
-            .accessibilityIdentifier("concentration-card-medication")
+                // Peak and trough levels
+                self.peakTroughView
+
+                // Steady state progress
+                self.steadyStateView
+            }
         }
-      }
-
-      Spacer()
-
-      Image(systemName: "chart.line.uptrend.xyaxis")
-        .foregroundColor(DesignTokens.Colors.primary)
-        .font(.title2)
-        .accessibilityHidden(true)
+        .accessibilityIdentifier("concentration-card")
+        .onAppear {
+            self.updateConcentrationData()
+        }
+        .onChange(of: self.medicationProfile.doses) { _, _ in
+            self.updateConcentrationData()
+        }
+        .onChange(of: self.doseService?.lastDoseUpdateTime) { _, _ in
+            self.updateConcentrationData()
+        }
     }
-  }
 
-  // MARK: - Current Concentration View
+    // MARK: - Header View
 
-  private var currentConcentrationView: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("Current Level")
-        .font(DesignTokens.Typography.caption)
-        .foregroundColor(.secondary)
-        .accessibilityIdentifier("current-level-label")
+    private var headerView: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Drug Concentration")
+                    .font(DesignTokens.Typography.headline)
+                    .accessibilityIdentifier("concentration-card-title")
 
-      ConcentrationDisplay(
-        concentration: self.currentConcentration,
-        isCurrentLevel: true)
-
-      // Last updated timestamp
-      Text("Updated \(Date().formatted(date: .omitted, time: .shortened))")
-        .font(DesignTokens.Typography.caption)
-        .foregroundColor(.secondary)
-        .accessibilityIdentifier("concentration-last-updated")
-
-      if self.currentConcentration == 0.0 {
-        Text("No recent doses recorded")
-          .font(DesignTokens.Typography.caption)
-          .foregroundColor(.secondary)
-          .italic()
-          .accessibilityIdentifier("no-doses-message")
-      }
-    }
-  }
-
-  // MARK: - Peak and Trough View
-
-  private var peakTroughView: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      if let peak = peakLevel {
-        VStack(alignment: .leading, spacing: 4) {
-          Text("Next Peak")
-            .font(DesignTokens.Typography.caption)
-            .foregroundColor(.secondary)
-
-          HStack {
-            ConcentrationDisplay(
-              concentration: peak.level,
-              isCurrentLevel: false)
+                if let medication = medicationProfile.medication {
+                    Text(medication.displayName)
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundColor(.secondary)
+                        .accessibilityIdentifier("concentration-card-medication")
+                }
+            }
 
             Spacer()
 
-            Text(self.timeDisplayText(for: peak.time))
-              .font(DesignTokens.Typography.caption)
-              .foregroundColor(.secondary)
-          }
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .foregroundColor(DesignTokens.Colors.primary)
+                .font(.title2)
+                .accessibilityHidden(true)
         }
-        .accessibilityIdentifier("peak-level-section")
-      }
+    }
 
-      if let trough = troughLevel {
-        VStack(alignment: .leading, spacing: 4) {
-          Text("Next Trough")
-            .font(DesignTokens.Typography.caption)
-            .foregroundColor(.secondary)
+    // MARK: - Current Concentration View
 
-          HStack {
+    private var currentConcentrationView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Current Level")
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
+                .accessibilityIdentifier("current-level-label")
+
             ConcentrationDisplay(
-              concentration: trough.level,
-              isCurrentLevel: false)
+                concentration: self.currentConcentration,
+                isCurrentLevel: true)
 
-            Spacer()
+            // Last updated timestamp
+            Text("Updated \(Date().formatted(date: .omitted, time: .shortened))")
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
+                .accessibilityIdentifier("concentration-last-updated")
 
-            Text(self.timeDisplayText(for: trough.time))
-              .font(DesignTokens.Typography.caption)
-              .foregroundColor(.secondary)
-          }
+            if self.currentConcentration == 0.0 {
+                Text("No recent doses recorded")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(.secondary)
+                    .italic()
+                    .accessibilityIdentifier("no-doses-message")
+            }
         }
-        .accessibilityIdentifier("trough-level-section")
-      }
     }
-  }
 
-  // MARK: - Steady State View
+    // MARK: - Peak and Trough View
 
-  private var steadyStateView: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack {
-        Text("Steady State Progress")
-          .font(DesignTokens.Typography.caption)
-          .foregroundColor(.secondary)
+    private var peakTroughView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let peak = peakLevel {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Next Peak")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundColor(.secondary)
 
-        Spacer()
+                    HStack {
+                        ConcentrationDisplay(
+                            concentration: peak.level,
+                            isCurrentLevel: false)
 
-        Text("\(Int(self.steadyStateProgress * 100))%")
-          .font(DesignTokens.Typography.caption)
-          .fontWeight(.medium)
-          .foregroundColor(
-            self.steadyStateProgress >= 0.95 ? DesignTokens.Colors.success : .primary)
-      }
-      .accessibilityIdentifier("steady-state-header")
+                        Spacer()
 
-      ProgressView(value: self.steadyStateProgress, total: 1.0)
-        .progressViewStyle(LinearProgressViewStyle())
-        .tint(
-          self.steadyStateProgress >= 0.95
-            ? DesignTokens.Colors.success : DesignTokens.Colors.primary
-        )
-        .accessibilityIdentifier("steady-state-progress")
-        .accessibilityValue("\(Int(self.steadyStateProgress * 100)) percent")
+                        Text(self.timeDisplayText(for: peak.time))
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .accessibilityIdentifier("peak-level-section")
+            }
 
-      if self.steadyStateProgress < 0.95 {
-        Text("Steady state typically reached after 4-5 weeks of consistent dosing")
-          .font(DesignTokens.Typography.caption)
-          .foregroundColor(.secondary)
-          .accessibilityIdentifier("steady-state-explanation")
-      } else {
-        Text("Steady state achieved")
-          .font(DesignTokens.Typography.caption)
-          .foregroundColor(DesignTokens.Colors.success)
-          .accessibilityIdentifier("steady-state-achieved")
-      }
+            if let trough = troughLevel {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Next Trough")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundColor(.secondary)
+
+                    HStack {
+                        ConcentrationDisplay(
+                            concentration: trough.level,
+                            isCurrentLevel: false)
+
+                        Spacer()
+
+                        Text(self.timeDisplayText(for: trough.time))
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .accessibilityIdentifier("trough-level-section")
+            }
+        }
     }
-  }
 
-  // MARK: - Helper Methods
+    // MARK: - Steady State View
 
-  private func updateConcentrationData() {
-    Task { @MainActor in
-      // Calculate current concentration
-      self.currentConcentration = self.pkEngine.calculateCurrentConcentration(
-        for: self.user,
-        medication: self.medicationProfile)
+    private var steadyStateView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Steady State Progress")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(.secondary)
 
-      // Calculate peak level from most recent dose
-      if let lastDose = medicationProfile.doses?.max(by: { $0.timestamp < $1.timestamp }) {
-        self.peakLevel = self.pkEngine.calculatePeakLevel(
-          for: lastDose, medication: self.medicationProfile)
-      } else {
-        self.peakLevel = nil
-      }
+                Spacer()
 
-      // Calculate trough level
-      self.troughLevel = self.pkEngine.calculateTroughLevel(for: self.medicationProfile)
+                Text("\(Int(self.steadyStateProgress * 100))%")
+                    .font(DesignTokens.Typography.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(
+                        self.steadyStateProgress >= 0.95 ? DesignTokens.Colors.success : .primary)
+            }
+            .accessibilityIdentifier("steady-state-header")
 
-      // Calculate steady state progress
-      self.steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(
-        for: self.medicationProfile)
+            ProgressView(value: self.steadyStateProgress, total: 1.0)
+                .progressViewStyle(LinearProgressViewStyle())
+                .tint(
+                    self.steadyStateProgress >= 0.95
+                        ? DesignTokens.Colors.success : DesignTokens.Colors.primary
+                )
+                .accessibilityIdentifier("steady-state-progress")
+                .accessibilityValue("\(Int(self.steadyStateProgress * 100)) percent")
+
+            if self.steadyStateProgress < 0.95 {
+                Text("Steady state typically reached after 4-5 weeks of consistent dosing")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(.secondary)
+                    .accessibilityIdentifier("steady-state-explanation")
+            } else {
+                Text("Steady state achieved")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(DesignTokens.Colors.success)
+                    .accessibilityIdentifier("steady-state-achieved")
+            }
+        }
     }
-  }
 
-  private func timeDisplayText(for date: Date) -> String {
-    let now = Date()
-    let timeInterval = date.timeIntervalSince(now)
+    // MARK: - Helper Methods
 
-    if timeInterval < 0 {
-      // Past time
-      let pastInterval = -timeInterval
-      if pastInterval < 3600 {
-        let minutes = Int(pastInterval / 60)
-        return "\(minutes)m ago"
-      } else if pastInterval < 86400 {
-        let hours = Int(pastInterval / 3600)
-        return "\(hours)h ago"
-      } else {
-        let days = Int(pastInterval / 86400)
-        return "\(days)d ago"
-      }
-    } else {
-      // Future time
-      if timeInterval < 3600 {
-        let minutes = Int(timeInterval / 60)
-        return "in \(minutes)m"
-      } else if timeInterval < 86400 {
-        let hours = Int(timeInterval / 3600)
-        return "in \(hours)h"
-      } else {
-        let days = Int(timeInterval / 86400)
-        return "in \(days)d"
-      }
+    private func updateConcentrationData() {
+        Task { @MainActor in
+            // Calculate current concentration
+            self.currentConcentration = self.pkEngine.calculateCurrentConcentration(
+                for: self.user,
+                medication: self.medicationProfile)
+
+            // Calculate peak level from most recent dose
+            if let lastDose = medicationProfile.doses?.max(by: { $0.timestamp < $1.timestamp }) {
+                self.peakLevel = self.pkEngine.calculatePeakLevel(
+                    for: lastDose, medication: self.medicationProfile)
+            } else {
+                self.peakLevel = nil
+            }
+
+            // Calculate trough level
+            self.troughLevel = self.pkEngine.calculateTroughLevel(for: self.medicationProfile)
+
+            // Calculate steady state progress
+            self.steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(
+                for: self.medicationProfile)
+        }
     }
-  }
+
+    private func timeDisplayText(for date: Date) -> String {
+        let now = Date()
+        let timeInterval = date.timeIntervalSince(now)
+
+        if timeInterval < 0 {
+            // Past time
+            let pastInterval = -timeInterval
+            if pastInterval < 3600 {
+                let minutes = Int(pastInterval / 60)
+                return "\(minutes)m ago"
+            } else if pastInterval < 86400 {
+                let hours = Int(pastInterval / 3600)
+                return "\(hours)h ago"
+            } else {
+                let days = Int(pastInterval / 86400)
+                return "\(days)d ago"
+            }
+        } else {
+            // Future time
+            if timeInterval < 3600 {
+                let minutes = Int(timeInterval / 60)
+                return "in \(minutes)m"
+            } else if timeInterval < 86400 {
+                let hours = Int(timeInterval / 3600)
+                return "in \(hours)h"
+            } else {
+                let days = Int(timeInterval / 86400)
+                return "in \(days)d"
+            }
+        }
+    }
 }
 
 // MARK: - Preview
 
 #Preview {
-  @Previewable @State var container = DataController.preview.container
+    @Previewable @State var container = DataController.preview.container
 
-  ConcentrationCard(
-    user: createPreviewUser(),
-    medicationProfile: createPreviewMedicationProfile(),
-    pkEngine: PharmacokineticsEngine(),
-    doseService: nil
-  )
-  .padding()
-  .modelContainer(container)
+    ConcentrationCard(
+        user: createPreviewUser(),
+        medicationProfile: createPreviewMedicationProfile(),
+        pkEngine: PharmacokineticsEngine(),
+        doseService: nil
+    )
+    .padding()
+    .modelContainer(container)
 }
 
 private func createPreviewUser() -> User {
-  User(
-    email: "preview@example.com",
-    name: "Preview User",
-    appleUserId: "preview-user")
+    User(
+        email: "preview@example.com",
+        name: "Preview User",
+        appleUserId: "preview-user")
 }
 
 private func createPreviewMedicationProfile() -> MedicationProfile {
-  MedicationProfile(
-    genericName: "semaglutide",
-    brandName: "Ozempic",
-    currentDose: 1.0,
-    startDate: Date().addingTimeInterval(-30 * 24 * 3600),
-    medicationType: "semaglutide")
+    MedicationProfile(
+        genericName: "semaglutide",
+        brandName: "Ozempic",
+        currentDose: 1.0,
+        startDate: Date().addingTimeInterval(-30 * 24 * 3600),
+        medicationType: "semaglutide")
 }
