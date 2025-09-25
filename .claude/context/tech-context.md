@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-25T18:58:42Z
-version: 1.8
+last_updated: 2025-09-25T19:11:47Z
+version: 1.9
 author: Claude Code PM System
 ---
 
@@ -232,7 +232,22 @@ author: Claude Code PM System
 - **Public API Design**: Chart control public API pattern (setZoomLevel, setPanOffset, resetZoomAndPan) provides programmatic control with proper encapsulation
 - **Accessibility Architecture**: Comprehensive VoiceOver support with dynamic descriptions and trend analysis requires thoughtful component design patterns
 
+## Medical App Testing & Coverage Management (Issue #71)
+
+### Coverage Configuration Management
+- **Coverage Configuration File Path Requirements**: File paths in coverage-config.json must match actual directory structure relative to target (not simplified names) - critical for pre-commit hook validation
+- **XcodeGen Project Management for Tests**: Automatic test file inclusion requires `xcodegen generate` after adding new Swift files - essential for new test files to appear in test runs
+
+### Swift Testing Framework Enhancement
+- **Test Compilation Error Resolution Patterns**: Fixed heterogeneous collection issues and type annotation problems in Swift Testing framework - requires careful type specification in test data creation
+- **Chart Data Type Integration**: Successfully resolved compilation issues with AdvancedDoseMarker, DoseAlertLevel, and DoseMarkerMetadata types through proper enum value usage and type annotation
+
+### Medical App Quality Gates
+- **Pre-Commit Hook Integration**: SwiftLint, coverage validation, and build verification in pre-commit hooks ensure medical-grade code quality standards are maintained automatically
+- **Coverage Validation Workflow**: Fix coverage configuration before attempting commits to prevent pre-commit hook failures - configuration validation must pass before code changes
+
 ## Update History
+- 2025-09-25T19:11:47Z: Added Medical App Testing & Coverage Management section with coverage configuration management, Swift Testing framework enhancements, and quality gates from Issue #71 test coverage improvements
 - 2025-09-25T18:58:42Z: Added Swift Charts & Advanced UI Integration section with SwiftUI sheet presentation patterns, performance optimization insights, and component architecture excellence from Issue #56 completion
 - 2025-09-24T13:21:27Z: Added DatePicker & Calendar Integration section with SwiftUI DatePicker patterns, XCUITest calendar interaction, and SwiftLint integration enhancements from Issue #56
 - 2025-09-23T14:14:43Z: Added Security & Crash Prevention section with Swift Charts security patterns, SwiftLint management, and testing patterns from Issue #55 security fixes
