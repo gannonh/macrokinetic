@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-24T18:23:44Z
-version: 1.8
+last_updated: 2025-09-25T18:58:42Z
+version: 1.9
 author: Claude Code PM System
 ---
 
@@ -356,3 +356,21 @@ struct UserAnalyticsSummary {
 - **Comprehensive E2E Testing Implementation**: Systematic approach (display → interaction → time periods → accessibility → performance) covers all user acceptance criteria for medical applications
 - **Accessibility Debugging Workflow**: Parent accessibility override → child element debug → identifier removal → test validation enables systematic accessibility issue resolution
 - **E2E Test Verification Strategy**: Individual test method validation before full suite run prevents long debugging cycles in complex medical app testing
+
+## SwiftUI Calendar & Modal Testing Patterns (Issue #56)
+
+### SwiftUI Calendar Integration Patterns
+- **SwiftUI Calendar Modal Dismissal**: Complex calendar popover dismissal solved by tapping form elements (Notes field) below the calendar - navigation bar tapping fails due to modal overlay coverage
+- **XCUITest Calendar Interaction**: SwiftUI DatePicker calendar requires element-based dismissal rather than coordinate-based tapping; successful pattern: tap accessible form fields outside calendar bounds
+- **Historical Data Creation Patterns**: `createHistoricalChartData()` demonstrates robust pattern for E2E test data with date calculation, calendar navigation, and dose creation across multiple time periods
+- **SwiftLint Test Complexity Management**: Medical test functions require `// swiftlint:disable cyclomatic_complexity` blocks for comprehensive E2E scenarios while maintaining code quality standards
+
+### SwiftUI Component Architecture Patterns
+- **SwiftUI Gesture Integration**: Successful implementation of complex gesture handling (pinch-zoom, drag-pan) with state management in ConcentrationTimelineChart
+- **Medical App Accessibility Excellence**: Comprehensive VoiceOver implementation with dynamic descriptions, trend analysis, and gesture instruction integration
+- **Professional Export Architecture**: ChartExportView demonstrates proper sheet presentation patterns with async operations and progress tracking
+- **Chart State Management**: Public API pattern (setZoomLevel, setPanOffset, resetZoomAndPan) enables programmatic control while maintaining encapsulation
+
+### SwiftUI Unit Testing Anti-Patterns
+- **Direct @State Manipulation Prevention**: Direct @State manipulation in tests doesn't work - use proper component initialization testing instead
+- **SwiftUI Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
