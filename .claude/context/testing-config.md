@@ -250,6 +250,8 @@ xcrun xccov view --file-list /tmp/coverage.xcresult
 Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 
 ### 1. Stub E2E Acceptance Criteria (All Tests)
+Tip: Start with the E2E Test Template: `JabTrackerUITests/Utils/UITestTemplateTest.swift`
+
 First, create stub acceptance tests to define user-facing success criteria:
 
 ```swift

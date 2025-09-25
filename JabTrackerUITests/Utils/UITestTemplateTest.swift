@@ -1,6 +1,6 @@
 import XCTest
 
-class AdherenceInsightsUITests: XCTestCase {
+class UITestTemplateTest: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
