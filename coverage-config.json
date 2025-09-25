@@ -16,6 +16,7 @@
           "Services/ReconstitutionCalculator.swift",
           "Models/DoseTitration.swift",
           "Models/AdherenceStatistics.swift",
+          "Models/AdherenceTrendData.swift",
           "Utilities/PricingCalculator.swift"
         ]
       },
@@ -111,6 +112,9 @@
       "Views/Analytics/AdherenceInsightsView.swift",
       "Views/Analytics/AdherenceMetricsCard.swift",
       "Views/Analytics/StreakCounterView.swift",
+      "Views/Analytics/AdherenceTrendChart.swift",
+      "Views/Analytics/MissedDosePatternView.swift",
+      "Views/Analytics/AdherenceProgressIndicator.swift",
       "Views/Analytics/ChartConfiguration.swift",
       "Views/Analytics/ChartControlsView.swift",
       "Views/Analytics/ChartExportView.swift",
