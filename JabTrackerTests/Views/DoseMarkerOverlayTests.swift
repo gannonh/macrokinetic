@@ -237,4 +237,238 @@ struct DoseMarkerOverlayTests {
             overlay.isMarkerSelected(sameMarker) == overlay.isMarkerSelected(markers[0]),
             "Same marker should give same selection result")
     }
+
+    // MARK: - Marker Selection Logic Tests
+
+    @Test("DoseMarkerOverlay marker selection logic works correctly")
+    func testMarkerSelectionLogic() {
+        let markers = createTestDoseMarkers()
+        let overlay = DoseMarkerOverlay(doseMarkers: markers)
+
+        // Test isMarkerSelected with no initial selection (selectedMarker is nil)
+        #expect(overlay.selectedMarker == nil, "Should start with no selection")
+        #expect(overlay.isMarkerSelected(markers[0]) == false, "Should report no selection initially")
+        #expect(overlay.isMarkerSelected(markers[1]) == false, "Should report no selection initially")
+        #expect(overlay.isMarkerSelected(markers[2]) == false, "Should report no selection initially")
+
+        // Test marker ID uniqueness (essential for selection logic)
+        #expect(markers[0].id != markers[1].id, "Different markers should have different IDs")
+        #expect(markers[1].id != markers[2].id, "Different markers should have different IDs")
+        #expect(markers[0].id != markers[2].id, "Different markers should have different IDs")
+
+        // Test marker equality
+        let sameMarkerReference = markers[0]
+        #expect(
+            overlay.isMarkerSelected(sameMarkerReference) == overlay.isMarkerSelected(markers[0]),
+            "Same marker reference should give same selection result")
+    }
+
+    // MARK: - Empty State Tests
+
+    @Test("DoseMarkerOverlay empty state behavior works correctly")
+    func testEmptyStateBehavior() {
+        let emptyOverlay = DoseMarkerOverlay(doseMarkers: [])
+
+        #expect(emptyOverlay.shouldShowEmptyState == true, "Should show empty state when no markers")
+        #expect(emptyOverlay.doseMarkers.isEmpty, "Should have empty marker array")
+        #expect(
+            emptyOverlay.accessibilityValue == "0 dose markers displayed",
+            "Should provide correct accessibility value for empty state")
+
+        let nonEmptyOverlay = DoseMarkerOverlay(doseMarkers: createTestDoseMarkers())
+        #expect(nonEmptyOverlay.shouldShowEmptyState == false, "Should not show empty state when markers exist")
+    }
+
+    // MARK: - Marker Detail Edge Cases
+
+    @Test("DoseMarkerOverlay handles marker detail edge cases")
+    func testMarkerDetailEdgeCases() {
+        let marker = AdvancedDoseMarker(
+            date: Date().addingTimeInterval(-24 * 3600),
+            amount: 1.0,
+            markerStyle: .standard
+        )
+        let overlay = DoseMarkerOverlay(doseMarkers: [marker])
+
+        // Test details for valid marker
+        let validDetails = overlay.detailsForMarker(marker)
+        #expect(validDetails != nil, "Should provide details for valid marker")
+        #expect(validDetails?.amount == 1.0, "Should include correct amount")
+        #expect(validDetails?.formattedDate.isEmpty == false, "Should provide formatted date")
+
+        // Test details for marker not in overlay
+        let otherMarker = AdvancedDoseMarker(
+            date: Date(),
+            amount: 2.0,
+            markerStyle: .emphasized
+        )
+        let invalidDetails = overlay.detailsForMarker(otherMarker)
+        #expect(invalidDetails == nil, "Should return nil for marker not in overlay")
+    }
+
+    // MARK: - Date Formatting Tests
+
+    @Test("DoseMarkerOverlay formats dates correctly")
+    func testDateFormatting() {
+        let testDate = Date()
+        let marker = AdvancedDoseMarker(
+            date: testDate,
+            amount: 1.0,
+            markerStyle: .standard
+        )
+        let overlay = DoseMarkerOverlay(doseMarkers: [marker])
+
+        let accessibility = overlay.accessibilityForMarker(marker)
+        let details = overlay.detailsForMarker(marker)
+
+        #expect(accessibility.value.isEmpty == false, "Should format date in accessibility value")
+        #expect(details?.formattedDate.isEmpty == false, "Should format date in details")
+
+        // Both should contain formatted date information
+        #expect(accessibility.value.contains("Amount:"), "Should include amount information")
+        #expect(accessibility.value.contains("1.0"), "Should include correct amount value")
+    }
+
+    // MARK: - Accessibility Value Tests
+
+    @Test("DoseMarkerOverlay provides correct accessibility values")
+    func testAccessibilityValues() {
+        // Test with different marker counts
+        let singleMarker = [createTestDoseMarkers()[0]]
+        let singleOverlay = DoseMarkerOverlay(doseMarkers: singleMarker)
+        #expect(
+            singleOverlay.accessibilityValue == "1 dose markers displayed",
+            "Should provide correct count for single marker")
+
+        let multipleMarkers = createTestDoseMarkers()
+        let multipleOverlay = DoseMarkerOverlay(doseMarkers: multipleMarkers)
+        #expect(
+            multipleOverlay.accessibilityValue == "3 dose markers displayed",
+            "Should provide correct count for multiple markers")
+
+        let emptyOverlay = DoseMarkerOverlay(doseMarkers: [])
+        #expect(
+            emptyOverlay.accessibilityValue == "0 dose markers displayed",
+            "Should provide correct count for no markers")
+    }
+
+    // MARK: - Marker Metadata Tests
+
+    @Test("DoseMarkerOverlay handles marker metadata correctly")
+    func testMarkerMetadata() {
+        let markerWithMetadata = AdvancedDoseMarker(
+            date: Date(),
+            amount: 1.0,
+            markerStyle: .standard,
+            metadata: DoseMarkerMetadata(
+                site: "Left thigh",
+                notes: "Injection went smoothly"
+            )
+        )
+        let overlay = DoseMarkerOverlay(doseMarkers: [markerWithMetadata])
+
+        let details = overlay.detailsForMarker(markerWithMetadata)
+        #expect(details?.site == "Left thigh", "Should include injection site in details")
+        #expect(details?.notes == "Injection went smoothly", "Should include notes in details")
+
+        let markerWithoutMetadata = AdvancedDoseMarker(
+            date: Date(),
+            amount: 1.0,
+            markerStyle: .standard
+        )
+        let overlayWithoutMetadata = DoseMarkerOverlay(doseMarkers: [markerWithoutMetadata])
+
+        let detailsWithoutMetadata = overlayWithoutMetadata.detailsForMarker(markerWithoutMetadata)
+        #expect(detailsWithoutMetadata?.site == nil, "Should handle missing site metadata")
+        #expect(detailsWithoutMetadata?.notes == nil, "Should handle missing notes metadata")
+    }
+
+    // MARK: - Complex Scenario Tests
+
+    @Test("DoseMarkerOverlay works with complex real-world scenarios")
+    func testComplexRealWorldScenarios() {
+        // Scenario: Mixed marker types with different alert levels
+        let complexMarkers = [
+            AdvancedDoseMarker(
+                date: Date().addingTimeInterval(-14 * 24 * 3600),  // 2 weeks ago
+                amount: 0.25,
+                markerStyle: .firstDose,
+                alertLevel: .normal
+            ),
+            AdvancedDoseMarker(
+                date: Date().addingTimeInterval(-7 * 24 * 3600),  // 1 week ago
+                amount: 0.5,
+                markerStyle: .standard,
+                alertLevel: .normal
+            ),
+            AdvancedDoseMarker(
+                date: Date().addingTimeInterval(-3 * 24 * 3600),  // 3 days ago
+                amount: 1.0,
+                markerStyle: .emphasized,
+                alertLevel: .warning
+            ),
+            AdvancedDoseMarker(
+                date: Date(),  // Today
+                amount: 0.0,
+                markerStyle: .skipped,
+                alertLevel: .critical
+            ),
+        ]
+
+        let overlay = DoseMarkerOverlay(doseMarkers: complexMarkers)
+
+        // Test initialization with complex data
+        #expect(overlay.doseMarkers.count == 4, "Should handle all marker types")
+        #expect(overlay.shouldShowEmptyState == false, "Should not show empty state with complex data")
+
+        // Test filtering with complex data
+        let lastWeekRange = Date().addingTimeInterval(-7 * 24 * 3600)...Date()
+        let recentMarkers = overlay.filteredMarkers(for: lastWeekRange)
+        #expect(recentMarkers.count == 2, "Should filter to markers from last week")  // Only markers from last 7 days (3 days ago + today)
+
+        // Test visual styles for different alert levels
+        let normalStyle = overlay.visualStyleForMarker(complexMarkers[0])
+        let warningStyle = overlay.visualStyleForMarker(complexMarkers[2])
+        let criticalStyle = overlay.visualStyleForMarker(complexMarkers[3])
+
+        #expect(normalStyle.opacity == 1.0, "Normal markers should have full opacity")
+        #expect(warningStyle.opacity == 0.9, "Warning markers should have 0.9 opacity")
+        #expect(criticalStyle.opacity == 1.0, "Critical markers should have full opacity")
+
+        // Test that different alert levels have different visual characteristics
+        #expect(
+            normalStyle.opacity != warningStyle.opacity || normalStyle.color != warningStyle.color,
+            "Normal and warning should differ visually")
+
+        // Test accessibility for complex scenario
+        let overallAccessibility = overlay.accessibilityValue
+        #expect(
+            overallAccessibility == "4 dose markers displayed",
+            "Should provide correct accessibility for complex scenario")
+    }
+
+    @Test("DoseMarkerOverlay handles marker filtering with edge cases")
+    func testMarkerFilteringEdgeCases() {
+        let markers = createTestDoseMarkers()
+        let overlay = DoseMarkerOverlay(doseMarkers: markers)
+
+        // Test exact boundary conditions
+        let exactStartDate = markers[2].date  // Date of the most recent marker
+        let exactEndDate = markers[2].date
+        let exactRangeMarkers = overlay.filteredMarkers(for: exactStartDate...exactEndDate)
+        #expect(exactRangeMarkers.count == 1, "Should include marker on exact boundary")
+        #expect(exactRangeMarkers[0].id == markers[2].id, "Should include correct boundary marker")
+
+        // Test very small time window
+        let microStart = Date()
+        let microEnd = microStart.addingTimeInterval(0.001)  // 1ms window
+        let microRangeMarkers = overlay.filteredMarkers(for: microStart...microEnd)
+        #expect(microRangeMarkers.isEmpty, "Should handle very small time windows")
+
+        // Test very large time window
+        let largeStart = Date().addingTimeInterval(-365 * 24 * 3600)  // 1 year ago
+        let largeEnd = Date().addingTimeInterval(365 * 24 * 3600)  // 1 year future
+        let largeRangeMarkers = overlay.filteredMarkers(for: largeStart...largeEnd)
+        #expect(largeRangeMarkers.count == 3, "Should include all markers in large time window")
+    }
 }

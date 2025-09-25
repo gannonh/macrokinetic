@@ -6,17 +6,17 @@
         "threshold": 90,
         "description": "Core business logic with minimal framework dependencies",
         "files": [
-          "User.swift",
-          "Dose.swift",
-          "MedicationProfile.swift",
-          "Medication.swift",
-          "ConcentrationPoint.swift",
-          "Medication+Pharmacokinetics.swift",
-          "PharmacokineticsEngine.swift",
-          "ReconstitutionCalculator.swift",
-          "DoseTitration.swift",
-          "AdherenceStatistics.swift",
-          "PricingCalculator.swift"
+          "Models/User.swift",
+          "Models/Dose.swift",
+          "Models/MedicationProfile.swift",
+          "Models/Medication.swift",
+          "Models/ConcentrationPoint.swift",
+          "Models/Medication+Pharmacokinetics.swift",
+          "Services/PharmacokineticsEngine.swift",
+          "Services/ReconstitutionCalculator.swift",
+          "Models/DoseTitration.swift",
+          "Models/AdherenceStatistics.swift",
+          "Utilities/PricingCalculator.swift"
         ]
       },
       "infrastructure": {
@@ -24,18 +24,18 @@
         "description": "Data management with some framework dependencies",
         "files": [
           "DataController.swift",
-          "MedicationManager.swift",
-          "DoseSearchService.swift",
-          "DoseService.swift",
-          "ChartDataProcessor.swift",
-          "ChartDataProcessor+Filtering.swift",
-          "ChartDataProcessor+Interpolation.swift",
-          "ChartDatasetService.swift",
-          "AnalyticsService.swift",
-          "ChartData.swift",
-          "ChartDataTypes.swift",
-          "ChartDataEnums.swift",
-          "SubscriptionProducts.swift"
+          "Services/MedicationManager.swift",
+          "Services/DoseSearchService.swift",
+          "Services/DoseService.swift",
+          "Services/ChartDataProcessor.swift",
+          "Services/ChartDataProcessor+Filtering.swift",
+          "Services/ChartDataProcessor+Interpolation.swift",
+          "Services/ChartDatasetService.swift",
+          "Services/AnalyticsService.swift",
+          "Models/ChartData.swift",
+          "Models/ChartDataTypes.swift",
+          "Models/ChartDataEnums.swift",
+          "Models/SubscriptionProducts.swift"
         ]
       },
       "framework_integration": {
@@ -44,35 +44,35 @@
         "files": [
           "AuthenticationManager.swift",
           "BiometricAuthManager.swift",
-          "SubscriptionManager.swift",
-          "SubscriptionManager+Testing.swift",
-          "OnboardingCoordinator.swift"
+          "Services/SubscriptionManager.swift",
+          "Services/SubscriptionManager+Testing.swift",
+          "Onboarding/OnboardingCoordinator.swift"
         ]
       },
       "view_models": {
         "threshold": 85,
         "description": "ObservableObject classes with testable business logic",
         "files": [
-          "OnboardingViewModel.swift",
-          "DoseCalendarViewModel.swift",
-          "DoseHistoryViewModel.swift",
-          "ConcentrationChartGestureHandler.swift",
-          "ConcentrationChartState.swift",
-          "QuickDoseViewModel.swift"
+          "Onboarding/OnboardingViewModel.swift",
+          "ViewModels/DoseCalendarViewModel.swift",
+          "ViewModels/DoseHistoryViewModel.swift",
+          "Views/Analytics/ConcentrationChartGestureHandler.swift",
+          "Views/Analytics/ConcentrationChartState.swift",
+          "Views/Dashboard/QuickDoseViewModel.swift"
         ]
       },
       "utilities": {
         "threshold": 75,
         "description": "Helper functions, extensions, and utility classes",
         "files": [
-          "ProfileValidation.swift",
-          "Array+Unique.swift",
-          "Dose+Filtering.swift",
-          "DoseValidation.swift",
-          "DoseDefaults.swift",
-          "ConcentrationChartAccessibility.swift",
-          "ProfileField.swift",
-          "DoseMarkerOverlay.swift"
+          "Utils/ProfileValidation.swift",
+          "Extensions/Array+Unique.swift",
+          "Models/Extensions/Dose+Filtering.swift",
+          "Utilities/DoseValidation.swift",
+          "Utilities/DoseDefaults.swift",
+          "Views/Analytics/ConcentrationChartAccessibility.swift",
+          "Views/Components/ProfileField.swift",
+          "Views/Analytics/DoseMarkerOverlay.swift"
         ]
       }
     }

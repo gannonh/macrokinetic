@@ -475,4 +475,240 @@ struct ChartDataProcessorInterpolationTests {
         #expect(shortTimeline.count >= 2)
         #expect(shortTimeline.allSatisfy { $0.concentration >= 0 })
     }
+
+    // MARK: - Advanced Chart Data Transformation Tests
+
+    @Test("Transform concentration points to advanced chart data format")
+    @MainActor
+    func testTransformToAdvancedChartData() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
+        let doses = createTestDoses(user: user, medication: medication, in: container)
+
+        let processor = ChartDataProcessor()
+
+        // Generate basic concentration timeline
+        let concentrationPoints = processor.generateConcentrationTimeline(
+            doses: doses,
+            medication: Medication.semaglutide,
+            startDate: doses.first!.timestamp,
+            endDate: doses.last!.timestamp.addingTimeInterval(24 * 3600),
+            intervalHours: 6
+        )
+
+        // Transform to advanced chart data
+        let advancedPoints = processor.transformToAdvancedChartData(
+            concentrationPoints,
+            interpolationType: .pharmacokinetic
+        )
+
+        // Verify transformation
+        #expect(advancedPoints.count == concentrationPoints.count)
+        #expect(advancedPoints.allSatisfy { $0.isInterpolated })
+
+        // Verify data integrity preserved
+        for (index, advancedPoint) in advancedPoints.enumerated() {
+            let originalPoint = concentrationPoints[index]
+            #expect(advancedPoint.date == originalPoint.date)
+            #expect(advancedPoint.concentration == originalPoint.concentration)
+        }
+
+        // Test with different interpolation type
+        let linearPoints = processor.transformToAdvancedChartData(
+            concentrationPoints,
+            interpolationType: .linear
+        )
+        #expect(linearPoints.count == concentrationPoints.count)
+        #expect(linearPoints.allSatisfy { $0.isInterpolated })
+    }
+
+    @Test("Generate enhanced dose markers with intelligent styling")
+    @MainActor
+    func testGenerateEnhancedDoseMarkers() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
+        let context = container.mainContext
+
+        // Create diverse dose pattern for styling tests
+        let baseDate = Date().addingTimeInterval(-15 * 24 * 3600)
+        var testDoses: [Dose] = []
+
+        for dayOffset in 0..<12 {
+            let doseDate = baseDate.addingTimeInterval(Double(dayOffset * 7) * 24 * 3600)
+            let dose = Dose(
+                amount: 1.0,
+                timestamp: doseDate,
+                skipped: dayOffset == 5,  // Skip one dose for testing
+                user: user,
+                medication: medication
+            )
+            context.insert(dose)
+            testDoses.append(dose)
+        }
+        try context.save()
+
+        let processor = ChartDataProcessor()
+
+        // Test enhanced styling enabled
+        let enhancedMarkers = processor.generateEnhancedDoseMarkers(
+            testDoses,
+            includeSkipped: true,
+            enhancedStyling: true
+        )
+
+        // Verify all doses represented
+        #expect(enhancedMarkers.count == testDoses.count)
+
+        // Verify first dose special styling
+        let firstMarker = enhancedMarkers.first!
+        #expect(firstMarker.markerStyle == .firstDose)
+        #expect(firstMarker.alertLevel == .info)
+
+        // Verify milestone dose styling (10th dose)
+        let milestoneMarker = enhancedMarkers[9]  // 10th dose (0-indexed)
+        #expect(milestoneMarker.markerStyle == .milestone)
+        #expect(milestoneMarker.alertLevel == .info)
+
+        // Verify skipped dose included
+        let skippedMarker = enhancedMarkers[5]
+        #expect(skippedMarker.isSkipped == true)
+
+        // Test with skipped doses excluded
+        let nonSkippedMarkers = processor.generateEnhancedDoseMarkers(
+            testDoses,
+            includeSkipped: false,
+            enhancedStyling: false
+        )
+
+        #expect(nonSkippedMarkers.count == testDoses.count - 1)  // One less due to skipped dose
+        #expect(nonSkippedMarkers.allSatisfy { !$0.isSkipped })
+    }
+
+    @Test("Create complete concentration chart dataset")
+    @MainActor
+    func testCreateConcentrationChartDataset() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
+        let doses = createTestDoses(user: user, medication: medication, in: container)
+
+        let processor = ChartDataProcessor()
+
+        // Create dataset with default configuration
+        let dataset = processor.createConcentrationChartDataset(
+            doses: doses,
+            medication: Medication.semaglutide,
+            timeRange: .lastWeek,
+            configuration: ConcentrationChartConfiguration.default
+        )
+
+        // Verify dataset structure
+        #expect(dataset.concentrationCurves.count == 1)
+        #expect(!dataset.doseMarkers.isEmpty)
+
+        let curve = dataset.concentrationCurves.first!
+        #expect(curve.medication == Medication.semaglutide.displayName)
+        #expect(curve.curveStyle == .smooth)
+        #expect(!curve.points.isEmpty)
+
+        // Verify markers are within time range
+        let timeRange = TimeRange.lastWeek.dateRange()
+        #expect(
+            dataset.doseMarkers.allSatisfy {
+                $0.date >= timeRange.start && $0.date <= timeRange.end
+            })
+
+        // Verify metadata
+        #expect(dataset.metadata.title.contains("Semaglutide"))
+        #expect(dataset.metadata.subtitle == TimeRange.lastWeek.displayName)
+
+        // Test with different time range
+        let monthlyDataset = processor.createConcentrationChartDataset(
+            doses: doses,
+            medication: Medication.tirzepatide,
+            timeRange: .lastMonth,
+            configuration: ConcentrationChartConfiguration.default
+        )
+
+        #expect(monthlyDataset.metadata.subtitle == TimeRange.lastMonth.displayName)
+    }
+
+    @Test("Optimized concentration timeline with adaptive intervals")
+    @MainActor
+    func testOptimizedConcentrationTimelineAdaptive() async throws {
+        let container = createTestContainer()
+        let (user, medication) = createTestUser(in: container)
+
+        // Create larger dose set for optimization testing
+        let context = container.mainContext
+        let baseDate = Date().addingTimeInterval(-30 * 24 * 3600)
+        var largeDoseSet: [Dose] = []
+
+        for dayOffset in 0..<30 {
+            let doseDate = baseDate.addingTimeInterval(Double(dayOffset) * 24 * 3600)
+            let dose = Dose(
+                amount: 1.0,
+                timestamp: doseDate,
+                user: user,
+                medication: medication
+            )
+            context.insert(dose)
+            largeDoseSet.append(dose)
+        }
+        try context.save()
+
+        let processor = ChartDataProcessor()
+
+        // Test with adaptive intervals disabled
+        let nonAdaptiveTimeline = processor.generateConcentrationTimelineOptimized(
+            doses: largeDoseSet,
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: Date(),
+            maxPoints: 100,
+            adaptiveIntervals: false
+        )
+
+        #expect(nonAdaptiveTimeline.count <= 105)  // Allow slight margin for interval calculations
+        #expect(nonAdaptiveTimeline.count >= 10)
+        #expect(nonAdaptiveTimeline.allSatisfy { $0.concentration >= 0 })
+
+        // Test with adaptive intervals enabled (should use different algorithm)
+        let adaptiveTimeline = processor.generateConcentrationTimelineOptimized(
+            doses: largeDoseSet,
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: Date(),
+            maxPoints: 100,
+            adaptiveIntervals: true
+        )
+
+        #expect(adaptiveTimeline.count <= 100)
+        #expect(adaptiveTimeline.count >= 10)
+        #expect(adaptiveTimeline.allSatisfy { $0.concentration >= 0 })
+
+        // Adaptive should generally have different point distribution
+        // (though exact verification depends on internal algorithm)
+        #expect(adaptiveTimeline.count > 0)
+
+        // Test edge cases for optimization
+        let zeroPointsResult = processor.generateConcentrationTimelineOptimized(
+            doses: largeDoseSet,
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: Date(),
+            maxPoints: 0,
+            adaptiveIntervals: true
+        )
+        #expect(zeroPointsResult.isEmpty)
+
+        let emptyDosesResult = processor.generateConcentrationTimelineOptimized(
+            doses: [],
+            medication: Medication.semaglutide,
+            startDate: baseDate,
+            endDate: Date(),
+            maxPoints: 100,
+            adaptiveIntervals: true
+        )
+        #expect(emptyDosesResult.isEmpty)
+    }
 }
