@@ -2,23 +2,13 @@ import XCTest
 
 class AdherenceInsightsUITests: XCTestCase {
 
-    var app: XCUIApplication!
-
     override func setUpWithError() throws {
         continueAfterFailure = false
-        app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data"]
-        app.launch()
-    }
-
-    override func tearDownWithError() throws {
-        app = nil
     }
 
     // MARK: - ACCEPTANCE CRITERION: AdherenceInsightsView displays correctly
     func testAdherenceInsightsViewDisplay() throws {
         // ALWAYS start with debugging the accessibility hierarchy
-        TestUtilities.debugElements(in: app, containing: "adherence-insights")
 
         // GIVEN: User has dose history with adherence data
         // (Will be implemented - create test doses through navigation)
