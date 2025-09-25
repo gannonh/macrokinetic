@@ -118,7 +118,7 @@ public enum TimeRange: Equatable {
 }
 
 /// Concentration range configuration for chart Y-axis
-public enum ConcentrationRange {
+public enum ConcentrationRange: Equatable {
     case automatic
     case custom(min: Double, max: Double)
     case therapeuticWindow(min: Double, max: Double, optimal: Double)
