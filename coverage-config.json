@@ -15,7 +15,18 @@
           "PharmacokineticsEngine.swift",
           "ReconstitutionCalculator.swift",
           "DoseTitration.swift",
-          "AdherenceStatistics.swift"
+          "AdherenceStatistics.swift",
+          "Models/User.swift",
+          "Models/Dose.swift",
+          "Models/MedicationProfile.swift",
+          "Models/Medication.swift",
+          "Models/ConcentrationPoint.swift",
+          "Models/Medication+Pharmacokinetics.swift",
+          "Models/DoseTitration.swift",
+          "Models/AdherenceStatistics.swift",
+          "Services/PharmacokineticsEngine.swift",
+          "Services/ReconstitutionCalculator.swift",
+          "Utilities/PricingCalculator.swift"
         ]
       },
       "infrastructure": {
@@ -27,7 +38,18 @@
           "DoseSearchService.swift",
           "DoseService.swift",
           "ChartDataProcessor.swift",
-          "ChartDataProcessor+Filtering.swift"
+          "ChartDataProcessor+Filtering.swift",
+          "Services/MedicationManager.swift",
+          "Services/DoseSearchService.swift",
+          "Services/DoseService.swift",
+          "Services/ChartDataProcessor.swift",
+          "Services/ChartDataProcessor+Filtering.swift",
+          "Services/ChartDataProcessor+Interpolation.swift",
+          "Services/AnalyticsService.swift",
+          "Models/ChartData.swift",
+          "Models/ChartDataTypes.swift",
+          "Models/ChartDataEnums.swift",
+          "Models/SubscriptionProducts.swift"
         ]
       },
       "framework_integration": {
@@ -36,7 +58,10 @@
         "files": [
           "AuthenticationManager.swift",
           "BiometricAuthManager.swift",
-          "SubscriptionManager.swift"
+          "SubscriptionManager.swift",
+          "Services/SubscriptionManager.swift",
+          "Services/SubscriptionManager+Testing.swift",
+          "Onboarding/OnboardingCoordinator.swift"
         ]
       },
       "view_models": {
@@ -47,7 +72,13 @@
           "DoseCalendarViewModel.swift",
           "DoseHistoryViewModel.swift",
           "ConcentrationChartGestureHandler.swift",
-          "ConcentrationChartState.swift"
+          "ConcentrationChartState.swift",
+          "Onboarding/OnboardingViewModel.swift",
+          "ViewModels/DoseCalendarViewModel.swift",
+          "ViewModels/DoseHistoryViewModel.swift",
+          "Views/Analytics/ConcentrationChartGestureHandler.swift",
+          "Views/Analytics/ConcentrationChartState.swift",
+          "Views/Dashboard/QuickDoseViewModel.swift"
         ]
       },
       "utilities": {
@@ -59,7 +90,15 @@
           "Dose+Filtering.swift",
           "DoseValidation.swift",
           "DoseDefaults.swift",
-          "ConcentrationChartAccessibility.swift"
+          "ConcentrationChartAccessibility.swift",
+          "Extensions/Array+Unique.swift",
+          "Models/Extensions/Dose+Filtering.swift",
+          "Utilities/DoseValidation.swift",
+          "Utilities/DoseDefaults.swift",
+          "Utils/ProfileValidation.swift",
+          "Views/Analytics/ConcentrationChartAccessibility.swift",
+          "Views/Components/ProfileField.swift",
+          "Views/Analytics/DoseMarkerOverlay.swift"
         ]
       }
     }
@@ -69,7 +108,9 @@
     "categories": [
       "SwiftUI Views",
       "View modifiers",
-      "SwiftUI-specific presentation logic"
+      "SwiftUI-specific presentation logic",
+      "App entry points",
+      "Design system components"
     ],
     "files": [
       "QuickDoseEntry.swift",
@@ -78,7 +119,51 @@
       "ChartControlsView.swift",
       "ConcentrationTimelineChart.swift",
       "ChartConfiguration.swift",
-      "ConcentrationChartControls.swift"
+      "ConcentrationChartControls.swift",
+      "ContentView.swift",
+      "JabTrackerApp.swift",
+      "Design/ButtonComponents.swift",
+      "Design/ButtonStyles.swift",
+      "Design/CardComponents.swift",
+      "Design/Colors+Extensions.swift",
+      "Design/DesignTokens.swift",
+      "Onboarding/Components/OnboardingProgressIndicator.swift",
+      "Onboarding/OnboardingView.swift",
+      "Onboarding/Views/InitialDoseSetupView.swift",
+      "Onboarding/Views/MedicationSelectionView.swift",
+      "Onboarding/Views/PermissionsRequestView.swift",
+      "Onboarding/Views/SubscriptionView.swift",
+      "Onboarding/Views/WelcomeScreensView.swift",
+      "Views/Analytics/ChartConfiguration.swift",
+      "Views/Analytics/ChartControlsView.swift",
+      "Views/Analytics/ChartExportView.swift",
+      "Views/Analytics/ConcentrationChartControls.swift",
+      "Views/Analytics/ConcentrationTimelineChart.swift",
+      "Views/Analytics/TimePeriodSelector.swift",
+      "Views/AuthenticationView.swift",
+      "Views/Dashboard/ConcentrationCard.swift",
+      "Views/Dashboard/ConcentrationDisplay.swift",
+      "Views/Dashboard/QuickDoseButton.swift",
+      "Views/DoseEntry/DoseEntryFormSections.swift",
+      "Views/DoseEntry/DoseEntryPhotoSection.swift",
+      "Views/DoseEntry/DoseEntryPKSection.swift",
+      "Views/DoseEntry/DoseEntrySheet.swift",
+      "Views/DoseEntry/QuickDoseEntry.swift",
+      "Views/History/CalendarDayView.swift",
+      "Views/History/DoseCalendarView.swift",
+      "Views/History/DoseDayDetailView.swift",
+      "Views/History/DoseHistoryRow.swift",
+      "Views/History/DoseHistoryView.swift",
+      "Views/History/DoseSearchAndFilterView.swift",
+      "Views/History/HistoryView.swift",
+      "Views/History/MonthlyStatsView.swift",
+      "Views/MedicationProfile/DoseTitrationView.swift",
+      "Views/MedicationProfile/ReconstitutionCalculatorView.swift",
+      "Views/Settings/MedicationFormComponents.swift",
+      "Views/Settings/MedicationProfileSettingsView.swift",
+      "Views/Settings/SettingsView.swift",
+      "Views/SplashView.swift",
+      "Views/UserProfileView.swift"
     ]
   },
   "special_testing_notes": {
