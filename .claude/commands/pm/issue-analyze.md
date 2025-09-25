@@ -109,9 +109,15 @@ parallelization_factor: {1.0-5.0}
 
 ### Stream A: {Stream Name}
 **Scope**: {What this stream handles}
-**Files**:
+**Implementation Files**:
 - {file_pattern_1}
 - {file_pattern_2}
+**UI/Interaction Testing Files**:
+- {test_file_pattern_1}
+- {test_file_pattern_2}
+**E2E Testing Files**:
+- {e2e_test_file_pattern_1}
+- {e2e_test_file_pattern_2}
 **Agent Type**: {backend|frontend|fullstack|database}-specialist
 **Can Start**: immediately
 **Estimated Hours**: {hours}
@@ -119,9 +125,15 @@ parallelization_factor: {1.0-5.0}
 
 ### Stream B: {Stream Name}
 **Scope**: {What this stream handles}
-**Files**:
+**Implementation Files**:
 - {file_pattern_1}
 - {file_pattern_2}
+**UI/Interaction Testing Files**:
+- {test_file_pattern_1}
+- {test_file_pattern_2}
+**E2E Testing Files**:
+- {e2e_test_file_pattern_1}
+- {e2e_test_file_pattern_2}
 **Agent Type**: {agent_type}
 **Can Start**: immediately
 **Estimated Hours**: {hours}
@@ -129,8 +141,15 @@ parallelization_factor: {1.0-5.0}
 
 ### Stream C: {Stream Name}
 **Scope**: {What this stream handles}
-**Files**:
+**Implementation Files**:
 - {file_pattern_1}
+- {file_pattern_2}
+**UI/Interaction Testing Files**:
+- {test_file_pattern_1}
+- {test_file_pattern_2}
+**E2E Testing Files**:
+- {e2e_test_file_pattern_1}
+- {e2e_test_file_pattern_2}
 **Agent Type**: {agent_type}
 **Can Start**: after Stream A completes
 **Estimated Hours**: {hours}
