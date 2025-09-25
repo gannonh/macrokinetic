@@ -68,7 +68,7 @@ git status -sb
 
 ### 2. Run Checks & Fix Issues
 
-1. Make sure all new files are added to `coverage-config.json` if needed
+1. Run `./scripts/check-coverage-config.sh` add any missing files to `coverage-config.json` if needed
 2. Run final checks: `./scripts/check-all.sh --skip-ui`
 3. If ANY failures or violations:
    - **⚠️ STOP MERGE PROCESS ⚠️**

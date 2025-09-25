@@ -211,6 +211,11 @@ struct AnalyticsView: View {
     @Query private var users: [User]
     @State private var chartDataProcessor = ChartDataProcessor()
     @State private var analyticsService = AnalyticsService()
+    @State private var chartDatasetService: ChartDatasetService
+
+    init() {
+        self._chartDatasetService = State(wrappedValue: ChartDatasetService())
+    }
 
     var body: some View {
         NavigationStack {
@@ -307,43 +312,11 @@ struct AnalyticsView: View {
     // MARK: - Data Generation
 
     /// Generates chart dataset from user medication data
+    /// Delegates to ChartDatasetService for safe handling of multiple profiles
     private func generateChartDataset(for user: User, profiles: [MedicationProfile])
         -> ConcentrationChartDataset?
     {
-        guard let primaryProfile = profiles.first,
-            let doses = primaryProfile.doses,
-            !doses.isEmpty
-        else {
-            return nil
-        }
-
-        // Convert SwiftData to chart data types
-        let advancedMarkers = doses.map { dose in
-            AdvancedDoseMarker(from: dose)
-        }
-
-        // Generate concentration points using ChartDataProcessor
-        let timeRange = (doses.map(\.timestamp).min() ?? Date())...(Date())
-        let concentrationPoints = chartDataProcessor.generateConcentrationTimeline(
-            for: primaryProfile,
-            timeRange: timeRange
-        )
-
-        // Convert ConcentrationPoint to AdvancedConcentrationPoint
-        let advancedPoints = concentrationPoints.map { point in
-            AdvancedConcentrationPoint(from: point)
-        }
-
-        let concentrationCurve = ConcentrationCurve(
-            points: advancedPoints,
-            medication: primaryProfile.genericName
-        )
-
-        return ConcentrationChartDataset(
-            concentrationCurves: [concentrationCurve],
-            doseMarkers: advancedMarkers,
-            configuration: .default
-        )
+        chartDatasetService.generateChartDataset(for: user, profiles: profiles)
     }
 }
 

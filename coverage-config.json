@@ -45,6 +45,7 @@
           "Services/ChartDataProcessor.swift",
           "Services/ChartDataProcessor+Filtering.swift",
           "Services/ChartDataProcessor+Interpolation.swift",
+          "Services/ChartDatasetService.swift",
           "Services/AnalyticsService.swift",
           "Models/ChartData.swift",
           "Models/ChartDataTypes.swift",
