@@ -293,7 +293,13 @@ issue/{issue_name}
 - **Test Command**: `./scripts/test.sh unit {X}`
 - **UI Test Command**: `./scripts/test.sh ui {X} {TestClassName}`
 
-## Files
+## Implementation Files
+{file_patterns}
+
+## Unit/Integration Test Files
+{file_patterns}
+
+## E2E Test Files
 {file_patterns}
 
 ## Progress
@@ -342,8 +348,9 @@ Task:
       Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 
       1. E2E Acceptance Criteria: Stub E2E acceptance test to define user-facing success (criteria only)
+         (See E2E Test Template: JabTrackerUITests/Utils/UITestTemplateTest.swift)
 
-      // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
+         // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
          func testNameOfTestMethod() throws {
             // ALWAYS start with debugging the accessibility hierarchy
             // 🔍 DEBUG: Tables: []

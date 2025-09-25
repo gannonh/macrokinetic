@@ -17,6 +17,8 @@
           "Models/DoseTitration.swift",
           "Models/AdherenceStatistics.swift",
           "Models/AdherenceTrendData.swift",
+          "Models/AdherencePattern.swift",
+          "Models/AdherenceInsight.swift",
           "Utilities/PricingCalculator.swift"
         ]
       },
@@ -33,6 +35,7 @@
           "Services/ChartDataProcessor+Interpolation.swift",
           "Services/ChartDatasetService.swift",
           "Services/AnalyticsService.swift",
+          "Services/AdherenceInsightsService.swift",
           "Models/ChartData.swift",
           "Models/ChartDataTypes.swift",
           "Models/ChartDataEnums.swift",
