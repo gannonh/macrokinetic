@@ -25,6 +25,7 @@
 - `/pm:epic-oneshot` - Decompose and sync in one command
 - `/pm:epic-list` - List all epics
 - `/pm:epic-show` - Display epic and its tasks
+- `/pm:epic-status` - Check the status of epics in the project management system
 - `/pm:epic-close` - Mark epic as complete
 - `/pm:epic-edit` - Edit epic details
 - `/pm:epic-refresh` - Update epic progress from tasks
@@ -33,10 +34,15 @@
 - `/pm:issue-show` - Display issue and sub-issues
 - `/pm:issue-status` - Check issue status
 - `/pm:issue-start` - Begin work with specialized agent
+- `/pm:issue-resume` - Begin or resume work on a GitHub issue with parallel agents based on work stream analysis
+- `/pm:issue-analyze` - Analyze a GitHub issue to identify parallel work streams for efficient execution
+- `/pm:issue-update` - Update an issue with recent activity, progress, and learnings from the current session
 - `/pm:issue-sync` - Push updates to GitHub
 - `/pm:issue-close` - Mark issue as complete
 - `/pm:issue-reopen` - Reopen closed issue
 - `/pm:issue-edit` - Edit issue details
+- `/pm:issue-merge` - Merge completed PR from branch to main using GitHub Pull Request workflow
+- `/pm:issue-import` - Import existing GitHub issues into the PM system
 
 ### Workflow Commands
 - `/pm:next` - Show next priority issue with epic context
@@ -49,11 +55,31 @@
 - `/pm:sync` - Full bidirectional sync with GitHub
 - `/pm:import` - Import existing GitHub issues
 
+### Pull Request Commands
+- `/pm:pr-process` - Process PR review comments with context-aware discretion
+- `/pm:pr-merge` - Merge completed PR from branch to main using GitHub Pull Request workflow
+
+### Development Commands
+- `/pm:commit` - Commit changes with a descriptive message
+- `/pm:help` - Show help information
+
 ### Maintenance Commands
 - `/pm:validate` - Check system integrity
 - `/pm:validate-tasks` - Validate and fix task file formats
 - `/pm:clean` - Archive completed work
 - `/pm:search` - Search across all content
+- `/pm:test-reference-update` - Update test references
+
+### QA Commands
+- `/qa:validate-coverage-config` - Validate iOS project coverage configuration
+- `/qa:swiftlint` - Run the SwiftLint and swift-format QA workflow with test verification
+- `/qa:test-quality` - Test quality review
+- `/qa:tq-fix` - Address test quality issues from analysis report
+- `/qa:code-quality` - Code quality review
+
+### Testing Commands
+- `/testing:run` - Run the test suite or specific tests
+- `/testing:prime` - Prepare and prime the testing environment by detecting test framework and validating dependencies
 
 
 ## System Architecture
