@@ -16,8 +16,11 @@ Update progress and capture session work & learnings for issue #$ARGUMENTS.
 
 First check if `.claude/epics/*/$ARGUMENTS.md` exists (new naming).
 If not found, search for task file with `github:.*issues/$ARGUMENTS` in frontmatter (old naming).
-If not found: "❌ No local task for issue #$ARGUMENTS"
-
+If not found, stop and notify user: 
+```
+❌ No local task for issue #$ARGUMENTS
+❔ To import existing issues, run /pm:issue-import [issue-number] [epic-name]
+```
 Extract epic name from path for subsequent operations.
 
 ### 2. Gather Session Context

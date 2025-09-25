@@ -1,47 +1,52 @@
 ---
+description: Import existing GitHub issues into the PM system.
+argument-hint: [issue-number] [epic-name] [github-label]  
 allowed-tools: Read, Write, LS
 ---
 
-# Import
+# Import Issue
 
 Import existing GitHub issues into the PM system.
 
-## Usage
-```
-/pm:import [--epic <epic_name>] [--label <label>]
-```
+## Options
 
-Options:
-- `--epic` - Import into specific epic
-- `--label` - Import only issues with specific label
-- No args - Import all untracked issues
+- Issue Number: $1
+- Epic Name: $2
+- GitHub Label: $3
 
 ## Instructions
 
 ### 1. Fetch GitHub Issues
 
 ```bash
-# Get issues based on filters
-if [[ "$ARGUMENTS" == *"--label"* ]]; then
-  gh issue list --label "{label}" --limit 1000 --json number,title,body,state,labels,createdAt,updatedAt
+# If issue number provided, get specific github issue
+if [[ -n "$1" ]]; then
+  gh issue view "$1" --json number,title,body,state,labels,createdAt,updatedAt
+fi
+# if label provided, filter issues by label
+if [[ -n "$3" ]]; then
+  gh issue list --label "$3" --state open --json number,title,body,createdAt,updatedAt,labels
+# if no label provided get all open issues
 else
-  gh issue list --limit 1000 --json number,title,body,state,labels,createdAt,updatedAt
+  gh issue list --state open --json number,title,body,createdAt,updatedAt,labels
 fi
 ```
 
 ### 2. Identify Untracked Issues
 
 For each GitHub issue:
-- Search local files for matching github URL
+- Find local file matching github issue number: `.claude/epics/$2/$1.md`
+- If found, skip (already tracked)
 - If not found, it's untracked and needs import
 
 ### 3. Categorize Issues
 
-Based on labels:
+Based on GitHub issue labels:
 - Issues with "epic" label → Create epic structure
 - Issues with "task" label → Create task in appropriate epic
+- Issues without "epic" or "task" label → Create task in appropriate epic
 - Issues with "epic:{name}" label → Assign to that epic
-- No PM labels → Ask user or create in "imported" epic
+- No PM labels → Ask user 
 
 ### 4. Create Local Structure
 
@@ -49,14 +54,15 @@ For each issue to import:
 
 **If Epic:**
 ```bash
-mkdir -p .claude/epics/{epic_name}
 # Create epic.md with GitHub content and frontmatter
+mkdir -p .claude/epics/$2$
+touch .claude/epics/$2$/epic.md
 ```
 
 **If Task:**
 ```bash
-# Find next available number (001.md, 002.md, etc.)
 # Create task file with GitHub content
+touch .claude/epics/$2/$1.md
 ```
 
 Set frontmatter:
@@ -65,7 +71,7 @@ name: {issue_title}
 status: {open|closed based on GitHub}
 created: {GitHub createdAt}
 updated: {GitHub updatedAt}
-github: https://github.com/{org}/{repo}/issues/{number}
+github: https://github.com/{org}/{repo}/issues/$1
 imported: true
 ```
 
