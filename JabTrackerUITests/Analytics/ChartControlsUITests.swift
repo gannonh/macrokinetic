@@ -39,7 +39,7 @@ final class ChartControlsUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        sleep(3)
+        // sleep(3)
 
         // TEMPORARY: Debug what buttons actually exist
         print("🔍 DEBUG: All buttons on Analytics tab:")
@@ -102,7 +102,7 @@ final class ChartControlsUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        sleep(3)
+        // sleep(3)
 
         // Verify chart is present (not empty state)
         let chartElement = findChartElement(in: app)
@@ -126,19 +126,19 @@ final class ChartControlsUITests: XCTestCase {
 
         // Test actual button interactions
         lastWeekButton.tap()
-        sleep(1)
+        // sleep(1)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Week selection")
 
         lastMonthButton.tap()
-        sleep(1)
+        // sleep(1)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Month selection")
 
         lastQuarterButton.tap()
-        sleep(1)
+        // sleep(1)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Quarter selection")
 
         lastYearButton.tap()
-        sleep(1)
+        // sleep(1)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Year selection")
 
         print(
@@ -161,7 +161,7 @@ final class ChartControlsUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        sleep(3)
+        // sleep(3)
 
         // Verify chart is present
         let chartElement = findChartElement(in: app)
@@ -223,7 +223,7 @@ final class ChartControlsUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        sleep(3)
+        // sleep(3)
 
         // Verify chart is present with data
         let chartElement = findChartElement(in: app)
@@ -244,24 +244,24 @@ final class ChartControlsUITests: XCTestCase {
 
         // Test sequential time period selection
         lastWeekButton.tap()
-        sleep(2)
+        // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Week selection")
 
         lastMonthButton.tap()
-        sleep(2)
+        // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Month selection")
 
         lastQuarterButton.tap()
-        sleep(2)
+        // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Quarter selection")
 
         lastYearButton.tap()
-        sleep(2)
+        // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Year selection")
 
         // Test switching back to earlier time periods
         lastWeekButton.tap()
-        sleep(2)
+        // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should handle switching back to Week view")
 
         print("✅ Multiple time period selection works - all buttons functional and chart responsive")
@@ -283,7 +283,7 @@ final class ChartControlsUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        sleep(3)
+        // sleep(3)
 
         // WHEN: Chart loads with default configuration
         let chartElement = findChartElement(in: app)
@@ -316,12 +316,12 @@ final class ChartControlsUITests: XCTestCase {
 
         // Test that a selection change works from the default state
         lastMonthButton.tap()
-        sleep(2)
+        // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should remain functional after changing from default")
 
         // Switch back to verify default behavior is restorable
         lastWeekButton.tap()
-        sleep(2)
+        // sleep(2)
         XCTAssertTrue(
             chartElement.exists, "Chart should handle switching back to Week view from default")
 

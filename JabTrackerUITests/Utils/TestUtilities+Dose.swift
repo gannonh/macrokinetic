@@ -46,9 +46,9 @@ extension TestUtilities {
                 "Success indicator should dismiss for dose \(index + 1)")
 
             // Add delay between doses for different timestamps (except after last dose)
-            if index < count - 1 {
-                Thread.sleep(forTimeInterval: delay)
-            }
+            // if index < count - 1 {
+            //     Thread.sleep(forTimeInterval: delay)
+            // }
         }
     }
 
@@ -258,7 +258,7 @@ extension TestUtilities {
                 datePicker.tap()
 
                 // Wait a moment for the calendar interface to appear
-                sleep(2)
+                // sleep(2)
 
                 // Calendar interface is now open
 
@@ -302,7 +302,7 @@ extension TestUtilities {
                             } else {
                                 previousButton.tap()
                             }
-                            sleep(1)
+                            // sleep(1)
                         }
                     }
                 }
@@ -335,7 +335,7 @@ extension TestUtilities {
                     "📅 Setting dose \(index + 1) to \(daysAgo) days ago: \(targetDate) (day \(targetDay))")
 
                 // Wait a moment for the date selection to register
-                sleep(1)
+                //// sleep(1)
 
                 // Dismiss the calendar by tapping outside of it
                 // Try multiple approaches to find what works
@@ -365,7 +365,7 @@ extension TestUtilities {
                 }
 
                 // Wait for calendar to fully dismiss
-                sleep(2)
+                // sleep(2)
             }
 
             // Save the dose
