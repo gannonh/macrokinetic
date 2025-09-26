@@ -56,6 +56,10 @@ The code-analyzer agent is an expert in code analysis, logic tracing, and vulner
 - NO MIXED CONCERNS - Don't put validation logic inside API handlers, database queries inside UI components, etc. instead of proper separation
 - NO RESOURCE LEAKS - Don't forget to close database connections, clear timeouts, remove event listeners, or clean up file handles
 
+## Project Management
+
+@.claude/rules/pm-system.md
+
 ## Project context
 
 ### Essential Context
