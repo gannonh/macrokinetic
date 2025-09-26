@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-25T19:11:47Z
-version: 2.0
+last_updated: 2025-09-26T01:23:01Z
+version: 2.1
 author: Claude Code PM System
 ---
 
@@ -391,3 +391,20 @@ struct UserAnalyticsSummary {
 - **Comprehensive Test Coverage Achievement**: Successfully improved 4 critical chart components from failing coverage (3%-50%) to meeting tier requirements (75%-85%) through systematic approach
 - **Medical App Coverage Standards**: 85+ test methods provide comprehensive validation for patient safety-critical chart components - demonstrates scalable approach for medical app testing
 - **Test File Organization Excellence**: Created dedicated test suites (ConcentrationChartStateTests, ConcentrationChartAccessibilityTests, ProfileFieldTests) with clear separation of concerns
+
+## AdherenceInsights Business Logic Patterns (Issue #57)
+
+### SwiftData Relationship Testing Patterns
+- **SwiftData Relationship Testing**: Fixed crash by avoiding direct array assignment to @Relationship properties in tests - discovered during Issue #57
+- **Critical Testing Anti-Pattern**: Never assign arrays to SwiftData relationships in tests (`medicationProfile.doses = existingDoses`) - always crashes
+- **Safe Relationship Testing**: Use individual property setters or pass arrays directly to engine methods without using relationships
+
+### Test-Driven Business Logic Validation
+- **Test-First Business Logic Validation**: Tests revealed fundamental flaws in weekend gap detection and dose escalation algorithms - discovered during Issue #57
+- **Medical Algorithm Design**: Weekly medication patterns require different logic than daily medication assumptions
+- **Force Unwrapping Test Pattern**: Safe unwrapping as "fix" masks underlying logic problems - avoid this pattern, fix root cause instead
+
+### Medical App Testing Integrity
+- **CRITICAL: Never Bend Tests to Pass Bad Logic**: Initial approach of making tests more "lenient" to pass was fundamentally wrong - discovered during Issue #57
+- **Test-Driven Debugging**: Tests that fail reveal actual business requirements, not testing issues
+- **Medical App Development Standards**: Test workarounds compromise patient safety - always fix root cause business logic
