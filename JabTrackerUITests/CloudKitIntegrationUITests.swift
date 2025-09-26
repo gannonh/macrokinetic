@@ -105,7 +105,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
             syncStatusHeader.tap()
 
             // Give time for retry operation
-            sleep(2)
+            // // sleep(2)
 
             // Status should remain valid after retry
             let hasValidStatus =
@@ -193,7 +193,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
             "Sync Status section should appear")
 
         // Wait for CloudKit status to stabilize
-        sleep(5)
+        // sleep(5)
 
         // Capture the displayed status
         let allStatusTexts = app.staticTexts.allElementsBoundByIndex.map(\.label)
@@ -235,7 +235,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
             for _ in 0..<5 {  // Max 5 steps to avoid infinite loop
                 if continueButton.exists, continueButton.isEnabled {
                     continueButton.tap()
-                    sleep(1)
+                    // sleep(1)
                 } else {
                     break
                 }
@@ -292,7 +292,7 @@ extension CloudKitIntegrationUITests {
                 lastStatus = currentStatus
             }
 
-            sleep(1)
+            // sleep(1)
         }
     }
 

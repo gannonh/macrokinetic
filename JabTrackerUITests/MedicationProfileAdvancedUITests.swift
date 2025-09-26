@@ -70,7 +70,7 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
             startDatePicker.waitForExistence(timeout: 3.0),
             "Start date picker should be accessible")
         startDatePicker.tap()
-        sleep(1)
+        // sleep(1)
 
         // Dismiss calendar modal
         let dismissRegion = self.app.buttons["PopoverDismissRegion"]
