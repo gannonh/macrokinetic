@@ -15,28 +15,67 @@ final class AdherenceChartsUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Chart components display adherence visualizations
     func testAdherenceChartComponents() throws {
-        // ALWAYS start with debugging the accessibility hierarchy
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.debugElements(in: app, containing: "adherence-chart")
-
-        // Example output reveals actual element types:
-        // 🔍 DEBUG: Charts: ["adherence-trend-chart"]
-        // 🔍 DEBUG: Images: ["missed-dose-indicator"]
-        // 🔍 DEBUG: ProgressIndicators: ["adherence-progress"]
-
         // GIVEN: User has dose history with adherence data
-        // (Test data setup would be here)
+        let app = TestUtilities.launchAppWithTestMode()
 
-        // WHEN: Chart components are displayed
-        // (Navigation to adherence view would be here)
+        // Create medication profile and historical dose data
+        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
+        TestUtilities.createHistoricalChartData(in: app, count: 5)
 
-        // THEN: AdherenceTrendChart shows weekly/monthly trends
-        // THEN: MissedDosePatternView highlights missed doses
-        // THEN: AdherenceProgressIndicator shows progress toward goals
-        // THEN: All charts are accessible and properly labeled
+        // WHEN: User navigates to Analytics tab
+        TestUtilities.navigateToTab(app, tabName: "Analytics")
 
-        // Placeholder assertion for stub test
-        XCTAssertTrue(true, "E2E acceptance criteria defined")
+        // Wait for Analytics view to load
+        sleep(2)
+
+        // Debug what's available after navigating to Analytics
+        TestUtilities.debugElements(in: app, containing: "analytics")
+        TestUtilities.debugElements(in: app, containing: "picker")
+
+        // Debug all segmented controls
+        print("🔍 DEBUG: All segmented controls:")
+        let allSegmentedControls = app.segmentedControls.allElementsBoundByIndex
+        for (index, control) in allSegmentedControls.enumerated() {
+            print("  Segmented Control \(index): '\(control.identifier)' - exists: \(control.exists)")
+        }
+
+        // Check if "Concentration" or "Adherence" text exists anywhere
+        let concentrationText = app.staticTexts["Concentration"]
+        let adherenceText = app.staticTexts["Adherence"]
+        print("🔍 DEBUG: Concentration text exists: \(concentrationText.exists)")
+        print("🔍 DEBUG: Adherence text exists: \(adherenceText.exists)")
+
+        // Navigate to Adherence segment
+        let segmentedControl = app.segmentedControls["analytics-type-picker"]
+        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
+
+        let adherenceSegment = segmentedControl.buttons["Adherence"]
+        XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
+        adherenceSegment.tap()
+
+        // Wait for adherence view to load
+        sleep(2)
+
+        // Debug what adherence elements are available
+        TestUtilities.debugElements(in: app, containing: "adherence")
+        TestUtilities.debugElements(in: app, containing: "streak")
+        TestUtilities.debugElements(in: app, containing: "metrics")
+
+        // THEN: Adherence components should be displayed
+        let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
+        XCTAssertTrue(adherenceMetricsCard.waitForExistence(timeout: 5), "Adherence metrics card should be displayed")
+
+        let streakCountersCard = app.otherElements["streak-counters-card"]
+        XCTAssertTrue(streakCountersCard.exists, "Streak counters card should be displayed")
+
+        let adherenceInsightsPlaceholder = app.otherElements["adherence-insights-placeholder"]
+        XCTAssertTrue(adherenceInsightsPlaceholder.exists, "Adherence insights placeholder should be displayed")
+
+        // Verify adherence percentage is displayed (inside metrics card)
+        let adherencePercentageText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '%'")).firstMatch
+        XCTAssertTrue(adherencePercentageText.exists, "Adherence percentage should be displayed")
+
+        print("✅ Adherence chart components successfully verified")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Trend chart displays adherence patterns over time
