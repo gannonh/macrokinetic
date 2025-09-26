@@ -291,6 +291,7 @@ Follow this strict iterative process for E2E test development:
 #### Debug-First E2E Pattern (Essential):
 ```swift
 func testSpecificFeature() throws {
+    let app = TestUtilities.launchAppWithTestMode()
     // Step 1: ALWAYS start with debugging elements
     TestUtilities.debugElements(in: app, containing: "your-feature")
 
