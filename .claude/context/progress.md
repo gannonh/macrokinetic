@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-25T19:11:47Z
-version: 2.6
+last_updated: 2025-09-26T01:23:01Z
+version: 2.7
 author: Claude Code PM System
 ---
 
@@ -242,7 +242,27 @@ author: Claude Code PM System
 - **E2E Test Verification Strategy**: Individual test method validation before full suite run prevents long debugging cycles in complex medical app testing
 - **SwiftLint Integration with E2E Development**: Pre-commit hooks catch violations during implementation - iterative fix workflow enables compliance without blocking development
 
+## Lessons Learned (Recent - Issue #57)
+### Critical Medical App Testing Principles
+- **CRITICAL: Never Bend Tests to Pass Bad Logic**: Initial approach of making tests more "lenient" to pass was fundamentally wrong approach - discovered during Issue #57
+- **Test-Driven Debugging**: Tests that fail reveal actual business requirements, not testing issues
+- **Medical App Development Standards**: Test workarounds compromise patient safety - always fix root cause business logic
+- **Parallel Development Coordination**: Business logic flaws in one stream (C) affect data accuracy in dependent streams (A, B)
+
+### AdherenceInsights Development Process
+- **Business Logic Validation First**: Weekend gap detection and dose escalation algorithms must be medically accurate before UI integration
+- **Stream Dependency Management**: UI streams depend on business logic accuracy - validate core algorithms before marking streams complete
+- **SwiftData Relationship Testing**: Critical to avoid array assignment to relationships in tests to prevent crashes
+- **Medical Algorithm Testing**: Weekly vs daily medication patterns require different testing approaches and validation
+
+### Medical App Quality Assurance Process
+- **Test Integrity Over Convenience**: Never modify tests to accommodate flawed business logic
+- **Root Cause Analysis**: Debug actual algorithm issues rather than masking with test workarounds
+- **Medical Safety Standards**: Healthcare applications require higher standards for business logic accuracy
+- **Three-Stream Validation**: All parallel development streams must validate their integration points
+
 ## Update History
+- 2025-09-26T01:23:01Z: Issue #57 critical medical app testing principles - never bend tests to pass bad logic, business logic validation first, stream dependency management, and medical safety standards
 - 2025-09-24T18:23:44Z: Issue #56 completion - ConcentrationTimelineChart with comprehensive E2E testing, accessibility patterns, SwiftLint integration, and medical app testing standards
 - 2025-09-23T13:29:15Z: Issue #55 completion - ChartDataProcessor with 4-stream parallel development, Swift Charts integration, lessons learned from parallel coordination
 - 2025-09-21T23:11:13Z: Issue #53 analytics models - fixed all SwiftData test crashes, 38 analytics tests passing, established relationship testing patterns

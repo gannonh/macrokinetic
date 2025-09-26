@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-23T13:29:15Z
-version: 1.4
+last_updated: 2025-09-26T01:23:01Z
+version: 1.5
 author: Claude Code PM System
 ---
 
@@ -121,7 +121,16 @@ JabTracker/
 - **Model-Service Separation**: Chart data structures in Models/ directory separate from processing logic in Services/
 - **Medical Data Architecture**: Specialized chart data types for healthcare visualization with pharmacokinetic modeling support
 
+## AdherenceInsights Structure Insights (Issue #57)
+- **Stream Dependency Management**: UI streams (A, B) depend on business logic accuracy from Stream C - discovered during Issue #57 implementation
+- **Critical Issue Identification Workflow**: Business logic validation essential before marking streams complete - prevents false completion status
+- **Three-Stream Architecture Validation**: Parallel development requires validation of integration points between streams before final completion
+- **Medical Algorithm Service Structure**: AdherenceInsightsService requires comprehensive business logic validation separate from UI implementation
+- **Service-View Separation**: UI excellence in streams A and B meaningless without medically accurate backend algorithms in stream C
+- **Healthcare App Architecture Requirements**: Medical applications require rigorous validation of core business logic before UI integration
+
 ## Update History
+- 2025-09-26T01:23:01Z: Added AdherenceInsights structure insights from Issue #57, stream dependency management, critical issue identification workflow, and healthcare app architecture requirements
 - 2025-09-23T13:29:15Z: Added ChartDataProcessor structure insights from Issue #55, parallel development architecture, new Models and Services files
 - 2025-09-16T22:39:56Z: Added calendar feature structure insights from Issue #42 development
 - 2025-09-12T16:35:25Z: Added PM system structure details (231+ files, hooks, settings), dose-tracking epic organization
