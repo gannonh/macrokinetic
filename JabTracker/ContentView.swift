@@ -212,6 +212,12 @@ struct AnalyticsView: View {
     @State private var chartDataProcessor = ChartDataProcessor()
     @State private var analyticsService = AnalyticsService()
     @State private var chartDatasetService: ChartDatasetService
+    @State private var selectedAnalyticsType: AnalyticsType = .concentration
+
+    enum AnalyticsType: String, CaseIterable {
+        case concentration = "Concentration"
+        case adherence = "Adherence"
+    }
 
     init() {
         self._chartDatasetService = State(wrappedValue: ChartDatasetService())
@@ -219,25 +225,43 @@ struct AnalyticsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: 16) {
-                    if let currentUser = users.first,
-                        let medicationProfiles = currentUser.medicationProfiles,
-                        !medicationProfiles.isEmpty
-                    {
-                        concentrationChartSection(for: currentUser, profiles: medicationProfiles)
-                    } else {
-                        noDataSection
+            VStack(spacing: 0) {
+                // Segmented Control
+                Picker("Analytics Type", selection: $selectedAnalyticsType) {
+                    ForEach(AnalyticsType.allCases, id: \.self) { type in
+                        Text(type.rawValue).tag(type)
                     }
                 }
+                .pickerStyle(SegmentedPickerStyle())
                 .padding()
+                .accessibilityIdentifier("analytics-type-picker")
+
+                // Content based on selection
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        if let currentUser = users.first,
+                            let medicationProfiles = currentUser.medicationProfiles,
+                            !medicationProfiles.isEmpty
+                        {
+                            switch selectedAnalyticsType {
+                            case .concentration:
+                                concentrationChartSection(for: currentUser, profiles: medicationProfiles)
+                            case .adherence:
+                                adherenceInsightsSection(for: currentUser)
+                            }
+                        } else {
+                            noDataSection
+                        }
+                    }
+                    .padding()
+                }
+                .accessibilityIdentifier("analytics-scroll-view")
             }
             .navigationTitle("Analytics")
-            .accessibilityIdentifier("analytics-view")
         }
     }
 
-    // MARK: - Chart Section
+    // MARK: - Chart Sections
 
     @ViewBuilder
     private func concentrationChartSection(for user: User, profiles: [MedicationProfile]) -> some View {
@@ -255,6 +279,49 @@ struct AnalyticsView: View {
                 .fill(Color(.systemBackground))
                 .shadow(radius: 2)
         )
+    }
+
+    @ViewBuilder
+    private func adherenceInsightsSection(for user: User) -> some View {
+        VStack(spacing: 16) {
+            // Adherence Metrics Card
+            AdherenceMetricsCard(adherenceRate: adherenceRate(for: user))
+                .accessibilityIdentifier("adherence-metrics-card")
+
+            // Streak Counters Card
+            DesignCard {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Dose Streaks")
+                        .font(DesignTokens.Typography.headline)
+                        .foregroundColor(.primary)
+
+                    StreakCounterView(
+                        currentStreak: user.currentStreak,
+                        bestStreak: user.longestStreak
+                    )
+                }
+            }
+            .accessibilityIdentifier("streak-counters-card")
+
+            // Insights Placeholder (for future implementation)
+            DesignCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Adherence Insights")
+                        .font(DesignTokens.Typography.headline)
+                        .foregroundColor(.primary)
+
+                    Text("Personalized insights and recommendations will appear here.")
+                        .font(DesignTokens.Typography.body)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .accessibilityIdentifier("adherence-insights-placeholder")
+        }
+    }
+
+    private func adherenceRate(for user: User) -> Double {
+        let context = ModelContext(DataController.shared.container)
+        return analyticsService.calculateOverallAdherence(user: user, context: context)
     }
 
     // MARK: - Empty States
