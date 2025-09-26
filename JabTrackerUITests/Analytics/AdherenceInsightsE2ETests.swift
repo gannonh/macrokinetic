@@ -8,18 +8,16 @@
 import XCTest
 
 final class AdherenceInsightsE2ETests: XCTestCase {
-    var app: XCUIApplication!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data"]
-        app.launch()
     }
 
     // MARK: - ACCEPTANCE CRITERION: Pattern recognition provides meaningful insights
     func testAdherencePatternInsights() throws {
         // ALWAYS start with debugging the accessibility hierarchy
+        let app = TestUtilities.launchAppWithTestMode()
+        TestUtilities.debugElements(in: app, containing: "adherence-insights")
         // 🔍 DEBUG: Pattern insights should be accessible through views
 
         // GIVEN: User has dose history with patterns (missed doses, streaks, etc.)

@@ -9,23 +9,15 @@ import XCTest
 
 final class AdherenceChartsUITests: XCTestCase {
 
-    var app: XCUIApplication!
-
     override func setUpWithError() throws {
         continueAfterFailure = false
-        app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data"]
-        app.launch()
-    }
-
-    override func tearDownWithError() throws {
-        app = nil
     }
 
     // MARK: - ACCEPTANCE CRITERION: Chart components display adherence visualizations
     func testAdherenceChartComponents() throws {
         // ALWAYS start with debugging the accessibility hierarchy
-        // TestUtilities.debugElements(in: app, containing: "adherence-chart")
+        let app = TestUtilities.launchAppWithTestMode()
+        TestUtilities.debugElements(in: app, containing: "adherence-chart")
 
         // Example output reveals actual element types:
         // 🔍 DEBUG: Charts: ["adherence-trend-chart"]
