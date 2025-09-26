@@ -1,5 +1,5 @@
 //
-//  AdherenceInsightsE2ETests.swift
+//  AdherencePatternRecognitionUITests.swift
 //  JabTrackerUITests
 //
 //  E2E tests for Pattern Recognition & Insights Logic
@@ -7,7 +7,7 @@
 
 import XCTest
 
-final class AdherenceInsightsE2ETests: XCTestCase {
+final class AdherencePatternRecognitionUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
