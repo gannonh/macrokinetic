@@ -386,8 +386,8 @@ Task:
       1. Print the hierarchy FIRST
       
       // ALWAYS start with debugging the accessibility hierarchy
-      TestUtilities.debugElements(in: app, containing: "dose-history")
-
+        let app = TestUtilities.launchAppWithTestMode()
+        TestUtilities.debugElements(in: app, containing: "adherence-insights")
          // Example output reveals actual element types:
          // 🔍 DEBUG: Tables: []
          // 🔍 DEBUG: ScrollViews: []

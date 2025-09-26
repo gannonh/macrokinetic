@@ -229,6 +229,7 @@ When an E2E test fails to find elements, ALWAYS start with debugging the accessi
 
 ```swift
 // Use TestUtilities.debugElements() to identify available elements
+let app = TestUtilities.launchAppWithTestMode()
 TestUtilities.debugElements(in: app, containing: "dose-history")
 
 // Example output helps identify actual element types:
@@ -256,6 +257,7 @@ let historyView = app.collectionViews["dose-history-view"]  // NavigationStack+L
 
 #### Essential Debug Utility Usage
 ```swift
+let app = TestUtilities.launchAppWithTestMode()
 // Basic debugging - shows all common element types
 TestUtilities.debugElements(in: app)
 
