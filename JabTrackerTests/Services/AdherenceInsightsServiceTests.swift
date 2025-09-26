@@ -28,14 +28,16 @@ struct AdherenceInsightsServiceTests {
         return user
     }
 
-    func createTestMedicationProfile(user: User, context: ModelContext) -> MedicationProfile {
+    func createTestMedicationProfile(user: User, context: ModelContext, medication: Medication = .semaglutide)
+        -> MedicationProfile
+    {
         let profile = MedicationProfile(
-            genericName: "semaglutide",
-            brandName: "Ozempic",
-            currentDose: 1.0,
-            startDate: Date().addingTimeInterval(-60 * 24 * 3600)  // 60 days ago
+            genericName: medication == .liraglutide ? "liraglutide" : "semaglutide",
+            brandName: medication == .liraglutide ? "Victoza" : "Ozempic",
+            currentDose: medication == .liraglutide ? 1.8 : 1.0,
+            startDate: Date().addingTimeInterval(-8 * 7 * 24 * 3600)  // 8 weeks ago to match dose test data
         )
-        profile.medication = .semaglutide
+        profile.medication = medication
         profile.user = user
         context.insert(profile)
 
@@ -209,7 +211,7 @@ struct AdherenceInsightsServiceTests {
 
         let context = createTestContext()
         let user = createTestUser(context: context)
-        let profile = createTestMedicationProfile(user: user, context: context)
+        let profile = createTestMedicationProfile(user: user, context: context, medication: .liraglutide)
 
         var doses: [Dose] = []
         let calendar = Calendar.current
@@ -307,8 +309,8 @@ struct AdherenceInsightsServiceTests {
         let context = createTestContext()
         let user = createTestUser(context: context)
 
-        // Create profile that started 8 weeks ago to ensure sufficient time
-        let startDate = Date().addingTimeInterval(-56 * 24 * 3600)  // 8 weeks ago
+        // Create profile that started 13 weeks ago to cover the 90-day analysis window
+        let startDate = Date().addingTimeInterval(-91 * 24 * 3600)  // 13 weeks ago
         let profile = MedicationProfile(
             genericName: "semaglutide",
             brandName: "Ozempic",
@@ -319,9 +321,10 @@ struct AdherenceInsightsServiceTests {
         profile.user = user
         context.insert(profile)
 
-        // Create excellent adherence for 8 weeks using Tuesdays to avoid weekend issues
+        // Create excellent adherence for 13 weeks to cover the 90-day analysis window
+        // Using Tuesdays to avoid weekend issues
         let calendar = Calendar.current
-        for week in 0..<8 {
+        for week in 0..<13 {
             let doseDate = calendar.date(byAdding: .weekOfYear, value: -week, to: Date())!
             // Set to Tuesday of each week
             var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: doseDate)
@@ -336,54 +339,11 @@ struct AdherenceInsightsServiceTests {
         let service = AdherenceInsightsService()
         let insights = service.generateInsights(for: user, context: context)
 
-        // Debug: Print insights if escalation not found
+        // Test should generate dose escalation insight for excellent adherence after 8 weeks
         let escalationInsights = insights.filter { $0.type == .doseEscalationReady }
-        if escalationInsights.isEmpty {
-            print("🔍 No dose escalation insights found. Available insights:")
-            for insight in insights {
-                print("🔍   - \(insight.title) (\(insight.type))")
-            }
+        #expect(!escalationInsights.isEmpty, "Should generate dose escalation insight for 13 weeks at 100% adherence")
 
-            // Check the conditions
-            let weeksOnDose =
-                calendar.dateComponents([.weekOfYear], from: profile.startDate, to: Date()).weekOfYear ?? 0
-            print("🔍 Debug: weeksOnCurrentDose = \(weeksOnDose), should be >= 4")
-
-            // Check adherence rate calculation
-            let dateRange = DateInterval(start: Date().addingTimeInterval(-60 * 24 * 3600), end: Date())
-            let recentDoses =
-                user.medicationProfiles?.first?.doses?.filter { dose in
-                    dateRange.contains(dose.timestamp)
-                } ?? []
-            let takenDoses = recentDoses.filter { !$0.skipped }.count
-            let expectedDoses = max(1, (60 + 6) / 7)  // 60 days = ~9 expected doses
-            let adherenceRate = Double(takenDoses) / Double(expectedDoses)
-            print(
-                "🔍 Debug: takenDoses = \(takenDoses), expectedDoses = \(expectedDoses), adherenceRate = \(adherenceRate), should be >= 0.85"
-            )
-        }
-
-        // The test should pass because:
-        // - adherenceRate = 0.889 > 0.85 ✅
-        // - weeksOnCurrentDose = 8 >= 4 ✅
-        // Both conditions are met for dose escalation insight
-
-        if escalationInsights.isEmpty {
-            // If still failing, it might be a logic issue in the service
-            // For now, let's make the test more lenient to verify the core crash fix worked
-            print("⚠️  Expected dose escalation insight but service logic may need adjustment")
-
-            // Verify we at least get some insights (weekend reminder is valid too)
-            #expect(!insights.isEmpty, "Should generate at least one insight")
-
-            // Check if we can find evidence that the escalation logic was reached
-            let weekendInsights = insights.filter { $0.type == .weekendReminder }
-            if !weekendInsights.isEmpty {
-                print("✅ Weekend reminder generated, which indicates service is working")
-            }
-        } else {
-            // Test the actual dose escalation insight properties
-            let insight = escalationInsights.first!
+        if let insight = escalationInsights.first {
             #expect(insight.priority == .high)
             #expect(insight.isHighlighted == true)
             #expect(insight.colorTheme == .purple)
@@ -426,7 +386,7 @@ struct AdherenceInsightsServiceTests {
     func testWeekendReminderInsightGeneration() {
         let context = createTestContext()
         let user = createTestUser(context: context)
-        let profile = createTestMedicationProfile(user: user, context: context)
+        let profile = createTestMedicationProfile(user: user, context: context, medication: .liraglutide)
 
         var doses: [Dose] = []
         let calendar = Calendar.current
@@ -462,19 +422,31 @@ struct AdherenceInsightsServiceTests {
     func testInsightsSortedByImportance() {
         let context = createTestContext()
         let user = createTestUser(context: context)
-        let profile = createTestMedicationProfile(user: user, context: context)
+        // Use daily medication (liraglutide) to enable weekend gap detection
+        let profile = createTestMedicationProfile(user: user, context: context, medication: .liraglutide)
 
-        // Create mixed adherence pattern that should generate multiple insights
+        // Create mixed adherence pattern over 90 days to generate multiple insights
         var doses: [Dose] = []
         let calendar = Calendar.current
+        let startDate = Date().addingTimeInterval(-90 * 24 * 3600)  // 90 days ago
 
-        for week in 0..<8 {
-            let doseDate = calendar.date(byAdding: .weekOfYear, value: -week, to: Date())!
+        // Create poor adherence pattern to trigger provider consultation insight
+        // and weekend gaps for daily medication to trigger weekend reminder
+        for day in 0..<90 {
+            let doseDate = calendar.date(byAdding: .day, value: day, to: startDate)!
+            let weekday = calendar.component(.weekday, from: doseDate)
 
-            // Pattern: good adherence but with some issues to generate multiple insight types
-            let skipped = (week == 1 || week == 3)  // Skip 2 out of 8 doses
-            doses.append(
-                createTestDose(profile: profile, user: user, context: context, timestamp: doseDate, skipped: skipped))
+            // Skip many doses to create poor adherence (~50%)
+            // Skip all weekends (Saturday=7, Sunday=1) to create weekend pattern
+            // Skip some random weekdays too
+            let shouldSkip =
+                (weekday == 1 || weekday == 7)  // weekends
+                || (day % 3 == 0)  // every 3rd day
+
+            if !shouldSkip {
+                doses.append(
+                    createTestDose(profile: profile, user: user, context: context, timestamp: doseDate, skipped: false))
+            }
         }
 
         try? context.save()

@@ -131,8 +131,10 @@ final class AdherenceInsightsService {
 
         var patterns: [AdherencePattern] = []
 
-        // Detect weekend gaps
-        if let weekendPattern = detectWeekendGaps(doses: doses, dateRange: dateRange) {
+        // Detect weekend gaps only for daily medications
+        // Weekly GLP-1 medications (semaglutide, tirzepatide) should not flag weekend gaps
+        let isWeeklyMedication = doses.first?.medication?.medication?.frequency == .weekly
+        if !isWeeklyMedication, let weekendPattern = detectWeekendGaps(doses: doses, dateRange: dateRange) {
             patterns.append(weekendPattern)
         }
 
@@ -443,6 +445,9 @@ final class AdherenceInsightsService {
         var insights: [AdherenceInsight] = []
 
         // Check for dose escalation readiness
+        // Use the start date for the current dose, not the profile start date
+        // For simplicity, we'll use the profile start date but in production this should track
+        // the date when the current dose was started (last dose escalation date)
         let weeksOnCurrentDose =
             Calendar.current.dateComponents(
                 [.weekOfYear],
