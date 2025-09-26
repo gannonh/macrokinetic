@@ -1,24 +1,26 @@
 ---
 description: Update an issue with recent activity, progress, and learnings from the current session.
-argument-hint: Issue number (e.g., 42)
+argument-hint: [Issue number (e.g., 42)] [Additional context (optional)]
 allowed-tools: Read, Write, Edit, LS
 ---
 
 # Issue Update
 
-Update progress and capture session work & learnings for issue #$ARGUMENTS.
+Update progress and capture session work & learnings for issue #$1.
 
 **ULTRATHINK** and use TodoWrite to keep track of your tasks.
+
+Additional context (if any): $2
 
 ## Instructions
 
 ### 1. Find Local Task File
 
-First check if `.claude/epics/*/$ARGUMENTS.md` exists (new naming).
-If not found, search for task file with `github:.*issues/$ARGUMENTS` in frontmatter (old naming).
+First check if `.claude/epics/*/$1.md` exists (new naming).
+If not found, search for task file with `github:.*issues/$1` in frontmatter (old naming).
 If not found, stop and notify user: 
 ```
-❌ No local task for issue #$ARGUMENTS
+❌ No local task for issue #$1
 ❔ To import existing issues, run /pm:issue-import [issue-number] [epic-name]
 ```
 Extract epic name from path for subsequent operations.
@@ -43,7 +45,7 @@ updated: {current_datetime}
 
 ### 4. Update Stream Progress Files
 
-Check for existing stream files at `.claude/epics/{epic_name}/updates/$ARGUMENTS/stream-*.md`.
+Check for existing stream files at `.claude/epics/{epic_name}/updates/$1/stream-*.md`.
 
 For each existing stream file, analyze session context to determine:
 - What work was completed in this stream's scope
@@ -82,11 +84,11 @@ If major milestones were reached:
 
 ```bash
 # Add all updated progress files
-git add .claude/epics/{epic_name}/updates/$ARGUMENTS/
-git add .claude/epics/{epic_name}/$ARGUMENTS.md
+git add .claude/epics/{epic_name}/updates/$1/
+git add .claude/epics/{epic_name}/$1.md
 
 # Commit with descriptive message
-git commit -m "Issue #$ARGUMENTS: update progress tracking
+git commit -m "Issue #$1: update progress tracking
 
 - {brief summary of session work}
 - Updated stream progress files
@@ -139,13 +141,13 @@ echo "## Progress Update - $(date '+%Y-%m-%d')
 {any important implementation details}
 
 ---
-Updated: {timestamp}" | gh issue comment $ARGUMENTS --body-file -
+Updated: {timestamp}" | gh issue comment $1 --body-file -
 ```
 
 ### 9. Output
 
 ```
-✅ Updated issue #$ARGUMENTS progress
+✅ Updated issue #$1 progress
 
 Epic: {epic_name}
 Session work: {summary}
@@ -161,12 +163,12 @@ Learnings captured: {yes/no}
 - Technology insights: {count}
 
 Files updated:
-  .claude/epics/{epic_name}/$ARGUMENTS.md
-  .claude/epics/{epic_name}/updates/$ARGUMENTS/stream-*.md
+  .claude/epics/{epic_name}/$1.md
+  .claude/epics/{epic_name}/updates/$1/stream-*.md
 
 - Next: Run /context:update to propagate learnings or /pm:epic-status {epic_name}
-- Sync: Run /pm:issue-sync $ARGUMENTS to push updates to GitHub
-- Resume: To resume work on the issue run /pm:issue-resume $ARGUMENTS
+- Sync: Run /pm:issue-sync $1 to push updates to GitHub
+- Resume: To resume work on the issue run /pm:issue-resume $1
 ```
 
 ## Context Analysis Guidelines
