@@ -1,5 +1,5 @@
 ---
-description: 
+description: Fill test coverage gaps until thresholds met.
 argument-hint: Additional context (optional)
 tools: Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch, Search, Task, Agent, Bash
 ---
