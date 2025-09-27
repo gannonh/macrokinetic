@@ -72,11 +72,21 @@ final class AdherenceChartsUITests: XCTestCase {
         // Personalized improvement recommendations were moved to backlog
 
         // Verify AdherenceProgressIndicator is displayed (no specific identifier, but should be present)
-        let progressElements = app.staticTexts.matching(identifier: "adherence-progress-indicator")
+        let progressElements = app.otherElements.matching(identifier: "adherence-progress-indicator")
+
+        // Add debug capability if elements are not found
+        if progressElements.count == 0 {
+            TestUtilities.debugElements(in: app, containing: "adherence-progress")
+        }
         XCTAssertTrue(progressElements.count > 0, "Adherence progress indicator should be displayed")
 
         // Verify adherence percentage is displayed (inside metrics card)
-        let adherencePercentageText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '%'")).firstMatch
+        let adherencePercentageText = app.otherElements.matching(NSPredicate(format: "label CONTAINS '%'")).firstMatch
+
+        // Add debug capability if element is not found
+        if !adherencePercentageText.waitForExistence(timeout: 3) {
+            TestUtilities.debugElements(in: app, containing: "%")
+        }
         XCTAssertTrue(adherencePercentageText.exists, "Adherence percentage should be displayed")
 
         print("✅ Adherence chart components successfully verified")
