@@ -199,11 +199,15 @@ struct AdherencePatternTests {
         #expect(AdherencePattern.PatternFrequency.fromPercentage(0.8) == .consistent)
         #expect(AdherencePattern.PatternFrequency.fromPercentage(0.95) == .constant)
 
-        // Edge cases - note: 0.1 is in the first range (0.0...0.1) due to Swift range overlap
+        // Edge cases - boundary values now map to correct buckets with half-open ranges
         #expect(AdherencePattern.PatternFrequency.fromPercentage(0.0) == .rare)
-        #expect(AdherencePattern.PatternFrequency.fromPercentage(0.1) == .rare)  // Boundary case - first match wins
+        #expect(AdherencePattern.PatternFrequency.fromPercentage(0.1) == .occasional)  // Boundary case - maps to second bucket
+        #expect(AdherencePattern.PatternFrequency.fromPercentage(0.3) == .frequent)  // Boundary case - maps to third bucket
+        #expect(AdherencePattern.PatternFrequency.fromPercentage(0.7) == .consistent)  // Boundary case - maps to fourth bucket
+        #expect(AdherencePattern.PatternFrequency.fromPercentage(0.9) == .constant)  // Boundary case - maps to fifth bucket
         #expect(AdherencePattern.PatternFrequency.fromPercentage(1.0) == .constant)
-        #expect(AdherencePattern.PatternFrequency.fromPercentage(1.5) == .constant)  // Over 1.0
+        #expect(AdherencePattern.PatternFrequency.fromPercentage(1.5) == .constant)  // Over 1.0 (clamped to 1.0)
+        #expect(AdherencePattern.PatternFrequency.fromPercentage(-0.5) == .rare)  // Below 0.0 (clamped to 0.0)
     }
 
     @Test("PatternFrequency CaseIterable conformance")

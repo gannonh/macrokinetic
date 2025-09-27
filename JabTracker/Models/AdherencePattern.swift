@@ -299,12 +299,15 @@ extension AdherencePattern {
 
 extension AdherencePattern.PatternFrequency {
     static func fromPercentage(_ percentage: Double) -> AdherencePattern.PatternFrequency {
-        switch percentage {
-        case 0.0...0.1: return .rare
-        case 0.1...0.3: return .occasional
-        case 0.3...0.7: return .frequent
-        case 0.7...0.9: return .consistent
-        default: return .constant
+        // Clamp input to valid range to handle out-of-bounds values safely
+        let clampedPercentage = max(0.0, min(1.0, percentage))
+
+        switch clampedPercentage {
+        case 0.0..<0.1: return .rare
+        case 0.1..<0.3: return .occasional
+        case 0.3..<0.7: return .frequent
+        case 0.7..<0.9: return .consistent
+        default: return .constant  // 0.9...1.0
         }
     }
 }
