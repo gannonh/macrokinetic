@@ -94,6 +94,7 @@ Generate the following initial context files:
     - Include: Future goals, potential expansions, strategic priorities
   - `project-style-guide.md` - Document coding standards, conventions, and style preferences
     - Include: Naming conventions, file structure patterns, comment style
+
 ### 4. Quality Validation
 
 After creating each file:
