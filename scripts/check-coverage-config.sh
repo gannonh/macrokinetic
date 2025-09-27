@@ -47,7 +47,7 @@ echo "Files in exclusions: $(echo "$EXCLUDED_FILES" | wc -l | tr -d ' ')"
 echo "Total configured files: $(echo "$ALL_CONFIGURED_FILES" | wc -l | tr -d ' ')"
 echo
 
-# Find missing files
+# Find missing files (files on disk but not in config)
 MISSING_FILES=""
 MISSING_COUNT=0
 
@@ -58,15 +58,27 @@ while IFS= read -r swift_file; do
     fi
 done <<< "$SWIFT_FILES_LIST"
 
+# Find phantom files (files in config but not on disk)
+echo "Checking for phantom files in coverage-config.json..."
+PHANTOM_FILES=""
+PHANTOM_COUNT=0
+
+# Check files in policy tiers and exclusions
+while IFS= read -r config_file; do
+    if [[ -n "$config_file" && ! -f "$TARGET_DIR/$config_file" ]]; then
+        PHANTOM_FILES="$PHANTOM_FILES$config_file"$'\n'
+        PHANTOM_COUNT=$((PHANTOM_COUNT + 1))
+    fi
+done <<< "$ALL_CONFIGURED_FILES"
+
 # Output results
 echo "📊 RESULTS:"
 echo "=========="
 
-if [[ $MISSING_COUNT -eq 0 ]]; then
-    echo -e "${GREEN}✅ All Swift files are accounted for in coverage-config.json${NC}"
-    echo
-    exit 0
-else
+TOTAL_ISSUES=0
+
+# Report missing files (files on disk but not in config)
+if [[ $MISSING_COUNT -gt 0 ]]; then
     echo -e "${RED}❌ Found $MISSING_COUNT Swift files missing from coverage-config.json:${NC}"
     echo
     echo -e "${YELLOW}Missing files (relative to JabTracker/):${NC}"
@@ -79,6 +91,35 @@ else
     echo -e "${YELLOW}These files need to be added to either:${NC}"
     echo "  1. A coverage tier in .policy.tiers.{tier_name}.files[]"
     echo "  2. The exclusions list in .exclusions.files[]"
+    echo
+    TOTAL_ISSUES=$((TOTAL_ISSUES + MISSING_COUNT))
+fi
+
+# Report phantom files (files in config but not on disk)
+if [[ $PHANTOM_COUNT -gt 0 ]]; then
+    echo -e "${RED}❌ Found $PHANTOM_COUNT phantom files in coverage-config.json:${NC}"
+    echo
+    echo -e "${YELLOW}Phantom files (in config but not on disk):${NC}"
+    echo "$PHANTOM_FILES" | while IFS= read -r phantom_file; do
+        if [[ -n "$phantom_file" ]]; then
+            echo "  - $phantom_file"
+        fi
+    done
+    echo
+    echo -e "${YELLOW}These files should be removed from coverage-config.json${NC}"
+    echo
+    TOTAL_ISSUES=$((TOTAL_ISSUES + PHANTOM_COUNT))
+fi
+
+# Final result
+if [[ $TOTAL_ISSUES -eq 0 ]]; then
+    echo -e "${GREEN}✅ Coverage configuration is complete and accurate!${NC}"
+    echo "  • All Swift files are accounted for"
+    echo "  • No phantom files found"
+    echo
+    exit 0
+else
+    echo -e "${RED}❌ Coverage configuration has $TOTAL_ISSUES issue(s) that need fixing${NC}"
     echo
     exit 1
 fi
