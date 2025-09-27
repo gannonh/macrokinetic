@@ -222,8 +222,11 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         // Note: Personalized recommendations removed from scope - testing core accessibility only
 
         // Test accessibility of key text elements
-        let accessibleTexts = app.staticTexts.matching(NSPredicate(format: "isHittable == TRUE"))
-        XCTAssertTrue(accessibleTexts.count >= 3, "Multiple text elements should be accessible to VoiceOver")
+        // Note: isHittable cannot be used in NSPredicate for XCUIElementQuery
+        // Instead, check that key text elements exist and are individually accessible
+        let allTexts = app.staticTexts.allElementsBoundByIndex
+        let accessibleTextCount = allTexts.filter { $0.isHittable }.count
+        XCTAssertTrue(accessibleTextCount >= 3, "Multiple text elements should be accessible to VoiceOver")
 
         // Verify navigation accessibility
         XCTAssertTrue(segmentedControl.isHittable, "Analytics segmented control should be VoiceOver accessible")
