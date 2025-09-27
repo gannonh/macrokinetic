@@ -96,7 +96,7 @@ gh pr ready $ARGUMENTS
 Deploy code-quality-analyzer and test-quality-analyzer agents in parallel to the PR: $ARGUMENTS
 
 #### 4.2 Request GitHub Reviewers
-Ask user to requests reviewers on github, monitor status, then resume this merge process from Step 5 once he comments are in. 
+Ask user to requests reviewers on github, monitor status, then resume this merge process from Step 5 once comments are in. 
 
 Format as follows:
 
