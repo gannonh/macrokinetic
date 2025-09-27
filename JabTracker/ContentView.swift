@@ -286,7 +286,7 @@ struct AnalyticsView: View {
     private func adherenceInsightsSection(for user: User) -> some View {
         VStack(spacing: 16) {
             // Adherence Metrics Card
-            AdherenceMetricsCard(adherenceRate: adherenceRate(for: user))
+            AdherenceMetricsCard(adherenceRate: adherenceRate(for: user, context: modelContext))
                 .accessibilityIdentifier("adherence-metrics-card")
 
             // Streak Counters Card
@@ -306,7 +306,7 @@ struct AnalyticsView: View {
 
             // Adherence Progress Indicator
             AdherenceProgressIndicator(
-                currentAdherence: adherenceRate(for: user),
+                currentAdherence: adherenceRate(for: user, context: modelContext),
                 targetAdherence: 0.8,
                 periodLabel: "This month"
             )
@@ -325,9 +325,8 @@ struct AnalyticsView: View {
         }
     }
 
-    private func adherenceRate(for user: User) -> Double {
-        let context = ModelContext(DataController.shared.container)
-        return analyticsService.calculateOverallAdherence(user: user, context: context)
+    private func adherenceRate(for user: User, context: ModelContext) -> Double {
+        analyticsService.calculateOverallAdherence(user: user, context: context)
     }
 
     private func generateTrendData(for user: User) -> [AdherenceTrendPoint] {
