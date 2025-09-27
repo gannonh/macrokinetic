@@ -120,8 +120,13 @@ struct AdherenceTrendChart: View {
                 .fill(DesignTokens.Colors.secondaryBackground)
         )
         .accessibilityIdentifier(accessibilityIdentifier)
-        .accessibilityLabel("Adherence trend chart showing \(trendDirection.displayName.lowercased()) pattern")
-        .accessibilityValue("Current trend: \(trendDirection.displayName)")
+        .accessibilityLabel(
+            trendData.isEmpty
+                ? "Adherence trend chart - No trend data available"
+                : "Adherence trend chart showing \(trendDirection.displayName.lowercased()) pattern"
+        )
+        .accessibilityValue(
+            trendData.isEmpty ? "Current trend: no data" : "Current trend: \(trendDirection.displayName)")
     }
 
     // MARK: - Private Properties
