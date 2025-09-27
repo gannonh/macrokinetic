@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-26T01:23:01Z
-version: 2.0
+last_updated: 2025-09-27T14:51:11Z
+version: 2.1
 author: Claude Code PM System
 ---
 
@@ -215,6 +215,24 @@ author: Claude Code PM System
 - **SwiftUI Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
 - **E2E Performance Testing Patterns**: Medical E2E tests with multiple dose creation achieve ~85s for comprehensive validation - acceptable for healthcare app verification
 
+## CodeGen-Enhanced E2E Testing Framework (Issue #57 Session 2025-09-26)
+
+### CodeGen Element Access Breakthrough
+- **CodeGen Pattern Discovery**: `staticTexts.matching(identifier:).element(boundBy:)` pattern provides reliable element access when multiple elements share accessibility identifiers
+- **TestUtilities Enhancement**: `findElementsUsingCodeGenPatterns()` function systematically applies CodeGen-discovered patterns for robust element targeting
+- **SwiftUI Reality vs Assumptions**: CodeGen recordings reveal Lists render as CollectionViews (not Tables), NavigationStack as CollectionView (not ScrollView)
+- **User CodeGen Recording Strategy**: When `TestUtilities.debugElements()` insufficient, request user CodeGen recording for complex UI interaction breakthroughs
+
+### Advanced Element Targeting Patterns
+- **Multiple Element Disambiguation**: Use `.element(boundBy: index)` pattern when multiple elements share identifiers - discovered through CodeGen analysis
+- **Accessibility Hierarchy Understanding**: CodeGen provides ground truth for SwiftUI accessibility structure vs developer assumptions
+- **Complex UI Interaction Solutions**: Calendar modal dismissal, sheet presentation, and nested navigation solved through CodeGen pattern analysis
+
+### Test Quality Framework Integration
+- **Acceptance Criteria First**: Write acceptance criteria as spec; implement and wire up test methods; if elements missing/wrong, fix implementation, NOT test
+- **CodeGen Collaboration Pattern**: When element targeting fails after debug utilities, collaborate with user through CodeGen recording for solution discovery
+- **Implementation Validation**: Tests validate expected behavior - element targeting issues indicate implementation problems, not test framework limitations
+
 ## Swift Charts & Advanced UI Integration (Issue #56 Completion)
 
 ### SwiftUI Sheet Presentation & Export Patterns
@@ -260,6 +278,7 @@ author: Claude Code PM System
 - **Weekly vs Daily Dosing Patterns**: Algorithm design must account for different medication schedules
 
 ## Update History
+- 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Framework section with CodeGen element access patterns, TestUtilities enhancements, and test quality framework integration from Issue #57 completion
 - 2025-09-26T01:23:01Z: Added AdherenceInsights Technology Integration section with Swift Testing framework debugging patterns and medical algorithm testing insights from Issue #57 business logic validation
 - 2025-09-25T19:11:47Z: Added Medical App Testing & Coverage Management section with coverage configuration management, Swift Testing framework enhancements, and quality gates from Issue #71 test coverage improvements
 - 2025-09-25T18:58:42Z: Added Swift Charts & Advanced UI Integration section with SwiftUI sheet presentation patterns, performance optimization insights, and component architecture excellence from Issue #56 completion
