@@ -1,30 +1,59 @@
 ---
-description: Begin or resume work on a GitHub issue with parallel agents based on work stream analysis.
+description: Begin or resume work on a GitHub issue.
 argument-hint: [Issue number] [additional context (optional)]
 allowed-tools: Bash, Read, Write, Edit, LS, Task
 ---
 
 # Issue Start/Resume
 
-Begin or resume work on a GitHub issue with parallel agents based on work stream analysis.
+Begin or resume work on a GitHub issue.
 
 **ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 Additional context (if any): $2
 
-## Quick Check
+## Preflight
 
 1. **Get issue details:**
    ```bash
    gh issue view $1 --json state,title,labels,body,assignees
    ```
 
-2. **Find local task file:**
+2. **Identify issue type:**
+   There are two fundamental types of issues of relevance to this command/process:
+
+   1. **PR Issues** - New issues resulting from the PR Review process
+      - These issues are identified by their titles, which are **prefixed by "PR #"**
+      - These issues are typically small, focused tasks that can be completed quickly
+      - They often relate to code changes, bug fixes, or minor enhancements
+      - They do not have a corresponding local markdown file.
+   2. **Task Issues** - Larger issues that are part of an epic.
+      - These issues are **identified by the label "task"**
+      - They often involve multiple steps, dependencies, and require more time to complete
+      - They may include design considerations, architectural changes, or significant new functionality
+
+   The following instruction sets are mutually exclusive based on issue type.
+
+## Instructions for PR Issues
+
+1. Read the issue description and recommended solution (if any) from GitHub.
+2. Assess the implementation requirements and acceptance criteria.
+3. Determine if any additional context or clarification is needed.
+4. Present to the user your recommended solution and imlementation plan for approval: Iterate until approved.
+5. Implement the solution using TDD principles.
+6. Ensure all checks pass: `./scripts/check-all.sh`
+7. Commit your work, refercing the issue number: `git commit -m "Fix for $1: [description of work]"`
+
+## Instructions for Task Issues
+
+### 1. Find Local Task File
+
    - First check if `.claude/epics/*/$1.md` exists (new naming)
    - If not found, search for file containing `github:.*issues/$1` in frontmatter (old naming)
    - If not found: "❌ No local task for issue #$1. This issue may have been created outside the PM system."
 
-3. **Check work status:**
+### 2. Check Work Status
+
    ```bash
    # Check if issue branch already exists
    if git branch -r | grep -q "origin/issue/.*$1"; then
@@ -41,8 +70,7 @@ Additional context (if any): $2
      ls -la .claude/epics/*/updates/$1/
    fi
    ```
-
-4. **Check for analysis:**
+### 3. Check for Analysis
    ```bash
    test -f .claude/epics/*/$1-analysis.md || echo "❌ No analysis found for issue #$1
 
@@ -50,9 +78,7 @@ Additional context (if any): $2
    ```
    If no analysis exists and no --analyze flag, stop execution.
 
-## Instructions
-
-### 1. Create or Checkout Issue Branch
+### 4. Create or Checkout Issue Branch
 
 Handle branch creation for new work or checkout existing branch for resume:
 ```bash
@@ -104,7 +130,7 @@ else
 fi
 ```
 
-### 2. Create or Update Draft Pull Request
+### 5. Create or Update Draft Pull Request
 
 Create a draft PR for new work or confirm existing PR for resumed work:
 
@@ -176,14 +202,14 @@ else
 fi
 ```
 
-### 3. Read Analysis
+### 6. Read Analysis
 
 Read `.claude/epics/{epic_name}/$1-analysis.md`:
 - Parse parallel streams
 - Identify which can start immediately
 - Note dependencies between streams
 
-### 4. Setup or Resume Progress Tracking
+### 7. Setup or Resume Progress Tracking
 
 Get current datetime: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 
@@ -216,7 +242,7 @@ fi
 
 Update task file frontmatter `updated` field with current datetime.
 
-### 5. Launch or Resume Parallel Agents using TDD
+### 8. Launch or Resume Parallel Agents using TDD
 
 **TDD Approach for Parallel Streams**: Each agent practices proper Test-Driven Development:
 - **Backend agents**: Write failing unit tests → implement code → refactor (Red-Green-Refactor)
@@ -467,7 +493,7 @@ Task:
       Complete your stream's work and mark as completed when done.
 ```
 
-### 6. GitHub Assignment
+### 9. GitHub Assignment
 
 ```bash
 if [ "$WORK_MODE" = "start" ]; then
@@ -483,7 +509,7 @@ else
 fi
 ```
 
-### 7. Output
+### 10. Output
 
 **For Starting New Work:**
 ```
