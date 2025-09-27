@@ -5,6 +5,7 @@
 //  Model for representing actionable adherence insights and recommendations
 //
 
+// swiftlint:disable file_length
 import Foundation
 
 /// Represents an actionable insight derived from adherence pattern analysis
@@ -306,6 +307,23 @@ extension AdherenceInsight {
         missedWeekends: Int,
         totalWeekends: Int
     ) -> AdherenceInsight {
+        // Guard against division by zero
+        guard totalWeekends > 0 else {
+            return AdherenceInsight(
+                type: .weekendReminder,
+                title: "Weekend Dose Reminders",
+                description: "No weekend data available yet. Track your doses for a few weekends to get insights.",
+                actionableRecommendation: "Continue tracking your weekend doses to build a pattern.",
+                priority: .low,
+                supportingPatterns: [pattern],
+                confidence: pattern.confidence,
+                dateRange: pattern.dateRange,
+                clinicalSignificance: .minimal,
+                treatmentImpact: .minimal,
+                colorTheme: .orange
+            )
+        }
+
         let percentage = Int((Double(missedWeekends) / Double(totalWeekends)) * 100)
 
         return AdherenceInsight(
