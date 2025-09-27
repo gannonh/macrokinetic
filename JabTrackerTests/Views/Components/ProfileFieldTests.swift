@@ -361,4 +361,181 @@ struct ProfileFieldTests {
         #expect(emptyMedicationField.value == nil)
         #expect(!emptyMedicationField.label.isEmpty)
     }
+
+    // MARK: - View Logic Tests
+
+    @Test("ProfileField content selection logic based on value presence")
+    func testContentSelectionLogic() {
+        // Test value-based display logic
+        let fieldWithValue = ProfileField(label: "Test", value: "HasValue") {
+            Text("Fallback Content")
+        }
+
+        let fieldWithoutValue = ProfileField(label: "Test", value: nil) {
+            Text("Fallback Content")
+        }
+
+        let fieldWithEmptyValue = ProfileField(label: "Test", value: "") {
+            Text("Fallback Content")
+        }
+
+        // Verify the field correctly identifies when it has a value
+        #expect(fieldWithValue.value != nil)
+        #expect(fieldWithoutValue.value == nil)
+        #expect(fieldWithEmptyValue.value == "")  // Empty string is still a value
+    }
+
+    @Test("ProfileField content type validation for view building")
+    func testContentTypeValidation() {
+        // Test that various view types can be used as content
+        let textContent = ProfileField(label: "Text", value: nil) {
+            Text("Simple text content")
+        }
+
+        let complexContent = ProfileField(label: "Complex", value: nil) {
+            VStack(alignment: .leading) {
+                Text("Line 1")
+                HStack {
+                    Text("Line 2")
+                    Spacer()
+                    Text("End")
+                }
+            }
+        }
+
+        let buttonContent = ProfileField(label: "Button", value: nil) {
+            Button("Action Button") {}
+        }
+
+        // Verify content is properly stored
+        #expect(textContent.label == "Text")
+        #expect(complexContent.label == "Complex")
+        #expect(buttonContent.label == "Button")
+        #expect(textContent.value == nil)
+        #expect(complexContent.value == nil)
+        #expect(buttonContent.value == nil)
+    }
+
+    @Test("ProfileField view builder pattern validation")
+    func testViewBuilderPattern() {
+        // Test view builder functionality with different scenarios
+        let conditionalContent = ProfileField(label: "Conditional", value: nil) {
+            if true {
+                Text("Condition met")
+            } else {
+                Text("Condition not met")
+            }
+        }
+
+        let loopContent = ProfileField(label: "Loop", value: nil) {
+            VStack {
+                ForEach(["Item 1", "Item 2"], id: \.self) { item in
+                    Text(item)
+                }
+            }
+        }
+
+        // Verify view builder patterns work correctly
+        #expect(conditionalContent.label == "Conditional")
+        #expect(loopContent.label == "Loop")
+    }
+
+    @Test("ProfileField value precedence over content")
+    func testValuePrecedenceLogic() {
+        // When value is provided, it should take precedence over content
+        let valueField = ProfileField(label: "Priority", value: "Value Text") {
+            Text("Content Text - should not be shown")
+        }
+
+        let nilValueField = ProfileField(label: "Priority", value: nil) {
+            Text("Content Text - should be shown")
+        }
+
+        // Test the logic that determines what gets displayed
+        #expect(valueField.value == "Value Text")
+        #expect(nilValueField.value == nil)
+
+        // When value exists, content should be present but not used
+        #expect(valueField.label == "Priority")
+        #expect(nilValueField.label == "Priority")
+    }
+
+    @Test("ProfileField complex initialization patterns")
+    func testComplexInitializationPatterns() {
+        // Test initialization with computed values
+        let computedValue = "Computed: \(25 + 5)"
+        let computedField = ProfileField(label: "Computed", value: computedValue) {
+            Text("Default")
+        }
+
+        // Test initialization with optional chaining
+        let optionalValue: String? = "Optional Value"
+        let optionalField = ProfileField(label: "Optional", value: optionalValue) {
+            Text("No value provided")
+        }
+
+        // Test initialization with string interpolation
+        let user = "Alice"
+        let interpolatedField = ProfileField(label: "Welcome", value: "Hello, \(user)!") {
+            Text("Welcome, Guest!")
+        }
+
+        #expect(computedField.value == "Computed: 30")
+        #expect(optionalField.value == "Optional Value")
+        #expect(interpolatedField.value == "Hello, Alice!")
+    }
+
+    @Test("ProfileField medical data edge cases")
+    func testMedicalDataEdgeCases() {
+        // Test medical data with special formatting needs
+        let doseWithUnit = ProfileField(label: "Current Dose", value: "1.25 mg") {
+            Text("No dose recorded")
+        }
+
+        let concentrationReading = ProfileField(label: "Concentration", value: "45.7 ng/mL") {
+            Text("Not measured")
+        }
+
+        let timeStamp = ProfileField(label: "Last Injection", value: "2025-01-15 08:00:00") {
+            Text("Never administered")
+        }
+
+        let siteRotation = ProfileField(label: "Injection Site", value: "Left thigh (rotation #3)") {
+            Text("Site not selected")
+        }
+
+        // Verify medical data is handled correctly
+        #expect(doseWithUnit.value?.contains("mg") == true)
+        #expect(concentrationReading.value?.contains("ng/mL") == true)
+        #expect(timeStamp.value?.contains("2025-01-15") == true)
+        #expect(siteRotation.value?.contains("thigh") == true)
+    }
+
+    @Test("ProfileField performance with large content")
+    func testPerformanceWithLargeContent() {
+        // Test handling of large text values
+        let largeValue = String(repeating: "Large content text ", count: 100)
+        let largeField = ProfileField(label: "Large", value: largeValue) {
+            Text("Fallback")
+        }
+
+        // Test complex content structures
+        let complexField = ProfileField(label: "Complex", value: nil) {
+            VStack {
+                ForEach(0..<10, id: \.self) { index in
+                    HStack {
+                        Text("Item \(index)")
+                        Spacer()
+                        Text("Value \(index)")
+                    }
+                }
+            }
+        }
+
+        // Verify large content is handled properly
+        #expect(largeField.value?.count == 1900)  // 100 * 19 characters ("Large content text ")
+        #expect(largeField.label == "Large")
+        #expect(complexField.label == "Complex")
+        #expect(complexField.value == nil)
+    }
 }

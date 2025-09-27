@@ -10,11 +10,9 @@ Fill test coverage gaps until thresholds met.
 
 ## Steps
 
-1. Have test-coverage-engineer assess test coverage and report back.
-2. Communicate findings to user and confirm that the user would like to proceed with filling gaps.
-3. Re-deploy test-coverage-engineer to fill gaps.
-4. Validate success criteria below.
-5. If not successful, iterate from step 3.
+1. Have test-coverage-engineer assess test coverage and fill gaps.
+2. Validate success criteria below.
+3. If not successful, iterate from step 1.
 
 ## Success Criteria
 
@@ -31,7 +29,8 @@ Fill test coverage gaps until thresholds met.
 
 ## Notes
 
-- Follow existing test patterns and structures.
+- Ensure tests follow existing test patterns and structures.
 - Ensure tests validate actual behavior, not just coverage.
+- **IMPORTANT** - You are responsible for validating the sub-agent's work.
 
 Additional Context (if any): $ARGUMENTS
