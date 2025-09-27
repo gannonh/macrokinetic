@@ -3,15 +3,19 @@ import SwiftUI
 struct AdherenceMetricsCard: View {
     let adherenceRate: Double
 
+    private var roundedPercent: Int {
+        Int((adherenceRate * 100).rounded())
+    }
+
     private var adherencePercentage: String {
-        String(format: "%.0f%%", adherenceRate * 100)
+        "\(roundedPercent)%"
     }
 
     private var adherenceColor: Color {
-        switch adherenceRate {
-        case 0.9...1.0:
+        switch roundedPercent {
+        case 90...100:
             return .green
-        case 0.7..<0.9:
+        case 70..<90:
             return .orange
         default:
             return .red
@@ -19,10 +23,10 @@ struct AdherenceMetricsCard: View {
     }
 
     private var adherenceQuality: String {
-        switch adherenceRate {
-        case 0.9...1.0:
+        switch roundedPercent {
+        case 90...100:
             return "Excellent"
-        case 0.7..<0.9:
+        case 70..<90:
             return "Good"
         default:
             return "Needs Improvement"
