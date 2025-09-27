@@ -40,9 +40,11 @@ Additional context (if any): $2
 2. Assess the implementation requirements and acceptance criteria.
 3. Determine if any additional context or clarification is needed.
 4. Present to the user your recommended solution and imlementation plan for approval: Iterate until approved.
-5. Implement the solution using TDD principles.
+5. Implement the solution.
 6. Ensure all checks pass: `./scripts/check-all.sh`
 7. Commit your work, refercing the issue number: `git commit -m "Fix for $1: [description of work]"`
+8. Push to GitHub: `git push`
+9. Close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
 
 ## Instructions for Task Issues
 
