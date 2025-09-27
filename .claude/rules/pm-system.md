@@ -50,14 +50,11 @@
 - `/pm:standup` - Daily standup report
 - `/pm:blocked` - Show blocked tasks
 - `/pm:in-progress` - List work in progress
+- `/pm:pr-merge` - Merge completed PR from branch to main using GitHub Pull Request workflow
 
 ### Sync Commands
 - `/pm:sync` - Full bidirectional sync with GitHub
 - `/pm:import` - Import existing GitHub issues
-
-### Pull Request Commands
-- `/pm:pr-process` - Process PR review comments with context-aware discretion
-- `/pm:pr-merge` - Merge completed PR from branch to main using GitHub Pull Request workflow
 
 ### Development Commands
 - `/pm:commit` - Commit changes with a descriptive message
