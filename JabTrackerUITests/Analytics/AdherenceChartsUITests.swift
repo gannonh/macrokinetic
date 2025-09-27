@@ -68,8 +68,12 @@ final class AdherenceChartsUITests: XCTestCase {
         let streakCountersCard = app.otherElements["streak-counters-card"]
         XCTAssertTrue(streakCountersCard.exists, "Streak counters card should be displayed")
 
-        let adherenceInsightsPlaceholder = app.otherElements["adherence-insights-placeholder"]
-        XCTAssertTrue(adherenceInsightsPlaceholder.exists, "Adherence insights placeholder should be displayed")
+        // Note: adherence-insights-placeholder was removed in Issue #57 scope reduction
+        // Personalized improvement recommendations were moved to backlog
+
+        // Verify AdherenceProgressIndicator is displayed (no specific identifier, but should be present)
+        let progressElements = app.staticTexts.matching(identifier: "adherence-progress-indicator")
+        XCTAssertTrue(progressElements.count > 0, "Adherence progress indicator should be displayed")
 
         // Verify adherence percentage is displayed (inside metrics card)
         let adherencePercentageText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '%'")).firstMatch
