@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-26T01:23:01Z
-version: 2.1
+last_updated: 2025-09-27T14:51:11Z
+version: 2.2
 author: Claude Code PM System
 ---
 
@@ -200,6 +200,13 @@ var children: [Child] = []
 - **Custom Rules**: Project-specific lint configurations
 - **Consistent Style**: Enforced across entire codebase
 
+### SwiftLint Management Patterns (Issue #57)
+- **Targeted Disable Strategy**: Use `// swiftlint:disable:next orphaned_doc_comment` instead of blanket disables to avoid blanket_disable_command violations
+- **Doc Comment Attachment**: SwiftLint requires doc comments directly attached to declarations without intervening disable comments
+- **Complex Function Handling**: Use `// swiftlint:disable:next cyclomatic_complexity` immediately before function declaration for complex test utilities
+- **Pre-commit Integration**: Pre-commit hooks enable catch-and-fix workflow for violations during implementation
+- **Iterative Fix Approach**: Systematic violation resolution (force unwrapping → for-where → cyclomatic complexity) while maintaining functionality
+
 ### Test Coverage Strategy
 - **Tiered Coverage**: Different coverage targets by component type
 - **Critical Path**: 100% coverage for medical calculations
@@ -357,6 +364,14 @@ struct UserAnalyticsSummary {
 - **Accessibility Debugging Workflow**: Parent accessibility override → child element debug → identifier removal → test validation enables systematic accessibility issue resolution
 - **E2E Test Verification Strategy**: Individual test method validation before full suite run prevents long debugging cycles in complex medical app testing
 
+### CodeGen-Enhanced E2E Testing Patterns (Issue #57)
+- **CodeGen Element Access Pattern**: Use `staticTexts.matching(identifier:).element(boundBy:)` for reliable element access when multiple elements share identifiers
+- **TestUtilities Enhancement**: `findElementsUsingCodeGenPatterns()` function provides systematic CodeGen-based element discovery for complex UI hierarchies
+- **CodeGen Recording Strategy**: When `TestUtilities.debugElements()` insufficient for complex UI interactions, request user CodeGen recording for breakthrough insights
+- **SwiftUI Accessibility Reality Check**: Lists render as CollectionViews (not Tables), NavigationStack renders as CollectionView (not ScrollView) - CodeGen reveals actual structure vs assumptions
+- **Debug-First Methodology**: ALWAYS use `TestUtilities.debugElements()` before writing element selectors to understand actual accessibility hierarchy
+- **Test Quality Standards**: Write acceptance criteria first as spec; if elements missing/incomplete/wrong, implementation needs work, NOT test weakening
+
 ## SwiftUI Calendar & Modal Testing Patterns (Issue #56)
 
 ### SwiftUI Calendar Integration Patterns
@@ -408,3 +423,7 @@ struct UserAnalyticsSummary {
 - **CRITICAL: Never Bend Tests to Pass Bad Logic**: Initial approach of making tests more "lenient" to pass was fundamentally wrong - discovered during Issue #57
 - **Test-Driven Debugging**: Tests that fail reveal actual business requirements, not testing issues
 - **Medical App Development Standards**: Test workarounds compromise patient safety - always fix root cause business logic
+
+## Update History
+- 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Patterns and SwiftLint Management Patterns from Issue #57 completion
+- 2025-09-26T01:23:01Z: Added AdherenceInsights Business Logic Patterns from Issue #57 business logic validation
