@@ -185,6 +185,10 @@ cat logs/latest/raw_output.txt
 # Enable coverage in Xcode scheme (already configured)
 # codeCoverageEnabled = "YES" in JabTracker.xcscheme
 
+# Validate coverage config (REQUIRED)
+./scripts/check-coverage-config.sh
+# Update coverage config (if needed): `coverage-config.json`
+
 # Check coverage policy compliance (RECOMMENDED)
 ./scripts/check-coverage.sh
 
