@@ -10,7 +10,7 @@ set -e  # Exit on any error
 set -o pipefail  # Ensure pipeline failures are detected
 
 # Parse command line arguments
-SKIP_UI_TESTS=false
+SKIP_UI_TESTS=true # Default to skipping UI tests for speed
 while [[ $# -gt 0 ]]; do
     case $1 in
         --skip-ui)
@@ -150,8 +150,21 @@ else
     print_warning "Install with: brew install swift-format"
 fi
 
-# 6. Coverage Policy Check
-print_header "6️⃣ Coverage Policy Check"
+# 6. Coverage Configuration Check (must pass before coverage policy check)
+print_header "6️⃣ Coverage Configuration Check"
+if ! run_check "Coverage Config" "./scripts/check-coverage-config.sh"; then
+    print_error "Coverage configuration is incomplete - cannot proceed with coverage checks"
+    print_warning "Add missing files to coverage-config.json before running coverage policy checks"
+    echo ""
+    echo -e "${RED}❌ Exiting due to incomplete coverage configuration${NC}"
+    echo "Fix by adding missing files to either:"
+    echo "  1. A coverage tier in .policy.tiers.{tier_name}.files[]"
+    echo "  2. The exclusions list in .exclusions.files[]"
+    exit 1
+fi
+
+# 7. Coverage Policy Check
+print_header "7️⃣ Coverage Policy Check"
 if [ -d "$RESULT_BUNDLE" ]; then
     if ! run_check "Coverage Policy" "RESULT_BUNDLE='$RESULT_BUNDLE' ./scripts/check-coverage.sh --use-existing"; then
         ((FAILED_CHECKS++))

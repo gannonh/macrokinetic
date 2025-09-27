@@ -35,11 +35,9 @@
           "Services/ChartDataProcessor+Interpolation.swift",
           "Services/ChartDatasetService.swift",
           "Services/AnalyticsService.swift",
-          "Services/AdherenceInsightsService.swift",
           "Models/ChartData.swift",
           "Models/ChartDataTypes.swift",
-          "Models/ChartDataEnums.swift",
-          "Models/SubscriptionProducts.swift"
+          "Models/ChartDataEnums.swift"
         ]
       },
       "framework_integration": {
@@ -91,13 +89,7 @@
       "Design system components"
     ],
     "files": [
-      "QuickDoseEntry.swift",
-      "DoseEntrySheet.swift",
-      "TimePeriodSelector.swift",
-      "ChartControlsView.swift",
-      "ConcentrationTimelineChart.swift",
-      "ChartConfiguration.swift",
-      "ConcentrationChartControls.swift",
+      "Models/SubscriptionProducts.swift",
       "ContentView.swift",
       "JabTrackerApp.swift",
       "Design/ButtonComponents.swift",
@@ -112,7 +104,6 @@
       "Onboarding/Views/PermissionsRequestView.swift",
       "Onboarding/Views/SubscriptionView.swift",
       "Onboarding/Views/WelcomeScreensView.swift",
-      "Views/Analytics/AdherenceInsightsView.swift",
       "Views/Analytics/AdherenceMetricsCard.swift",
       "Views/Analytics/StreakCounterView.swift",
       "Views/Analytics/AdherenceTrendChart.swift",

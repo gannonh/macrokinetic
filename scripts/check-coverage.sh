@@ -73,8 +73,8 @@ echo "================================"
 echo "🧠 Tier 1: Pure Business Logic (Target: ${PURE_BUSINESS_LOGIC_THRESHOLD}%)"
 for file in "${PURE_BUSINESS_LOGIC_FILES[@]}"; do
     COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
-        .targets[] | select(.name == "JabTracker.app") | 
-        .files[] | select(.name | endswith($file)) | 
+        .targets[] | select(.name == "JabTracker.app") |
+        .files[] | select(.name == ($file | split("/") | last)) |
         .lineCoverage * 100 | round
     ')
     
@@ -94,8 +94,8 @@ echo ""
 echo "🏗️ Tier 2: Infrastructure & Data (Target: ${INFRASTRUCTURE_THRESHOLD}%)"
 for file in "${INFRASTRUCTURE_FILES[@]}"; do
     COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
-        .targets[] | select(.name == "JabTracker.app") | 
-        .files[] | select(.name | endswith($file)) | 
+        .targets[] | select(.name == "JabTracker.app") |
+        .files[] | select(.name == ($file | split("/") | last)) |
         .lineCoverage * 100 | round
     ')
     
@@ -114,8 +114,8 @@ echo ""
 echo "🔗 Tier 3: Framework Integration (Target: ${FRAMEWORK_INTEGRATION_THRESHOLD}%)"
 for file in "${FRAMEWORK_INTEGRATION_FILES[@]}"; do
     COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
-        .targets[] | select(.name == "JabTracker.app") | 
-        .files[] | select(.name | endswith($file)) | 
+        .targets[] | select(.name == "JabTracker.app") |
+        .files[] | select(.name == ($file | split("/") | last)) |
         .lineCoverage * 100 | round
     ')
     
@@ -137,8 +137,8 @@ if [ ${#VIEW_MODEL_FILES[@]} -eq 0 ]; then
 else
     for file in "${VIEW_MODEL_FILES[@]}"; do
         COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
-            .targets[] | select(.name == "JabTracker.app") | 
-            .files[] | select(.name | endswith($file)) | 
+            .targets[] | select(.name == "JabTracker.app") |
+            .files[] | select(.name == ($file | split("/") | last)) |
             .lineCoverage * 100 | round
         ')
         
@@ -162,8 +162,8 @@ if [ ${#UTILITIES_FILES[@]} -eq 0 ]; then
 else
     for file in "${UTILITIES_FILES[@]}"; do
         COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
-            .targets[] | select(.name == "JabTracker.app") | 
-            .files[] | select(.name | endswith($file)) | 
+            .targets[] | select(.name == "JabTracker.app") |
+            .files[] | select(.name == ($file | split("/") | last)) |
             .lineCoverage * 100 | round
         ')
         
