@@ -28,8 +28,8 @@ struct StreakCounterViewTests {
 
     @Test("StreakCounterView handles zero current streak")
     func testZeroCurrentStreakHandling() throws {
-        let currentStreak = 0
-        let bestStreak = 15
+        _ = 0  // currentStreak
+        _ = 15  // bestStreak
 
         // Expected: StreakCounterView should handle zero current streak appropriately
         let view = StreakCounterView(currentStreak: 0, bestStreak: 15)
@@ -38,8 +38,8 @@ struct StreakCounterViewTests {
 
     @Test("StreakCounterView handles zero best streak")
     func testZeroBestStreakHandling() throws {
-        let currentStreak = 0
-        let bestStreak = 0
+        _ = 0  // currentStreak
+        _ = 0  // bestStreak
 
         // Expected: StreakCounterView should handle zero best streak (new user scenario)
         let view = StreakCounterView(currentStreak: 0, bestStreak: 0)
@@ -48,8 +48,8 @@ struct StreakCounterViewTests {
 
     @Test("StreakCounterView displays singular day correctly")
     func testSingularDayDisplay() throws {
-        let currentStreak = 1
-        let bestStreak = 1
+        _ = 1  // currentStreak
+        _ = 1  // bestStreak
 
         // Expected: StreakCounterView should use "day" not "days" for singular values
         let view = StreakCounterView(currentStreak: 1, bestStreak: 1)
@@ -58,8 +58,8 @@ struct StreakCounterViewTests {
 
     @Test("StreakCounterView displays plural days correctly")
     func testPluralDaysDisplay() throws {
-        let currentStreak = 5
-        let bestStreak = 12
+        _ = 5  // currentStreak
+        _ = 12  // bestStreak
 
         // Expected: StreakCounterView should use "days" for plural values
         let view = StreakCounterView(currentStreak: 5, bestStreak: 12)
@@ -68,8 +68,8 @@ struct StreakCounterViewTests {
 
     @Test("StreakCounterView accessibility provides clear context")
     func testAccessibilityContext() throws {
-        let currentStreak = 7
-        let bestStreak = 21
+        _ = 7  // currentStreak
+        _ = 21  // bestStreak
 
         // Expected: StreakCounterView should provide clear accessibility labels
         // Should distinguish between current and best streak in VoiceOver
