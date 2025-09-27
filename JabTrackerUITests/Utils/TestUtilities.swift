@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import XCTest
 
 /// Shared test utilities for UI testing across the JabTracker app
@@ -415,6 +416,140 @@ enum TestUtilities {
         print("\(prefix): === END DEBUG ===")
     }
 
+    // swiftlint:disable:next orphaned_doc_comment
+    /// Advanced element finding using patterns discovered from CodeGen recordings
+    /// Tries multiple access patterns that CodeGen showed work in practice
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - identifier: The accessibility identifier to search for
+    ///   - prefix: Optional prefix for debug output (default: "🔍 CODEGEN")
+    /// - Returns: Dictionary of found elements with their access patterns
+    // swiftlint:disable:next cyclomatic_complexity
+    static func findElementsUsingCodeGenPatterns(
+        in app: XCUIApplication,
+        identifier: String,
+        prefix: String = "🔍 CODEGEN"
+    ) -> [String: XCUIElement] {
+        print("\(prefix): Searching for identifier '\(identifier)' using CodeGen patterns")
+
+        var foundElements: [String: XCUIElement] = [:]
+
+        // Pattern 1: Direct otherElements access (traditional)
+        let directOther = app.otherElements[identifier]
+        if directOther.exists {
+            foundElements["otherElements[\"\(identifier)\"]"] = directOther
+        }
+
+        // Pattern 2: staticTexts.matching(identifier:) - discovered from CodeGen
+        let staticTextsMatching = app.staticTexts.matching(identifier: identifier)
+        if staticTextsMatching.count > 0 {
+            for index in 0..<staticTextsMatching.count {
+                let element = staticTextsMatching.element(boundBy: index)
+                if element.exists {
+                    foundElements["staticTexts.matching(identifier: \"\(identifier)\").element(boundBy: \(index))"] =
+                        element
+                }
+            }
+        }
+
+        // Pattern 3: buttons.matching(identifier:) - for button components
+        let buttonsMatching = app.buttons.matching(identifier: identifier)
+        if buttonsMatching.count > 0 {
+            for index in 0..<buttonsMatching.count {
+                let element = buttonsMatching.element(boundBy: index)
+                if element.exists {
+                    foundElements["buttons.matching(identifier: \"\(identifier)\").element(boundBy: \(index))"] =
+                        element
+                }
+            }
+        }
+
+        // Pattern 4: images.matching(identifier:) - for image components
+        let imagesMatching = app.images.matching(identifier: identifier)
+        if imagesMatching.count > 0 {
+            for index in 0..<imagesMatching.count {
+                let element = imagesMatching.element(boundBy: index)
+                if element.exists {
+                    foundElements["images.matching(identifier: \"\(identifier)\").element(boundBy: \(index))"] = element
+                }
+            }
+        }
+
+        // Pattern 5: containing(.other, identifier:) - from CodeGen line 37
+        let containingOther = app.otherElements.containing(.other, identifier: identifier).firstMatch
+        if containingOther.exists {
+            foundElements["otherElements.containing(.other, identifier: \"\(identifier)\").firstMatch"] =
+                containingOther
+        }
+
+        // Pattern 6: Direct element type access
+        let directButton = app.buttons[identifier]
+        if directButton.exists {
+            foundElements["buttons[\"\(identifier)\"]"] = directButton
+        }
+
+        let directImage = app.images[identifier]
+        if directImage.exists {
+            foundElements["images[\"\(identifier)\"]"] = directImage
+        }
+
+        let directStaticText = app.staticTexts[identifier]
+        if directStaticText.exists {
+            foundElements["staticTexts[\"\(identifier)\"]"] = directStaticText
+        }
+
+        // Print results
+        if foundElements.isEmpty {
+            print("\(prefix): ❌ No elements found for identifier '\(identifier)'")
+        } else {
+            print("\(prefix): ✅ Found \(foundElements.count) elements:")
+            for (pattern, element) in foundElements {
+                print("\(prefix):   • \(pattern) -> exists: \(element.exists), hittable: \(element.isHittable)")
+            }
+        }
+
+        return foundElements
+    }
+
+    /// Get the best element using CodeGen patterns
+    /// Returns the first existing element from the most reliable patterns
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - identifier: The accessibility identifier to search for
+    /// - Returns: The best matching element, or nil if none found
+    static func getBestElementUsingCodeGenPatterns(
+        in app: XCUIApplication,
+        identifier: String
+    ) -> XCUIElement? {
+        let foundElements = findElementsUsingCodeGenPatterns(in: app, identifier: identifier)
+
+        // Priority order based on CodeGen reliability:
+        // 1. staticTexts.matching (most common in CodeGen)
+        // 2. Direct access patterns
+        // 3. containing patterns
+
+        for (pattern, element) in foundElements {
+            if pattern.contains("staticTexts.matching") && element.exists {
+                return element
+            }
+        }
+
+        for (pattern, element) in foundElements {
+            if pattern.contains("buttons[") && element.exists {
+                return element
+            }
+        }
+
+        for (pattern, element) in foundElements {
+            if pattern.contains("otherElements[") && element.exists {
+                return element
+            }
+        }
+
+        // Return any existing element as fallback
+        return foundElements.values.first { $0.exists }
+    }
+
     // Note: elementTypeName implementation moved to TestUtilities+ElementTypes.swift extension
 
     // MARK: - Medication Profile Helpers
@@ -604,6 +739,28 @@ enum TestUtilities {
         XCTAssertTrue(dismissed, "Quick dose sheet should dismiss after saving dose")
 
         return dismissed
+    }
+
+    /// Create historical chart data for testing analytics views
+    /// Creates multiple doses with different timestamps to simulate historical data
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - count: Number of historical doses to create (default: 5)
+    ///   - timeout: Maximum time to wait for UI elements (default: 3 seconds)
+    static func createHistoricalChartData(
+        in app: XCUIApplication,
+        count: Int = 5,
+        timeout: TimeInterval = 3
+    ) {
+        for index in 0..<count {
+            let success = self.createTestDose(app, notes: "Historical dose \(index + 1)", timeout: timeout)
+            XCTAssertTrue(success, "Should successfully create historical dose \(index + 1)")
+
+            // Add delay for different timestamps (simulate doses over time)
+            if index < count - 1 {
+                Thread.sleep(forTimeInterval: 1.0)  // 1 second delay for distinct timestamps
+            }
+        }
     }
 
     /// Create multiple test doses with different timestamps

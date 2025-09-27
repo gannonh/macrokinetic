@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import StoreKit
 import SwiftData
 import SwiftUI
@@ -303,25 +304,70 @@ struct AnalyticsView: View {
             }
             .accessibilityIdentifier("streak-counters-card")
 
-            // Insights Placeholder (for future implementation)
-            DesignCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Adherence Insights")
-                        .font(DesignTokens.Typography.headline)
-                        .foregroundColor(.primary)
+            // Adherence Progress Indicator
+            AdherenceProgressIndicator(
+                currentAdherence: adherenceRate(for: user),
+                targetAdherence: 0.8,
+                periodLabel: "This month"
+            )
 
-                    Text("Personalized insights and recommendations will appear here.")
-                        .font(DesignTokens.Typography.body)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .accessibilityIdentifier("adherence-insights-placeholder")
+            // Adherence Trend Chart
+            AdherenceTrendChart(
+                trendData: generateTrendData(for: user),
+                timePeriod: .weekly
+            )
+
+            // Missed Dose Pattern Visualization
+            MissedDosePatternView(
+                missedDoses: generateMissedDosePatterns(for: user),
+                style: .calendar
+            )
         }
     }
 
     private func adherenceRate(for user: User) -> Double {
         let context = ModelContext(DataController.shared.container)
         return analyticsService.calculateOverallAdherence(user: user, context: context)
+    }
+
+    private func generateTrendData(for user: User) -> [AdherenceTrendPoint] {
+        // Generate sample trend data for the last 4 weeks
+        let calendar = Calendar.current
+        let now = Date()
+        var trendData: [AdherenceTrendPoint] = []
+
+        for weekOffset in 0..<4 {
+            if let weekDate = calendar.date(byAdding: .weekOfYear, value: -weekOffset, to: now) {
+                let adherenceRate = Double.random(in: 0.6...0.95)
+                trendData.append(
+                    AdherenceTrendPoint(
+                        date: weekDate,
+                        adherenceRate: adherenceRate,
+                        period: "Week \(4 - weekOffset)"
+                    ))
+            }
+        }
+
+        return trendData.sorted { $0.date < $1.date }
+    }
+
+    private func generateMissedDosePatterns(for user: User) -> [MissedDosePattern] {
+        // Generate sample missed dose patterns
+        let calendar = Calendar.current
+        let now = Date()
+
+        return [
+            MissedDosePattern(
+                date: calendar.date(byAdding: .day, value: -6, to: now) ?? now,
+                dayOfWeek: "Saturday",
+                missedCount: 2
+            ),
+            MissedDosePattern(
+                date: calendar.date(byAdding: .day, value: -5, to: now) ?? now,
+                dayOfWeek: "Sunday",
+                missedCount: 3
+            ),
+        ]
     }
 
     // MARK: - Empty States

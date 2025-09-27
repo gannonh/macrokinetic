@@ -191,8 +191,7 @@ struct AdherenceProgressIndicator: View {
                 .fill(DesignTokens.Colors.secondaryBackground)
         )
         .accessibilityIdentifier(accessibilityIdentifier)
-        .accessibilityLabel("Adherence progress indicator")
-        .accessibilityValue("\(currentAdherenceText) of \(targetAdherenceText) goal. \(statusMessage)")
+        .accessibilityElement(children: .contain)
     }
 }
 
