@@ -138,20 +138,10 @@ else
     print_warning "UI tests skipped with --skip-ui flag"
 fi
 
-# 5. swift-format check (if available)
-print_header "5️⃣ swift-format Style Check"
-if command -v swift-format &> /dev/null; then
-    if ! run_check "swift-format Check" "swift-format --configuration .swift-format lint --recursive ."; then
-        ((FAILED_CHECKS++))
-        print_warning "Run 'swift-format --configuration .swift-format --in-place --recursive .' to fix formatting issues"
-    fi
-else
-    print_warning "swift-format not installed - skipping format check"
-    print_warning "Install with: brew install swift-format"
-fi
+# Note: swift-format check removed - auto-fix handles formatting during the preparation phase
 
-# 6. Coverage Configuration Check (must pass before coverage policy check)
-print_header "6️⃣ Coverage Configuration Check"
+# 5. Coverage Configuration Check (must pass before coverage policy check)
+print_header "5️⃣ Coverage Configuration Check"
 if ! run_check "Coverage Config" "./scripts/check-coverage-config.sh"; then
     print_error "Coverage configuration is incomplete - cannot proceed with coverage checks"
     print_warning "Add missing files to coverage-config.json before running coverage policy checks"
@@ -163,8 +153,8 @@ if ! run_check "Coverage Config" "./scripts/check-coverage-config.sh"; then
     exit 1
 fi
 
-# 7. Coverage Policy Check
-print_header "7️⃣ Coverage Policy Check"
+# 6. Coverage Policy Check
+print_header "6️⃣ Coverage Policy Check"
 if [ -d "$RESULT_BUNDLE" ]; then
     if ! run_check "Coverage Policy" "RESULT_BUNDLE='$RESULT_BUNDLE' ./scripts/check-coverage.sh --use-existing"; then
         ((FAILED_CHECKS++))
