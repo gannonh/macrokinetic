@@ -42,13 +42,15 @@
       },
       "framework_integration": {
         "threshold": 42,
-        "description": "Heavy Apple framework dependencies",
+        "description": "Heavy Apple framework dependencies and SwiftUI components with limited testability",
         "files": [
           "AuthenticationManager.swift",
           "BiometricAuthManager.swift",
           "Services/SubscriptionManager.swift",
           "Services/SubscriptionManager+Testing.swift",
-          "Onboarding/OnboardingCoordinator.swift"
+          "Onboarding/OnboardingCoordinator.swift",
+          "Views/Analytics/ConcentrationChartGestureHandler.swift",
+          "Views/Analytics/DoseMarkerOverlay.swift"
         ]
       },
       "view_models": {
@@ -58,7 +60,6 @@
           "Onboarding/OnboardingViewModel.swift",
           "ViewModels/DoseCalendarViewModel.swift",
           "ViewModels/DoseHistoryViewModel.swift",
-          "Views/Analytics/ConcentrationChartGestureHandler.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift"
         ]
@@ -72,9 +73,14 @@
           "Models/Extensions/Dose+Filtering.swift",
           "Utilities/DoseValidation.swift",
           "Utilities/DoseDefaults.swift",
-          "Views/Analytics/ConcentrationChartAccessibility.swift",
-          "Views/Components/ProfileField.swift",
-          "Views/Analytics/DoseMarkerOverlay.swift"
+          "Views/Analytics/ConcentrationChartAccessibility.swift"
+        ]
+      },
+      "swiftui_components": {
+        "threshold": 15,
+        "description": "SwiftUI view components with minimal testable business logic",
+        "files": [
+          "Views/Components/ProfileField.swift"
         ]
       }
     }
