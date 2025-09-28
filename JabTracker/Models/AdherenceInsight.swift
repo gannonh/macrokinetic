@@ -5,7 +5,6 @@
 //  Model for representing actionable adherence insights and recommendations
 //
 
-// swiftlint:disable file_length
 import Foundation
 
 /// Represents an actionable insight derived from adherence pattern analysis
@@ -161,10 +160,6 @@ extension AdherenceInsight {
         case high
         case critical
 
-        var displayName: String {
-            rawValue.capitalized
-        }
-
         var sortOrder: Int {
             switch self {
             case .critical: return 0
@@ -189,10 +184,6 @@ extension AdherenceInsight {
         case moderate
         case significant
         case critical
-
-        var displayName: String {
-            rawValue.capitalized
-        }
     }
 
     enum TreatmentImpact: String, CaseIterable {
@@ -200,10 +191,6 @@ extension AdherenceInsight {
         case moderate
         case significant
         case critical
-
-        var displayName: String {
-            rawValue.capitalized
-        }
     }
 
     enum ColorTheme: String, CaseIterable {
@@ -213,10 +200,6 @@ extension AdherenceInsight {
         case red
         case purple
         case gray
-
-        var displayName: String {
-            rawValue.capitalized
-        }
     }
 }
 
