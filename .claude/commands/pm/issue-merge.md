@@ -216,6 +216,9 @@ Next Steps:
 
 After receiving approval:
 ```bash
+# Ensure no regressions since last check
+./scripts/check-all.sh 
+
 # Merge PR with rebase (preserves individual commits)
 gh pr merge $ARGUMENTS --rebase --delete-branch
 
