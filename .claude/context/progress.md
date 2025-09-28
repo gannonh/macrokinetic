@@ -153,8 +153,10 @@ author: Claude Code PM System
 ## Current Priorities
 1. **Analytics Dashboard** - Next phase (insights dashboard, advanced analytics features)
 2. **Notifications System** - Smart dose reminders and milestone notifications
-3. **Export Functionality** - Healthcare provider reports and data export
-4. **Additional Analytics Tasks** - Remaining 4 tasks in analytics epic (60% complete)
+3. **Additional Analytics Tasks** - Remaining 2 tasks in analytics epic (75% complete, excluding deferred #58)
+
+## Deferred Issues
+- **#58 - ExportableReportView** (deferred 2025-09-28) - Professional PDF reports not needed for MVP
 
 ## Completed Epic Status
 **✅ Dose Tracking Epic: 100% COMPLETE** (Epic #37 CLOSED)
@@ -296,6 +298,7 @@ author: Claude Code PM System
 - **Complex Function Handling**: Use `// swiftlint:disable:next cyclomatic_complexity` immediately before function declaration for complex test utilities
 
 ## Update History
+- 2025-09-28T16:32:53Z: Deferred issue #58 (ExportableReportView) as not needed for MVP; updated analytics epic progress to 38% (5 remaining tasks, excluding deferred)
 - 2025-09-28T16:08:57Z: Updated current state to reflect move to main branch, recent bug fixes for issues #73-81, PM system enhancements, and current stable project status
 - 2025-09-27T14:51:11Z: Issue #57 completion - Architecture consolidation, E2E testing excellence with CodeGen patterns, test quality standards, SwiftLint management mastery, and scope management
 - 2025-09-26T01:23:01Z: Issue #57 critical medical app testing principles - never bend tests to pass bad logic, business logic validation first, stream dependency management, and medical safety standards

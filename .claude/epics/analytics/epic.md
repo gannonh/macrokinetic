@@ -2,8 +2,8 @@
 name: analytics
 status: in-progress
 created: 2025-09-21T21:11:24Z
-progress: 33%
-updated: 2025-09-28T16:00:22Z
+progress: 75%
+updated: 2025-09-28T16:32:53Z
 prd: .claude/prds/analytics.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/52
 ---
@@ -82,7 +82,7 @@ High-level task categories that will be created:
 - [x] #55 - Build ChartDataProcessor (parallel: true)
 - [ ] #56 - Implement ConcentrationTimelineChart (parallel: false)
 - [ ] #57 - Create AdherenceInsightsView (parallel: true)
-- [ ] #58 - Build ExportableReportView (parallel: true)
+- [deferred] #58 - Build ExportableReportView (deferred: 2025-09-28T16:32:53Z)
 - [ ] #59 - Add AnalyticsTabView Navigation (parallel: false)
 - [ ] #60 - Performance Optimization for Large Datasets (parallel: true)
 - [ ] #61 - Comprehensive Testing Suite for Analytics (parallel: true)

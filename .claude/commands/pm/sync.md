@@ -10,6 +10,8 @@ Full bidirectional sync between local and GitHub.
 
 If epic_name provided, sync only that epic. Otherwise sync all.
 
+epic_name: $ARGUMENTS
+
 ## Instructions
 
 ### 1. Pull from GitHub

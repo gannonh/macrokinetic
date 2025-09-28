@@ -1,8 +1,10 @@
 ---
-name: Build ExportableReportView
-status: open
+name: "[deferred] Build ExportableReportView"
+status: deferred
 created: 2025-09-21T21:14:27Z
-updated: 2025-09-21T21:26:15Z
+updated: 2025-09-28T16:32:53Z
+deferred_at: 2025-09-28T16:32:53Z
+deferred_reason: "not needed for mvp"
 github: https://github.com/gannonh/jab-tracker-ios/issues/58
 depends_on: [54]
 parallel: true
