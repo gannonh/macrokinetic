@@ -1,14 +1,15 @@
 ---
 name: "[deferred] Build ExportableReportView"
-status: deferred
+status: open
 created: 2025-09-21T21:14:27Z
-updated: 2025-09-28T16:32:53Z
+updated: 2025-09-28T16:33:26Z
 deferred_at: 2025-09-28T16:32:53Z
 deferred_reason: "not needed for mvp"
 github: https://github.com/gannonh/jab-tracker-ios/issues/58
 depends_on: [54]
 parallel: true
 conflicts_with: []
+last_sync: 2025-09-28T23:59:59Z
 ---
 
 # Task: Build ExportableReportView
@@ -49,3 +50,7 @@ Create ExportableReportView that generates professional PDF reports for healthca
 - [ ] Share Sheet integration working correctly
 - [ ] High-resolution chart exports validated
 - [ ] Privacy compliance verified (local processing only)
+
+---
+**DEFERRED**: 2025-09-28T16:32:53Z - not needed for mvp
+Issue postponed indefinitely for future re-assessment. No longer part of current epic scope.
