@@ -32,7 +32,7 @@ Additional context (if any): $2
       - They often involve multiple steps, dependencies, and require more time to complete
       - They may include design considerations, architectural changes, or significant new functionality
 
-   The following instruction sets are mutually exclusive based on issue type.
+**THE FOLLOWING INSTRUCTION SETS ARE MUTUALLY EXCLUSIVE BASED ON ISSUE TYPE.**
 
 ## Instructions for PR Issues
 

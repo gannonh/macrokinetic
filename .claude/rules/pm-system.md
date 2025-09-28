@@ -147,16 +147,12 @@ Pushes epic and tasks to GitHub as issues with appropriate labels and relationsh
 /pm:issue-sync [issue-number]     # Push progress updates to GitHub
 /context:update                 # Update progress and propagate learnings
 /pm:pr-merge [pr-number]        # Mark PR ready → review → merge to main (symlink to issue-merge)
-/qa:test-quality [pr-number]    # Run test quality analysis and post as PR comment (auto integrated into pr-merge process)
-/qa:code-quality [pr-number]    # Run code quality analysis and post as PR comment (auto integrated into pr-merge process)
-/qa:swiftlint                   # Run SwiftLint and SwiftFormat QA workflow with test
-/pm:pr-process [path-or-paste] # Process PR review comments with context-aware discretion
-/pm:pr-merge [pr-number]        # Resume merge process after reviews
 /pm:issue-close [issue-number]    # Close issue + update epic progress
-/pm:epic-refresh [epic-name]      # Update epic progress from tasks
 /context:update                 # Update progress and propagate learnings
-/pm:sync                        # Full bidirectional sync with GitHub
+/pm:epic-refresh [epic-name]      # Update epic progress from tasks
+/pm:sync [epic-name]                   # Full bidirectional sync with GitHub
 /pm:epic-close [epic-name]        # Close epic when all issues complete
+/pm:next                          # Show next priority issue with epic context
 ```
 
 **Issue/Branch/PR Workflow:** Each issue gets its own branch and pull request for focused development and review. Specialized agents implement features while maintaining comprehensive progress tracking and audit trails. Use `issue-update` to capture progress during development and `issue-resume` to continue work after breaks.

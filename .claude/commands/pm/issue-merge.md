@@ -248,8 +248,8 @@ gh pr merge $ARGUMENTS --rebase --delete-branch
 
 After merge completes:
 ```bash
-# Get branch name for cleanup
-branch_name=$(gh pr view $ARGUMENTS --json headRefName -q .headRefName)
+# Get branch name from pr title for cleanup
+gh pr view $ARGUMENTS --json title -q .title
 
 # Switch to main and update
 git checkout main

@@ -2,8 +2,8 @@
 name: analytics
 status: in-progress
 created: 2025-09-21T21:11:24Z
-progress: 60%
-updated: 2025-09-25T19:09:00Z
+progress: 33%
+updated: 2025-09-28T16:00:22Z
 prd: .claude/prds/analytics.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/52
 ---
