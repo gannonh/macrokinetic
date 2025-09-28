@@ -214,12 +214,31 @@ Next Steps:
 
 ### 6. Merge After Approval
 
-After receiving approval:
+1. Run final checks:
 ```bash
 # Ensure no regressions since last check
 ./scripts/check-all.sh 
+```
+2. Present summary to user:
+```bash
+✅ All checks passed successfully!
 
-# Merge PR with rebase (preserves individual commits)
+Proceed with merge?
+
+# OR...
+
+❌ Issues found:
+- 2 lint errors: 
+  [lint error details]
+- 1 failed test:
+  [test failure details]
+
+Would you like me to fix these before merging?
+```
+
+3.  Merge PR with rebase (preserves individual commits)
+```bash
+# Only if explicitly approved by user
 gh pr merge $ARGUMENTS --rebase --delete-branch
 
 ✅ PR #$ARGUMENTS merged and branch deleted"
