@@ -103,7 +103,8 @@ struct AdherenceProgressIndicator: View {
                 }
 
                 Text(periodLabel)
-                    .font(DesignTokens.Typography.caption)
+                    .font(DesignTokens.Typography.body)
+                    .fontWeight(.semibold)
                     .foregroundColor(.secondary)
             }
 
