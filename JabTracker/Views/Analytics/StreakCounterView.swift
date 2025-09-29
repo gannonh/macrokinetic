@@ -12,16 +12,19 @@ struct StreakCounterView: View {
     var body: some View {
         HStack(spacing: 20) {
             // Current Streak
-            VStack(alignment: .center, spacing: 4) {
-                Text("\(currentStreak)")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("🔥")
+                        .font(.title)
+                    Text("\(currentStreak)")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                }
 
                 Text("Current Streak")
                     .font(DesignTokens.Typography.caption)
                     .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
 
                 Text(formatStreakText(currentStreak))
                     .font(DesignTokens.Typography.body)
@@ -31,11 +34,16 @@ struct StreakCounterView: View {
             .accessibilityLabel("Current streak: \(formatStreakText(currentStreak))")
             .accessibilityIdentifier("current-streak-counter")
 
+            Spacer()
+
             Divider()
                 .frame(height: 40)
+                .opacity(0.3)
+
+            Spacer()
 
             // Best Streak
-            VStack(alignment: .center, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 4) {
                 Text("\(bestStreak)")
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -44,7 +52,6 @@ struct StreakCounterView: View {
                 Text("Best Streak")
                     .font(DesignTokens.Typography.caption)
                     .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
 
                 Text(formatStreakText(bestStreak))
                     .font(DesignTokens.Typography.body)
@@ -54,6 +61,7 @@ struct StreakCounterView: View {
             .accessibilityLabel("Best streak: \(formatStreakText(bestStreak))")
             .accessibilityIdentifier("best-streak-counter")
         }
+        .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
     }
 }

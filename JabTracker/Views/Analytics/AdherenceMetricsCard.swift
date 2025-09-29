@@ -49,13 +49,13 @@ struct AdherenceMetricsCard: View {
                     Spacer()
 
                     Text(adherenceQuality)
-                        .font(DesignTokens.Typography.body)
+                        .font(DesignTokens.Typography.caption)
                         .foregroundColor(adherenceColor)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                         .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(adherenceColor.opacity(0.1))
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(adherenceColor.opacity(0.05))
                         )
                 }
             }
