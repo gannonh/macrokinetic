@@ -125,6 +125,18 @@ final class ChartControlsUITests: XCTestCase {
 
         // The chart should be showing data points for the doses we created
         // We created doses at 0, 7, 14, 21, 28 days ago
+
+        // 📸 PHASE 1: Capture final state with time period labels
+        screenshotCapture.capture(
+            section: "chart-controls",
+            description: "final-state",
+            metadata: [
+                "chart_verified": "true",
+                "time_period_labels": "visible",
+                "historical_data": "multiple_weeks",
+            ]
+        )
+
         print("✅ Chart displays with historical dose data spanning multiple weeks")
     }
 
@@ -138,7 +150,16 @@ final class ChartControlsUITests: XCTestCase {
             app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
         TestUtilities.createHistoricalChartData(in: app, count: 5)
 
+        // 📸 PHASE 1: Capture baseline before controls state test
+        screenshotCapture.capture(
+            section: "controls-state",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "5"]
+        )
+
         // Navigate to Analytics tab
+        // Measure navigation performance
+        let navStart = Date()
         let analyticsTab = app.tabBars.buttons["Analytics"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
@@ -150,6 +171,19 @@ final class ChartControlsUITests: XCTestCase {
         let chartElement = findChartElement(in: app)
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should be present with test data")
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture controls loaded state
+        screenshotCapture.capture(
+            section: "controls-state",
+            description: "controls-loaded",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "chart_present": "true",
+                "state": "loaded",
+            ]
+        )
 
         // WHEN: User interacts with time period controls
         // Now that accessibility identifiers are fixed, we can use them directly
@@ -179,9 +213,24 @@ final class ChartControlsUITests: XCTestCase {
         // sleep(1)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Quarter selection")
 
+        // Measure interaction performance
+        let interactionStart = Date()
         lastYearButton.tap()
         // sleep(1)
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Year selection")
+        let interactionEnd = Date()
+        let interactionTime = interactionEnd.timeIntervalSince(interactionStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture final state after button interactions
+        screenshotCapture.capture(
+            section: "controls-state",
+            description: "final-state",
+            metadata: [
+                "all_buttons_verified": "true",
+                "chart_responsive": "true",
+                "interaction_time_ms": String(format: "%.1f", interactionTime),
+            ]
+        )
 
         print(
             "✅ All time period buttons are functional - chart maintains visibility through selections")
@@ -197,7 +246,15 @@ final class ChartControlsUITests: XCTestCase {
             app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
         TestUtilities.createHistoricalChartData(in: app, count: 3)
 
+        // 📸 PHASE 1: Capture baseline before accessibility test
+        screenshotCapture.capture(
+            section: "controls-accessibility",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "3", "test_type": "accessibility"]
+        )
+
         // Navigate to Analytics tab
+        let navStart = Date()
         let analyticsTab = app.tabBars.buttons["Analytics"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
@@ -209,6 +266,19 @@ final class ChartControlsUITests: XCTestCase {
         let chartElement = findChartElement(in: app)
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should be present with test data")
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture accessibility features loaded
+        screenshotCapture.capture(
+            section: "controls-accessibility",
+            description: "accessibility-loaded",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "voiceover_ready": "true",
+                "state": "testing_accessibility",
+            ]
+        )
 
         // WHEN: User navigates chart with accessibility
         // THEN: Chart provides accessibility information
@@ -246,6 +316,18 @@ final class ChartControlsUITests: XCTestCase {
         // Test VoiceOver interaction with chart
         XCTAssertTrue(chartElement.isHittable, "Chart should be hittable for accessibility navigation")
 
+        // 📸 PHASE 1: Capture final accessibility verification state
+        screenshotCapture.capture(
+            section: "controls-accessibility",
+            description: "final-state",
+            metadata: [
+                "accessibility_verified": "true",
+                "voiceover_compatible": "true",
+                "all_buttons_hittable": "true",
+                "labels_correct": "true",
+            ]
+        )
+
         print("✅ All chart controls are properly accessible with VoiceOver support")
     }
 
@@ -259,7 +341,15 @@ final class ChartControlsUITests: XCTestCase {
             app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
         TestUtilities.createHistoricalChartData(in: app, count: 4)
 
+        // 📸 PHASE 1: Capture baseline before multiple selection test
+        screenshotCapture.capture(
+            section: "multiple-selection",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "4", "test_type": "sequential_selection"]
+        )
+
         // Navigate to Analytics tab
+        let navStart = Date()
         let analyticsTab = app.tabBars.buttons["Analytics"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
@@ -271,6 +361,19 @@ final class ChartControlsUITests: XCTestCase {
         let chartElement = findChartElement(in: app)
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should be present with test data")
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture initial state with all period buttons
+        screenshotCapture.capture(
+            section: "multiple-selection",
+            description: "buttons-loaded",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "all_periods_available": "true",
+                "state": "ready_for_selection",
+            ]
+        )
 
         // WHEN: User selects different time periods sequentially
         let lastWeekButton = app.buttons["time-period-last week"]
@@ -302,9 +405,24 @@ final class ChartControlsUITests: XCTestCase {
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Year selection")
 
         // Test switching back to earlier time periods
+        let switchbackStart = Date()
         lastWeekButton.tap()
         // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should handle switching back to Week view")
+        let switchbackEnd = Date()
+        let switchbackTime = switchbackEnd.timeIntervalSince(switchbackStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture final state after sequential selections
+        screenshotCapture.capture(
+            section: "multiple-selection",
+            description: "final-state",
+            metadata: [
+                "all_selections_tested": "true",
+                "chart_responsive": "true",
+                "switchback_verified": "true",
+                "switchback_time_ms": String(format: "%.1f", switchbackTime),
+            ]
+        )
 
         print("✅ Multiple time period selection works - all buttons functional and chart responsive")
     }
@@ -319,7 +437,15 @@ final class ChartControlsUITests: XCTestCase {
             app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
         TestUtilities.createHistoricalChartData(in: app, count: 2)
 
+        // 📸 PHASE 1: Capture baseline before default period test
+        screenshotCapture.capture(
+            section: "default-period",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "2", "test_type": "default_selection"]
+        )
+
         // Navigate to Analytics tab
+        let navStart = Date()
         let analyticsTab = app.tabBars.buttons["Analytics"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
@@ -331,6 +457,19 @@ final class ChartControlsUITests: XCTestCase {
         let chartElement = findChartElement(in: app)
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should load with default time period")
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture chart with default period loaded
+        screenshotCapture.capture(
+            section: "default-period",
+            description: "default-loaded",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "default_period_active": "true",
+                "state": "initial_load",
+            ]
+        )
 
         // THEN: Chart loads successfully with default period
         XCTAssertTrue(chartElement.exists, "Chart should display with default time period selection")
@@ -362,10 +501,25 @@ final class ChartControlsUITests: XCTestCase {
         XCTAssertTrue(chartElement.exists, "Chart should remain functional after changing from default")
 
         // Switch back to verify default behavior is restorable
+        let restoreStart = Date()
         lastWeekButton.tap()
         // sleep(2)
         XCTAssertTrue(
             chartElement.exists, "Chart should handle switching back to Week view from default")
+        let restoreEnd = Date()
+        let restoreTime = restoreEnd.timeIntervalSince(restoreStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture final state after default period verification
+        screenshotCapture.capture(
+            section: "default-period",
+            description: "final-state",
+            metadata: [
+                "default_verified": "true",
+                "selection_from_default": "working",
+                "restore_verified": "true",
+                "restore_time_ms": String(format: "%.1f", restoreTime),
+            ]
+        )
 
         print(
             "✅ Default time period functionality verified - chart loads properly and selections work from initial state"
