@@ -99,6 +99,12 @@ struct AdherenceTrendChart: View {
                     }
                 }
                 .chartYScale(domain: 0...1)
+                .chartXAxis {
+                    AxisMarks(values: .automatic) { _ in
+                        AxisValueLabel(format: .dateTime.month(.narrow).day())
+                        AxisTick()
+                    }
+                }
                 .chartYAxis {
                     AxisMarks(position: .leading) { value in
                         AxisValueLabel {
@@ -107,7 +113,11 @@ struct AdherenceTrendChart: View {
                                     .font(DesignTokens.Typography.caption)
                             }
                         }
-                        AxisGridLine()
+                        if let rate = value.as(Double.self) {
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: rate == 0.0 ? 1.5 : 0.5))
+                        } else {
+                            AxisGridLine()
+                        }
                         AxisTick()
                     }
                 }

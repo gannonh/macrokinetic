@@ -91,10 +91,17 @@ struct MissedDosePatternView: View {
                     .foregroundColor(.primary)
 
                 if totalMissedDoses > 0 {
-                    HStack(spacing: 12) {
-                        Label("\(totalMissedDoses)", systemImage: "exclamationmark.triangle.fill")
-                            .font(DesignTokens.Typography.body)
-                            .foregroundColor(DesignTokens.Colors.warning)
+                    HStack(alignment: .center, spacing: 12) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.title3)
+                                .foregroundColor(DesignTokens.Colors.warning)
+
+                            Text("\(totalMissedDoses)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(DesignTokens.Colors.warning)
+                        }
 
                         if let worstDay = worstDay {
                             Text("Worst day: \(worstDay)")
@@ -249,17 +256,18 @@ private struct CalendarPatternView: View {
                 .font(DesignTokens.Typography.caption)
                 .foregroundColor(.secondary)
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 4) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 6) {
                 ForEach(patterns.sorted(by: { $0.date > $1.date }).prefix(14)) { pattern in
-                    VStack(spacing: 2) {
+                    ZStack {
                         Circle()
                             .fill(pattern.missedCount > 0 ? DesignTokens.Colors.danger : DesignTokens.Colors.success)
-                            .frame(width: 20, height: 20)
+                            .frame(width: 32, height: 32)
                             .opacity(0.7)
 
                         Text("\(Calendar.current.component(.day, from: pattern.date))")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
                     }
                 }
             }
