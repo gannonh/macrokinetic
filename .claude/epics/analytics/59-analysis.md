@@ -19,10 +19,10 @@ Polish and optimize the user experience of the existing AnalyticsView (currently
 **Purpose**: Capture current state for evaluation
 **Activities**:
 - Create screenshot utility for systematic capture
-- Document current analytics UI across all sections
-- Capture concentration chart, adherence insights, segmented control
-- Note current performance metrics (load times, transition speeds)
-- Document current accessibility support
+- Update existing e2e tests to:
+  - Capture screenshots of each analytics section
+  - Measure current performance (load times, transition speeds)
+  - Validate existing accessibility support
 
 **Deliverables**:
 - `JabTrackerUITests/Utils/ScreenshotCapture.swift` (new)
@@ -37,6 +37,7 @@ Polish and optimize the user experience of the existing AnalyticsView (currently
 **Activities**:
 - Review screenshots for visual inconsistencies
 - Identify spacing, typography, color issues
+- Identify opportunitites for smooth transitions/animations
 - Note missing or inadequate loading states
 - Identify performance bottlenecks
 - Create prioritized improvement list
