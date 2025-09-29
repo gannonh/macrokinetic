@@ -7,10 +7,19 @@ import XCTest
 
 /// E2E acceptance tests for ConcentrationTimelineChart functionality
 /// Defines the complete user experience and acceptance criteria for chart interactions
+/// Enhanced with screenshot capture and performance measurement for UI/UX analysis
 final class ConcentrationTimelineChartUITests: XCTestCase {
+
+    var screenshotCapture: ScreenshotCapture!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+    }
+
+    override func setUp() {
+        super.setUp()
+        let app = XCUIApplication()
+        screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "baseline")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Chart displays concentration timeline correctly
@@ -28,10 +37,34 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         // WHEN: User navigates to concentration timeline chart
         let analyticsTab = app.tabBars.buttons["Analytics"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+
+        // 📸 PHASE 1: Capture baseline before navigation
+        screenshotCapture.capture(
+            section: "navigation",
+            description: "before-analytics-tap",
+            metadata: ["state": "ready", "has_dose_data": "true"]
+        )
+
+        // Measure analytics navigation performance
+        let navStart = Date()
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        // sleep(3)
+        let analyticsView = app.scrollViews["analytics-scroll-view"]
+        _ = analyticsView.waitForExistence(timeout: 10)
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture analytics view loaded
+        screenshotCapture.capture(
+            section: "concentration-chart",
+            description: "initial-load",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "section": "concentration",
+                "state": "loaded",
+            ]
+        )
 
         // THEN: Chart renders with concentration line over time
         let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch

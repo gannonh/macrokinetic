@@ -1,9 +1,23 @@
 import XCTest
 
+/// E2E acceptance tests for adherence metrics display functionality
+/// Defines the complete user experience and acceptance criteria for adherence metrics visualization
+/// Enhanced with screenshot capture and performance measurement for UI/UX analysis
 class AdherenceMetricsDisplayUITests: XCTestCase {
+
+    var screenshotCapture: ScreenshotCapture!
+
+    // Debug flag - set to true to enable debug output during test development
+    private let enableDebugOutput = false
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+    }
+
+    override func setUp() {
+        super.setUp()
+        let app = XCUIApplication()
+        screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "baseline")
     }
 
     // MARK: - ACCEPTANCE CRITERION: AdherenceInsightsView displays correctly
@@ -15,11 +29,17 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
         TestUtilities.createHistoricalChartData(in: app, count: 5)
 
-        // WHEN: User navigates to adherence insights view
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
+        // 📸 PHASE 1: Capture baseline before metrics display
+        screenshotCapture.capture(
+            section: "metrics-display",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "5"]
+        )
 
-        // Wait for Analytics view to load
-        // sleep(2)
+        // WHEN: User navigates to adherence insights view
+        // Measure navigation and metrics display performance
+        let displayStart = Date()
+        TestUtilities.navigateToTab(app, tabName: "Analytics")
 
         // Navigate to Adherence segment
         let segmentedControl = app.segmentedControls["analytics-type-picker"]
@@ -29,12 +49,25 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
         adherenceSegment.tap()
 
-        // Wait for adherence view to load
-        // sleep(2)
+        // Wait for adherence metrics to display
+        let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
+        _ = adherenceMetricsCard.waitForExistence(timeout: 5)
+        let displayEnd = Date()
+        let displayTime = displayEnd.timeIntervalSince(displayStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture metrics display loaded
+        screenshotCapture.capture(
+            section: "metrics-display",
+            description: "metrics-loaded",
+            metadata: [
+                "display_time_ms": String(format: "%.1f", displayTime),
+                "metrics_type": "adherence_insights",
+                "state": "loaded",
+            ]
+        )
 
         // THEN: Adherence percentage displays with color coding
-        let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
-        XCTAssertTrue(adherenceMetricsCard.waitForExistence(timeout: 5), "Adherence metrics card should be displayed")
+        XCTAssertTrue(adherenceMetricsCard.exists, "Adherence metrics card should be displayed")
 
         // Verify adherence percentage is displayed
         let adherencePercentageText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '%'")).firstMatch
@@ -55,8 +88,22 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         XCTAssertTrue(streakCountersCard.isHittable, "Streak counters card should be accessible")
 
         // Debug: Let's see what actual content is displayed
-        TestUtilities.debugElements(in: app, containing: "adherence")
-        TestUtilities.debugElements(in: app, containing: "%")
+        if enableDebugOutput {
+            TestUtilities.debugElements(in: app, containing: "adherence")
+            TestUtilities.debugElements(in: app, containing: "%")
+        }
+
+        // 📸 PHASE 1: Capture final metrics display state
+        screenshotCapture.capture(
+            section: "metrics-display",
+            description: "final-state",
+            metadata: [
+                "metrics_verified": "true",
+                "percentage_visible": "true",
+                "streaks_visible": "true",
+                "accessibility": "enabled",
+            ]
+        )
 
         print("✅ Adherence insights view display successfully verified")
     }
