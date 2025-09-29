@@ -2,13 +2,29 @@
 //  ChartControlsUITests.swift
 //  JabTrackerUITests
 //
+//  Enhanced with screenshot capture and performance measurement for UI/UX analysis
+//
 
 import XCTest
 
+/// E2E acceptance tests for chart controls functionality
+/// Defines the complete user experience and acceptance criteria for chart interactions
+/// Enhanced with screenshot capture and performance measurement for UI/UX analysis
 final class ChartControlsUITests: XCTestCase {
+
+    var screenshotCapture: ScreenshotCapture!
+
+    // Debug flag - set to true to enable debug output during test development
+    private let enableDebugOutput = false
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+    }
+
+    override func setUp() {
+        super.setUp()
+        let app = XCUIApplication()
+        screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "baseline")
     }
 
     // MARK: - Helper Methods
@@ -33,18 +49,44 @@ final class ChartControlsUITests: XCTestCase {
         // Create multiple doses for chart data
         TestUtilities.createHistoricalChartData(in: app, count: 5)
 
+        // 📸 PHASE 1: Capture baseline before chart controls test
+        screenshotCapture.capture(
+            section: "chart-controls",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "5"]
+        )
+
         // Navigate to Analytics tab
         let analyticsTab = app.tabBars.buttons["Analytics"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+
+        // Measure chart controls load performance
+        let loadStart = Date()
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        // sleep(3)
+        let analyticsView = app.scrollViews["analytics-scroll-view"]
+        _ = analyticsView.waitForExistence(timeout: 10)
+        let loadEnd = Date()
+        let loadTime = loadEnd.timeIntervalSince(loadStart) * 1000  // ms
 
-        // TEMPORARY: Debug what buttons actually exist
-        print("🔍 DEBUG: All buttons on Analytics tab:")
-        for button in app.buttons.allElementsBoundByIndex where button.exists {
-            print("  Button: '\(button.identifier)' label: '\(button.label)'")
+        // 📸 PHASE 1: Capture chart controls view loaded
+        screenshotCapture.capture(
+            section: "chart-controls",
+            description: "controls-loaded",
+            metadata: [
+                "load_time_ms": String(format: "%.1f", loadTime),
+                "section": "concentration",
+                "state": "chart_controls_loaded",
+            ]
+        )
+
+        // Debug what buttons actually exist
+        if enableDebugOutput {
+            print("🔍 DEBUG: All buttons on Analytics tab:")
+            for button in app.buttons.allElementsBoundByIndex where button.exists {
+                print("  Button: '\(button.identifier)' label: '\(button.label)'")
+            }
         }
 
         // Verify we have a chart (not empty state)
