@@ -376,3 +376,61 @@ cat logs/latest/raw_output.txt | grep "DEBUG"
 - Coverage reports saved to test log directory and `/tmp/jab-tracker-coverage.xcresult`
 - Manual authentication tests require Xcode for interactive Apple ID flow
 - Log files include: `raw_output.txt`, `results.xcresult`, `coverage.json` (if --coverage used)
+
+## Screenshot Capture & Test Results Analysis
+
+### Xcode Test Results Browser (Highly Recommended)
+```bash
+# Run any UI test, then open results in Xcode
+./scripts/test.sh ui 1 ConcentrationTimelineChartUITests/testConcentrationTimelineDisplaysCorrectly
+open logs/latest/results.xcresult
+```
+
+**In Xcode Test Results:**
+1. **Navigate to specific test**: Expand `JabTracker` → `Tests` → find your test class → click specific test method
+2. **View test execution timeline**: The Activities panel shows every step with timestamps
+3. **Step through test execution**: Click any activity to see the app state at that moment
+4. **View screenshots**: Screenshots captured via `ScreenshotCapture` utility appear as attachments
+5. **Analyze performance**: Activity timestamps show where tests spend time
+6. **Debug element targeting**: See exact UI state when element queries execute
+
+**Key Xcode Features:**
+- **Activities Timeline**: Shows every XCUITest action with precise timing
+- **Screenshot Attachments**: Custom screenshots with metadata appear in attachments section
+- **App State Inspection**: Click any timeline point to see the simulator state at that moment
+- **Performance Analysis**: Identify slow operations by reviewing activity durations
+- **Failure Analysis**: When tests fail, see exact UI state and available elements
+
+### Screenshot Capture Utility
+Enhanced E2E tests use `ScreenshotCapture` utility for systematic UI documentation:
+
+```swift
+// In test setUp
+var screenshotCapture: ScreenshotCapture!
+override func setUp() {
+    super.setUp()
+    let app = XCUIApplication()
+    screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "baseline")
+}
+
+// During test execution
+screenshotCapture.capture(
+    section: "analytics-navigation",
+    description: "before-tap",
+    metadata: ["state": "ready", "navigation_time_ms": "1250.5"]
+)
+```
+
+**Benefits:**
+- **Systematic Documentation**: Captures UI state at critical test points
+- **Performance Measurement**: Includes timing metadata for performance analysis
+- **Organized Naming**: Uses section-description-timestamp format for easy identification
+- **Rich Metadata**: Custom metadata helps understand test context and performance
+- **Xcode Integration**: Screenshots appear as named attachments in test results
+
+### Best Practices for Screenshot-Enhanced E2E Tests
+- **Capture liberally**: Screenshots help debug failing tests and document expected behavior
+- **Use descriptive names**: section-description format makes screenshots easy to find
+- **Include performance data**: Add timing measurements to metadata for performance baselines
+- **Capture before/after states**: Document state changes for better test comprehension
+- **Use for debugging**: When tests fail, screenshots show exactly what the UI looked like
