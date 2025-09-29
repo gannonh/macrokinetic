@@ -117,7 +117,15 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
         TestUtilities.createHistoricalChartData(in: app, count: 3)  // Initial adherence pattern
 
+        // 📸 PHASE 1: Capture baseline before metrics update test
+        screenshotCapture.capture(
+            section: "metrics-update",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "3", "test_type": "metric_updates"]
+        )
+
         // Navigate to Analytics → Adherence
+        let navStart = Date()
         TestUtilities.navigateToTab(app, tabName: "Analytics")
         let segmentedControl = app.segmentedControls["analytics-type-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
@@ -126,15 +134,31 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         // Get initial metrics
         let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
         XCTAssertTrue(adherenceMetricsCard.waitForExistence(timeout: 5), "Adherence metrics card should be displayed")
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture initial metrics state
+        screenshotCapture.capture(
+            section: "metrics-update",
+            description: "initial-metrics",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "metrics_loaded": "true",
+                "state": "initial",
+            ]
+        )
 
         let initialPercentage = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '%'")).firstMatch
         XCTAssertTrue(initialPercentage.exists, "Initial adherence percentage should be displayed")
 
         // WHEN: User logs new dose (simplified - just verify metrics can be updated)
         // Navigate away and back to test metric refresh capability
+        let refreshStart = Date()
         TestUtilities.navigateToTab(app, tabName: "Home")
         TestUtilities.navigateToTab(app, tabName: "Analytics")
         segmentedControl.buttons["Adherence"].tap()
+        let refreshEnd = Date()
+        let refreshTime = refreshEnd.timeIntervalSince(refreshStart) * 1000  // ms
 
         // THEN: Adherence percentage updates correctly (remains accessible)
         let updatedPercentage = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '%'")).firstMatch
@@ -143,6 +167,17 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         // THEN: Streak counters update appropriately (remain functional)
         let streakCountersCard = app.otherElements["streak-counters-card"]
         XCTAssertTrue(streakCountersCard.exists, "Streak counters should remain functional after navigation")
+
+        // 📸 PHASE 1: Capture final state after metrics refresh
+        screenshotCapture.capture(
+            section: "metrics-update",
+            description: "final-state",
+            metadata: [
+                "refresh_verified": "true",
+                "metrics_persistent": "true",
+                "refresh_time_ms": String(format: "%.1f", refreshTime),
+            ]
+        )
 
         print("✅ Adherence metrics update successfully verified")
     }
@@ -156,11 +191,32 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         TestUtilities.createMedicationProfile(app, genericName: "tirzepatide", brandName: "Mounjaro", dose: "2.5")
         TestUtilities.createHistoricalChartData(in: app, count: 6)  // Consistent adherence for streaks
 
+        // 📸 PHASE 1: Capture baseline before streak counters test
+        screenshotCapture.capture(
+            section: "streak-counters",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "6", "test_type": "streak_display"]
+        )
+
         // WHEN: User views adherence insights
+        let navStart = Date()
         TestUtilities.navigateToTab(app, tabName: "Analytics")
         let segmentedControl = app.segmentedControls["analytics-type-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
         segmentedControl.buttons["Adherence"].tap()
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture streak counters loaded
+        screenshotCapture.capture(
+            section: "streak-counters",
+            description: "streaks-loaded",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "streaks_visible": "true",
+                "state": "loaded",
+            ]
+        )
 
         // THEN: Current streak shows accurate count
         let streakCountersCard = app.otherElements["streak-counters-card"]
@@ -192,6 +248,18 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         let numericTexts = app.staticTexts.matching(NSPredicate(format: "label MATCHES '[0-9]+'"))
         XCTAssertTrue(numericTexts.count >= 1, "Numeric streak values should be displayed")
 
+        // 📸 PHASE 1: Capture final state with streak verification
+        screenshotCapture.capture(
+            section: "streak-counters",
+            description: "final-state",
+            metadata: [
+                "streaks_verified": "true",
+                "current_streak": "visible",
+                "best_streak": "visible",
+                "accessibility": "enabled",
+            ]
+        )
+
         print("✅ Streak counters display successfully verified")
     }
 
@@ -204,11 +272,32 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         TestUtilities.createMedicationProfile(app, genericName: "liraglutide", brandName: "Victoza", dose: "1.2")
         TestUtilities.createHistoricalChartData(in: app, count: 4)  // Mixed adherence pattern
 
+        // 📸 PHASE 1: Capture baseline before color coding test
+        screenshotCapture.capture(
+            section: "color-coding",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "4", "test_type": "color_accessibility"]
+        )
+
         // WHEN: User views adherence metrics
+        let navStart = Date()
         TestUtilities.navigateToTab(app, tabName: "Analytics")
         let segmentedControl = app.segmentedControls["analytics-type-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
         segmentedControl.buttons["Adherence"].tap()
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture color-coded metrics loaded
+        screenshotCapture.capture(
+            section: "color-coding",
+            description: "colors-loaded",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "color_coding_active": "true",
+                "state": "loaded",
+            ]
+        )
 
         // THEN: Colors reflect quality (green: excellent, yellow: good, red: needs improvement)
         let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
@@ -233,6 +322,17 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         XCTAssertTrue(streakCountersCard.exists, "Streak counters should support color-coded quality indicators")
         XCTAssertTrue(streakCountersCard.isHittable, "Streak color coding should be accessible")
 
+        // 📸 PHASE 1: Capture final state with color accessibility verification
+        screenshotCapture.capture(
+            section: "color-coding",
+            description: "final-state",
+            metadata: [
+                "color_coding_verified": "true",
+                "accessibility_support": "true",
+                "colorblind_friendly": "text_labels_present",
+            ]
+        )
+
         print("✅ Adherence color coding successfully verified")
     }
 
@@ -245,11 +345,32 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         TestUtilities.createMedicationProfile(app, genericName: "dulaglutide", brandName: "Trulicity", dose: "1.5")
         TestUtilities.createHistoricalChartData(in: app, count: 5)
 
+        // 📸 PHASE 1: Capture baseline before VoiceOver test
+        screenshotCapture.capture(
+            section: "voiceover-accessibility",
+            description: "before-navigation",
+            metadata: ["state": "ready", "dose_count": "5", "test_type": "voiceover_support"]
+        )
+
         // WHEN: User navigates adherence insights
+        let navStart = Date()
         TestUtilities.navigateToTab(app, tabName: "Analytics")
         let segmentedControl = app.segmentedControls["analytics-type-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
         segmentedControl.buttons["Adherence"].tap()
+        let navEnd = Date()
+        let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
+
+        // 📸 PHASE 1: Capture VoiceOver-accessible interface loaded
+        screenshotCapture.capture(
+            section: "voiceover-accessibility",
+            description: "voiceover-ready",
+            metadata: [
+                "navigation_time_ms": String(format: "%.1f", navTime),
+                "voiceover_elements": "loaded",
+                "state": "accessibility_ready",
+            ]
+        )
 
         // THEN: All metrics have descriptive accessibility labels
         let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
@@ -277,6 +398,18 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
         // Verify navigation accessibility
         XCTAssertTrue(segmentedControl.isHittable, "Analytics segmented control should be VoiceOver accessible")
+
+        // 📸 PHASE 1: Capture final VoiceOver verification state
+        screenshotCapture.capture(
+            section: "voiceover-accessibility",
+            description: "final-state",
+            metadata: [
+                "voiceover_verified": "true",
+                "all_elements_accessible": "true",
+                "labels_descriptive": "true",
+                "navigation_accessible": "true",
+            ]
+        )
 
         print("✅ VoiceOver accessibility successfully verified")
     }
