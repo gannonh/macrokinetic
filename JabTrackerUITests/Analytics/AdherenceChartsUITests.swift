@@ -161,6 +161,20 @@ final class AdherenceChartsUITests: XCTestCase {
             ]
         )
 
+        // Scroll down to show "below the fold" content
+        analyticsView.swipeUp()
+
+        // 📸 PHASE 1: Capture scrolled view showing below-the-fold content
+        screenshotCapture.capture(
+            section: "adherence-charts",
+            description: "scrolled-below-fold",
+            metadata: [
+                "scroll_direction": "down",
+                "view_area": "below_the_fold",
+                "content_type": "extended_analytics",
+            ]
+        )
+
         print("✅ Adherence chart components successfully verified")
     }
 
@@ -432,6 +446,21 @@ final class AdherenceChartsUITests: XCTestCase {
                 "goals_visible": "true",
                 "counters_visible": "true",
                 "accessibility": "enabled",
+            ]
+        )
+
+        // Scroll up to show "above the fold" content
+        let analyticsView = app.scrollViews["analytics-scroll-view"]
+        analyticsView.swipeDown()
+
+        // 📸 PHASE 1: Capture scrolled view showing above-the-fold content
+        screenshotCapture.capture(
+            section: "progress-indicator",
+            description: "scrolled-above-fold",
+            metadata: [
+                "scroll_direction": "up",
+                "view_area": "above_the_fold",
+                "content_type": "top_analytics",
             ]
         )
 
