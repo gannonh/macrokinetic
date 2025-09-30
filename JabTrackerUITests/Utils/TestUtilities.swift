@@ -47,6 +47,110 @@ enum TestUtilities {
         return app
     }
 
+    /// Preset test data configurations for E2E performance testing
+    enum TestDataPreset {
+        case small  // 7 days
+        case medium  // 30 days
+        case large  // 365 days (1 year)
+        case extraLarge  // 730 days (2 years)
+
+        var launchEnvironment: [String: String] {
+            switch self {
+            case .small:
+                return [
+                    "TEST_DATA_SEED": "true",
+                    "TEST_DATA_DAYS": "7",
+                    "TEST_DATA_MEDICATION": "semaglutide",
+                    "TEST_DATA_BRAND": "Ozempic",
+                    "TEST_DATA_DOSE": "0.25",
+                    "TEST_DATA_ADHERENCE": "1.0",
+                    "TEST_DATA_VARIABILITY": "false",
+                    "TEST_DATA_SKIPPED": "false",
+                ]
+            case .medium:
+                return [
+                    "TEST_DATA_SEED": "true",
+                    "TEST_DATA_DAYS": "30",
+                    "TEST_DATA_MEDICATION": "semaglutide",
+                    "TEST_DATA_BRAND": "Ozempic",
+                    "TEST_DATA_DOSE": "0.5",
+                    "TEST_DATA_ADHERENCE": "0.95",
+                    "TEST_DATA_VARIABILITY": "true",
+                    "TEST_DATA_SKIPPED": "true",
+                ]
+            case .large:
+                return [
+                    "TEST_DATA_SEED": "true",
+                    "TEST_DATA_DAYS": "365",
+                    "TEST_DATA_MEDICATION": "semaglutide",
+                    "TEST_DATA_BRAND": "Ozempic",
+                    "TEST_DATA_DOSE": "1.0",
+                    "TEST_DATA_ADHERENCE": "0.92",
+                    "TEST_DATA_VARIABILITY": "true",
+                    "TEST_DATA_SKIPPED": "true",
+                ]
+            case .extraLarge:
+                return [
+                    "TEST_DATA_SEED": "true",
+                    "TEST_DATA_DAYS": "730",
+                    "TEST_DATA_MEDICATION": "tirzepatide",
+                    "TEST_DATA_BRAND": "Mounjaro",
+                    "TEST_DATA_DOSE": "5.0",
+                    "TEST_DATA_ADHERENCE": "0.90",
+                    "TEST_DATA_VARIABILITY": "true",
+                    "TEST_DATA_SKIPPED": "true",
+                ]
+            }
+        }
+
+        var daysOfHistory: Int {
+            switch self {
+            case .small: return 7
+            case .medium: return 30
+            case .large: return 365
+            case .extraLarge: return 730
+            }
+        }
+    }
+
+    /// Launch app with pre-seeded test data for performance testing
+    /// - Enables fast E2E performance testing with large datasets without UI interaction
+    /// - Uses preset configurations to avoid importing main app types
+    /// - Parameters:
+    ///   - preset: Preset test data configuration (.small, .medium, .large, .extraLarge)
+    ///   - resetData: Whether to reset app data before seeding (default: true)
+    /// - Returns: Launched XCUIApplication with pre-seeded test data
+    static func launchAppWithSeededData(
+        preset: TestDataPreset,
+        resetData: Bool = true
+    ) -> XCUIApplication {
+        let app = XCUIApplication()
+
+        // Set UI testing environment
+        app.launchEnvironment["UI_TESTING"] = "true"
+
+        // Merge preset seeding environment
+        for (key, value) in preset.launchEnvironment {
+            app.launchEnvironment[key] = value
+        }
+
+        // Set launch arguments
+        var launchArgs = ["--ui-testing"]
+        if resetData {
+            launchArgs.append("--reset-app-data")
+        }
+        app.launchArguments = launchArgs
+
+        print("🚀 Launching app with seeded data preset: \(preset) (\(preset.daysOfHistory) days)")
+
+        app.launch()
+
+        // Brief wait to ensure seeding completes
+        Thread.sleep(forTimeInterval: 0.5)
+
+        return app
+    }
+
     /// Launch app for manual UI testing (shows auth UI but mocks Apple ID response)
     /// - Shows real AuthenticationView for manual interaction
     /// - Allows manual testing of UI flows
@@ -761,105 +865,6 @@ enum TestUtilities {
                 Thread.sleep(forTimeInterval: 1.0)  // 1 second delay for distinct timestamps
             }
         }
-    }
-
-    // MARK: - Large Dataset Seeding (Performance Testing)
-
-    /// Create a large dataset for performance testing
-    /// Note: This is a slow operation - use sparingly and only for performance tests
-    /// - Parameters:
-    ///   - app: The XCUIApplication instance
-    ///   - count: Number of doses to create (default: 50, max recommended: 100)
-    ///   - timeout: Maximum time to wait for UI elements (default: 3 seconds)
-    /// - Returns: Actual number of doses created
-    @discardableResult
-    static func createLargeDataset(
-        in app: XCUIApplication,
-        count: Int = 50,
-        timeout: TimeInterval = 3
-    ) -> Int {
-        print("⚠️  Creating large dataset with \(count) doses - this will take several minutes")
-
-        let startTime = Date()
-        var successCount = 0
-
-        for index in 0..<count {
-            let success = self.createTestDose(
-                app,
-                notes: "Performance test dose \(index + 1)",
-                timeout: timeout
-            )
-
-            if success {
-                successCount += 1
-            }
-
-            // Progress reporting every 10 doses
-            if (index + 1) % 10 == 0 {
-                let elapsed = Date().timeIntervalSince(startTime)
-                let rate = Double(index + 1) / elapsed
-                let remaining = Double(count - index - 1) / rate
-
-                print(
-                    """
-                    📊 Progress: \(index + 1)/\(count) doses created
-                       ⏱  Elapsed: \(String(format: "%.1f", elapsed))s
-                       ⏱  Estimated remaining: \(String(format: "%.1f", remaining))s
-                    """)
-            }
-
-            // Small delay between doses (0.1s instead of 1s for faster creation)
-            if index < count - 1 {
-                Thread.sleep(forTimeInterval: 0.1)
-            }
-        }
-
-        let totalTime = Date().timeIntervalSince(startTime)
-        print(
-            """
-            ✅ Large dataset creation complete:
-               - Created: \(successCount)/\(count) doses
-               - Total time: \(String(format: "%.1f", totalTime))s
-               - Average: \(String(format: "%.2f", totalTime / Double(count)))s per dose
-            """)
-
-        return successCount
-    }
-
-    /// Create dataset for specific performance scenario
-    /// - Parameters:
-    ///   - app: The XCUIApplication instance
-    ///   - scenario: Performance test scenario (.small, .medium, .large)
-    ///   - timeout: Maximum time to wait for UI elements
-    /// - Returns: Number of doses created
-    @discardableResult
-    static func createPerformanceDataset(
-        in app: XCUIApplication,
-        scenario: PerformanceTestScenario,
-        timeout: TimeInterval = 3
-    ) -> Int {
-        switch scenario {
-        case .small:
-            // 7 days of weekly doses = ~1 dose
-            return createLargeDataset(in: app, count: 1, timeout: timeout)
-        case .medium:
-            // 30 days of weekly doses = ~4-5 doses
-            return createLargeDataset(in: app, count: 5, timeout: timeout)
-        case .large:
-            // 365 days of weekly doses = ~52 doses
-            return createLargeDataset(in: app, count: 52, timeout: timeout)
-        case .extraLarge:
-            // 730 days of weekly doses = ~104 doses
-            return createLargeDataset(in: app, count: 104, timeout: timeout)
-        }
-    }
-
-    /// Performance test scenario sizes
-    enum PerformanceTestScenario {
-        case small  // 7 days of data
-        case medium  // 30 days of data
-        case large  // 365 days of data (1 year)
-        case extraLarge  // 730 days of data (2 years)
     }
 
     /// Create multiple test doses with different timestamps

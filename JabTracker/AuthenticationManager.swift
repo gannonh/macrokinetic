@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import AuthenticationServices
 import Foundation
 import OSLog
@@ -173,12 +174,91 @@ class AuthenticationManager: NSObject, ObservableObject {
                 self.authenticationState = .authenticated
             }
             Self.logger.info("✅ AuthenticationManager: UI testing mock user created and persisted")
+
+            // Check for test data seeding request
+            await self.seedTestDataIfRequested(for: mockUser, context: context)
         } catch {
             Self.logger.error("❌ AuthenticationManager: Failed to persist UI testing user: \(error)")
             await MainActor.run {
                 self.authenticationState = .notAuthenticated
             }
         }
+    }
+
+    // swiftlint:disable:next orphaned_doc_comment
+    /// Seed test data for UI testing if TEST_DATA_SEED environment variable is set
+    /// Enables fast E2E performance testing with large datasets
+    // swiftlint:disable:next function_body_length
+    private func seedTestDataIfRequested(for user: User, context: ModelContext) async {
+        #if DEBUG || TEST
+            let environment = ProcessInfo.processInfo.environment
+
+            guard environment["TEST_DATA_SEED"] == "true" else {
+                return
+            }
+
+            Self.logger.info("🌱 Test data seeding requested via launch arguments")
+
+            // Parse seeding configuration from environment
+            let daysOfHistory = Int(environment["TEST_DATA_DAYS"] ?? "30") ?? 30
+            let medicationRaw = environment["TEST_DATA_MEDICATION"] ?? "semaglutide"
+            let brandName = environment["TEST_DATA_BRAND"] ?? "Ozempic"
+            let doseAmount = Double(environment["TEST_DATA_DOSE"] ?? "1.0") ?? 1.0
+            let adherenceRate = Double(environment["TEST_DATA_ADHERENCE"] ?? "1.0") ?? 1.0
+            let addVariability = environment["TEST_DATA_VARIABILITY"] == "true"
+            let includeSkipped = environment["TEST_DATA_SKIPPED"] == "true"
+
+            // Create medication enum from string
+            guard let medication = Medication(rawValue: medicationRaw) else {
+                Self.logger.warning("⚠️  Invalid medication: \(medicationRaw), skipping seeding")
+                return
+            }
+
+            Self.logger.info(
+                """
+                🌱 Seeding configuration:
+                   - Days: \(daysOfHistory)
+                   - Medication: \(medicationRaw)
+                   - Brand: \(brandName)
+                   - Dose: \(doseAmount)mg
+                   - Adherence: \(String(format: "%.1f%%", adherenceRate * 100))
+                """)
+
+            // Create configuration
+            let config = TestDataSeedingConfig(
+                daysOfHistory: daysOfHistory,
+                medication: medication,
+                brandName: brandName,
+                doseAmount: doseAmount,
+                adherenceRate: adherenceRate,
+                addTimingVariability: addVariability,
+                includeSkippedDoses: includeSkipped
+            )
+
+            // Perform seeding on main actor
+            await MainActor.run {
+                do {
+                    let startTime = Date()
+                    let result = try TestDataSeeding.seedData(
+                        into: context,
+                        config: config,
+                        existingUser: user  // Seed data for the authenticated mock user
+                    )
+                    let seedingTime = Date().timeIntervalSince(startTime) * 1000
+
+                    Self.logger.info(
+                        """
+                        ✅ Test data seeding complete:
+                           - Doses created: \(result.actualDoseCount)
+                           - Skipped doses: \(result.skippedDoses.count)
+                           - Adherence: \(String(format: "%.1f%%", result.adherenceRate * 100))
+                           - Seeding time: \(String(format: "%.1f", seedingTime))ms
+                        """)
+                } catch {
+                    Self.logger.error("❌ Test data seeding failed: \(error)")
+                }
+            }
+        #endif
     }
 
     // MARK: - Private Helper Methods

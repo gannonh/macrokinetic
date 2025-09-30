@@ -98,6 +98,7 @@
       "Models/SubscriptionProducts.swift",
       "ContentView.swift",
       "JabTrackerApp.swift",
+      "Utils/TestDataSeeding.swift",
       "Design/ButtonComponents.swift",
       "Design/ButtonStyles.swift",
       "Design/CardComponents.swift",

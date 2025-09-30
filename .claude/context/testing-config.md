@@ -24,11 +24,15 @@ created: 2025-01-22T04:47:23Z
 ### Overview
 The `TestDataSeeding` utility provides comprehensive data generation for both unit and E2E tests, with support for small to extra-large datasets (up to 2 years of historical data).
 
-### Quick Start
+**Key Distinction:**
+- **Unit Tests**: Direct SwiftData access - fast seeding (365 days in ~70ms)
+- **E2E Tests**: Launch argument approach - app seeds its own data at startup (no UI interaction)
+
+### Unit Test Seeding (Direct SwiftData Access)
 
 ```swift
-// Unit tests - Use TestDataSeeding
-@Test("My test with seeded data")
+// Unit tests have direct access to SwiftData
+@Test("Test with seeded data")
 @MainActor
 func myTest() throws {
     let container = try TestDataSeeding.createTestContainer()
@@ -44,30 +48,41 @@ func myTest() throws {
     #expect(result.doses.count > 0)
     #expect(result.adherenceRate >= 0.90)
 }
+```
 
-// E2E tests - Use TestUtilities for small datasets
-func testWithSeededData() {
-    let app = TestUtilities.launchAppWithTestMode()
+### E2E Test Seeding (Launch Argument Approach)
 
-    // Create test data via UI (for E2E validation)
-    TestUtilities.createHistoricalChartData(in: app, count: 5)
-}
+**Why Launch Arguments?**
+XCUITests run in a separate process and cannot directly access the app's SwiftData. The app must detect test mode via launch arguments and seed its own data.
 
-// E2E performance tests - Use createLargeDataset for stress testing
-func testPerformanceWithLargeDataset() {
-    let app = TestUtilities.launchAppWithTestMode()
+```swift
+// E2E tests use launch arguments to trigger seeding
+func testChartWithSeededData() throws {
+    // Launch app with pre-seeded data using preset
+    let app = TestUtilities.launchAppWithSeededData(preset: .medium)
 
-    // Create large dataset (WARNING: slow operation)
-    let count = TestUtilities.createPerformanceDataset(
-        in: app,
-        scenario: .large  // 365 days = ~52 doses
-    )
+    // App automatically seeds 30 days of data at startup
+    // No UI interaction needed - data is instantly available
 
-    #expect(count >= 50)
+    let analyticsTab = app.tabBars.buttons["Analytics"]
+    analyticsTab.tap()
+
+    let chart = app.otherElements["concentration-timeline-chart"].firstMatch
+    XCTAssertTrue(chart.waitForExistence(timeout: 10))
 }
 ```
 
-### Preset Configurations
+**Available Presets for E2E Tests:**
+
+```swift
+// TestUtilities.TestDataPreset enum provides these options:
+.small      // 7 days, 1-2 doses
+.medium     // 30 days, ~4-5 doses, realistic adherence
+.large      // 365 days, ~52 doses, performance testing
+.extraLarge // 730 days, ~104 doses, stress testing
+```
+
+### Preset Configurations (Unit Tests)
 
 ```swift
 // Small: 7 days, 100% adherence, no variability (quick tests)
@@ -83,7 +98,7 @@ let result = try TestDataSeeding.seedData(into: context, config: .large)
 let result = try TestDataSeeding.seedData(into: context, config: .extraLarge)
 ```
 
-### Custom Configuration
+### Custom Configuration (Unit Tests)
 
 ```swift
 let customConfig = TestDataSeedingConfig(
@@ -100,10 +115,10 @@ let customConfig = TestDataSeedingConfig(
 let result = try TestDataSeeding.seedData(into: context, config: customConfig)
 ```
 
-### Quick Helpers
+### Quick Helpers (Unit Tests)
 
 ```swift
-// Create individual entities
+// Create individual entities for testing
 let user = TestDataSeeding.createTestUser()
 let profile = TestDataSeeding.createTestMedicationProfile()
 let doses = TestDataSeeding.createTestDoses(
@@ -128,31 +143,52 @@ struct TestDataSeedingResult {
 }
 ```
 
-### E2E Performance Testing
+### E2E Performance Testing (Correct Pattern)
 
 ```swift
-// For E2E tests that need large datasets
-func testChartPerformanceWith1YearData() {
-    let app = TestUtilities.launchAppWithTestMode()
+/// Test chart rendering with 365 days of pre-seeded data
+func testChartPerformanceWith1YearData() throws {
+    // GIVEN: App launched with 1 year of pre-seeded data (~52 doses)
+    let preset = TestUtilities.TestDataPreset.large
+    let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-    // Create 52 doses (1 year of weekly medication)
-    let count = TestUtilities.createPerformanceDataset(
-        in: app,
-        scenario: .large
-    )
+    print("📊 App launched with \(preset.daysOfHistory) days of data")
 
-    // Test chart rendering performance
-    TestUtilities.navigateToTab(app, tabName: "Analytics")
-    // ... performance assertions
+    // WHEN: Navigate to Analytics and measure rendering
+    let analyticsTab = app.tabBars.buttons["Analytics"]
+    XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5))
+
+    let navigationStart = Date()
+    analyticsTab.tap()
+
+    let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+    let chartExists = chartElement.waitForExistence(timeout: 15)
+    let navigationTime = Date().timeIntervalSince(navigationStart) * 1000  // ms
+
+    // THEN: Chart renders within target time
+    XCTAssertTrue(chartExists, "Chart should render with 1 year of data")
+    print("⏱️  Navigation: \(String(format: "%.1f", navigationTime))ms")
+    XCTAssertLessThan(navigationTime, 2000, "Should be <2000ms for large dataset")
 }
 ```
 
 ### Performance Notes
 
-- **Small datasets** (<10 doses): Near-instant generation
-- **Medium datasets** (30 days): <50ms generation time
-- **Large datasets** (365 days): <200ms generation time
-- **E2E large datasets** (50+ doses): 5-10 minutes via UI (use sparingly)
+**Unit Test Seeding (Direct SwiftData):**
+- **Small datasets** (7 days): ~10ms generation
+- **Medium datasets** (30 days): ~30ms generation
+- **Large datasets** (365 days): ~70ms generation
+- **Extra large datasets** (730 days): ~170ms generation
+
+**E2E Test Seeding (Launch Arguments):**
+- **All dataset sizes**: Instant from test perspective (seeding happens during app launch)
+- **No UI interaction**: Data pre-populated before first screen renders
+- **Consistent performance**: Same fast startup regardless of dataset size
+
+**⚠️ NEVER use UI-based dose creation for E2E performance tests:**
+- Creating 52 doses via UI would take 5-10 minutes
+- Creating 365 doses would take hours
+- Launch argument seeding is instant and reliable
 
 ### Important Patterns
 
@@ -160,7 +196,35 @@ func testChartPerformanceWith1YearData() {
 2. **Set relationships properly** - use individual setters, not array assignment
 3. **Verify adherence rates** - randomness may cause slight variations from config
 4. **Use appropriate dataset sizes** - larger isn't always better for testing
-5. **E2E seeding is slow** - prefer unit tests with seeded data for performance tests
+5. **E2E seeding via launch arguments** - instant data availability without UI interaction
+6. **Unit tests for seeding logic** - validate TestDataSeeding methods themselves
+7. **E2E tests for performance** - use pre-seeded data to test chart/UI rendering with realistic datasets
+
+### How E2E Seeding Works (Technical Details)
+
+1. **Test sets launch environment variables:**
+   ```swift
+   app.launchEnvironment["TEST_DATA_SEED"] = "true"
+   app.launchEnvironment["TEST_DATA_DAYS"] = "365"
+   app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
+   // ... etc
+   ```
+
+2. **App detects seeding request** in `AuthenticationManager.setupUITestingUser()`:
+   ```swift
+   if ProcessInfo.processInfo.environment["TEST_DATA_SEED"] == "true" {
+       // Parse config from environment variables
+       let result = try TestDataSeeding.seedData(
+           into: context,
+           config: config,
+           existingUser: mockUser  // Seed for authenticated user
+       )
+   }
+   ```
+
+3. **Seeding completes before UI loads** - data is ready when test starts interacting with the app
+
+4. **Test can immediately verify** - no waiting for UI-based dose creation
 
 ## ⚠️ CRITICAL TESTING ANTI-PATTERNS - AVOID AT ALL COSTS
 
