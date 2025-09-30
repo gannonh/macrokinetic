@@ -6,7 +6,7 @@
 import SwiftUI
 
 /// State management for concentration timeline chart
-/// Handles configuration changes and UI state like export sheet presentation
+/// Handles configuration changes and UI state
 @Observable
 class ConcentrationChartState {
 
@@ -14,9 +14,6 @@ class ConcentrationChartState {
 
     /// Current chart configuration
     var currentConfiguration: ConcentrationChartConfiguration
-
-    /// Whether export sheet is currently presented
-    var showingExportSheet = false
 
     /// Original configuration for reset operations
     private let originalConfiguration: ConcentrationChartConfiguration
@@ -47,29 +44,5 @@ class ConcentrationChartState {
     /// - Parameter newConfiguration: New configuration to apply
     func updateConfiguration(_ newConfiguration: ConcentrationChartConfiguration) {
         currentConfiguration = newConfiguration
-    }
-
-    // MARK: - Export Sheet Methods
-
-    /// Shows the export sheet
-    func showExportSheet() {
-        showingExportSheet = true
-    }
-
-    /// Hides the export sheet
-    func hideExportSheet() {
-        showingExportSheet = false
-    }
-
-    /// Handles export result and dismisses sheet
-    /// - Parameter result: Result of the export operation
-    func handleExportResult<E: Error>(_ result: Result<URL, E>) {
-        showingExportSheet = false
-        switch result {
-        case .success(let url):
-            print("✅ Chart exported successfully to: \(url)")
-        case .failure(let error):
-            print("❌ Chart export failed: \(error)")
-        }
     }
 }

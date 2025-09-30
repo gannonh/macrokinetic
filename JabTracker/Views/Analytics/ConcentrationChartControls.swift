@@ -6,16 +6,13 @@
 import SwiftUI
 
 /// Controls view for concentration timeline chart
-/// Provides time period selection and chart action buttons (export, reset)
+/// Provides time period selection and chart action buttons (reset)
 struct ConcentrationChartControls: View {
 
     // MARK: - Properties
 
     /// Current chart configuration
     @Binding var configuration: ConcentrationChartConfiguration
-
-    /// Whether export sheet is currently shown
-    @Binding var showingExportSheet: Bool
 
     /// Action to reset chart view (zoom, pan, and configuration)
     let resetAction: () -> Void
@@ -78,31 +75,17 @@ struct ConcentrationChartControls: View {
         }
     }
 
-    /// Action buttons for chart controls (export and reset)
+    /// Action buttons for chart controls (reset)
     @ViewBuilder
     private func chartActionButtons() -> some View {
-        HStack(spacing: 12) {
-            Button(
-                action: {
-                    showingExportSheet = true
-                },
-                label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.caption)
-                }
-            )
-            .accessibilityLabel("Export chart")
-            .accessibilityIdentifier("export-chart-button")
-
-            Button(
-                action: resetAction,
-                label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.caption)
-                }
-            )
-            .accessibilityLabel("Reset chart view")
-            .accessibilityIdentifier("reset-chart-button")
-        }
+        Button(
+            action: resetAction,
+            label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.caption)
+            }
+        )
+        .accessibilityLabel("Reset chart view")
+        .accessibilityIdentifier("reset-chart-button")
     }
 }

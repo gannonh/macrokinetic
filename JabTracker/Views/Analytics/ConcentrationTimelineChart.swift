@@ -103,7 +103,6 @@ struct ConcentrationTimelineChart: View {
 
                 ConcentrationChartControls(
                     configuration: $chartState.currentConfiguration,
-                    showingExportSheet: $chartState.showingExportSheet,
                     resetAction: resetChartView
                 )
             }
@@ -113,13 +112,6 @@ struct ConcentrationTimelineChart: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(DesignTokens.Colors.secondaryBackground)
         )
-        .sheet(isPresented: $chartState.showingExportSheet) {
-            NavigationStack {
-                ChartExportView(dataset: dataset) { result in
-                    chartState.handleExportResult(result)
-                }
-            }
-        }
     }
 
     // MARK: - Chart Components
