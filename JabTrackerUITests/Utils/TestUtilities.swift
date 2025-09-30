@@ -763,6 +763,105 @@ enum TestUtilities {
         }
     }
 
+    // MARK: - Large Dataset Seeding (Performance Testing)
+
+    /// Create a large dataset for performance testing
+    /// Note: This is a slow operation - use sparingly and only for performance tests
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - count: Number of doses to create (default: 50, max recommended: 100)
+    ///   - timeout: Maximum time to wait for UI elements (default: 3 seconds)
+    /// - Returns: Actual number of doses created
+    @discardableResult
+    static func createLargeDataset(
+        in app: XCUIApplication,
+        count: Int = 50,
+        timeout: TimeInterval = 3
+    ) -> Int {
+        print("⚠️  Creating large dataset with \(count) doses - this will take several minutes")
+
+        let startTime = Date()
+        var successCount = 0
+
+        for index in 0..<count {
+            let success = self.createTestDose(
+                app,
+                notes: "Performance test dose \(index + 1)",
+                timeout: timeout
+            )
+
+            if success {
+                successCount += 1
+            }
+
+            // Progress reporting every 10 doses
+            if (index + 1) % 10 == 0 {
+                let elapsed = Date().timeIntervalSince(startTime)
+                let rate = Double(index + 1) / elapsed
+                let remaining = Double(count - index - 1) / rate
+
+                print(
+                    """
+                    📊 Progress: \(index + 1)/\(count) doses created
+                       ⏱  Elapsed: \(String(format: "%.1f", elapsed))s
+                       ⏱  Estimated remaining: \(String(format: "%.1f", remaining))s
+                    """)
+            }
+
+            // Small delay between doses (0.1s instead of 1s for faster creation)
+            if index < count - 1 {
+                Thread.sleep(forTimeInterval: 0.1)
+            }
+        }
+
+        let totalTime = Date().timeIntervalSince(startTime)
+        print(
+            """
+            ✅ Large dataset creation complete:
+               - Created: \(successCount)/\(count) doses
+               - Total time: \(String(format: "%.1f", totalTime))s
+               - Average: \(String(format: "%.2f", totalTime / Double(count)))s per dose
+            """)
+
+        return successCount
+    }
+
+    /// Create dataset for specific performance scenario
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - scenario: Performance test scenario (.small, .medium, .large)
+    ///   - timeout: Maximum time to wait for UI elements
+    /// - Returns: Number of doses created
+    @discardableResult
+    static func createPerformanceDataset(
+        in app: XCUIApplication,
+        scenario: PerformanceTestScenario,
+        timeout: TimeInterval = 3
+    ) -> Int {
+        switch scenario {
+        case .small:
+            // 7 days of weekly doses = ~1 dose
+            return createLargeDataset(in: app, count: 1, timeout: timeout)
+        case .medium:
+            // 30 days of weekly doses = ~4-5 doses
+            return createLargeDataset(in: app, count: 5, timeout: timeout)
+        case .large:
+            // 365 days of weekly doses = ~52 doses
+            return createLargeDataset(in: app, count: 52, timeout: timeout)
+        case .extraLarge:
+            // 730 days of weekly doses = ~104 doses
+            return createLargeDataset(in: app, count: 104, timeout: timeout)
+        }
+    }
+
+    /// Performance test scenario sizes
+    enum PerformanceTestScenario {
+        case small  // 7 days of data
+        case medium  // 30 days of data
+        case large  // 365 days of data (1 year)
+        case extraLarge  // 730 days of data (2 years)
+    }
+
     /// Create multiple test doses with different timestamps
     /// - Parameters:
     ///   - app: The XCUIApplication instance
