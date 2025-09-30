@@ -432,7 +432,7 @@ final class ChartDataProcessor {
     func generateConcentrationTimeline(
         for medicationProfile: MedicationProfile,
         timeRange: ClosedRange<Date>,
-        intervalHours: Double = 1.0
+        intervalHours: Double = 0.5  // Increased density from 1.0 to 0.5 hours for clearer spikes
     ) -> [ConcentrationPoint] {
         guard let medication = medicationProfile.medication,
             let doses = medicationProfile.doses
@@ -443,11 +443,22 @@ final class ChartDataProcessor {
         let pharmacokineticsEngine = PharmacokineticsEngine()
         var concentrationPoints: [ConcentrationPoint] = []
 
+        // Get dose timestamps for adaptive sampling (extra dense around doses)
+        let doseTimestamps =
+            doses
+            .filter { !$0.skipped && $0.timestamp >= timeRange.lowerBound && $0.timestamp <= timeRange.upperBound }
+            .map { $0.timestamp }
+            .sorted()
+
         var currentTime = timeRange.lowerBound
         let endTime = timeRange.upperBound
-        let intervalSeconds = intervalHours * 3600
+        let baseIntervalSeconds = intervalHours * 3600
 
         while currentTime <= endTime {
+            // Use 4x denser sampling within ±24 hours of any dose for clear spikes
+            let nearDose = doseTimestamps.contains { abs($0.timeIntervalSince(currentTime)) < 24 * 3600 }
+            let actualInterval = nearDose ? baseIntervalSeconds / 4 : baseIntervalSeconds
+
             let concentration = pharmacokineticsEngine.calculateConcentrationOptimized(
                 from: doses,
                 medication: medication,
@@ -458,7 +469,7 @@ final class ChartDataProcessor {
                 ConcentrationPoint(date: currentTime, concentration: concentration)
             )
 
-            currentTime = currentTime.addingTimeInterval(intervalSeconds)
+            currentTime = currentTime.addingTimeInterval(actualInterval)
         }
 
         return concentrationPoints

@@ -266,20 +266,12 @@ struct AnalyticsView: View {
 
     @ViewBuilder
     private func concentrationChartSection(for user: User, profiles: [MedicationProfile]) -> some View {
-        VStack(spacing: 16) {
-            // Generate chart dataset from user data
-            if let chartDataset = generateChartDataset(for: user, profiles: profiles) {
-                ConcentrationTimelineChart(dataset: chartDataset)
-            } else {
-                chartLoadingView()
-            }
+        // Generate chart dataset from user data
+        if let chartDataset = generateChartDataset(for: user, profiles: profiles) {
+            ConcentrationTimelineChart(dataset: chartDataset)
+        } else {
+            chartLoadingView()
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(radius: 2)
-        )
     }
 
     @ViewBuilder
