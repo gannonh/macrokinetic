@@ -74,7 +74,8 @@ public enum TimeRange: Equatable {
 
         switch self {
         case .automatic:
-            let startDate = calendar.date(byAdding: .day, value: -7, to: referenceDate) ?? referenceDate
+            // Default to 30 days for weekly GLP-1 medications to show multiple dose cycles
+            let startDate = calendar.date(byAdding: .day, value: -30, to: referenceDate) ?? referenceDate
             return (startDate, referenceDate)
         case .custom(let start, let end):
             return (start, end)

@@ -165,7 +165,21 @@ This document captures baseline UI/UX analysis and gathers feedback for analytic
 - [x] **Calendar dots size** - Increased from 20x20 to 32x32 (60% larger) for better tappability
 - [x] **Calendar numbers inside circles** - White semibold text centered in circles (ZStack layout)
 
-**Commit**: [pending] - Issue #59: Phase 4 - Adherence View Below Fold UI improvements
+**Commit**: `80f67ce` - Issue #59: Phase 4 - Adherence View Below Fold UI improvements
+
+---
+
+### ✅ Phase 5 Implementation Status (Completed 2025-09-29)
+
+- [x] **Therapeutic range visualization** - Added shaded green band showing optimal concentration zone (RectangleMark with 15% opacity)
+- [x] **Y-axis units** - Added "ng/mL" units to all concentration values with proper formatting (%.1f)
+- [x] **Time period visual feedback** - Selected button now shows primary color background, white text, semibold font
+- [x] **Unselected button borders** - Added subtle borders to non-selected time period buttons for better UX
+- [x] **Multiple dose markers** - Increased marker size to 120 (more prominent), kept circular shape for all markers
+- [x] **Time period button text truncation** - Changed to short labels: "7d", "30d", "90d", "1y" to prevent truncation
+- [x] **Accessibility labels** - Added full text as accessibility labels for screen readers
+
+**Commit**: [pending] - Issue #59: Phase 5 - Concentration View UI improvements
 
 ---
 
@@ -205,6 +219,7 @@ This document captures baseline UI/UX analysis and gathers feedback for analytic
   - Y-axis values provide clear reference points (0.2, 0.4, 0.6)
 
   AREAS FOR IMPROVEMENT:
+  - Generally chart should look consistant with the charts in the adherence view : .claude/epics/analytics/updates/59/design-review/F5E561F9-CAD6-4EA7-926B-DE6035B1AE98.png
   - Only one dose marker visible - consider showing multiple historical doses
   - Users mostly want to understand their current concentration (today) and how it will degrade over time; ideally we have some type of weekly horizontal view where users can see day over day concentrations, understanding the correlation between concentration and appetite as well as side effects like nausea.
   - No legend explaining what the line or markers represent (needs "Concentration" label)

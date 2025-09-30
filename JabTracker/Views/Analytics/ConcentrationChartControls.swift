@@ -39,21 +39,42 @@ struct ConcentrationChartControls: View {
         HStack(spacing: 8) {
             ForEach([TimeRange.lastWeek, .lastMonth, .lastQuarter, .lastYear], id: \.displayName) {
                 timeRange in
-                Button(timeRange.displayName) {
+                let isSelected = configuration.timeRange == timeRange
+                Button(shortLabel(for: timeRange)) {
                     configuration = configuration.withTimeRange(timeRange)
                 }
                 .font(.caption)
-                .foregroundColor(configuration.timeRange == timeRange ? .primary : .secondary)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .foregroundColor(isSelected ? .white : .secondary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(
-                            configuration.timeRange == timeRange
-                                ? Color.secondary.opacity(0.2) : Color.clear)
+                        .fill(isSelected ? DesignTokens.Colors.primary : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.secondary.opacity(0.3), lineWidth: isSelected ? 0 : 1)
                 )
                 .accessibilityIdentifier("time-period-\(timeRange.displayName.lowercased())")
+                .accessibilityLabel(timeRange.displayName)
             }
+        }
+    }
+
+    /// Returns shortened label for time range to prevent truncation
+    private func shortLabel(for timeRange: TimeRange) -> String {
+        switch timeRange {
+        case .lastWeek:
+            return "7d"
+        case .lastMonth:
+            return "30d"
+        case .lastQuarter:
+            return "90d"
+        case .lastYear:
+            return "1y"
+        default:
+            return timeRange.displayName
         }
     }
 

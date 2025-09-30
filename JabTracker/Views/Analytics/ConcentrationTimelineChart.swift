@@ -82,12 +82,25 @@ struct ConcentrationTimelineChart: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             if showsEmptyState {
                 emptyChartView()
             } else {
-                chartHeaderView()
+                // Chart Header
+                HStack {
+                    Text("Concentration Timeline")
+                        .font(DesignTokens.Typography.headline)
+                        .foregroundColor(.primary)
+
+                    Spacer()
+
+                    Text(configuration.timeRange.displayName)
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundColor(.secondary)
+                }
+
                 concentrationChartView()
+
                 ConcentrationChartControls(
                     configuration: $chartState.currentConfiguration,
                     showingExportSheet: $chartState.showingExportSheet,
@@ -95,7 +108,11 @@ struct ConcentrationTimelineChart: View {
                 )
             }
         }
-        .background(configuration.theme.backgroundColor)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(DesignTokens.Colors.secondaryBackground)
+        )
         .sheet(isPresented: $chartState.showingExportSheet) {
             NavigationStack {
                 ChartExportView(dataset: dataset) { result in
@@ -154,66 +171,72 @@ struct ConcentrationTimelineChart: View {
     @ViewBuilder
     private var chartContent: some View {
         Chart {
+            // Therapeutic range band (drawn first, behind everything)
+            if case .therapeuticWindow(let minConc, let maxConc, _) = configuration.concentrationRange {
+                RectangleMark(
+                    yStart: .value("Min", minConc),
+                    yEnd: .value("Max", maxConc)
+                )
+                .foregroundStyle(DesignTokens.Colors.success.opacity(0.15))
+                .accessibilityLabel("Therapeutic range")
+                .accessibilityValue(
+                    """
+                    Optimal concentration between \(String(format: "%.1f", minConc)) \
+                    and \(String(format: "%.1f", maxConc))
+                    """
+                )
+            }
+
             // Concentration line series
             ForEach(processedConcentrationPoints) { point in
                 LineMark(
                     x: .value("Time", point.date),
                     y: .value("Concentration", point.concentration)
                 )
-                .foregroundStyle(configuration.theme.primaryColor)
-                .lineStyle(StrokeStyle(lineWidth: 2))
-                .interpolationMethod(.cardinal)
+                .foregroundStyle(DesignTokens.Colors.primary)
+                .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
             }
 
-            // Dose marker series
+            // Dose markers - dots on the concentration line at dose times
             ForEach(processedDoseMarkers) { marker in
-                PointMark(
-                    x: .value("Time", marker.date),
-                    y: .value("Dose", 0)  // Position at bottom of chart
-                )
-                .foregroundStyle(marker.markerStyle.color)
-                .symbolSize(marker.markerStyle.size * marker.markerStyle.size)
-                .accessibilityLabel("Dose marker")
-                .accessibilityValue("Dose: \(marker.amount) at \(marker.date.formatted())")
+                // Find the concentration at this dose time
+                if let concentrationAtDose = processedConcentrationPoints.first(where: {
+                    abs($0.date.timeIntervalSince(marker.date)) < 1800  // Within 30 min
+                }) {
+                    PointMark(
+                        x: .value("Time", concentrationAtDose.date),
+                        y: .value("Concentration", concentrationAtDose.concentration)
+                    )
+                    .foregroundStyle(DesignTokens.Colors.success)
+                    .symbolSize(100)
+                    .symbol(.circle)
+                    .accessibilityLabel("Dose administered")
+                    .accessibilityValue(
+                        "Dose: \(String(format: "%.1f", marker.amount)) mg at \(marker.date.formatted())")
+                }
             }
         }
-        .frame(height: 300)
-        .chartBackground { proxy in
-            chartGridBackground(proxy: proxy)
-        }
+        .frame(height: 200)
         .chartXAxis {
             AxisMarks(values: .automatic) { _ in
-                AxisValueLabel()
+                AxisValueLabel(format: .dateTime.month(.narrow).day())
                     .font(.caption)
-                if configuration.gridSettings.showVerticalGrid {
-                    AxisGridLine(
-                        stroke: StrokeStyle(
-                            lineWidth: 1,
-                            dash: configuration.gridSettings.gridLineStyle == .dashed ? [3, 3] : []
-                        )
-                    )
-                    .foregroundStyle(
-                        configuration.gridSettings.gridColor.opacity(configuration.gridSettings.gridOpacity))
-                }
+                AxisTick()
             }
         }
         .chartYAxis {
-            AxisMarks(values: .automatic) { _ in
-                AxisValueLabel()
-                    .font(.caption)
-                if configuration.gridSettings.showHorizontalGrid {
-                    AxisGridLine(
-                        stroke: StrokeStyle(
-                            lineWidth: 1,
-                            dash: configuration.gridSettings.gridLineStyle == .dashed ? [3, 3] : []
-                        )
-                    )
-                    .foregroundStyle(
-                        configuration.gridSettings.gridColor.opacity(configuration.gridSettings.gridOpacity))
+            AxisMarks(position: .leading, values: .automatic) { value in
+                AxisValueLabel {
+                    if let concentration = value.as(Double.self) {
+                        Text("\(String(format: "%.1f", concentration))")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
+                AxisGridLine()
+                AxisTick()
             }
         }
-        .padding(.horizontal)
     }
 
     /// Grid background for the chart
