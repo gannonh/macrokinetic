@@ -19,6 +19,149 @@ created: 2025-01-22T04:47:23Z
 - UI Test Files: 25 files found
 - Naming Pattern: *Tests.swift
 
+## Test Data Seeding
+
+### Overview
+The `TestDataSeeding` utility provides comprehensive data generation for both unit and E2E tests, with support for small to extra-large datasets (up to 2 years of historical data).
+
+### Quick Start
+
+```swift
+// Unit tests - Use TestDataSeeding
+@Test("My test with seeded data")
+@MainActor
+func myTest() throws {
+    let container = try TestDataSeeding.createTestContainer()
+    let context = container.mainContext
+
+    // Seed data with preset config
+    let result = try TestDataSeeding.seedData(
+        into: context,
+        config: .medium  // 30 days, ~4-5 doses, 95% adherence
+    )
+
+    // Use seeded data
+    #expect(result.doses.count > 0)
+    #expect(result.adherenceRate >= 0.90)
+}
+
+// E2E tests - Use TestUtilities for small datasets
+func testWithSeededData() {
+    let app = TestUtilities.launchAppWithTestMode()
+
+    // Create test data via UI (for E2E validation)
+    TestUtilities.createHistoricalChartData(in: app, count: 5)
+}
+
+// E2E performance tests - Use createLargeDataset for stress testing
+func testPerformanceWithLargeDataset() {
+    let app = TestUtilities.launchAppWithTestMode()
+
+    // Create large dataset (WARNING: slow operation)
+    let count = TestUtilities.createPerformanceDataset(
+        in: app,
+        scenario: .large  // 365 days = ~52 doses
+    )
+
+    #expect(count >= 50)
+}
+```
+
+### Preset Configurations
+
+```swift
+// Small: 7 days, 100% adherence, no variability (quick tests)
+let result = try TestDataSeeding.seedData(into: context, config: .small)
+
+// Medium: 30 days, 95% adherence, timing variability (standard tests)
+let result = try TestDataSeeding.seedData(into: context, config: .medium)
+
+// Large: 365 days, 92% adherence, realistic patterns (performance tests)
+let result = try TestDataSeeding.seedData(into: context, config: .large)
+
+// Extra Large: 730 days, 90% adherence (stress tests)
+let result = try TestDataSeeding.seedData(into: context, config: .extraLarge)
+```
+
+### Custom Configuration
+
+```swift
+let customConfig = TestDataSeedingConfig(
+    daysOfHistory: 90,
+    medication: .tirzepatide,
+    brandName: "Mounjaro",
+    doseAmount: 5.0,
+    injectionSites: ["Abdomen", "Thigh"],
+    adherenceRate: 1.0,
+    addTimingVariability: false,
+    includeSkippedDoses: false
+)
+
+let result = try TestDataSeeding.seedData(into: context, config: customConfig)
+```
+
+### Quick Helpers
+
+```swift
+// Create individual entities
+let user = TestDataSeeding.createTestUser()
+let profile = TestDataSeeding.createTestMedicationProfile()
+let doses = TestDataSeeding.createTestDoses(
+    count: 10,
+    amount: 0.5,
+    daysApart: 7,
+    profile: profile
+)
+```
+
+### Test Data Result Structure
+
+```swift
+struct TestDataSeedingResult {
+    let user: User
+    let medicationProfile: MedicationProfile
+    let doses: [Dose]                // Successfully taken doses
+    let skippedDoses: [Dose]         // Missed/skipped doses
+    let expectedDoseCount: Int       // Total scheduled doses
+    let actualDoseCount: Int         // Actually taken doses
+    let adherenceRate: Double        // Percentage adherence (0.0-1.0)
+}
+```
+
+### E2E Performance Testing
+
+```swift
+// For E2E tests that need large datasets
+func testChartPerformanceWith1YearData() {
+    let app = TestUtilities.launchAppWithTestMode()
+
+    // Create 52 doses (1 year of weekly medication)
+    let count = TestUtilities.createPerformanceDataset(
+        in: app,
+        scenario: .large
+    )
+
+    // Test chart rendering performance
+    TestUtilities.navigateToTab(app, tabName: "Analytics")
+    // ... performance assertions
+}
+```
+
+### Performance Notes
+
+- **Small datasets** (<10 doses): Near-instant generation
+- **Medium datasets** (30 days): <50ms generation time
+- **Large datasets** (365 days): <200ms generation time
+- **E2E large datasets** (50+ doses): 5-10 minutes via UI (use sparingly)
+
+### Important Patterns
+
+1. **Always use test containers** for unit tests to avoid CloudKit conflicts
+2. **Set relationships properly** - use individual setters, not array assignment
+3. **Verify adherence rates** - randomness may cause slight variations from config
+4. **Use appropriate dataset sizes** - larger isn't always better for testing
+5. **E2E seeding is slow** - prefer unit tests with seeded data for performance tests
+
 ## ⚠️ CRITICAL TESTING ANTI-PATTERNS - AVOID AT ALL COSTS
 
 ### SwiftData Relationship Crashes (MOST COMMON BUG)
