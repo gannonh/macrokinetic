@@ -32,9 +32,9 @@ struct ChartDataModelTests {
         let referenceDate = Date()
         let calendar = Calendar.current
 
-        // Test automatic range (7 days)
+        // Test automatic range (30 days)
         let automaticRange = TimeRange.automatic.dateRange(relativeTo: referenceDate)
-        let expectedStart = calendar.date(byAdding: .day, value: -7, to: referenceDate) ?? referenceDate
+        let expectedStart = calendar.date(byAdding: .day, value: -30, to: referenceDate) ?? referenceDate
         #expect(abs(automaticRange.start.timeIntervalSince(expectedStart)) < 1.0)
         #expect(abs(automaticRange.end.timeIntervalSince(referenceDate)) < 1.0)
 

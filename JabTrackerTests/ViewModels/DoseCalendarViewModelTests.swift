@@ -270,26 +270,31 @@ struct DoseCalendarViewModelTests {
 
     @Test("ViewModel retrieves doses for specific date correctly")
     func dosesForSpecificDate() throws {
-        // Given: Doses on specific dates
+        // Given: Doses on specific dates within the same month
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+        // Use mid-month dates to avoid month boundary issues
+        let referenceDate = calendar.date(from: DateComponents(year: 2024, month: 6, day: 15))!
+        let firstDay = calendar.startOfDay(for: referenceDate)
+        let secondDay = calendar.date(byAdding: .day, value: 1, to: firstDay)!
 
-        let todayDose1 = self.createTestDose(timestamp: today, amount: 1.0)
-        let todayDose2 = self.createTestDose(timestamp: today.addingTimeInterval(3600), amount: 1.5)  // Same day, different time
-        let tomorrowDose = self.createTestDose(timestamp: tomorrow, amount: 2.0)
+        // Set viewModel to the month containing our test dates
+        self.viewModel.navigateToMonth(firstDay)
 
-        self.viewModel.setDoses([todayDose1, todayDose2, tomorrowDose])
+        let firstDayDose1 = self.createTestDose(timestamp: firstDay, amount: 1.0)
+        let firstDayDose2 = self.createTestDose(timestamp: firstDay.addingTimeInterval(3600), amount: 1.5)  // Same day, different time
+        let secondDayDose = self.createTestDose(timestamp: secondDay, amount: 2.0)
+
+        self.viewModel.setDoses([firstDayDose1, firstDayDose2, secondDayDose])
 
         // When: Getting doses for specific dates
-        let todayDoses = self.viewModel.doses(for: today)
-        let tomorrowDoses = self.viewModel.doses(for: tomorrow)
+        let firstDayDoses = self.viewModel.doses(for: firstDay)
+        let secondDayDoses = self.viewModel.doses(for: secondDay)
         let emptyDateDoses = self.viewModel.doses(
-            for: calendar.date(byAdding: .day, value: 5, to: today)!)
+            for: calendar.date(byAdding: .day, value: 5, to: firstDay)!)
 
         // Then: Correct doses are returned
-        #expect(todayDoses.count == 2, "Should return 2 doses for today")
-        #expect(tomorrowDoses.count == 1, "Should return 1 dose for tomorrow")
+        #expect(firstDayDoses.count == 2, "Should return 2 doses for first day")
+        #expect(secondDayDoses.count == 1, "Should return 1 dose for second day")
         #expect(emptyDateDoses.isEmpty, "Should return empty array for date with no doses")
     }
 
