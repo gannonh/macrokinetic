@@ -152,6 +152,7 @@
 		9C2F8196C57A8273FC2911FD /* Medication+Pharmacokinetics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C84C7D36DA80599EBECFF5 /* Medication+Pharmacokinetics.swift */; };
 		9D2587AF3DB6CC19C1FD2D17 /* PricingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103BC0C5A928D9F16AE014D8 /* PricingCalculator.swift */; };
 		9D4CC78848561E2BE543B2CE /* ChartDataProcessor+Interpolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EDD54B293AC83AAD572820 /* ChartDataProcessor+Interpolation.swift */; };
+		9E1018B257D629B301FA9AEE /* DoseDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211434EFA04C1DC2C79C5ABA /* DoseDataService.swift */; };
 		9E27575CFDF53DA45781E258 /* InitialDoseSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD8766844D8A02928C9250E8 /* InitialDoseSetupView.swift */; };
 		9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4068B3EB73128183393A2D3B /* ButtonComponents.swift */; };
 		9F4CF2202CE772C0CC88D09A /* TimePeriodSelectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17FD9E88E939C154DAA0108 /* TimePeriodSelectorTests.swift */; };
@@ -301,6 +302,7 @@
 		1E94E4AE5BAB59EDF35956F6 /* OnboardingViewModelCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelCoverageTests.swift; sourceTree = "<group>"; };
 		1F7CF957925F9C87FDA1339E /* DoseEntryPhotoSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseEntryPhotoSection.swift; sourceTree = "<group>"; };
 		2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationUITests.swift; sourceTree = "<group>"; };
+		211434EFA04C1DC2C79C5ABA /* DoseDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseDataService.swift; sourceTree = "<group>"; };
 		2371FC6C0CDFC9C1317A4BC6 /* ChartDataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataModelTests.swift; sourceTree = "<group>"; };
 		237634B95610580901398F2F /* ReconstitutionCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReconstitutionCalculator.swift; sourceTree = "<group>"; };
 		240B04AE5BF1245C25DDF8DE /* ConcentrationTimelineChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationTimelineChart.swift; sourceTree = "<group>"; };
@@ -642,6 +644,7 @@
 				0717C0520765741FCE7EA2ED /* ChartDataProcessor+Filtering.swift */,
 				C7EDD54B293AC83AAD572820 /* ChartDataProcessor+Interpolation.swift */,
 				12E043B51BE1DCC3D80AAF3D /* ChartDatasetService.swift */,
+				211434EFA04C1DC2C79C5ABA /* DoseDataService.swift */,
 				C6B6CDF3795E3B15F9AB2AA1 /* DoseSearchService.swift */,
 				B586AE6F94F894FB215E2710 /* DoseService.swift */,
 				572438AA8526D5758975FA16 /* MedicationManager.swift */,
@@ -1395,6 +1398,7 @@
 				E4E2E302D5AC11A67F4A584B /* Dose.swift in Sources */,
 				1E0D912C973F906C52EF582F /* DoseCalendarView.swift in Sources */,
 				BA31440BC731D9DCE897FAE2 /* DoseCalendarViewModel.swift in Sources */,
+				9E1018B257D629B301FA9AEE /* DoseDataService.swift in Sources */,
 				333B4ED445E7A1BA121181A3 /* DoseDayDetailView.swift in Sources */,
 				2CBFEBDCA8E027FBC56CC429 /* DoseDefaults.swift in Sources */,
 				9BB32F07FC25E272BEE7E011 /* DoseEntryFormSections.swift in Sources */,
