@@ -64,8 +64,13 @@ final class DoseDataService {
         to endDate: Date,
         context: ModelContext
     ) -> [Dose] {
+        let userId = user.id
         let predicate = #Predicate<Dose> { dose in
-            dose.user?.id == user.id && dose.timestamp >= startDate && dose.timestamp <= endDate
+            if let doseUser = dose.user {
+                doseUser.id == userId && dose.timestamp >= startDate && dose.timestamp <= endDate
+            } else {
+                false
+            }
         }
 
         let descriptor = FetchDescriptor(
@@ -85,8 +90,13 @@ final class DoseDataService {
         for user: User,
         context: ModelContext
     ) -> [Dose] {
+        let userId = user.id
         let predicate = #Predicate<Dose> { dose in
-            dose.user?.id == user.id
+            if let doseUser = dose.user {
+                doseUser.id == userId
+            } else {
+                false
+            }
         }
 
         let descriptor = FetchDescriptor(
@@ -109,8 +119,13 @@ final class DoseDataService {
         limit: Int,
         context: ModelContext
     ) -> [Dose] {
+        let userId = user.id
         let predicate = #Predicate<Dose> { dose in
-            dose.user?.id == user.id
+            if let doseUser = dose.user {
+                doseUser.id == userId
+            } else {
+                false
+            }
         }
 
         var descriptor = FetchDescriptor(
@@ -138,8 +153,15 @@ final class DoseDataService {
             return fetchAllDoses(for: profile, context: context)
         }
 
+        let profileId = profile.id
+        let cutoffDate = cutoff
+        let endDate = Date()
         let predicate = #Predicate<Dose> { dose in
-            dose.medication?.id == profile.id && dose.timestamp >= cutoff && dose.timestamp <= Date()
+            if let doseMedication = dose.medication {
+                doseMedication.id == profileId && dose.timestamp >= cutoffDate && dose.timestamp <= endDate
+            } else {
+                false
+            }
         }
 
         let descriptor = FetchDescriptor(
@@ -159,8 +181,13 @@ final class DoseDataService {
         for profile: MedicationProfile,
         context: ModelContext
     ) -> [Dose] {
+        let profileId = profile.id
         let predicate = #Predicate<Dose> { dose in
-            dose.medication?.id == profile.id
+            if let doseMedication = dose.medication {
+                doseMedication.id == profileId
+            } else {
+                false
+            }
         }
 
         let descriptor = FetchDescriptor(
