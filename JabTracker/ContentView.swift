@@ -209,11 +209,17 @@ struct ConcentrationList: View {
 
 struct AnalyticsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var users: [User]
+    @State private var doseDataService = DoseDataService()
     @State private var chartDataProcessor = ChartDataProcessor()
     @State private var analyticsService = AnalyticsService()
     @State private var chartDatasetService: ChartDatasetService
     @State private var selectedAnalyticsType: AnalyticsType = .concentration
+    @State private var selectedTimePeriod: ChartDataProcessor.TimePeriod = .last30Days
+
+    // Manually fetched data (not @Query to avoid eager loading)
+    @State private var currentUser: User?
+    @State private var medicationProfiles: [MedicationProfile] = []
+    @State private var isLoadingData = true
 
     enum AnalyticsType: String, CaseIterable {
         case concentration = "Concentration"
@@ -237,18 +243,28 @@ struct AnalyticsView: View {
                 .padding()
                 .accessibilityIdentifier("analytics-type-picker")
 
+                // Time Period Selector (for concentration view)
+                if selectedAnalyticsType == .concentration {
+                    TimePeriodSelector(selectedPeriod: $selectedTimePeriod)
+                        .padding(.horizontal)
+                        .onChange(of: selectedTimePeriod) { _, _ in
+                            // Refresh data when time period changes
+                            loadData()
+                        }
+                }
+
                 // Content based on selection
                 ScrollView {
                     LazyVStack(spacing: 16) {
-                        if let currentUser = users.first,
-                            let medicationProfiles = currentUser.medicationProfiles,
-                            !medicationProfiles.isEmpty
-                        {
+                        if isLoadingData {
+                            ProgressView("Loading analytics...")
+                                .padding()
+                        } else if let user = currentUser, !medicationProfiles.isEmpty {
                             switch selectedAnalyticsType {
                             case .concentration:
-                                concentrationChartSection(for: currentUser, profiles: medicationProfiles)
+                                concentrationChartSection(for: user)
                             case .adherence:
-                                adherenceInsightsSection(for: currentUser)
+                                adherenceInsightsSection(for: user)
                             }
                         } else {
                             noDataSection
@@ -259,15 +275,48 @@ struct AnalyticsView: View {
                 .accessibilityIdentifier("analytics-scroll-view")
             }
             .navigationTitle("Analytics")
+            .task {
+                // Load data when view appears
+                loadData()
+            }
         }
+    }
+
+    // MARK: - Data Loading
+
+    /// Manually fetch user and medication profiles without eager-loading all doses
+    private func loadData() {
+        isLoadingData = true
+        defer { isLoadingData = false }
+
+        // Fetch user without relationships
+        let userDescriptor = FetchDescriptor<User>()
+        guard let user = try? modelContext.fetch(userDescriptor).first else {
+            currentUser = nil
+            medicationProfiles = []
+            return
+        }
+        currentUser = user
+
+        // Fetch medication profiles for this user (without doses relationship)
+        let userId = user.id
+        let profilePredicate = #Predicate<MedicationProfile> { profile in
+            if let profileUser = profile.user {
+                profileUser.id == userId
+            } else {
+                false
+            }
+        }
+        let profileDescriptor = FetchDescriptor(predicate: profilePredicate)
+        medicationProfiles = (try? modelContext.fetch(profileDescriptor)) ?? []
     }
 
     // MARK: - Chart Sections
 
     @ViewBuilder
-    private func concentrationChartSection(for user: User, profiles: [MedicationProfile]) -> some View {
-        // Generate chart dataset from user data
-        if let chartDataset = generateChartDataset(for: user, profiles: profiles) {
+    private func concentrationChartSection(for user: User) -> some View {
+        // Generate chart dataset using filtered doses from DoseDataService
+        if let chartDataset = generateChartDataset(for: user) {
             ConcentrationTimelineChart(dataset: chartDataset)
         } else {
             chartLoadingView()
@@ -415,12 +464,36 @@ struct AnalyticsView: View {
 
     // MARK: - Data Generation
 
-    /// Generates chart dataset from user medication data
-    /// Delegates to ChartDatasetService for safe handling of multiple profiles
-    private func generateChartDataset(for user: User, profiles: [MedicationProfile])
-        -> ConcentrationChartDataset?
-    {
-        chartDatasetService.generateChartDataset(for: user, profiles: profiles)
+    /// Generates chart dataset using DoseDataService for efficient dose fetching
+    /// Only fetches doses within the selected time period to avoid loading all data
+    private func generateChartDataset(for user: User) -> ConcentrationChartDataset? {
+        // Build profiles with filtered doses from DoseDataService
+        var profilesWithDoses: [MedicationProfile] = []
+
+        for profile in medicationProfiles {
+            // Fetch doses for this profile within the selected time period
+            let doses = doseDataService.fetchDoses(
+                for: profile,
+                within: selectedTimePeriod,
+                context: modelContext
+            )
+
+            // Skip profiles with no doses in the selected period
+            guard !doses.isEmpty else { continue }
+
+            // Temporarily assign filtered doses to profile for chart generation
+            // This is safe because we're not saving the context
+            profile.doses = doses
+            profilesWithDoses.append(profile)
+        }
+
+        guard !profilesWithDoses.isEmpty else { return nil }
+
+        // Generate chart dataset using profiles with filtered doses
+        return chartDatasetService.generateChartDataset(
+            for: user,
+            profiles: profilesWithDoses
+        )
     }
 }
 
