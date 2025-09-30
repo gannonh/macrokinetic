@@ -1,3 +1,35 @@
+Great! We've successfully completed Phases 3-5 of the analytics orchestration polish. Ready to move into Phase 6: State & Performance Optimization.
+
+  Phase 6 has 4 distinct optimization tasks:
+
+  Phase 6 Tasks:
+
+  1. Profile chart rendering performance
+    - Test with 1+ year datasets (365+ doses)
+    - Identify bottlenecks in chart rendering
+    - Measure baseline performance metrics
+  2. Optimize data loading and caching
+    - Implement chart data caching strategy
+    - Reduce redundant calculations
+    - Optimize SwiftData queries
+  3. Improve perceived performance
+    - Add skeleton screens for loading states
+    - Implement optimistic UI updates
+    - Ensure smooth animations throughout
+  4. Validate performance against baselines
+    - Target: <500ms tab switching
+    - Target: <100ms chart interactions
+    - Document performance improvements
+
+  Would you like me to:
+  - A) Proceed systematically through all 4 tasks starting with performance profiling?
+  - B) Focus on a specific task first (e.g., start with profiling, then we'll decide next steps)?
+  - C) Create a detailed implementation plan for Phase 6 before starting?
+
+  Given this is performance work, I'll likely need to create test datasets with 365+ doses to properly profile the system. How would you like to approach
+  this?
+---
+
 ⏺ Based on the design review document, we've completed:
   - ✅ Phase 3: Adherence View Above Fold improvements
   - ✅ Phase 4: Adherence View Below Fold improvements

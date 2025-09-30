@@ -1,3 +1,11 @@
-The issue is a little out of date. as several items mentioned have been completed in prior phases (eg, Add segmented control or tab navigation within analytics view). Please reassess the issue and update the description and acceptance criteria to focus on polishing the user experience and orchestration of all analytics components within the existing AnalyticsView. The components themselves have been implemented in prior issues (#56, #57, #58). The main focus now is on ensuring smooth navigation between sections, unified state management, performance optimization, and final polish to ensure a seamless user experience.
+I believe the answer is "yes" to most of those questions. Situation: 
 
-Muich of the work should entail carefully analysis of each view from a UX/UI design point of view, including fit and finish, transitions, loading states, error handling, and accessibility. The orchestration layer should ensure that all components work together harmoniously, with a focus on performance optimization for smooth transitions between large datasets.
+While we currently support adding medicine profiles and logging doses, we currently lack any type of dose scheduling system. I imagine this feature would be:
+-  integrated into the onboarding process: @docs/screenshots/Simulator Screenshot - iPhone 15 - 2025-09-30 at 09.39.47.png
+-  integrated into medicine profile management (CRUD): @docs/screenshots/Simulator Screenshot - iPhone 15 - 2025-09-30 at 09.40.32.png
+
+we can also draw inspiration from this dose scheduling ui: @docs/screenshots/Screenshot 2025-09-30 at 9.51.20 AM.png
+
+In particular I like how you can schedule your weekly dose amount, such as 2mg over multiple offset injections, such as 3.5 days (twice a week). This is a common pattern for GPL-1 agonist peptides to smooth concentration curves, which helps to maintain steady benefits and reduce side effects.
+
+Based on this input, please take a first pass at the prd based on your recommendations.
