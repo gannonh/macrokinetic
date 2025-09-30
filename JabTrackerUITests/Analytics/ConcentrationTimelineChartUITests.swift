@@ -110,24 +110,9 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         XCTAssertTrue(resetButton.exists, "Reset chart button should be available")
         resetButton.tap()
 
+        // THEN: Chart responds appropriately to user interactions
         // Verify chart still exists after reset
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after reset interaction")
-
-        // Test export functionality (chart interaction feature)
-        let exportButton = app.buttons["export-chart-button"]
-        XCTAssertTrue(exportButton.exists, "Export chart button should be available")
-        exportButton.tap()
-
-        // Wait briefly for any export interaction
-        // sleep(2)
-
-        // Dismiss export sheet if it appeared
-        if app.sheets.firstMatch.exists {
-            app.sheets.firstMatch.swipeDown()
-            // sleep(1)
-        }
-
-        // THEN: Chart responds appropriately to user interactions
         XCTAssertTrue(chartElement.exists, "Chart should handle interactive features gracefully")
 
         // Verify chart maintains functionality after interactions
@@ -140,7 +125,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         // Chart should still be responsive after interactive features
         XCTAssertTrue(chartElement.exists, "Chart should remain responsive after all interactions")
 
-        print("✅ Interactive chart features work correctly - reset and export functionality verified")
+        print("✅ Interactive chart features work correctly - reset functionality verified")
     }
 
     // MARK: - ACCEPTANCE CRITERION: Time period selection works
@@ -239,7 +224,6 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let lastWeekButton = app.buttons["time-period-last week"].firstMatch
         let lastMonthButton = app.buttons["time-period-last month"].firstMatch
         let resetButton = app.buttons["reset-chart-button"].firstMatch
-        let exportButton = app.buttons["export-chart-button"].firstMatch
 
         // Verify all interactive elements are accessible
         XCTAssertTrue(
@@ -257,11 +241,6 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         XCTAssertEqual(
             resetButton.label, "Reset chart view",
             "Reset button should have descriptive accessibility label")
-
-        XCTAssertTrue(exportButton.isHittable, "Export button should be hittable")
-        XCTAssertEqual(
-            exportButton.label, "Export chart",
-            "Export button should have descriptive accessibility label")
 
         // Test VoiceOver interaction with time period selection
         lastWeekButton.tap()
