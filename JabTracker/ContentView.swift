@@ -221,6 +221,9 @@ struct AnalyticsView: View {
     @State private var medicationProfiles: [MedicationProfile] = []
     @State private var isLoadingData = true
 
+    // Cached chart dataset (computed once, not during view rendering)
+    @State private var chartDataset: ConcentrationChartDataset?
+
     enum AnalyticsType: String, CaseIterable {
         case concentration = "Concentration"
         case adherence = "Adherence"
@@ -248,8 +251,8 @@ struct AnalyticsView: View {
                     TimePeriodSelector(selectedPeriod: $selectedTimePeriod)
                         .padding(.horizontal)
                         .onChange(of: selectedTimePeriod) { _, _ in
-                            // Refresh data when time period changes
-                            loadData()
+                            // Regenerate chart dataset when time period changes
+                            refreshChartDataset()
                         }
                 }
 
@@ -278,6 +281,7 @@ struct AnalyticsView: View {
             .task {
                 // Load data when view appears
                 loadData()
+                refreshChartDataset()
             }
         }
     }
@@ -311,13 +315,22 @@ struct AnalyticsView: View {
         medicationProfiles = (try? modelContext.fetch(profileDescriptor)) ?? []
     }
 
+    /// Regenerate chart dataset (called once on load and when time period changes)
+    private func refreshChartDataset() {
+        guard let user = currentUser else {
+            chartDataset = nil
+            return
+        }
+        chartDataset = generateChartDataset(for: user)
+    }
+
     // MARK: - Chart Sections
 
     @ViewBuilder
     private func concentrationChartSection(for user: User) -> some View {
-        // Generate chart dataset using filtered doses from DoseDataService
-        if let chartDataset = generateChartDataset(for: user) {
-            ConcentrationTimelineChart(dataset: chartDataset)
+        // Use cached chart dataset (generated in .task and .onChange, not during view rendering)
+        if let dataset = chartDataset {
+            ConcentrationTimelineChart(dataset: dataset)
         } else {
             chartLoadingView()
         }
