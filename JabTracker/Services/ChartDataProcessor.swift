@@ -5,6 +5,7 @@
 // swiftlint:disable file_length
 
 import Foundation
+import OSLog
 import Observation
 import SwiftData
 
@@ -13,6 +14,10 @@ import SwiftData
 @Observable
 // swiftlint:disable:next type_body_length
 final class ChartDataProcessor {
+
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
+        category: "ChartDataProcessor")
 
     // MARK: - Initialization
 
@@ -455,7 +460,15 @@ final class ChartDataProcessor {
         timeRange: ClosedRange<Date>,
         intervalHours: Double = 0.5
     ) -> [ConcentrationPoint] {
+        Self.logger.debug(
+            """
+            🧮 generateConcentrationTimeline(): explicit=\(doses.count, privacy: .public), \
+            relationship=\(medicationProfile.doses?.count ?? 0, privacy: .public)
+            """
+        )
+
         guard let medication = medicationProfile.medication else {
+            Self.logger.error("❌ No medication for profile '\(medicationProfile.genericName, privacy: .public)'")
             return []
         }
 
@@ -468,6 +481,8 @@ final class ChartDataProcessor {
             .filter { !$0.skipped && $0.timestamp >= timeRange.lowerBound && $0.timestamp <= timeRange.upperBound }
             .map { $0.timestamp }
             .sorted()
+
+        Self.logger.debug("  📊 Using \(doseTimestamps.count, privacy: .public) doses in time range")
 
         var currentTime = timeRange.lowerBound
         let endTime = timeRange.upperBound
@@ -491,6 +506,7 @@ final class ChartDataProcessor {
             currentTime = currentTime.addingTimeInterval(actualInterval)
         }
 
+        Self.logger.info("✅ Generated \(concentrationPoints.count, privacy: .public) points")
         return concentrationPoints
     }
 

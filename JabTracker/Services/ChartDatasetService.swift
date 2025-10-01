@@ -7,11 +7,16 @@
 //
 
 import Foundation
+import OSLog
 
 /// Service responsible for generating chart datasets from user medication data
 /// Provides safe handling of multiple profiles, invalid data filtering, and proper time range calculation
 @Observable
 class ChartDatasetService {
+
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
+        category: "ChartDatasetService")
 
     private let chartDataProcessor: ChartDataProcessor
 
@@ -132,19 +137,36 @@ class ChartDatasetService {
         _ validProfiles: [(MedicationProfile, [Dose])],
         timeRange: ClosedRange<Date>
     ) -> ([ConcentrationCurve], [AdvancedDoseMarker]) {
+        Self.logger.debug("🔧 processProfiles() called with \(validProfiles.count, privacy: .public) profiles")
         var concentrationCurves: [ConcentrationCurve] = []
         var allMarkers: [AdvancedDoseMarker] = []
 
         for (profile, doses) in validProfiles {
+            Self.logger.debug(
+                """
+                  🔍 Processing '\(profile.genericName, privacy: .public)': tuple=\(doses.count, privacy: .public), \
+                relationship=\(profile.doses?.count ?? 0, privacy: .public)
+                """
+            )
+
             let validMarkers = createValidDoseMarkers(from: doses)
             allMarkers.append(contentsOf: validMarkers)
+            Self.logger.debug(
+                "  ✅ Created \(validMarkers.count, privacy: .public) markers from \(doses.count, privacy: .public)"
+            )
 
             // Use doses from tuple instead of profile.doses relationship
             if let curve = createConcentrationCurve(for: profile, doses: doses, timeRange: timeRange) {
                 concentrationCurves.append(curve)
+                Self.logger.debug("  ✅ Generated curve with \(curve.points.count, privacy: .public) points")
+            } else {
+                Self.logger.warning("  ⚠️  Failed to generate curve for '\(profile.genericName, privacy: .public)'")
             }
         }
 
+        Self.logger.info(
+            "✅ Processed \(concentrationCurves.count, privacy: .public) curves, \(allMarkers.count, privacy: .public)"
+        )
         return (concentrationCurves, allMarkers)
     }
 
