@@ -182,7 +182,7 @@ enum ChartFormatting {
             formatter.dateFormat = "E"
         case .lastMonth, .lastQuarter:
             formatter.dateFormat = "MMM d"
-        case .lastYear:
+        case .lastYear, .all:
             formatter.dateFormat = "MMM"
         case .automatic, .custom:
             formatter.dateStyle = .short
