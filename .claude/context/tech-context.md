@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-27T14:51:11Z
-version: 2.1
+last_updated: 2025-10-01T20:00:09Z
+version: 2.2
 author: Claude Code PM System
 ---
 
@@ -277,7 +277,25 @@ author: Claude Code PM System
 - **Medical Calculation Validation**: Unit tests must validate medical algorithm accuracy, not work around bad logic
 - **Weekly vs Daily Dosing Patterns**: Algorithm design must account for different medication schedules
 
+## Analytics UI/UX Integration (Issue #59)
+
+### iOS HIG Compliance Patterns
+- **Segmented Control Visual Feedback**: Segmented controls should show selected state with clear visual feedback (primary color background, white text, semibold font) - standard iOS pattern expectations
+- **Touch Target Minimums**: All interactive elements must meet 44×44pt minimum - especially critical for medical apps where precision is important
+- **Color Independence**: Color coding needs text/icon backup for accessibility - never rely on color alone to convey information
+
+### Performance Standards for Medical Apps
+- **Analytics Navigation Timing**: 500-2000ms acceptable but can optimize to <500ms with skeleton loading states for professional feel
+- **Chart Rendering Standards**: Medical app charts should render <500ms for 365+ dose datasets - consider progressive rendering for larger datasets
+- **Perceived Performance**: Skeleton screens and loading indicators improve perceived performance even when actual timing is acceptable
+
+### Accessibility Requirements
+- **VoiceOver Chart Descriptions**: Chart accessibility labels should describe trends dynamically (e.g., "improving from 60% to 100% over 4 weeks") - not just static element names
+- **Touch Target Sizing**: Calendar dots and small interactive elements need verification against 44×44pt minimum
+- **High Contrast Support**: Ensure chart elements remain visible and distinguishable in high contrast modes
+
 ## Update History
+- 2025-10-01T20:00:09Z: Added Analytics UI/UX Integration section (Issue #59) with iOS HIG compliance patterns, performance standards, and accessibility requirements from Phase 2 design review
 - 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Framework section with CodeGen element access patterns, TestUtilities enhancements, and test quality framework integration from Issue #57 completion
 - 2025-09-26T01:23:01Z: Added AdherenceInsights Technology Integration section with Swift Testing framework debugging patterns and medical algorithm testing insights from Issue #57 business logic validation
 - 2025-09-25T19:11:47Z: Added Medical App Testing & Coverage Management section with coverage configuration management, Swift Testing framework enhancements, and quality gates from Issue #71 test coverage improvements

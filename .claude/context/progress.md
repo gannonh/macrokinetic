@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-28T16:08:57Z
-version: 2.9
+last_updated: 2025-10-01T20:00:09Z
+version: 3.0
 author: Claude Code PM System
 ---
 
@@ -9,34 +9,38 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: main
-- **Last Commit**: 1856d15 - Fix coverage: remove unused displayName properties from AdherenceInsight enums
-- **Status**: Recent fixes for issues #73-81 completed, project in stable state on main branch
+- **Branch**: issue/59-analytics-orchestration-polish
+- **Last Commit**: 9c18c76 - Issue #59: update progress tracking - Phase 6 chart time range bug discovery
+- **Status**: Active development on Issue #59 Phase 6 (State & Performance Optimization), investigating critical chart time range filtering bug
 
 ## Recent Work (Last 10 Commits)
-1. **1856d15** - Fix coverage: remove unused displayName properties from AdherenceInsight enums
-2. **b9adbb3** - chore: Enhance merge process: add final checks and user summary before merging PR
-3. **20d3148** - chore: add regression check before merging PR
-4. **8faf4a6** - Fix for #81: Fix AdherenceChartsUITests wrong element type queries
-5. **dc3fa2c** - Fix for #78: Fix AdherenceTrendChart accessibility labels when no data
-6. **afb56c8** - Fix for #76: Fix boundary value mapping in AdherenceMetricsCard percentage-to-status conversion
-7. **cbde408** - Fix for #75: Fix boundary value mapping in AdherencePattern percentage-to-frequency conversion
-8. **80e2a28** - Fix for #74: Guard against division by zero in AdherenceInsight.weekendReminder
-9. **ae728ff** - Fix for #73: Replace local ModelContext creation with environment context
-10. **d5791b2** - refactor: simplify issue start process and clarify instructions for PR and Task issues
+1. **9c18c76** - Issue #59: update progress tracking - Phase 6 chart time range bug discovery
+2. **c73c111** - wip: Update chart state on time range change in ConcentrationTimelineChart
+3. **4fa51ad** - WIP: Fix analytics chart performance and UX issues
+4. **606a5eb** - Issue #59: Extract AnalyticsView + add comprehensive OSLog logging
+5. **27bd7a3** - Issue #59: Fix SwiftData relationship mutation bug causing dose data loss
+6. **6223620** - feat: Enable test data seeding for UI testing and set UI testing flag in project configuration
+7. **ec38d32** - Issue #59: Fix Analytics tab lockup by caching chart dataset
+8. **7482018** - Issue #59: Integrate DoseDataService into AnalyticsView for efficient dose loading
+9. **7395641** - Issue #59: Add DoseDataService for database-level dose filtering
+10. **f1ad22d** - Issue #59: Add test data seeding utilities for unit and E2E tests
 
 ## Current Working Directory Status
-- **Modified Files**: PM system files (issue-merge.md, epic.md, pm-system.md)
-- **Branch Status**: On main branch, stable state
+- **Modified Files**: All committed (clean working directory)
+- **Branch Status**: issue/59-analytics-orchestration-polish (active feature branch)
+- **Current Phase**: Issue #59 Phase 6 - State & Performance Optimization
+- **Active Investigation**: Chart time range filtering bug (90d/1y showing only 30 days of data)
 - **Recent Session Work**:
-  - ✅ **BUG FIXES COMPLETED**: Systematic resolution of issues #73-81 with focus on code quality and test reliability
-  - ✅ **Coverage Optimization**: Removed unused displayName properties from AdherenceInsight enums to improve coverage metrics
-  - ✅ **PM System Enhancement**: Enhanced merge process with final checks and user summary, added regression testing
-  - ✅ **UI Test Reliability**: Fixed AdherenceChartsUITests element type queries for better test stability
-  - ✅ **Accessibility Improvements**: Fixed AdherenceTrendChart accessibility labels when no data present
-  - ✅ **Boundary Value Fixes**: Corrected percentage-to-status and percentage-to-frequency mapping in AdherenceMetrics and AdherencePattern
-  - ✅ **Safety Enhancements**: Added division by zero guards in AdherenceInsight.weekendReminder
-  - ✅ **Architecture Cleanup**: Replaced local ModelContext creation with environment context for better consistency
+  - 🔍 **Issue #59 Phase 6 Started**: State & Performance Optimization phase
+  - 🐛 **Critical Bug Discovered**: 90d and 1y chart views showing only 30 days of data despite correct labels
+  - 📊 **Root Cause Identified**: ChartState configuration not synchronizing with dataset.configuration.timeRange changes
+  - ⚙️ **Fix Attempted**: Added .onChange and Hashable conformance, but bug persists
+  - 📝 **Performance Logging Issue**: ⏱️ timing logs no longer appearing in AnalyticsView console output
+  - 🎯 **7d UX Issue**: Single point display (no line) needs improvement - requires min 2 points for visualization
+  - 🔧 **Architecture Changes**: Extracted AnalyticsView to separate file (342 lines from ContentView)
+  - 📈 **OSLog Integration**: Comprehensive logging added to track SwiftData relationship mutations
+  - ✅ **Tab Lockup Fixed**: Cached chart dataset to prevent synchronous data fetching in view body
+  - ✅ **Relationship Bug Fixed**: Tuple-based API prevents profile.doses mutation causing data loss
 
 ## Completed Major Features
 ✅ **Medication Profile Management** (Issue #35)
@@ -273,6 +277,30 @@ author: Claude Code PM System
 - **Root Cause Analysis**: Debug actual algorithm issues rather than masking with test workarounds
 - **Medical Safety Standards**: Healthcare applications require higher standards for business logic accuracy
 - **Three-Stream Validation**: All parallel development streams must validate their integration points
+
+## Lessons Learned (Recent - Issue #59 Sessions 2025-09-29 to 2025-10-01)
+
+### Design Review Process Excellence
+- **Screenshot-Driven Design Reviews**: Capturing comprehensive E2E test screenshots enables thorough visual analysis without running simulators repeatedly - significantly speeds up design iteration cycle
+- **Phase-Based UX Development**: Phase 1 (screenshots) → Phase 2 (analysis) → Phase 3 (implementation) → Phase 4 (optimization) provides clear checkpoints and prevents premature optimization
+- **Priority Framework Success**: Must Have (5) → Should Have (6) → Nice to Have (7) prioritization framework enables focused delivery on critical fixes first
+- **Structured Feedback Organization**: Organizing feedback by view section (above fold, below fold, controls) with ratings and structured improvements creates immediately actionable implementation plan
+
+### SwiftData Relationship Mutation Discovery
+- **Profile.doses Mutation Bug**: Synchronous data fetching in SwiftUI view body caused tab lockup - moved to cached state updated in .task and .onChange
+- **Tuple-Based API Pattern**: Passing tuples of (MedicationProfile, [Dose]) prevents unwanted SwiftData relationship mutations during chart generation
+- **OSLog Integration Value**: Comprehensive logging with privacy-safe patterns enabled precise tracking of relationship state changes at each pipeline step
+
+### Chart State Synchronization Challenge (Active Investigation)
+- **Time Range Filtering Bug**: ConcentrationTimelineChart's processedConcentrationPoints filters by configuration.timeRange, but chartState.configuration doesn't synchronize when dataset changes
+- **Client-Side vs Server-Side Filtering**: Current bug suggests removing client-side filtering in favor of relying on dataset generation for correct time ranges
+- **Loading State UX**: Charts loading in background without visual feedback creates poor UX - need skeleton screens during regeneration
+- **Single Point Visualization**: 7d view with 1 point needs UX improvement - requires minimum 2 points to show line (consider projected decay)
+
+### AnalyticsView Architecture Refactoring
+- **View Extraction Value**: Moving 342 lines from ContentView to separate AnalyticsView.swift improved maintainability and organization
+- **Manual Data Loading Pattern**: Using manual fetch with FetchDescriptor instead of @Query prevents eager-loading all doses - critical for performance with large datasets
+- **Chart Dataset Caching**: Computing chart dataset once and storing in @State instead of during view render prevents main thread blocking
 
 ## Lessons Learned (Recent - Issue #57 Session 2025-09-26)
 ### E2E Testing Excellence with CodeGen
