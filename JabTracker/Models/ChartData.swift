@@ -68,6 +68,7 @@ public enum TimeRange: Equatable {
     case lastMonth
     case lastQuarter
     case lastYear
+    case all  // Full time range (all available data)
 
     public func dateRange(relativeTo referenceDate: Date = Date()) -> (start: Date, end: Date) {
         let calendar = Calendar.current
@@ -94,6 +95,11 @@ public enum TimeRange: Equatable {
         case .lastYear:
             let startDate = calendar.date(byAdding: .year, value: -1, to: referenceDate) ?? referenceDate
             return (startDate, referenceDate)
+        case .all:
+            // Return maximum possible range for full dataset generation
+            // Use 10 years ago as a reasonable maximum (no user will have more data)
+            let startDate = calendar.date(byAdding: .year, value: -10, to: referenceDate) ?? referenceDate
+            return (startDate, referenceDate)
         }
     }
 
@@ -114,6 +120,8 @@ public enum TimeRange: Equatable {
             return "Last Quarter"
         case .lastYear:
             return "Last Year"
+        case .all:
+            return "All Time"
         }
     }
 }
@@ -370,6 +378,46 @@ struct ConcentrationChartDataset {
         self.doseMarkers = doseMarkers
         self.configuration = configuration
         self.metadata = metadata
+    }
+
+    /// Filter dataset to specific time range (instant - no regeneration)
+    /// Used for time period switching without recomputing concentration curves
+    func filtered(to timeRange: TimeRange) -> ConcentrationChartDataset {
+        let (startDate, _) = timeRange.dateRange()
+
+        // Filter concentration curves to only include points within time range
+        let filteredCurves = concentrationCurves.map { curve in
+            let filteredPoints = curve.points.filter { $0.date >= startDate }
+            return ConcentrationCurve(
+                points: filteredPoints,
+                medication: curve.medication,
+                curveStyle: curve.curveStyle,
+                isVisible: curve.isVisible
+            )
+        }
+
+        // Filter dose markers to only include doses within time range
+        let filteredMarkers = doseMarkers.filter { $0.date >= startDate }
+
+        // Create new configuration with updated time range
+        var newConfiguration = configuration
+        newConfiguration = ConcentrationChartConfiguration(
+            timeRange: timeRange,
+            concentrationRange: configuration.concentrationRange,
+            interpolationSettings: configuration.interpolationSettings,
+            theme: configuration.theme,
+            gridSettings: configuration.gridSettings,
+            axisSettings: configuration.axisSettings,
+            interactionSettings: configuration.interactionSettings,
+            animationSettings: configuration.animationSettings
+        )
+
+        return ConcentrationChartDataset(
+            concentrationCurves: filteredCurves,
+            doseMarkers: filteredMarkers,
+            configuration: newConfiguration,
+            metadata: metadata
+        )
     }
 }
 
