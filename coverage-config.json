@@ -123,6 +123,7 @@
       "Views/Analytics/ConcentrationChartControls.swift",
       "Views/Analytics/ConcentrationTimelineChart.swift",
       "Views/Analytics/TimePeriodSelector.swift",
+      "Views/Analytics/AnalyticsView.swift",
       "Views/AuthenticationView.swift",
       "Views/Dashboard/ConcentrationCard.swift",
       "Views/Dashboard/ConcentrationDisplay.swift",
