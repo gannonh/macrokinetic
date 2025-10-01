@@ -57,9 +57,8 @@ struct ConcentrationCard: View {
         .onAppear {
             self.updateConcentrationData()
         }
-        .onChange(of: self.medicationProfile.doses) { _, _ in
-            self.updateConcentrationData()
-        }
+        // Removed .onChange(of: medicationProfile.doses) to prevent eager-loading
+        // Card updates via doseService.lastDoseUpdateTime instead
         .onChange(of: self.doseService?.lastDoseUpdateTime) { _, _ in
             self.updateConcentrationData()
         }
