@@ -186,18 +186,20 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
 
     // swiftlint:disable:next orphaned_doc_comment
-    /// Seed test data for UI testing if TEST_DATA_SEED environment variable is set
-    /// Enables fast E2E performance testing with large datasets
+    /// Seed test data for UI testing if TEST_DATA_SEED environment variable or --seed-test-data launch argument is set
+    /// Enables fast E2E performance testing with large datasets and manual testing with realistic data
     // swiftlint:disable:next function_body_length
     private func seedTestDataIfRequested(for user: User, context: ModelContext) async {
         #if DEBUG || TEST
             let environment = ProcessInfo.processInfo.environment
+            let arguments = ProcessInfo.processInfo.arguments
 
-            guard environment["TEST_DATA_SEED"] == "true" else {
+            // Check for seeding request via environment variable (UI tests) or launch argument (manual runs)
+            guard environment["TEST_DATA_SEED"] == "true" || arguments.contains("--seed-test-data") else {
                 return
             }
 
-            Self.logger.info("🌱 Test data seeding requested via launch arguments")
+            Self.logger.info("🌱 Test data seeding requested")
 
             // Parse seeding configuration from environment
             let daysOfHistory = Int(environment["TEST_DATA_DAYS"] ?? "30") ?? 30
