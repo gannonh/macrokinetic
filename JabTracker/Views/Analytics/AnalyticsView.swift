@@ -16,6 +16,7 @@ struct AnalyticsView: View {
         category: "AnalyticsView")
 
     @Environment(\.modelContext) private var modelContext
+    @State private var viewModel = AnalyticsViewModel()
     @State private var doseDataService = DoseDataService()
     @State private var chartDataProcessor = ChartDataProcessor()
     @State private var analyticsService = AnalyticsService()
@@ -60,8 +61,11 @@ struct AnalyticsView: View {
                     TimePeriodSelector(selectedPeriod: $selectedTimePeriod)
                         .padding(.horizontal)
                         .onChange(of: selectedTimePeriod) { _, _ in
-                            // INSTANT: Just filter the full dataset (no regeneration!)
-                            filterChartDataset()
+                            // Show loading immediately, then filter in background
+                            chartDataset = nil
+                            Task {
+                                await filterChartDatasetAsync()
+                            }
                         }
                 }
 
@@ -222,6 +226,40 @@ struct AnalyticsView: View {
         Self.logger.info("  ⚡ Filtered to \(timeRange.displayName): \(String(format: "%.1f", filterTime))ms")
     }
 
+    /// Async version of filterChartDataset for responsive UI during time period changes
+    private func filterChartDatasetAsync() async {
+        guard let full = fullChartDataset else {
+            await MainActor.run {
+                chartDataset = nil
+            }
+            return
+        }
+
+        let filterStart = Date()
+
+        // Map ChartDataProcessor.TimePeriod to TimeRange
+        let timeRange: TimeRange = {
+            switch selectedTimePeriod {
+            case .last7Days: return .lastWeek
+            case .last30Days: return .lastMonth
+            case .last90Days: return .lastQuarter
+            case .lastYear: return .lastYear
+            case .all: return .all
+            }
+        }()
+
+        // Filter on background thread (doesn't block UI)
+        let filtered = full.filtered(to: timeRange)
+
+        let filterTime = Date().timeIntervalSince(filterStart) * 1000
+
+        // Update UI on main thread
+        await MainActor.run {
+            chartDataset = filtered
+            Self.logger.info("  ⚡ Filtered to \(timeRange.displayName): \(String(format: "%.1f", filterTime))ms")
+        }
+    }
+
     // MARK: - Chart Sections
 
     @ViewBuilder
@@ -265,13 +303,13 @@ struct AnalyticsView: View {
 
             // Adherence Trend Chart
             AdherenceTrendChart(
-                trendData: generateTrendData(for: user),
+                trendData: viewModel.generateTrendData(for: user),
                 timePeriod: .weekly
             )
 
             // Missed Dose Pattern Visualization
             MissedDosePatternView(
-                missedDoses: generateMissedDosePatterns(for: user),
+                missedDoses: viewModel.generateMissedDosePatterns(for: user),
                 style: .calendar
             )
         }
@@ -279,46 +317,6 @@ struct AnalyticsView: View {
 
     private func adherenceRate(for user: User, context: ModelContext) -> Double {
         analyticsService.calculateOverallAdherence(user: user, context: context)
-    }
-
-    private func generateTrendData(for user: User) -> [AdherenceTrendPoint] {
-        // Generate sample trend data for the last 4 weeks
-        let calendar = Calendar.current
-        let now = Date()
-        var trendData: [AdherenceTrendPoint] = []
-
-        for weekOffset in 0..<4 {
-            if let weekDate = calendar.date(byAdding: .weekOfYear, value: -weekOffset, to: now) {
-                let adherenceRate = Double.random(in: 0.6...0.95)
-                trendData.append(
-                    AdherenceTrendPoint(
-                        date: weekDate,
-                        adherenceRate: adherenceRate,
-                        period: "Week \(4 - weekOffset)"
-                    ))
-            }
-        }
-
-        return trendData.sorted { $0.date < $1.date }
-    }
-
-    private func generateMissedDosePatterns(for user: User) -> [MissedDosePattern] {
-        // Generate sample missed dose patterns
-        let calendar = Calendar.current
-        let now = Date()
-
-        return [
-            MissedDosePattern(
-                date: calendar.date(byAdding: .day, value: -6, to: now) ?? now,
-                dayOfWeek: "Saturday",
-                missedCount: 2
-            ),
-            MissedDosePattern(
-                date: calendar.date(byAdding: .day, value: -5, to: now) ?? now,
-                dayOfWeek: "Sunday",
-                missedCount: 3
-            ),
-        ]
     }
 
     // MARK: - Empty States
