@@ -1,3 +1,77 @@
+
+Oct 1, 2025 at 7:24 AM
+
+ Problems Identified:
+
+  1. Data Not Showing Bug (Critical): 7d shows no line initially but shows data after viewing other ranges - this indicates relationship mutation is STILL 
+  happening somewhere
+  2. Wrong Chart Labels:
+    - 7d shows "Last Month" (should show "Last Week")
+    - 90d shows "Last Month" (should show "Last Quarter")
+    - Labels don't match selected time period
+  3. No Caching: Every time period switch regenerates from scratch (7+ seconds)
+  4. No Loading UX: Segment switches but chart stays frozen with old data while regenerating
+  5. Performance: 30d/90d/1y all take similar time despite different data volumes
+
+  Root Cause Analysis:
+
+  The "7d shows no data initially, but shows data after viewing other ranges" is the smoking gun - this means:
+
+  1. DoseDataService correctly fetches 1 dose for 7d (logs confirm: "📦 Profile semaglutide: 1 doses in last7Days")
+  2. We pass the filtered doses via tuple to avoid relationship mutation
+  3. BUT somewhere in the chain, the old profile.doses relationship is still being accessed
+
+  Let me investigate where the relationship leak is occurring...
+
+  Investigation Plan:
+
+  Phase 1: Debug Data Flow (Critical)
+
+  1. Add comprehensive logging at every step to trace exact data flow:
+    - ContentView.generateChartDataset() - log dose count in tuple
+    - ChartDatasetService.processProfiles() - log dose count received
+    - ChartDatasetService.createConcentrationCurve() - log dose count used
+    - ChartDataProcessor.generateConcentrationTimeline() - log dose count at calculation time
+  2. Check if there are other code paths accessing profile.doses:
+    - Search for all profile.doses accesses in chart-related code
+    - Verify generateConcentrationTimelineWithLevels() isn't being called
+    - Check if ConcentrationTimelineChart itself accesses relationships
+
+  Phase 2: Fix TimeRange Label Bug
+
+  1. Investigate why chartDataset.configuration.timeRange.displayName shows wrong values
+  2. Verify convertToTimeRange() mapping is correct
+  3. Check if chart configuration is being overwritten somewhere
+
+  Phase 3: Implement Intelligent Caching
+
+  1. Create cache structure to store datasets by time period:
+  @State private var datasetCache: [ChartDataProcessor.TimePeriod: ConcentrationChartDataset] = [:]
+  2. Implement subset/delta loading strategy:
+    - 7d: Use first 7 days of cached 30d data (instant)
+    - 30d: Load and cache full 30d
+    - 90d: Load 31-90 day delta, merge with cached 30d
+    - 1y: Load 91-365 day delta, merge with cached 90d
+
+  Phase 4: Add Performance Instrumentation
+
+  1. Add timing logs for:
+    - Dose fetch time
+    - Chart dataset generation time
+    - Total refresh time
+  2. Format: ⏱️ [Step]: XXXms
+
+  Phase 5: Fix Loading UX
+
+  1. Set chartDataset = nil BEFORE segment switch (show loading immediately)
+  2. Use Task to make refresh async so segment switches instantly
+  3. Show loading indicator while chart regenerates
+
+  Would you like me to proceed with Phase 1 (debugging data flow) to find the relationship leak, or would you prefer I implement all phases together?
+
+
+---
+
 Great! We've successfully completed Phases 3-5 of the analytics orchestration polish. Ready to move into Phase 6: State & Performance Optimization.
 
   Phase 6 has 4 distinct optimization tasks:
@@ -28,6 +102,8 @@ Great! We've successfully completed Phases 3-5 of the analytics orchestration po
 
   Given this is performance work, I'll likely need to create test datasets with 365+ doses to properly profile the system. How would you like to approach
   this?
+
+
 ---
 
 ⏺ Based on the design review document, we've completed:

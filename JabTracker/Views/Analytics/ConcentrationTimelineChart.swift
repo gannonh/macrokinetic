@@ -103,7 +103,8 @@ struct ConcentrationTimelineChart: View {
 
                 ConcentrationChartControls(
                     configuration: $chartState.currentConfiguration,
-                    resetAction: resetChartView
+                    resetAction: resetChartView,
+                    showTimePeriodSelector: false  // Parent view (AnalyticsView) controls time period
                 )
             }
         }

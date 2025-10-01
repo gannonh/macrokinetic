@@ -17,11 +17,16 @@ struct ConcentrationChartControls: View {
     /// Action to reset chart view (zoom, pan, and configuration)
     let resetAction: () -> Void
 
+    /// Whether to show time period selector (false when parent view controls time period)
+    var showTimePeriodSelector: Bool = true
+
     // MARK: - Body
 
     var body: some View {
         HStack {
-            timePeriodSelector()
+            if showTimePeriodSelector {
+                timePeriodSelector()
+            }
             Spacer()
             chartActionButtons()
         }

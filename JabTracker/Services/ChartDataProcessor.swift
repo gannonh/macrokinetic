@@ -440,6 +440,25 @@ final class ChartDataProcessor {
             return []
         }
 
+        return generateConcentrationTimeline(
+            for: medicationProfile,
+            doses: doses,
+            timeRange: timeRange,
+            intervalHours: intervalHours
+        )
+    }
+
+    /// Generate concentration timeline with explicit dose array (avoids SwiftData relationship access)
+    func generateConcentrationTimeline(
+        for medicationProfile: MedicationProfile,
+        doses: [Dose],
+        timeRange: ClosedRange<Date>,
+        intervalHours: Double = 0.5
+    ) -> [ConcentrationPoint] {
+        guard let medication = medicationProfile.medication else {
+            return []
+        }
+
         let pharmacokineticsEngine = PharmacokineticsEngine()
         var concentrationPoints: [ConcentrationPoint] = []
 
