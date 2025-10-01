@@ -321,7 +321,13 @@ struct AnalyticsView: View {
             chartDataset = nil
             return
         }
+
+        // Show loading indicator while regenerating
+        chartDataset = nil
+
+        print("🔄 Refreshing chart dataset for time period: \(selectedTimePeriod)")
         chartDataset = generateChartDataset(for: user)
+        print("📊 Chart dataset updated: \(chartDataset?.configuration.timeRange.displayName ?? "nil")")
     }
 
     // MARK: - Chart Sections
@@ -331,6 +337,7 @@ struct AnalyticsView: View {
         // Use cached chart dataset (generated in .task and .onChange, not during view rendering)
         if let dataset = chartDataset {
             ConcentrationTimelineChart(dataset: dataset)
+                .id(selectedTimePeriod)  // Force recreation when time period changes
         } else {
             chartLoadingView()
         }
@@ -480,8 +487,10 @@ struct AnalyticsView: View {
     /// Generates chart dataset using DoseDataService for efficient dose fetching
     /// Only fetches doses within the selected time period to avoid loading all data
     private func generateChartDataset(for user: User) -> ConcentrationChartDataset? {
-        // Build profiles with filtered doses from DoseDataService
-        var profilesWithDoses: [MedicationProfile] = []
+        print("📈 Generating chart dataset - medicationProfiles count: \(medicationProfiles.count)")
+
+        // Build tuples of (profile, filteredDoses) without mutating SwiftData relationships
+        var profilesWithDoses: [(MedicationProfile, [Dose])] = []
 
         for profile in medicationProfiles {
             // Fetch doses for this profile within the selected time period
@@ -491,21 +500,25 @@ struct AnalyticsView: View {
                 context: modelContext
             )
 
+            print("  📦 Profile \(profile.genericName): \(doses.count) doses in \(selectedTimePeriod)")
+
             // Skip profiles with no doses in the selected period
             guard !doses.isEmpty else { continue }
 
-            // Temporarily assign filtered doses to profile for chart generation
-            // This is safe because we're not saving the context
-            profile.doses = doses
-            profilesWithDoses.append(profile)
+            // Create tuple WITHOUT mutating profile.doses relationship
+            // This prevents SwiftData from tracking unwanted relationship changes
+            profilesWithDoses.append((profile, doses))
         }
+
+        print("  ✅ Total profiles with doses: \(profilesWithDoses.count)")
 
         guard !profilesWithDoses.isEmpty else { return nil }
 
-        // Generate chart dataset using profiles with filtered doses
+        // Generate chart dataset using tuple-based method (no relationship mutation)
         return chartDatasetService.generateChartDataset(
             for: user,
-            profiles: profilesWithDoses
+            profilesWithDoses: profilesWithDoses,
+            timePeriod: selectedTimePeriod
         )
     }
 }

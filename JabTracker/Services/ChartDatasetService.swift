@@ -21,9 +21,16 @@ class ChartDatasetService {
 
     /// Generates chart dataset from user medication data
     /// Handles multiple profiles and provides safe error handling
-    func generateChartDataset(for user: User, profiles: [MedicationProfile])
-        -> ConcentrationChartDataset?
-    {
+    /// - Parameters:
+    ///   - user: The user whose data to chart
+    ///   - profiles: Medication profiles with pre-loaded doses
+    ///   - timePeriod: Selected time period for the chart
+    /// - Returns: Chart dataset configured for the selected time period
+    func generateChartDataset(
+        for user: User,
+        profiles: [MedicationProfile],
+        timePeriod: ChartDataProcessor.TimePeriod = .last30Days
+    ) -> ConcentrationChartDataset? {
         let validProfiles = extractValidProfiles(from: profiles)
         guard !validProfiles.isEmpty else { return nil }
 
@@ -36,11 +43,65 @@ class ChartDatasetService {
             return nil
         }
 
+        // Convert TimePeriod to TimeRange for chart configuration
+        let chartTimeRange = convertToTimeRange(timePeriod)
+
         return ConcentrationChartDataset(
             concentrationCurves: concentrationCurves,
             doseMarkers: allMarkers,
-            configuration: .default
+            configuration: .default.withTimeRange(chartTimeRange)
         )
+    }
+
+    /// Generates chart dataset from profiles with pre-filtered doses
+    /// This method avoids SwiftData relationship mutation by accepting doses directly
+    /// - Parameters:
+    ///   - user: The user whose data to chart
+    ///   - profilesWithDoses: Tuples of medication profiles paired with their filtered doses
+    ///   - timePeriod: Selected time period for the chart
+    /// - Returns: Chart dataset configured for the selected time period
+    func generateChartDataset(
+        for user: User,
+        profilesWithDoses: [(MedicationProfile, [Dose])],
+        timePeriod: ChartDataProcessor.TimePeriod = .last30Days
+    ) -> ConcentrationChartDataset? {
+        // Filter out profiles with no doses
+        let validProfiles = profilesWithDoses.filter { !$0.1.isEmpty }
+        guard !validProfiles.isEmpty else { return nil }
+
+        let timeRange = calculateTimeRange(from: validProfiles)
+        guard let timeRange = timeRange else { return nil }
+
+        let (concentrationCurves, allMarkers) = processProfiles(validProfiles, timeRange: timeRange)
+
+        guard !concentrationCurves.isEmpty, !allMarkers.isEmpty else {
+            return nil
+        }
+
+        // Convert TimePeriod to TimeRange for chart configuration
+        let chartTimeRange = convertToTimeRange(timePeriod)
+
+        return ConcentrationChartDataset(
+            concentrationCurves: concentrationCurves,
+            doseMarkers: allMarkers,
+            configuration: .default.withTimeRange(chartTimeRange)
+        )
+    }
+
+    /// Converts ChartDataProcessor.TimePeriod to TimeRange for chart configuration
+    private func convertToTimeRange(_ timePeriod: ChartDataProcessor.TimePeriod) -> TimeRange {
+        switch timePeriod {
+        case .last7Days:
+            return .lastWeek
+        case .last30Days:
+            return .lastMonth
+        case .last90Days:
+            return .lastQuarter
+        case .lastYear:
+            return .lastYear
+        case .all:
+            return .automatic
+        }
     }
 
     // MARK: - Private Helper Methods
@@ -78,7 +139,8 @@ class ChartDatasetService {
             let validMarkers = createValidDoseMarkers(from: doses)
             allMarkers.append(contentsOf: validMarkers)
 
-            if let curve = createConcentrationCurve(for: profile, timeRange: timeRange) {
+            // Use doses from tuple instead of profile.doses relationship
+            if let curve = createConcentrationCurve(for: profile, doses: doses, timeRange: timeRange) {
                 concentrationCurves.append(curve)
             }
         }
@@ -99,10 +161,12 @@ class ChartDatasetService {
     /// Create concentration curve for a profile with safe error handling
     private func createConcentrationCurve(
         for profile: MedicationProfile,
+        doses: [Dose],
         timeRange: ClosedRange<Date>
     ) -> ConcentrationCurve? {
         let concentrationPoints = chartDataProcessor.generateConcentrationTimeline(
             for: profile,
+            doses: doses,  // Use explicit doses instead of profile.doses
             timeRange: timeRange
         )
 
