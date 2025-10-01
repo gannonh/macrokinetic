@@ -84,10 +84,12 @@ struct AnalyticsView: View {
                 .accessibilityIdentifier("analytics-scroll-view")
             }
             .navigationTitle("Analytics")
-            .task {
-                // Load data when view appears
-                loadData()
-                refreshChartDataset()
+            .onAppear {
+                // Load data only on first appearance
+                if currentUser == nil {
+                    loadData()
+                    refreshChartDataset()
+                }
             }
         }
     }
@@ -128,23 +130,54 @@ struct AnalyticsView: View {
             return
         }
 
-        // Show loading indicator while regenerating
+        // Show loading indicator immediately
         chartDataset = nil
 
         Self.logger.info("🔄 Refreshing chart for: \(String(describing: self.selectedTimePeriod), privacy: .public)")
-        chartDataset = generateChartDataset(for: user)
-        Self.logger.info(
-            "📊 Chart updated: \(self.chartDataset?.configuration.timeRange.displayName ?? "nil", privacy: .public)")
+
+        // Capture values needed for background processing
+        let profiles = medicationProfiles
+        let period = selectedTimePeriod
+        let context = modelContext
+        let doseService = doseDataService
+        let chartService = chartDatasetService
+
+        // Generate dataset on background thread
+        Task.detached(priority: .userInitiated) {
+            // Fetch doses on background thread
+            var profilesWithDoses: [(MedicationProfile, [Dose])] = []
+
+            for profile in profiles {
+                let doses = await MainActor.run {
+                    doseService.fetchDoses(for: profile, within: period, context: context)
+                }
+                guard !doses.isEmpty else { continue }
+                profilesWithDoses.append((profile, doses))
+            }
+
+            // Generate chart dataset (heavy computation)
+            let dataset = chartService.generateChartDataset(
+                for: user,
+                profilesWithDoses: profilesWithDoses,
+                timePeriod: period
+            )
+
+            // Update UI on main thread
+            await MainActor.run {
+                self.chartDataset = dataset
+                Self.logger.info(
+                    "📊 Chart updated: \(dataset?.configuration.timeRange.displayName ?? "nil", privacy: .public)")
+            }
+        }
     }
 
     // MARK: - Chart Sections
 
     @ViewBuilder
     private func concentrationChartSection(for user: User) -> some View {
-        // Use cached chart dataset (generated in .task and .onChange, not during view rendering)
+        // Use cached chart dataset (generated once, chart updates itself via onChange)
         if let dataset = chartDataset {
             ConcentrationTimelineChart(dataset: dataset)
-                .id(selectedTimePeriod)  // Force recreation when time period changes
         } else {
             chartLoadingView()
         }
