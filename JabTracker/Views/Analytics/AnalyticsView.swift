@@ -135,6 +135,8 @@ struct AnalyticsView: View {
 
         Self.logger.info("🔄 Refreshing chart for: \(String(describing: self.selectedTimePeriod), privacy: .public)")
 
+        let refreshStartTime = Date()
+
         // Capture values needed for background processing
         let profiles = medicationProfiles
         let period = selectedTimePeriod
@@ -144,6 +146,8 @@ struct AnalyticsView: View {
 
         // Generate dataset on background thread
         Task.detached(priority: .userInitiated) {
+            let doseFetchStart = Date()
+
             // Fetch doses on background thread
             var profilesWithDoses: [(MedicationProfile, [Dose])] = []
 
@@ -155,16 +159,30 @@ struct AnalyticsView: View {
                 profilesWithDoses.append((profile, doses))
             }
 
+            let doseFetchEnd = Date()
+            let doseFetchTime = doseFetchEnd.timeIntervalSince(doseFetchStart) * 1000
+            let totalDoses = profilesWithDoses.reduce(0) { $0 + $1.1.count }
+
+            Self.logger.info("  ⏱️  Dose fetching: \(String(format: "%.1f", doseFetchTime))ms (\(totalDoses) doses)")
+
             // Generate chart dataset (heavy computation)
+            let chartGenStart = Date()
             let dataset = chartService.generateChartDataset(
                 for: user,
                 profilesWithDoses: profilesWithDoses,
                 timePeriod: period
             )
+            let chartGenEnd = Date()
+            let chartGenTime = chartGenEnd.timeIntervalSince(chartGenStart) * 1000
+
+            Self.logger.info("  ⏱️  Chart generation: \(String(format: "%.1f", chartGenTime))ms")
 
             // Update UI on main thread
             await MainActor.run {
                 self.chartDataset = dataset
+
+                let totalTime = Date().timeIntervalSince(refreshStartTime) * 1000
+                Self.logger.info("  ⏱️  Total refresh: \(String(format: "%.1f", totalTime))ms")
                 Self.logger.info(
                     "📊 Chart updated: \(dataset?.configuration.timeRange.displayName ?? "nil", privacy: .public)")
             }
