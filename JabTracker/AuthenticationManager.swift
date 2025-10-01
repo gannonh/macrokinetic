@@ -186,7 +186,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
 
     // swiftlint:disable:next orphaned_doc_comment
-    /// Seed test data for UI testing if TEST_DATA_SEED environment variable or --seed-test-data launch argument is set
+    /// Seed test data for UI testing if TEST_DATA_SEED environment variable or time period launch arguments are set
     /// Enables fast E2E performance testing with large datasets and manual testing with realistic data
     // swiftlint:disable:next function_body_length
     private func seedTestDataIfRequested(for user: User, context: ModelContext) async {
@@ -194,21 +194,32 @@ class AuthenticationManager: NSObject, ObservableObject {
             let environment = ProcessInfo.processInfo.environment
             let arguments = ProcessInfo.processInfo.arguments
 
-            // Check for seeding request via environment variable (UI tests) or launch argument (manual runs)
-            guard environment["TEST_DATA_SEED"] == "true" || arguments.contains("--seed-test-data") else {
-                return
+            // Determine which seeding period was requested
+            var daysOfHistory = 0
+            if environment["TEST_DATA_SEED"] == "true" {
+                // Legacy environment variable approach (for UI tests)
+                daysOfHistory = Int(environment["TEST_DATA_DAYS"] ?? "30") ?? 30
+            } else if arguments.contains("--seed-test-7d") {
+                daysOfHistory = 7
+            } else if arguments.contains("--seed-test-30d") {
+                daysOfHistory = 30
+            } else if arguments.contains("--seed-test-90d") {
+                daysOfHistory = 90
+            } else if arguments.contains("--seed-test-1y") {
+                daysOfHistory = 365
+            } else {
+                return  // No seeding requested
             }
 
-            Self.logger.info("🌱 Test data seeding requested")
+            Self.logger.info("🌱 Test data seeding requested for \(daysOfHistory) days")
 
-            // Parse seeding configuration from environment
-            let daysOfHistory = Int(environment["TEST_DATA_DAYS"] ?? "30") ?? 30
+            // Parse seeding configuration from environment (or use defaults)
             let medicationRaw = environment["TEST_DATA_MEDICATION"] ?? "semaglutide"
             let brandName = environment["TEST_DATA_BRAND"] ?? "Ozempic"
             let doseAmount = Double(environment["TEST_DATA_DOSE"] ?? "1.0") ?? 1.0
-            let adherenceRate = Double(environment["TEST_DATA_ADHERENCE"] ?? "1.0") ?? 1.0
-            let addVariability = environment["TEST_DATA_VARIABILITY"] == "true"
-            let includeSkipped = environment["TEST_DATA_SKIPPED"] == "true"
+            let adherenceRate = Double(environment["TEST_DATA_ADHERENCE"] ?? "0.95") ?? 0.95
+            let addVariability = environment["TEST_DATA_VARIABILITY"] ?? "true" == "true"
+            let includeSkipped = environment["TEST_DATA_SKIPPED"] ?? "true" == "true"
 
             // Create medication enum from string
             guard let medication = Medication(rawValue: medicationRaw) else {
