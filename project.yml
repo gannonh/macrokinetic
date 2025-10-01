@@ -78,5 +78,8 @@ schemes:
         "--force-onboarding": false
         "--reset-app-data": true
         "--ui-testing": true
-        "--seed-test-data": true
+        "--seed-test-7d": false
+        "--seed-test-30d": false
+        "--seed-test-90d": false
+        "--seed-test-1y": true
       storeKitConfiguration: JabTrackerStoreKit.storekit
