@@ -73,6 +73,7 @@
 - `/qa:test-quality` - Test quality review
 - `/qa:tq-fix` - Address test quality issues from analysis report
 - `/qa:code-quality` - Code quality review
+- `/pm:design-review` - Conduct design review for UI/UX feedback and improvements
 
 ### Testing Commands
 - `/testing:run` - Run the test suite or specific tests
