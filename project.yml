@@ -77,5 +77,6 @@ schemes:
       commandLineArguments:
         "--force-onboarding": false
         "--reset-app-data": true
-        "--ui-testing": false
+        "--ui-testing": true
+        "--seed-test-data": true
       storeKitConfiguration: JabTrackerStoreKit.storekit
