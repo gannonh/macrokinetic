@@ -113,6 +113,10 @@ struct ConcentrationTimelineChart: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(DesignTokens.Colors.secondaryBackground)
         )
+        .onChange(of: dataset.configuration.timeRange) { _, _ in
+            // Update chart state when time range changes
+            chartState = ConcentrationChartState(configuration: dataset.configuration)
+        }
     }
 
     // MARK: - Chart Components

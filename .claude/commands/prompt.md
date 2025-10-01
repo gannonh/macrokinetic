@@ -1,11 +1,50 @@
-I believe the answer is "yes" to most of those questions. Situation: 
+Thanks. I changed it and rebuilt. When I go to analytics, it correctly loads the 30 day data, but when I navigate to 7d, that chart is empty and
+  navigating back to 30 and it's still empty. Logs:
 
-While we currently support adding medicine profiles and logging doses, we currently lack any type of dose scheduling system. I imagine this feature would be:
--  integrated into the onboarding process: @docs/screenshots/Simulator Screenshot - iPhone 15 - 2025-09-30 at 09.39.47.png
--  integrated into medicine profile management (CRUD): @docs/screenshots/Simulator Screenshot - iPhone 15 - 2025-09-30 at 09.40.32.png
+✅ Test data seeding complete:
+   - Doses created: 5
+   - Skipped doses: 0
+   - Adherence: 100.0%
+   - Seeding time: 28.7ms
+🔍 OnboardingCoordinator: UI testing mode detected - bypassing onboarding
+🔍 OnboardingCoordinator: UI testing mode detected - bypassing onboarding
+🔍 ContentView: Tab changed from home to history
+🔍 ContentView: Tab changed from history to analytics
+🔄 Refreshing chart dataset for time period: last30Days
+📈 Generating chart dataset - medicationProfiles count: 1
+  🔍 DEBUG: Total doses in DB: 5
+    - Dose 2025-10-01 00:11:23 +0000: medication=semaglutide, medicationID=457E9102
+    - Dose 2025-09-24 00:11:23 +0000: medication=semaglutide, medicationID=457E9102
+    - Dose 2025-09-17 00:11:23 +0000: medication=semaglutide, medicationID=457E9102
+  🔍 DEBUG: Querying for profileID=457E9102, genericName=semaglutide
+  📦 Profile semaglutide: 5 doses in last30Days
+  ✅ Total profiles with doses: 1
+📊 Chart dataset updated: Last Month
+fopen failed for data file: errno = 2 (No such file or directory)
+Errors found! Invalidating cache...
+fopen failed for data file: errno = 2 (No such file or directory)
+Errors found! Invalidating cache...
+🔄 Refreshing chart dataset for time period: last7Days
+📈 Generating chart dataset - medicationProfiles count: 1
+  🔍 DEBUG: Total doses in DB: 5
+    - Dose 2025-10-01 00:11:23 +0000: medication=semaglutide, medicationID=457E9102
+    - Dose 2025-09-24 00:11:23 +0000: medication=semaglutide, medicationID=457E9102
+    - Dose 2025-09-17 00:11:23 +0000: medication=semaglutide, medicationID=457E9102
+  🔍 DEBUG: Querying for profileID=457E9102, genericName=semaglutide
+  📦 Profile semaglutide: 1 doses in last7Days
+  ✅ Total profiles with doses: 1
+📊 Chart dataset updated: Last Week
+🔄 Refreshing chart dataset for time period: last30Days
+📈 Generating chart dataset - medicationProfiles count: 1
+  🔍 DEBUG: Total doses in DB: 5
+    - Dose 2025-10-01 00:11:23 +0000: medication=semaglutide, medicationID=457E9102
+    - Dose 2025-09-24 00:11:23 +0000: medication=nil, medicationID=nil
+    - Dose 2025-09-17 00:11:23 +0000: medication=nil, medicationID=nil
+  🔍 DEBUG: Querying for profileID=457E9102, genericName=semaglutide
+  📦 Profile semaglutide: 1 doses in last30Days
+  ✅ Total profiles with doses: 1
+📊 Chart dataset updated: Last Month
 
-we can also draw inspiration from this dose scheduling ui: @docs/screenshots/Screenshot 2025-09-30 at 9.51.20 AM.png
-
-In particular I like how you can schedule your weekly dose amount, such as 2mg over multiple offset injections, such as 3.5 days (twice a week). This is a common pattern for GPL-1 agonist peptides to smooth concentration curves, which helps to maintain steady benefits and reduce side effects.
-
-Based on this input, please take a first pass at the prd based on your recommendations.
+This is strange:
+    - Dose 2025-09-24 00:11:23 +0000: medication=nil, medicationID=nil
+    - Dose 2025-09-17 00:11:23 +0000: medication=nil, medicationID=nil
