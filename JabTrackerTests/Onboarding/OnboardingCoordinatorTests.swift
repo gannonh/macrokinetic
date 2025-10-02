@@ -110,6 +110,10 @@ final class OnboardingCoordinatorTests {
 
     @Test("OnboardingCoordinator shows onboarding for authenticated user who hasn't completed it")
     func testShowOnboardingForIncompleteUser() {
+        // Clean up UserDefaults from previous tests
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
+
         let context = createTestContext()
         let user = createTestUser(context: context, hasCompletedOnboarding: false)
         let authManager = createMockAuthManager(with: user)
@@ -268,6 +272,13 @@ final class OnboardingCoordinatorTests {
 
     @Test("OnboardingCoordinator processInfo direct testing")
     func testProcessInfoDirectBehavior() {
+        // DEBUG: Print what ProcessInfo actually contains
+        print("🔍 ProcessInfo.arguments: \(ProcessInfo.processInfo.arguments)")
+        print(
+            "🔍 ProcessInfo.environment['UI_TESTING']: \(ProcessInfo.processInfo.environment["UI_TESTING"] ?? "not set")"
+        )
+        print("🔍 Contains --ui-testing: \(ProcessInfo.processInfo.arguments.contains("--ui-testing"))")
+
         let coordinator = OnboardingCoordinator(authManager: AuthenticationManager())
 
         // Test the actual ProcessInfo behavior
