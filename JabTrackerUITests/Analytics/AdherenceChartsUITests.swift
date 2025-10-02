@@ -30,12 +30,9 @@ final class AdherenceChartsUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Chart components display adherence visualizations
     func testAdherenceChartComponents() throws {
-        // GIVEN: User has dose history with adherence data
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and historical dose data
-        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 5)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before adherence charts
         screenshotCapture.capture(
@@ -180,12 +177,9 @@ final class AdherenceChartsUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Trend chart displays adherence patterns over time
     func testAdherenceTrendChartDisplay() throws {
-        // GIVEN: User has dose history spanning multiple weeks
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and extensive historical dose data for trend analysis
-        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 10)  // More doses for trend patterns
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before trend chart test
         screenshotCapture.capture(
@@ -259,12 +253,9 @@ final class AdherenceChartsUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Missed dose pattern visualization
     func testMissedDosePatternView() throws {
-        // GIVEN: User has missed doses in their history
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile with some historical doses (simulating mixed adherence)
-        TestUtilities.createMedicationProfile(app, genericName: "tirzepatide", brandName: "Mounjaro", dose: "2.5")
-        TestUtilities.createHistoricalChartData(in: app, count: 7)  // Some doses with gaps
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before missed dose pattern test
         screenshotCapture.capture(
@@ -344,12 +335,9 @@ final class AdherenceChartsUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Progress indicator shows adherence goals
     func testAdherenceProgressIndicator() throws {
-        // GIVEN: User has adherence data and goals
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile with good adherence data
-        TestUtilities.createMedicationProfile(app, genericName: "liraglutide", brandName: "Victoza", dose: "1.2")
-        TestUtilities.createHistoricalChartData(in: app, count: 8)  // Good adherence pattern
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before progress indicator test
         screenshotCapture.capture(

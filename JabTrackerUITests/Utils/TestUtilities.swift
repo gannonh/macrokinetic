@@ -931,3 +931,43 @@ extension XCUIElement {
         waitForExistence(timeout: timeout) && isHittable
     }
 }
+
+// MARK: - Test Cleanup Utilities
+
+extension TestUtilities {
+    /// Clean up chart dataset cache from Application Support directory
+    /// Used in tearDown() to ensure test isolation between runs
+    ///
+    /// **Cache Location**: `~/Library/Application Support/ChartCache/concentrationDataset.json`
+    ///
+    /// **Usage:**
+    /// ```swift
+    /// override func tearDown() {
+    ///     super.tearDown()
+    ///     TestUtilities.cleanupChartCache()
+    /// }
+    /// ```
+    static func cleanupChartCache() {
+        let fileManager = FileManager.default
+        guard
+            let appSupport = fileManager.urls(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask
+            ).first
+        else {
+            return
+        }
+
+        let cacheDirectory = appSupport.appendingPathComponent("ChartCache", isDirectory: true)
+        let cacheFile = cacheDirectory.appendingPathComponent("concentrationDataset.json")
+
+        if fileManager.fileExists(atPath: cacheFile.path) {
+            do {
+                try fileManager.removeItem(at: cacheFile)
+                print("🗑️  Cleaned up chart dataset cache for test isolation")
+            } catch {
+                print("⚠️  Failed to clean up chart dataset cache: \(error.localizedDescription)")
+            }
+        }
+    }
+}
