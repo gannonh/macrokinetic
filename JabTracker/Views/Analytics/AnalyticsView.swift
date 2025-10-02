@@ -60,11 +60,14 @@ struct AnalyticsView: View {
                 if selectedAnalyticsType == .concentration {
                     TimePeriodSelector(selectedPeriod: $selectedTimePeriod)
                         .padding(.horizontal)
-                        .onChange(of: selectedTimePeriod) { _, _ in
+                        .onChange(of: selectedTimePeriod) {
                             // Show loading immediately, then filter in background
+                            let switchStart = Date()
                             chartDataset = nil
                             Task {
                                 await filterChartDatasetAsync()
+                                let totalTime = Date().timeIntervalSince(switchStart) * 1000
+                                Self.logger.info("  📊 Total time period switch: \(String(format: "%.1f", totalTime))ms")
                             }
                         }
                 }

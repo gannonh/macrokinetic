@@ -26,23 +26,17 @@ struct ConcentrationTimelineChart: View {
     }
 
     /// Processed concentration points ready for chart display
+    /// NOTE: No filtering here - parent view (AnalyticsView) filters dataset before passing it
     var processedConcentrationPoints: [AdvancedConcentrationPoint] {
         dataset.concentrationCurves.flatMap { curve in
-            curve.points.filter { point in
-                // Filter points based on current time range
-                let timeRange = configuration.timeRange.dateRange()
-                return point.date >= timeRange.start && point.date <= timeRange.end
-            }
+            curve.points
         }
     }
 
     /// Processed dose markers ready for chart display
+    /// NOTE: No filtering here - parent view (AnalyticsView) filters dataset before passing it
     var processedDoseMarkers: [AdvancedDoseMarker] {
-        dataset.doseMarkers.filter { marker in
-            // Filter markers based on current time range
-            let timeRange = configuration.timeRange.dateRange()
-            return marker.date >= timeRange.start && marker.date <= timeRange.end
-        }
+        dataset.doseMarkers
     }
 
     /// Accessibility label for the chart
