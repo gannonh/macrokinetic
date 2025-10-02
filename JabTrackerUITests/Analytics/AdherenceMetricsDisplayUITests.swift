@@ -22,12 +22,9 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: AdherenceInsightsView displays correctly
     func testAdherenceInsightsViewDisplay() throws {
-        // GIVEN: User has dose history with adherence data
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and historical dose data
-        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 5)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before metrics display
         screenshotCapture.capture(
@@ -110,12 +107,9 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Adherence metrics update correctly
     func testAdherenceMetricsUpdate() throws {
-        // GIVEN: User has specific adherence pattern
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile with initial doses
-        TestUtilities.createMedicationProfile(app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 3)  // Initial adherence pattern
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before metrics update test
         screenshotCapture.capture(
@@ -184,12 +178,9 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Streak counters work correctly
     func testStreakCountersDisplay() throws {
-        // GIVEN: User has consistent dose history with streaks
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile with consistent dose history
-        TestUtilities.createMedicationProfile(app, genericName: "tirzepatide", brandName: "Mounjaro", dose: "2.5")
-        TestUtilities.createHistoricalChartData(in: app, count: 6)  // Consistent adherence for streaks
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before streak counters test
         screenshotCapture.capture(
@@ -265,12 +256,9 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Color coding reflects adherence quality
     func testAdherenceColorCoding() throws {
-        // GIVEN: User has varying adherence rates
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile with moderate adherence data
-        TestUtilities.createMedicationProfile(app, genericName: "liraglutide", brandName: "Victoza", dose: "1.2")
-        TestUtilities.createHistoricalChartData(in: app, count: 4)  // Mixed adherence pattern
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before color coding test
         screenshotCapture.capture(
@@ -339,11 +327,8 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: VoiceOver accessibility works properly
     func testVoiceOverAccessibility() throws {
         // GIVEN: VoiceOver is enabled (simulated through accessibility testing)
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile with adherence data
-        TestUtilities.createMedicationProfile(app, genericName: "dulaglutide", brandName: "Trulicity", dose: "1.5")
-        TestUtilities.createHistoricalChartData(in: app, count: 5)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before VoiceOver test
         screenshotCapture.capture(
