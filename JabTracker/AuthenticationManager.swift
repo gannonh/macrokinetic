@@ -221,6 +221,16 @@ class AuthenticationManager: NSObject, ObservableObject {
                 self.authenticationState = .authenticated
             }
 
+            // Mark onboarding as complete if bypass flag is set
+            if ProcessInfo.processInfo.arguments.contains("--bypass-onboarding") {
+                mockUser.hasCompletedOnboarding = true
+                mockUser.onboardingCompletedAt = Date()
+                UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
+                try? context.save()
+                Self.logger.info("✅ AuthenticationManager: Marked onboarding as complete (bypass enabled)")
+            }
+
             // Only seed test data on first launch
             if isNewUser {
                 await self.seedTestDataIfRequested(for: mockUser, context: context)
