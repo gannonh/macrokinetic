@@ -112,8 +112,8 @@ final class CalendarIntegrationUITests: XCTestCase {
         // This test validates accessibility labels and identifiers are properly set
 
         // GIVEN: Calendar is displayed
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 2)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
         TestUtilities.navigateToHistoryView(in: app)
 
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
