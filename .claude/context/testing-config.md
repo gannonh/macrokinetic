@@ -312,13 +312,44 @@ The app supports several launch arguments for testing and development:
 **`--reset-app-data`**:
 - Clears all SwiftData users from database on launch
 - Clears onboarding completion status from UserDefaults
+- Clears chart dataset cache from Application Support directory
 - Resets to fresh app state (like first-time install)
 - Useful for testing onboarding and first-run experiences
+
+**`--bypass-onboarding`**:
+- Skips onboarding flow by marking it as complete
+- User created with `hasCompletedOnboarding = true`
+- Useful for testing main app features without going through onboarding
+- Works with `--ui-testing` and `--reset-app-data` flags
+- Takes priority over `--force-onboarding`
 
 **`--force-onboarding`**:
 - Forces onboarding flow to show even if user has completed it
 - Useful for repeatedly testing onboarding flow during development
 - Overrides normal onboarding completion logic
+- Ignored if `--bypass-onboarding` is also enabled
+
+**`--seed-test-7d`**:
+- Seeds 7 days of test data (~1 dose for weekly medications)
+- Uses TestDataSeeding.TestDataPreset.small configuration
+- Quick dataset for basic testing
+
+**`--seed-test-30d`**:
+- Seeds 30 days of test data (~4-5 doses for weekly medications)
+- Uses TestDataSeeding.TestDataPreset.medium configuration
+- Standard dataset for most testing scenarios
+
+**`--seed-test-90d`**:
+- Seeds 90 days of test data (~13 doses for weekly medications)
+- Uses TestDataSeeding.TestDataPreset.large configuration
+- Good for testing adherence patterns and analytics
+
+**`--seed-test-1y`**:
+- Seeds 365 days of test data (~52 doses for weekly medications)
+- Uses TestDataSeeding.TestDataPreset.extraLarge configuration
+- Used for performance testing and chart visualization with large datasets
+
+**Note**: Only one seed flag should be enabled at a time. If multiple are enabled, the last one processed will be used.
 
 ## Available Simulators
 1. **PRIMARY** iPhone 15,OS=17.5 (Default - UUID: 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB)
