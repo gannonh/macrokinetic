@@ -2,6 +2,7 @@
 framework: xcodebuild_swift_testing
 test_command: ./scripts/test.sh
 created: 2025-01-22T04:47:23Z
+last_updated: 2025-10-02T17:09:51Z
 ---
 
 # Test Driven Development

@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-01T20:00:09Z
-version: 3.0
+last_updated: 2025-10-02T17:09:51Z
+version: 3.1
 author: Claude Code PM System
 ---
 
@@ -10,37 +10,33 @@ author: Claude Code PM System
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
 - **Branch**: issue/59-analytics-orchestration-polish
-- **Last Commit**: 9c18c76 - Issue #59: update progress tracking - Phase 6 chart time range bug discovery
-- **Status**: Active development on Issue #59 Phase 6 (State & Performance Optimization), investigating critical chart time range filtering bug
+- **Last Commit**: 1295c3b - feat: Add bypass onboarding command line argument and update seed test flags
+- **Status**: Active development on Issue #59 - cache persistence testing and launch argument configuration
 
 ## Recent Work (Last 10 Commits)
-1. **9c18c76** - Issue #59: update progress tracking - Phase 6 chart time range bug discovery
-2. **c73c111** - wip: Update chart state on time range change in ConcentrationTimelineChart
-3. **4fa51ad** - WIP: Fix analytics chart performance and UX issues
-4. **606a5eb** - Issue #59: Extract AnalyticsView + add comprehensive OSLog logging
-5. **27bd7a3** - Issue #59: Fix SwiftData relationship mutation bug causing dose data loss
-6. **6223620** - feat: Enable test data seeding for UI testing and set UI testing flag in project configuration
-7. **ec38d32** - Issue #59: Fix Analytics tab lockup by caching chart dataset
-8. **7482018** - Issue #59: Integrate DoseDataService into AnalyticsView for efficient dose loading
-9. **7395641** - Issue #59: Add DoseDataService for database-level dose filtering
-10. **f1ad22d** - Issue #59: Add test data seeding utilities for unit and E2E tests
+1. **1295c3b** - feat: Add bypass onboarding command line argument and update seed test flags
+2. **9515737** - feat: Add launch arguments for bypassing onboarding and seeding test data
+3. **b01153a** - Issue #59: feat: Add bypass onboarding flag to mark onboarding as complete
+4. **ee57e74** - Issue #59: Fix cache persistence test - preserve cache on app restart
+5. **90d576f** - Issue #59: Update progress tracking - disk-based chart dataset caching implementation
+6. **7f61b60** - Issue #59: Implement disk-based chart dataset caching for instant app startup
+7. **cb1b328** - refactor: Extract chart data management to AnalyticsViewModel
+8. **8c1a8b4** - fix: Remove double-filtering bottleneck in ConcentrationTimelineChart
+9. **dd54b45** - Refactor: Extract helper methods to AnalyticsViewModel + fix time period UX
+10. **a174739** - Fix: Remove eager-loading observer from ConcentrationCard to fix 8s tab switch delay
 
 ## Current Working Directory Status
 - **Modified Files**: All committed (clean working directory)
 - **Branch Status**: issue/59-analytics-orchestration-polish (active feature branch)
-- **Current Phase**: Issue #59 Phase 6 - State & Performance Optimization
-- **Active Investigation**: Chart time range filtering bug (90d/1y showing only 30 days of data)
-- **Recent Session Work**:
-  - 🔍 **Issue #59 Phase 6 Started**: State & Performance Optimization phase
-  - 🐛 **Critical Bug Discovered**: 90d and 1y chart views showing only 30 days of data despite correct labels
-  - 📊 **Root Cause Identified**: ChartState configuration not synchronizing with dataset.configuration.timeRange changes
-  - ⚙️ **Fix Attempted**: Added .onChange and Hashable conformance, but bug persists
-  - 📝 **Performance Logging Issue**: ⏱️ timing logs no longer appearing in AnalyticsView console output
-  - 🎯 **7d UX Issue**: Single point display (no line) needs improvement - requires min 2 points for visualization
-  - 🔧 **Architecture Changes**: Extracted AnalyticsView to separate file (342 lines from ContentView)
-  - 📈 **OSLog Integration**: Comprehensive logging added to track SwiftData relationship mutations
-  - ✅ **Tab Lockup Fixed**: Cached chart dataset to prevent synchronous data fetching in view body
-  - ✅ **Relationship Bug Fixed**: Tuple-based API prevents profile.doses mutation causing data loss
+- **Current Phase**: Testing infrastructure improvements and launch argument configuration
+- **Recent Session Work** (2025-10-02):
+  - ✅ **Cache Persistence Fix**: Modified 1y performance test to preserve cache on app restart
+  - ✅ **Test Isolation**: Added `clearChartDatasetCache()` to `AuthenticationManager.resetAppData()`
+  - ✅ **SwiftLint Configuration**: Increased `type_body_length` threshold from 300 to 350
+  - ✅ **Bypass Onboarding Flag**: Implemented `--bypass-onboarding` to skip onboarding flow
+  - ✅ **Onboarding Completion**: User now marked with `hasCompletedOnboarding = true` when bypass flag enabled
+  - ✅ **Testing Documentation**: Updated testing-config.md with all launch argument documentation
+  - 📊 **Test Data Configuration**: Configured 90-day test data seeding for manual testing
 
 ## Completed Major Features
 ✅ **Medication Profile Management** (Issue #35)

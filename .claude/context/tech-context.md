@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-01T20:00:09Z
-version: 2.2
+last_updated: 2025-10-02T17:09:51Z
+version: 2.3
 author: Claude Code PM System
 ---
 
@@ -160,9 +160,10 @@ author: Claude Code PM System
 - **Production Safety**: Charts must handle malformed data gracefully without crashing
 
 ### SwiftLint Management for Large Files
-- **SwiftLint Type Body Length**: Large service classes require specific disable syntax (`// swiftlint:disable:next type_body_length`)
+- **SwiftLint Type Body Length**: Threshold increased to 350 lines (from 300) to accommodate complex service classes like AuthenticationManager
 - **Medical Service Classes**: ChartDataProcessor and similar services may exceed default line limits for comprehensive medical functionality
-- **Targeted Disables**: Use `swiftlint:disable:next` instead of blanket disables to maintain code quality standards
+- **Configuration Over Comments**: Prefer adjusting `.swiftlint.yml` thresholds over using disable comments to avoid blanket disable violations
+- **Targeted Disables**: When disables are necessary, use `swiftlint:disable:next` for specific rules instead of blanket disables
 
 ### Testing Data Generation Patterns
 - **Test Data Generation**: Sparse vs dense data generation impacts interpolation algorithm testing effectiveness
@@ -295,6 +296,7 @@ author: Claude Code PM System
 - **High Contrast Support**: Ensure chart elements remain visible and distinguishable in high contrast modes
 
 ## Update History
+- 2025-10-02T17:09:51Z: Updated SwiftLint Management section - increased type_body_length threshold to 350, prefer configuration changes over disable comments
 - 2025-10-01T20:00:09Z: Added Analytics UI/UX Integration section (Issue #59) with iOS HIG compliance patterns, performance standards, and accessibility requirements from Phase 2 design review
 - 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Framework section with CodeGen element access patterns, TestUtilities enhancements, and test quality framework integration from Issue #57 completion
 - 2025-09-26T01:23:01Z: Added AdherenceInsights Technology Integration section with Swift Testing framework debugging patterns and medical algorithm testing insights from Issue #57 business logic validation
