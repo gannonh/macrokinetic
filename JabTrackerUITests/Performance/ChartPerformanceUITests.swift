@@ -31,22 +31,7 @@ final class ChartPerformanceUITests: XCTestCase {
 
     override func tearDown() {
         super.tearDown()
-
-        // Clean up chart dataset cache to ensure test isolation
-        // Cache location: ~/Library/Application Support/ChartCache/concentrationDataset.json
-        let fileManager = FileManager.default
-        if let appSupport = fileManager.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        ).first {
-            let cacheDirectory = appSupport.appendingPathComponent("ChartCache", isDirectory: true)
-            let cacheFile = cacheDirectory.appendingPathComponent("concentrationDataset.json")
-
-            if fileManager.fileExists(atPath: cacheFile.path) {
-                try? fileManager.removeItem(at: cacheFile)
-                print("🗑️  Cleaned up chart dataset cache for test isolation")
-            }
-        }
+        TestUtilities.cleanupChartCache()
     }
 
     // MARK: - 30 Day Dataset Performance
