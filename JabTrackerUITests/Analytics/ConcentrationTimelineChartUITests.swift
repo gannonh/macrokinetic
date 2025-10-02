@@ -24,15 +24,9 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Chart displays concentration timeline correctly
     func testConcentrationTimelineDisplaysCorrectly() throws {
-        // GIVEN: User has medication profile with dose history
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile first
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-
-        // Create dose history for chart data
-        TestUtilities.createHistoricalChartData(in: app, count: 3)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to concentration timeline chart
         let analyticsTab = app.tabBars.buttons["Analytics"]
@@ -85,12 +79,9 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Interactive features work correctly
     func testInteractiveChartFeatures() throws {
         // GIVEN: ConcentrationTimelineChart is displayed with data
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and dose data
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 4)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to Analytics tab
         let analyticsTab = app.tabBars.buttons["Analytics"]
@@ -116,7 +107,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         XCTAssertTrue(chartElement.exists, "Chart should handle interactive features gracefully")
 
         // Verify chart maintains functionality after interactions
-        let timePeriodButton = app.buttons["time-period-last month"].firstMatch
+        let timePeriodButton = app.buttons["30d-button"].firstMatch
         XCTAssertTrue(
             timePeriodButton.exists, "Time period controls should remain functional after interactions")
         timePeriodButton.tap()
@@ -131,12 +122,9 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Time period selection works
     func testTimePeriodSelector() throws {
         // GIVEN: ConcentrationTimelineChart is displayed
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and dose data spanning different time periods
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 5)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to Analytics tab
         let analyticsTab = app.tabBars.buttons["Analytics"]
@@ -151,10 +139,10 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
             chartElement.waitForExistence(timeout: 5), "Chart should display for time period testing")
 
         // WHEN: User selects different time periods (7d, 30d, 90d, 1y)
-        let lastWeekButton = app.buttons["time-period-last week"].firstMatch
-        let lastMonthButton = app.buttons["time-period-last month"].firstMatch
-        let lastQuarterButton = app.buttons["time-period-last quarter"].firstMatch
-        let lastYearButton = app.buttons["time-period-last year"].firstMatch
+        let lastWeekButton = app.buttons["7d-button"].firstMatch
+        let lastMonthButton = app.buttons["30d-button"].firstMatch
+        let lastQuarterButton = app.buttons["90d-button"].firstMatch
+        let lastYearButton = app.buttons["1y-button"].firstMatch
 
         // Verify all time period buttons exist
         XCTAssertTrue(lastWeekButton.waitForExistence(timeout: 3), "Last Week button should exist")
@@ -191,13 +179,9 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Accessibility features work correctly
     func testChartAccessibilityFeatures() throws {
-        // GIVEN: ConcentrationTimelineChart is displayed with data
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and dose data
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 3)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to Analytics tab
         let analyticsTab = app.tabBars.buttons["Analytics"]
@@ -221,21 +205,21 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         XCTAssertTrue(chartElement.isHittable, "Chart should be hittable for accessibility navigation")
 
         // Test time period button accessibility
-        let lastWeekButton = app.buttons["time-period-last week"].firstMatch
-        let lastMonthButton = app.buttons["time-period-last month"].firstMatch
+        let lastWeekButton = app.buttons["7d-button"].firstMatch
+        let lastMonthButton = app.buttons["30d-button"].firstMatch
         let resetButton = app.buttons["reset-chart-button"].firstMatch
 
         // Verify all interactive elements are accessible
         XCTAssertTrue(
             lastWeekButton.waitForExistence(timeout: 3), "Time period buttons should be accessible")
-        XCTAssertTrue(lastWeekButton.isHittable, "Last Week button should be hittable")
+        XCTAssertTrue(lastWeekButton.isHittable, "7d button should be hittable")
         XCTAssertEqual(
-            lastWeekButton.label, "Last Week", "Last Week button should have correct accessibility label")
+            lastWeekButton.label, "7d time period", "7d button should have correct accessibility label")
 
-        XCTAssertTrue(lastMonthButton.isHittable, "Last Month button should be hittable")
+        XCTAssertTrue(lastMonthButton.isHittable, "30d button should be hittable")
         XCTAssertEqual(
-            lastMonthButton.label, "Last Month",
-            "Last Month button should have correct accessibility label")
+            lastMonthButton.label, "30d time period",
+            "30d button should have correct accessibility label")
 
         XCTAssertTrue(resetButton.isHittable, "Reset button should be hittable")
         XCTAssertEqual(
@@ -253,15 +237,9 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Performance with large datasets
     func testChartPerformanceWithLargeDatasets() throws {
         // GIVEN: User has extensive dose history (1+ year of data)
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-
-        // Create large dataset (simulating extensive dose history)
-        // Note: For E2E testing, we use a reasonable size to avoid excessive test duration
-        TestUtilities.createHistoricalChartData(in: app, count: 10)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: ConcentrationTimelineChart loads with full dataset
         let analyticsTab = app.tabBars.buttons["Analytics"]
@@ -286,7 +264,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         // Test time period switching performance with large dataset
         let performanceStartTime = Date()
 
-        let lastMonthButton = app.buttons["time-period-last month"].firstMatch
+        let lastMonthButton = app.buttons["30d-button"].firstMatch
         XCTAssertTrue(
             lastMonthButton.waitForExistence(timeout: 3), "Time period buttons should be available")
 
@@ -294,7 +272,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should handle time period changes with large dataset")
 
-        let lastYearButton = app.buttons["time-period-last year"].firstMatch
+        let lastYearButton = app.buttons["1y-button"].firstMatch
         lastYearButton.tap()
         // sleep(2)
         XCTAssertTrue(chartElement.exists, "Chart should handle year view with large dataset")
