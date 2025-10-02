@@ -9,11 +9,8 @@ final class DoseButtonUITests: XCTestCase {
 
     @MainActor
     func testQuickDoseButtonOpensSheetWithSmartDefaults() throws {
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Given: User has a medication profile set up
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // When: User taps the "+" (Add) tab button
         let addTab = app.tabBars.element.buttons["Add"]
@@ -38,11 +35,8 @@ final class DoseButtonUITests: XCTestCase {
 
     @MainActor
     func testQuickDoseSheetSuccessfulDoseLogging() throws {
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Given: User has a medication profile set up
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // When: User opens quick dose sheet
         let addTab = app.tabBars.element.buttons["Add"]
@@ -74,11 +68,8 @@ final class DoseButtonUITests: XCTestCase {
 
     @MainActor
     func testQuickDoseSheetAccessibilitySupport() throws {
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Given: User has a medication profile set up
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // When: User opens quick dose sheet
         let addTab = app.tabBars.element.buttons["Add"]
@@ -132,11 +123,8 @@ final class DoseButtonUITests: XCTestCase {
 
     @MainActor
     func testQuickDoseSheetCancellation() throws {
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Given: User has a medication profile set up
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // When: User opens quick dose sheet
         let addTab = app.tabBars.element.buttons["Add"]
