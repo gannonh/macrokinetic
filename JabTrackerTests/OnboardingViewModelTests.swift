@@ -232,7 +232,9 @@ struct OnboardingViewModelTests {
 
     // MARK: - Permission Request Tests
 
-    @Test("Notification permission request functionality")
+    @Test(
+        "Notification permission request functionality",
+        .disabled("Triggers system permission dialog that hangs test runner"))
     @MainActor
     func notificationPermissionRequest() async throws {
         let dataController = DataController.testContainer()
