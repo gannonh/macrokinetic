@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Enhanced chart point with interpolation metadata for pharmacokinetic concentration curves
 /// Supports Swift Charts LineMark with custom interpolation and styling capabilities
-struct AdvancedConcentrationPoint: Identifiable, Hashable {
+struct AdvancedConcentrationPoint: Identifiable, Hashable, Codable {
     let id: UUID
     let date: Date
     let concentration: Double
@@ -52,7 +52,7 @@ struct AdvancedConcentrationPoint: Identifiable, Hashable {
 }
 
 /// Statistical confidence interval for concentration predictions
-struct ConfidenceInterval: Hashable {
+struct ConfidenceInterval: Hashable, Codable {
     let lowerBound: Double
     let upperBound: Double
     let confidenceLevel: Double  // e.g., 0.95 for 95% confidence
@@ -65,7 +65,7 @@ struct ConfidenceInterval: Hashable {
 }
 
 /// Types of interpolation algorithms available for concentration curves
-public enum InterpolationType: String, CaseIterable {
+public enum InterpolationType: String, CaseIterable, Codable {
     case linear
     case pharmacokinetic  // Exponential decay-based
     case spline  // Cubic spline interpolation
@@ -94,7 +94,7 @@ public enum InterpolationType: String, CaseIterable {
 
 /// Enhanced dose marker with additional visualization metadata for Swift Charts
 /// Supports different marker styles, colors, and interaction states
-struct AdvancedDoseMarker: Identifiable, Hashable {
+struct AdvancedDoseMarker: Identifiable, Hashable, Codable {
     let id: UUID
     let date: Date
     let amount: Double
@@ -156,7 +156,7 @@ struct AdvancedDoseMarker: Identifiable, Hashable {
 }
 
 /// Additional metadata for dose markers enabling rich chart interactions
-struct DoseMarkerMetadata: Hashable {
+struct DoseMarkerMetadata: Hashable, Codable {
     let site: String?
     let notes: String?
     let hasPhoto: Bool

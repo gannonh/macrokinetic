@@ -49,14 +49,15 @@ enum TestUtilities {
 
     /// Preset test data configurations for E2E performance testing
     enum TestDataPreset {
-        case small  // 7 days
-        case medium  // 30 days
-        case large  // 365 days (1 year)
-        case extraLarge  // 730 days (2 years)
+        case sevenDays  // 7 days
+        case thirtyDays  // 30 days
+        case ninetyDays  // 90 days
+        case oneYear  // 365 days (1 year)
+        case twoYears  // 730 days (2 years)
 
         var launchEnvironment: [String: String] {
             switch self {
-            case .small:
+            case .sevenDays:
                 return [
                     "TEST_DATA_SEED": "true",
                     "TEST_DATA_DAYS": "7",
@@ -67,7 +68,7 @@ enum TestUtilities {
                     "TEST_DATA_VARIABILITY": "false",
                     "TEST_DATA_SKIPPED": "false",
                 ]
-            case .medium:
+            case .thirtyDays:
                 return [
                     "TEST_DATA_SEED": "true",
                     "TEST_DATA_DAYS": "30",
@@ -78,7 +79,18 @@ enum TestUtilities {
                     "TEST_DATA_VARIABILITY": "true",
                     "TEST_DATA_SKIPPED": "true",
                 ]
-            case .large:
+            case .ninetyDays:
+                return [
+                    "TEST_DATA_SEED": "true",
+                    "TEST_DATA_DAYS": "90",
+                    "TEST_DATA_MEDICATION": "semaglutide",
+                    "TEST_DATA_BRAND": "Ozempic",
+                    "TEST_DATA_DOSE": "0.75",
+                    "TEST_DATA_ADHERENCE": "0.93",
+                    "TEST_DATA_VARIABILITY": "true",
+                    "TEST_DATA_SKIPPED": "true",
+                ]
+            case .oneYear:
                 return [
                     "TEST_DATA_SEED": "true",
                     "TEST_DATA_DAYS": "365",
@@ -89,7 +101,7 @@ enum TestUtilities {
                     "TEST_DATA_VARIABILITY": "true",
                     "TEST_DATA_SKIPPED": "true",
                 ]
-            case .extraLarge:
+            case .twoYears:
                 return [
                     "TEST_DATA_SEED": "true",
                     "TEST_DATA_DAYS": "730",
@@ -105,10 +117,11 @@ enum TestUtilities {
 
         var daysOfHistory: Int {
             switch self {
-            case .small: return 7
-            case .medium: return 30
-            case .large: return 365
-            case .extraLarge: return 730
+            case .sevenDays: return 7
+            case .thirtyDays: return 30
+            case .ninetyDays: return 90
+            case .oneYear: return 365
+            case .twoYears: return 730
             }
         }
     }

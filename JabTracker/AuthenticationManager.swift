@@ -160,23 +160,44 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     private func setupUITestingUser() async {
         let context = self.dataController.container.mainContext
-        let mockUser = User(
-            email: "test@uitesting.com",
-            name: "UI Test User",
-            weight: 70.0,
-            weightUnit: "kg")
 
-        context.insert(mockUser)
+        // Check if a user already exists from a previous session
+        let fetchDescriptor = FetchDescriptor<User>()
+        let existingUsers = try? context.fetch(fetchDescriptor)
+
+        let mockUser: User
+        let isNewUser: Bool
+
+        if let existingUser = existingUsers?.first {
+            // Use existing user from previous session (preserves seeded data)
+            mockUser = existingUser
+            isNewUser = false
+            Self.logger.info("✅ AuthenticationManager: Found existing UI testing user, reusing with persisted data")
+        } else {
+            // Create new user on first launch
+            mockUser = User(
+                email: "test@uitesting.com",
+                name: "UI Test User",
+                weight: 70.0,
+                weightUnit: "kg")
+            context.insert(mockUser)
+            isNewUser = true
+            Self.logger.info("✅ AuthenticationManager: Creating new UI testing mock user")
+        }
+
         do {
             try context.save()
             await MainActor.run {
                 self.currentUser = mockUser
                 self.authenticationState = .authenticated
             }
-            Self.logger.info("✅ AuthenticationManager: UI testing mock user created and persisted")
 
-            // Check for test data seeding request
-            await self.seedTestDataIfRequested(for: mockUser, context: context)
+            // Only seed test data on first launch
+            if isNewUser {
+                await self.seedTestDataIfRequested(for: mockUser, context: context)
+            } else {
+                Self.logger.info("📊 Skipping test data seeding - using persisted data from previous session")
+            }
         } catch {
             Self.logger.error("❌ AuthenticationManager: Failed to persist UI testing user: \(error)")
             await MainActor.run {

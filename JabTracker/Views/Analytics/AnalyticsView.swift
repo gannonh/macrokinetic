@@ -136,7 +136,8 @@ struct AnalyticsView: View {
     }
 
     /// Generate FULL chart dataset once (all doses, all time)
-    /// This is slow but only happens ONCE per session
+    /// First tries to load from disk cache for instant startup
+    /// Only regenerates if cache miss (first launch or cache cleared)
     private func refreshChartDataset() {
         guard let user = currentUser else {
             viewModel.fullChartDataset = nil
@@ -144,6 +145,13 @@ struct AnalyticsView: View {
             return
         }
 
+        // Try to load from cache first (instant vs 80s generation)
+        if viewModel.loadFromCache(selectedPeriod: selectedTimePeriod) {
+            // Cache hit - instant load, no generation needed
+            return
+        }
+
+        // Cache miss - need to generate full dataset
         // Show loading indicator immediately
         viewModel.chartDataset = nil
 
