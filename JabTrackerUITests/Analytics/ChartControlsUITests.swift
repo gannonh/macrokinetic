@@ -27,6 +27,11 @@ final class ChartControlsUITests: XCTestCase {
         screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "baseline")
     }
 
+    override func tearDown() {
+        super.tearDown()
+        TestUtilities.cleanupChartCache()
+    }
+
     // MARK: - Helper Methods
 
     /// Find chart element using multiple possible identifiers
@@ -40,14 +45,9 @@ final class ChartControlsUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Time period selector works correctly
     func testTimePeriodSelectorChangesChartTimeframe() throws {
         // GIVEN: User has dose data and is viewing concentration timeline chart
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile first
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-
-        // Create multiple doses for chart data
-        TestUtilities.createHistoricalChartData(in: app, count: 5)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before chart controls test
         screenshotCapture.capture(
@@ -143,12 +143,9 @@ final class ChartControlsUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Chart controls display correct state
     func testChartControlsDisplayCorrectState() throws {
         // GIVEN: User has chart controls visible
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and dose data
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 5)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before controls state test
         screenshotCapture.capture(
@@ -164,11 +161,13 @@ final class ChartControlsUITests: XCTestCase {
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
 
-        // Wait for Analytics view to load
-        // sleep(3)
+        // Debug: Find what elements are actually available
+        if enableDebugOutput {
+            TestUtilities.debugElements(in: app, containing: "chart")
+        }
 
-        // Verify chart is present (not empty state)
-        let chartElement = findChartElement(in: app)
+        // Verify chart is present - check the ScrollView container first
+        let chartElement = app.scrollViews.otherElements["concentration-timeline-chart"]
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should be present with test data")
         let navEnd = Date()
@@ -186,11 +185,10 @@ final class ChartControlsUITests: XCTestCase {
         )
 
         // WHEN: User interacts with time period controls
-        // Now that accessibility identifiers are fixed, we can use them directly
-        let lastWeekButton = app.buttons["time-period-last week"]
-        let lastMonthButton = app.buttons["time-period-last month"]
-        let lastQuarterButton = app.buttons["time-period-last quarter"]
-        let lastYearButton = app.buttons["time-period-last year"]
+        let lastWeekButton = app.buttons["7d-button"]
+        let lastMonthButton = app.buttons["30d-button"]
+        let lastQuarterButton = app.buttons["90d-button"]
+        let lastYearButton = app.buttons["1y-button"]
 
         // THEN: Time period controls should be accessible and functional
         XCTAssertTrue(lastWeekButton.waitForExistence(timeout: 3), "Last Week button should exist")
@@ -238,13 +236,9 @@ final class ChartControlsUITests: XCTestCase {
 
     // MARK: - ACCEPTANCE CRITERION: Chart controls are accessible
     func testChartControlsAccessibility() throws {
-        // GIVEN: User is viewing concentration timeline chart
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and dose data
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 3)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before accessibility test
         screenshotCapture.capture(
@@ -259,11 +253,8 @@ final class ChartControlsUITests: XCTestCase {
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
 
-        // Wait for Analytics view to load
-        // sleep(3)
-
         // Verify chart is present
-        let chartElement = findChartElement(in: app)
+        let chartElement = app.scrollViews.otherElements["concentration-timeline-chart"]
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should be present with test data")
         let navEnd = Date()
@@ -288,10 +279,10 @@ final class ChartControlsUITests: XCTestCase {
         print("✅ Chart accessibility label: '\(chartElement.label)'")
 
         // Test time period button accessibility
-        let lastWeekButton = app.buttons["time-period-last week"]
-        let lastMonthButton = app.buttons["time-period-last month"]
-        let lastQuarterButton = app.buttons["time-period-last quarter"]
-        let lastYearButton = app.buttons["time-period-last year"]
+        let lastWeekButton = app.buttons["7d-button"]
+        let lastMonthButton = app.buttons["30d-button"]
+        let lastQuarterButton = app.buttons["90d-button"]
+        let lastYearButton = app.buttons["1y-button"]
 
         XCTAssertTrue(
             lastWeekButton.waitForExistence(timeout: 3), "Last Week button should be accessible")
@@ -305,13 +296,13 @@ final class ChartControlsUITests: XCTestCase {
         XCTAssertTrue(lastQuarterButton.isHittable, "Last Quarter button should be hittable")
         XCTAssertTrue(lastYearButton.isHittable, "Last Year button should be hittable")
 
-        // Test button labels for accessibility - buttons should have their text as the label
-        XCTAssertEqual(lastWeekButton.label, "Last Week", "Last Week button should have correct label")
+        // Test button labels for accessibility - buttons should have their time period as the label
+        XCTAssertEqual(lastWeekButton.label, "7d time period", "7d button should have correct label")
         XCTAssertEqual(
-            lastMonthButton.label, "Last Month", "Last Month button should have correct label")
+            lastMonthButton.label, "30d time period", "30d button should have correct label")
         XCTAssertEqual(
-            lastQuarterButton.label, "Last Quarter", "Last Quarter button should have correct label")
-        XCTAssertEqual(lastYearButton.label, "Last Year", "Last Year button should have correct label")
+            lastQuarterButton.label, "90d time period", "90d button should have correct label")
+        XCTAssertEqual(lastYearButton.label, "1y time period", "1y button should have correct label")
 
         // Test VoiceOver interaction with chart
         XCTAssertTrue(chartElement.isHittable, "Chart should be hittable for accessibility navigation")
@@ -334,12 +325,9 @@ final class ChartControlsUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Multiple time periods can be selected
     func testMultipleTimePeriodSelection() throws {
         // GIVEN: Chart with accessible time period options
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and dose data for testing
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 4)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before multiple selection test
         screenshotCapture.capture(
@@ -354,11 +342,8 @@ final class ChartControlsUITests: XCTestCase {
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
 
-        // Wait for Analytics view to load
-        // sleep(3)
-
         // Verify chart is present with data
-        let chartElement = findChartElement(in: app)
+        let chartElement = app.scrollViews.otherElements["concentration-timeline-chart"]
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should be present with test data")
         let navEnd = Date()
@@ -376,10 +361,10 @@ final class ChartControlsUITests: XCTestCase {
         )
 
         // WHEN: User selects different time periods sequentially
-        let lastWeekButton = app.buttons["time-period-last week"]
-        let lastMonthButton = app.buttons["time-period-last month"]
-        let lastQuarterButton = app.buttons["time-period-last quarter"]
-        let lastYearButton = app.buttons["time-period-last year"]
+        let lastWeekButton = app.buttons["7d-button"]
+        let lastMonthButton = app.buttons["30d-button"]
+        let lastQuarterButton = app.buttons["90d-button"]
+        let lastYearButton = app.buttons["1y-button"]
 
         // Verify all buttons are accessible
         XCTAssertTrue(lastWeekButton.waitForExistence(timeout: 3), "Last Week button should exist")
@@ -430,12 +415,9 @@ final class ChartControlsUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Default time period is selected on load
     func testDefaultTimePeriodSelection() throws {
         // GIVEN: User opens chart for first time
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create medication profile and dose data
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-        TestUtilities.createHistoricalChartData(in: app, count: 2)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // 📸 PHASE 1: Capture baseline before default period test
         screenshotCapture.capture(
@@ -450,11 +432,8 @@ final class ChartControlsUITests: XCTestCase {
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
         analyticsTab.tap()
 
-        // Wait for Analytics view to load
-        // sleep(3)
-
         // WHEN: Chart loads with default configuration
-        let chartElement = findChartElement(in: app)
+        let chartElement = app.scrollViews.otherElements["concentration-timeline-chart"]
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should load with default time period")
         let navEnd = Date()
@@ -484,10 +463,10 @@ final class ChartControlsUITests: XCTestCase {
         )
 
         // Verify that time period buttons are present and one is selected by default
-        let lastWeekButton = app.buttons["time-period-last week"]
-        let lastMonthButton = app.buttons["time-period-last month"]
-        let lastQuarterButton = app.buttons["time-period-last quarter"]
-        let lastYearButton = app.buttons["time-period-last year"]
+        let lastWeekButton = app.buttons["7d-button"]
+        let lastMonthButton = app.buttons["30d-button"]
+        let lastQuarterButton = app.buttons["90d-button"]
+        let lastYearButton = app.buttons["1y-button"]
 
         // All buttons should exist
         XCTAssertTrue(lastWeekButton.waitForExistence(timeout: 3), "Last Week button should exist")
