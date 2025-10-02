@@ -9,7 +9,6 @@ import OSLog
 import SwiftData
 import SwiftUI
 
-// swiftlint:disable:next type_body_length
 struct AnalyticsView: View {
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
@@ -28,11 +27,6 @@ struct AnalyticsView: View {
     @State private var currentUser: User?
     @State private var medicationProfiles: [MedicationProfile] = []
     @State private var isLoadingData = true
-
-    // Full dataset (generated once with ALL data)
-    @State private var fullChartDataset: ConcentrationChartDataset?
-    // Filtered dataset (displayed - filtered from fullChartDataset)
-    @State private var chartDataset: ConcentrationChartDataset?
 
     enum AnalyticsType: String, CaseIterable {
         case concentration = "Concentration"
@@ -61,11 +55,19 @@ struct AnalyticsView: View {
                     TimePeriodSelector(selectedPeriod: $selectedTimePeriod)
                         .padding(.horizontal)
                         .onChange(of: selectedTimePeriod) {
-                            // Show loading immediately, then filter in background
-                            let switchStart = Date()
-                            chartDataset = nil
-                            Task {
-                                await filterChartDatasetAsync()
+                            // Defer entire operation to next run loop to allow button animation
+                            Task { @MainActor in
+                                let switchStart = Date()
+
+                                // Set loading state
+                                viewModel.chartDataset = nil
+
+                                // Yield to allow UI to show loading indicator
+                                await Task.yield()
+
+                                // Perform filtering
+                                await viewModel.filterChartDatasetAsync(to: selectedTimePeriod)
+
                                 let totalTime = Date().timeIntervalSince(switchStart) * 1000
                                 Self.logger.info("  📊 Total time period switch: \(String(format: "%.1f", totalTime))ms")
                             }
@@ -137,129 +139,25 @@ struct AnalyticsView: View {
     /// This is slow but only happens ONCE per session
     private func refreshChartDataset() {
         guard let user = currentUser else {
-            fullChartDataset = nil
-            chartDataset = nil
+            viewModel.fullChartDataset = nil
+            viewModel.chartDataset = nil
             return
         }
 
         // Show loading indicator immediately
-        chartDataset = nil
+        viewModel.chartDataset = nil
 
-        Self.logger.info("🔄 Generating FULL chart dataset (all time)...")
-
-        let refreshStartTime = Date()
-
-        // Capture values needed for background processing
-        let profiles = medicationProfiles
-        let context = modelContext
-        let doseService = doseDataService
-        let chartService = chartDatasetService
-
-        // Generate dataset on background thread
-        Task.detached(priority: .userInitiated) {
-            let doseFetchStart = Date()
-
-            // Fetch ALL doses (not filtered by time period)
-            var profilesWithDoses: [(MedicationProfile, [Dose])] = []
-
-            for profile in profiles {
-                let doses = await MainActor.run {
-                    doseService.fetchDoses(for: profile, within: .all, context: context)  // Fetch ALL
-                }
-                guard !doses.isEmpty else { continue }
-                profilesWithDoses.append((profile, doses))
-            }
-
-            let doseFetchEnd = Date()
-            let doseFetchTime = doseFetchEnd.timeIntervalSince(doseFetchStart) * 1000
-            let totalDoses = profilesWithDoses.reduce(0) { $0 + $1.1.count }
-
-            Self.logger.info("  ⏱️  Dose fetching: \(String(format: "%.1f", doseFetchTime))ms (\(totalDoses) doses)")
-
-            // Generate FULL chart dataset (heavy computation - all concentration points)
-            let chartGenStart = Date()
-            let fullDataset = chartService.generateChartDataset(
-                for: user,
-                profilesWithDoses: profilesWithDoses,
-                timePeriod: .all  // Generate for ALL time
+        Task {
+            await viewModel.refreshChartDataset(
+                config: AnalyticsViewModel.RefreshConfig(
+                    user: user,
+                    profiles: medicationProfiles,
+                    doseService: doseDataService,
+                    chartService: chartDatasetService,
+                    context: modelContext,
+                    selectedPeriod: selectedTimePeriod
+                )
             )
-            let chartGenEnd = Date()
-            let chartGenTime = chartGenEnd.timeIntervalSince(chartGenStart) * 1000
-
-            Self.logger.info("  ⏱️  Chart generation: \(String(format: "%.1f", chartGenTime))ms")
-
-            // Update UI on main thread
-            await MainActor.run {
-                self.fullChartDataset = fullDataset
-
-                // Filter to selected period for display
-                self.filterChartDataset()
-
-                let totalTime = Date().timeIntervalSince(refreshStartTime) * 1000
-                Self.logger.info("  ⏱️  Total refresh: \(String(format: "%.1f", totalTime))ms")
-                Self.logger.info("✅ Full dataset generated and cached")
-            }
-        }
-    }
-
-    /// Filter full dataset to selected time period (INSTANT - <10ms)
-    private func filterChartDataset() {
-        guard let full = fullChartDataset else {
-            chartDataset = nil
-            return
-        }
-
-        let filterStart = Date()
-
-        // Map ChartDataProcessor.TimePeriod to TimeRange
-        let timeRange: TimeRange = {
-            switch selectedTimePeriod {
-            case .last7Days: return .lastWeek
-            case .last30Days: return .lastMonth
-            case .last90Days: return .lastQuarter
-            case .lastYear: return .lastYear
-            case .all: return .all
-            }
-        }()
-
-        // INSTANT: Just filter arrays (no regeneration)
-        chartDataset = full.filtered(to: timeRange)
-
-        let filterTime = Date().timeIntervalSince(filterStart) * 1000
-        Self.logger.info("  ⚡ Filtered to \(timeRange.displayName): \(String(format: "%.1f", filterTime))ms")
-    }
-
-    /// Async version of filterChartDataset for responsive UI during time period changes
-    private func filterChartDatasetAsync() async {
-        guard let full = fullChartDataset else {
-            await MainActor.run {
-                chartDataset = nil
-            }
-            return
-        }
-
-        let filterStart = Date()
-
-        // Map ChartDataProcessor.TimePeriod to TimeRange
-        let timeRange: TimeRange = {
-            switch selectedTimePeriod {
-            case .last7Days: return .lastWeek
-            case .last30Days: return .lastMonth
-            case .last90Days: return .lastQuarter
-            case .lastYear: return .lastYear
-            case .all: return .all
-            }
-        }()
-
-        // Filter on background thread (doesn't block UI)
-        let filtered = full.filtered(to: timeRange)
-
-        let filterTime = Date().timeIntervalSince(filterStart) * 1000
-
-        // Update UI on main thread
-        await MainActor.run {
-            chartDataset = filtered
-            Self.logger.info("  ⚡ Filtered to \(timeRange.displayName): \(String(format: "%.1f", filterTime))ms")
         }
     }
 
@@ -268,7 +166,7 @@ struct AnalyticsView: View {
     @ViewBuilder
     private func concentrationChartSection(for user: User) -> some View {
         // Use cached chart dataset (generated once, chart updates itself via onChange)
-        if let dataset = chartDataset {
+        if let dataset = viewModel.chartDataset {
             ConcentrationTimelineChart(dataset: dataset)
         } else {
             chartLoadingView()
