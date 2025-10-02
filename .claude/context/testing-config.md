@@ -59,7 +59,7 @@ XCUITests run in a separate process and cannot directly access the app's SwiftDa
 // E2E tests use launch arguments to trigger seeding
 func testChartWithSeededData() throws {
     // Launch app with pre-seeded data using preset
-    let app = TestUtilities.launchAppWithSeededData(preset: .medium)
+    let app = TestUtilities.launchAppWithSeededData(preset: .thirtyDays)
 
     // App automatically seeds 30 days of data at startup
     // No UI interaction needed - data is instantly available
@@ -76,26 +76,30 @@ func testChartWithSeededData() throws {
 
 ```swift
 // TestUtilities.TestDataPreset enum provides these options:
-.small      // 7 days, 1-2 doses
-.medium     // 30 days, ~4-5 doses, realistic adherence
-.large      // 365 days, ~52 doses, performance testing
-.extraLarge // 730 days, ~104 doses, stress testing
+.sevenDays   // 7 days, 1-2 doses
+.thirtyDays  // 30 days, ~4-5 doses, realistic adherence
+.ninetyDays  // 90 days, ~13 doses, performance testing
+.oneYear     // 365 days, ~52 doses, performance testing
+.twoYears    // 730 days, ~104 doses, stress testing
 ```
 
 ### Preset Configurations (Unit Tests)
 
 ```swift
-// Small: 7 days, 100% adherence, no variability (quick tests)
-let result = try TestDataSeeding.seedData(into: context, config: .small)
+// Seven Days: 7 days, 100% adherence, no variability (quick tests)
+let result = try TestDataSeeding.seedData(into: context, config: .sevenDays)
 
-// Medium: 30 days, 95% adherence, timing variability (standard tests)
-let result = try TestDataSeeding.seedData(into: context, config: .medium)
+// Thirty Days: 30 days, 95% adherence, timing variability (standard tests)
+let result = try TestDataSeeding.seedData(into: context, config: .thirtyDays)
 
-// Large: 365 days, 92% adherence, realistic patterns (performance tests)
-let result = try TestDataSeeding.seedData(into: context, config: .large)
+// Ninety Days: 90 days, 93% adherence, realistic patterns (performance tests)
+let result = try TestDataSeeding.seedData(into: context, config: .ninetyDays)
 
-// Extra Large: 730 days, 90% adherence (stress tests)
-let result = try TestDataSeeding.seedData(into: context, config: .extraLarge)
+// One Year: 365 days, 92% adherence, realistic patterns (performance tests)
+let result = try TestDataSeeding.seedData(into: context, config: .oneYear)
+
+// Two Years: 730 days, 90% adherence (stress tests)
+let result = try TestDataSeeding.seedData(into: context, config: .twoYears)
 ```
 
 ### Custom Configuration (Unit Tests)
@@ -149,7 +153,7 @@ struct TestDataSeedingResult {
 /// Test chart rendering with 365 days of pre-seeded data
 func testChartPerformanceWith1YearData() throws {
     // GIVEN: App launched with 1 year of pre-seeded data (~52 doses)
-    let preset = TestUtilities.TestDataPreset.large
+    let preset = TestUtilities.TestDataPreset.oneYear
     let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
     print("📊 App launched with \(preset.daysOfHistory) days of data")

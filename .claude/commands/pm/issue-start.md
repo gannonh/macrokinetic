@@ -371,7 +371,7 @@ Task:
       9. **TEST COMMAND**: ./scripts/test.sh unit {X}
       10. **UI TEST COMMAND**: ./scripts/test.sh ui {X} {TestClassName}
 
-      Outside-In TDD Flow
+      ## Outside-In TDD Flow
 
       Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
 
@@ -403,7 +403,7 @@ Task:
       7. Integration Tests (GREEN PHASE): Run integration tests to verify correctness
       8. E2E Tests (GREEN PHASE - ACCEPTANCE): Write full E2E tests that verify the entire user flow
 
-      E2E Testing Element Targeting (CRITICAL)
+      ### E2E Testing Element Targeting (CRITICAL)
 
       Element targeting is the primary challenge in E2E testing.
 
@@ -431,17 +431,41 @@ Task:
       - **Form toggles** → require coordinate-based tapping, not direct `.tap()`
       - **XCUIElementQuery** → has `.count` property, not `.isEmpty` (SwiftLint auto-fix breaks this)
 
-      ### Essential Utilities
+      #### Essential Utilities
       - **`TestUtilities.debugElements()`** - Debug accessibility hierarchy
       - **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
       - Use **debug output** to identify correct element types before writing selectors
 
-      ### Systematic Process
+      #### Systematic Process
       1. Test fails to find element → Add `TestUtilities.debugElements()`
       2. Analyze debug output → Identify actual element type and identifier
       3. Update test selector → Use correct element type (collectionViews/tables/buttons)
       4. Remove debug code → Clean up after fixing selector
       5. Document learning → Update style guide for future reference
+
+      ### E2E Test Seeding 
+
+      // E2E tests use launch arguments to trigger seeding
+      func testChartWithSeededData() throws {
+         // Launch app with pre-seeded data using preset
+         let app = TestUtilities.launchAppWithSeededData(preset: .thirtyDays)
+
+         // App automatically seeds 30 days of data at startup
+         // No UI interaction needed - data is instantly available
+
+         let analyticsTab = app.tabBars.buttons["Analytics"]
+         analyticsTab.tap()
+
+         let chart = app.otherElements["concentration-timeline-chart"].firstMatch
+         XCTAssertTrue(chart.waitForExistence(timeout: 10))
+      }
+
+      // TestUtilities.TestDataPreset enum provides these options:
+      .sevenDays   // 7 days, 1-2 doses
+      .thirtyDays  // 30 days, ~4-5 doses, realistic adherence
+      .ninetyDays  // 90 days, ~13 doses, performance testing
+      .oneYear     // 365 days, ~52 doses, performance testing
+      .twoYears    // 730 days, ~104 doses, stress testing
 
       ## ⚠️ CRITICAL TESTING ANTI-PATTERNS - AVOID AT ALL COSTS
 
@@ -480,6 +504,7 @@ Task:
       - Coverage reports saved to test log directory and `/tmp/jab-tracker-coverage.xcresult`
       - Manual authentication tests require Xcode for interactive Apple ID flow
       - Log files include: `raw_output.txt`, `results.xcresult`, `coverage.json` (if --coverage used)
+      - Testing documentation: @.claude/context/testing-config.md
     
       Coordination Checkpoint:
       - Update your stream file with "ready_for_testing: true"

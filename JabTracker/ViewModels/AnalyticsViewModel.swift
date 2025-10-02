@@ -28,13 +28,31 @@ class AnalyticsViewModel {
 
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "AnalyticsViewModel")
 
-    /// Full chart dataset (all time) - generated once and cached
+    /// Disk cache for chart dataset persistence
+    private let cache = ChartDatasetCache()
+
+    /// Full chart dataset (all time) - generated once and cached in memory + disk
     var fullChartDataset: ConcentrationChartDataset?
 
     /// Filtered chart dataset for current time period
     var chartDataset: ConcentrationChartDataset?
 
     // MARK: - Chart Data Management
+
+    /// Try to load cached dataset from disk (instant vs 80s generation)
+    /// - Parameter selectedPeriod: Initial time period to filter to
+    /// - Returns: true if loaded from cache, false if cache miss
+    func loadFromCache(selectedPeriod: ChartDataProcessor.TimePeriod) -> Bool {
+        guard let cached = cache.load() else {
+            Self.logger.info("📭 No cached dataset - will need to generate")
+            return false
+        }
+
+        fullChartDataset = cached
+        filterChartDataset(to: selectedPeriod)
+        Self.logger.info("✅ Loaded from cache - instant startup")
+        return true
+    }
 
     /// Refresh full chart dataset (all time) - only happens once per session
     /// - Parameter config: Configuration containing user, profiles, services, context, and selected period
@@ -86,7 +104,16 @@ class AnalyticsViewModel {
 
             let totalTime = Date().timeIntervalSince(refreshStartTime) * 1000
             Self.logger.info("  ⏱️  Total refresh: \(String(format: "%.1f", totalTime))ms")
-            Self.logger.info("✅ Full dataset generated and cached")
+            Self.logger.info("✅ Full dataset generated and cached in memory")
+
+            // Save to disk for instant startup next time
+            if let dataset = self.fullChartDataset {
+                do {
+                    try self.cache.save(dataset)
+                } catch {
+                    Self.logger.error("❌ Failed to save chart dataset to cache: \(error.localizedDescription)")
+                }
+            }
         }
     }
 

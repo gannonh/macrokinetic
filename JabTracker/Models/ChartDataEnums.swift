@@ -7,7 +7,7 @@ import Foundation
 import SwiftUI
 
 /// Visual styles for dose markers in Swift Charts
-enum DoseMarkerStyle: String, CaseIterable {
+enum DoseMarkerStyle: String, CaseIterable, Codable {
     case standard
     case emphasized
     case skipped
@@ -50,7 +50,7 @@ enum DoseMarkerStyle: String, CaseIterable {
 }
 
 /// Alert levels for dose markers to indicate timing or adherence issues
-enum DoseAlertLevel: String, CaseIterable {
+enum DoseAlertLevel: String, CaseIterable, Codable {
     case normal
     case info
     case warning
@@ -76,7 +76,7 @@ enum DoseAlertLevel: String, CaseIterable {
 }
 
 /// Adherence status classifications for dose timing analysis
-enum AdherenceStatus: String, CaseIterable {
+enum AdherenceStatus: String, CaseIterable, Codable {
     case early
     case onTime
     case late
@@ -102,7 +102,7 @@ enum AdherenceStatus: String, CaseIterable {
 }
 
 /// Timing accuracy levels for dose administration precision
-enum TimingAccuracy: String, CaseIterable {
+enum TimingAccuracy: String, CaseIterable, Codable {
     case exact
     case approximate
     case estimated

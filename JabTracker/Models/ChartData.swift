@@ -11,7 +11,7 @@ import SwiftUI
 
 /// Comprehensive chart configuration for concentration timeline visualization
 /// Encapsulates all chart appearance, behavior, and interaction settings
-public struct ConcentrationChartConfiguration {
+public struct ConcentrationChartConfiguration: Codable {
     // Timeline and scale settings
     public let timeRange: TimeRange
     public let concentrationRange: ConcentrationRange
@@ -60,7 +60,7 @@ public struct ConcentrationChartConfiguration {
 }
 
 /// Time range configuration for chart X-axis
-public enum TimeRange: Equatable {
+public enum TimeRange: Equatable, Codable {
     case automatic
     case custom(startDate: Date, endDate: Date)
     case last24Hours
@@ -127,7 +127,7 @@ public enum TimeRange: Equatable {
 }
 
 /// Concentration range configuration for chart Y-axis
-public enum ConcentrationRange: Equatable {
+public enum ConcentrationRange: Equatable, Codable {
     case automatic
     case custom(min: Double, max: Double)
     case therapeuticWindow(min: Double, max: Double, optimal: Double)
@@ -151,7 +151,7 @@ public enum ConcentrationRange: Equatable {
 }
 
 /// Interpolation algorithm settings for smooth curve generation
-public struct InterpolationSettings {
+public struct InterpolationSettings: Codable {
     let type: InterpolationType
     let intervalHours: Double
     let smoothingFactor: Double
@@ -191,7 +191,7 @@ public struct InterpolationSettings {
 }
 
 /// Chart visual theme configurations
-public enum ChartTheme: Equatable {
+public enum ChartTheme: Equatable, Codable {
     case medical
     case consumer
     case professional
@@ -250,14 +250,56 @@ public struct GridSettings {
     )
 }
 
-public enum GridLineStyle {
+// MARK: - GridSettings Codable Conformance
+extension GridSettings: Codable {
+    enum CodingKeys: String, CodingKey {
+        case showHorizontalGrid
+        case showVerticalGrid
+        case gridLineStyle
+        case gridColorComponents
+        case gridOpacity
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(showHorizontalGrid, forKey: .showHorizontalGrid)
+        try container.encode(showVerticalGrid, forKey: .showVerticalGrid)
+        try container.encode(gridLineStyle, forKey: .gridLineStyle)
+
+        // Encode Color as RGBA components
+        let components = gridColor.cgColor?.components ?? [0, 0, 0, 1]
+        try container.encode(components, forKey: .gridColorComponents)
+
+        try container.encode(gridOpacity, forKey: .gridOpacity)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        showHorizontalGrid = try container.decode(Bool.self, forKey: .showHorizontalGrid)
+        showVerticalGrid = try container.decode(Bool.self, forKey: .showVerticalGrid)
+        gridLineStyle = try container.decode(GridLineStyle.self, forKey: .gridLineStyle)
+
+        // Decode Color from RGBA components
+        let components = try container.decode([CGFloat].self, forKey: .gridColorComponents)
+        gridColor = Color(
+            red: components.count > 0 ? components[0] : 0,
+            green: components.count > 1 ? components[1] : 0,
+            blue: components.count > 2 ? components[2] : 0,
+            opacity: components.count > 3 ? components[3] : 1
+        )
+
+        gridOpacity = try container.decode(Double.self, forKey: .gridOpacity)
+    }
+}
+
+public enum GridLineStyle: Codable {
     case solid
     case dashed
     case dotted
 }
 
 /// Chart axis configuration and formatting
-public struct AxisSettings {
+public struct AxisSettings: Codable {
     let timeAxisFormat: TimeAxisFormat
     let concentrationAxisFormat: ConcentrationAxisFormat
     let showAxisLabels: Bool
@@ -273,7 +315,7 @@ public struct AxisSettings {
     )
 }
 
-public enum TimeAxisFormat {
+public enum TimeAxisFormat: Codable {
     case adaptive  // Automatically choose based on time range
     case hourly
     case daily
@@ -281,15 +323,16 @@ public enum TimeAxisFormat {
     case monthly
 }
 
-public enum ConcentrationAxisFormat {
+public enum ConcentrationAxisFormat: Codable {
     case decimal
     case scientific
     case percentage
-    case custom(formatter: NumberFormatter)
+    // Note: custom(formatter: NumberFormatter) removed for Codable conformance
+    // Can be re-added with custom Codable implementation if needed
 }
 
 /// Chart interaction behavior settings
-public struct InteractionSettings {
+public struct InteractionSettings: Codable {
     let enableZoom: Bool
     let enablePan: Bool
     let enableSelection: Bool
@@ -314,7 +357,7 @@ public struct InteractionSettings {
 }
 
 /// Animation behavior for chart transitions and updates
-public struct AnimationSettings {
+public struct AnimationSettings: Codable {
     let enableAnimations: Bool
     let duration: Double
     let animationType: AnimationType
@@ -342,7 +385,7 @@ public struct AnimationSettings {
     )
 }
 
-public enum AnimationType {
+public enum AnimationType: Codable {
     case linear
     case spring
     case easeIn
@@ -350,7 +393,7 @@ public enum AnimationType {
     case easeInOut
 }
 
-public enum EasingFunction {
+public enum EasingFunction: Codable {
     case linear
     case easeIn
     case easeOut
@@ -362,7 +405,7 @@ public enum EasingFunction {
 
 /// Complete dataset for rendering concentration timeline charts
 /// Combines concentration curves, dose markers, and configuration
-struct ConcentrationChartDataset {
+struct ConcentrationChartDataset: Codable {
     let concentrationCurves: [ConcentrationCurve]
     let doseMarkers: [AdvancedDoseMarker]
     let configuration: ConcentrationChartConfiguration
@@ -422,7 +465,7 @@ struct ConcentrationChartDataset {
 }
 
 /// Individual concentration curve with styling and metadata
-struct ConcentrationCurve: Identifiable {
+struct ConcentrationCurve: Identifiable, Codable {
     let id = UUID()
     let points: [AdvancedConcentrationPoint]
     let medication: String
@@ -443,7 +486,7 @@ struct ConcentrationCurve: Identifiable {
 }
 
 /// Visual styling options for concentration curves
-enum CurveStyle {
+enum CurveStyle: Codable {
     case smooth
     case angular
     case dashed
@@ -462,7 +505,7 @@ enum CurveStyle {
 }
 
 /// Metadata for chart context and documentation
-struct ChartMetadata {
+struct ChartMetadata: Codable {
     let title: String
     let subtitle: String?
     let generatedAt: Date
