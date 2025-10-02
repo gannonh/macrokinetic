@@ -125,8 +125,8 @@ final class CalendarNavigationUITests: XCTestCase {
 
     func test_calendar_dateSelection() throws {
         // GIVEN: Calendar is displayed with doses
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 4)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
         TestUtilities.navigateToHistoryView(in: app)
 
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
@@ -200,8 +200,8 @@ final class CalendarNavigationUITests: XCTestCase {
 
     func test_calendar_viewToggling() throws {
         // GIVEN: User is in History tab with existing doses
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
         TestUtilities.navigateToHistoryView(in: app)
 
         // Verify we start in list view
