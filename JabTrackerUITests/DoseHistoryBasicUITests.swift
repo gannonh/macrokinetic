@@ -17,10 +17,8 @@ final class DoseHistoryBasicUITests: XCTestCase {
 
     @MainActor
     func test_doseHistory_displaysInReverseChronologicalOrder() throws {
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Given: User has medication profile and multiple doses
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // When: User navigates to History tab
         TestUtilities.navigateToHistoryView(in: app)
