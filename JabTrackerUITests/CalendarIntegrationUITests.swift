@@ -17,16 +17,25 @@ final class CalendarIntegrationUITests: XCTestCase {
 
     func test_calendar_showsHistoryDataIntegration() throws {
         // GIVEN: User has doses recorded in history
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 5)
+        let preset = TestUtilities.TestDataPreset.ninetyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
         TestUtilities.navigateToHistoryView(in: app)
 
         // Verify doses are in list view first
         let historyListView = app.descendants(matching: .any)["dose-history-list"]
         XCTAssertTrue(historyListView.waitForExistence(timeout: 3), "List view should show doses")
 
+        // // Debug: Check all cells in collection view
+        let collectionView = app.collectionViews.firstMatch
+
+        // Try scrolling to ensure all cells are loaded
+        collectionView.swipeUp(velocity: .slow)
+        Thread.sleep(forTimeInterval: 0.5)
+
         let listDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 5)
-        XCTAssertEqual(listDoseRows.count, 5, "Should have 5 doses in list view")
+        print("🔍 DEBUG: getDoseRows returned: \(listDoseRows.count) rows")
+
+        XCTAssertGreaterThanOrEqual(listDoseRows.count, 5, "Should have at least 5 doses in list view")
 
         // WHEN: User switches to calendar view
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
