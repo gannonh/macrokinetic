@@ -134,8 +134,9 @@ final class CalendarDisplayUITests: XCTestCase {
 
     func test_calendar_injectionSiteColorCoding() throws {
         // GIVEN: User has doses with injection sites
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+
         TestUtilities.navigateToHistoryView(in: app)
 
         // WHEN: Calendar displays dose indicators
@@ -160,8 +161,8 @@ final class CalendarDisplayUITests: XCTestCase {
 
     func test_calendar_showsDoseIndicators() throws {
         // GIVEN: User has doses recorded on specific dates
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
         TestUtilities.navigateToHistoryView(in: app)
 
         // WHEN: User views calendar
