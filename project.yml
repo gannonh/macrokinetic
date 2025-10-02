@@ -73,6 +73,15 @@ schemes:
         - name: JabTrackerUITests
           parallelizable: false
           randomExecutionOrder: false
+      commandLineArguments:
+        "--bypass-onboarding": false
+        "--force-onboarding": false
+        "--reset-app-data": false
+        "--ui-testing": false
+        "--seed-test-7d": false
+        "--seed-test-30d": false
+        "--seed-test-90d": false
+        "--seed-test-1y": false
     run:
       commandLineArguments:
         "--bypass-onboarding": true
