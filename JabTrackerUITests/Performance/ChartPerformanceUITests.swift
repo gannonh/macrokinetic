@@ -29,6 +29,26 @@ final class ChartPerformanceUITests: XCTestCase {
         screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "performance")
     }
 
+    override func tearDown() {
+        super.tearDown()
+
+        // Clean up chart dataset cache to ensure test isolation
+        // Cache location: ~/Library/Application Support/ChartCache/concentrationDataset.json
+        let fileManager = FileManager.default
+        if let appSupport = fileManager.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first {
+            let cacheDirectory = appSupport.appendingPathComponent("ChartCache", isDirectory: true)
+            let cacheFile = cacheDirectory.appendingPathComponent("concentrationDataset.json")
+
+            if fileManager.fileExists(atPath: cacheFile.path) {
+                try? fileManager.removeItem(at: cacheFile)
+                print("🗑️  Cleaned up chart dataset cache for test isolation")
+            }
+        }
+    }
+
     // MARK: - 30 Day Dataset Performance
 
     /// Test complete segment switching cycle with 30 days of pre-seeded data
@@ -259,7 +279,8 @@ final class ChartPerformanceUITests: XCTestCase {
 
         let restartApp = XCUIApplication()
         restartApp.launchEnvironment = app.launchEnvironment  // Keep test data environment
-        restartApp.launchArguments = app.launchArguments  // Keep --ui-testing flag
+        // CRITICAL: Do NOT reset data on restart - we want to test cache persistence
+        restartApp.launchArguments = ["--ui-testing"]  // Remove --reset-app-data
         restartApp.launch()
 
         // Navigate to Analytics again

@@ -105,6 +105,32 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
     }
 
+    /// Clear chart dataset cache from Application Support directory
+    /// Used during test data reset to ensure clean state
+    private func clearChartDatasetCache() {
+        let fileManager = FileManager.default
+        guard
+            let appSupport = fileManager.urls(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask
+            ).first
+        else {
+            return
+        }
+
+        let cacheDirectory = appSupport.appendingPathComponent("ChartCache", isDirectory: true)
+        let cacheFile = cacheDirectory.appendingPathComponent("concentrationDataset.json")
+
+        if fileManager.fileExists(atPath: cacheFile.path) {
+            do {
+                try fileManager.removeItem(at: cacheFile)
+                Self.logger.info("🗑️  Cleared chart dataset cache for clean test state")
+            } catch {
+                Self.logger.error("❌ Failed to clear chart dataset cache: \(error.localizedDescription)")
+            }
+        }
+    }
+
     private func resetAppData() async {
         let context = self.dataController.container.mainContext
 
@@ -151,6 +177,9 @@ class AuthenticationManager: NSObject, ObservableObject {
         // Clear onboarding status from UserDefaults
         UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
         UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
+
+        // Clear chart dataset cache for test isolation
+        clearChartDatasetCache()
 
         await MainActor.run {
             self.currentUser = nil
