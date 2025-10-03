@@ -2,14 +2,12 @@
 description: Mark an issue as complete and close it on GitHub
 argument-hint: issue number (e.g., 42)
 allowed-tools: Bash, Read, Write, LS
-model: claude-sonnet-4-20250514
+model: 
 ---
 
 # Issue Close
 
 Mark an issue as complete and close it on GitHub.
-
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Instructions
 
