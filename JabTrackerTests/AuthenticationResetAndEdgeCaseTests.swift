@@ -281,4 +281,67 @@ struct AuthenticationResetAndEdgeCaseTests {
         // Reset to initial state
         authManager.authenticationState = .notDetermined
     }
+
+    @Test("seedAdditionalMedicationProfiles method execution")
+    @MainActor
+    func seedAdditionalMedicationProfilesExecution() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create test user
+        let user = User(email: "seed-profiles@example.com", name: "Seed Profiles User")
+        context.insert(user)
+        try context.save()
+
+        // Test seedAdditionalMedicationProfiles method
+        try authManager.seedAdditionalMedicationProfiles(count: 2, user: user, context: context)
+
+        // Verify profiles were created
+        let profileDescriptor = FetchDescriptor<MedicationProfile>()
+        let profiles = try context.fetch(profileDescriptor)
+
+        #expect(profiles.count >= 2, "Should have created additional medication profiles")
+
+        // Clean up
+        for profile in profiles {
+            context.delete(profile)
+        }
+        context.delete(user)
+        try context.save()
+    }
+
+    @Test("checkAuthenticationStatus with existing user")
+    @MainActor
+    func checkAuthenticationStatusWithExistingUser() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create a test user
+        let user = User(email: "existing@test.com", name: "Existing User")
+        context.insert(user)
+        try context.save()
+
+        // Call checkAuthenticationStatus
+        await authManager.checkAuthenticationStatus()
+
+        // Verify state
+        #expect(authManager.authenticationState == .authenticated, "Should be authenticated with existing user")
+        #expect(authManager.currentUser != nil, "Should have current user set")
+    }
+
+    @Test("checkAuthenticationStatus with no users")
+    @MainActor
+    func checkAuthenticationStatusWithNoUsers() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        // Call checkAuthenticationStatus with empty database
+        await authManager.checkAuthenticationStatus()
+
+        // Verify state
+        #expect(authManager.authenticationState == .notAuthenticated, "Should be notAuthenticated with no users")
+        #expect(authManager.currentUser == nil, "Should have no current user")
+    }
 }
