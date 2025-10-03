@@ -75,16 +75,19 @@ struct ChartDatasetCacheTests {
 
     // MARK: - Load Tests
 
-    @Test("load returns nil when no cache exists")
-    func loadReturnsNilWithoutCache() throws {
+    @Test("load returns notFound when no cache exists")
+    func loadReturnsNotFoundWithoutCache() throws {
         let cache = ChartDatasetCache()
 
         // Clear cache to ensure no file exists
         cache.clear()
 
-        let loaded = cache.load()
+        let result = cache.load()
 
-        #expect(loaded == nil, "Should return nil when no cache file exists")
+        guard case .notFound = result else {
+            #expect(Bool(false), "Should return .notFound when no cache file exists")
+            return
+        }
         #expect(cache.hasCachedData == false, "hasCachedData should be false")
     }
 
@@ -98,14 +101,18 @@ struct ChartDatasetCacheTests {
         try cache.save(originalDataset)
 
         // Load back
-        let loadedDataset = cache.load()
+        let result = cache.load()
 
-        #expect(loadedDataset != nil, "Should load dataset successfully")
+        guard case .success(let loadedDataset) = result else {
+            #expect(Bool(false), "Should return .success with dataset")
+            return
+        }
+
         #expect(
-            loadedDataset?.concentrationCurves.count == 1,
+            loadedDataset.concentrationCurves.count == 1,
             "Should have same number of curves")
         #expect(
-            loadedDataset?.doseMarkers.count == 1, "Should have same number of markers")
+            loadedDataset.doseMarkers.count == 1, "Should have same number of markers")
     }
 
     @Test("load preserves dataset structure")
@@ -116,8 +123,10 @@ struct ChartDatasetCacheTests {
         cache.clear()
         try cache.save(originalDataset)
 
-        guard let loadedDataset = cache.load() else {
-            #expect(Bool(false), "Failed to load dataset")
+        let result = cache.load()
+
+        guard case .success(let loadedDataset) = result else {
+            #expect(Bool(false), "Should return .success with dataset")
             return
         }
 
@@ -153,10 +162,13 @@ struct ChartDatasetCacheTests {
         let corruptedData = Data("corrupted data".utf8)
         try corruptedData.write(to: cacheURL, options: .atomic)
 
-        // Load should return nil for corrupted data
-        let loaded = cache.load()
+        // Load should return .corrupted for corrupted data
+        let result = cache.load()
 
-        #expect(loaded == nil, "Should return nil for corrupted cache")
+        guard case .corrupted = result else {
+            #expect(Bool(false), "Should return .corrupted for corrupted cache")
+            return
+        }
     }
 
     // MARK: - Clear Tests
@@ -222,17 +234,23 @@ struct ChartDatasetCacheTests {
         #expect(cache.hasCachedData == true)
 
         // 3. Load
-        let loaded = cache.load()
-        #expect(loaded != nil)
-        #expect(loaded?.concentrationCurves.count == 1)
+        let result = cache.load()
+        guard case .success(let loaded) = result else {
+            #expect(Bool(false), "Should load successfully")
+            return
+        }
+        #expect(loaded.concentrationCurves.count == 1)
 
         // 4. Clear
         cache.clear()
         #expect(cache.hasCachedData == false)
 
-        // 5. Load after clear returns nil
-        let loadedAfterClear = cache.load()
-        #expect(loadedAfterClear == nil)
+        // 5. Load after clear returns notFound
+        let resultAfterClear = cache.load()
+        guard case .notFound = resultAfterClear else {
+            #expect(Bool(false), "Should return .notFound after clear")
+            return
+        }
     }
 
     @Test("multiple save-load cycles maintain data integrity")
@@ -245,7 +263,8 @@ struct ChartDatasetCacheTests {
             cache.clear()
             try cache.save(dataset)
 
-            guard let loaded = cache.load() else {
+            let result = cache.load()
+            guard case .success(let loaded) = result else {
                 #expect(
                     Bool(false), "Failed to load dataset on iteration \(iteration)")
                 return

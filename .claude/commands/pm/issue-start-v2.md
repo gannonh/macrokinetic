@@ -37,14 +37,15 @@ Additional context (if any): $2
 ## Instructions for PR Issues
 
 1. Read the issue description and recommended solution (if any) from GitHub.
-2. Assess the implementation requirements and acceptance criteria.
-3. Determine if any additional context or clarification is needed.
-4. Present to the user your recommended solution and implementation plan for approval: Iterate until approved.
-5. Implement the solution.
-6. Ensure all checks pass: `./scripts/check-all.sh`
-7. Commit your work, referencing the issue number: `git commit -m "Fix for #$1: [description of work]"`
-8. Push to GitHub: `git push`
-9. Close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
+2. Label the issue as `in-progress` in GitHub
+3. Assess the implementation requirements and acceptance criteria.
+4. Determine if any additional context or clarification is needed - if so, as the human for clarification.
+5. Present to the user your recommended solution and implementation plan for approval: Iterate until approved.
+6. Implement the solution.
+7. Ensure all checks pass: `./scripts/check-all.sh`
+8. Commit your work, referencing the issue number: `git commit -m "Fix for #$1: [description of work]"`
+9. Push to GitHub: `git push`
+10. Close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
 
 ## Instructions for Task Issues
 
