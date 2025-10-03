@@ -52,15 +52,16 @@ extension TestUtilities {
         }
     }
 
-    /// Sets up a standard test environment with medication profile(s) and doses
+    /// Sets up a standard test environment with medication profile(s) and doses using data seeding
     /// - Parameters:
-    ///   - app: The XCUIApplication instance
+    ///   - app: The XCUIApplication instance (unused, kept for API compatibility)
     ///   - doseCount: Number of doses to create (default: 3)
     ///   - medicationProfiles: Number of medication profiles to create (default: 1)
     ///   - medicationName: Generic medication name for first profile (default: "semaglutide")
     ///   - brandName: Brand name for first profile (default: "Ozempic")
     ///   - dose: Dose amount for first profile (default: "0.25")
-    /// - Returns: The configured app ready for dose history testing
+    /// - Returns: A newly launched app with seeded test data
+    /// - Note: This now uses data seeding instead of UI creation (~40x faster)
     @discardableResult
     static func setupDoseHistoryTest(
         app: XCUIApplication,
@@ -70,33 +71,19 @@ extension TestUtilities {
         brandName: String = "Ozempic",
         dose: String = "0.25"
     ) -> XCUIApplication {
-        // Create medication profiles using the standard method
-        // The navigateToMedicationProfiles will check if we're already there
-        if medicationProfiles >= 1 {
-            createMedicationProfile(app, genericName: medicationName, brandName: brandName, dose: dose)
-        }
+        // Use custom preset for flexible test setup
+        let customPreset = TestDataPreset.custom(
+            doseCount: doseCount,
+            medicationProfiles: medicationProfiles,
+            medication: medicationName,
+            brand: brandName,
+            dose: dose,
+            adherence: 1.0,  // 100% adherence for test consistency
+            variability: false  // No timing variability for predictable tests
+        )
 
-        if medicationProfiles >= 2 {
-            // The second call will see we're already on Medication Profiles screen and not navigate again
-            // Use the createMedicationProfileWithDefaults to avoid dose selection issues
-            self.createMedicationProfileWithDefaults(
-                app, genericName: "tirzepatide", brandName: "Mounjaro")
-        }
-
-        if medicationProfiles >= 3 {
-            self.createMedicationProfileWithDefaults(
-                app, genericName: "liraglutide", brandName: "Victoza")
-        }
-
-        if medicationProfiles >= 4 {
-            self.createMedicationProfileWithDefaults(
-                app, genericName: "dulaglutide", brandName: "Trulicity")
-        }
-
-        // Create multiple doses (will be associated with the first medication profile by default)
-        self.createMultipleDoses(in: app, count: doseCount)
-
-        return app
+        // Launch with seeded data (resets app data automatically)
+        return TestUtilities.launchAppWithSeededData(preset: customPreset, resetData: true)
     }
 
     /// Creates a medication profile using default dose (doesn't select a specific dose)

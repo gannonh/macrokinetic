@@ -17,10 +17,9 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
     func test_doseHistory_swipeActionsDeleteDose() throws {
         // GIVEN: A dose exists in history
-        let app = TestUtilities.launchAppWithTestMode()
 
         // Given: User has a medication profile and a dose for it
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
@@ -85,10 +84,9 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
     func test_doseHistory_swipeActionsDuplicateDose() throws {
         // GIVEN: A dose exists in history
-        let app = TestUtilities.launchAppWithTestMode()
 
         // Given: User has a medication profile and a dose for it
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
@@ -144,10 +142,9 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
     func test_doseHistory_swipeActionsSkipDose() throws {
         // GIVEN: A non-skipped dose exists in history
-        let app = TestUtilities.launchAppWithTestMode()
 
         // Given: User has a medication profile and a dose for it
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
@@ -202,10 +199,9 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
     func test_doseHistory_deleteConfirmationPreventsAccidentalDeletion() throws {
         // GIVEN: A dose exists in history
-        let app = TestUtilities.launchAppWithTestMode()
 
         // Given: User has a medication profile and a dose for it
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)

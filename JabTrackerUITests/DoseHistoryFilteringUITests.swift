@@ -163,11 +163,8 @@ final class DoseHistoryFilteringUITests: XCTestCase {
     }
 
     func test_doseHistory_medicationFiltering() throws {
-        // GIVEN: Doses with different medications exist
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create doses with multiple medications
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3, medicationProfiles: 2)
+        // GIVEN: Doses with different medications exist (seeded via launch arguments)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 3, medicationProfiles: 2)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
@@ -209,10 +206,8 @@ final class DoseHistoryFilteringUITests: XCTestCase {
 
     func test_doseHistory_injectionSiteFiltering() throws {
         // GIVEN: Doses with different injection sites exist
-        let app = TestUtilities.launchAppWithTestMode()
-
         // Create doses with different injection sites
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 3)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
@@ -254,10 +249,9 @@ final class DoseHistoryFilteringUITests: XCTestCase {
 
     func test_doseHistory_pullToRefreshUpdatesData() throws {
         // GIVEN: Dose history is displayed
-        let app = TestUtilities.launchAppWithTestMode()
 
         // Create initial doses
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 2)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 2)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)

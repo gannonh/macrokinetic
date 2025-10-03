@@ -108,8 +108,7 @@ final class CalendarDisplayUITests: XCTestCase {
 
     func test_calendar_doseIndicatorVariations() throws {
         // GIVEN: User has doses recorded
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 5)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 5)
         TestUtilities.navigateToHistoryView(in: app)
 
         // WHEN: Calendar is displayed
