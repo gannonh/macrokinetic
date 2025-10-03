@@ -280,6 +280,8 @@ class AuthenticationManager: NSObject, ObservableObject {
             let adherenceRate = Double(environment["TEST_DATA_ADHERENCE"] ?? "0.95") ?? 0.95
             let addVariability = environment["TEST_DATA_VARIABILITY"] ?? "true" == "true"
             let includeSkipped = environment["TEST_DATA_SKIPPED"] ?? "true" == "true"
+            let medicationProfileCount = Int(environment["TEST_DATA_PROFILES"] ?? "1") ?? 1
+            let doseCount = Int(environment["TEST_DATA_DOSE_COUNT"] ?? "\(daysOfHistory / 7)") ?? (daysOfHistory / 7)
 
             // Create medication enum from string
             guard let medication = Medication(rawValue: medicationRaw) else {
@@ -291,7 +293,9 @@ class AuthenticationManager: NSObject, ObservableObject {
                 """
                 🌱 Seeding configuration:
                    - Days: \(daysOfHistory)
-                   - Medication: \(medicationRaw)
+                   - Dose count: \(doseCount)
+                   - Medication profiles: \(medicationProfileCount)
+                   - Primary medication: \(medicationRaw)
                    - Brand: \(brandName)
                    - Dose: \(doseAmount)mg
                    - Adherence: \(String(format: "%.1f%%", adherenceRate * 100))
@@ -312,16 +316,29 @@ class AuthenticationManager: NSObject, ObservableObject {
             await MainActor.run {
                 do {
                     let startTime = Date()
+
+                    // Seed primary profile and its doses
                     let result = try TestDataSeeding.seedData(
                         into: context,
                         config: config,
                         existingUser: user  // Seed data for the authenticated mock user
                     )
+
+                    // Create additional medication profiles if requested
+                    if medicationProfileCount > 1 {
+                        try self.seedAdditionalMedicationProfiles(
+                            count: medicationProfileCount - 1,
+                            user: user,
+                            context: context
+                        )
+                    }
+
                     let seedingTime = Date().timeIntervalSince(startTime) * 1000
 
                     Self.logger.info(
                         """
                         ✅ Test data seeding complete:
+                           - Medication profiles: \(medicationProfileCount)
                            - Doses created: \(result.actualDoseCount)
                            - Skipped doses: \(result.skippedDoses.count)
                            - Adherence: \(String(format: "%.1f%%", result.adherenceRate * 100))
@@ -519,6 +536,52 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
                 self.authenticationState = .notAuthenticated
             }
         }
+    }
+}
+
+// MARK: - Test Data Seeding Extension
+
+extension AuthenticationManager {
+    /// Configuration for additional medication profiles
+    private struct MedicationConfig {
+        let medication: Medication
+        let brand: String
+        let dose: Double
+    }
+
+    /// Seeds additional medication profiles for multi-profile testing
+    /// - Parameters:
+    ///   - count: Number of additional profiles to create (beyond the primary profile)
+    ///   - user: The user to associate profiles with
+    ///   - context: The model context for persistence
+    func seedAdditionalMedicationProfiles(
+        count: Int,
+        user: User,
+        context: ModelContext
+    ) throws {
+        // Define additional medications to create (in order)
+        let additionalMedications: [MedicationConfig] = [
+            MedicationConfig(medication: .tirzepatide, brand: "Mounjaro", dose: 5.0),
+            MedicationConfig(medication: .liraglutide, brand: "Victoza", dose: 1.2),
+            MedicationConfig(medication: .dulaglutide, brand: "Trulicity", dose: 1.5),
+        ]
+
+        for index in 0..<min(count, additionalMedications.count) {
+            let config = additionalMedications[index]
+
+            let profile = MedicationProfile(
+                genericName: config.medication.displayName,
+                brandName: config.brand,
+                currentDose: config.dose
+            )
+            profile.user = user
+            context.insert(profile)
+
+            Self.logger.info(
+                "✅ Created additional medication profile: \(config.medication.displayName) (\(config.brand))")
+        }
+
+        try context.save()
     }
 }
 

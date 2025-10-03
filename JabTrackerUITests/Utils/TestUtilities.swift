@@ -54,6 +54,15 @@ enum TestUtilities {
         case ninetyDays  // 90 days
         case oneYear  // 365 days (1 year)
         case twoYears  // 730 days (2 years)
+        case custom(
+            doseCount: Int,
+            medicationProfiles: Int = 1,
+            medication: String = "semaglutide",
+            brand: String = "Ozempic",
+            dose: String = "0.25",
+            adherence: Double = 1.0,
+            variability: Bool = false
+        )  // Custom configuration for flexible test setup
 
         var launchEnvironment: [String: String] {
             switch self {
@@ -112,6 +121,30 @@ enum TestUtilities {
                     "TEST_DATA_VARIABILITY": "true",
                     "TEST_DATA_SKIPPED": "true",
                 ]
+            case .custom(
+                let doseCount,
+                let medicationProfiles,
+                let medication,
+                let brand,
+                let dose,
+                let adherence,
+                let variability
+            ):
+                // Calculate days to create exact dose count for weekly medication
+                // For N doses: days = (N-1) * 7 (doses at day 0, 7, 14, ..., (N-1)*7)
+                let days = max(0, (doseCount - 1) * 7)
+                return [
+                    "TEST_DATA_SEED": "true",
+                    "TEST_DATA_DAYS": String(days),
+                    "TEST_DATA_DOSE_COUNT": String(doseCount),
+                    "TEST_DATA_PROFILES": String(medicationProfiles),
+                    "TEST_DATA_MEDICATION": medication,
+                    "TEST_DATA_BRAND": brand,
+                    "TEST_DATA_DOSE": dose,
+                    "TEST_DATA_ADHERENCE": String(adherence),
+                    "TEST_DATA_VARIABILITY": variability ? "true" : "false",
+                    "TEST_DATA_SKIPPED": "false",
+                ]
             }
         }
 
@@ -122,6 +155,9 @@ enum TestUtilities {
             case .ninetyDays: return 90
             case .oneYear: return 365
             case .twoYears: return 730
+            case .custom(let doseCount, _, _, _, _, _, _):
+                // Weekly medication: (doseCount - 1) * 7 days to get exact dose count
+                return max(0, (doseCount - 1) * 7)
             }
         }
     }

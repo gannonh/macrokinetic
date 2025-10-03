@@ -41,11 +41,9 @@ final class DoseHistoryBasicUITests: XCTestCase {
     }
 
     func test_doseHistory_swipeActionsEditDose() throws {
-        // GIVEN: A dose exists in history with multiple medication profiles
-        let app = TestUtilities.launchAppWithTestMode()
 
         // Given: User has 2 medication profiles and a dose for the first one
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 1, medicationProfiles: 2)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1, medicationProfiles: 2)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
