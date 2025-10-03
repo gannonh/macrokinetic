@@ -63,26 +63,36 @@ final class ChartDatasetCache {
     // MARK: - Initialization
 
     init() {
-        // Use Application Support directory for persistent cache
-        guard
-            let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask
-            ).first
-        else {
-            fatalError("Unable to access Application Support directory")
+        // Try Application Support directory for persistent cache
+        if let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first {
+            let cacheDirectory = appSupport.appendingPathComponent("ChartCache", isDirectory: true)
+
+            // Create cache directory if needed
+            try? FileManager.default.createDirectory(
+                at: cacheDirectory,
+                withIntermediateDirectories: true
+            )
+
+            cacheURL = cacheDirectory.appendingPathComponent("concentrationDataset.json")
+            Self.logger.info("📁 Chart dataset cache initialized at: \(self.cacheURL.path)")
+        } else {
+            // Graceful degradation to temporary directory
+            Self.logger.error("⚠️ Unable to access Application Support - cache disabled for persistent storage")
+
+            let tempDir = FileManager.default.temporaryDirectory
+            let cacheDirectory = tempDir.appendingPathComponent("ChartCache", isDirectory: true)
+
+            try? FileManager.default.createDirectory(
+                at: cacheDirectory,
+                withIntermediateDirectories: true
+            )
+
+            cacheURL = cacheDirectory.appendingPathComponent("concentrationDataset.json")
+            Self.logger.warning("⚠️ Using temporary directory - cache will be cleared on app termination")
         }
-
-        let cacheDirectory = appSupport.appendingPathComponent("ChartCache", isDirectory: true)
-
-        // Create cache directory if needed
-        try? FileManager.default.createDirectory(
-            at: cacheDirectory,
-            withIntermediateDirectories: true
-        )
-
-        cacheURL = cacheDirectory.appendingPathComponent("concentrationDataset.json")
-        Self.logger.info("📁 Chart dataset cache initialized at: \(self.cacheURL.path)")
     }
 
     // MARK: - Public API
