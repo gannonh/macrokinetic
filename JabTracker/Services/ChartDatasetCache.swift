@@ -9,6 +9,37 @@
 import Foundation
 import OSLog
 
+/// Error types for cache operations
+enum CacheError: LocalizedError {
+    case encodingFailed(Error)
+    case writeFailed(Error)
+    case decodingFailed(Error)
+    case readFailed(Error)
+    case corrupted(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .encodingFailed(let error):
+            return "Failed to encode cache data: \(error.localizedDescription)"
+        case .writeFailed(let error):
+            return "Failed to write cache to disk: \(error.localizedDescription)"
+        case .decodingFailed(let error):
+            return "Failed to decode cache data: \(error.localizedDescription)"
+        case .readFailed(let error):
+            return "Failed to read cache from disk: \(error.localizedDescription)"
+        case .corrupted(let reason):
+            return "Cache data is corrupted: \(reason)"
+        }
+    }
+}
+
+/// Result type for cache load operations
+enum CacheLoadResult {
+    case success(ConcentrationChartDataset)
+    case notFound
+    case corrupted(Error)
+}
+
 /// Service for persisting chart datasets to disk for instant app launch
 /// Requirements:
 /// - Save computed chart dataset to disk after generation
@@ -58,6 +89,7 @@ final class ChartDatasetCache {
 
     /// Save chart dataset to disk
     /// - Parameter dataset: Complete chart dataset to persist
+    /// - Throws: CacheError if encoding or writing fails
     func save(_ dataset: ConcentrationChartDataset) throws {
         let startTime = Date()
         Self.logger.info("💾 Saving chart dataset to disk...")
@@ -66,8 +98,18 @@ final class ChartDatasetCache {
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = .prettyPrinted  // For debugging
 
-        let data = try encoder.encode(dataset)
-        try data.write(to: cacheURL, options: .atomic)
+        let data: Data
+        do {
+            data = try encoder.encode(dataset)
+        } catch {
+            throw CacheError.encodingFailed(error)
+        }
+
+        do {
+            try data.write(to: cacheURL, options: .atomic)
+        } catch {
+            throw CacheError.writeFailed(error)
+        }
 
         let saveTime = Date().timeIntervalSince(startTime) * 1000
         let sizeKB = Double(data.count) / 1024.0
@@ -83,11 +125,11 @@ final class ChartDatasetCache {
     }
 
     /// Load chart dataset from disk
-    /// - Returns: Cached dataset if available, nil otherwise
-    func load() -> ConcentrationChartDataset? {
+    /// - Returns: Result indicating success, not found, or corruption
+    func load() -> CacheLoadResult {
         guard FileManager.default.fileExists(atPath: cacheURL.path) else {
             Self.logger.info("📭 No cached dataset found - first launch or cache cleared")
-            return nil
+            return .notFound
         }
 
         let startTime = Date()
@@ -113,11 +155,11 @@ final class ChartDatasetCache {
                 """
             )
 
-            return dataset
+            return .success(dataset)
 
         } catch {
             Self.logger.error("❌ Failed to load cached dataset: \(error.localizedDescription)")
-            return nil
+            return .corrupted(error)
         }
     }
 

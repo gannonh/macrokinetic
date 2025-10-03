@@ -41,17 +41,30 @@ class AnalyticsViewModel {
 
     /// Try to load cached dataset from disk (instant vs 80s generation)
     /// - Parameter selectedPeriod: Initial time period to filter to
-    /// - Returns: true if loaded from cache, false if cache miss
+    /// - Returns: true if loaded from cache, false if cache miss or corrupted
     func loadFromCache(selectedPeriod: ChartDataProcessor.TimePeriod) -> Bool {
-        guard let cached = cache.load() else {
+        switch cache.load() {
+        case .success(let cached):
+            fullChartDataset = cached
+            filterChartDataset(to: selectedPeriod)
+            Self.logger.info("✅ Loaded from cache - instant startup")
+            return true
+
+        case .notFound:
             Self.logger.info("📭 No cached dataset - will need to generate")
             return false
-        }
 
-        fullChartDataset = cached
-        filterChartDataset(to: selectedPeriod)
-        Self.logger.info("✅ Loaded from cache - instant startup")
-        return true
+        case .corrupted(let error):
+            Self.logger.warning(
+                """
+                ⚠️  Cached dataset is corrupted - will regenerate
+                   Error: \(error.localizedDescription)
+                """
+            )
+            // Clear corrupted cache so it doesn't interfere with next save
+            cache.clear()
+            return false
+        }
     }
 
     /// Refresh full chart dataset (all time) - only happens once per session
@@ -110,8 +123,10 @@ class AnalyticsViewModel {
             if let dataset = self.fullChartDataset {
                 do {
                     try self.cache.save(dataset)
+                } catch let error as CacheError {
+                    Self.logger.error("❌ Cache save failed: \(error.localizedDescription)")
                 } catch {
-                    Self.logger.error("❌ Failed to save chart dataset to cache: \(error.localizedDescription)")
+                    Self.logger.error("❌ Unexpected error saving to cache: \(error.localizedDescription)")
                 }
             }
         }
