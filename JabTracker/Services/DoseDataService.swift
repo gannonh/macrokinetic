@@ -27,6 +27,60 @@ final class DoseDataService {
         return Calendar.current.date(byAdding: .day, value: -days, to: Date())
     }
 
+    // MARK: - Predicate Factories
+
+    /// Creates a predicate for filtering doses by user ID
+    private func userPredicate(userId: UUID) -> Predicate<Dose> {
+        #Predicate<Dose> { dose in
+            if let doseUser = dose.user {
+                doseUser.id == userId
+            } else {
+                false
+            }
+        }
+    }
+
+    /// Creates a predicate for filtering doses by user ID within a date range
+    private func userDateRangePredicate(
+        userId: UUID,
+        startDate: Date,
+        endDate: Date
+    ) -> Predicate<Dose> {
+        #Predicate<Dose> { dose in
+            if let doseUser = dose.user {
+                doseUser.id == userId && dose.timestamp >= startDate && dose.timestamp <= endDate
+            } else {
+                false
+            }
+        }
+    }
+
+    /// Creates a predicate for filtering doses by medication profile ID
+    private func profilePredicate(profileId: UUID) -> Predicate<Dose> {
+        #Predicate<Dose> { dose in
+            if let doseMedication = dose.medication {
+                doseMedication.id == profileId
+            } else {
+                false
+            }
+        }
+    }
+
+    /// Creates a predicate for filtering doses by profile ID within a date range
+    private func profileDateRangePredicate(
+        profileId: UUID,
+        startDate: Date,
+        endDate: Date
+    ) -> Predicate<Dose> {
+        #Predicate<Dose> { dose in
+            if let doseMedication = dose.medication {
+                doseMedication.id == profileId && dose.timestamp >= startDate && dose.timestamp <= endDate
+            } else {
+                false
+            }
+        }
+    }
+
     // MARK: - Dose Fetching Methods
 
     /// Fetch doses for a user within a specific time period
@@ -64,14 +118,11 @@ final class DoseDataService {
         to endDate: Date,
         context: ModelContext
     ) -> [Dose] {
-        let userId = user.id
-        let predicate = #Predicate<Dose> { dose in
-            if let doseUser = dose.user {
-                doseUser.id == userId && dose.timestamp >= startDate && dose.timestamp <= endDate
-            } else {
-                false
-            }
-        }
+        let predicate = userDateRangePredicate(
+            userId: user.id,
+            startDate: startDate,
+            endDate: endDate
+        )
 
         let descriptor = FetchDescriptor(
             predicate: predicate,
@@ -90,14 +141,7 @@ final class DoseDataService {
         for user: User,
         context: ModelContext
     ) -> [Dose] {
-        let userId = user.id
-        let predicate = #Predicate<Dose> { dose in
-            if let doseUser = dose.user {
-                doseUser.id == userId
-            } else {
-                false
-            }
-        }
+        let predicate = userPredicate(userId: user.id)
 
         let descriptor = FetchDescriptor(
             predicate: predicate,
@@ -119,14 +163,7 @@ final class DoseDataService {
         limit: Int,
         context: ModelContext
     ) -> [Dose] {
-        let userId = user.id
-        let predicate = #Predicate<Dose> { dose in
-            if let doseUser = dose.user {
-                doseUser.id == userId
-            } else {
-                false
-            }
-        }
+        let predicate = userPredicate(userId: user.id)
 
         var descriptor = FetchDescriptor(
             predicate: predicate,
@@ -153,16 +190,11 @@ final class DoseDataService {
             return fetchAllDoses(for: profile, context: context)
         }
 
-        let profileId = profile.id
-        let cutoffDate = cutoff
-        let endDate = Date()
-        let predicate = #Predicate<Dose> { dose in
-            if let doseMedication = dose.medication {
-                doseMedication.id == profileId && dose.timestamp >= cutoffDate && dose.timestamp <= endDate
-            } else {
-                false
-            }
-        }
+        let predicate = profileDateRangePredicate(
+            profileId: profile.id,
+            startDate: cutoff,
+            endDate: Date()
+        )
 
         let descriptor = FetchDescriptor(
             predicate: predicate,
@@ -181,14 +213,7 @@ final class DoseDataService {
         for profile: MedicationProfile,
         context: ModelContext
     ) -> [Dose] {
-        let profileId = profile.id
-        let predicate = #Predicate<Dose> { dose in
-            if let doseMedication = dose.medication {
-                doseMedication.id == profileId
-            } else {
-                false
-            }
-        }
+        let predicate = profilePredicate(profileId: profile.id)
 
         let descriptor = FetchDescriptor(
             predicate: predicate,
