@@ -60,6 +60,9 @@ INFRASTRUCTURE_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.infrastruc
 FRAMEWORK_INTEGRATION_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.framework_integration.files[]'))
 FRAMEWORK_INTEGRATION_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.framework_integration.threshold')
 
+TESTING_INFRASTRUCTURE_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.testing_infrastructure.files[]'))
+TESTING_INFRASTRUCTURE_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.testing_infrastructure.threshold')
+
 VIEW_MODEL_FILES=($(echo "$CONFIG_JSON" | jq -r '.policy.tiers.view_models.files[]'))
 VIEW_MODEL_THRESHOLD=$(echo "$CONFIG_JSON" | jq -r '.policy.tiers.view_models.threshold')
 
@@ -125,6 +128,26 @@ for file in "${FRAMEWORK_INTEGRATION_FILES[@]}"; do
         echo "✅ $file: ${COVERAGE}%"
     else
         echo "❌ $file: ${COVERAGE}% (below ${FRAMEWORK_INTEGRATION_THRESHOLD}% threshold)"
+        POLICY_FAILED=true
+    fi
+done
+
+# Tier 3B: Testing Infrastructure
+echo ""
+echo "🧪 Tier 3B: Testing Infrastructure (Target: ${TESTING_INFRASTRUCTURE_THRESHOLD}%)"
+for file in "${TESTING_INFRASTRUCTURE_FILES[@]}"; do
+    COVERAGE=$(echo "$COVERAGE_JSON" | jq -r --arg file "$file" '
+        .targets[] | select(.name == "JabTracker.app") |
+        .files[] | select(.name == ($file | split("/") | last)) |
+        .lineCoverage * 100 | round
+    ')
+
+    if [ "$COVERAGE" = "null" ] || [ "$COVERAGE" = "" ]; then
+        echo "⚠️  $file: Not found in coverage report"
+    elif [ "$COVERAGE" -ge "$TESTING_INFRASTRUCTURE_THRESHOLD" ] 2>/dev/null; then
+        echo "✅ $file: ${COVERAGE}%"
+    else
+        echo "❌ $file: ${COVERAGE}% (below ${TESTING_INFRASTRUCTURE_THRESHOLD}% threshold)"
         POLICY_FAILED=true
     fi
 done
