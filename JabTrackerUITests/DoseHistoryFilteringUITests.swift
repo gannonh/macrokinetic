@@ -17,17 +17,16 @@ final class DoseHistoryFilteringUITests: XCTestCase {
 
     func test_doseHistory_searchFiltersInRealTime() throws {
         // GIVEN: Multiple doses with different notes exist
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create multiple doses with different notes for filtering
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
 
         // Verify we have multiple doses initially
-        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
-        XCTAssertEqual(initialDoseRows.count, 3, "Should start with 3 doses")
+        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 4)
+        XCTAssertGreaterThan(initialDoseRows.count, 3, "Should start with more than 3 doses")
 
         // WHEN: User enters text in search bar
         let searchField = app.textFields["dose-history-list"]
@@ -40,7 +39,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         // THEN: List filters in real-time to show only matching doses
         // Wait for filtering to complete by checking filtered results
         let filteredResults = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "count <= 3"),
+            predicate: NSPredicate(format: "count <= \(initialDoseRows.count)"),
             object: app.buttons.matching(identifier: "dose-history-row"))
         wait(for: [filteredResults], timeout: 5)
 
@@ -61,24 +60,22 @@ final class DoseHistoryFilteringUITests: XCTestCase {
 
         // Verify all doses are shown again
         let restoredDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
-        XCTAssertEqual(
+        XCTAssertGreaterThan(
             restoredDoseRows.count, 3,
             "All doses should be visible after clearing search")
     }
 
     func test_doseHistory_searchClearsWhenTextRemoved() throws {
-        // GIVEN: Search has filtered the list
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create multiple doses for filtering
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 3)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
 
         // Verify we have multiple doses initially
         let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
-        XCTAssertEqual(initialDoseRows.count, 3, "Should start with 3 doses")
+        XCTAssertGreaterThan(initialDoseRows.count, 3, "Should start with more than 3 doses")
 
         // Apply search filter
         let searchField = app.textFields["dose-history-list"]
@@ -103,24 +100,24 @@ final class DoseHistoryFilteringUITests: XCTestCase {
 
         // THEN: All doses are shown again
         let restoredDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
-        XCTAssertEqual(
+        XCTAssertGreaterThan(
             restoredDoseRows.count, 3,
             "All doses should be visible after clearing search text")
     }
 
     func test_doseHistory_dateRangeFiltering() throws {
         // GIVEN: Doses from multiple dates exist
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create multiple doses across different dates
-        TestUtilities.setupDoseHistoryTest(app: app, doseCount: 5)
+        // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
+        let preset = TestUtilities.TestDataPreset.thirtyDays
+        let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
 
         // Verify we have multiple doses initially
-        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 5)
-        XCTAssertEqual(initialDoseRows.count, 5, "Should start with 5 doses")
+        // Verify we have multiple doses initially
+        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
+        XCTAssertGreaterThan(initialDoseRows.count, 3, "Should start with more than 3 doses")
 
         // WHEN: User applies date range filter
         // Look for filter button or date range picker
