@@ -19,6 +19,20 @@ final class ChartDataProcessor {
         subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
         category: "ChartDataProcessor")
 
+    // MARK: - Concentration Sampling Configuration
+
+    /// Standard sampling interval for concentration timeline (hours)
+    /// Balances chart smoothness with performance for large datasets
+    private static let standardSamplingInterval: TimeInterval = 0.5 * 3600  // 30 minutes
+
+    /// Multiplier for denser sampling near dose events
+    /// Provides smoother curves during rapid concentration changes
+    private static let doseSamplingMultiplier: Double = 4.0
+
+    /// Time window around doses requiring denser sampling (hours)
+    /// Captures concentration spikes and decay curves accurately
+    private static let denseSamplingWindow: TimeInterval = 24 * 3600  // ±24 hours
+
     // MARK: - Initialization
 
     init() {}
@@ -432,12 +446,12 @@ final class ChartDataProcessor {
     /// - Parameters:
     ///   - medicationProfile: The medication profile to analyze
     ///   - timeRange: Date range for timeline generation
-    ///   - intervalHours: Time interval between calculated points
+    ///   - intervalHours: Time interval between calculated points (defaults to 0.5 hours, per standardSamplingInterval)
     /// - Returns: Array of concentration points calculated using pharmacokinetic models
     func generateConcentrationTimeline(
         for medicationProfile: MedicationProfile,
         timeRange: ClosedRange<Date>,
-        intervalHours: Double = 0.5  // Increased density from 1.0 to 0.5 hours for clearer spikes
+        intervalHours: Double = 0.5  // Uses standardSamplingInterval (0.5 * 3600 seconds)
     ) -> [ConcentrationPoint] {
         guard let medication = medicationProfile.medication,
             let doses = medicationProfile.doses
@@ -489,9 +503,9 @@ final class ChartDataProcessor {
         let baseIntervalSeconds = intervalHours * 3600
 
         while currentTime <= endTime {
-            // Use 4x denser sampling within ±24 hours of any dose for clear spikes
-            let nearDose = doseTimestamps.contains { abs($0.timeIntervalSince(currentTime)) < 24 * 3600 }
-            let actualInterval = nearDose ? baseIntervalSeconds / 4 : baseIntervalSeconds
+            // Use denser sampling within dose sampling window for clear spikes
+            let nearDose = doseTimestamps.contains { abs($0.timeIntervalSince(currentTime)) < Self.denseSamplingWindow }
+            let actualInterval = nearDose ? baseIntervalSeconds / Self.doseSamplingMultiplier : baseIntervalSeconds
 
             let concentration = pharmacokineticsEngine.calculateConcentrationOptimized(
                 from: doses,

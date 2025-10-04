@@ -90,6 +90,7 @@ final class DoseDataService {
     ///   - timePeriod: Time period filter
     ///   - context: SwiftData ModelContext
     /// - Returns: Array of doses within the time period, sorted by timestamp descending
+    @MainActor
     func fetchDoses(
         for user: User,
         within timePeriod: ChartDataProcessor.TimePeriod,
@@ -180,6 +181,7 @@ final class DoseDataService {
     ///   - timePeriod: Time period filter
     ///   - context: SwiftData ModelContext
     /// - Returns: Array of doses for the profile within the time period
+    @MainActor
     func fetchDoses(
         for profile: MedicationProfile,
         within timePeriod: ChartDataProcessor.TimePeriod,
