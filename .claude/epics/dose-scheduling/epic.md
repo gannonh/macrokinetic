@@ -459,3 +459,32 @@ High-level task categories that will be created during epic decomposition:
 6. **Extend Existing Services**: AnalyticsService and OnboardingViewModel extended rather than creating parallel systems
 7. **Visual Feedback Over Complex Logic**: Concentration curve preview guides users, reducing need for automated recommendations
 8. **Consolidation into 10 Tasks**: Grouping related work (e.g., all notification features in one task) reduces overhead and enables focused delivery
+
+## Tasks Created
+
+### Foundation (Phase 1: Weeks 1-2)
+- [ ] 001.md - SwiftData Models - DoseSchedule, ScheduledDose, DoseEvent (parallel: false, M effort)
+- [ ] 002.md - ScheduleService Core - CRUD, calculations, adherence metrics (parallel: false, L effort)
+- [ ] 003.md - NotificationService - Queue management, background refresh, actions (parallel: false, L effort)
+
+### UI Integration (Phases 2-6: Weeks 3-10)
+- [ ] 004.md - Onboarding Integration - Schedule setup step with UI components (parallel: false, L effort)
+- [ ] 005.md - Calendar Integration - Scheduled dose indicators and actions (parallel: true, M effort)
+- [ ] 006.md - Medication Profile CRUD - Schedule management in profile editing (parallel: true, M effort)
+- [ ] 007.md - Split-Dose Support - Calculations and UI configuration (parallel: true, M effort)
+
+### Analytics & Quality (Phases 7-8: Weeks 11-12)
+- [ ] 008.md - Analytics Integration - Schedule adherence tracking and timeline view (parallel: true, L effort)
+- [ ] 009.md - Testing Suite - Comprehensive unit, integration, E2E tests (parallel: false, XL effort)
+- [ ] 010.md - Performance & Polish - Optimization, accessibility audit, edge cases (parallel: false, L effort)
+
+**Total Tasks**: 10
+**Parallel Tasks**: 4 (005, 006, 007, 008)
+**Sequential Tasks**: 6 (001, 002, 003, 004, 009, 010)
+**Estimated Total Effort**: 85-105 hours (7x M + 3x L + 1x XL)
+
+### Task Dependencies
+- **Critical Path**: 001 → 002 → 003 → 004 → 009 → 010
+- **Parallel Stream 1**: 001 → 002 → 005 (Calendar)
+- **Parallel Stream 2**: 001 → 002 → 006 (Profile CRUD)
+- **Parallel Stream 3**: 002 → 007 → 008 (Split-Dose + Analytics)

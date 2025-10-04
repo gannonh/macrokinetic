@@ -21,6 +21,7 @@
 
 ### Epic Commands
 - `/pm:epic-decompose` - Break epic into task files
+- `/pm:validate-tasks` - Validate and standardize task file formats
 - `/pm:epic-sync` - Push epic and tasks to GitHub
 - `/pm:epic-oneshot` - Decompose and sync in one command
 - `/pm:epic-list` - List all epics
@@ -129,6 +130,18 @@ Transforms PRD into a technical implementation plan with architectural decisions
 Breaks epic into concrete, actionable tasks with acceptance criteria, effort estimates, and parallelization flags.
 
 **Output:** `.claude/epics/feature-name/[task].md`
+
+**Important:** After decomposition, validate task file formats to ensure consistency:
+
+```bash
+/pm:validate-tasks feature-name
+```
+Validates and standardizes task frontmatter format across all tasks in the epic. This ensures:
+- Consistent YAML frontmatter fields (task_id, title, epic, status, etc.)
+- Proper field ordering for GitHub sync compatibility
+- Removal of duplicate or non-standard fields
+
+**When to run:** Always run after `/pm:epic-decompose` if parallel agents were used, or if you notice inconsistent frontmatter formats between task files.
 
 ### 4. GitHub Synchronization
 
