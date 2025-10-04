@@ -70,53 +70,90 @@ class AnalyticsViewModel {
     /// Refresh full chart dataset (all time) - only happens once per session
     /// - Parameter config: Configuration containing user, profiles, services, context, and selected period
     func refreshChartDataset(config: RefreshConfig) async {
-        let user = config.user
-        let profiles = config.profiles
-        let doseService = config.doseService
-        let chartService = config.chartService
-        let context = config.context
-        let selectedPeriod = config.selectedPeriod
         Self.logger.info("🔄 Generating FULL chart dataset (all time)...")
-
         let refreshStartTime = Date()
 
-        // Fetch ALL doses (not filtered by time period)
+        let profilesWithDoses = await fetchAllDoses(config: config)
+        guard !profilesWithDoses.isEmpty else {
+            await MainActor.run {
+                self.fullChartDataset = nil
+                self.chartDataset = nil
+            }
+            return
+        }
+
+        let fullDataset = await generateFullDataset(
+            user: config.user,
+            profilesWithDoses: profilesWithDoses,
+            chartService: config.chartService
+        )
+
+        await updateAndPersistDataset(
+            fullDataset,
+            selectedPeriod: config.selectedPeriod,
+            totalTime: Date().timeIntervalSince(refreshStartTime)
+        )
+    }
+
+    /// Fetch all doses for medication profiles
+    /// - Parameter config: Configuration containing profiles, dose service, and context
+    /// - Returns: Array of tuples containing medication profiles and their doses
+    private func fetchAllDoses(config: RefreshConfig) async -> [(MedicationProfile, [Dose])] {
         let doseFetchStart = Date()
         var profilesWithDoses: [(MedicationProfile, [Dose])] = []
 
-        for profile in profiles {
-            let doses = await MainActor.run {
-                doseService.fetchDoses(for: profile, within: .all, context: context)
-            }
+        for profile in config.profiles {
+            let doses = await config.doseService.fetchDoses(for: profile, within: .all, context: config.context)
             guard !doses.isEmpty else { continue }
             profilesWithDoses.append((profile, doses))
         }
 
-        let doseFetchEnd = Date()
-        let doseFetchTime = doseFetchEnd.timeIntervalSince(doseFetchStart) * 1000
+        let doseFetchTime = Date().timeIntervalSince(doseFetchStart) * 1000
         let totalDoses = profilesWithDoses.reduce(0) { $0 + $1.1.count }
-
         Self.logger.info("  ⏱️  Dose fetching: \(String(format: "%.1f", doseFetchTime))ms (\(totalDoses) doses)")
 
-        // Generate FULL chart dataset (heavy computation - all concentration points)
+        return profilesWithDoses
+    }
+
+    /// Generate full chart dataset using chart service
+    /// - Parameters:
+    ///   - user: User for the dataset
+    ///   - profilesWithDoses: Medication profiles with their doses
+    ///   - chartService: Chart service for dataset generation
+    /// - Returns: Generated concentration chart dataset
+    private func generateFullDataset(
+        user: User,
+        profilesWithDoses: [(MedicationProfile, [Dose])],
+        chartService: ChartDatasetService
+    ) async -> ConcentrationChartDataset? {
         let chartGenStart = Date()
         let fullDataset = chartService.generateChartDataset(
             for: user,
             profilesWithDoses: profilesWithDoses,
             timePeriod: .all
         )
-        let chartGenEnd = Date()
-        let chartGenTime = chartGenEnd.timeIntervalSince(chartGenStart) * 1000
-
+        let chartGenTime = Date().timeIntervalSince(chartGenStart) * 1000
         Self.logger.info("  ⏱️  Chart generation: \(String(format: "%.1f", chartGenTime))ms")
 
-        // Update properties
+        return fullDataset
+    }
+
+    /// Update chart dataset properties and persist to disk cache
+    /// - Parameters:
+    ///   - dataset: Full chart dataset to persist
+    ///   - selectedPeriod: Time period to filter to
+    ///   - totalTime: Total refresh time interval for logging
+    private func updateAndPersistDataset(
+        _ dataset: ConcentrationChartDataset?,
+        selectedPeriod: ChartDataProcessor.TimePeriod,
+        totalTime: TimeInterval
+    ) async {
         await MainActor.run {
-            self.fullChartDataset = fullDataset
+            self.fullChartDataset = dataset
             self.filterChartDataset(to: selectedPeriod)
 
-            let totalTime = Date().timeIntervalSince(refreshStartTime) * 1000
-            Self.logger.info("  ⏱️  Total refresh: \(String(format: "%.1f", totalTime))ms")
+            let totalTimeMs = totalTime * 1000
+            Self.logger.info("  ⏱️  Total refresh: \(String(format: "%.1f", totalTimeMs))ms")
             Self.logger.info("✅ Full dataset generated and cached in memory")
 
             // Save to disk for instant startup next time

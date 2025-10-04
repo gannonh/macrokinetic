@@ -33,9 +33,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
         ).firstMatch
 
         // Check for empty state elements independently with proper waits
-        let emptyStateExists = emptyStateView.waitForExistence(timeout: 3)
-        let titleExists = emptyStateTitle.waitForExistence(timeout: 3)
-        let descriptionExists = emptyStateDescription.waitForExistence(timeout: 3)
+        let emptyStateExists = emptyStateView.waitForExistence(timeout: 1)
+        let titleExists = emptyStateTitle.waitForExistence(timeout: 1)
+        let descriptionExists = emptyStateDescription.waitForExistence(timeout: 1)
 
         // Verify at least one empty state element exists
         let hasEmptyStateElement = emptyStateExists || titleExists || descriptionExists
