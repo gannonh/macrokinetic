@@ -8,8 +8,6 @@ argument-hint: Epic name (e.g., dose-tracking)
 
 Push epic and tasks to GitHub as issues.
 
-**ULTRATHINK**
-
 ## Quick Check
 
 ```bash
@@ -23,34 +21,6 @@ ls .claude/epics/$ARGUMENTS/*.md 2>/dev/null | grep -v epic.md | wc -l
 If no tasks found: "❌ No tasks to sync. Run: /pm:epic-decompose $ARGUMENTS"
 
 ## Instructions
-
-### 0. Check Remote Repository
-
-Follow `/rules/github-operations.md` to ensure we're not syncing to the CCPM template:
-
-```bash
-# Check if remote origin is the CCPM template repository
-remote_url=$(git remote get-url origin 2>/dev/null || echo "")
-if [[ "$remote_url" == *"automazeio/ccpm"* ]] || [[ "$remote_url" == *"automazeio/ccpm.git"* ]]; then
-  echo "❌ ERROR: You're trying to sync with the CCPM template repository!"
-  echo ""
-  echo "This repository (automazeio/ccpm) is a template for others to use."
-  echo "You should NOT create issues or PRs here."
-  echo ""
-  echo "To fix this:"
-  echo "1. Fork this repository to your own GitHub account"
-  echo "2. Update your remote origin:"
-  echo "   git remote set-url origin https://github.com/YOUR_USERNAME/YOUR_REPO.git"
-  echo ""
-  echo "Or if this is a new project:"
-  echo "1. Create a new repository on GitHub"
-  echo "2. Update your remote origin:"
-  echo "   git remote set-url origin https://github.com/YOUR_USERNAME/YOUR_REPO.git"
-  echo ""
-  echo "Current remote: $remote_url"
-  exit 1
-fi
-```
 
 ### 1. Create Epic Issue
 
