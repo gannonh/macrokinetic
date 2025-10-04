@@ -6,9 +6,7 @@ allowed-tools: Bash, Read, Write, Edit, LS, Task
 
 # Issue Start/Resume
 
-Begin or resume work on a GitHub issue.
-
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
+Begin or resume work on one or more GitHub issues: $1
 
 Additional context (if any): $2
 
