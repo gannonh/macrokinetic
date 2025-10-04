@@ -472,6 +472,13 @@ struct ConcentrationCurve: Identifiable, Codable {
     let curveStyle: CurveStyle
     let isVisible: Bool
 
+    enum CodingKeys: String, CodingKey {
+        case points
+        case medication
+        case curveStyle
+        case isVisible
+    }
+
     init(
         points: [AdvancedConcentrationPoint],
         medication: String,

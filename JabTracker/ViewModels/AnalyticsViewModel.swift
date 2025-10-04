@@ -103,6 +103,8 @@ class AnalyticsViewModel {
         var profilesWithDoses: [(MedicationProfile, [Dose])] = []
 
         for profile in config.profiles {
+            // Note: Swift 6 concurrency warning expected - SwiftData models are designed for MainActor use
+            // Will be addressed during Swift 6 migration
             let doses = await config.doseService.fetchDoses(for: profile, within: .all, context: config.context)
             guard !doses.isEmpty else { continue }
             profilesWithDoses.append((profile, doses))
