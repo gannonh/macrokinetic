@@ -14,20 +14,26 @@ The context system enables:
 
 When fully initialized, this directory contains:
 
-### Project Foundation
-- **`project-brief.md`** - Project scope, goals, and key objectives
-- **`project-vision.md`** - Long-term vision and strategic direction
-- **`project-overview.md`** - High-level summary of features and capabilities
-- **`progress.md`** - Current project status, completed work, and immediate next steps
+### Essential Context
 
-### Technical Context
-- **`tech-context.md`** - Dependencies, technologies, and development tools
-- **`project-structure.md`** - Directory structure and file organization
-- **`system-patterns.md`** - Architectural patterns and design decisions
-- **`project-style-guide.md`** - Coding standards, conventions, and style preferences
+1. High-level understanding of the project: `.claude/context/product-context.md`
+2. Core purpose and goals: `.claude/context/project-brief.md`
+3. Technical stack and dependencies: `.claude/context/tech-context.md`
+4. Testing framework and setup: `.claude/context/testing-config.md`
 
-### Product Context
-- **`product-context.md`** - Product requirements, target users, and core functionality
+### Current State
+
+5. Current status and recent work: `.claude/context/progress.md`
+6. Project structure: `.claude/context/project-structure.md`
+
+### Deep Context
+
+7. Architecture and design patterns: `.claude/context/system-patterns.md`
+8. User needs and requirements: `.claude/context/product-context.md`
+9. Coding conventions: `.claude/context/project-style-guide.md`
+10. Long-term direction: `.claude/context/project-vision.md`
+11. Common workflows and commands: `.claude/context/development-commands.md`
+
 
 ## Context Commands
 

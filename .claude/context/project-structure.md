@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-09-26T01:23:01Z
-version: 1.5
+last_updated: 2025-10-04T22:04:22Z
+version: 1.6
 author: Claude Code PM System
 ---
 
@@ -18,12 +18,14 @@ jab-tracker-ios/
 │   │   └── testing/           # Test execution and analysis
 │   ├── context/               # Project context documentation (this directory)
 │   ├── epics/                 # Epic and feature tracking
-│   │   └── dose-tracking/     # Current epic with 9 tasks and analysis
-│   ├── hooks/                 # Development workflow hooks (NEW)
+│   │   ├── analytics/         # Analytics epic (COMPLETED 2025-10-04)
+│   │   ├── dose-tracking/     # Dose tracking epic (COMPLETED)
+│   │   └── dose-scheduling/   # Dose scheduling epic (BACKLOG - NEW)
+│   ├── hooks/                 # Development workflow hooks
 │   ├── prds/                  # Product Requirements Documents
 │   ├── rules/                 # Development rules and guidelines (10+ rule files)
 │   ├── scripts/               # PM automation scripts (shell implementations)
-│   └── settings.json          # PM system configuration (NEW)
+│   └── settings.json          # PM system configuration
 ├── ccpm/                      # Claude Code Project Management tools
 ├── docs/                      # Project documentation
 │   ├── spec-master-prd.md     # Master Product Requirements
