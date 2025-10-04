@@ -45,7 +45,7 @@ Additional context (if any): $2
 7. Ensure all checks pass: `./scripts/check-all.sh`
 8. Commit your work, referencing the issue number: `git commit -m "Fix for #$1: [description of work]"`
 9. Push to GitHub: `git push`
-10. Close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
+10. Remove the `in-progress` label and close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
 
 ## Instructions for Task Issues
 
