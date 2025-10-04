@@ -56,6 +56,8 @@ func myTest() throws {
 **Why Launch Arguments?**
 XCUITests run in a separate process and cannot directly access the app's SwiftData. The app must detect test mode via launch arguments and seed its own data.
 
+#### Preset-Based Approach
+
 ```swift
 // E2E tests use launch arguments to trigger seeding
 func testChartWithSeededData() throws {
@@ -82,6 +84,65 @@ func testChartWithSeededData() throws {
 .ninetyDays  // 90 days, ~13 doses, performance testing
 .oneYear     // 365 days, ~52 doses, performance testing
 .twoYears    // 730 days, ~104 doses, stress testing
+```
+
+#### Custom Parameter Approach
+
+For tests requiring specific data configurations, use custom parameters instead of presets:
+
+```swift
+// Using setupDoseHistoryTest() convenience method (RECOMMENDED)
+func test_doseHistory_medicationFiltering() throws {
+    // Setup with custom parameters: 3 doses across 2 medication profiles
+    let app = TestUtilities.setupDoseHistoryTest(
+        app: XCUIApplication(),
+        doseCount: 3,
+        medicationProfiles: 2,
+        medicationName: "semaglutide",
+        brandName: "Ozempic",
+        dose: "0.25"
+    )
+
+    TestUtilities.navigateToHistoryView(in: app)
+    // Test implementation...
+}
+
+// Using .custom() preset directly (ALTERNATIVE)
+func testCustomDataConfiguration() throws {
+    let customPreset = TestUtilities.TestDataPreset.custom(
+        doseCount: 5,
+        medicationProfiles: 1,
+        medication: "tirzepatide",
+        brand: "Mounjaro",
+        dose: "5.0",
+        adherence: 0.95,  // 95% adherence
+        variability: true  // Include timing variability
+    )
+
+    let app = TestUtilities.launchAppWithSeededData(preset: customPreset)
+    // Test implementation...
+}
+```
+
+**Custom Parameter Options:**
+
+```swift
+// TestUtilities.setupDoseHistoryTest() parameters:
+doseCount: Int = 3              // Number of doses to create
+medicationProfiles: Int = 1     // Number of medication profiles
+medicationName: String = "semaglutide"  // Generic medication name
+brandName: String = "Ozempic"   // Brand name
+dose: String = "0.25"           // Dose amount as string
+// Auto-configured: 100% adherence, no timing variability
+
+// TestDataPreset.custom() parameters (more control):
+doseCount: Int                  // Number of doses to create
+medicationProfiles: Int = 1     // Number of medication profiles
+medication: String = "semaglutide"  // Generic medication name
+brand: String = "Ozempic"       // Brand name
+dose: String = "0.25"           // Dose amount as string
+adherence: Double = 1.0         // Adherence rate (0.0-1.0)
+variability: Bool = false       // Include timing variability
 ```
 
 ### Preset Configurations (Unit Tests)
