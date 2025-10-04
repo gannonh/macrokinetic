@@ -2,7 +2,6 @@
 description: Mark an issue as complete and close it on GitHub
 argument-hint: issue number (e.g., 42)
 allowed-tools: Bash, Read, Write, LS
-model: 
 ---
 
 # Issue Close

@@ -1,8 +1,7 @@
 ---
 description: Mark an epic as complete when all issues are done
 argument-hint: Epic name (e.g., dose-tracking)
-allowed-tools: Read, LS
-model: Sonnet
+allowed-tools: Bash, Read, Write, LS
 ---
 
 # Epic Close

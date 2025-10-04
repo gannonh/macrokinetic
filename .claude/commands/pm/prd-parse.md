@@ -8,8 +8,6 @@ allowed-tools: Read, Write, LS
 
 Convert PRD to technical implementation epic.
 
-**ULTRATHINK**
-
 ## Required Rules
 
 **IMPORTANT:** Before executing this command, read and follow:
