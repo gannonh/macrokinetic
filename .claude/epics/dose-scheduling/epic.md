@@ -4,7 +4,7 @@ status: backlog
 created: 2025-10-04T22:00:03Z
 progress: 0%
 prd: .claude/prds/dose-scheduling.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/gannonh/jab-tracker-ios/issues/173
 ---
 
 # Epic: Dose Scheduling System
@@ -461,30 +461,17 @@ High-level task categories that will be created during epic decomposition:
 8. **Consolidation into 10 Tasks**: Grouping related work (e.g., all notification features in one task) reduces overhead and enables focused delivery
 
 ## Tasks Created
+- [ ] #174 - SwiftData Models - DoseSchedule, ScheduledDose, DoseEvent
+- [ ] #175 - ScheduleService Core - Schedule Management and Calculation Algorithms
+- [ ] #176 - NotificationService - Smart Dose Reminders and Notification Management
+- [ ] #177 - Onboarding Integration
+- [ ] #178 - Calendar Integration
+- [ ] #179 - Medication Profile CRUD
+- [ ] #180 - Split-Dose Support
+- [ ] #181 - Analytics Integration - Schedule Adherence Tracking & Timeline View
+- [ ] #182 - Testing Suite - Comprehensive Unit, Integration & E2E Tests for Scheduling
+- [ ] #183 - Performance & Polish - Optimization, Accessibility Audit & Edge Cases
 
-### Foundation (Phase 1: Weeks 1-2)
-- [ ] 001.md - SwiftData Models - DoseSchedule, ScheduledDose, DoseEvent (parallel: false, M effort)
-- [ ] 002.md - ScheduleService Core - CRUD, calculations, adherence metrics (parallel: false, L effort)
-- [ ] 003.md - NotificationService - Queue management, background refresh, actions (parallel: false, L effort)
-
-### UI Integration (Phases 2-6: Weeks 3-10)
-- [ ] 004.md - Onboarding Integration - Schedule setup step with UI components (parallel: false, L effort)
-- [ ] 005.md - Calendar Integration - Scheduled dose indicators and actions (parallel: true, M effort)
-- [ ] 006.md - Medication Profile CRUD - Schedule management in profile editing (parallel: true, M effort)
-- [ ] 007.md - Split-Dose Support - Calculations and UI configuration (parallel: true, M effort)
-
-### Analytics & Quality (Phases 7-8: Weeks 11-12)
-- [ ] 008.md - Analytics Integration - Schedule adherence tracking and timeline view (parallel: true, L effort)
-- [ ] 009.md - Testing Suite - Comprehensive unit, integration, E2E tests (parallel: false, XL effort)
-- [ ] 010.md - Performance & Polish - Optimization, accessibility audit, edge cases (parallel: false, L effort)
-
-**Total Tasks**: 10
-**Parallel Tasks**: 4 (005, 006, 007, 008)
-**Sequential Tasks**: 6 (001, 002, 003, 004, 009, 010)
-**Estimated Total Effort**: 85-105 hours (7x M + 3x L + 1x XL)
-
-### Task Dependencies
-- **Critical Path**: 001 → 002 → 003 → 004 → 009 → 010
-- **Parallel Stream 1**: 001 → 002 → 005 (Calendar)
-- **Parallel Stream 2**: 001 → 002 → 006 (Profile CRUD)
-- **Parallel Stream 3**: 002 → 007 → 008 (Split-Dose + Analytics)
+Total tasks: 10
+Parallel tasks: 4
+Sequential tasks: 6
