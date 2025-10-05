@@ -15,9 +15,10 @@ struct MedicationManagerTests {
     let context: ModelContext
 
     init() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         self.container = try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self,
+            DoseSchedule.self, ScheduledDose.self,
             configurations: config)
         self.context = ModelContext(self.container)
     }

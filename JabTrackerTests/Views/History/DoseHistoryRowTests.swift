@@ -16,9 +16,11 @@ struct DoseHistoryRowTests {
     // MARK: - Test Infrastructure
 
     private func createTestModelContext() -> ModelContext {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try! ModelContainer(
-            for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+            for: User.self, Dose.self, MedicationProfile.self,
+            DoseSchedule.self, ScheduledDose.self,
+            configurations: config)
         return ModelContext(container)
     }
 
@@ -439,9 +441,11 @@ struct DoseHistoryRowTests {
 
 struct DoseHistoryRowEdgeCaseTests {
     private func createTestModelContext() -> ModelContext {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try! ModelContainer(
-            for: User.self, Dose.self, MedicationProfile.self, configurations: config)
+            for: User.self, Dose.self, MedicationProfile.self,
+            DoseSchedule.self, ScheduledDose.self,
+            configurations: config)
         return ModelContext(container)
     }
 

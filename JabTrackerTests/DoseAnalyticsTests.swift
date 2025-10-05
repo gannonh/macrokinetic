@@ -618,22 +618,27 @@ struct DoseAnalyticsTests {
         // Given: A medication profile and schedule
         let profile = self.createTestMedicationProfile()
         let schedule = DoseSchedule(
-            medicationProfile: profile,
+            medicationProfile: nil,  // Don't set relationship yet
             patternType: .weekly)
 
         let scheduledDose = ScheduledDose(
             scheduledTime: Date(),
             doseAmount: 1.0)
-        scheduledDose.schedule = schedule
 
         // When: Create dose with scheduledDose reference
         let dose = self.createTestDose()
-        dose.scheduledDose = scheduledDose
 
+        // Insert all objects BEFORE setting relationships
         context.insert(profile)
         context.insert(schedule)
         context.insert(scheduledDose)
         context.insert(dose)
+
+        // NOW set relationships after insertion
+        schedule.medicationProfile = profile
+        scheduledDose.schedule = schedule
+        dose.scheduledDose = scheduledDose
+
         try context.save()
 
         // Then: Reference should be set correctly

@@ -56,7 +56,7 @@ final class DoseSchedule {
     /// Parent side of relationship with cascade delete - when schedule is deleted,
     /// all scheduled doses are removed to maintain data integrity
     @Relationship(deleteRule: .cascade, inverse: \ScheduledDose.schedule)
-    var scheduledDoses: [ScheduledDose] = []
+    var scheduledDoses: [ScheduledDose]?  // CloudKit requires optional relationships
 
     // MARK: - Schedule Configuration
 
@@ -152,9 +152,10 @@ final class DoseSchedule {
     /// - Returns: Date of next pending dose, or nil if none exist
     var nextScheduledDose: Date? {
         // Filter for pending doses only
-        let pendingDoses = scheduledDoses.filter { dose in
-            dose.status == .pending
-        }
+        let pendingDoses =
+            scheduledDoses?.filter { dose in
+                dose.status == .pending
+            } ?? []
 
         // Use min() to find earliest scheduled dose
         guard let nextDose = pendingDoses.min(by: { $0.scheduledTime < $1.scheduledTime }) else {

@@ -68,7 +68,7 @@ struct DoseScheduleTests {
         // createdAt and updatedAt are non-optional Dates, so just verify they exist as Dates
         _ = schedule.createdAt
         _ = schedule.updatedAt
-        #expect(schedule.scheduledDoses.isEmpty)
+        #expect(schedule.scheduledDoses?.isEmpty ?? true)
     }
 
     @Test("DoseSchedule initializes with custom values")
