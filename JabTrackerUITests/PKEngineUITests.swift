@@ -22,6 +22,7 @@ final class PKEngineUITests: XCTestCase {
     /// When: User views the dashboard
     /// Then: Current concentration level is displayed accurately
     /// And: Concentration updates when new doses are added
+    @MainActor
     func testCurrentConcentrationDisplayOnDashboard() throws {
         // GIVEN: User has 1 dose logged
         let app = TestUtilities.launchAppWithSeededData(
@@ -76,6 +77,7 @@ final class PKEngineUITests: XCTestCase {
     /// Then: Peak level timing and value are shown
     /// And: Trough level timing and value are shown
     /// And: Peak occurs at medication-specific time after injection
+    @MainActor
     func testPeakAndTroughLevelCalculations() throws {
         // GIVEN: User has 1 dose logged
         let app = TestUtilities.launchAppWithSeededData(
@@ -146,6 +148,7 @@ final class PKEngineUITests: XCTestCase {
     /// Then: Steady-state progress is shown as percentage (0-100%)
     /// And: Clear explanation of what steady-state means
     /// And: Typical timeframe to reach steady-state is indicated
+    @MainActor
     func testSteadyStateProgressDisplay() throws {
         // GIVEN: User has 3 doses logged (simulates regular dosing pattern)
         let app = TestUtilities.launchAppWithSeededData(
@@ -250,6 +253,7 @@ final class PKEngineUITests: XCTestCase {
     /// And: Visual indicators show if levels are in therapeutic range
     /// And: Units are clearly displayed
     /// And: Color coding helps interpret levels (low/normal/high)
+    @MainActor
     func testConcentrationDisplayFormatting() throws {
         // GIVEN: User has 1 dose logged
         let app = TestUtilities.launchAppWithSeededData(
@@ -380,6 +384,7 @@ final class PKEngineUITests: XCTestCase {
     /// And: Card can be tapped for more detailed information
     /// And: Card shows summary info at glance (current level, next dose timing)
     /// And: Card updates smoothly without disrupting other UI elements
+    @MainActor
     func testConcentrationCardDashboardIntegration() throws {
         // GIVEN: User has 1 dose logged
         let app = TestUtilities.launchAppWithSeededData(
@@ -465,6 +470,7 @@ final class PKEngineUITests: XCTestCase {
     /// Then: Each medication shows separate concentration data
     /// And: Calculations are independent per medication
     /// And: User can distinguish between different medication levels
+    @MainActor
     func testMultipleMedicationConcentrations() throws {
         // GIVEN: User has 2 medication profiles with 1 dose
         let app = TestUtilities.launchAppWithSeededData(
@@ -589,6 +595,7 @@ final class PKEngineUITests: XCTestCase {
     /// Then: Concentration calculations complete within 50ms
     /// And: Dashboard loads smoothly without lag
     /// And: Updates are responsive during dose entry
+    @MainActor
     func testConcentrationCalculationPerformance() throws {
         // GIVEN: User has 10 doses logged (simulates regular use over 10 weeks)
         let app = TestUtilities.launchAppWithSeededData(
@@ -669,6 +676,7 @@ final class PKEngineUITests: XCTestCase {
     /// Then: Helpful message explains why concentration data is unavailable
     /// And: Clear guidance on how to enable concentration tracking
     /// And: No crashes or empty states without explanation
+    @MainActor
     func testConcentrationErrorStates() throws {
         // GIVEN: User with medication profile but no doses
         let app = TestUtilities.launchAppWithSeededData(

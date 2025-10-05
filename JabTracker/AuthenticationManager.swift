@@ -321,7 +321,8 @@ class AuthenticationManager: NSObject, ObservableObject {
                     let result = try TestDataSeeding.seedData(
                         into: context,
                         config: config,
-                        existingUser: user  // Seed data for the authenticated mock user
+                        existingUser: user,  // Seed data for the authenticated mock user
+                        targetDoseCount: doseCount  // Use exact dose count from launch arguments
                     )
 
                     // Create additional medication profiles if requested
