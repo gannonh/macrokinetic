@@ -1,7 +1,6 @@
 ---
 description: Update epic progress based on task states.
 argument-hint: Epic name (e.g., dose-tracking)
-allowed-tools: Read, Write, LS
 ---
 
 # Epic Refresh
