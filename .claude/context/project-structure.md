@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-04T22:04:22Z
-version: 1.6
+last_updated: 2025-10-05T23:08:25Z
+version: 1.7
 author: Claude Code PM System
 ---
 
@@ -131,7 +131,16 @@ JabTracker/
 - **Service-View Separation**: UI excellence in streams A and B meaningless without medically accurate backend algorithms in stream C
 - **Healthcare App Architecture Requirements**: Medical applications require rigorous validation of core business logic before UI integration
 
+## Dose Scheduling Models Structure Insights (Issue #174)
+- **SwiftData Model Location Pattern**: All persistent models (`DoseSchedule.swift`, `ScheduledDose.swift`) placed in `JabTracker/Models/` directory alongside existing User, Dose, MedicationProfile models
+- **Calculated Entity Organization**: Non-persistent calculated entities (`DoseEvent.swift` struct) also stored in `JabTracker/Models/` for discoverability and logical grouping
+- **Test File Parallel Structure**: Model tests follow strict parallel organization - `DoseSchedule.swift` → `JabTrackerTests/DoseScheduleTests.swift`, maintaining 1:1 mapping
+- **Parallel Stream File Ownership**: 4-stream development succeeded through clear file ownership (Stream A: ScheduledDose, Stream B: DoseSchedule, Stream C: DoseEvent, Stream D: Integration tests)
+- **Integration Test Organization**: Integration tests (`DoseSchedulingIntegrationTests.swift`) validate cross-model relationships and belong in dedicated integration test files
+- **Model Extension Pattern**: Updated existing models (`MedicationProfile.swift`, `Dose.swift`) to add new relationships - maintains cohesion within model files
+
 ## Update History
+- 2025-10-05T23:08:25Z: Added Dose Scheduling Models structure insights from Issue #174 - SwiftData model organization, test file parallel structure, and parallel stream file ownership patterns
 - 2025-09-26T01:23:01Z: Added AdherenceInsights structure insights from Issue #57, stream dependency management, critical issue identification workflow, and healthcare app architecture requirements
 - 2025-09-23T13:29:15Z: Added ChartDataProcessor structure insights from Issue #55, parallel development architecture, new Models and Services files
 - 2025-09-16T22:39:56Z: Added calendar feature structure insights from Issue #42 development

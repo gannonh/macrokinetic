@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-04T22:04:22Z
-version: 3.3
+last_updated: 2025-10-05T23:08:25Z
+version: 3.4
 author: Claude Code PM System
 ---
 
@@ -9,27 +9,34 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: main
-- **Last Commit**: ec65f02 - Epic Analytics: Update epic status to completed and adjust timestamps; remove unused model field in commands
-- **Status**: Analytics epic complete (100%), new dose-scheduling epic created (backlog)
+- **Branch**: issue/174-swiftdata-models-doseschedule-scheduleddose-doseevent
+- **Last Commit**: 534442d - chore: Remove allowed-tools section from epic refresh documentation
+- **Status**: Issue #174 (Dose Scheduling Models) complete - 69 tests passing, 90%+ coverage
 
 ## Recent Work (Last 10 Commits)
-1. **23888a9** - Issue #59: Update progress tracking - cache persistence & launch argument configuration
-2. **b464919** - Issue #59: Add ConcentrationChartState coverage tests (31% → 100%)
-3. **77f4424** - Issue #59: Add Tier 3B Testing Infrastructure (27% threshold) for AuthenticationManager
-4. **ece26bd** - Issue #59: Add AuthenticationManager coverage tests (27%)
-5. **8f8dd8e** - feat: Add permission request tests for OnboardingViewModel
-6. **63b0226** - feat: Add comprehensive ChartDatasetCache test coverage
-7. **77281e7** - test: Add comprehensive test coverage for AnalyticsViewModel and DoseDataService
-8. **2573f6c** - refactor: Convert setupDoseHistoryTest to use data seeding instead of UI interaction
-9. **37e9102** - feat: Update DoseHistoryFilteringUITests to use seeded data for search and filtering tests
-10. **bac7325** - feat: Update DoseHistoryBasicUITests to use seeded data for dose history setup
+1. **534442d** - chore: Remove allowed-tools section from epic refresh documentation
+2. **b776a25** - chore: Update epic status and progress for dose scheduling
+3. **8bdf5fb** - Issue #174: Capture session learnings
+4. **127ddc7** - Issue #174: Update progress tracking
+5. **c7efe69** - fix: Properly handle exact dose count in test data seeding
+6. **3c0b90e** - test: Refactor PKEngine E2E tests to use seeded data pattern
+7. **cfc9d15** - Issue #174: Improve DoseSchedule test coverage from 79% to 90%
+8. **1d1dffe** - Issue #174: Fix failing tests after SwiftData model integration
+9. **9034164** - Issue #174: Fix CloudKit relationship requirements
+10. **cc6675a** - Issue #174: Stream D (Integration) - Wire models into codebase
 
 ## Current Working Directory Status
-- **Modified Files**: Untracked epic directory (.claude/epics/dose-scheduling/)
-- **Branch Status**: main (stable)
-- **Current Phase**: Analytics epic complete, planning next epic (dose-scheduling)
-- **Recent Milestone** (2025-10-04):
+- **Modified Files**: .claude/commands/context/update.md, .claude/commands/pm/issue-sync.md, .claude/epics/dose-scheduling/174.md
+- **Branch Status**: issue/174-swiftdata-models-doseschedule-scheduleddose-doseevent (ready for PR)
+- **Current Phase**: Dose scheduling epic in progress - foundational models complete (Issue #174)
+- **Recent Session Work** (2025-10-05):
+  - ✅ **Issue #174 Complete**: SwiftData models for dose scheduling (DoseSchedule, ScheduledDose, DoseEvent)
+  - ✅ **4-Stream Parallel Development**: Successfully coordinated 4 parallel agents - 69 tests, 90%+ coverage
+  - ✅ **CloudKit Relationship Fixes**: Fixed circular reference errors and optional relationship requirements
+  - ✅ **Test Coverage Excellence**: DoseSchedule improved from 79% to 90% through systematic coverage improvements
+  - ✅ **Integration Testing**: 6 integration tests validate cross-model interactions
+  - 🧠 **Learnings Captured**: Comprehensive learnings from parallel development and SwiftData CloudKit patterns
+- **Previous Milestone** (2025-10-04):
   - 🎉 **Analytics Epic Complete**: Issue #59 closed, all analytics features implemented and tested
   - ✅ **Epic Status**: Analytics epic marked as completed (100% progress)
   - 📋 **New Epic Created**: Dose scheduling epic created in backlog
@@ -346,7 +353,25 @@ author: Claude Code PM System
 - **Doc Comment Attachment**: SwiftLint requires doc comments directly attached to declarations without intervening disable comments
 - **Complex Function Handling**: Use `// swiftlint:disable:next cyclomatic_complexity` immediately before function declaration for complex test utilities
 
+## Lessons Learned (Recent - Issue #174 Session 2025-10-05)
+
+### Systematic Bug Fixing Process Excellence
+- **Systematic Anti-Pattern Discovery**: User request to "find anti-patterns systemically" led to discovering ModelConfiguration issue across multiple test files - more efficient than one-by-one fixes
+- **Bug Categorization Value**: Failing tests after integration revealed 3 distinct bug categories (schema counts, logic errors, boundary conditions) - systematic categorization helps prioritize fixes
+- **Root Cause Analysis**: Fixed 11 failing tests by addressing root causes (CloudKit relationships, adherence logic, timing boundaries) rather than working around symptoms
+
+### Test-Driven Bug Discovery Patterns
+- **Integration Testing as Validation**: Stream D integration tests caught issues that individual stream tests missed - validates cross-model interactions
+- **Coverage-Driven Development**: Improving DoseSchedule coverage from 79% to 90% revealed uncovered code paths and edge cases
+- **Boundary Condition Testing**: Date comparison tests at exact boundaries require 1-second tolerance for millisecond-level timing precision
+
+### Parallel Development Coordination Success
+- **4-Stream Efficiency**: Completed 4 parallel streams (ScheduledDose, DoseSchedule, DoseEvent, Integration) with 69 total tests and no merge conflicts
+- **Clear Ownership Prevents Conflicts**: Each stream owns specific model files and test files - prevents merge conflicts during parallel development
+- **Integration Stream Value**: Dedicated integration stream (Stream D) validates cross-model interactions before marking issue complete
+
 ## Update History
+- 2025-10-05T23:08:25Z: Issue #174 completion - SwiftData dose scheduling models with parallel development, CloudKit relationship patterns, systematic bug fixing, and comprehensive learnings captured
 - 2025-10-04T22:04:22Z: Analytics epic completion - Issue #59 closed, epic marked as 100% complete, new dose-scheduling epic created, bug fixes #83-88, updated branch status to main
 - 2025-10-03T18:13:21Z: Issue #59 session update - cache persistence testing, bypass onboarding launch argument, test coverage improvements (ConcentrationChartState 100%, AuthenticationManager 27%), testing infrastructure documentation
 - 2025-10-02T17:09:51Z: Issue #59 disk-based chart dataset caching implementation, SwiftLint configuration adjustments
