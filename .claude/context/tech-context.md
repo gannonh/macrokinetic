@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-02T17:09:51Z
-version: 2.3
+last_updated: 2025-10-05T23:08:25Z
+version: 2.4
 author: Claude Code PM System
 ---
 
@@ -295,7 +295,25 @@ author: Claude Code PM System
 - **Touch Target Sizing**: Calendar dots and small interactive elements need verification against 44×44pt minimum
 - **High Contrast Support**: Ensure chart elements remain visible and distinguishable in high contrast modes
 
+## Dose Scheduling Models Integration (Issue #174)
+
+### SwiftData Model Testing Anti-Patterns
+- **Incomplete ModelConfiguration**: Fixed systematic issue across multiple test files - ModelConfiguration in tests must include ALL models (not just those directly tested) and `cloudKitDatabase: .none` for proper test isolation
+- **CloudKit Relationship Optionality**: All SwiftData relationships must be optional for CloudKit sync compatibility - non-optional relationships cause sync failures
+- **Schema Evolution Testing**: When adding new models (DoseSchedule, ScheduledDose, DoseEvent), all existing tests checking entity counts must be updated
+
+### Test Coverage Patterns for Computed Properties
+- **Uncovered Closure Testing**: Computed properties with closures (filter, min, map) require specific test scenarios that exercise the closure code paths
+- **Boundary Condition Testing**: Computed properties comparing dates need tests at exact boundaries with 1-second tolerance for timing precision
+- **Status Enum Testing**: Computed properties returning status enums need comprehensive tests for all possible state transitions
+
+### Parallel Stream Development Success (Issue #174)
+- **4-Stream Parallel Coordination**: Successfully completed 4 parallel streams (ScheduledDose: 29 tests, DoseSchedule: 20 tests, DoseEvent: 20 tests, Integration: 6 tests) with no merge conflicts
+- **File Ownership Strategy**: Clear file ownership prevents conflicts - each stream owns specific model files and test files
+- **Integration Stream Value**: Dedicated integration stream (Stream D) validates cross-model interactions and catches integration bugs early
+
 ## Update History
+- 2025-10-05T23:08:25Z: Added Dose Scheduling Models Integration section (Issue #174) with SwiftData testing anti-patterns, coverage patterns for computed properties, and parallel development success patterns
 - 2025-10-02T17:09:51Z: Updated SwiftLint Management section - increased type_body_length threshold to 350, prefer configuration changes over disable comments
 - 2025-10-01T20:00:09Z: Added Analytics UI/UX Integration section (Issue #59) with iOS HIG compliance patterns, performance standards, and accessibility requirements from Phase 2 design review
 - 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Framework section with CodeGen element access patterns, TestUtilities enhancements, and test quality framework integration from Issue #57 completion

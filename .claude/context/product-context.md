@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-01T20:00:09Z
-version: 2.1
+last_updated: 2025-10-05T23:08:25Z
+version: 2.2
 author: Claude Code PM System
 ---
 
@@ -216,7 +216,25 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Systematic UX Analysis**: Organizing feedback by view (above fold, below fold, specific features) with ratings and structured improvements creates immediately actionable implementation plan
 - **Priority Framework Success**: Must Have (5) → Should Have (6) → Nice to Have (7) prioritization framework for polish tasks enables focused delivery
 
+## Product Insights from Issue #174 Dose Scheduling Models (SwiftData Foundation)
+
+### Medical Adherence Definition Refinement
+- **Adherence Means Taking Medication**: Adherence calculations should reflect actual medication intake - `isAdherent` should return false for skipped doses even if they have a valid reason (`.adherent` status)
+- **Skipped vs Missed Distinction**: Medical apps must distinguish between intentional skips (with reasons) and missed doses (forgotten) - both impact adherence metrics but differently
+- **Adherence Status Categories**: Three-tier status system (adherent, nonAdherent, pending) provides clear tracking for medication management
+
+### Scheduling Window Medical Requirements
+- **1-Second Tolerance Medically Reasonable**: Scheduling window boundaries require 1-second tolerance for system timing precision - medically acceptable and necessary for reliable system operation
+- **Window Definition Flexibility**: `windowStart` and `windowEnd` define adherence windows (typically ±2 hours for weekly doses) - flexible enough for real-world patient schedules
+- **Real-Time Window Calculation**: `isInWindow` computed property provides real-time status - essential for dose reminder timing and adherence tracking
+
+### Dose Scheduling Architecture Value
+- **DoseEvent Calculated Entity**: Combining scheduled and actual doses into unified timeline (DoseEvent struct) simplifies adherence visualization and reporting
+- **Pause/Resume Support**: Medical treatment interruptions require proper tracking (`pausedAt`, `pausedUntil`) without losing schedule history - essential for clinical accuracy
+- **Reschedule Tracking**: Preserving original scheduled time (`rescheduledFrom`) enables accurate adherence analysis even when doses are rescheduled
+
 ## Update History
+- 2025-10-05T23:08:25Z: Added Product Insights from Issue #174 Dose Scheduling Models - medical adherence definitions, scheduling window requirements, and dose scheduling architecture value for patient workflows
 - 2025-10-01T20:00:09Z: Added Product Insights from Issue #59 Analytics Orchestration & Polish (Phase 2 Design Review) - medical app design standards, therapeutic range visualization requirements, user education needs, gamification effectiveness, and design review process patterns
 - 2025-09-27T14:51:11Z: Added Product Insights from Issue #57 Architecture Consolidation & E2E Testing Excellence - scope management success, architecture consolidation value, E2E testing quality standards, CodeGen testing breakthrough, and TestUtilities enhancement strategy
 - 2025-09-26T01:23:01Z: Added Product Insights from Issue #57 AdherenceInsights Business Logic Validation - weekly medication pattern recognition, medical accuracy requirements, healthcare testing standards, and algorithm design requirements

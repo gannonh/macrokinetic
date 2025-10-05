@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-01T20:00:09Z
-version: 2.3
+last_updated: 2025-10-05T23:08:25Z
+version: 2.4
 author: Claude Code PM System
 ---
 
@@ -231,6 +231,11 @@ dose.medication = medicationProfile  // Individual setter OK
 - **Test Container Setup**: Use DataController.testContainer() consistently instead of creating custom ModelContainers
 - **CloudKit Test Environment**: Use ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` for tests
 - **Context Management**: Always insert models into context BEFORE setting relationships, then save context
+- **CloudKit Relationship Requirements (Issue #174)**: All SwiftData relationships must be optional for CloudKit sync, and parent side must use `@Relationship(inverse:)` while child side uses plain property
+- **Circular Reference Prevention**: Never add `@Relationship` to both sides - causes "Circular reference resolving attached macro" error; only parent uses `@Relationship`
+- **Relationship Assignment Order**: Insert all objects into context BEFORE setting relationships to avoid "Duplicate registration attempt" crashes
+- **Computed Property Timing Precision**: When comparing `Date()` to stored dates in computed properties, add small tolerance (1 second) for boundary conditions to handle millisecond-level timing variations in tests
+- **ModelConfiguration Completeness**: Test ModelConfiguration must include ALL models in schema, not just those directly tested - incomplete configurations cause SwiftData crashes
 
 ## Key Development Patterns
 
@@ -451,6 +456,7 @@ struct UserAnalyticsSummary {
 - **Review History**: Track feedback and implementation status over time
 
 ## Update History
+- 2025-10-05T23:08:25Z: Added SwiftData CloudKit relationship patterns from Issue #174 (dose scheduling models) - CloudKit requirements, circular reference prevention, timing precision, and ModelConfiguration completeness
 - 2025-10-01T20:00:09Z: Added Design Review & Polish Patterns section (Issue #59) with phase-based UX development, priority framework, visual baseline documentation, and structured design review outputs
 - 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Patterns and SwiftLint Management Patterns from Issue #57 completion
 - 2025-09-26T01:23:01Z: Added AdherenceInsights Business Logic Patterns from Issue #57 business logic validation
