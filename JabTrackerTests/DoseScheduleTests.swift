@@ -302,8 +302,161 @@ struct DoseScheduleTests {
         #expect(schedule.nextScheduledDose == nil)
     }
 
-    // Note: Full nextScheduledDose testing requires ScheduledDose model
-    // Additional tests will be added in integration testing
+    @Test("nextScheduledDose returns earliest pending dose")
+    func testNextScheduledDoseWithMultiplePending() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        // Create scheduled doses with different times
+        let now = Date()
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: now)!
+        let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: now)!
+
+        let dose1 = ScheduledDose(
+            scheduledTime: tomorrow,
+            doseAmount: 0.5,
+            windowStart: tomorrow.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: tomorrow.addingTimeInterval(2 * 60 * 60)
+        )
+        let dose2 = ScheduledDose(
+            scheduledTime: nextWeek,
+            doseAmount: 0.5,
+            windowStart: nextWeek.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: nextWeek.addingTimeInterval(2 * 60 * 60)
+        )
+
+        context.insert(dose1)
+        context.insert(dose2)
+
+        dose1.schedule = schedule
+        dose2.schedule = schedule
+
+        try context.save()
+
+        // Should return earliest pending dose (tomorrow)
+        let nextDose = schedule.nextScheduledDose
+        #expect(nextDose != nil)
+        #expect(abs(nextDose!.timeIntervalSince(tomorrow)) < 1.0)  // Within 1 second
+    }
+
+    @Test("nextScheduledDose ignores taken doses")
+    func testNextScheduledDoseIgnoresTaken() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        let now = Date()
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: now)!
+
+        // Create taken dose (yesterday)
+        let takenDose = ScheduledDose(
+            scheduledTime: yesterday,
+            doseAmount: 0.5,
+            windowStart: yesterday.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: yesterday.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(takenDose)
+        takenDose.schedule = schedule
+
+        // Link to actual dose to mark as taken
+        let actualDose = Dose(amount: 0.5, timestamp: yesterday)
+        context.insert(actualDose)
+        actualDose.scheduledDose = takenDose
+
+        // Create pending dose (tomorrow)
+        let pendingDose = ScheduledDose(
+            scheduledTime: tomorrow,
+            doseAmount: 0.5,
+            windowStart: tomorrow.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: tomorrow.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(pendingDose)
+        pendingDose.schedule = schedule
+
+        try context.save()
+
+        // Should return only the pending dose, ignoring taken
+        let nextDose = schedule.nextScheduledDose
+        #expect(nextDose != nil)
+        #expect(abs(nextDose!.timeIntervalSince(tomorrow)) < 1.0)
+    }
+
+    @Test("nextScheduledDose ignores skipped doses")
+    func testNextScheduledDoseIgnoresSkipped() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        let now = Date()
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: now)!
+
+        // Create skipped dose (yesterday)
+        let skippedDose = ScheduledDose(
+            scheduledTime: yesterday,
+            doseAmount: 0.5,
+            windowStart: yesterday.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: yesterday.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(skippedDose)
+        skippedDose.schedule = schedule
+        skippedDose.skippedAt = yesterday  // Mark as skipped
+
+        // Create pending dose (tomorrow)
+        let pendingDose = ScheduledDose(
+            scheduledTime: tomorrow,
+            doseAmount: 0.5,
+            windowStart: tomorrow.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: tomorrow.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(pendingDose)
+        pendingDose.schedule = schedule
+
+        try context.save()
+
+        // Should return only the pending dose, ignoring skipped
+        let nextDose = schedule.nextScheduledDose
+        #expect(nextDose != nil)
+        #expect(abs(nextDose!.timeIntervalSince(tomorrow)) < 1.0)
+    }
+
+    @Test("nextScheduledDose returns nil when only non-pending doses exist")
+    func testNextScheduledDoseOnlyNonPending() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+
+        // Create taken dose
+        let takenDose = ScheduledDose(
+            scheduledTime: yesterday,
+            doseAmount: 0.5,
+            windowStart: yesterday.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: yesterday.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(takenDose)
+        takenDose.schedule = schedule
+
+        let actualDose = Dose(amount: 0.5, timestamp: yesterday)
+        context.insert(actualDose)
+        actualDose.scheduledDose = takenDose
+
+        try context.save()
+
+        // Should return nil - no pending doses
+        #expect(schedule.nextScheduledDose == nil)
+    }
 
     // MARK: - Audit Trail Tests
 
