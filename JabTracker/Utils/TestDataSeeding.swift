@@ -259,7 +259,7 @@
             var currentDate = now
             let endDate = calendar.date(byAdding: .day, value: -daysOfHistory, to: now) ?? now
 
-            while currentDate >= endDate {
+            while currentDate > endDate {
                 schedule.append(currentDate)
                 currentDate = calendar.date(byAdding: .day, value: -intervalDays, to: currentDate) ?? currentDate
             }
