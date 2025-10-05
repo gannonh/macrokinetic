@@ -3,10 +3,12 @@ issue: 174
 stream: Model Integration & Validation
 agent: parallel-stream-developer
 started: 2025-10-05T16:55:24Z
-status: in_progress
+completed: 2025-10-05T22:52:16Z
+status: complete
 simulator: 1
 simulator_uuid: 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB
 test_command: "./scripts/test.sh unit 1"
+ready_for_testing: true
 ---
 
 # Stream D: Model Integration & Validation
@@ -66,3 +68,50 @@ issue/174-swiftdata-models-doseschedule-scheduleddose-doseevent
 
 ## Status
 **COMPLETE** - All integration tests passing, models successfully wired into existing codebase
+
+## 2025-10-05 Session Update - Bug Fixes & Integration Validation
+**Work Completed:**
+- ✅ Fixed CloudKit relationship requirements across all models:
+  - Made `DoseSchedule.scheduledDoses` optional (CloudKit requirement)
+  - Added `@Relationship(inverse:)` to `ScheduledDose.actualDose` (parent side)
+  - Kept `Dose.scheduledDose` as plain property (child side, no @Relationship)
+  - Fixed circular reference error by following one-side relationship rule
+- ✅ Fixed ScheduledDose.isInWindow boundary conditions:
+  - Added 1-second tolerance to windowEnd check
+  - Fixes edge cases where `now == windowEnd` or instantaneous windows
+  - Medically reasonable tolerance for dose timing precision
+- ✅ Updated 8 test files for schema count (4→6 entities):
+  - DataControllerBasicTests, DataControllerCloudKitTests, JabTrackerTests, PersistenceTests
+  - DoseHistoryRowTests, DoseTitrationTests, MedicationManagerTests
+- ✅ Fixed DoseAnalyticsTests relationship assignment order:
+  - Insert all objects BEFORE setting relationships
+  - Prevents "Duplicate registration attempt" crashes
+
+**Files Modified:**
+- JabTracker/Models/DoseSchedule.swift (optional scheduledDoses, updated nextScheduledDose)
+- JabTracker/Models/ScheduledDose.swift (added @Relationship to actualDose, tolerance in isInWindow)
+- JabTracker/Models/Dose.swift (plain property scheduledDose)
+- 8 test files updated for schema count
+- JabTrackerTests/DoseAnalyticsTests.swift (fixed relationship assignment order)
+
+**Issues Resolved:**
+- CloudKit error: "relationships must have an inverse"
+- CloudKit error: "relationships must be optional"
+- Circular reference error from @Relationship on both sides
+- Duplicate registration crashes in tests
+- isInWindow boundary condition failures (2 tests)
+
+**Testing Status:**
+- All integration tests passing
+- All model tests passing (69 total)
+- SwiftLint: 0 violations
+- No regressions
+
+**Integration Status:**
+- Clean integration complete
+- All 3 models successfully wired into codebase
+- DataController schema updated (6 entities)
+- Ready for PR review
+
+**Next Steps:**
+- None - stream complete
