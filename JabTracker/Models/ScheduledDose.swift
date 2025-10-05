@@ -126,13 +126,15 @@ final class ScheduledDose {
      Whether the current time falls within the adherence window.
 
      Returns `true` if the current time is between `windowStart` and `windowEnd` (inclusive).
+     Uses a 1-second tolerance on the end boundary to handle timing precision and edge cases.
      Used to determine if a dose can be taken on time.
 
      - Returns: `true` if now is within the adherence window, `false` otherwise
      */
     var isInWindow: Bool {
         let now = Date()
-        return now >= windowStart && now <= windowEnd
+        let tolerance: TimeInterval = 1.0  // 1 second tolerance for boundary conditions
+        return now >= windowStart && now <= windowEnd.addingTimeInterval(tolerance)
     }
 
     /**

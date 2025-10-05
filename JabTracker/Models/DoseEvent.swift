@@ -57,10 +57,10 @@ struct DoseEvent: Identifiable, Comparable {
 
     /// Whether this event represents adherent behavior
     ///
-    /// Returns `true` only if `adherenceStatus == .adherent`. This provides a simple boolean check
-    /// for filtering adherent events from non-adherent ones.
+    /// Returns `true` only if the dose was actually taken AND adherence status is adherent.
+    /// Skipped doses, even if validly skipped, do not count as adherent for this property.
     var isAdherent: Bool {
-        adherenceStatus == .adherent
+        adherenceStatus == .adherent && type == .taken
     }
 
     // MARK: - Factory Methods
