@@ -1,7 +1,7 @@
 ---
 description: Begin or resume work on a GitHub issue.
 argument-hint: [Issue number] [additional context (optional)]
-allowed-tools: Bash, Read, Write, Edit, LS, Task
+allowed-tools: Bash, Edit, MultiEdit, SlashCommand, WebFetch, WebSearch, Write
 ---
 
 # Issue Start/Resume
@@ -297,7 +297,7 @@ For new work or resumed work that requires a new Stream, create `.claude/epics/{
 ---
 issue: $1
 stream: {stream_name}
-agent: {agent_type}
+agent: parallel-stream-developer
 started: {current_datetime}
 status: in_progress
 simulator: {simulator_number}
