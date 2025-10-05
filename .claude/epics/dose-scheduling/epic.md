@@ -1,8 +1,9 @@
 ---
 name: dose-scheduling
-status: backlog
+status: in-progress
 created: 2025-10-04T22:00:03Z
-progress: 0%
+progress: 10%
+updated: 2025-10-05T23:00:00Z
 prd: .claude/prds/dose-scheduling.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/173
 ---
