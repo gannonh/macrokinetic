@@ -15,10 +15,19 @@ struct MedicationProfileEnhancementTests {
     let context: ModelContext
 
     init() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        self.container = try ModelContainer(
-            for: User.self, MedicationProfile.self, Dose.self,
-            configurations: config)
+        let schema = Schema([
+            User.self,
+            MedicationProfile.self,
+            Dose.self,
+            ScheduledDose.self,
+            DoseSchedule.self,
+        ])
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        self.container = try ModelContainer(for: schema, configurations: [config])
         self.context = ModelContext(self.container)
     }
 
@@ -271,5 +280,66 @@ struct MedicationProfileEnhancementTests {
         // Then
         #expect(profile.notes == longNotes)
         #expect(profile.notes.count > 2000)
+    }
+
+    // MARK: - Integration Tests: DoseSchedule Relationship
+
+    @Test("MedicationProfile schedules relationship exists")
+    func schedulesRelationshipExists() {
+        // Given
+        let profile = MedicationProfile()
+
+        // Then: Verify schedules relationship is initialized
+        #expect(profile.schedules != nil)
+        #expect(profile.schedules?.isEmpty == true)
+    }
+
+    @Test("MedicationProfile can have multiple schedules")
+    func multipleSchedules() throws {
+        // Given
+        let profile = MedicationProfile(
+            genericName: "Semaglutide",
+            brandName: "Ozempic",
+            currentDose: 0.5)
+        context.insert(profile)  // Insert profile FIRST
+
+        let schedule1 = DoseSchedule(
+            medicationProfile: profile,
+            patternType: .weekly)
+        context.insert(schedule1)
+
+        let schedule2 = DoseSchedule(
+            medicationProfile: profile,
+            patternType: .splitDose)
+        context.insert(schedule2)
+
+        // When
+        try context.save()
+
+        // Then: Both schedules should be linked to profile
+        #expect(profile.schedules?.count == 2)
+        #expect(schedule1.medicationProfile?.id == profile.id)
+        #expect(schedule2.medicationProfile?.id == profile.id)
+    }
+
+    @Test("Relationship inverse works correctly")
+    func relationshipInverseWorks() throws {
+        // Given
+        let profile = MedicationProfile(
+            genericName: "Semaglutide",
+            brandName: "Ozempic",
+            currentDose: 0.5)
+        context.insert(profile)  // Insert profile FIRST
+
+        let schedule = DoseSchedule(
+            medicationProfile: profile,
+            patternType: .weekly)
+        context.insert(schedule)
+
+        try context.save()
+
+        // Then: Relationship should work in both directions
+        #expect(schedule.medicationProfile?.id == profile.id)
+        #expect(profile.schedules?.contains(where: { $0.id == schedule.id }) == true)
     }
 }

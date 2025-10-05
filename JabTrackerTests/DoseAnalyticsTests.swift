@@ -589,4 +589,75 @@ struct DoseAnalyticsTests {
         #expect(dose.analyticsTags.count == 2)
         #expect(dose.analyticsContext.count == 1)
     }
+
+    // MARK: - Integration Tests: ScheduledDose Reference
+
+    @Test("Dose can be created without scheduledDose reference")
+    @MainActor
+    func unscheduledDoseCreation() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        // Given: A dose without a schedule
+        let dose = self.createTestDose()
+
+        // When
+        context.insert(dose)
+        try context.save()
+
+        // Then: scheduledDose should be nil
+        #expect(dose.scheduledDose == nil)
+    }
+
+    @Test("Dose can reference a ScheduledDose")
+    @MainActor
+    func scheduledDoseReference() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        // Given: A medication profile and schedule
+        let profile = self.createTestMedicationProfile()
+        let schedule = DoseSchedule(
+            medicationProfile: profile,
+            patternType: .weekly)
+
+        let scheduledDose = ScheduledDose(
+            scheduledTime: Date(),
+            doseAmount: 1.0)
+        scheduledDose.schedule = schedule
+
+        // When: Create dose with scheduledDose reference
+        let dose = self.createTestDose()
+        dose.scheduledDose = scheduledDose
+
+        context.insert(profile)
+        context.insert(schedule)
+        context.insert(scheduledDose)
+        context.insert(dose)
+        try context.save()
+
+        // Then: Reference should be set correctly
+        #expect(dose.scheduledDose?.id == scheduledDose.id)
+    }
+
+    @Test("ScheduledDose reference can be nil for unscheduled doses")
+    @MainActor
+    func unscheduledDoseNilReference() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        // Given: A dose created manually (not from a schedule)
+        let dose = Dose(
+            amount: 1.0,
+            timestamp: Date(),
+            site: "Abdomen",
+            notes: "Manual entry")
+
+        // When
+        context.insert(dose)
+        try context.save()
+
+        // Then: scheduledDose should be nil
+        #expect(dose.scheduledDose == nil)
+    }
 }

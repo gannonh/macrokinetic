@@ -25,6 +25,9 @@ final class Dose {
     var user: User?
     var medication: MedicationProfile?
 
+    // Link to scheduled dose if this was a scheduled dose
+    var scheduledDose: ScheduledDose?
+
     init(
         amount: Double = 0.0,
         timestamp: Date = Date(),
@@ -37,7 +40,8 @@ final class Dose {
         analyticsTags: [String] = [],
         analyticsContext: [String: String] = [:],
         user: User? = nil,
-        medication: MedicationProfile? = nil
+        medication: MedicationProfile? = nil,
+        scheduledDose: ScheduledDose? = nil
     ) {
         #if DEBUG
             print("🔍 Dose.init called with amount: [REDACTED], site: [REDACTED], notes: [REDACTED]")
@@ -57,6 +61,7 @@ final class Dose {
         self.analyticsContext = analyticsContext
         self.user = user
         self.medication = medication
+        self.scheduledDose = scheduledDose
 
         #if DEBUG
             print("🔍 Dose.init completed - ID: \(self.id)")
