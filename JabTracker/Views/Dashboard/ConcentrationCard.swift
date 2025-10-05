@@ -53,7 +53,7 @@ struct ConcentrationCard: View {
                 self.steadyStateView
             }
         }
-        .accessibilityIdentifier("concentration-card")
+        .accessibilityIdentifier("concentration-card-\(medicationProfile.medicationType)")
         .onAppear {
             self.updateConcentrationData()
         }

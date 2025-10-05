@@ -119,8 +119,8 @@ struct DashboardView: View {
             }
             .accessibilityIdentifier("dashboard-scroll-view")
             .navigationTitle("Home")
-            .accessibilityIdentifier("dashboard-view")
         }
+        .accessibilityIdentifier("dashboard-view")
     }
 
     // MARK: - Concentration Section
