@@ -130,13 +130,15 @@
         ///   - context: The ModelContext to seed data into
         ///   - config: Configuration for data generation
         ///   - existingUser: Optional existing user to seed data for (E2E tests). If nil, creates new user (unit tests)
+        ///   - targetDoseCount: Optional exact number of doses to create (overrides daysOfHistory calculation)
         /// - Returns: Result containing created entities
         @MainActor
         // swiftlint:disable:next function_body_length
         static func seedData(
             into context: ModelContext,
             config: TestDataSeedingConfig = .medium,
-            existingUser: User? = nil
+            existingUser: User? = nil,
+            targetDoseCount: Int? = nil
         ) throws -> TestDataSeedingResult {
             // Use existing user (E2E tests) or create new user (unit tests)
             let user: User
@@ -164,7 +166,8 @@
             // Generate doses based on medication frequency
             let doseSchedule = generateDoseSchedule(
                 for: config.medication,
-                daysOfHistory: config.daysOfHistory
+                daysOfHistory: config.daysOfHistory,
+                targetDoseCount: targetDoseCount
             )
 
             var createdDoses: [Dose] = []
@@ -235,10 +238,12 @@
         /// - Parameters:
         ///   - medication: The medication type (determines frequency)
         ///   - daysOfHistory: Number of days to generate
+        ///   - targetDoseCount: Optional exact number of doses to create (overrides time-based calculation)
         /// - Returns: Array of scheduled dose dates
         static func generateDoseSchedule(
             for medication: Medication,
-            daysOfHistory: Int
+            daysOfHistory: Int,
+            targetDoseCount: Int? = nil
         ) -> [Date] {
             var schedule: [Date] = []
             let now = Date()
@@ -255,11 +260,27 @@
                 intervalDays = 7
             }
 
-            // Generate scheduled doses going backwards from today
+            // If targetDoseCount is specified, create exact number of doses
+            if let targetCount = targetDoseCount {
+                guard targetCount > 0 else {
+                    return []  // Return empty array for 0 doses
+                }
+
+                // Create doses going backwards from now
+                for index in 0..<targetCount {
+                    let daysBack = index * intervalDays
+                    let doseDate = calendar.date(byAdding: .day, value: -daysBack, to: now) ?? now
+                    schedule.append(doseDate)
+                }
+
+                return schedule.reversed()  // Return chronological order
+            }
+
+            // Otherwise, generate doses based on daysOfHistory
             var currentDate = now
             let endDate = calendar.date(byAdding: .day, value: -daysOfHistory, to: now) ?? now
 
-            while currentDate > endDate {
+            while currentDate >= endDate {
                 schedule.append(currentDate)
                 currentDate = calendar.date(byAdding: .day, value: -intervalDays, to: currentDate) ?? currentDate
             }
