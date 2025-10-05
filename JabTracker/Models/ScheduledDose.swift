@@ -72,7 +72,8 @@ final class ScheduledDose {
 
     // MARK: - Optional Action Fields
 
-    /// Actual dose taken (if completed) - child relationship, plain property
+    /// Actual dose taken (if completed)
+    @Relationship(inverse: \Dose.scheduledDose)
     var actualDose: Dose?
 
     /// Timestamp when dose was intentionally skipped
