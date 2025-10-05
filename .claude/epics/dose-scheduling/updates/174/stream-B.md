@@ -3,10 +3,12 @@ issue: 174
 stream: DoseSchedule Model & Tests
 agent: parallel-stream-developer
 started: 2025-10-05T16:41:53Z
-status: in_progress
+completed: 2025-10-05T22:52:16Z
+status: complete
 simulator: 2
 simulator_uuid: BFE552DA-1CB4-4736-821D-270EC6307512
 test_command: "./scripts/test.sh unit 2"
+ready_for_testing: true
 ---
 
 # Stream B: DoseSchedule Model & Tests
@@ -80,3 +82,36 @@ Commit: ec549ed
 Branch: issue/174-swiftdata-models-doseschedule-scheduleddose-doseevent
 Files: 12 changed, 1723 insertions(+), 5 deletions(-)
 ```
+
+## 2025-10-05 Session Update - Coverage Improvements & Bug Fixes
+**Work Completed:**
+- ✅ Fixed CloudKit relationship requirements (made scheduledDoses optional)
+- ✅ Fixed 8 schema entity count tests (4→6 entities)
+- ✅ Improved test coverage from 79% to 90% (added 4 comprehensive tests):
+  - testNextScheduledDoseWithMultiplePending: Tests filter and min(by:) closures
+  - testNextScheduledDoseIgnoresTaken: Verifies taken doses are filtered out
+  - testNextScheduledDoseIgnoresSkipped: Verifies skipped doses are filtered out
+  - testNextScheduledDoseOnlyNonPending: Verifies nil return when no pending doses
+
+**Files Modified:**
+- JabTracker/Models/DoseSchedule.swift (made scheduledDoses optional for CloudKit)
+- JabTrackerTests/DoseScheduleTests.swift (added 4 tests, updated 1 test for optional handling)
+- Multiple test files updated for schema count (4→6 entities)
+
+**Issues Resolved:**
+- CloudKit requirement: all relationships must be optional
+- Test coverage below 90% threshold (now 90%+)
+- Uncovered closures in nextScheduledDose computed property
+
+**Testing Status:**
+- All 20 tests passing (16 original + 4 new)
+- SwiftLint: 0 violations
+- Coverage: 90%+ (Tier 1 requirement met)
+
+**Integration Status:**
+- Clean integration with Stream A, C, and D
+- No regressions
+- Ready for PR review
+
+**Next Steps:**
+- None - stream complete

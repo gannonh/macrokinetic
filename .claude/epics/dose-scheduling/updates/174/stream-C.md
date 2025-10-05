@@ -3,10 +3,12 @@ issue: 174
 stream: DoseEvent Struct & Tests
 agent: parallel-stream-developer
 started: 2025-10-05T16:41:53Z
-status: in_progress
+completed: 2025-10-05T22:52:16Z
+status: complete
 simulator: 3
 simulator_uuid: FF190E2B-E6A1-461F-BEAF-E9A827038FA1
 test_command: "./scripts/test.sh unit 3"
+ready_for_testing: true
 ---
 
 # Stream C: DoseEvent Struct & Tests
@@ -116,3 +118,30 @@ Test Suite 'DoseEventTests' passed
 ✅ Code quality verified
 ✅ Documentation complete
 ✅ No merge conflicts anticipated
+
+## 2025-10-05 Session Update - Bug Fixes
+**Work Completed:**
+- ✅ Fixed DoseEvent.isAdherent computed property logic:
+  - Changed from `adherenceStatus == .adherent` to `adherenceStatus == .adherent && type == .taken`
+  - Skipped doses now correctly return false for isAdherent (even though they have .adherent status)
+  - This aligns with medical definition: adherence means actually taking the medication
+
+**Files Modified:**
+- JabTracker/Models/DoseEvent.swift (updated isAdherent logic)
+
+**Issues Resolved:**
+- DoseEvent adherence logic incorrect for skipped doses
+- Test failure: createFromSkippedScheduledDose() expected isAdherent to be false
+
+**Testing Status:**
+- All 20 tests passing
+- SwiftLint: 0 violations
+- Coverage: 90%+ maintained
+
+**Integration Status:**
+- Clean integration with all streams
+- No regressions
+- Ready for PR review
+
+**Next Steps:**
+- None - stream complete
