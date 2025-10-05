@@ -16,8 +16,8 @@ struct JabTrackerTests {
         _ = ContentView()
             .environment(\.modelContext, dataController.container.mainContext)
 
-        // Test that the data controller has the expected schema (User, Dose, MedicationProfile, DoseTitration)
-        #expect(dataController.container.schema.entities.count == 4)
+        // Test that the data controller has the expected schema
+        #expect(dataController.container.schema.entities.count == 6)
 
         // Verify schema contains expected entities
         let entityNames = dataController.container.schema.entities.map(\.name)
