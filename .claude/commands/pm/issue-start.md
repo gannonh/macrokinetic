@@ -1,14 +1,12 @@
 ---
 description: Begin or resume work on a GitHub issue.
 argument-hint: [Issue number] [additional context (optional)]
-allowed-tools: Bash, Read, Write, Edit, LS, Task
+allowed-tools: Bash, Edit, MultiEdit, SlashCommand, WebFetch, WebSearch, Write
 ---
 
 # Issue Start/Resume
 
-Begin or resume work on a GitHub issue.
-
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
+Begin or resume work on one or more GitHub issues: $1
 
 Additional context (if any): $2
 
@@ -37,14 +35,15 @@ Additional context (if any): $2
 ## Instructions for PR Issues
 
 1. Read the issue description and recommended solution (if any) from GitHub.
-2. Assess the implementation requirements and acceptance criteria.
-3. Determine if any additional context or clarification is needed.
-4. Present to the user your recommended solution and imlementation plan for approval: Iterate until approved.
-5. Implement the solution.
-6. Ensure all checks pass: `./scripts/check-all.sh`
-7. Commit your work, refercing the issue number: `git commit -m "Fix for $1: [description of work]"`
-8. Push to GitHub: `git push`
-9. Close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
+2. Label the issue as `in-progress` in GitHub
+3. Assess the implementation requirements and acceptance criteria.
+4. Determine if any additional context or clarification is needed - if so, as the human for clarification.
+5. Present to the user your recommended solution and implementation plan for approval: Iterate until approved.
+6. Implement the solution.
+7. Ensure all checks pass: `./scripts/check-all.sh`
+8. Commit your work, referencing the issue number: `git commit -m "Fix for #$1: [description of work]"`
+9. Push to GitHub: `git push`
+10. Remove the `in-progress` label and close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
 
 ## Instructions for Task Issues
 
@@ -293,20 +292,20 @@ Proceed with launching/resuming agents only after user confirmation.
 
 **For Starting New Work - Create Stream Files:**
 
-For new work or resumed work that requires a new Stream, create `.claude/epics/{epic_name}/updates/$1/stream-{X}.md`:
+For new work or resumed work that requires a new Stream, create `.claude/epics/{epic_name}/updates/$1/stream-{stream_letter}.md`:
 ```markdown
 ---
 issue: $1
 stream: {stream_name}
-agent: {agent_type}
+agent: parallel-stream-developer
 started: {current_datetime}
 status: in_progress
-simulator: {X}
+simulator: {simulator_number}
 simulator_uuid: {simulator_uuid}
-test_command: "./scripts/test.sh unit {X}"
+test_command: "./scripts/test.sh unit {simulator_number}"
 ---
 
-# Stream {X}: {stream_name}
+# Stream {stream_letter}: {stream_name}
 
 ## Scope
 {stream_description}
@@ -316,10 +315,10 @@ test_command: "./scripts/test.sh unit {X}"
 issue/{issue_name}
 
 ## Testing
-- **Assigned Simulator**: {X} ({simulator_name})
+- **Assigned Simulator**: {simulator_number} ({simulator_uuid})
 - **Simulator UUID**: {simulator_uuid}
-- **Test Command**: `./scripts/test.sh unit {X}`
-- **UI Test Command**: `./scripts/test.sh ui {X} {TestClassName}`
+- **Test Command**: `./scripts/test.sh unit {simulator_number}`
+- **UI Test Command**: `./scripts/test.sh ui {simulator_number} {TestClassName}`
 
 ## Implementation Files
 {file_patterns}
@@ -344,181 +343,16 @@ For existing streams, update the stream file with resume information:
 - Next actions: {next_actions_based_on_analysis}
 ```
 
-Launch agent using Task tool:
-```yaml
-Task:
-  description: "Issue #$1 Stream {X}"
-  subagent_type: "{agent_type}"
-  prompt: |
-      You are working on Issue #$1 on branch issue/{issue_name}.
-
-      Branch: issue/{issue_name}
-      Your stream: {stream_name}
-
-      Your scope:
-      - Files to modify: {file_patterns}
-      - Work to complete: {stream_description}
-
-      Requirements:
-      1. Read full task from: .claude/epics/{epic_name}/{task_file}
-      2. Work ONLY in your assigned files in the current directory
-      3. Commit frequently with format: "Issue #$1: {specific change}"
-      4. Update progress in: {main_project_root}/.claude/epics/{epic_name}/updates/$1/stream-{X}.md
-      5. Add new files to coverage-config.json
-      6. Follow coordination rules in /rules/agent-coordination.md
-      7. For user facing features/components, stub E2E acceptance tests that define "done"
-      8. **ASSIGNED SIMULATOR**: {X} ({simulator_name})
-      9. **TEST COMMAND**: ./scripts/test.sh unit {X}
-      10. **UI TEST COMMAND**: ./scripts/test.sh ui {X} {TestClassName}
-
-      ## Outside-In TDD Flow
-
-      Each outer layer defines the acceptance criteria and contracts for the inner layers. E2E tests are the ultimate acceptance criteria that define when a feature is truly "done" from the user's perspective.
-
-      1. E2E Acceptance Criteria: Stub E2E acceptance test to define user-facing success (criteria only)
-         (See E2E Test Template: JabTrackerUITests/Utils/UITestTemplateTest.swift)
-
-         // MARK: - ACCEPTANCE CRITERION: Swipe actions work correctly (edit, delete, skip, duplicate)
-         func testNameOfTestMethod() throws {
-            // ALWAYS start with debugging the accessibility hierarchy
-            // 🔍 DEBUG: Tables: []
-            // 🔍 DEBUG: ScrollViews: []
-            // 🔍 DEBUG: CollectionViews: ["dose-history-view"]
-
-            // GIVEN: A dose exists in history
-
-            // WHEN: User swipes left on dose row
-
-            // THEN: Edit action appears and functions correctly
-
-            // THEN: Dose entry sheet opens with pre-populated data
-            
-         }
-
-      2. Unit Tests (RED PHASE): Write failing unit tests that test isolated business logic and component contracts
-      3. Implementation: Minimal code to satisfy the unit tests
-      4. Unit Tests (GREEN PHASE): Run unit tests to verify correctness
-      5. Integration Tests (RED PHASE): Write failing integration tests that verify component interactions
-      6. Implementation: Implement minimal code to satisfy the integration tests
-      7. Integration Tests (GREEN PHASE): Run integration tests to verify correctness
-      8. E2E Tests (GREEN PHASE - ACCEPTANCE): Write full E2E tests that verify the entire user flow
-
-      ### E2E Testing Element Targeting (CRITICAL)
-
-      Element targeting is the primary challenge in E2E testing.
-
-      Before writing the actual e2e tests, FIRST use `TestUtilities.debugElements()` to print and inspect the actual accessibility hierarchy. SwiftUI often renders elements differently than expected (e.g. List → CollectionView).
-
-      Debug-First Approach
-
-      1. Print the hierarchy FIRST
-      
-      // ALWAYS start with debugging the accessibility hierarchy
-        let app = TestUtilities.launchAppWithTestMode()
-        TestUtilities.debugElements(in: app, containing: "adherence-insights")
-         // Example output reveals actual element types:
-         // 🔍 DEBUG: Tables: []
-         // 🔍 DEBUG: ScrollViews: []
-         // 🔍 DEBUG: CollectionViews: ["dose-history-view"]
-
-      2. Read the raw logs to understand the actual element types and identifiers: logs/
-
-      cat logs/latest_SIMULATOR_ID/raw_output.txt | grep "DEBUG"
-
-      Common SwiftUI → Accessibility Mismatches
-      - **SwiftUI List** → renders as **CollectionView** (not Table)
-      - **NavigationStack** → renders as **CollectionView** (not ScrollView)
-      - **Form toggles** → require coordinate-based tapping, not direct `.tap()`
-      - **XCUIElementQuery** → has `.count` property, not `.isEmpty` (SwiftLint auto-fix breaks this)
-
-      #### Essential Utilities
-      - **`TestUtilities.debugElements()`** - Debug accessibility hierarchy
-      - **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
-      - Use **debug output** to identify correct element types before writing selectors
-
-      #### Systematic Process
-      1. Test fails to find element → Add `TestUtilities.debugElements()`
-      2. Analyze debug output → Identify actual element type and identifier
-      3. Update test selector → Use correct element type (collectionViews/tables/buttons)
-      4. Remove debug code → Clean up after fixing selector
-      5. Document learning → Update style guide for future reference
-
-      ### E2E Test Seeding 
-
-      // E2E tests use launch arguments to trigger seeding
-      func testChartWithSeededData() throws {
-         // Launch app with pre-seeded data using preset
-         let app = TestUtilities.launchAppWithSeededData(preset: .thirtyDays)
-
-         // App automatically seeds 30 days of data at startup
-         // No UI interaction needed - data is instantly available
-
-         let analyticsTab = app.tabBars.buttons["Analytics"]
-         analyticsTab.tap()
-
-         let chart = app.otherElements["concentration-timeline-chart"].firstMatch
-         XCTAssertTrue(chart.waitForExistence(timeout: 10))
-      }
-
-      // TestUtilities.TestDataPreset enum provides these options:
-      .sevenDays   // 7 days, 1-2 doses
-      .thirtyDays  // 30 days, ~4-5 doses, realistic adherence
-      .ninetyDays  // 90 days, ~13 doses, performance testing
-      .oneYear     // 365 days, ~52 doses, performance testing
-      .twoYears    // 730 days, ~104 doses, stress testing
-
-      ## ⚠️ CRITICAL TESTING ANTI-PATTERNS - AVOID AT ALL COSTS
-
-      ### SwiftData Relationship Crashes (MOST COMMON BUG)
-      **NEVER assign arrays to SwiftData relationships in tests:**
-
-      // ❌ THIS WILL CRASH THE APP - NEVER DO THIS
-      medicationProfile.doses = existingDoses
-      user.medicationProfiles = [profile1, profile2]
-
-      // ✅ CORRECT - Use individual property setters instead
-      for dose in existingDoses {
-         dose.medication = medicationProfile  // Sets individual relationship
-      }
-      // OR avoid relationships entirely in test-only code
-      _ = existingDoses  // Keep for test setup but don't assign to relationship
-      
-      **Why this crashes:**
-      - SwiftData uses computed properties with complex setter logic
-      - Direct array assignment bypasses SwiftData's relationship management
-      - Causes crashes in `@__swiftmacro_` generated code
-      - Test environment makes this worse due to lack of proper ModelContext
-
-      **Safe testing patterns:**
-      1. **Pass arrays directly to engine methods** instead of using relationships
-      2. **Use ModelContainer with proper context** when relationships are required
-      3. **Comment why relationships are avoided** in test-only scenarios
-      4. **Test relationship-dependent methods with empty profiles** to verify graceful handling
-
-      ## Test Execution Notes
-      - All test runs automatically log to `./logs/{test_type}_YYYY-MM-DD_HH-MM-SS/`
-      - Latest test results always available via `logs/latest` symlink
-      - Swift Testing framework handles unit tests with modern syntax
-      - UI tests use XCUITest with accessibility-based element selection
-      - **PREFER specific UI test classes** over running all UI tests (performance)
-      - Coverage reports saved to test log directory and `/tmp/jab-tracker-coverage.xcresult`
-      - Manual authentication tests require Xcode for interactive Apple ID flow
-      - Log files include: `raw_output.txt`, `results.xcresult`, `coverage.json` (if --coverage used)
-      - Testing documentation: @.claude/context/testing-config.md
-    
-      Coordination Checkpoint:
-      - Update your stream file with "ready_for_testing: true"
-      - List which test files you created and their test results
-      - Report any test failures or issues discovered during TDD
-      - Continue TDD cycles until your stream's tests are green
-      
-      If you need to modify files outside your scope:
-      - Check if another stream owns them
-      - Wait if necessary
-      - Update your progress file with coordination notes
-      
-      Complete your stream's work and mark as completed when done.
-```
+Launch parallel-stream-developer agent, providing the following inputs: 
+- **issue_number**: The GitHub issue they're implementing: $1
+- **issue_name**: Human-readable issue description
+- **stream_name**: Their specific stream identifier (e.g., "A", "B", "C")
+- **file_patterns**: Exact files they own and can modify
+- **stream_description**: Their specific work scope
+- **epic_name**: Parent epic for context
+- **task_file**: Full task specification location
+- **simulator_number**: Their assigned simulator (1, 2, or 3)
+- **simulator_uuid**: Simulator device name
 
 ### 9. GitHub Assignment
 
@@ -574,9 +408,9 @@ Resuming {count} agents:
 Progress tracking:
   .claude/epics/{epic_name}/updates/$1/
 
-Monitor with: /pm:issue-status $1
-Update progress with: /pm:issue-update $1
-Sync updates: /pm:issue-sync $1
+- Monitor with: /pm:issue-status $1
+- Update progress with: /pm:issue-update $1
+- Sync updates: /pm:issue-sync $1
 ```
 
 ## Error Handling
