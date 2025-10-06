@@ -512,9 +512,9 @@ struct ScheduleServiceAdherenceTests {
 
         let now = Date()
 
-        // Create 10 doses, reschedule 6 of them (60%)
+        // Create 10 doses within last 30 days, reschedule 6 of them (60%)
         for index in 0..<10 {
-            let scheduledTime = Calendar.current.date(byAdding: .day, value: -63 + (index * 7), to: now)!
+            let scheduledTime = Calendar.current.date(byAdding: .day, value: -29 + (index * 3), to: now)!
             let dose = createTestScheduledDose(
                 context: context,
                 schedule: schedule,
