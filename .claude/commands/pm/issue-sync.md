@@ -1,7 +1,6 @@
 ---
 description: Push local updates as GitHub issue comments for transparent audit trail.
 argument-hint: Issue number (e.g., 42)
-allowed-tools: Read, Write, LS
 ---
 
 # Issue Sync
