@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-05T23:08:25Z
-version: 1.7
+last_updated: 2025-10-06T20:59:29Z
+version: 1.8
 author: Claude Code PM System
 ---
 
@@ -139,7 +139,29 @@ JabTracker/
 - **Integration Test Organization**: Integration tests (`DoseSchedulingIntegrationTests.swift`) validate cross-model relationships and belong in dedicated integration test files
 - **Model Extension Pattern**: Updated existing models (`MedicationProfile.swift`, `Dose.swift`) to add new relationships - maintains cohesion within model files
 
+## ScheduleService Structure Insights (Issue #175)
+
+### Service Extension Organization
+- **Base + Extensions Pattern**: `JabTracker/Services/ScheduleService.swift` (base class) with domain-specific extensions (`+Projection`, `+Modifications`, `+Adherence`, `+Titration`)
+- **Extension File Naming**: Consistent pattern: `ScheduleService+DomainName.swift` for each functional area
+- **Clear Separation of Concerns**: CRUD operations in base, projections in +Projection, modifications in +Modifications, adherence in +Adherence, titration in +Titration
+
+### Test File Parallel Structure
+- **One-to-One Mapping**: Each implementation file has corresponding test file for clear ownership
+  - `ScheduleService.swift` → `ScheduleServiceTests.swift` (CRUD tests)
+  - `ScheduleService+Projection.swift` → `ScheduleServiceProjectionTests.swift` (projection tests)
+  - `ScheduleService+Modifications.swift` → `ScheduleServiceModificationTests.swift`
+  - `ScheduleService+Adherence.swift` → `ScheduleServiceAdherenceTests.swift`
+  - `ScheduleService+Titration.swift` → `ScheduleServiceTitrationTests.swift`
+- **Stream Ownership**: Each parallel stream owns both implementation extension and corresponding test file
+
+### Parallel Development File Organization
+- **No Shared Files**: Each stream works on dedicated extension files - prevents merge conflicts
+- **Base Class Foundation**: Stream A creates base class first, then other streams add extensions
+- **Error Enum in Base**: Centralized error enum (`ScheduleServiceError.swift`) in base class with stream-specific cases
+
 ## Update History
+- 2025-10-06T20:59:29Z: Added ScheduleService structure insights from Issue #175 - service extension organization pattern, test file parallel structure, and parallel development file organization for extension-based services
 - 2025-10-05T23:08:25Z: Added Dose Scheduling Models structure insights from Issue #174 - SwiftData model organization, test file parallel structure, and parallel stream file ownership patterns
 - 2025-09-26T01:23:01Z: Added AdherenceInsights structure insights from Issue #57, stream dependency management, critical issue identification workflow, and healthcare app architecture requirements
 - 2025-09-23T13:29:15Z: Added ChartDataProcessor structure insights from Issue #55, parallel development architecture, new Models and Services files

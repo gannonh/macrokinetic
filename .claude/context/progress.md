@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-06T18:14:31Z
-version: 3.5
+last_updated: 2025-10-06T20:59:29Z
+version: 3.6
 author: Claude Code PM System
 ---
 
@@ -9,31 +9,34 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: main
-- **Last Commit**: c249806 - chore: Close issue #174 - SwiftData Models for Dose Scheduling complete
-- **Status**: Issue #174 closed, PR #175 merged - Dose scheduling epic in progress (10% complete, 1/10 tasks)
+- **Branch**: issue/175-scheduleservice-core-schedule-management-and-calculation-algorithms
+- **Last Commit**: 1210af1 - Issue #175: update progress tracking
+- **Status**: Issue #175 in progress (20% complete) - ScheduleService Core with 3 parallel streams active
 
 ## Recent Work (Last 10 Commits)
-1. **c249806** - chore: Close issue #174 - SwiftData Models for Dose Scheduling complete
-2. **a01a2af** - chore: Update documentation for issue closing and updating processes
-3. **e47ed91** - Fix for #185 and #190: Improve test data quality
-4. **3cf03cb** - fix: Eliminate timing race conditions in ScheduledDoseTests
-5. **1a06e3d** - chore: Add comprehensive code and test quality reports for SwiftData models in dose scheduling
-6. **d7ce6c3** - chore: Remove allowed-tools section from issue merge documentation
-7. **dc68236** - chore: Remove allowed-tools section from context and issue sync documentation
-8. **e29db05** - Context update: process Issue #174 learnings and current state
-9. **7ffc838** - chore: Remove allowed-tools section from epic refresh documentation
-10. **11f7231** - chore: Update epic status and progress for dose scheduling
+1. **1210af1** - Issue #175: update progress tracking
+2. **638be37** - chore: Update issue-start command documentation and allowed-tools
+3. **cd14550** - chore: Remove unused allowed-tools from issue update command
+4. **07e65d9** - Issue #175 Stream A: Implement CRUD operations with 10 passing tests
+5. **2742dbf** - Issue #175 Stream C: Implement checkTitrationImpact method (12% → 25%)
+6. **7a69b2f** - Issue #175 Stream A: Add base ScheduleService class structure
+7. **685cdcd** - Issue #175: Initialize branch for ScheduleService Core
+8. **d156804** - refactor: Update testing file categories from UI/Interaction to Unit/Integration
+9. **a02fb15** - feat: Add titration warning to schedule summary and navigation to titration plan
+10. **6e16d65** - Context update: Issue #174 closure and learnings status consistency
 
 ## Current Working Directory Status
-- **Modified Files**: None (clean working directory)
-- **Branch Status**: main (PR #175 merged)
-- **Current Phase**: Dose scheduling epic in progress - Issue #174 closed, ready for next task
+- **Modified Files**: Context files being updated
+- **Branch Status**: issue/175-scheduleservice-core-schedule-management-and-calculation-algorithms (PR #191 draft)
+- **Current Phase**: ScheduleService Core development - 3 parallel streams active
 - **Recent Session Work** (2025-10-06):
-  - ✅ **Issue #174 Closed**: PR #175 merged, issue closed on GitHub
-  - ✅ **Epic Progress Updated**: Dose scheduling epic at 10% (1/10 tasks complete)
-  - ✅ **Documentation Updates**: Issue closing and updating processes documented
-  - ✅ **Test Quality Improvements**: Fixed timing race conditions, improved test data quality
+  - 🚀 **Issue #175 Started**: Launched 3 parallel streams for ScheduleService Core (hybrid parallel approach)
+  - ✅ **Stream A (67% complete)**: Base class + CRUD operations implemented - 10/10 tests passing
+  - ✅ **Stream C (12% complete)**: Titration integration started - checkTitrationImpact method implemented
+  - ⏸️ **Stream B (Ready)**: Waiting for base class availability - dependency resolved
+  - 📊 **Hybrid Parallel Strategy**: Phase 1 (Sequential) → Phase 2 (Parallel) enables 2.4x speedup
+  - 🎯 **Progress Tracking**: Individual stream markdown files with session updates for clear audit trail
+  - 🔄 **Coordination Success**: Extension architecture prevents file conflicts, GitHub commits coordinate streams
 - **Previous Session Work** (2025-10-05):
   - ✅ **Issue #174 Complete**: SwiftData models for dose scheduling (DoseSchedule, ScheduledDose, DoseEvent)
   - ✅ **4-Stream Parallel Development**: Successfully coordinated 4 parallel agents - 69 tests, 90%+ coverage
@@ -375,7 +378,26 @@ author: Claude Code PM System
 - **Clear Ownership Prevents Conflicts**: Each stream owns specific model files and test files - prevents merge conflicts during parallel development
 - **Integration Stream Value**: Dedicated integration stream (Stream D) validates cross-model interactions before marking issue complete
 
+## Lessons Learned (Recent - Issue #175 Session 2025-10-06)
+
+### Hybrid Parallel Development Strategy Excellence
+- **Agent Launch Strategy**: Launching all 3 agents simultaneously with clear dependency documentation (Stream A first, then B & C) works well for hybrid parallel approach - agents understand and respect dependencies
+- **Stream Progress Tracking**: Individual stream markdown files with session updates provide clear audit trail and enable easy resumption - critical for long-running parallel work
+- **Commit Strategy for Dependencies**: Stream A committed base class early (Phase 1 - 7a69b2f) to unblock dependent streams - critical for parallel success when Swift extensions depend on base class compilation
+- **Coordination Through GitHub**: Using GitHub commits as coordination points between streams prevents need for complex inter-agent communication - simple and effective
+
+### Extension Architecture for Parallel Services
+- **Extension Pattern Success**: ScheduleService+Projection, +Modifications, +Adherence, +Titration pattern prevents file conflicts during parallel development - each stream owns dedicated extension files
+- **Base Class Foundation**: Phase 1 sequential development creates foundation (base class with @Observable, ModelContext, core properties) then Phase 2 enables true parallel work
+- **Error Enum Coordination**: Centralized error enum in base class with stream-specific cases added as needed prevents duplication - discovered during Issue #175 implementation
+
+### TDD in Parallel Streams
+- **Embedded Testing Per Stream**: Each stream follows TDD with embedded testing - no separate testing streams needed, agents own both implementation and tests for their domain
+- **Simulator Isolation Value**: Dedicated simulator assignment (1, 2, 3) per stream enables conflict-free parallel test execution - critical for TDD workflow during parallel development
+- **Test-First Development**: Agents successfully implement test-first approach in parallel without coordination overhead
+
 ## Update History
+- 2025-10-06T20:59:29Z: Issue #175 started - ScheduleService Core with hybrid parallel development (3 streams), process learnings captured for agent coordination, extension architecture, and TDD in parallel streams
 - 2025-10-05T23:08:25Z: Issue #174 completion - SwiftData dose scheduling models with parallel development, CloudKit relationship patterns, systematic bug fixing, and comprehensive learnings captured
 - 2025-10-04T22:04:22Z: Analytics epic completion - Issue #59 closed, epic marked as 100% complete, new dose-scheduling epic created, bug fixes #83-88, updated branch status to main
 - 2025-10-03T18:13:21Z: Issue #59 session update - cache persistence testing, bypass onboarding launch argument, test coverage improvements (ConcentrationChartState 100%, AuthenticationManager 27%), testing infrastructure documentation

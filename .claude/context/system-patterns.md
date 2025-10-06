@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-05T23:08:25Z
-version: 2.4
+last_updated: 2025-10-06T20:59:29Z
+version: 2.5
 author: Claude Code PM System
 ---
 
@@ -340,6 +340,15 @@ struct UserAnalyticsSummary {
 - **Service Coordination**: Clean integration patterns between PharmacokineticsEngine and AnalyticsService
 - **Performance Optimization**: Batch operations and adaptive density control for handling 1+ year datasets efficiently
 
+### Hybrid Parallel Development Strategy (Issue #175)
+- **Phase-Based Parallelization**: Phase 1 (Sequential foundation) → Phase 2 (Parallel execution) enables 2.4x speedup while respecting Swift compilation dependencies
+- **Extension-Based Service Architecture**: Using Swift extensions (ScheduleService+Projection, +Modifications, +Adherence, +Titration) prevents file conflicts during parallel development - each stream works on dedicated extension files
+- **@Observable Service Pattern**: ScheduleService successfully implements iOS 17+ @Observable pattern for real-time updates with ModelContext dependency injection - demonstrates modern service architecture for medical apps
+- **Test-Driven Parallel Streams**: Each stream follows TDD with embedded testing - no separate testing streams needed, agents own both implementation and tests for their domain
+- **Simulator Isolation for Parallel Testing**: Dedicated simulator assignment (1, 2, 3) per stream enables conflict-free parallel test execution - critical for TDD workflow during parallel development
+- **Error Enum Coordination**: Centralized error enum in base class with stream-specific cases added as needed prevents duplication - Stream A creates base ScheduleServiceError enum, Streams B & C add their cases
+- **Commit Strategy for Dependencies**: Stream A committed base class early (Phase 1) to unblock dependent streams - critical for parallel success when extensions depend on base class compilation
+
 ## Security & Defensive Programming Patterns (Issue #55)
 
 ### Medical App Crash Prevention
@@ -456,6 +465,7 @@ struct UserAnalyticsSummary {
 - **Review History**: Track feedback and implementation status over time
 
 ## Update History
+- 2025-10-06T20:59:29Z: Added Hybrid Parallel Development Strategy from Issue #175 - phase-based parallelization, extension architecture, @Observable service pattern, error enum coordination, and commit strategies for parallel streams
 - 2025-10-05T23:08:25Z: Added SwiftData CloudKit relationship patterns from Issue #174 (dose scheduling models) - CloudKit requirements, circular reference prevention, timing precision, and ModelConfiguration completeness
 - 2025-10-01T20:00:09Z: Added Design Review & Polish Patterns section (Issue #59) with phase-based UX development, priority framework, visual baseline documentation, and structured design review outputs
 - 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Patterns and SwiftLint Management Patterns from Issue #57 completion
