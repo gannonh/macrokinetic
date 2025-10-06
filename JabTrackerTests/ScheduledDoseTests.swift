@@ -69,7 +69,8 @@ struct ScheduledDoseTests {
             doseAmount: 0.5
         )
 
-        #expect(scheduledDose.id != UUID())
+        // Verify ID is a valid UUID (not nil/empty)
+        #expect(scheduledDose.id.uuidString.count == 36)  // Standard UUID string length
         #expect(scheduledDose.scheduledTime == now)
         #expect(scheduledDose.doseAmount == 0.5)
         // createdAt and updatedAt are non-optional and set to Date() by default
@@ -85,7 +86,8 @@ struct ScheduledDoseTests {
         let scheduledDose = ScheduledDose()
         context.insert(scheduledDose)
 
-        #expect(scheduledDose.id != UUID())
+        // Verify ID is a valid UUID (not nil/empty)
+        #expect(scheduledDose.id.uuidString.count == 36)  // Standard UUID string length
         #expect(scheduledDose.doseAmount == 0.0)
         #expect(scheduledDose.skippedAt == nil)
         #expect(scheduledDose.skipReason == nil)

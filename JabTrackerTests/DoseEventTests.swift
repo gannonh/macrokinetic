@@ -61,8 +61,9 @@ struct DoseEventTests {
             scheduledDose.skippedAt = Date()
             scheduledDose.skipReason = "Test skip"
         case .missed:
-            // Set window to past
-            scheduledDose.windowEnd = Date().addingTimeInterval(-86400)  // 1 day ago
+            // Set window to past to ensure dose is actually missed
+            // Note: scheduledTime should already be set appropriately by caller
+            scheduledDose.windowEnd = scheduledTime.addingTimeInterval(-3600)  // Window ended 1 hour before scheduled time
         case .pending:
             break  // Default state
         }
