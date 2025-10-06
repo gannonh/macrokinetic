@@ -44,6 +44,9 @@
           "Services/DoseSearchService.swift",
           "Services/DoseService.swift",
           "Services/MedicationManager.swift",
+          "Services/ScheduleService+Adherence.swift",
+          "Services/ScheduleService+Modifications.swift",
+          "Services/ScheduleService+Projection.swift",
           "Services/ScheduleService.swift"
         ]
       },

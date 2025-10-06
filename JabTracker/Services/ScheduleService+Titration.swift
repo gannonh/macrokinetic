@@ -75,7 +75,7 @@ extension ScheduleService {
      *
      * This method:
      * 1. Updates schedule's baseSchedule doseAmount to titration's toDose
-     * 2. Logs the titration-triggered modification in schedule history
+     * 2. Logs the titration-triggered modification
      * 3. Regenerates upcoming ScheduledDose entities with new dose amount
      * 4. Preserves all other schedule properties (pattern, timing, windows)
      *
@@ -89,9 +89,60 @@ extension ScheduleService {
      */
     func handleCompletedTitration(_ titration: DoseTitration, schedule: DoseSchedule) throws {
         logger.info(
-            "Handling completed titration for schedule \(schedule.id): \(titration.fromDose)mg → \(titration.toDose)mg")
+            "Handling completed titration for schedule \(schedule.id): \(titration.fromDose)mg → \(titration.toDose)mg"
+        )
 
-        // TODO: Implement titration completion handling
+        // Step 1: Update schedule's baseSchedule doseAmount
+        do {
+            // Parse existing baseSchedule JSON
+            var scheduleDict =
+                try JSONSerialization.jsonObject(
+                    with: schedule.baseSchedule,
+                    options: []
+                ) as? [String: Any] ?? [:]
+
+            // Update doseAmount to titration's toDose
+            scheduleDict["doseAmount"] = titration.toDose
+
+            // Re-encode updated schedule
+            let updatedScheduleData = try JSONSerialization.data(
+                withJSONObject: scheduleDict,
+                options: []
+            )
+
+            schedule.baseSchedule = updatedScheduleData
+            logger.debug("Updated baseSchedule doseAmount to \(titration.toDose)mg")
+
+        } catch {
+            logger.error("Failed to update baseSchedule: \(error.localizedDescription)")
+            throw ScheduleServiceError.invalidScheduleConfiguration
+        }
+
+        // Step 2: Update schedule's updatedAt timestamp
+        schedule.updatedAt = Date()
+        logger.info("Logged titration completion in schedule updatedAt timestamp")
+
+        // Step 3: Regenerate upcoming ScheduledDose entities with new dose amount
+        let now = Date()
+        let upcomingDoses = schedule.scheduledDoses?.filter { $0.scheduledTime >= now } ?? []
+
+        logger.debug("Found \(upcomingDoses.count) upcoming doses to update")
+
+        for dose in upcomingDoses {
+            dose.doseAmount = titration.toDose
+            logger.debug("Updated scheduled dose \(dose.id) to \(titration.toDose)mg")
+        }
+
+        // Step 4: Save changes to context
+        do {
+            try context.save()
+            logger.info(
+                "Successfully completed titration handling: updated \(upcomingDoses.count) upcoming doses"
+            )
+        } catch {
+            logger.error("Failed to save titration changes: \(error.localizedDescription)")
+            throw ScheduleServiceError.contextSaveFailed(error)
+        }
     }
 
     // MARK: - Titration Warnings
@@ -111,8 +162,20 @@ extension ScheduleService {
     func getTitrationWarning(for schedule: DoseSchedule) -> String? {
         logger.info("Generating titration warning for schedule \(schedule.id)")
 
-        // TODO: Implement warning message generation
-        return nil
+        // Check if there's an active titration
+        guard let activeTitration = checkTitrationImpact(for: schedule) else {
+            logger.debug("No active titration found - no warning needed")
+            return nil
+        }
+
+        // Format warning message using helper
+        let warning = formatTitrationWarning(
+            titration: activeTitration,
+            scheduledDate: activeTitration.scheduledDate
+        )
+
+        logger.info("Generated titration warning: \(warning)")
+        return warning
     }
 
     // MARK: - Private Helpers

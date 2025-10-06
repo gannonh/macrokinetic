@@ -53,14 +53,32 @@ struct ScheduleConfiguration: Codable {
 // MARK: - Service Errors
 
 /// Errors that can occur during schedule service operations
-enum ScheduleServiceError: LocalizedError {
+enum ScheduleServiceError: LocalizedError, Equatable {
     case invalidDoseAmount
     case pauseUntilInPast
     case invalidScheduleConfiguration
+    case invalidTimeRange
     case scheduleNotFound
     case scheduleConflict
     case doseNotModifiable
     case contextSaveFailed(Error)
+
+    static func == (lhs: ScheduleServiceError, rhs: ScheduleServiceError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidDoseAmount, .invalidDoseAmount),
+            (.pauseUntilInPast, .pauseUntilInPast),
+            (.invalidScheduleConfiguration, .invalidScheduleConfiguration),
+            (.invalidTimeRange, .invalidTimeRange),
+            (.scheduleNotFound, .scheduleNotFound),
+            (.scheduleConflict, .scheduleConflict),
+            (.doseNotModifiable, .doseNotModifiable):
+            return true
+        case (.contextSaveFailed(let lhsError), .contextSaveFailed(let rhsError)):
+            return lhsError.localizedDescription == rhsError.localizedDescription
+        default:
+            return false
+        }
+    }
 
     var errorDescription: String? {
         switch self {
@@ -70,6 +88,8 @@ enum ScheduleServiceError: LocalizedError {
             return "Pause until date must be in the future"
         case .invalidScheduleConfiguration:
             return "Schedule configuration is invalid"
+        case .invalidTimeRange:
+            return "New time must be within ±7 days of original scheduled time"
         case .scheduleNotFound:
             return "Schedule not found"
         case .scheduleConflict:
@@ -98,7 +118,7 @@ final class ScheduleService {
     // MARK: - Properties
 
     /// SwiftData model context for persistence operations
-    private let context: ModelContext
+    let context: ModelContext
 
     /// Active (non-deleted) dose schedules
     var activeSchedules: [DoseSchedule] = []
