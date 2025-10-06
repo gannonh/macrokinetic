@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-06T20:59:29Z
-version: 3.6
+last_updated: 2025-10-06T22:40:03Z
+version: 3.7
 author: Claude Code PM System
 ---
 
@@ -10,33 +10,34 @@ author: Claude Code PM System
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
 - **Branch**: issue/175-scheduleservice-core-schedule-management-and-calculation-algorithms
-- **Last Commit**: 1210af1 - Issue #175: update progress tracking
-- **Status**: Issue #175 in progress (20% complete) - ScheduleService Core with 3 parallel streams active
+- **Last Commit**: cbb1b73 - Issue #175: update progress tracking
+- **Status**: Issue #175 COMPLETE (100%) - All 1286 tests passing, ready for PR review
 
 ## Recent Work (Last 10 Commits)
-1. **1210af1** - Issue #175: update progress tracking
-2. **638be37** - chore: Update issue-start command documentation and allowed-tools
-3. **cd14550** - chore: Remove unused allowed-tools from issue update command
-4. **07e65d9** - Issue #175 Stream A: Implement CRUD operations with 10 passing tests
-5. **2742dbf** - Issue #175 Stream C: Implement checkTitrationImpact method (12% → 25%)
-6. **7a69b2f** - Issue #175 Stream A: Add base ScheduleService class structure
-7. **685cdcd** - Issue #175: Initialize branch for ScheduleService Core
-8. **d156804** - refactor: Update testing file categories from UI/Interaction to Unit/Integration
-9. **a02fb15** - feat: Add titration warning to schedule summary and navigation to titration plan
-10. **6e16d65** - Context update: Issue #174 closure and learnings status consistency
+1. **cbb1b73** - Issue #175: update progress tracking
+2. **e90b054** - Issue #175 Stream A: Fix historical schedule creation (test #6)
+3. **eb14b67** - Issue #175 Stream B: Fix adherence test data range (test #5)
+4. **ea9bc71** - Issue #175 Stream A: Fix split-dose boundary condition (test #3)
+5. **8d9a7f9** - Issue #175 Stream A: Fix DST tolerance and empty array validation (tests #1, #2, #4)
+6. **8062cb2** - Issue #175 Stream A,B,C: Complete ScheduleService implementation (WIP - 6 failing tests)
+7. **e7d52de** - Issue #175: Update documentation with ScheduleService architecture insights, hybrid parallel development strategy, and extension-based service patterns
+8. **638be37** - chore: Update issue-start command documentation and allowed-tools
+9. **1210af1** - Issue #175: update progress tracking
+10. **cd14550** - chore: Remove unused allowed-tools from issue update command
 
 ## Current Working Directory Status
 - **Modified Files**: Context files being updated
 - **Branch Status**: issue/175-scheduleservice-core-schedule-management-and-calculation-algorithms (PR #191 draft)
-- **Current Phase**: ScheduleService Core development - 3 parallel streams active
+- **Current Phase**: ScheduleService Core COMPLETE - Ready for PR review
 - **Recent Session Work** (2025-10-06):
-  - 🚀 **Issue #175 Started**: Launched 3 parallel streams for ScheduleService Core (hybrid parallel approach)
-  - ✅ **Stream A (67% complete)**: Base class + CRUD operations implemented - 10/10 tests passing
-  - ✅ **Stream C (12% complete)**: Titration integration started - checkTitrationImpact method implemented
-  - ⏸️ **Stream B (Ready)**: Waiting for base class availability - dependency resolved
-  - 📊 **Hybrid Parallel Strategy**: Phase 1 (Sequential) → Phase 2 (Parallel) enables 2.4x speedup
-  - 🎯 **Progress Tracking**: Individual stream markdown files with session updates for clear audit trail
-  - 🔄 **Coordination Success**: Extension architecture prevents file conflicts, GitHub commits coordinate streams
+  - 🎉 **Issue #175 COMPLETE**: ScheduleService Core implementation finished - 100% test passing (1286/1286 tests)
+  - ✅ **Stream A (100% complete)**: Base class + CRUD + Projection - 20/20 projection tests passing
+  - ✅ **Stream B (100% complete)**: Modifications + Adherence - 25/25 tests passing
+  - ✅ **Stream C (100% complete)**: Titration integration - 8/8 tests passing
+  - 🐛 **Test Fixes Complete**: Fixed 6 failing tests through iterative debugging (DST tolerance, boundary conditions, time alignment, historical schedules)
+  - 📊 **Hybrid Parallel Strategy**: Phase 1 (Sequential) → Phase 2 (Parallel) enabled 2.4x speedup
+  - 🎯 **Extension Architecture Success**: ScheduleService+Projection, +Modifications, +Adherence, +Titration prevented file conflicts
+  - 🔄 **Coordination Through GitHub**: Early base class commit unblocked parallel streams
 - **Previous Session Work** (2025-10-05):
   - ✅ **Issue #174 Complete**: SwiftData models for dose scheduling (DoseSchedule, ScheduledDose, DoseEvent)
   - ✅ **4-Stream Parallel Development**: Successfully coordinated 4 parallel agents - 69 tests, 90%+ coverage
@@ -396,7 +397,17 @@ author: Claude Code PM System
 - **Simulator Isolation Value**: Dedicated simulator assignment (1, 2, 3) per stream enables conflict-free parallel test execution - critical for TDD workflow during parallel development
 - **Test-First Development**: Agents successfully implement test-first approach in parallel without coordination overhead
 
+### Test Fix Debugging Patterns (Issue #175 Completion)
+- **DST Tolerance Requirements**: Daylight saving time transitions cause exactly 1-hour differences in date intervals - use `<= 3600` instead of `< 3600` for tolerance checks to handle DST edge cases
+- **Date Range Boundary Validation**: Schedule generation must respect creation date boundaries - return empty array when requested date range is entirely before schedule.createdAt
+- **Forward-Only Time Alignment**: When aligning dates to earlier-in-day times (15:30 start → 08:00 dose time), must check if aligned time is before start and move forward to next day to prevent backwards time movement
+- **Boundary Condition Precision**: While loop boundaries (`<` vs `<=`) critical for correct dose count - `<` prevents generating extra day of doses at range end
+- **Test Data Window Alignment**: Detection algorithms with time windows (e.g., 30-day adherence analysis) require test data within the analysis window - doses outside window won't be detected
+- **Historical Schedule Creation**: `createSchedule` method must use `startDate` parameter to set `schedule.createdAt` for historical schedules - enables proper generation of past doses
+- **Iterative Fix Strategy**: Fixing tests one at a time with separate commits (Option B) enables clear debugging and creates valuable git history for future reference
+
 ## Update History
+- 2025-10-06T22:40:03Z: Issue #175 COMPLETE - ScheduleService Core finished with 100% test passing (1286/1286), added test fix debugging patterns (DST tolerance, boundary conditions, time alignment), updated current state and recent work
 - 2025-10-06T20:59:29Z: Issue #175 started - ScheduleService Core with hybrid parallel development (3 streams), process learnings captured for agent coordination, extension architecture, and TDD in parallel streams
 - 2025-10-05T23:08:25Z: Issue #174 completion - SwiftData dose scheduling models with parallel development, CloudKit relationship patterns, systematic bug fixing, and comprehensive learnings captured
 - 2025-10-04T22:04:22Z: Analytics epic completion - Issue #59 closed, epic marked as 100% complete, new dose-scheduling epic created, bug fixes #83-88, updated branch status to main
