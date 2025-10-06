@@ -1,7 +1,6 @@
 ---
 description: Analyze a GitHub issue to identify parallel work streams for efficient execution.
 argument-hint: [Issue number] 
-allowed-tools: Read, Write, LS
 ---
 
 # Issue Analyze
@@ -110,7 +109,7 @@ parallelization_factor: {1.0-5.0}
 **Implementation Files**:
 - {file_pattern_1}
 - {file_pattern_2}
-**UI/Interaction Testing Files**:
+**Unit/Integration Testing Files**:
 - {test_file_pattern_1}
 - {test_file_pattern_2}
 **E2E Testing Files**:
@@ -126,7 +125,7 @@ parallelization_factor: {1.0-5.0}
 **Implementation Files**:
 - {file_pattern_1}
 - {file_pattern_2}
-**UI/Interaction Testing Files**:
+**Unit/Integration Testing Files**:
 - {test_file_pattern_1}
 - {test_file_pattern_2}
 **E2E Testing Files**:
@@ -142,7 +141,7 @@ parallelization_factor: {1.0-5.0}
 **Implementation Files**:
 - {file_pattern_1}
 - {file_pattern_2}
-**UI/Interaction Testing Files**:
+**Unit/Integration Testing Files**:
 - {test_file_pattern_1}
 - {test_file_pattern_2}
 **E2E Testing Files**:
