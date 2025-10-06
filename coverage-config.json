@@ -30,19 +30,20 @@
         "description": "Data management with some framework dependencies",
         "files": [
           "DataController.swift",
-          "Services/MedicationManager.swift",
-          "Services/DoseSearchService.swift",
-          "Services/DoseService.swift",
-          "Services/DoseDataService.swift",
-          "Services/ChartDataProcessor.swift",
+          "Models/ChartData.swift",
+          "Models/ChartDataEnums.swift",
+          "Models/ChartDataTypes.swift",
+          "Services/AnalyticsService.swift",
           "Services/ChartDataProcessor+Filtering.swift",
           "Services/ChartDataProcessor+Interpolation.swift",
-          "Services/ChartDatasetService.swift",
+          "Services/ChartDataProcessor.swift",
           "Services/ChartDatasetCache.swift",
-          "Services/AnalyticsService.swift",
-          "Models/ChartData.swift",
-          "Models/ChartDataTypes.swift",
-          "Models/ChartDataEnums.swift"
+          "Services/ChartDatasetService.swift",
+          "Services/DoseDataService.swift",
+          "Services/DoseSearchService.swift",
+          "Services/DoseService.swift",
+          "Services/MedicationManager.swift",
+          "Services/ScheduleService.swift"
         ]
       },
       "framework_integration": {
