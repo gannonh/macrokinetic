@@ -178,6 +178,9 @@ final class ScheduleService {
             isActive: true
         )
 
+        // Set creation time to match start date (for historical schedules)
+        schedule.createdAt = startDate
+
         // Insert into context
         context.insert(schedule)
 
