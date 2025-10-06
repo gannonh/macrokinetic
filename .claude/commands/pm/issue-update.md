@@ -124,27 +124,13 @@ Update frontmatter:
 learnings_captured: false  # flag for context/update.md to process
 ```
 
-### 8. GitHub Sync
+### 8. Sync Issue to GitHub 
 
-If significant progress made, optionally sync to GitHub:
-```bash
-# Add progress comment to issue
-echo "## Progress Update - $(date '+%Y-%m-%d')
+Run Slash Command `/pm:issue-sync $1` to push progress updates to GitHub
 
-{summary of work completed}
+### 9. Update context docs
 
-**Stream Updates:**
-{list relevant stream progress}
-
-**Technical Details:**
-{any important implementation details}
-
----
-Updated: {timestamp}" | gh issue comment $1 --body-file -
-```
-### 9. Update context
-
-Run `/context:update` to integrate learnings into project documentation. 
+Run Slash Command `/context:update` to integrate learnings into project documentation.
 
 ### 10. Output
 
@@ -171,8 +157,6 @@ Files updated:
   .claude/epics/{epic_name}/$1.md
   .claude/epics/{epic_name}/updates/$1/stream-*.md
 
-- Next: Run /context:update to propagate learnings or /pm:epic-status {epic_name}
-- Sync: Run /pm:issue-sync $1 to push updates to GitHub
 - Resume: To resume work on the issue run /pm:issue-resume $1
 ```
 

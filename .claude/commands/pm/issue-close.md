@@ -129,9 +129,9 @@ learnings_captured: false  # flag for context/update.md to process
 ```
 Commit documentation updates.
 
-### 9. Update context
+### 9. Update context docs
 
-Run `/context:update` to integrate learnings into project documentation. 
+Run Slash Command `/context:update` to integrate learnings into project documentation.
 
 ### 10. Output
 
