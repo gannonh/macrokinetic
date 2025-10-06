@@ -59,6 +59,54 @@ struct ScheduleServiceTitrationTests {
         #expect(result?.toDose == 0.5, "Titration toDose should be 0.5")
     }
 
+    /// GIVEN: A medication profile with multiple titrations
+    /// WHEN: Checking titration impact for the schedule
+    /// THEN: Returns the most recent titration (exercises max comparison)
+    @Test("Return most recent titration when multiple exist")
+    func testCheckTitrationImpact_MultipleTitrations_ReturnsMostRecent() async throws {
+        // GIVEN: Medication profile with 3 titrations at different dates
+        let context = try createTestContext()
+        let user = createTestUser(context: context)
+        let profile = createTestMedicationProfile(context: context, user: user, currentDose: 0.25)
+
+        // Create 3 titrations: 5 days ago, 15 days from now, 25 days from now
+        let date15Days = Calendar.current.date(byAdding: .day, value: 15, to: Date())!
+        let date25Days = Calendar.current.date(byAdding: .day, value: 25, to: Date())!
+
+        _ = createTestTitration(
+            context: context,
+            profile: profile,
+            fromDose: 0.25,
+            toDose: 0.5,
+            scheduledDate: date15Days
+        )
+
+        let mostRecentTitration = createTestTitration(
+            context: context,
+            profile: profile,
+            fromDose: 0.5,
+            toDose: 1.0,
+            scheduledDate: date25Days  // Most recent (furthest in future within 30 days)
+        )
+
+        let schedule = createTestSchedule(context: context, profile: profile, doseAmount: 0.25)
+
+        try context.save()
+
+        let service = ScheduleService(context: context)
+
+        // WHEN: checkTitrationImpact(for: schedule) called
+        let result = service.checkTitrationImpact(for: schedule)
+
+        // THEN: Returns the most recent titration (25 days from now)
+        #expect(result != nil, "Should detect titration")
+        #expect(
+            result?.id == mostRecentTitration.id,
+            "Should return the most recent titration (25 days)"
+        )
+        #expect(result?.toDose == 1.0, "Most recent titration should be to 1.0mg")
+    }
+
     /// GIVEN: A medication profile with no active titration
     /// WHEN: Checking titration impact for the schedule
     /// THEN: Returns nil (no upcoming dose change)
@@ -112,6 +160,67 @@ struct ScheduleServiceTitrationTests {
 
         // THEN: Returns nil (beyond 30-day window)
         #expect(result == nil, "Should return nil when titration is beyond 30-day window")
+    }
+
+    /// GIVEN: A medication profile with empty titrations array
+    /// WHEN: Checking titration impact for the schedule
+    /// THEN: Returns nil (no titrations available)
+    @Test("Return nil when medication profile has empty titrations array")
+    func testCheckTitrationImpact_EmptyTitrationsArray_ReturnsNil() async throws {
+        // GIVEN: Medication profile with explicitly empty titrations array
+        let context = try createTestContext()
+        let user = createTestUser(context: context)
+        let profile = createTestMedicationProfile(context: context, user: user, currentDose: 0.25)
+
+        // Ensure doseTitrations is empty array (not nil)
+        // SwiftData @Relationship with array defaults to empty array
+
+        let schedule = createTestSchedule(context: context, profile: profile, doseAmount: 0.25)
+
+        try context.save()
+
+        let service = ScheduleService(context: context)
+
+        // WHEN: checkTitrationImpact(for: schedule) called
+        let result = service.checkTitrationImpact(for: schedule)
+
+        // THEN: Returns nil
+        #expect(result == nil, "Should return nil when titrations array is empty")
+    }
+
+    /// GIVEN: A schedule with no associated medication profile
+    /// WHEN: Checking titration impact for the schedule
+    /// THEN: Returns nil (no medication profile to check)
+    @Test("Return nil when schedule has no medication profile")
+    func testCheckTitrationImpact_NoMedicationProfile_ReturnsNil() async throws {
+        // GIVEN: Schedule with no medication profile
+        let context = try createTestContext()
+
+        // Create orphaned schedule without medication profile
+        let scheduleDict: [String: Any] = [
+            "pattern": "weekly",
+            "doseAmount": 0.25,
+            "injectionSite": "Abdomen",
+            "dayOfWeek": 1,
+            "hour": 9,
+            "minute": 0,
+        ]
+        let baseScheduleData = try JSONSerialization.data(withJSONObject: scheduleDict, options: [])
+        let schedule = DoseSchedule(
+            medicationProfile: nil,  // No medication profile
+            patternType: .weekly,
+            baseSchedule: baseScheduleData
+        )
+        context.insert(schedule)
+        try context.save()
+
+        let service = ScheduleService(context: context)
+
+        // WHEN: checkTitrationImpact(for: schedule) called
+        let result = service.checkTitrationImpact(for: schedule)
+
+        // THEN: Returns nil
+        #expect(result == nil, "Should return nil when schedule has no medication profile")
     }
 
     // MARK: - Titration Completion Tests
@@ -258,6 +367,49 @@ struct ScheduleServiceTitrationTests {
                 dose.doseAmount == 0.5,
                 "Upcoming dose should be updated to 0.5mg (was 0.25mg)"
             )
+        }
+    }
+
+    /// GIVEN: A completed titration and schedule with invalid JSON in baseSchedule
+    /// WHEN: Handling titration completion
+    /// THEN: Throws invalidScheduleConfiguration error
+    @Test("Throw error when baseSchedule JSON is invalid")
+    func testHandleCompletedTitration_InvalidJSON_ThrowsError() async throws {
+        // GIVEN: Schedule with invalid JSON in baseSchedule
+        let context = try createTestContext()
+        let user = createTestUser(context: context)
+        let profile = createTestMedicationProfile(context: context, user: user, currentDose: 0.25)
+
+        // Create schedule with invalid JSON (not a dictionary)
+        let invalidData = Data("not valid json".utf8)
+        let schedule = DoseSchedule(
+            medicationProfile: profile,
+            patternType: .weekly,
+            baseSchedule: invalidData
+        )
+        context.insert(schedule)
+
+        // Create titration
+        let titration = createTestTitration(
+            context: context,
+            profile: profile,
+            fromDose: 0.25,
+            toDose: 0.5,
+            scheduledDate: Date()
+        )
+
+        try context.save()
+
+        let service = ScheduleService(context: context)
+
+        // WHEN/THEN: handleCompletedTitration throws invalidScheduleConfiguration
+        do {
+            try service.handleCompletedTitration(titration, schedule: schedule)
+            #expect(Bool(false), "Should throw invalidScheduleConfiguration error")
+        } catch let error as ScheduleServiceError {
+            #expect(error == .invalidScheduleConfiguration, "Should throw invalidScheduleConfiguration")
+        } catch {
+            #expect(Bool(false), "Should throw ScheduleServiceError, got \(error)")
         }
     }
 
