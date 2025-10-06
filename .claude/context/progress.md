@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-05T23:08:25Z
-version: 3.4
+last_updated: 2025-10-06T18:14:31Z
+version: 3.5
 author: Claude Code PM System
 ---
 
@@ -9,27 +9,32 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: issue/174-swiftdata-models-doseschedule-scheduleddose-doseevent
-- **Last Commit**: 534442d - chore: Remove allowed-tools section from epic refresh documentation
-- **Status**: Issue #174 (Dose Scheduling Models) complete - 69 tests passing, 90%+ coverage
+- **Branch**: main
+- **Last Commit**: c249806 - chore: Close issue #174 - SwiftData Models for Dose Scheduling complete
+- **Status**: Issue #174 closed, PR #175 merged - Dose scheduling epic in progress (10% complete, 1/10 tasks)
 
 ## Recent Work (Last 10 Commits)
-1. **534442d** - chore: Remove allowed-tools section from epic refresh documentation
-2. **b776a25** - chore: Update epic status and progress for dose scheduling
-3. **8bdf5fb** - Issue #174: Capture session learnings
-4. **127ddc7** - Issue #174: Update progress tracking
-5. **c7efe69** - fix: Properly handle exact dose count in test data seeding
-6. **3c0b90e** - test: Refactor PKEngine E2E tests to use seeded data pattern
-7. **cfc9d15** - Issue #174: Improve DoseSchedule test coverage from 79% to 90%
-8. **1d1dffe** - Issue #174: Fix failing tests after SwiftData model integration
-9. **9034164** - Issue #174: Fix CloudKit relationship requirements
-10. **cc6675a** - Issue #174: Stream D (Integration) - Wire models into codebase
+1. **c249806** - chore: Close issue #174 - SwiftData Models for Dose Scheduling complete
+2. **a01a2af** - chore: Update documentation for issue closing and updating processes
+3. **e47ed91** - Fix for #185 and #190: Improve test data quality
+4. **3cf03cb** - fix: Eliminate timing race conditions in ScheduledDoseTests
+5. **1a06e3d** - chore: Add comprehensive code and test quality reports for SwiftData models in dose scheduling
+6. **d7ce6c3** - chore: Remove allowed-tools section from issue merge documentation
+7. **dc68236** - chore: Remove allowed-tools section from context and issue sync documentation
+8. **e29db05** - Context update: process Issue #174 learnings and current state
+9. **7ffc838** - chore: Remove allowed-tools section from epic refresh documentation
+10. **11f7231** - chore: Update epic status and progress for dose scheduling
 
 ## Current Working Directory Status
-- **Modified Files**: .claude/commands/context/update.md, .claude/commands/pm/issue-sync.md, .claude/epics/dose-scheduling/174.md
-- **Branch Status**: issue/174-swiftdata-models-doseschedule-scheduleddose-doseevent (ready for PR)
-- **Current Phase**: Dose scheduling epic in progress - foundational models complete (Issue #174)
-- **Recent Session Work** (2025-10-05):
+- **Modified Files**: None (clean working directory)
+- **Branch Status**: main (PR #175 merged)
+- **Current Phase**: Dose scheduling epic in progress - Issue #174 closed, ready for next task
+- **Recent Session Work** (2025-10-06):
+  - ✅ **Issue #174 Closed**: PR #175 merged, issue closed on GitHub
+  - ✅ **Epic Progress Updated**: Dose scheduling epic at 10% (1/10 tasks complete)
+  - ✅ **Documentation Updates**: Issue closing and updating processes documented
+  - ✅ **Test Quality Improvements**: Fixed timing race conditions, improved test data quality
+- **Previous Session Work** (2025-10-05):
   - ✅ **Issue #174 Complete**: SwiftData models for dose scheduling (DoseSchedule, ScheduledDose, DoseEvent)
   - ✅ **4-Stream Parallel Development**: Successfully coordinated 4 parallel agents - 69 tests, 90%+ coverage
   - ✅ **CloudKit Relationship Fixes**: Fixed circular reference errors and optional relationship requirements
