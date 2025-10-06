@@ -408,9 +408,9 @@ Resuming {count} agents:
 Progress tracking:
   .claude/epics/{epic_name}/updates/$1/
 
-Monitor with: /pm:issue-status $1
-Update progress with: /pm:issue-update $1
-Sync updates: /pm:issue-sync $1
+- Monitor with: /pm:issue-status $1
+- Update progress with: /pm:issue-update $1
+- Sync updates: /pm:issue-sync $1
 ```
 
 ## Error Handling

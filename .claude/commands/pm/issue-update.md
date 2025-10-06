@@ -1,7 +1,6 @@
 ---
 description: Update an issue with recent activity, progress, and learnings from the current session.
 argument-hint: [Issue number (e.g., 42)] [Additional context (optional)]
-allowed-tools: Read, Write, Edit, LS
 ---
 
 # Issue Update
