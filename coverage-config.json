@@ -22,7 +22,8 @@
           "Models/AdherenceTrendData.swift",
           "Models/AdherencePattern.swift",
           "Models/AdherenceInsight.swift",
-          "Utilities/PricingCalculator.swift"
+          "Utilities/PricingCalculator.swift",
+          "Services/ScheduleService+Titration.swift"
         ]
       },
       "infrastructure": {
