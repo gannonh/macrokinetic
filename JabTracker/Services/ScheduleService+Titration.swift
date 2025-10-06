@@ -47,7 +47,13 @@ extension ScheduleService {
         let thirtyDaysFromNow = Calendar.current.date(byAdding: .day, value: 30, to: now) ?? now
 
         // Check if medication profile has an active titration within 30 days
-        guard let titration = medicationProfile.currentTitration else {
+        guard let titrations = medicationProfile.doseTitrations, !titrations.isEmpty else {
+            logger.debug("No titrations for medication profile")
+            return nil
+        }
+
+        // Find the most recent titration
+        guard let titration = titrations.max(by: { $0.scheduledDate < $1.scheduledDate }) else {
             logger.debug("No current titration for medication profile")
             return nil
         }
