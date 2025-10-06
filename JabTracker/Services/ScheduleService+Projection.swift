@@ -44,10 +44,18 @@ extension ScheduleService {
         from startDate: Date,
         to endDate: Date
     ) -> [ScheduledDose] {
+        // Return empty if date range is entirely before schedule creation
+        if endDate < schedule.createdAt {
+            return []
+        }
+
         // Decode schedule configuration
         guard let config = try? decodeScheduleConfiguration(schedule) else {
             return []
         }
+
+        // Adjust start date to schedule creation if needed
+        let effectiveStartDate = max(startDate, schedule.createdAt)
 
         // Generate doses based on pattern type
         switch schedule.patternType {
@@ -55,7 +63,7 @@ extension ScheduleService {
             return generateWeeklyDoses(
                 schedule: schedule,
                 config: config,
-                from: startDate,
+                from: effectiveStartDate,
                 to: endDate
             )
 
@@ -63,7 +71,7 @@ extension ScheduleService {
             return generateSplitDoses(
                 schedule: schedule,
                 config: config,
-                from: startDate,
+                from: effectiveStartDate,
                 to: endDate
             )
 
@@ -71,7 +79,7 @@ extension ScheduleService {
             return generateCustomDoses(
                 schedule: schedule,
                 config: config,
-                from: startDate,
+                from: effectiveStartDate,
                 to: endDate
             )
 
@@ -261,10 +269,17 @@ extension ScheduleService {
         components.hour = config.timeOfDay.hour
         components.minute = config.timeOfDay.minute
         components.second = 0
-        currentDate = calendar.date(from: components)!
+        let alignedDate = calendar.date(from: components)!
+
+        // If aligned time is before start, move to next day
+        if alignedDate < startDate {
+            currentDate = calendar.date(byAdding: .day, value: 1, to: alignedDate)!
+        } else {
+            currentDate = alignedDate
+        }
 
         // Generate doses at daily interval
-        while currentDate <= endDate {
+        while currentDate < endDate {
             // Skip if paused
             if let pausedUntil = schedule.pausedUntil,
                 let pausedAt = schedule.pausedAt,

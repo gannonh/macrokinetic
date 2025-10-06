@@ -117,7 +117,7 @@ struct ScheduleServiceProjectionTests {
         for index in 1..<doses.count {
             let interval = doses[index].scheduledTime.timeIntervalSince(doses[index - 1].scheduledTime)
             let expectedInterval: TimeInterval = 7 * 24 * 60 * 60  // 7 days in seconds
-            #expect(abs(interval - expectedInterval) < 3600, "Doses should be ~7 days apart")  // ±1 hour tolerance
+            #expect(abs(interval - expectedInterval) <= 3600, "Doses should be ~7 days apart")  // ±1 hour tolerance (DST)
         }
     }
 
@@ -407,7 +407,7 @@ struct ScheduleServiceProjectionTests {
         for index in 1..<doses.count {
             let interval = doses[index].scheduledTime.timeIntervalSince(doses[index - 1].scheduledTime)
             let expectedInterval: TimeInterval = 3 * 24 * 60 * 60  // 3 days in seconds
-            #expect(abs(interval - expectedInterval) < 3600, "Doses should be ~3 days apart")
+            #expect(abs(interval - expectedInterval) <= 3600, "Doses should be ~3 days apart")  // ±1 hour tolerance (DST)
         }
     }
 
