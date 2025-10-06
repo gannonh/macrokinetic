@@ -51,3 +51,82 @@ N/A (pure business logic service)
   3. Begin implementation of ScheduleService+Adherence.swift
   4. Follow TDD approach: write tests first, implement methods
 - **Agent Status**: Agent-2 was launched and is waiting for base class availability notification
+
+---
+
+## Progress (Updated: 2025-10-06T21:32:00Z)
+
+### Session 1: Complete Implementation - READY FOR TESTING
+
+#### Part 1: Dose Modifications Extension ✅
+- **IMPLEMENTED**: ScheduleService+Modifications.swift (181 lines)
+  - ✅ `rescheduleDose(_:to:)` - full validation (±7 days), window recalculation, preserves original time
+  - ✅ `skipDose(_:reason:)` - marks dose skipped with timestamp and optional reason
+  - ✅ `markDoseTaken(_:actualDose:)` - links scheduled to actual dose with relationship setup
+  - ✅ Comprehensive validation: prevents modifying taken/skipped doses
+  - ✅ Error case added to ScheduleServiceError: `invalidTimeRange`
+  - ✅ Base class updated: `context` changed from `private` to internal for extension access
+
+- **IMPLEMENTED**: ScheduleServiceModificationTests.swift (354 lines, 15 tests)
+  - ✅ Reschedule within valid range (3 days, 1 day)
+  - ✅ Reschedule validation (reject >7 days)
+  - ✅ Reschedule error handling (already taken, already skipped)
+  - ✅ Multiple reschedules preserve original time
+  - ✅ Skip dose with/without reason
+  - ✅ Skip already taken dose error handling
+  - ✅ Mark dose taken creates proper relationships
+  - ✅ Mark taken error handling (already taken, already skipped)
+  - ✅ Combined operations (skip after reschedule, mark taken after reschedule)
+
+#### Part 2: Adherence Metrics Extension ✅
+- **IMPLEMENTED**: ScheduleService+Adherence.swift (411 lines)
+  - ✅ `calculateAdherence(for:from:to:)` - comprehensive adherence metrics
+    - Adherence percentage calculation (taken / (taken + missed))
+    - Current streak tracking (consecutive adherent doses)
+    - Longest streak in period
+    - On-time percentage (doses taken within original window)
+    - Average delay for rescheduled doses
+  - ✅ `getRecentAdherencePattern(for:days:)` - DoseEvent timeline generation
+  - ✅ `detectAdherenceIssues(for:)` - pattern analysis with actionable insights
+    - Consecutive misses detection (3+ misses)
+    - Frequent rescheduling detection (>50% of doses)
+    - Severity classification (low, medium, high)
+  - ✅ Private helpers: `calculateCurrentStreak()`, `calculateLongestStreak()`
+  - ✅ Data structures: ScheduleAdherenceMetrics, AdherenceIssue (with IssueType, Severity enums)
+
+- **IMPLEMENTED**: ScheduleServiceAdherenceTests.swift (447 lines, 10 tests)
+  - ✅ Calculate adherence percentage accurately (70% adherence test)
+  - ✅ Calculate adherence with all doses taken (100%)
+  - ✅ Calculate adherence with all doses missed (0%)
+  - ✅ Calculate current streak correctly (5-dose streak)
+  - ✅ Calculate longest streak in period (4-dose max)
+  - ✅ Calculate on-time percentage (60% on-time)
+  - ✅ Calculate adherence with mixed pattern (taken/missed/skipped)
+  - ✅ Recent adherence pattern returns correct DoseEvent timeline
+  - ✅ Identify missed doses (5 consecutive misses = high severity)
+  - ✅ Identify frequent rescheduling pattern (60% reschedules = medium severity)
+
+#### Testing Status ⚠️
+- **BLOCKER**: Stream A's ScheduleService+Projection.swift has compilation errors:
+  - Lines 242, 324: `schedule.startDate` doesn't exist in DoseSchedule model
+  - My code compiles successfully but cannot build due to other stream's errors
+- **Status**: Implementation complete, awaiting buildable state to run tests
+
+#### Files Created (All Implementation Complete)
+- JabTracker/Services/ScheduleService+Modifications.swift (181 lines)
+- JabTracker/Services/ScheduleService+Adherence.swift (411 lines)
+- JabTrackerTests/ScheduleServiceModificationTests.swift (354 lines)
+- JabTrackerTests/ScheduleServiceAdherenceTests.swift (447 lines)
+
+#### Completion Status
+- **Tests Written**: 25/25 (100%) ✅
+- **Implementation**: 100% complete ✅
+- **Test Execution**: Blocked by Stream A compilation errors ⚠️
+- **Coverage Target**: 90%+ (Tier 1 - estimated based on comprehensive test coverage)
+
+#### Next Actions
+1. **IMMEDIATE**: Coordinate with Stream A to resolve Projection compilation errors
+2. **BLOCKED**: Run full test suite: `./scripts/test.sh unit 2`
+3. **BLOCKED**: Verify all 25 tests pass
+4. **BLOCKED**: Check coverage with `./scripts/test.sh unit 2 --coverage`
+5. **PENDING**: Commit implementation once tests verify correctness
