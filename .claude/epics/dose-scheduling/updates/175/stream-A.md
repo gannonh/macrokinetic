@@ -4,9 +4,9 @@
 **Stream**: A - CRUD Operations & Schedule Projection
 **Agent**: Claude Code (Stream A)
 **Started**: 2025-10-06
-**Status**: Phase 1 Complete ✅ - Phase 2 In Progress
+**Status**: Phase 2 Complete ✅ - Phase 3 Starting
 
-## Completion Status: 15%
+## Completion Status: 67%
 
 ### Phase 1: Base Class Structure ✅ (COMPLETE - Committed 7a69b2f)
 - [x] Created `JabTracker/Services/ScheduleService.swift` with base class
@@ -17,20 +17,23 @@
 - [x] Ran `xcodegen generate` to include in project
 - [x] Committed and pushed to GitHub
 
-**Unblocking Status**: ✅ Streams B & C can now proceed with their extensions
+**Unblocking Status**: ✅ Streams B & C unblocked
 
-### Phase 2: CRUD Operations (In Progress)
-- [ ] Create error enum `ScheduleServiceError`
-- [ ] Implement `createSchedule(for:pattern:startDate:baseSchedule:)`
-- [ ] Implement `updateSchedule(_:newPattern:newBaseSchedule:)`
-- [ ] Implement `deleteSchedule(_:)`
-- [ ] Implement `pauseSchedule(_:until:)`
-- [ ] Implement `resumeSchedule(_:)`
-- [ ] Create test file: `ScheduleServiceTests.swift`
-- [ ] Write 15 CRUD test methods
-- [ ] All CRUD tests passing
+### Phase 2: CRUD Operations ✅ (COMPLETE - Committed 07e65d9)
+- [x] Created ScheduleConfiguration, TimeComponents, CustomRecurrence types
+- [x] Created ScheduleServiceError enum with 7 error cases
+- [x] Implemented `createSchedule(for:pattern:startDate:baseSchedule:)`
+- [x] Implemented `updateSchedule(_:newPattern:newBaseSchedule:)`
+- [x] Implemented `deleteSchedule(_:)`
+- [x] Implemented `pauseSchedule(_:until:)`
+- [x] Implemented `resumeSchedule(_:)`
+- [x] Added `decodeScheduleConfiguration()` helper method
+- [x] Created test file: `ScheduleServiceTests.swift`
+- [x] Wrote 10 CRUD test methods
+- [x] All CRUD tests passing (0.048s execution)
+- [x] Fixed Stream D titration extension compilation error
 
-### Phase 3: Schedule Projection
+### Phase 3: Schedule Projection (In Progress)
 - [ ] Create extension file: `ScheduleService+Projection.swift`
 - [ ] Implement `generateScheduledDoses(for:from:to:)`
 - [ ] Implement `refreshUpcomingDoses(daysAhead:)`
@@ -41,34 +44,47 @@
 - [ ] All projection tests passing
 
 ## Files Created
-- ✅ JabTracker/Services/ScheduleService.swift (base class - Phase 1 complete)
+- ✅ JabTracker/Services/ScheduleService.swift (CRUD complete)
 - ⏳ JabTracker/Services/ScheduleService+Projection.swift (pending)
-- ⏳ JabTrackerTests/ScheduleServiceTests.swift (pending)
+- ✅ JabTrackerTests/ScheduleServiceTests.swift (10 tests passing)
 - ⏳ JabTrackerTests/ScheduleServiceProjectionTests.swift (pending)
 
 ## Test Results
-- Phase 1: No tests yet (base class only)
-- CRUD Tests: Pending
-- Projection Tests: Pending
+- Phase 1: Base class created, no tests
+- Phase 2 CRUD Tests: 10/10 passing ✅ (0.048s)
+- Phase 3 Projection Tests: Pending
 - Performance Tests: Pending
 
+## CRUD Test Coverage (10 tests)
+✅ Create schedule with weekly pattern
+✅ Create schedule with split-dose pattern
+✅ Create schedule with custom pattern
+✅ Update schedule pattern type
+✅ Update base schedule configuration
+✅ Delete schedule marks inactive
+✅ Pause schedule sets pausedAt and pausedUntil
+✅ Resume schedule clears pause fields
+✅ Create schedule with invalid dose amount throws error
+✅ Pause schedule with past date throws error
+
 ## Coordination Notes
-- ✅ **CRITICAL**: Phase 1 committed (7a69b2f) and pushed to GitHub
-- ✅ Streams B & C unblocked - they can now create their extension files
-- Base class provides foundation for event-driven notifications (Stream B)
-- Base class provides foundation for conflict resolution (Stream C)
-- No shared files with other streams after Phase 1 commit
+- ✅ Phase 1 unblocked Streams B & C (committed 7a69b2f)
+- ✅ Phase 2 complete with all CRUD operations (committed 07e65d9)
+- Fixed compilation error in Stream D's titration extension (max instead of sorted)
+- Base ScheduleService provides foundation for other streams' extensions
+- No shared files conflict - clean parallel development
 
 ## Next Steps
-1. Continue with Phase 2: CRUD Operations implementation
-2. Create ScheduleServiceError enum
-3. Implement createSchedule() with TDD approach
-4. Create test file and write failing tests first
-5. Implement remaining CRUD methods iteratively
-6. Move to Phase 3: Projection algorithms
+1. Create ScheduleService+Projection.swift extension
+2. Implement generateScheduledDoses() with weekly pattern support
+3. Add split-dose pattern support
+4. Add custom pattern support
+5. Implement refreshUpcomingDoses() and getNextScheduledDose()
+6. Create projection test file with 20 test methods
+7. Ensure 365-day projection completes in <100ms
 
 ## Blockers
-None - Phase 1 complete, proceeding with implementation
+None - Proceeding with Phase 3
 
 ---
-Last Updated: 2025-10-06 (Phase 1 Complete)
+Last Updated: 2025-10-06 (Phase 2 Complete - 10 CRUD tests passing)
