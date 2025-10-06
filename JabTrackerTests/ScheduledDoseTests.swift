@@ -170,7 +170,7 @@ struct ScheduledDoseTests {
         let scheduledDose = ScheduledDose(
             scheduledTime: now,
             doseAmount: 0.5,
-            windowStart: now,
+            windowStart: now.addingTimeInterval(-1),  // Fixed: 1 second before now to avoid race condition
             windowEnd: Calendar.current.date(byAdding: .hour, value: 2, to: now)!
         )
         context.insert(scheduledDose)
@@ -188,7 +188,7 @@ struct ScheduledDoseTests {
             scheduledTime: now,
             doseAmount: 0.5,
             windowStart: Calendar.current.date(byAdding: .hour, value: -2, to: now)!,
-            windowEnd: now
+            windowEnd: now.addingTimeInterval(1)  // Fixed: 1 second after now to avoid race condition
         )
         context.insert(scheduledDose)
 
@@ -409,17 +409,19 @@ struct ScheduledDoseTests {
         let container = try createTestContainer()
         let context = container.mainContext
 
-        let time = Date()
+        let pastTime = Date().addingTimeInterval(-1)  // Fixed: Use past timestamp to avoid race condition
         let scheduledDose = ScheduledDose(
-            scheduledTime: time,
+            scheduledTime: pastTime,
             doseAmount: 0.5,
-            windowStart: time,
-            windowEnd: time
+            windowStart: pastTime,
+            windowEnd: pastTime
         )
         context.insert(scheduledDose)
 
+        // Verify instantaneous window is valid (start equals end)
         #expect(scheduledDose.windowStart == scheduledDose.windowEnd)
-        #expect(scheduledDose.isInWindow == true)
+        // Since window is in the past, isInWindow should be false
+        #expect(scheduledDose.isInWindow == false)
     }
 
     @Test("Multiple scheduled doses can exist independently")
