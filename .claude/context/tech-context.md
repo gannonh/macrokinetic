@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-05T23:08:25Z
-version: 2.4
+last_updated: 2025-10-06T20:59:29Z
+version: 2.5
 author: Claude Code PM System
 ---
 
@@ -312,7 +312,30 @@ author: Claude Code PM System
 - **File Ownership Strategy**: Clear file ownership prevents conflicts - each stream owns specific model files and test files
 - **Integration Stream Value**: Dedicated integration stream (Stream D) validates cross-model interactions and catches integration bugs early
 
+## ScheduleService Architecture (Issue #175)
+
+### Swift Extension Compilation Requirements
+- **Base Class Dependency**: Base class must exist and be committed before extensions can compile - critical for parallel stream coordination with extension-based architecture
+- **Compilation Order Matters**: Stream A must commit ScheduleService base class before Streams B & C can compile their extension files (ScheduleService+Modifications, +Adherence, +Titration)
+- **Extension Pattern for Parallel Development**: Using Swift extensions for domain-specific functionality prevents file conflicts during parallel development while maintaining clean separation of concerns
+
+### ScheduleConfiguration Codable Pattern
+- **JSON Persistence in SwiftData**: Using Codable struct for schedule configuration enables JSON persistence in SwiftData baseSchedule field (stored as Data)
+- **Structured Configuration**: ScheduleConfiguration with TimeComponents and CustomRecurrence provides type-safe scheduling configuration
+- **Flexibility for Patterns**: Supports weekly, split-dose, and custom patterns through optional fields in single Codable struct
+
+### SwiftData Soft Delete Pattern
+- **Mark Inactive Instead of Delete**: Delete operations mark entities as inactive (`isActive = false`) rather than hard delete to preserve referential integrity
+- **Cascade Relationships Preserved**: Soft delete maintains relationships while preventing logical deletion from affecting dependent entities
+- **Audit Trail**: Soft delete enables schedule history and audit trail for medical compliance
+
+### OSLog Category Organization
+- **Subsystem Pattern**: Using subsystem "com.gannonhall.JabTracker" with category "ScheduleService" for structured logging across extensions
+- **Category Per Service**: Each service gets its own logging category for easy filtering and debugging
+- **Extension Logging**: Extensions inherit logging category from base service for consistent log organization
+
 ## Update History
+- 2025-10-06T20:59:29Z: Added ScheduleService Architecture section (Issue #175) - Swift extension compilation requirements, ScheduleConfiguration Codable pattern, SwiftData soft delete pattern, and OSLog category organization for parallel service development
 - 2025-10-05T23:08:25Z: Added Dose Scheduling Models Integration section (Issue #174) with SwiftData testing anti-patterns, coverage patterns for computed properties, and parallel development success patterns
 - 2025-10-02T17:09:51Z: Updated SwiftLint Management section - increased type_body_length threshold to 350, prefer configuration changes over disable comments
 - 2025-10-01T20:00:09Z: Added Analytics UI/UX Integration section (Issue #59) with iOS HIG compliance patterns, performance standards, and accessibility requirements from Phase 2 design review

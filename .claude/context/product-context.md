@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-05T23:08:25Z
-version: 2.2
+last_updated: 2025-10-06T20:59:29Z
+version: 2.3
 author: Claude Code PM System
 ---
 
@@ -233,7 +233,22 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Pause/Resume Support**: Medical treatment interruptions require proper tracking (`pausedAt`, `pausedUntil`) without losing schedule history - essential for clinical accuracy
 - **Reschedule Tracking**: Preserving original scheduled time (`rescheduledFrom`) enables accurate adherence analysis even when doses are rescheduled
 
+## Product Insights from Issue #175 ScheduleService Core (2025-10-06)
+
+### Schedule Management Complexity
+- **Multiple Pattern Support**: Supporting weekly, split-dose, and custom patterns requires sophisticated algorithm design and comprehensive testing - reflects real-world patient medication variety
+- **Configuration Flexibility**: ScheduleConfiguration with TimeComponents and CustomRecurrence enables type-safe scheduling across diverse medication regimens
+
+### Medical Accuracy Requirements
+- **90%+ Test Coverage Mandate**: Tier 1 business logic requirement (90%+ coverage) reflects critical importance of schedule calculations for patient safety
+- **Algorithm Validation**: Dose generation algorithms directly impact medication adherence - medical accuracy requires comprehensive edge case testing
+
+### Performance as User Experience
+- **<100ms Requirement**: 365-day projection performance requirement ensures responsive UI interactions for dose scheduling
+- **User Perception**: Fast schedule generation enables seamless user experience when creating or modifying medication schedules
+
 ## Update History
+- 2025-10-06T20:59:29Z: Added Product Insights from Issue #175 ScheduleService Core - schedule management complexity, medical accuracy requirements (90%+ coverage mandate), and performance as user experience (<100ms requirement)
 - 2025-10-05T23:08:25Z: Added Product Insights from Issue #174 Dose Scheduling Models - medical adherence definitions, scheduling window requirements, and dose scheduling architecture value for patient workflows
 - 2025-10-01T20:00:09Z: Added Product Insights from Issue #59 Analytics Orchestration & Polish (Phase 2 Design Review) - medical app design standards, therapeutic range visualization requirements, user education needs, gamification effectiveness, and design review process patterns
 - 2025-09-27T14:51:11Z: Added Product Insights from Issue #57 Architecture Consolidation & E2E Testing Excellence - scope management success, architecture consolidation value, E2E testing quality standards, CodeGen testing breakthrough, and TestUtilities enhancement strategy
