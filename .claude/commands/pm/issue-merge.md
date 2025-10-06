@@ -1,8 +1,6 @@
 ---
-allowed-tools: Read, Write, Bash(gh pr view:*), Bash(gh issue:*)
 description: Merge completed PR from branch to main using GitHub Pull Request workflow
 argument-hint: [pr-number]
-model: claude-sonnet-4-20250514
 ---
 
 # PR Merge
