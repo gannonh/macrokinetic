@@ -129,7 +129,11 @@ learnings_captured: false  # flag for context/update.md to process
 ```
 Commit documentation updates.
 
-### 9. Output
+### 9. Update context
+
+Run `/context:update` to integrate learnings into project documentation. 
+
+### 10. Output
 
 ```
 ✅ Closed issue #$ARGUMENTS
@@ -137,6 +141,7 @@ Commit documentation updates.
   Local: Task marked complete ✓
   GitHub: Issue closed & epic updated ✓
   Epic progress: {new_progress}% ({closed}/{total} tasks complete)
+  Context updated with learnings ✓
 
 Next: Run /pm:next for next priority task
 ```

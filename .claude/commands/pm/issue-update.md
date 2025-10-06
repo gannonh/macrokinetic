@@ -125,7 +125,7 @@ Update frontmatter:
 learnings_captured: false  # flag for context/update.md to process
 ```
 
-### 8. GitHub Sync (Optional)
+### 8. GitHub Sync
 
 If significant progress made, optionally sync to GitHub:
 ```bash
@@ -143,8 +143,11 @@ echo "## Progress Update - $(date '+%Y-%m-%d')
 ---
 Updated: {timestamp}" | gh issue comment $1 --body-file -
 ```
+### 9. Update context
 
-### 9. Output
+Run `/context:update` to integrate learnings into project documentation. 
+
+### 10. Output
 
 ```
 ✅ Updated issue #$1 progress
@@ -161,6 +164,9 @@ Learnings captured: {yes/no}
 - Technical patterns: {count}
 - Process insights: {count}
 - Technology insights: {count}
+
+Context documentation updated ✓
+- [files updated]
 
 Files updated:
   .claude/epics/{epic_name}/$1.md
