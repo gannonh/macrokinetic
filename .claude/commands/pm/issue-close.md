@@ -43,14 +43,7 @@ status: closed
 updated: {current_datetime}
 ```
 
-### 4. Update Progress File
-
-If progress file exists at `.claude/epics/{epic}/updates/$ARGUMENTS/progress.md`:
-- Set completion: 100%
-- Add completion note with timestamp
-- Update last_sync with current datetime
-
-### 5. Close on GitHub
+### 4. Close on GitHub
 
 Add completion comment and close:
 ```bash
@@ -66,7 +59,7 @@ Closed at: {timestamp}" | gh issue comment $ARGUMENTS --body-file -
 gh issue close $ARGUMENTS
 ```
 
-### 6. Update Epic Task List on GitHub
+### 5. Update Epic Task List on GitHub
 
 Check the task checkbox in the epic issue:
 
@@ -91,14 +84,14 @@ if [ ! -z "$epic_issue" ]; then
 fi
 ```
 
-### 7. Update Epic Progress
+### 6. Update Epic Progress
 
 - Count total tasks in epic
 - Count closed tasks
 - Calculate new progress percentage
 - Update epic.md frontmatter progress field
 
-### 8. Capture Session Learnings
+### 7. Capture Session Learnings
 
 Add learnings section to issue file if significant discoveries were made:
 
@@ -129,11 +122,11 @@ learnings_captured: false  # flag for context/update.md to process
 ```
 Commit documentation updates.
 
-### 9. Update context docs
+### 8. Update context docs
 
 Run Slash Command `/context:update` to integrate learnings into project documentation.
 
-### 10. Output
+### 9. Output
 
 ```
 ✅ Closed issue #$ARGUMENTS

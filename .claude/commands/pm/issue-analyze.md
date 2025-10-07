@@ -115,7 +115,7 @@ parallelization_factor: {1.0-5.0}
 **E2E Testing Files**:
 - {e2e_test_file_pattern_1}
 - {e2e_test_file_pattern_2}
-**Agent Type**: {backend|frontend|fullstack|database}-specialist
+**Product Area**: {backend|frontend|fullstack|infra|devops}
 **Can Start**: immediately
 **Estimated Hours**: {hours}
 **Dependencies**: none
