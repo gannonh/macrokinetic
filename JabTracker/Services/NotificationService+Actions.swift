@@ -27,12 +27,6 @@ extension NotificationService {
     ) async throws {
         actionLogger.info("Handling notification action: \(actionIdentifier) for dose: \(scheduledDose.id)")
 
-        // Validate scheduled dose still exists
-        guard scheduledDose.modelContext != nil else {
-            actionLogger.error("Scheduled dose has no context - may have been deleted")
-            throw NotificationServiceError.invalidScheduledDose
-        }
-
         switch actionIdentifier {
         case "TAKE_DOSE":
             try await handleTakeDoseAction(for: scheduledDose)
@@ -57,10 +51,10 @@ extension NotificationService {
         actionLogger.info("Handling notification response: \(response.actionIdentifier)")
 
         // Extract scheduled dose ID from user info
-        guard let doseIDString = response.notification.request.content.userInfo["scheduledDoseID"] as? String,
+        guard let doseIDString = response.notification.request.content.userInfo["scheduledDoseId"] as? String,
             let doseID = UUID(uuidString: doseIDString)
         else {
-            actionLogger.error("Missing or invalid scheduledDoseID in notification user info")
+            actionLogger.error("Missing or invalid scheduledDoseId in notification user info")
             throw NotificationServiceError.invalidScheduledDose
         }
 
@@ -118,8 +112,8 @@ extension NotificationService {
 
         let context = scheduleService.context
 
-        // Get medication profile
-        guard let medicationProfile = scheduledDose.schedule?.medicationProfile else {
+        // Validate medication profile exists
+        guard scheduledDose.schedule?.medicationProfile != nil else {
             actionLogger.error("Scheduled dose missing medication profile")
             throw NotificationServiceError.invalidScheduledDose
         }

@@ -188,13 +188,54 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         isRefreshing = true
         defer { isRefreshing = false }
 
-        // Cancel all existing notifications
-        notificationCenter.removeAllPendingNotificationRequests()
+        // Refresh upcoming doses from ScheduleService (30 days ahead by default)
+        scheduleService.refreshUpcomingDoses()
 
         // Get upcoming doses from ScheduleService
-        // Note: This requires ScheduleService.upcomingDoses property (to be implemented by Stream B/C)
-        // For now, create empty queue
-        notificationQueue = []
+        let upcomingDoses = scheduleService.upcomingDoses
+        logger.debug("Found \(upcomingDoses.count) upcoming doses")
+
+        // Cancel all existing notifications
+        notificationCenter.removeAllPendingNotificationRequests()
+        logger.debug("Cancelled all existing pending notifications")
+
+        // Limit to 64 notifications (iOS constraint)
+        let dosesToSchedule = Array(upcomingDoses.prefix(64))
+        if upcomingDoses.count > 64 {
+            logger.warning(
+                "Upcoming doses (\(upcomingDoses.count)) exceeds iOS 64-notification limit, scheduling only first 64")
+        }
+
+        // Schedule notifications for upcoming doses
+        for scheduledDose in dosesToSchedule {
+            try scheduleDoseReminder(for: scheduledDose)
+        }
+        logger.debug("Scheduled \(dosesToSchedule.count) dose reminders")
+
+        // Update queue property from pending notifications
+        let pendingRequests = await notificationCenter.pendingNotificationRequests()
+        notificationQueue = pendingRequests.compactMap { request in
+            guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
+                let triggerDate = trigger.nextTriggerDate(),
+                let doseIDString = request.content.userInfo["scheduledDoseId"] as? String,
+                let doseID = UUID(uuidString: doseIDString)
+            else {
+                return nil
+            }
+
+            let content = NotificationContent(
+                title: request.content.title,
+                body: request.content.body,
+                categoryIdentifier: request.content.categoryIdentifier
+            )
+
+            return PendingNotification(
+                id: request.identifier,
+                scheduledDoseId: doseID,
+                triggerDate: triggerDate,
+                content: content
+            )
+        }
 
         logger.info("Notification queue refreshed with \(self.notificationQueue.count) notifications")
     }
