@@ -69,6 +69,7 @@ class AnalyticsViewModel {
 
     /// Refresh full chart dataset (all time) - only happens once per session
     /// - Parameter config: Configuration containing user, profiles, services, context, and selected period
+    @MainActor
     func refreshChartDataset(config: RefreshConfig) async {
         Self.logger.info("🔄 Generating FULL chart dataset (all time)...")
         let refreshStartTime = Date()
@@ -98,12 +99,13 @@ class AnalyticsViewModel {
     /// Fetch all doses for medication profiles
     /// - Parameter config: Configuration containing profiles, dose service, and context
     /// - Returns: Array of tuples containing medication profiles and their doses
+    @MainActor
     private func fetchAllDoses(config: RefreshConfig) async -> [(MedicationProfile, [Dose])] {
         let doseFetchStart = Date()
         var profilesWithDoses: [(MedicationProfile, [Dose])] = []
 
         for profile in config.profiles {
-            let doses = await config.doseService.fetchDoses(for: profile, within: .all, context: config.context)
+            let doses = config.doseService.fetchDoses(for: profile, within: .all, context: config.context)
             guard !doses.isEmpty else { continue }
             profilesWithDoses.append((profile, doses))
         }
@@ -121,6 +123,7 @@ class AnalyticsViewModel {
     ///   - profilesWithDoses: Medication profiles with their doses
     ///   - chartService: Chart service for dataset generation
     /// - Returns: Generated concentration chart dataset
+    @MainActor
     private func generateFullDataset(
         user: User,
         profilesWithDoses: [(MedicationProfile, [Dose])],

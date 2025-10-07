@@ -186,7 +186,7 @@ struct ConcentrationCard: View {
             }
             .accessibilityIdentifier("steady-state-header")
 
-            ProgressView(value: self.steadyStateProgress, total: 1.0)
+            ProgressView(value: min(max(self.steadyStateProgress, 0.0), 1.0), total: 1.0)
                 .progressViewStyle(LinearProgressViewStyle())
                 .tint(
                     self.steadyStateProgress >= 0.95

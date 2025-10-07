@@ -453,7 +453,7 @@ final class ChartDataProcessor {
         timeRange: ClosedRange<Date>,
         intervalHours: Double = 0.5  // Uses standardSamplingInterval (0.5 * 3600 seconds)
     ) -> [ConcentrationPoint] {
-        guard let medication = medicationProfile.medication,
+        guard medicationProfile.medication != nil,
             let doses = medicationProfile.doses
         else {
             return []
