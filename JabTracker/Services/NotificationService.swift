@@ -1,0 +1,231 @@
+import Foundation
+import OSLog
+import UserNotifications
+
+/// NotificationService manages all notification functionality for the dose scheduling system.
+///
+/// This service orchestrates dose reminder notifications, handles notification actions (take, skip, snooze),
+/// manages a 30-day rolling notification queue, and detects missed doses for timely alerts.
+///
+/// Architecture:
+/// - Uses @Observable pattern for real-time updates (iOS 17+)
+/// - Implements UNUserNotificationCenterDelegate as singleton for app-wide delegate access
+/// - Integrates with ScheduleService for dose schedule access
+/// - Respects iOS 64-notification limit through prioritization
+///
+/// Notification Lifecycle:
+/// 1. Authorization requested on first use
+/// 2. Categories registered with actionable buttons (Take, Skip, Snooze)
+/// 3. Queue refreshed with 30 days of upcoming doses
+/// 4. Notifications scheduled at reminder time (default: 1 hour before dose)
+/// 5. User receives notification with actions
+/// 6. Actions handled through delegate methods
+/// 7. Queue updated after dose taken/skipped
+/// 8. Background refresh keeps queue current
+///
+/// Thread Safety: All public methods are @MainActor to ensure safe access to @Observable properties
+@Observable
+@MainActor
+final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
+    // MARK: - Properties
+
+    /// Injected ScheduleService dependency for accessing dose schedules
+    private let scheduleService: ScheduleService
+
+    /// User notification center for scheduling and managing notifications
+    private let notificationCenter: UNUserNotificationCenter
+
+    /// Current notification queue (pending notifications)
+    var notificationQueue: [PendingNotification] = []
+
+    /// Current authorization status for notifications
+    var authorizationStatus: UNAuthorizationStatus = .notDetermined
+
+    /// Indicates if notification queue is currently being refreshed
+    var isRefreshing: Bool = false
+
+    /// Logger for notification service operations
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
+
+    // MARK: - Initialization
+
+    /**
+     * Initialize NotificationService with required dependencies.
+     *
+     * - Parameters:
+     *   - scheduleService: Service for accessing dose schedules
+     *   - notificationCenter: User notification center (default: .current())
+     *
+     * - Note: Sets self as UNUserNotificationCenter delegate and registers notification categories
+     */
+    init(scheduleService: ScheduleService, notificationCenter: UNUserNotificationCenter = .current()) {
+        self.scheduleService = scheduleService
+        self.notificationCenter = notificationCenter
+        super.init()
+        self.notificationCenter.delegate = self
+        registerNotificationCategories()
+    }
+
+    // MARK: - Authorization
+
+    /**
+     * Request notification authorization from the user.
+     *
+     * Requests permissions for alert, sound, and badge notifications. Updates the authorizationStatus
+     * property based on the user's response.
+     *
+     * - Returns: True if authorized, false if denied
+     * - Throws: NotificationServiceError.authorizationDenied if user denies permission
+     */
+    func requestAuthorization() async throws -> Bool {
+        logger.info("Requesting notification authorization")
+
+        let options: UNAuthorizationOptions = [.alert, .sound, .badge]
+
+        do {
+            let granted = try await notificationCenter.requestAuthorization(options: options)
+            let status = await checkAuthorizationStatus()
+
+            logger.info("Authorization request completed: granted=\(granted), status=\(String(describing: status))")
+
+            if !granted {
+                throw NotificationServiceError.authorizationDenied
+            }
+
+            return granted
+        } catch {
+            logger.error("Authorization request failed: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    /**
+     * Check the current notification authorization status.
+     *
+     * Queries the notification center for current settings and updates the authorizationStatus property.
+     *
+     * - Returns: Current UNAuthorizationStatus
+     */
+    func checkAuthorizationStatus() async -> UNAuthorizationStatus {
+        let settings = await notificationCenter.notificationSettings()
+        authorizationStatus = settings.authorizationStatus
+
+        logger.debug("Authorization status checked: \(String(describing: self.authorizationStatus))")
+
+        return authorizationStatus
+    }
+
+    /**
+     * Register notification categories with actionable buttons.
+     *
+     * Registers two categories:
+     * - DOSE_REMINDER: Take, Skip, Snooze actions for upcoming doses
+     * - MISSED_DOSE: Take Now, Skip actions for missed doses
+     *
+     * Called automatically during initialization.
+     */
+    func registerNotificationCategories() {
+        logger.info("Registering notification categories")
+
+        // Dose Reminder Category
+        let takeAction = UNNotificationAction(
+            identifier: "TAKE_DOSE",
+            title: NSLocalizedString("Take Dose", comment: "Notification action"),
+            options: [.foreground]
+        )
+        let skipAction = UNNotificationAction(
+            identifier: "SKIP_DOSE",
+            title: NSLocalizedString("Skip", comment: "Notification action"),
+            options: [.destructive]
+        )
+        let snoozeAction = UNNotificationAction(
+            identifier: "SNOOZE",
+            title: NSLocalizedString("Snooze 15m", comment: "Notification action"),
+            options: []
+        )
+        let doseReminderCategory = UNNotificationCategory(
+            identifier: "DOSE_REMINDER",
+            actions: [takeAction, skipAction, snoozeAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        // Missed Dose Category
+        let takeNowAction = UNNotificationAction(
+            identifier: "TAKE_NOW",
+            title: NSLocalizedString("Take Now", comment: "Notification action"),
+            options: [.foreground]
+        )
+        let skipMissedAction = UNNotificationAction(
+            identifier: "SKIP_MISSED",
+            title: NSLocalizedString("Skip", comment: "Notification action"),
+            options: [.destructive]
+        )
+        let missedDoseCategory = UNNotificationCategory(
+            identifier: "MISSED_DOSE",
+            actions: [takeNowAction, skipMissedAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        notificationCenter.setNotificationCategories([doseReminderCategory, missedDoseCategory])
+
+        logger.info("Notification categories registered successfully")
+    }
+
+    // MARK: - Queue Management
+    // To be implemented in Phase 2
+
+    // MARK: - UNUserNotificationCenterDelegate
+    // To be implemented by Stream C (Action Handling)
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        // Will be implemented by Stream C
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        // Will be implemented by Stream C
+        [.banner, .sound, .badge]
+    }
+}
+
+// MARK: - NotificationServiceError
+
+/// Errors specific to NotificationService operations.
+enum NotificationServiceError: LocalizedError {
+    case authorizationDenied
+    case schedulingFailed
+    case notificationLimitExceeded
+    case invalidScheduledDose
+
+    var errorDescription: String? {
+        switch self {
+        case .authorizationDenied:
+            return NSLocalizedString(
+                "Notification authorization was denied. Please enable notifications in Settings.",
+                comment: "Authorization denied error"
+            )
+        case .schedulingFailed:
+            return NSLocalizedString(
+                "Failed to schedule notification. Please try again.",
+                comment: "Scheduling failed error"
+            )
+        case .notificationLimitExceeded:
+            return NSLocalizedString(
+                "Cannot schedule more notifications. iOS limit of 64 notifications reached.",
+                comment: "Notification limit error"
+            )
+        case .invalidScheduledDose:
+            return NSLocalizedString(
+                "Invalid scheduled dose. Cannot create notification.",
+                comment: "Invalid dose error"
+            )
+        }
+    }
+}
