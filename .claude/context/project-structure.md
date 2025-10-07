@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-07T18:35:45Z
-version: 1.9
+last_updated: 2025-10-07T22:25:40Z
+version: 2.0
 author: Claude Code PM System
 ---
 
@@ -51,6 +51,9 @@ JabTracker/
 │   ├── User.swift           # User profile model
 │   ├── Dose.swift           # Dose tracking model
 │   ├── MedicationProfile.swift # Medication profile model
+│   ├── DoseSchedule.swift   # Dose schedule model (Issue #174)
+│   ├── ScheduledDose.swift  # Scheduled dose model (Issue #174)
+│   ├── PendingNotification.swift # Notification queue data structures (Issue #176)
 │   ├── ChartData.swift      # Chart configuration and layout structures (Issue #55)
 │   ├── ChartDataTypes.swift # Advanced chart point and marker types (Issue #55)
 │   └── ChartDataEnums.swift # Chart styling and status enums (Issue #55)
@@ -64,6 +67,14 @@ JabTracker/
 │   ├── AuthenticationManager.swift
 │   ├── BiometricAuthManager.swift
 │   ├── MedicationManager.swift
+│   ├── ScheduleService.swift         # Dose schedule management (Issue #175)
+│   ├── ScheduleService+Projection.swift # Schedule projection and upcoming doses (Issue #175)
+│   ├── ScheduleService+Modifications.swift # Schedule modifications (Issue #175)
+│   ├── ScheduleService+Adherence.swift # Adherence tracking (Issue #175)
+│   ├── ScheduleService+Titration.swift # Dose titration (Issue #175)
+│   ├── NotificationService.swift     # Core notification infrastructure (Issue #176)
+│   ├── NotificationService+Actions.swift # Action handling & missed dose detection (Issue #176)
+│   ├── NotificationService+Background.swift # Background refresh & badge management (Issue #176)
 │   ├── ChartDataProcessor.swift      # Core chart data transformation service (Issue #55)
 │   ├── ChartDataProcessor+Filtering.swift # Filtering and aggregation extensions (Issue #55)
 │   └── ChartDataProcessor+Interpolation.swift # Advanced interpolation methods (Issue #55)
@@ -85,6 +96,17 @@ JabTracker/
   - ChartDataProcessorFilteringTests.swift (filtering and aggregation)
   - ChartDataProcessorPerformanceTests.swift (performance benchmarks)
   - ChartDataProcessorIntegrationTests.swift (service coordination)
+- **ScheduleService Test Suite**: Comprehensive testing across 5 specialized test files (Issue #175):
+  - ScheduleServiceTests.swift (CRUD operations)
+  - ScheduleServiceProjectionTests.swift (schedule projection)
+  - ScheduleServiceModificationTests.swift (schedule modifications)
+  - ScheduleServiceAdherenceTests.swift (adherence tracking)
+  - ScheduleServiceTitrationTests.swift (dose titration)
+- **NotificationService Test Suite**: Comprehensive testing across 4 specialized test files (Issue #176):
+  - NotificationServiceTests.swift (authorization & queue management - 25 tests)
+  - NotificationServiceBackgroundTests.swift (background refresh & badge - 15 tests)
+  - NotificationServiceActionTests.swift (action handling & missed dose - 20 tests)
+  - PendingNotificationTests.swift (model coverage - 10 tests)
 - **Mock utilities**: Shared test utilities and factories
 
 ## Build System
@@ -163,6 +185,7 @@ JabTracker/
 - **Error Enum in Base**: Centralized error enum (`ScheduleServiceError.swift`) in base class with stream-specific cases
 
 ## Update History
+- 2025-10-07T22:25:40Z: Added NotificationService files (NotificationService.swift, +Actions.swift, +Background.swift) and PendingNotification.swift model (Issue #176), updated test suite structure with 4 new test files (70 tests total)
 - 2025-10-07T18:35:45Z: Added Utilities directory with TimeConstants.swift for centralized time constants (Issue #175)
 - 2025-10-06T20:59:29Z: Added ScheduleService structure insights from Issue #175 - service extension organization pattern, test file parallel structure, and parallel development file organization for extension-based services
 - 2025-10-05T23:08:25Z: Added Dose Scheduling Models structure insights from Issue #174 - SwiftData model organization, test file parallel structure, and parallel stream file ownership patterns
