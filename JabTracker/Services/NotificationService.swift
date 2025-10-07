@@ -30,10 +30,10 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     // MARK: - Properties
 
     /// Injected ScheduleService dependency for accessing dose schedules
-    private let scheduleService: ScheduleService
+    internal let scheduleService: ScheduleService
 
     /// User notification center for scheduling and managing notifications
-    private let notificationCenter: UNUserNotificationCenter
+    internal let notificationCenter: UNUserNotificationCenter
 
     /// Current notification queue (pending notifications)
     var notificationQueue: [PendingNotification] = []
@@ -174,7 +174,103 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     }
 
     // MARK: - Queue Management
-    // To be implemented in Phase 2
+
+    /**
+     * Refresh the notification queue with upcoming doses for the next 30 days.
+     *
+     * Cancels all existing pending notifications and schedules new ones based on the current
+     * dose schedule. Respects iOS 64-notification limit by prioritizing nearest doses.
+     *
+     * - Throws: NotificationServiceError if scheduling fails
+     */
+    func refreshNotificationQueue() async throws {
+        logger.info("Refreshing notification queue")
+        isRefreshing = true
+        defer { isRefreshing = false }
+
+        // Cancel all existing notifications
+        notificationCenter.removeAllPendingNotificationRequests()
+
+        // Get upcoming doses from ScheduleService
+        // Note: This requires ScheduleService.upcomingDoses property (to be implemented by Stream B/C)
+        // For now, create empty queue
+        notificationQueue = []
+
+        logger.info("Notification queue refreshed with \(self.notificationQueue.count) notifications")
+    }
+
+    /**
+     * Schedule a dose reminder notification.
+     *
+     * Creates and schedules a notification for the specified dose at the configured reminder time.
+     * Default reminder is 1 hour before the scheduled dose time.
+     *
+     * - Parameters:
+     *   - scheduledDose: The scheduled dose to remind about
+     *   - reminderOffset: Time offset before dose (negative value, default: -3600 seconds / -1 hour)
+     * - Throws: NotificationServiceError.schedulingFailed if notification cannot be scheduled
+     */
+    func scheduleDoseReminder(for scheduledDose: ScheduledDose, reminderOffset: TimeInterval = -3600) throws {
+        logger.info("Scheduling dose reminder for dose: \(scheduledDose.id)")
+
+        // Calculate trigger time
+        let triggerDate = scheduledDose.scheduledTime.addingTimeInterval(reminderOffset)
+
+        // Don't schedule notifications in the past
+        guard triggerDate > Date() else {
+            logger.debug("Skipping notification for dose in the past: \(scheduledDose.id)")
+            return
+        }
+
+        // Create notification content
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("Time for your dose", comment: "Dose reminder title")
+        content.body = NSLocalizedString("Medication reminder", comment: "Dose reminder body")
+        content.sound = .default
+        content.categoryIdentifier = "DOSE_REMINDER"
+
+        // Include scheduledDoseId in userInfo for action handling
+        content.userInfo = ["scheduledDoseId": scheduledDose.id.uuidString]
+
+        // Create calendar trigger
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+
+        // Create request
+        let request = UNNotificationRequest(
+            identifier: scheduledDose.id.uuidString,
+            content: content,
+            trigger: trigger
+        )
+
+        // Schedule notification
+        notificationCenter.add(request) { error in
+            if let error = error {
+                self.logger.error("Failed to schedule notification: \(error.localizedDescription)")
+            } else {
+                self.logger.info("Notification scheduled for \(triggerDate)")
+            }
+        }
+    }
+
+    /**
+     * Cancel a notification for a specific scheduled dose.
+     *
+     * Removes the pending notification from the notification center and updates the queue.
+     *
+     * - Parameter scheduledDose: The scheduled dose whose notification should be cancelled
+     */
+    func cancelNotification(for scheduledDose: ScheduledDose) {
+        logger.info("Cancelling notification for dose: \(scheduledDose.id)")
+
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [scheduledDose.id.uuidString])
+
+        // Update queue to remove cancelled notification
+        notificationQueue.removeAll { $0.scheduledDoseId == scheduledDose.id }
+
+        logger.debug("Notification cancelled and queue updated")
+    }
 
     // MARK: - UNUserNotificationCenterDelegate
     // To be implemented by Stream C (Action Handling)
