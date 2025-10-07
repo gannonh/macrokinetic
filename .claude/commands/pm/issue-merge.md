@@ -110,14 +110,8 @@ Step 4: Request Review
 
 ### 5. Process PR Comments
 
-#### Instructions
 
-1. Inform the user:
-```
-I'll create a new GitHub issue for each PR comment. 
-```
-
-2. Create issues from comments
+#### 5.1. Create GitHub Issues
 ```bash
 # Create new issue for each comment
 gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | {body: .body, author: .author.login, createdAt: .createdAt}' | while read -r comment; do
@@ -125,9 +119,14 @@ gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | {body: .body,
   issue_body="Comment by $(echo "$comment" | jq -r .author) on $(echo "$comment" | jq -r .createdAt):\n\n$(echo "$comment" | jq -r .body)"
   gh issue create --title "$issue_title" --body "$issue_body"
 done
-
 ```
-3. Evaluate and prioritize issues
+**Important:** 
+- Depending on the reviewer style, a single comment may warrant multiple issues. 
+- Only create issues for comments that have not already been converted to issues. Avoid duplicates.
+- Issues will be triaged in the next step, so it's better to create too many than let any slip through the cracks.
+
+#### 5.2. Triage GitHub Issues
+For each newly created issue from the PR comments, evaluate and prioritize:
 
 - Evaluate each new issue
 - Read the issue
@@ -152,8 +151,7 @@ done
 
 [ex. This is a critical development infrastructure issue that should be resolved before merge to prevent ongoing developer friction.]
 ```
-
-#### Evaluation Criteria
+**EVALUATION CRITERIA**
 
 **Common High Priority Patterns**
 - **Invalid Tests** (wrong assertions, missing cases, always passing, false confidence)
@@ -187,7 +185,7 @@ Issues are high priority only if all answers are "yes" or the benefit clearly ou
 - Explain decisions briefly to maintain audit trail
 - Standard issue grooming applies (close duplicates, non-issues, etc.)
 
-4. Present to the user
+#### 5.3. Present to the user
 ```
 📋 Evaluation Summary
 
