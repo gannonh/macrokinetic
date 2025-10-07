@@ -92,7 +92,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence percentage accurately")
     func testCalculateAdherencePercentageAccurately() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -138,7 +138,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence with all doses taken")
     func testCalculateAdherenceWithAllDosesTaken() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -179,7 +179,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence with all doses missed")
     func testCalculateAdherenceWithAllDosesMissed() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -215,7 +215,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate current streak correctly")
     func testCalculateCurrentStreakCorrectly() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -262,7 +262,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate longest streak in period")
     func testCalculateLongestStreakInPeriod() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -309,7 +309,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate on-time percentage")
     func testCalculateOnTimePercentage() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -353,7 +353,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence with mixed pattern")
     func testCalculateAdherenceWithMixedPattern() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -416,7 +416,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Recent adherence pattern returns correct DoseEvent timeline")
     func testRecentAdherencePatternReturnsCorrectTimeline() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -470,7 +470,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Identify missed doses")
     func testIdentifyMissedDoses() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -506,7 +506,7 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Identify frequent rescheduling pattern")
     func testIdentifyFrequentRescheduling() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 

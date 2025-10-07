@@ -92,7 +92,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose within valid range succeeds")
     func testRescheduleDoseWithinValidRange() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -130,7 +130,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose beyond 7 days throws error")
     func testRescheduleDoseBeyondValidRange() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -158,7 +158,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose that is already taken throws error")
     func testRescheduleAlreadyTakenDose() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -185,7 +185,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose that is already skipped throws error")
     func testRescheduleAlreadySkippedDose() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -204,7 +204,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Multiple reschedules preserve original time")
     func testMultipleReschedulesPreserveOriginalTime() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -238,7 +238,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose sets skipped timestamp and reason")
     func testSkipDoseSetsTimestampAndReason() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -264,7 +264,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose without reason succeeds")
     func testSkipDoseWithoutReason() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -284,7 +284,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose that is already taken throws error")
     func testSkipAlreadyTakenDose() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -312,7 +312,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark dose taken links actual dose")
     func testMarkDoseTakenLinksActualDose() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -341,7 +341,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark dose taken on already taken dose throws error")
     func testMarkDoseTakenOnAlreadyTakenDose() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -379,7 +379,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark dose taken on skipped dose throws error")
     func testMarkDoseTakenOnSkippedDose() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -406,7 +406,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose after reschedule succeeds")
     func testSkipDoseAfterReschedule() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -436,7 +436,7 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark taken after reschedule succeeds")
     func testMarkTakenAfterReschedule() throws {
-        let context = try createTestContext()
+        let context = createTestContext()
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
