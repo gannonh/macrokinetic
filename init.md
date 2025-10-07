@@ -1,1 +1,1 @@
-Issue #175: Initialize branch for ScheduleService Core implementation
+Issue #176: Initialize branch for issue tracking
