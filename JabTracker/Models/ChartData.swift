@@ -466,7 +466,7 @@ struct ConcentrationChartDataset: Codable {
 
 /// Individual concentration curve with styling and metadata
 struct ConcentrationCurve: Identifiable, Codable {
-    let id = UUID()
+    var id: UUID = UUID()
     let points: [AdvancedConcentrationPoint]
     let medication: String
     let curveStyle: CurveStyle
