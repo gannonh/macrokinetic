@@ -24,14 +24,14 @@ Merge completed PR from branch to main using GitHub Pull Request workflow.
 
 ## Instructions
 
-The merge process is multi-step. It is possible the user is starting from Step 1, or resuming from a later step in the process. Therefore, your first task is to ask te user what step they would like to start from:
+The merge process is multi-step. It is possible the user is starting from Step 1, or resuming from a later step in the process. Therefore, your first task is to ask the user from which step they would like to start:
 
 ```bash
 At which step would you like to start? (1-8)"
 1. Pre-Merge Validation"
 2. Run Checks & Fix Issues"
 3. Mark PR as Ready for Review"
-4. Request Review"
+4. Request Reviews"
 5. Process PR Comments"
 6. Merge After Approval"
 7. Post-Merge Cleanup"
@@ -123,7 +123,8 @@ done
 **Important:** 
 - Depending on the reviewer style, a single comment may warrant multiple issues. 
 - Only create issues for comments that have not already been converted to issues. Avoid duplicates.
-- Issues will be triaged in the next step, so it's better to create too many than let any slip through the cracks.
+- Issues will be triaged in the next step, so it's better to strive for completeness than to leave any comments unaddressed.
+- Be sure to **preface each issue with "PR #$ARGUMENTS - "** to maintain traceability.
 
 #### 5.2. Triage GitHub Issues
 For each newly created issue from the PR comments, evaluate and prioritize:
