@@ -6,7 +6,10 @@
 //
 
 import Foundation
+import OSLog
 import SwiftData
+
+private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ScheduleService")
 
 // MARK: - Schedule Configuration Types
 
@@ -306,7 +309,8 @@ final class ScheduleService {
         do {
             activeSchedules = try context.fetch(descriptor)
         } catch {
-            print("Error loading active schedules: \(error)")
+            logger.error("Failed to load active schedules: \(error.localizedDescription)")
+            // TODO: Consider bubbling this error up or setting an error state property for UI feedback
             activeSchedules = []
         }
     }
