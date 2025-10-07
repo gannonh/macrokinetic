@@ -147,7 +147,7 @@ struct NotificationServiceTests {
         // GIVEN: Fresh NotificationService
         let scheduleService = try createTestScheduleService()
         let notificationCenter = createMockNotificationCenter()
-        let notificationService = NotificationService(
+        _ = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: notificationCenter
         )
