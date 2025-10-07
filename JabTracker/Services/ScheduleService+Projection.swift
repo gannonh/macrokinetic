@@ -82,9 +82,6 @@ extension ScheduleService {
                 from: effectiveStartDate,
                 to: endDate
             )
-
-        default:
-            return []
         }
     }
 
