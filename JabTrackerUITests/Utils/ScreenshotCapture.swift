@@ -126,7 +126,7 @@ class ScreenshotCapture {
 
         // Measure app launch time
         let launchStart = Date()
-        TestUtilities.launchAppWithTestMode()
+        _ = TestUtilities.launchAppWithTestMode()
         let launchEnd = Date()
         metrics["app_launch_time"] = launchEnd.timeIntervalSince(launchStart) * 1000  // ms
 
