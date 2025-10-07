@@ -215,8 +215,8 @@ extension ScheduleService {
     /// Get the original scheduling window for a dose (before any rescheduling)
     private func getOriginalWindow(for dose: ScheduledDose) -> (start: Date, end: Date) {
         if let originalTime = dose.rescheduledFrom {
-            let windowStart = originalTime.addingTimeInterval(-2 * 60 * 60)
-            let windowEnd = originalTime.addingTimeInterval(2 * 60 * 60)
+            let windowStart = originalTime.addingTimeInterval(-TimeConstants.hours(2))
+            let windowEnd = originalTime.addingTimeInterval(TimeConstants.hours(2))
             return (windowStart, windowEnd)
         } else {
             return (dose.windowStart, dose.windowEnd)
