@@ -45,6 +45,7 @@
           "Services/DoseService.swift",
           "Services/MedicationManager.swift",
           "Services/NotificationService.swift",
+          "Services/NotificationService+Background.swift",
           "Services/ScheduleService+Adherence.swift",
           "Services/ScheduleService+Modifications.swift",
           "Services/ScheduleService+Projection.swift",

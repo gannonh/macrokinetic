@@ -45,7 +45,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     var isRefreshing: Bool = false
 
     /// Logger for notification service operations
-    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
+    internal let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
 
     // MARK: - Initialization
 

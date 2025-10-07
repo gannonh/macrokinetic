@@ -173,14 +173,18 @@ struct NotificationServiceTests {
             notificationCenter: createMockNotificationCenter()
         )
 
-        // WHEN: Refresh queue
-        // try await notificationService.refreshNotificationQueue()
+        // Verify initial state
+        #expect(notificationService.notificationQueue.isEmpty)
+        #expect(notificationService.isRefreshing == false)
 
-        // THEN: Queue should be empty
-        // #expect(notificationService.notificationQueue.isEmpty)
+        // WHEN: Refresh queue with empty schedule
+        try await notificationService.refreshNotificationQueue()
 
-        // Placeholder - will implement in Phase 2
-        #expect(true)
+        // THEN: Queue should still be empty (no doses to schedule)
+        #expect(notificationService.notificationQueue.isEmpty)
+
+        // AND: isRefreshing should return to false after completion
+        #expect(notificationService.isRefreshing == false)
     }
 
     @Test("Schedule dose reminder - default offset")
