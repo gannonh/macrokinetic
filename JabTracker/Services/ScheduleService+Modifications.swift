@@ -53,11 +53,13 @@ extension ScheduleService {
 
         // Validate new time is within ±7 days of original
         let originalTime = scheduledDose.rescheduledFrom ?? scheduledDose.scheduledTime
-        let maxShift: TimeInterval = 7 * 24 * 60 * 60  // 7 days in seconds
+        let maxShift = TimeConstants.days(TimeConstants.maxRescheduleDays)
         let timeDifference = abs(newTime.timeIntervalSince(originalTime))
 
         guard timeDifference <= maxShift else {
-            logger.warning("Reschedule rejected: \(timeDifference / 86400) days exceeds 7-day limit")
+            let daysDifference = timeDifference / TimeConstants.secondsPerDay
+            logger.warning(
+                "Reschedule rejected: \(daysDifference) days exceeds \(TimeConstants.maxRescheduleDays)-day limit")
             throw ScheduleServiceError.invalidTimeRange
         }
 

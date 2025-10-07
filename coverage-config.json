@@ -91,6 +91,7 @@
           "Models/Extensions/Dose+Filtering.swift",
           "Utilities/DoseValidation.swift",
           "Utilities/DoseDefaults.swift",
+          "Utilities/TimeConstants.swift",
           "Views/Analytics/ConcentrationChartAccessibility.swift"
         ]
       },
