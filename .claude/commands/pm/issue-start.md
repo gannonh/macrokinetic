@@ -370,48 +370,25 @@ else
 fi
 ```
 
-### 10. Output
+### 10. Review Agent Work Output
 
-**For Starting New Work:**
-```
-✅ Started parallel work on issue #$1
+When an agent completes a session, carefully validate their work against their stream updates file:
 
-Issue: {issue_name}
-Branch: issue/{issue_name}
+- Check for successful completion of tasks
+- Verify adherence to the defined scope and requirements
+- Ensure all tests pass and code quality standards are met
+- Request revisions as necessary until the work meets expectations
+- When a logical stopping point has been reached, continue to the next step to provide a Session Summary
 
-Launching {count} parallel agents:
-  Stream A: {name} (Agent-1) ✓ Started
-  Stream B: {name} (Agent-2) ✓ Started
-  Stream C: {name} - Waiting (depends on A)
+### 11. Session Summary
 
-Progress tracking:
-  .claude/epics/{epic_name}/updates/$1/
+Provide a detailed session summary including outstanding work, recommended next steps and possible next actions.
 
 Monitor with: /pm:issue-status $1
 Update progress with: /pm:issue-update $1
 Sync updates: /pm:issue-sync $1
-```
+Resume work: /pm:issue-resume $1
 
-**For Resuming Work:**
-```
-🔄 Resumed parallel work on issue #$1
-
-Issue: {issue_name}
-Branch: issue/{issue_name} (existing)
-PR: {pr_url} ({pr_state})
-
-Resuming {count} agents:
-  Stream A: {name} (Agent-1) ✓ Resumed
-  Stream B: {name} (Agent-2) ✓ Completed (skipped)
-  Stream C: {name} (Agent-3) ✓ Resumed
-
-Progress tracking:
-  .claude/epics/{epic_name}/updates/$1/
-
-- Monitor with: /pm:issue-status $1
-- Update progress with: /pm:issue-update $1
-- Sync updates: /pm:issue-sync $1
-```
 
 ## Error Handling
 
