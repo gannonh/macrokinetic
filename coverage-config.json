@@ -56,6 +56,7 @@
         "description": "Heavy Apple framework dependencies and SwiftUI components with limited testability",
         "files": [
           "BiometricAuthManager.swift",
+          "Services/NotificationService+Actions.swift",
           "Services/SubscriptionManager.swift",
           "Services/SubscriptionManager+Testing.swift",
           "Onboarding/OnboardingCoordinator.swift",
