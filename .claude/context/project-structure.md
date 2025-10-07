@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-06T20:59:29Z
-version: 1.8
+last_updated: 2025-10-07T18:35:45Z
+version: 1.9
 author: Claude Code PM System
 ---
 
@@ -67,6 +67,8 @@ JabTracker/
 │   ├── ChartDataProcessor.swift      # Core chart data transformation service (Issue #55)
 │   ├── ChartDataProcessor+Filtering.swift # Filtering and aggregation extensions (Issue #55)
 │   └── ChartDataProcessor+Interpolation.swift # Advanced interpolation methods (Issue #55)
+├── Utilities/             # Utility functions and helpers
+│   └── TimeConstants.swift # Centralized time constants for schedule calculations (Issue #175)
 └── App/                   # App-level configuration
     ├── JabTrackerApp.swift # Main app entry point
     └── DataController.swift # SwiftData + CloudKit setup
@@ -161,6 +163,7 @@ JabTracker/
 - **Error Enum in Base**: Centralized error enum (`ScheduleServiceError.swift`) in base class with stream-specific cases
 
 ## Update History
+- 2025-10-07T18:35:45Z: Added Utilities directory with TimeConstants.swift for centralized time constants (Issue #175)
 - 2025-10-06T20:59:29Z: Added ScheduleService structure insights from Issue #175 - service extension organization pattern, test file parallel structure, and parallel development file organization for extension-based services
 - 2025-10-05T23:08:25Z: Added Dose Scheduling Models structure insights from Issue #174 - SwiftData model organization, test file parallel structure, and parallel stream file ownership patterns
 - 2025-09-26T01:23:01Z: Added AdherenceInsights structure insights from Issue #57, stream dependency management, critical issue identification workflow, and healthcare app architecture requirements

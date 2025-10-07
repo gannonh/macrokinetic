@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-06T22:40:03Z
-version: 3.7
+last_updated: 2025-10-07T18:35:45Z
+version: 3.8
 author: Claude Code PM System
 ---
 
@@ -9,27 +9,34 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: issue/175-scheduleservice-core-schedule-management-and-calculation-algorithms
-- **Last Commit**: cbb1b73 - Issue #175: update progress tracking
-- **Status**: Issue #175 COMPLETE (100%) - All 1286 tests passing, ready for PR review
+- **Branch**: main
+- **Last Commit**: 0721d4b - chore: Close issue #175 and update epic progress
+- **Status**: Issue #175 CLOSED - PR #191 merged to main, all tests passing (1,310 tests)
 
 ## Recent Work (Last 10 Commits)
-1. **cbb1b73** - Issue #175: update progress tracking
-2. **e90b054** - Issue #175 Stream A: Fix historical schedule creation (test #6)
-3. **eb14b67** - Issue #175 Stream B: Fix adherence test data range (test #5)
-4. **ea9bc71** - Issue #175 Stream A: Fix split-dose boundary condition (test #3)
-5. **8d9a7f9** - Issue #175 Stream A: Fix DST tolerance and empty array validation (tests #1, #2, #4)
-6. **8062cb2** - Issue #175 Stream A,B,C: Complete ScheduleService implementation (WIP - 6 failing tests)
-7. **e7d52de** - Issue #175: Update documentation with ScheduleService architecture insights, hybrid parallel development strategy, and extension-based service patterns
-8. **638be37** - chore: Update issue-start command documentation and allowed-tools
-9. **1210af1** - Issue #175: update progress tracking
-10. **cd14550** - chore: Remove unused allowed-tools from issue update command
+1. **0721d4b** - chore: Close issue #175 and update epic progress
+2. **38ac073** - chore: Add TimeConstantsTests to project configuration
+3. **6f3941a** - test: Add comprehensive tests for TimeConstants utility
+4. **851674f** - chore: project build
+5. **7560361** - Fix #197: Extract magic numbers to TimeConstants utility
+6. **65fcef2** - Fix #199: Replace silent error handling with OSLog in loadActiveSchedules
+7. **ef4502f** - fix: resolve Swift diagnostics warnings
+8. **09d7ac7** - fix(ScheduleService): Fix split-dose generation boundary condition
+9. **f779d3e** - chore(issue-merge.md): correct user prompt wording and enhance issue creation guidance
+10. **4fc2b16** - chore(issue-merge.md): streamline PR comment processing and issue creation steps
 
 ## Current Working Directory Status
-- **Modified Files**: Context files being updated
-- **Branch Status**: issue/175-scheduleservice-core-schedule-management-and-calculation-algorithms (PR #191 draft)
-- **Current Phase**: ScheduleService Core COMPLETE - Ready for PR review
-- **Recent Session Work** (2025-10-06):
+- **Modified Files**: None (clean working directory)
+- **Branch Status**: main (up to date with origin/main)
+- **Current Phase**: Issue #175 Complete - Dose Scheduling Epic at 20% (2/10 tasks)
+- **Recent Session Work** (2025-10-07):
+  - ✅ **PR #191 Merged**: Issue #175 merged to main with rebase strategy, feature branch deleted
+  - ✅ **Issue #175 Closed**: ScheduleService Core complete, epic progress updated to 20%
+  - 🧪 **Test Coverage Fix**: Added TimeConstantsTests.swift (20 comprehensive tests, 100% coverage)
+  - 📊 **Coverage Achievement**: Fixed TimeConstants.swift from 33% → 100%, exceeding 75% Tier 5 requirement
+  - 🎯 **Quality Gates**: All checks passed (SwiftLint, build, 1,310 tests, coverage policy)
+  - 🔄 **Final Test Count**: 1,310 tests passing (20 new TimeConstants tests added during merge)
+- **Previous Session Work** (2025-10-06):
   - 🎉 **Issue #175 COMPLETE**: ScheduleService Core implementation finished - 100% test passing (1286/1286 tests)
   - ✅ **Stream A (100% complete)**: Base class + CRUD + Projection - 20/20 projection tests passing
   - ✅ **Stream B (100% complete)**: Modifications + Adherence - 25/25 tests passing
@@ -407,6 +414,7 @@ author: Claude Code PM System
 - **Iterative Fix Strategy**: Fixing tests one at a time with separate commits (Option B) enables clear debugging and creates valuable git history for future reference
 
 ## Update History
+- 2025-10-07T18:35:45Z: Issue #175 CLOSED - PR #191 merged to main, TimeConstantsTests added (100% coverage), epic progress 20%, all quality gates passed (1,310 tests)
 - 2025-10-06T22:40:03Z: Issue #175 COMPLETE - ScheduleService Core finished with 100% test passing (1286/1286), added test fix debugging patterns (DST tolerance, boundary conditions, time alignment), updated current state and recent work
 - 2025-10-06T20:59:29Z: Issue #175 started - ScheduleService Core with hybrid parallel development (3 streams), process learnings captured for agent coordination, extension architecture, and TDD in parallel streams
 - 2025-10-05T23:08:25Z: Issue #174 completion - SwiftData dose scheduling models with parallel development, CloudKit relationship patterns, systematic bug fixing, and comprehensive learnings captured
