@@ -276,7 +276,7 @@ extension ScheduleService {
         }
 
         // Generate doses at daily interval
-        while currentDate < endDate {
+        while currentDate <= endDate {
             // Skip if paused
             if let pausedUntil = schedule.pausedUntil,
                 let pausedAt = schedule.pausedAt,
@@ -325,30 +325,27 @@ extension ScheduleService {
                 to: baseTime
             )!
 
-            // Only add if within date range
-            if doseTime <= endDate {
-                let windowStart = calendar.date(
-                    byAdding: .minute,
-                    value: -config.windowMinutesBefore,
-                    to: doseTime
-                )!
+            let windowStart = calendar.date(
+                byAdding: .minute,
+                value: -config.windowMinutesBefore,
+                to: doseTime
+            )!
 
-                let windowEnd = calendar.date(
-                    byAdding: .minute,
-                    value: config.windowMinutesAfter,
-                    to: doseTime
-                )!
+            let windowEnd = calendar.date(
+                byAdding: .minute,
+                value: config.windowMinutesAfter,
+                to: doseTime
+            )!
 
-                let scheduledDose = ScheduledDose(
-                    scheduledTime: doseTime,
-                    doseAmount: config.doseAmount,
-                    windowStart: windowStart,
-                    windowEnd: windowEnd
-                )
-                scheduledDose.schedule = schedule
+            let scheduledDose = ScheduledDose(
+                scheduledTime: doseTime,
+                doseAmount: config.doseAmount,
+                windowStart: windowStart,
+                windowEnd: windowEnd
+            )
+            scheduledDose.schedule = schedule
 
-                doses.append(scheduledDose)
-            }
+            doses.append(scheduledDose)
         }
 
         return doses
