@@ -35,6 +35,8 @@ struct OnboardingView: View {
                         MedicationSelectionView(viewModel: self.viewModel)
                     case .doseSetup:
                         InitialDoseSetupView(viewModel: self.viewModel)
+                    case .scheduleSetup:
+                        ScheduleSetupView(viewModel: self.viewModel)
                     case .notifications:
                         PermissionsRequestView(viewModel: self.viewModel, type: .notifications)
                     case .healthKit:
