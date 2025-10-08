@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-06T20:59:29Z
-version: 2.5
+last_updated: 2025-10-08T20:37:55Z
+version: 2.6
 author: Claude Code PM System
 ---
 
@@ -334,7 +334,22 @@ author: Claude Code PM System
 - **Category Per Service**: Each service gets its own logging category for easy filtering and debugging
 - **Extension Logging**: Extensions inherit logging category from base service for consistent log organization
 
+## NotificationService Architecture (Issue #176)
+
+### iOS User Notifications Framework Integration
+- **UNUserNotificationCenterDelegate Integration**: UNUserNotificationCenterDelegate integration requires careful coordination with @Observable pattern - delegate methods run on background threads requiring ModelContext management
+- **Notification Queue Management Patterns**: 30-day rolling window with 64-notification iOS limit requires prioritization logic and periodic refresh - background refresh ensures queue stays current
+- **SwiftData ModelContext Thread Safety**: Notification action handling in delegate methods requires careful ModelContext access from background threads - @MainActor isolation critical for data integrity
+- **Mock Framework Design**: Comprehensive mock implementation (MockNotificationCenter with 8 methods, 5 internal arrays) enables testing of complex notification workflows including authorization, scheduling, cancellation, delivery, and badge management
+
+### UNUserNotificationCenter Testing Patterns
+- **Protocol-Based Abstraction**: NotificationCenterProtocol abstraction enables comprehensive unit testing of notification logic without requiring actual UNUserNotificationCenter implementation
+- **Mock Implementation Complexity**: MockNotificationCenter requires tracking multiple internal states (pending notifications, delivered notifications, badge count, authorization status, registered categories) to accurately simulate framework behavior
+- **Unit Testing Limitations**: Framework-level notification scheduling and delivery cannot be fully unit tested - requires E2E validation for actual notification delivery and category registration verification
+- **Test Isolation Benefits**: Protocol-based mocking enables testing notification logic in isolation from iOS system frameworks - critical for reliable CI/CD test execution
+
 ## Update History
+- 2025-10-08T20:37:55Z: Added NotificationService Architecture section (Issue #176) - iOS User Notifications Framework integration, UNUserNotificationCenter testing patterns, protocol-based abstraction, and mock framework design for notification workflows
 - 2025-10-06T20:59:29Z: Added ScheduleService Architecture section (Issue #175) - Swift extension compilation requirements, ScheduleConfiguration Codable pattern, SwiftData soft delete pattern, and OSLog category organization for parallel service development
 - 2025-10-05T23:08:25Z: Added Dose Scheduling Models Integration section (Issue #174) with SwiftData testing anti-patterns, coverage patterns for computed properties, and parallel development success patterns
 - 2025-10-02T17:09:51Z: Updated SwiftLint Management section - increased type_body_length threshold to 350, prefer configuration changes over disable comments

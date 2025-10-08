@@ -184,7 +184,16 @@ JabTracker/
 - **Base Class Foundation**: Stream A creates base class first, then other streams add extensions
 - **Error Enum in Base**: Centralized error enum (`ScheduleServiceError.swift`) in base class with stream-specific cases
 
+## NotificationService Structure Insights (Issue #176)
+
+### NotificationService File Organization
+- **Extension-Based Organization**: NotificationService.swift base + NotificationService+Actions.swift + NotificationService+Background.swift enables clear separation of concerns and parallel development
+- **Test File Parallel Structure**: One-to-one mapping between implementation and test files (NotificationService → NotificationServiceTests, NotificationService+Actions → NotificationServiceActionTests, NotificationService+Background → NotificationServiceBackgroundTests) maintains clear ownership
+- **Mock Utilities Location**: MockNotificationCenter.swift in JabTrackerTests/Mocks/ directory establishes pattern for framework protocol mocks - reusable across test suites
+- **PendingNotification Model Location**: Notification-specific data structures in JabTracker/Models/ alongside other domain models - maintains consistency with existing project organization
+
 ## Update History
+- 2025-10-08T20:37:55Z: Added NotificationService Structure Insights (Issue #176) - extension-based organization, test file parallel structure, mock utilities location, and notification model organization patterns
 - 2025-10-07T22:25:40Z: Added NotificationService files (NotificationService.swift, +Actions.swift, +Background.swift) and PendingNotification.swift model (Issue #176), updated test suite structure with 4 new test files (70 tests total)
 - 2025-10-07T18:35:45Z: Added Utilities directory with TimeConstants.swift for centralized time constants (Issue #175)
 - 2025-10-06T20:59:29Z: Added ScheduleService structure insights from Issue #175 - service extension organization pattern, test file parallel structure, and parallel development file organization for extension-based services
