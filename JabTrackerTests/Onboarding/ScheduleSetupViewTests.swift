@@ -13,20 +13,11 @@ import Testing
 
 @MainActor
 struct ScheduleSetupViewTests {
-    let dataController: DataController
-    let authManager: AuthenticationManager
-    let viewModel: OnboardingViewModel
-
-    init() throws {
-        // Create test container
-        self.dataController = DataController.testContainer()
-        self.authManager = AuthenticationManager(dataController: dataController)
-
-        // Setup test user
-        let user = authManager.setupUITestingUser(dataController: dataController)
-        try dataController.container.mainContext.save()
-
-        self.viewModel = OnboardingViewModel(
+    /// Create test environment for schedule setup tests
+    func createTestViewModel() -> OnboardingViewModel {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(
             dataController: dataController,
             authManager: authManager
         )
@@ -34,17 +25,22 @@ struct ScheduleSetupViewTests {
         // Setup medication selection (prerequisite for schedule setup)
         viewModel.selectedMedication = .semaglutide
         viewModel.selectedDose = 0.5
+
+        return viewModel
     }
 
     // MARK: - Pattern Selection Tests
 
     @Test("Default pattern is weekly")
     func testDefaultPattern() {
+        let viewModel = createTestViewModel()
         #expect(viewModel.schedulePattern == .weekly)
     }
 
     @Test("Can change pattern selection")
     func testPatternChange() {
+        let viewModel = createTestViewModel()
+
         // Change to split dose
         viewModel.schedulePattern = .splitDose
         #expect(viewModel.schedulePattern == .splitDose)
@@ -58,11 +54,14 @@ struct ScheduleSetupViewTests {
 
     @Test("Default reminder time is 60 minutes")
     func testDefaultReminderTime() {
+        let viewModel = createTestViewModel()
         #expect(viewModel.reminderMinutes == 60)
     }
 
     @Test("Can configure reminder times")
     func testReminderTimeConfiguration() {
+        let viewModel = createTestViewModel()
+
         // 15 minutes
         viewModel.reminderMinutes = 15
         #expect(viewModel.reminderMinutes == 15)
@@ -78,6 +77,8 @@ struct ScheduleSetupViewTests {
 
     @Test("Can toggle multiple reminders")
     func testMultipleRemindersToggle() {
+        let viewModel = createTestViewModel()
+
         #expect(viewModel.enableMultipleReminders == false)
 
         viewModel.enableMultipleReminders = true
@@ -91,18 +92,24 @@ struct ScheduleSetupViewTests {
 
     @Test("Weekly pattern is always valid")
     func testWeeklyPatternValid() {
+        let viewModel = createTestViewModel()
+        viewModel.currentStep = .scheduleSetup
         viewModel.schedulePattern = .weekly
         #expect(viewModel.canProceedToNext == true)
     }
 
     @Test("Split dose pattern is always valid")
     func testSplitDosePatternValid() {
+        let viewModel = createTestViewModel()
+        viewModel.currentStep = .scheduleSetup
         viewModel.schedulePattern = .splitDose
         #expect(viewModel.canProceedToNext == true)
     }
 
     @Test("Custom pattern requires validation")
     func testCustomPatternValidation() {
+        let viewModel = createTestViewModel()
+        viewModel.currentStep = .scheduleSetup
         viewModel.schedulePattern = .custom
         viewModel.customScheduleValid = false
         #expect(viewModel.canProceedToNext == false)
@@ -115,6 +122,8 @@ struct ScheduleSetupViewTests {
 
     @Test("Can navigate to schedule setup step")
     func testNavigateToScheduleSetup() {
+        let viewModel = createTestViewModel()
+
         // Navigate through required steps
         viewModel.currentStep = .welcome
         viewModel.moveToNextStep()
@@ -129,6 +138,7 @@ struct ScheduleSetupViewTests {
 
     @Test("Cannot proceed from schedule setup without valid configuration")
     func testCannotProceedWithoutValidConfig() {
+        let viewModel = createTestViewModel()
         viewModel.currentStep = .scheduleSetup
         viewModel.schedulePattern = .custom
         viewModel.customScheduleValid = false
@@ -138,6 +148,7 @@ struct ScheduleSetupViewTests {
 
     @Test("Can proceed from schedule setup with valid configuration")
     func testCanProceedWithValidConfig() {
+        let viewModel = createTestViewModel()
         viewModel.currentStep = .scheduleSetup
         viewModel.schedulePattern = .weekly
 

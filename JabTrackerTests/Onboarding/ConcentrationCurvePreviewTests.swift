@@ -234,7 +234,7 @@ struct ConcentrationCurvePreviewTests {
             let dose = Dose(
                 amount: doseAmount,
                 timestamp: currentDate,
-                injectionSite: "Thigh"
+                site: "Thigh"
             )
             doses.append(dose)
             currentDate = currentDate.addingTimeInterval(Double(intervalDays) * 24 * 3600)
@@ -248,8 +248,8 @@ struct ConcentrationCurvePreviewTests {
         doses: [Dose],
         medication: Medication,
         days: Int
-    ) -> [ConcentrationPoint] {
-        var points: [ConcentrationPoint] = []
+    ) -> [PreviewConcentrationPoint] {
+        var points: [PreviewConcentrationPoint] = []
         let startDate = doses.first?.timestamp ?? Date()
         let endDate = Date()
 
@@ -265,7 +265,7 @@ struct ConcentrationCurvePreviewTests {
             )
 
             points.append(
-                ConcentrationPoint(
+                PreviewConcentrationPoint(
                     date: currentTime,
                     concentration: concentration
                 ))
@@ -278,7 +278,7 @@ struct ConcentrationCurvePreviewTests {
 }
 
 /// Data structure for concentration curve points
-struct ConcentrationPoint: Identifiable {
+struct PreviewConcentrationPoint: Identifiable {
     let id = UUID()
     let date: Date
     let concentration: Double
