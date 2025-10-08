@@ -45,7 +45,7 @@ extension NotificationService {
             try await refreshNotificationQueue()
 
             // 2. Detect and alert for missed doses
-            // TODO: Implement missed dose detection in Stream C
+            try await processMissedDoses()
 
             // 3. Update badge count
             await updateBadgeCount()
@@ -76,8 +76,8 @@ extension NotificationService {
         // Calculate badge count from notification queue
         let pendingCount = notificationQueue.count
 
-        // TODO: Add missed dose count when Stream C implements detection
-        let missedDoseCount = 0
+        // Add missed dose count
+        let missedDoseCount = (try? await detectMissedDoses().count) ?? 0
 
         let totalCount = pendingCount + missedDoseCount
 

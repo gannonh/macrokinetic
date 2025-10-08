@@ -314,20 +314,26 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     }
 
     // MARK: - UNUserNotificationCenterDelegate
-    // To be implemented by Stream C (Action Handling)
 
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        // Will be implemented by Stream C
+        await Task { @MainActor in
+            do {
+                try await self.handleNotificationResponse(response)
+                self.logger.info("Successfully handled notification response: \(response.actionIdentifier)")
+            } catch {
+                self.logger.error("Failed to handle notification response: \(error.localizedDescription)")
+            }
+        }.value
     }
 
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        // Will be implemented by Stream C
+        // Show notifications even when app is in foreground
         [.banner, .sound, .badge]
     }
 }
