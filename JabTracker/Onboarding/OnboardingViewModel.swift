@@ -181,6 +181,19 @@ class OnboardingViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Schedule Configuration Methods
+
+    /// Validates the current schedule configuration
+    /// - Returns: true if configuration is valid, false otherwise
+    func validateScheduleConfiguration() -> Bool {
+        switch schedulePattern {
+        case .weekly, .splitDose:
+            return true
+        case .custom:
+            return customScheduleValid
+        }
+    }
+
     func completeOnboarding() async throws {
         guard let user = authManager.currentUser,
             let selectedMedication
