@@ -111,23 +111,75 @@ Step 4: Request Review
 ### 5. Process PR Comments
 
 
-#### 5.1. Create GitHub Issues
-```bash
-# Create new issue for each comment
-gh pr view $ARGUMENTS --comments --json comments -q '.comments[] | {body: .body, author: .author.login, createdAt: .createdAt}' | while read -r comment; do
-  issue_title="PR #$ARGUMENTS - [issue-title]"
-  issue_body="Comment by $(echo "$comment" | jq -r .author) on $(echo "$comment" | jq -r .createdAt):\n\n$(echo "$comment" | jq -r .body)"
-  gh issue create --title "$issue_title" --body "$issue_body"
-done
-```
-**Important:** 
-- Depending on the reviewer style, a single comment may warrant multiple issues. 
-- Only create issues for comments that have not already been converted to issues. Avoid duplicates.
-- Issues will be triaged in the next step, so it's better to strive for completeness than to leave any comments unaddressed.
-- Be sure to **preface each issue with "PR #$ARGUMENTS - "** to maintain traceability.
+#### 5.1. Create GitHub Issues from PR Feedback
 
-#### 5.2. Triage GitHub Issues
-For each newly created issue from the PR comments, evaluate and prioritize:
+**Your Task:**
+Read ALL PR feedback sources, analyze the content, present summary to user, and create individual GitHub issues for each distinct actionable recommendation.
+
+**Step 1: Fetch All Feedback Sources**
+
+Use these commands to retrieve all types of feedback:
+
+```bash
+# 1. PR-level conversation comments
+gh pr view $ARGUMENTS --json comments --jq '.comments[] | {
+  author: .author.login,
+  created: .createdAt,
+  body: .body
+}'
+
+# 2. Inline code review comments (line-specific)
+gh api repos/OWNER/REPO/pulls/$ARGUMENTS/comments --jq '.[] | {
+  author: .user.login,
+  file: .path,
+  line: .line,
+  body: .body
+}'
+
+# 3. Review summaries (overall review state and comments)
+gh pr view $ARGUMENTS --json reviews --jq '.reviews[] | {
+  author: .author.login,
+  state: .state,
+  body: .body,
+  submittedAt: .submittedAt
+}'
+```
+
+**Step 2: Analyze All Feedback**
+
+Read through every comment, review, and inline suggestion. For each piece of feedback:
+- Identify distinct, actionable recommendations
+- Note which items are related and could be grouped
+
+**Step 3: Create Issues**
+
+For each actionable item you identify:
+
+```bash
+gh issue create \
+  --title "PR #$ARGUMENTS - [descriptive title]" \
+  --body "[detailed description with context]"
+```
+
+**Guidelines for Issue Creation:**
+
+- **Large analyzer reports** (test quality, code quality): Parse them to extract individual issues
+  - Example: Don't create 1 issue for "test quality report"
+  - DO create: Issue for "6 placeholder tests", separate issue for "missed dose coverage", etc.
+- **Related recommendations**: Group similar items into one issue when it makes sense
+  - Example: 4 Copilot comments about "hardcoded scheduledDoseId" → 1 grouped issue
+- **Individual comments**: Each specific recommendation gets its own issue
+- **Context**: Include enough detail so the issue can be understood without reading the PR
+- **Traceability**: Always prefix with "PR #$ARGUMENTS - "
+
+**Important:**
+- Use your judgment - this is NOT automated
+- Parse long reports carefully to extract all actionable items
+- Don't skip the analyzer reports - they contain the most important feedback
+- Check for duplicates before creating issues
+
+#### 5.2. Triage & Label GitHub Issues
+For each newly created issue from the PR comments, evaluate, prioritize and label.
 
 - Evaluate each new issue
 - Read the issue
@@ -138,6 +190,11 @@ For each newly created issue from the PR comments, evaluate and prioritize:
   - [P2] Optional: Can be deferred until after merge
   - [P3] Low: Minor improvement, no immediate action needed
   - [wont-fix] Won't fix: Not applicable or not worth addressing
+
+```bash
+gh issue edit [issue-number] --add-label [label]
+```
+
 - Comment on each issue with your evaluation and reasoning:
 ```
 **Priority Evaluation: [priority number] (priority-meaning)**
