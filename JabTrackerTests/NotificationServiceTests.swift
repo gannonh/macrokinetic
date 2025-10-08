@@ -24,8 +24,8 @@ struct NotificationServiceTests {
     }
 
     /// Create mock notification center for testing
-    private func createMockNotificationCenter() -> UNUserNotificationCenter {
-        .current()  // Using real center for now, could mock later
+    private func createMockNotificationCenter() -> MockNotificationCenter {
+        MockNotificationCenter()
     }
 
     // MARK: - Authorization Tests (5 tests)
@@ -155,8 +155,8 @@ struct NotificationServiceTests {
         // WHEN: Service initializes
         // Categories are registered in init
 
-        // THEN: Categories should be registered (verify by getting categories)
-        let categories = await notificationCenter.notificationCategories()
+        // THEN: Categories should be registered (verify through mock's stored categories)
+        let categories = notificationCenter.setCategories
 
         // Verify both categories exist
         let categoryIdentifiers = categories.map { $0.identifier }
@@ -253,9 +253,10 @@ struct NotificationServiceTests {
     func testScheduleDoseReminderDefaultOffset() async throws {
         // GIVEN: ScheduledDose in the future and NotificationService
         let scheduleService = try createTestScheduleService()
+        let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
-            notificationCenter: createMockNotificationCenter()
+            notificationCenter: mockCenter
         )
 
         // Create a scheduled dose 2 hours in the future
@@ -270,18 +271,21 @@ struct NotificationServiceTests {
         // WHEN: Schedule reminder with default offset (-1 hour)
         try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
-        // THEN: Notification should be scheduled without error
-        // The method should not throw and should execute successfully
-        #expect(true, "Dose reminder scheduled with default offset")
+        // THEN: Notification should be scheduled
+        #expect(mockCenter.addedRequests.count == 1, "Should create one pending notification")
+        let request = try #require(mockCenter.addedRequests.first)
+        #expect(request.content.categoryIdentifier == "DOSE_REMINDER", "Should have DOSE_REMINDER category")
+        #expect(request.identifier == scheduledDose.id.uuidString, "Should use scheduled dose ID as identifier")
     }
 
     @Test("Schedule dose reminder - custom offset")
     func testScheduleDoseReminderCustomOffset() async throws {
         // GIVEN: ScheduledDose in the future and NotificationService
         let scheduleService = try createTestScheduleService()
+        let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
-            notificationCenter: createMockNotificationCenter()
+            notificationCenter: mockCenter
         )
 
         // Create a scheduled dose 4 hours in the future
@@ -298,16 +302,20 @@ struct NotificationServiceTests {
         try await notificationService.scheduleDoseReminder(for: scheduledDose, reminderOffset: customOffset)
 
         // THEN: Notification should be scheduled successfully
-        #expect(true, "Dose reminder scheduled with custom offset")
+        #expect(mockCenter.addedRequests.count == 1, "Should create one pending notification")
+        let request = try #require(mockCenter.addedRequests.first)
+        #expect(request.content.categoryIdentifier == "DOSE_REMINDER", "Should have DOSE_REMINDER category")
+        #expect(request.identifier == scheduledDose.id.uuidString, "Should use scheduled dose ID as identifier")
     }
 
     @Test("Schedule dose reminder - past time skipped")
     func testScheduleDoseReminderPastTimeSkipped() async throws {
         // GIVEN: ScheduledDose in the past and NotificationService
         let scheduleService = try createTestScheduleService()
+        let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
-            notificationCenter: createMockNotificationCenter()
+            notificationCenter: mockCenter
         )
 
         // Create a scheduled dose in the past
@@ -322,9 +330,8 @@ struct NotificationServiceTests {
         // WHEN: Attempt to schedule reminder for past dose
         try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
-        // THEN: Method should complete without error (skips past notifications)
-        // Implementation logs and skips - no exception thrown
-        #expect(true, "Past dose notification skipped gracefully")
+        // THEN: Should NOT schedule notification for past dose
+        #expect(mockCenter.addedRequests.isEmpty, "Should not schedule notification for past dose")
     }
 
     @Test("Cancel notification removes from queue")
