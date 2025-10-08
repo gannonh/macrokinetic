@@ -268,7 +268,7 @@ struct NotificationServiceTests {
         )
 
         // WHEN: Schedule reminder with default offset (-1 hour)
-        try notificationService.scheduleDoseReminder(for: scheduledDose)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
         // THEN: Notification should be scheduled without error
         // The method should not throw and should execute successfully
@@ -295,7 +295,7 @@ struct NotificationServiceTests {
 
         // WHEN: Schedule reminder with custom offset (-30 minutes)
         let customOffset: TimeInterval = -30 * 60
-        try notificationService.scheduleDoseReminder(for: scheduledDose, reminderOffset: customOffset)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose, reminderOffset: customOffset)
 
         // THEN: Notification should be scheduled successfully
         #expect(true, "Dose reminder scheduled with custom offset")
@@ -320,7 +320,7 @@ struct NotificationServiceTests {
         )
 
         // WHEN: Attempt to schedule reminder for past dose
-        try notificationService.scheduleDoseReminder(for: scheduledDose)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
         // THEN: Method should complete without error (skips past notifications)
         // Implementation logs and skips - no exception thrown
@@ -346,7 +346,7 @@ struct NotificationServiceTests {
         )
 
         // Schedule the notification
-        try notificationService.scheduleDoseReminder(for: scheduledDose)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
         // Add to queue manually (since we're not using ScheduleService integration yet)
         let pendingNotification = PendingNotification(
@@ -390,7 +390,7 @@ struct NotificationServiceTests {
             windowEnd: futureTime.addingTimeInterval(2 * 60 * 60)
         )
 
-        try notificationService.scheduleDoseReminder(for: scheduledDose)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
         // WHEN: Cancel the notification
         notificationService.cancelNotification(for: scheduledDose)
@@ -449,7 +449,7 @@ struct NotificationServiceTests {
         )
 
         // WHEN: Schedule reminder
-        try notificationService.scheduleDoseReminder(for: scheduledDose)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
         // THEN: Pending notification request should be created
         // Note: There's a small delay in the completion handler, so we check count increased
@@ -476,7 +476,7 @@ struct NotificationServiceTests {
         )
 
         // WHEN: Schedule reminder
-        try notificationService.scheduleDoseReminder(for: scheduledDose)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
         // THEN: Request should be created with userInfo containing scheduledDoseId
         // We verify this by checking the scheduled request
@@ -601,7 +601,7 @@ struct NotificationServiceTests {
         )
 
         // WHEN: Schedule with default offset (-1 hour)
-        try notificationService.scheduleDoseReminder(for: scheduledDose)
+        try await notificationService.scheduleDoseReminder(for: scheduledDose)
 
         // THEN: Trigger should be 1 hour before scheduled time
         let expectedTrigger = scheduledTime.addingTimeInterval(-3600)

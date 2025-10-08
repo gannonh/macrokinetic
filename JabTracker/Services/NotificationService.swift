@@ -33,7 +33,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     internal let scheduleService: ScheduleService
 
     /// User notification center for scheduling and managing notifications
-    internal let notificationCenter: UNUserNotificationCenter
+    internal var notificationCenter: NotificationCenterProtocol
 
     /// Current notification queue (pending notifications)
     var notificationQueue: [PendingNotification] = []
@@ -58,7 +58,10 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      *
      * - Note: Sets self as UNUserNotificationCenter delegate and registers notification categories
      */
-    init(scheduleService: ScheduleService, notificationCenter: UNUserNotificationCenter = .current()) {
+    init(
+        scheduleService: ScheduleService,
+        notificationCenter: NotificationCenterProtocol = UNUserNotificationCenter.current()
+    ) {
         self.scheduleService = scheduleService
         self.notificationCenter = notificationCenter
         super.init()
@@ -208,7 +211,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
         // Schedule notifications for upcoming doses
         for scheduledDose in dosesToSchedule {
-            try scheduleDoseReminder(for: scheduledDose)
+            try await scheduleDoseReminder(for: scheduledDose)
         }
         logger.debug("Scheduled \(dosesToSchedule.count) dose reminders")
 
@@ -251,7 +254,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      *   - reminderOffset: Time offset before dose (negative value, default: -3600 seconds / -1 hour)
      * - Throws: NotificationServiceError.schedulingFailed if notification cannot be scheduled
      */
-    func scheduleDoseReminder(for scheduledDose: ScheduledDose, reminderOffset: TimeInterval = -3600) throws {
+    func scheduleDoseReminder(for scheduledDose: ScheduledDose, reminderOffset: TimeInterval = -3600) async throws {
         logger.info("Scheduling dose reminder for dose: \(scheduledDose.id)")
 
         // Calculate trigger time
@@ -286,12 +289,11 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         )
 
         // Schedule notification
-        notificationCenter.add(request) { error in
-            if let error = error {
-                self.logger.error("Failed to schedule notification: \(error.localizedDescription)")
-            } else {
-                self.logger.info("Notification scheduled for \(triggerDate)")
-            }
+        do {
+            try await notificationCenter.add(request)
+            logger.info("Notification scheduled for \(triggerDate)")
+        } catch {
+            logger.error("Failed to schedule notification: \(error.localizedDescription)")
         }
     }
 
