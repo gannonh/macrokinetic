@@ -21,8 +21,15 @@ class OnboardingViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
+    // Schedule configuration properties
+    @Published var schedulePattern: SchedulePatternType = .weekly
+    @Published var reminderMinutes: Int = 60  // 1 hour before
+    @Published var enableMultipleReminders: Bool = false
+    @Published var customScheduleValid: Bool = false
+
     private let dataController: DataController
     private let authManager: AuthenticationManager
+    private let pkEngine = PharmacokineticsEngine()
 
     // Test hooks (internal so testable with @testable import). In production these remain nil.
     // They allow unit tests to simulate HealthKit availability and forced authorization result
@@ -56,6 +63,8 @@ class OnboardingViewModel: ObservableObject {
             return self.selectedMedication != nil
         case .doseSetup:
             return self.selectedDose > 0 && !self.selectedSites.isEmpty  // Require at least one site
+        case .scheduleSetup:
+            return validateScheduleConfiguration()
         case .notifications, .healthKit, .subscription:
             return true
         }
@@ -218,6 +227,7 @@ enum OnboardingStep: String, CaseIterable {
     case welcome
     case medicationSelection = "medication"
     case doseSetup = "dose"
+    case scheduleSetup = "schedule"
     case notifications
     case healthKit = "health"
     case subscription
@@ -230,6 +240,8 @@ enum OnboardingStep: String, CaseIterable {
             return "Select Your Medication"
         case .doseSetup:
             return "Set Up Your First Dose"
+        case .scheduleSetup:
+            return "Set Up Your Schedule"
         case .notifications:
             return "Enable Notifications"
         case .healthKit:
