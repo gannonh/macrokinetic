@@ -115,9 +115,11 @@
       "View modifiers",
       "SwiftUI-specific presentation logic",
       "App entry points",
-      "Design system components"
+      "Design system components",
+      "Protocol definitions"
     ],
     "files": [
+      "Services/NotificationCenterProtocol.swift",
       "Models/SubscriptionProducts.swift",
       "ContentView.swift",
       "JabTrackerApp.swift",

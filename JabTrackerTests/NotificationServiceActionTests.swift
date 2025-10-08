@@ -24,7 +24,7 @@ struct NotificationServiceActionTests {
         let scheduleService = ScheduleService(context: context)
         let notificationService = NotificationService(
             scheduleService: scheduleService,
-            notificationCenter: .current()
+            notificationCenter: UNUserNotificationCenter.current()
         )
 
         return (notificationService, scheduleService, context)
@@ -348,20 +348,114 @@ struct NotificationServiceActionTests {
 
     @Test("scheduleMissedDoseAlert creates notification for missed dose")
     func testScheduleMissedDoseAlert() async throws {
-        // TODO: This test requires proper UNUserNotificationCenter mocking/verification
-        // UNUserNotificationCenter in unit tests doesn't reliably persist pending notifications
-        // for verification. The scheduling logic is tested through integration in other tests.
-        // Will be properly validated in UI/E2E tests where notifications can be observed.
-        #expect(true)  // Placeholder until E2E testing phase
+        // GIVEN: Service with mock notification center
+        let container = try TestDataSeeding.createTestContainer()
+        let context = container.mainContext
+
+        let mockCenter = MockNotificationCenter()
+        let scheduleService = ScheduleService(context: context)
+        let service = NotificationService(
+            scheduleService: scheduleService,
+            notificationCenter: mockCenter
+        )
+
+        // Create a missed dose with medication profile
+        let medication = TestDataSeeding.createTestMedicationProfile()
+        medication.brandName = "Ozempic"
+        context.insert(medication)
+
+        let schedule = DoseSchedule(medicationProfile: medication)
+        context.insert(schedule)
+
+        let missedTime = Date().addingTimeInterval(-3600)  // 1 hour ago
+        let missedDose = ScheduledDose(
+            scheduledTime: missedTime,
+            doseAmount: 0.5,
+            windowStart: missedTime.addingTimeInterval(-7200),
+            windowEnd: missedTime.addingTimeInterval(7200)
+        )
+        missedDose.schedule = schedule
+        context.insert(missedDose)
+        try context.save()
+
+        // WHEN: scheduleMissedDoseAlert is called
+        try await service.scheduleMissedDoseAlert(for: missedDose)
+
+        // THEN: Notification request was added
+        #expect(mockCenter.addedRequests.count == 1)
+
+        let request = try #require(mockCenter.addedRequests.first)
+        #expect(request.content.categoryIdentifier == "MISSED_DOSE")
+        #expect(request.content.title == "Missed Dose Alert")
+        #expect(request.content.body.contains("Ozempic"))
+        #expect(request.content.sound == .default)
+        #expect(request.identifier.hasPrefix("missed-"))
+
+        // Verify userInfo contains scheduled dose ID
+        let doseIDString = request.content.userInfo["scheduledDoseId"] as? String
+        #expect(doseIDString == missedDose.id.uuidString)
     }
 
     @Test("processMissedDoses detects and schedules alerts")
     func testProcessMissedDoses() async throws {
-        // TODO: This test requires proper UNUserNotificationCenter mocking/verification
-        // UNUserNotificationCenter in unit tests doesn't reliably persist pending notifications
-        // for verification. The scheduling logic is tested through integration in other tests.
-        // Will be properly validated in UI/E2E tests where notifications can be observed.
-        #expect(true)  // Placeholder until E2E testing phase
+        // GIVEN: Service with mock notification center and multiple missed doses
+        let container = try TestDataSeeding.createTestContainer()
+        let context = container.mainContext
+
+        let mockCenter = MockNotificationCenter()
+        let scheduleService = ScheduleService(context: context)
+        let service = NotificationService(
+            scheduleService: scheduleService,
+            notificationCenter: mockCenter
+        )
+
+        // Create medication profile
+        let medication = TestDataSeeding.createTestMedicationProfile()
+        medication.brandName = "Mounjaro"
+        context.insert(medication)
+
+        let schedule = DoseSchedule(medicationProfile: medication)
+        context.insert(schedule)
+
+        // Create 3 missed doses (past window end)
+        for index in 1...3 {
+            // Schedule doses far enough back that their windows have passed
+            let missedTime = Date().addingTimeInterval(Double(-(index + 2)) * 3600)  // 3, 4, 5 hours ago
+            let missedDose = ScheduledDose(
+                scheduledTime: missedTime,
+                doseAmount: 0.5,
+                windowStart: missedTime.addingTimeInterval(-7200),  // 2 hours before
+                windowEnd: missedTime.addingTimeInterval(7200)  // 2 hours after (now 1, 2, 3 hours ago - all past)
+            )
+            missedDose.schedule = schedule
+            context.insert(missedDose)
+        }
+
+        // Create 1 future dose (not missed)
+        let futureTime = Date().addingTimeInterval(3600)
+        let futureDose = ScheduledDose(
+            scheduledTime: futureTime,
+            doseAmount: 0.5,
+            windowStart: futureTime.addingTimeInterval(-7200),
+            windowEnd: futureTime.addingTimeInterval(7200)
+        )
+        futureDose.schedule = schedule
+        context.insert(futureDose)
+
+        try context.save()
+
+        // WHEN: processMissedDoses is called
+        try await service.processMissedDoses()
+
+        // THEN: 3 notifications should be scheduled (one for each missed dose)
+        #expect(mockCenter.addedRequests.count == 3)
+
+        // Verify all notifications are MISSED_DOSE category
+        for request in mockCenter.addedRequests {
+            #expect(request.content.categoryIdentifier == "MISSED_DOSE")
+            #expect(request.content.title == "Missed Dose Alert")
+            #expect(request.content.body.contains("Mounjaro"))
+        }
     }
 }
 

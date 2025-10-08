@@ -157,7 +157,7 @@ extension NotificationService {
         try context.save()
 
         // Schedule notification for snoozed dose (immediate - no offset)
-        try scheduleDoseReminder(for: snoozedDose, reminderOffset: 0)
+        try await scheduleDoseReminder(for: snoozedDose, reminderOffset: 0)
 
         actionLogger.info("Successfully snoozed dose notification for 1 hour")
     }
