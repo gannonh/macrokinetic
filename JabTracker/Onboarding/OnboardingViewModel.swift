@@ -29,7 +29,7 @@ class OnboardingViewModel: ObservableObject {
 
     private let dataController: DataController
     private let authManager: AuthenticationManager
-    private let pkEngine = PharmacokineticsEngine()
+    let pkEngine = PharmacokineticsEngine()  // Internal for ScheduleSetupView access
 
     // Test hooks (internal so testable with @testable import). In production these remain nil.
     // They allow unit tests to simulate HealthKit availability and forced authorization result
