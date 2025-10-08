@@ -47,6 +47,13 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Logger for notification service operations
     internal let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
 
+    // MARK: - Constants
+
+    /// Keys for notification userInfo dictionary
+    enum UserInfoKeys {
+        static let scheduledDoseId = "scheduledDoseId"
+    }
+
     // MARK: - Initialization
 
     /**
@@ -220,7 +227,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         notificationQueue = pendingRequests.compactMap { request in
             guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
                 let triggerDate = trigger.nextTriggerDate(),
-                let doseIDString = request.content.userInfo["scheduledDoseId"] as? String,
+                let doseIDString = request.content.userInfo[UserInfoKeys.scheduledDoseId] as? String,
                 let doseID = UUID(uuidString: doseIDString)
             else {
                 return nil
@@ -274,7 +281,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         content.categoryIdentifier = "DOSE_REMINDER"
 
         // Include scheduledDoseId in userInfo for action handling
-        content.userInfo = ["scheduledDoseId": scheduledDose.id.uuidString]
+        content.userInfo = [UserInfoKeys.scheduledDoseId: scheduledDose.id.uuidString]
 
         // Create calendar trigger
         let calendar = Calendar.current

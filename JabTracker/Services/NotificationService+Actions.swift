@@ -51,7 +51,9 @@ extension NotificationService {
         actionLogger.info("Handling notification response: \(response.actionIdentifier)")
 
         // Extract scheduled dose ID from user info
-        guard let doseIDString = response.notification.request.content.userInfo["scheduledDoseId"] as? String,
+        guard
+            let doseIDString = response.notification.request.content.userInfo[
+                NotificationService.UserInfoKeys.scheduledDoseId] as? String,
             let doseID = UUID(uuidString: doseIDString)
         else {
             actionLogger.error("Missing or invalid scheduledDoseId in notification user info")
@@ -81,10 +83,7 @@ extension NotificationService {
         let context = scheduleService.context
 
         // Get medication profile
-        guard let medicationProfile = scheduledDose.schedule?.medicationProfile else {
-            actionLogger.error("Scheduled dose missing medication profile")
-            throw NotificationServiceError.invalidScheduledDose
-        }
+        let medicationProfile = try validateMedicationProfile(for: scheduledDose)
 
         // Create actual dose at current time
         let dose = Dose(
@@ -113,10 +112,7 @@ extension NotificationService {
         let context = scheduleService.context
 
         // Validate medication profile exists
-        guard scheduledDose.schedule?.medicationProfile != nil else {
-            actionLogger.error("Scheduled dose missing medication profile")
-            throw NotificationServiceError.invalidScheduledDose
-        }
+        _ = try validateMedicationProfile(for: scheduledDose)
 
         // Mark scheduled dose as skipped
         scheduledDose.skippedAt = Date()
@@ -195,10 +191,7 @@ extension NotificationService {
         actionLogger.info("Scheduling missed dose alert for: \(scheduledDose.id)")
 
         // Get medication profile
-        guard let medicationProfile = scheduledDose.schedule?.medicationProfile else {
-            actionLogger.error("Scheduled dose missing medication profile")
-            throw NotificationServiceError.invalidScheduledDose
-        }
+        let medicationProfile = try validateMedicationProfile(for: scheduledDose)
 
         // Create notification content for missed dose
         let content = UNMutableNotificationContent()
@@ -207,7 +200,7 @@ extension NotificationService {
         content.body = "You missed your \(medicationProfile.brandName) dose scheduled for \(scheduledTime)"
         content.sound = .default
         content.categoryIdentifier = "MISSED_DOSE"
-        content.userInfo = ["scheduledDoseId": scheduledDose.id.uuidString]
+        content.userInfo = [NotificationService.UserInfoKeys.scheduledDoseId: scheduledDose.id.uuidString]
 
         // Schedule for immediate delivery (1 second from now to ensure delivery)
         let triggerDate = Date().addingTimeInterval(1)
@@ -241,6 +234,21 @@ extension NotificationService {
     }
 
     // MARK: - Helper Methods
+
+    /// Validate and extract medication profile from scheduled dose
+    ///
+    /// - Parameter scheduledDose: The scheduled dose to validate
+    /// - Returns: The medication profile associated with the scheduled dose
+    /// - Throws: NotificationServiceError.invalidScheduledDose if profile is missing
+    private func validateMedicationProfile(
+        for scheduledDose: ScheduledDose
+    ) throws -> MedicationProfile {
+        guard let medicationProfile = scheduledDose.schedule?.medicationProfile else {
+            actionLogger.error("Scheduled dose missing medication profile")
+            throw NotificationServiceError.invalidScheduledDose
+        }
+        return medicationProfile
+    }
 
     /// Format time for display in notifications
     private func formatTime(_ date: Date) -> String {
