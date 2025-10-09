@@ -286,12 +286,8 @@ class OnboardingViewModel: ObservableObject {
     /// - Returns: true if user already has profiles (onboarding marked complete), false otherwise
     /// - Throws: SwiftData fetch errors
     private func checkAndPreventDuplicateProfiles(for user: User, in context: ModelContext) throws -> Bool {
-        let existingProfilesDesc = FetchDescriptor<MedicationProfile>(
-            predicate: #Predicate { profile in
-                profile.user?.id == user.id
-            }
-        )
-        let existingProfiles = try context.fetch(existingProfilesDesc)
+        // Use the user's medicationProfiles relationship to check for existing profiles
+        let existingProfiles = user.medicationProfiles ?? []
 
         #if DEBUG
             print("   🔍 Checking for existing profiles...")
