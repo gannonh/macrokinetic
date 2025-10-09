@@ -32,6 +32,7 @@ struct ConcentrationLabel: View {
                     .foregroundColor(.primary)
             }
         }
+        .accessibilityIdentifier("concentration-label-\(title.lowercased())")
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(String(format: "%.2f", value))")
     }
