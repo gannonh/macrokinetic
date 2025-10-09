@@ -194,6 +194,35 @@ class OnboardingViewModel: ObservableObject {
         }
     }
 
+    /// Saves schedule configuration and proceeds to next onboarding step if valid
+    func saveScheduleConfiguration(
+        pattern: SchedulePatternType,
+        reminderMinutes: Int,
+        enableMultiple: Bool
+    ) {
+        // Temporarily save pattern to validate
+        let originalPattern = self.schedulePattern
+        self.schedulePattern = pattern
+
+        // Validate configuration
+        guard validateScheduleConfiguration() else {
+            // Restore original pattern on validation failure
+            self.schedulePattern = originalPattern
+            self.errorMessage = "Invalid schedule configuration. Please check your custom schedule settings."
+            return
+        }
+
+        // Update remaining configuration properties
+        self.reminderMinutes = reminderMinutes
+        self.enableMultipleReminders = enableMultiple
+
+        // Clear any previous errors
+        self.errorMessage = nil
+
+        // Proceed to next step
+        moveToNextStep()
+    }
+
     func completeOnboarding() async throws {
         guard let user = authManager.currentUser,
             let selectedMedication
