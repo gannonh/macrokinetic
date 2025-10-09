@@ -491,12 +491,72 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
     func testVoiceOverNavigation() throws {
         // GIVEN: User is on schedule setup step
-        // WHEN: VoiceOver is enabled
+        try navigateToScheduleSetup()
+
+        // WHEN: VoiceOver is enabled (simulated by checking accessibility properties)
+        // Note: XCUITest doesn't simulate actual VoiceOver, but we can verify accessibility properties
+
         // THEN: All pattern cards are accessible with descriptive labels
+        let weeklyCard = app.buttons["pattern-card-weekly"]
+        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let customCard = app.buttons["pattern-card-custom"]
+
+        XCTAssertTrue(weeklyCard.exists, "Weekly pattern card should exist")
+        XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should exist")
+        XCTAssertTrue(customCard.exists, "Custom pattern card should exist")
+
+        // Verify pattern cards have descriptive labels for VoiceOver
+        XCTAssertEqual(weeklyCard.label, "Standard Weekly", "Weekly card should have descriptive label")
+        XCTAssertEqual(
+            splitDoseCard.label, "Split Dose (Twice Weekly)",
+            "Split dose card should have descriptive label")
+        XCTAssertEqual(customCard.label, "Custom Pattern", "Custom card should have descriptive label")
+
+        print("📊 Pattern cards accessibility verified")
+
         // THEN: Concentration preview has accessibility label describing trend
+        let peakLabel = app.staticTexts.matching(identifier: "concentration-label-peak").element(boundBy: 0)
+        let troughLabel = app.staticTexts.matching(identifier: "concentration-label-trough").element(boundBy: 0)
+
+        XCTAssertTrue(peakLabel.exists, "Peak concentration label should exist")
+        XCTAssertTrue(troughLabel.exists, "Trough concentration label should exist")
+
+        // Verify labels have proper accessibility values
+        XCTAssertEqual(peakLabel.label, "Peak", "Peak label should have proper accessibility label")
+        XCTAssertEqual(troughLabel.label, "Trough", "Trough label should have proper accessibility label")
+
+        print("📊 Concentration preview accessibility verified")
+
         // THEN: Reminder picker announces selected value
+        let reminderPicker = app.buttons["reminder-time-picker"]
+        XCTAssertTrue(reminderPicker.exists, "Reminder picker should exist")
+
+        // Verify picker has accessibility value
+        let pickerValue = reminderPicker.value as? String
+        XCTAssertNotNil(pickerValue, "Reminder picker should have accessibility value")
+        print("📊 Reminder picker accessibility value: \(pickerValue ?? "nil")")
+
         // THEN: Multiple reminders toggle announces state
+        let multipleRemindersToggle = app.switches["Enable multiple reminders"]
+        XCTAssertTrue(multipleRemindersToggle.exists, "Multiple reminders toggle should exist")
+
+        // Verify toggle has proper accessibility value indicating state
+        let toggleValue = multipleRemindersToggle.value as? String
+        XCTAssertNotNil(toggleValue, "Toggle should have accessibility value indicating state")
+        print("📊 Multiple reminders toggle accessibility value: \(toggleValue ?? "nil")")
+
         // THEN: Continue button announces enabled/disabled state with reason
+        let continueButton = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(continueButton.exists, "Continue button should exist")
+        XCTAssertTrue(continueButton.isEnabled, "Continue button should be enabled with pattern selected")
+
+        // Verify button has proper accessibility label
+        let buttonLabel = continueButton.label
+        XCTAssertFalse(buttonLabel.isEmpty, "Continue button should have accessibility label")
+        print("📊 Continue button accessibility label: \(buttonLabel)")
+        print("📊 Continue button enabled state: \(continueButton.isEnabled)")
+
+        print("📊 All accessibility properties verified for VoiceOver navigation")
     }
 
     // MARK: - PERFORMANCE: Chart preview rendering
