@@ -394,6 +394,15 @@ struct UserAnalyticsSummary {
 - **Debug-First Methodology**: ALWAYS use `TestUtilities.debugElements()` before writing element selectors to understand actual accessibility hierarchy
 - **Test Quality Standards**: Write acceptance criteria first as spec; if elements missing/incomplete/wrong, implementation needs work, NOT test weakening
 
+### Onboarding Integration E2E Testing Patterns (Issue #177)
+- **Back Button Access Pattern**: SwiftUI NavigationStack back buttons require explicit accessibility identifier (`app.buttons["onboarding-back-button"]`) - navigation bar element queries (`app.navigationBars.buttons.element(boundBy: 0)`) unreliable
+- **Iterative Test Development Success**: Implementing 12 E2E tests one at a time with debug-first approach achieved 100% pass rate on first full suite run (211 seconds total)
+- **Strategic Sleep Timing**: Use `sleep(3)` for navigation between onboarding steps and view rendering, `usleep(50_000)` for UI update timing - ensures reliable test execution
+- **State Preservation Validation**: Back/forward navigation tests confirm OnboardingViewModel maintains state (pattern selection, toggle values) across navigation - critical for onboarding UX
+- **Accessibility Without VoiceOver Simulation**: Validate accessibility properties (labels, values, hints) without simulating actual VoiceOver - enables efficient CI/CD accessibility testing
+- **Integration Test Flow Patterns**: Handle optional screens (notifications permission) with `waitForExistence(timeout:)` conditional logic - enables flexible onboarding flow validation
+- **Performance Testing Timeouts**: E2E tests use < 1 second timeouts (not < 200ms unit test expectations) - reflects real user interaction timing and chart rendering performance
+
 ## SwiftUI Calendar & Modal Testing Patterns (Issue #56)
 
 ### SwiftUI Calendar Integration Patterns
@@ -473,6 +482,7 @@ struct UserAnalyticsSummary {
 - **Review History**: Track feedback and implementation status over time
 
 ## Update History
+- 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing Patterns from Issue #177 - back button access patterns, iterative test development success, strategic sleep timing, state preservation validation, accessibility testing without VoiceOver simulation, and performance testing timeouts
 - 2025-10-08T20:37:55Z: Added NotificationService Parallel Development Patterns from Issue #176 - 3-stream parallel coordination, extension architecture, protocol-based testability, and UNUserNotificationCenter testing limitations
 - 2025-10-06T20:59:29Z: Added Hybrid Parallel Development Strategy from Issue #175 - phase-based parallelization, extension architecture, @Observable service pattern, error enum coordination, and commit strategies for parallel streams
 - 2025-10-05T23:08:25Z: Added SwiftData CloudKit relationship patterns from Issue #174 (dose scheduling models) - CloudKit requirements, circular reference prevention, timing precision, and ModelConfiguration completeness

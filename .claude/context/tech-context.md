@@ -334,6 +334,24 @@ author: Claude Code PM System
 - **Category Per Service**: Each service gets its own logging category for easy filtering and debugging
 - **Extension Logging**: Extensions inherit logging category from base service for consistent log organization
 
+## Onboarding Integration E2E Testing (Issue #177)
+
+### XCUITest Back Button Access Patterns
+- **Back Button Element Discovery**: SwiftUI back buttons in NavigationStack require explicit accessibility identifier (`app.buttons["onboarding-back-button"]`) - navigation bar queries (`app.navigationBars.buttons.element(boundBy: 0)`) unreliable
+- **Debug Output Verification**: `TestUtilities.debugElements()` reveals back button in Buttons list with specific identifier - more reliable than accessibility hierarchy assumptions
+- **Element Type Verification**: Back buttons appear as standard Button elements in accessibility hierarchy, not as NavigationBar sub-elements
+
+### Onboarding Flow E2E Testing Patterns
+- **Schedule Setup Integration**: E2E tests validate complete onboarding flow (welcome → medication → dose → schedule setup → notifications → main app)
+- **Optional Screen Handling**: Use `waitForExistence(timeout:)` for optional screens like notifications permission - enables flexible flow validation
+- **Tab Bar Verification**: Tab bar existence sufficient for main app verification in integration tests - confirms successful onboarding completion
+- **Navigation Timing**: Strategic `sleep(3)` placement for navigation between onboarding steps - ensures view rendering completion
+
+### Concentration Chart Preview Performance
+- **Chart Rendering Validation**: Concentration curve preview renders reliably in < 1 second during onboarding schedule setup - meets NFR1 requirement
+- **Pattern Update Performance**: Chart updates on schedule pattern change complete within E2E-appropriate timeouts (< 1s) - validated through performance tests
+- **Swift Charts Integration**: PharmacokineticsEngine integration with Swift Charts for onboarding concentration preview demonstrates medical-grade chart rendering performance
+
 ## NotificationService Architecture (Issue #176)
 
 ### iOS User Notifications Framework Integration
@@ -349,6 +367,7 @@ author: Claude Code PM System
 - **Test Isolation Benefits**: Protocol-based mocking enables testing notification logic in isolation from iOS system frameworks - critical for reliable CI/CD test execution
 
 ## Update History
+- 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing section (Issue #177) - XCUITest back button access patterns, onboarding flow E2E testing patterns, and concentration chart preview performance validation for schedule setup integration
 - 2025-10-08T20:37:55Z: Added NotificationService Architecture section (Issue #176) - iOS User Notifications Framework integration, UNUserNotificationCenter testing patterns, protocol-based abstraction, and mock framework design for notification workflows
 - 2025-10-06T20:59:29Z: Added ScheduleService Architecture section (Issue #175) - Swift extension compilation requirements, ScheduleConfiguration Codable pattern, SwiftData soft delete pattern, and OSLog category organization for parallel service development
 - 2025-10-05T23:08:25Z: Added Dose Scheduling Models Integration section (Issue #174) with SwiftData testing anti-patterns, coverage patterns for computed properties, and parallel development success patterns

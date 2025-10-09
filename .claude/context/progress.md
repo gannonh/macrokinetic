@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-08T20:37:55Z
-version: 4.0
+last_updated: 2025-10-09T20:27:54Z
+version: 4.1
 author: Claude Code PM System
 ---
 
@@ -9,27 +9,38 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: main
-- **Last Commit**: 6e7da29 - chore: Close issue #176 - NotificationService implementation complete
-- **Status**: Issue #176 CLOSED - PR #203 merged to main, epic progress 30% (3/10 tasks)
+- **Branch**: issue/177-onboarding-integration
+- **Last Commit**: 0867d84 - Issue #177: sync to GitHub (last_sync: 2025-10-09T20:24:17Z)
+- **Status**: Issue #177 COMPLETE - All 3 streams finished (UI, ViewModel, E2E Testing), ready for code review
 
 ## Recent Work (Last 10 Commits)
-1. **6e7da29** - chore: Close issue #176 - NotificationService implementation complete
-2. **4134ea7** - Fix for #204, #207, #208, #213: Code quality improvements from PR #203 review
-3. **e070077** - fix(#205): Remove/fix 6 placeholder tests that always pass
-4. **f0911bc** - fix(#206): Add comprehensive test coverage for missed dose alerts
-5. **b93d7fb** - Fix for #210 & #209: Connect notification delegates and complete background refresh integration
-6. **388fc94** - chore: Enhance PR feedback processing and code quality analysis
-7. **df4d534** - Issue #176: update progress tracking
-8. **b82a018** - fix(NotificationService): Complete Stream C implementation and achieve 100% test pass rate
-9. **a23877d** - Issue #176: Implement all 25 NotificationService tests with real assertions
-10. **f16a0c6** - Issue #176: Update Stream A progress (65% - TDD started)
+1. **0867d84** - Issue #177: sync to GitHub (last_sync: 2025-10-09T20:24:17Z)
+2. **098505a** - Issue #177: update progress tracking
+3. **3d45a6e** - docs(#177): Complete Stream C progress documentation
+4. **c828e16** - feat(#177): Implement test #12 - Back navigation preserves state (PASSING - 22.7s)
+5. **d1a2974** - test(#177): Add E2E test #11 - Chart Preview Performance (PASSING - 14.4s)
+6. **e1f2845** - test(#177): Add E2E test #10 - VoiceOver Navigation Accessibility (PASSING - 14.1s)
+7. **54bb2c0** - test(#177): Add E2E test #9 - Complete Onboarding with Split-Dose Schedule (PASSING - 22.2s)
+8. **530b3a6** - test(#177): Add E2E test #8 - Complete Onboarding with Weekly Schedule (PASSING)
+9. **f0a41ce** - test(#177): Add E2E test #7 - Continue Button Validation (PASSING)
+10. **67419eb** - test(#177): Add E2E test #6 - Multiple Reminders Toggle (PASSING)
 
 ## Current Working Directory Status
 - **Modified Files**: Context documentation updates in progress
-- **Branch Status**: main (up to date with origin/main)
-- **Current Phase**: Issue #176 CLOSED - Dose Scheduling Epic at 30% (3/10 tasks)
-- **Recent Session Work** (2025-10-07 - Issue #176):
+- **Branch Status**: issue/177-onboarding-integration (all changes committed)
+- **Current Phase**: Issue #177 COMPLETE - Onboarding Schedule Setup with E2E Testing
+- **Recent Session Work** (2025-10-09 - Issue #177):
+  - 🎉 **Issue #177 COMPLETE**: Onboarding Schedule Setup - All 12 E2E tests passing (211 seconds)
+  - ✅ **Stream A (100% complete)**: UI Components (ScheduleSetupView, SchedulePatternCard, ConcentrationCurvePreview, ReminderPreferencesView)
+  - ✅ **Stream B (100% complete)**: ViewModel Integration (saveScheduleConfiguration, createInitialSchedule methods - 13 tests)
+  - ✅ **Stream C (100% complete)**: E2E Testing - 12 comprehensive tests covering navigation, pattern selection, accessibility, performance
+  - 🐛 **Accessibility Identifier Fixes**: Added 4 missing identifiers for E2E element discovery (e2486fe)
+  - 📊 **Debug-First Success**: TestUtilities.debugElements() identified correct back button selector
+  - 🎯 **E2E Test Suite**: 100% pass rate (12/12 tests) - navigation, integration, accessibility, performance validated
+  - 📦 **Test Duration**: 211 seconds total (14.8s-25.6s per test)
+  - 🔄 **Integration Success**: All 3 streams integrated without conflicts
+  - 📝 **Next Steps**: Code review, full test suite run, documentation update, merge to main
+- **Previous Session Work** (2025-10-08 - Issue #176):
   - 🎉 **Issue #176 COMPLETE**: NotificationService implementation finished - 100% test passing (1,379/1,379 tests)
   - ✅ **Stream A (100% complete)**: Core Notification Infrastructure - 25/25 tests passing
   - ✅ **Stream B (100% complete)**: Background Refresh & Badge Management - 15/15 tests passing
@@ -437,7 +448,32 @@ author: Claude Code PM System
 - **Mock Framework Complexity**: Comprehensive mock implementation (MockNotificationCenter with 8 methods, 5 internal arrays) required to accurately simulate iOS notification framework behavior
 - **Framework Testing Limitations**: UNUserNotificationCenter framework-level operations cannot be fully unit tested - 2 tests marked as TODO for E2E validation of actual notification delivery
 
+## Lessons Learned (Recent - Issue #177 Session 2025-10-09)
+
+### Iterative E2E Development Process Excellence
+- **One-Test-at-a-Time Implementation**: Implementing and verifying each of 12 tests individually (vs batch implementation) prevented debugging chaos and achieved 100% pass rate on first full suite run
+- **Debug-First Methodology Success**: Using `TestUtilities.debugElements()` before writing every selector saved significant time and prevented element targeting errors
+- **Commit After Each Test Pattern**: Individual commits for each passing test (13 commits total) provides clear progress tracking and easy rollback points
+- **Full Suite Verification Strategy**: Running all 12 tests together (211 seconds) confirmed no test interdependencies or conflicts
+
+### E2E Element Targeting Patterns
+- **Back Button Access Discovery**: SwiftUI back buttons require explicit accessibility identifier (`app.buttons["onboarding-back-button"]`) rather than navigation bar queries (`app.navigationBars.buttons.element(boundBy: 0)`)
+- **Multiple Element Handling**: Use `.element(boundBy: 0)` pattern for accessing specific elements when multiple share the same identifier
+- **Debug Output Analysis**: Raw test logs reveal actual element types and identifiers - more reliable than assumptions about SwiftUI → accessibility mappings
+- **Strategic Sleep Placement**: Use `sleep(3)` for navigation/rendering, `usleep(50_000)` for UI update timing - ensures reliable E2E tests
+
+### Accessibility Testing Without Simulation
+- **VoiceOver Property Validation**: Comprehensive accessibility testing validates properties (labels, values, hints) without simulating actual VoiceOver - enables efficient CI/CD testing
+- **State Announcement Verification**: Toggle and button accessibility values correctly indicate current state for assistive technologies
+- **Accessibility Label Coverage**: All interactive elements have descriptive labels enabling full VoiceOver navigation through schedule setup
+
+### Performance Testing for E2E
+- **E2E vs Unit Test Timeouts**: E2E tests require < 1 second timeouts (not < 200ms unit test expectations) - reflects real user interaction timing
+- **Chart Preview Performance**: Concentration curve preview renders in < 1 second, meeting NFR1 requirement
+- **Pattern Update Responsiveness**: Chart updates on pattern change complete within acceptable E2E timeouts
+
 ## Update History
+- 2025-10-09T20:27:54Z: Issue #177 COMPLETE - Onboarding Schedule Setup with 12 E2E tests (100% pass rate), all 3 streams complete, learnings captured for iterative E2E development, element targeting patterns, accessibility testing, and performance validation
 - 2025-10-08T20:37:55Z: Issue #176 CLOSED - PR #203 merged to main, issue closed on GitHub, epic progress updated to 30%, learnings captured and integrated into context documentation
 - 2025-10-07T22:25:40Z: Issue #176 COMPLETE - NotificationService implementation finished with 3-stream parallel development (Stream A: 25 tests, Stream B: 15 tests, Stream C: 20 tests), PendingNotificationTests added (10 tests, 100% coverage), all quality gates passed (1,379 tests), epic progress 30%
 - 2025-10-07T18:35:45Z: Issue #175 CLOSED - PR #191 merged to main, TimeConstantsTests added (100% coverage), epic progress 20%, all quality gates passed (1,310 tests)
