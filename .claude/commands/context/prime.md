@@ -43,9 +43,8 @@ Load context files in priority order for optimal understanding:
 
 **Priority 1 - Essential Context (load first):**
 1. `project-overview.md` - High-level understanding of the project
-2. `project-brief.md` - Core purpose and goals
-3. `tech-context.md` - Technical stack and dependencies
-4. `testing-config.md` - Testing framework and setup
+2. `tech-context.md` - Technical stack and dependencies
+3. `testing-config.md` - Testing framework and setup
 
 **Priority 2 - Current State (load second):**
 5. `progress.md` - Current status and recent work
