@@ -98,11 +98,42 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
     func testUserCanSelectSchedulePatterns() throws {
         // GIVEN: User is on schedule setup step
+        try navigateToScheduleSetup()
+
         // WHEN: User views available patterns
-        // THEN: Three pattern cards are displayed: "Standard Weekly", "Split Dose", "Custom Pattern"
-        // THEN: Each pattern card shows description
+        // THEN: Three pattern cards are displayed with correct titles
+        let weeklyCard = app.buttons["pattern-card-weekly"]
+        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let customCard = app.buttons["pattern-card-custom"]
+
+        XCTAssertTrue(weeklyCard.exists, "Weekly pattern card should be visible")
+        XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should be visible")
+        XCTAssertTrue(customCard.exists, "Custom pattern card should be visible")
+
+        // THEN: Each pattern card shows correct title in label
+        XCTAssertEqual(weeklyCard.label, "Standard Weekly", "Weekly card should show title")
+        XCTAssertEqual(
+            splitDoseCard.label, "Split Dose (Twice Weekly)", "Split dose card should show title")
+        XCTAssertEqual(customCard.label, "Custom Pattern", "Custom card should show title")
+
         // THEN: User can tap each pattern card to select
-        // THEN: Selected pattern shows visual feedback (blue border, checkmark)
+        // Weekly pattern should be selected by default
+        XCTAssertTrue(weeklyCard.isSelected, "Weekly pattern should be selected by default")
+
+        // Tap split dose pattern
+        splitDoseCard.tap()
+        XCTAssertTrue(splitDoseCard.isSelected, "Split dose pattern should be selected after tap")
+        XCTAssertFalse(weeklyCard.isSelected, "Weekly pattern should not be selected")
+
+        // Tap custom pattern
+        customCard.tap()
+        XCTAssertTrue(customCard.isSelected, "Custom pattern should be selected after tap")
+        XCTAssertFalse(splitDoseCard.isSelected, "Split dose pattern should not be selected")
+
+        // Tap weekly pattern again
+        weeklyCard.tap()
+        XCTAssertTrue(weeklyCard.isSelected, "Weekly pattern should be selected after tap")
+        XCTAssertFalse(customCard.isSelected, "Custom pattern should not be selected")
     }
 
     // MARK: - ACCEPTANCE CRITERION 3: Concentration curve preview updates when pattern changes
