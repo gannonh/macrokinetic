@@ -170,4 +170,68 @@ struct OnboardingViewModelCoverageTests {
         // In test environment on simulator, HealthKit is not available
         // The method should handle this gracefully
     }
+
+    @Test("completeOnboarding prevents duplicate profiles")
+    @MainActor
+    func completeOnboardingPreventsDuplicates() async throws {
+        let dataController = DataController.testContainer()
+        let context = dataController.container.mainContext
+
+        // Create a user with an existing medication profile
+        let user = User(email: "test@example.com", name: "Test User")
+        context.insert(user)
+
+        let existingProfile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 0.5,
+            startDate: Date(),
+            medicationType: "semaglutide",
+            preferredInjectionSites: ["Thigh"]
+        )
+        existingProfile.user = user
+        context.insert(existingProfile)
+
+        try context.save()
+
+        // Setup auth manager and viewmodel
+        let authManager = AuthenticationManager(dataController: dataController)
+        authManager.currentUser = user
+
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Select medication for onboarding
+        viewModel.selectMedication(.semaglutide)
+        viewModel.selectedDose = 1.0
+        viewModel.selectedStartDate = Date()
+        viewModel.toggleInjectionSite("Abdomen")
+
+        // Try to complete onboarding - should detect existing profile and mark complete
+        try await viewModel.completeOnboarding()
+
+        // User should have onboarding marked complete
+        #expect(user.hasCompletedOnboarding == true, "User should have onboarding marked complete")
+        #expect(user.onboardingCompletedAt != nil, "Onboarding completion date should be set")
+
+        // Should still only have 1 profile (no duplicate created)
+        let profilesCount = (user.medicationProfiles ?? []).count
+        #expect(profilesCount == 1, "Should have exactly 1 profile (no duplicate created)")
+    }
+
+    @Test("currentStepIndex returns correct index for all steps")
+    @MainActor
+    func currentStepIndexReturnsCorrectIndex() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Test currentStepIndex for all steps to trigger implicit closure
+        for (expectedIndex, step) in OnboardingStep.allCases.enumerated() {
+            viewModel.currentStep = step
+            let actualIndex = viewModel.currentStepIndex
+            #expect(
+                actualIndex == expectedIndex,
+                "currentStepIndex should be \(expectedIndex) for step \(step), got \(actualIndex)")
+        }
+    }
 }
