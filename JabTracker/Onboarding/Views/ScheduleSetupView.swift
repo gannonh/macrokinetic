@@ -78,6 +78,7 @@ struct ScheduleSetupView: View {
             }
             .padding()
         }
+        .accessibilityIdentifier("schedule-setup-view")
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Schedule setup")
     }

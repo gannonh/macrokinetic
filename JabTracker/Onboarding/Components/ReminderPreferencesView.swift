@@ -37,6 +37,7 @@ struct ReminderPreferencesView: View {
                         Text("2 hours before").tag(120)
                     }
                     .pickerStyle(.menu)
+                    .accessibilityIdentifier("reminder-time-picker")
                     .accessibilityLabel("Reminder time")
                     .accessibilityValue(reminderTimeDescription)
                 }

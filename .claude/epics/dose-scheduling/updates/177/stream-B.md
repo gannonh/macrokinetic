@@ -1,7 +1,46 @@
 # Stream B Progress: ViewModel Integration & Business Logic
 
 **Status**: Complete (100%)
-**Last Updated**: 2025-10-09 06:30
+**Last Updated**: 2025-10-09 07:15
+
+## Bug Fix Session (2025-10-09 07:00-07:20)
+
+### 🐛 Bug: Duplicate Medication Profile Creation
+- **Issue**: Manual testing revealed duplicate profiles being created during onboarding
+- **Root Cause**: `completeOnboarding()` didn't check for existing profiles before creating new one
+- **Impact**: With `--force-onboarding` flag enabled, repeated onboarding runs created duplicate profiles
+
+### ✅ Fix Implementation (Commits 00373bc, b89f3d9)
+1. **Duplicate Prevention Logic**:
+   - Added `checkAndPreventDuplicateProfiles(for:in:)` helper method
+   - Uses `user.medicationProfiles` relationship directly (avoids Predicate macro issues)
+   - If profiles exist, marks onboarding complete and returns early
+   - Added comprehensive debug logging for tracking
+
+2. **Code Organization Improvements**:
+   - Extracted `OnboardingStep` enum to separate file (28 lines)
+   - Extracted `OnboardingError` enum to separate file (16 lines)
+   - Resolved SwiftLint violations (function body length, file length)
+   - Updated `coverage-config.json` to include new enum files in exclusions
+
+3. **Compilation Fix**:
+   - Initial predicate approach (`profile.user?.id == user.id`) failed Swift macro compilation
+   - Second attempt (`profile.user == user`) also failed with optional comparison error
+   - Final solution uses `user.medicationProfiles ?? []` - simpler and leverages existing relationship
+   - **Verified**: Build succeeds with `xcodebuild`
+
+4. **Quality Gates**: All passed
+   - ✅ swift-format
+   - ✅ SwiftLint --fix
+   - ✅ Coverage configuration validation
+   - ✅ SwiftLint validation (0 violations)
+   - ✅ Build verification (xcodebuild)
+
+### Files Modified
+- `JabTracker/Onboarding/OnboardingViewModel.swift` (reduced from 412 to 367 lines)
+- Created: `JabTracker/Onboarding/OnboardingStep.swift`
+- Created: `JabTracker/Onboarding/OnboardingError.swift`
+- Updated: `coverage-config.json`
 
 ## Current Session Progress
 
