@@ -217,27 +217,27 @@ struct ConcentrationCurvePreviewTests {
         var doses: [Dose] = []
         let startDate = Date().addingTimeInterval(-Double(days) * 24 * 3600)
 
-        let intervalDays: Int
+        let intervalSeconds: TimeInterval
         switch pattern {
         case .weekly:
-            intervalDays = 7
+            intervalSeconds = 7 * 24 * 3600  // 7 days
         case .splitDose:
-            intervalDays = 3  // Twice weekly (approximately)
+            intervalSeconds = 3.5 * 24 * 3600  // 3.5 days (twice weekly)
         case .custom:
-            intervalDays = 7  // Default to weekly for custom
+            intervalSeconds = 7 * 24 * 3600  // Default to weekly
         }
 
         var currentDate = startDate
         let endDate = Date()
 
-        while currentDate <= endDate {
+        while currentDate < endDate {
             let dose = Dose(
                 amount: doseAmount,
                 timestamp: currentDate,
                 site: "Thigh"
             )
             doses.append(dose)
-            currentDate = currentDate.addingTimeInterval(Double(intervalDays) * 24 * 3600)
+            currentDate = currentDate.addingTimeInterval(intervalSeconds)
         }
 
         return doses
