@@ -235,6 +235,11 @@ class OnboardingViewModel: ObservableObject {
 
         let context = self.dataController.container.mainContext
 
+        // Check for existing profiles and prevent duplicates
+        if try checkAndPreventDuplicateProfiles(for: user, in: context) {
+            return  // User already has profiles, onboarding marked complete
+        }
+
         // Create medication profile
         let medicationProfile = MedicationProfile(
             genericName: selectedMedication.displayName,
@@ -247,6 +252,10 @@ class OnboardingViewModel: ObservableObject {
         // Link medication profile to user
         medicationProfile.user = user
         context.insert(medicationProfile)
+
+        #if DEBUG
+            print("   ✅ Created new profile: \(medicationProfile.genericName) - \(medicationProfile.brandName)")
+        #endif
 
         // Save medication profile first
         try context.save()
@@ -264,6 +273,55 @@ class OnboardingViewModel: ObservableObject {
         // Store completion in UserDefaults as backup
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
+
+        #if DEBUG
+            print("   ✅ Onboarding completed successfully")
+        #endif
+    }
+
+    /// Checks for existing medication profiles and prevents duplicate creation
+    /// - Parameters:
+    ///   - user: The current user
+    ///   - context: SwiftData model context
+    /// - Returns: true if user already has profiles (onboarding marked complete), false otherwise
+    /// - Throws: SwiftData fetch errors
+    private func checkAndPreventDuplicateProfiles(for user: User, in context: ModelContext) throws -> Bool {
+        let existingProfilesDesc = FetchDescriptor<MedicationProfile>(
+            predicate: #Predicate { profile in
+                profile.user?.id == user.id
+            }
+        )
+        let existingProfiles = try context.fetch(existingProfilesDesc)
+
+        #if DEBUG
+            print("   🔍 Checking for existing profiles...")
+            print("   Found \(existingProfiles.count) existing profile(s) for user")
+            for (index, profile) in existingProfiles.enumerated() {
+                print("   Profile \(index + 1): \(profile.genericName) - \(profile.brandName)")
+            }
+        #endif
+
+        if !existingProfiles.isEmpty {
+            // User already has profiles, mark onboarding as complete
+            user.hasCompletedOnboarding = true
+            user.onboardingCompletedAt = Date()
+            user.updatedAt = Date()
+
+            try context.save()
+
+            // Store completion in UserDefaults as backup
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+            UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
+
+            #if DEBUG
+                print("   ⚠️ User already has profiles, skipping duplicate creation")
+                print("   ✅ Onboarding marked as complete")
+            #endif
+
+            return true
+        }
+
+        return false
     }
 
     /// Creates initial dose schedule for the medication profile
@@ -304,51 +362,5 @@ class OnboardingViewModel: ObservableObject {
 
     private func updateProgress() {
         self.progress = Double(self.currentStepIndex) / Double(self.totalSteps - 1)
-    }
-}
-
-enum OnboardingStep: String, CaseIterable {
-    case welcome
-    case medicationSelection = "medication"
-    case doseSetup = "dose"
-    case scheduleSetup = "schedule"
-    case notifications
-    case healthKit = "health"
-    case subscription
-
-    var title: String {
-        switch self {
-        case .welcome:
-            return "Welcome to JabTracker"
-        case .medicationSelection:
-            return "Select Your Medication"
-        case .doseSetup:
-            return "Set Up Your First Dose"
-        case .scheduleSetup:
-            return "Set Up Your Schedule"
-        case .notifications:
-            return "Enable Notifications"
-        case .healthKit:
-            return "Connect Health Data"
-        case .subscription:
-            return "JabTracker Premium"
-        }
-    }
-}
-
-enum OnboardingError: LocalizedError {
-    case missingRequiredData
-    case permissionsDenied
-    case dataCreationFailed
-
-    var errorDescription: String? {
-        switch self {
-        case .missingRequiredData:
-            return "Required onboarding data is missing"
-        case .permissionsDenied:
-            return "Required permissions were not granted"
-        case .dataCreationFailed:
-            return "Failed to save onboarding data"
-        }
     }
 }
