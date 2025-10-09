@@ -130,6 +130,8 @@
       "Design/Colors+Extensions.swift",
       "Design/DesignTokens.swift",
       "Onboarding/Components/OnboardingProgressIndicator.swift",
+      "Onboarding/OnboardingError.swift",
+      "Onboarding/OnboardingStep.swift",
       "Onboarding/OnboardingView.swift",
       "Onboarding/Views/InitialDoseSetupView.swift",
       "Onboarding/Views/MedicationSelectionView.swift",
