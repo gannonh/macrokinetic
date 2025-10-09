@@ -124,6 +124,7 @@
 		682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */; };
 		68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */; };
 		6987A1D4EF21586531C4FE0E /* ConcentrationTimelineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240B04AE5BF1245C25DDF8DE /* ConcentrationTimelineChart.swift */; };
+		69A32454D4EFB51D5D3516DA /* OnboardingIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDE67C4B8CE6DE83D41ADFD6 /* OnboardingIntegrationTests.swift */; };
 		6B58365598CAC977D5C86F3A /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B7AE2951FEA60931B228ACB /* AnalyticsService.swift */; };
 		6C215A97DF5A5E8A881AE8C8 /* ContentViewChartDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7221B7F59FA69A911F5BBCF8 /* ContentViewChartDataTests.swift */; };
 		6CB527835ADF1C38EF7C8959 /* ChartDataProcessor+Filtering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0717C0520765741FCE7EA2ED /* ChartDataProcessor+Filtering.swift */; };
@@ -561,6 +562,7 @@
 		CCC53F4AA7A76F686436ECEC /* Dose+Filtering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dose+Filtering.swift"; sourceTree = "<group>"; };
 		CD8C49DC32DA4FF954C3C2DE /* ChartControlsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartControlsUITests.swift; sourceTree = "<group>"; };
 		CDC07DC6AC9A3098F3CF677D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CDE67C4B8CE6DE83D41ADFD6 /* OnboardingIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingIntegrationTests.swift; sourceTree = "<group>"; };
 		CE2E4DCF3A284F0E06D02ADC /* OnboardingScheduleSetupUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingScheduleSetupUITests.swift; sourceTree = "<group>"; };
 		CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerTests.swift; sourceTree = "<group>"; };
 		D01A6A7F6B131EE8509708EA /* AdherenceTrendData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceTrendData.swift; sourceTree = "<group>"; };
@@ -684,6 +686,7 @@
 			children = (
 				B6BF07DD02813C719A348BA0 /* ConcentrationCurvePreviewTests.swift */,
 				71755FB3B65A50FDA1530C99 /* OnboardingCoordinatorTests.swift */,
+				CDE67C4B8CE6DE83D41ADFD6 /* OnboardingIntegrationTests.swift */,
 				6F7852CEE4BC258E173948B9 /* OnboardingViewModelScheduleTests.swift */,
 				20E90AD09666FBD3CD92BED2 /* OnboardingViewModelValidationTests.swift */,
 				AA296892BE2CD9DB5B367056 /* ScheduleSetupViewTests.swift */,
@@ -1482,6 +1485,7 @@
 				17D0C0CDB4E90A9978B98B66 /* NotificationServiceBackgroundTests.swift in Sources */,
 				53193030C188F008771729C8 /* NotificationServiceTests.swift in Sources */,
 				A6E8DB80A6C88BACCD6DCCAF /* OnboardingCoordinatorTests.swift in Sources */,
+				69A32454D4EFB51D5D3516DA /* OnboardingIntegrationTests.swift in Sources */,
 				28C344FA71FC43E28013B3C7 /* OnboardingViewModelCoverageTests.swift in Sources */,
 				3753866F27385447AE1B6FCF /* OnboardingViewModelScheduleTests.swift in Sources */,
 				02F2C52197FFBD349FC6D4F1 /* OnboardingViewModelTests.swift in Sources */,
