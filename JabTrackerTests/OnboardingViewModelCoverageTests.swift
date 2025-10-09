@@ -84,6 +84,9 @@ struct OnboardingViewModelCoverageTests {
             OnboardingStep.doseSetup.title == "Set Up Your First Dose",
             "Dose setup step should have correct title")
         #expect(
+            OnboardingStep.scheduleSetup.title == "Set Up Your Schedule",
+            "Schedule setup step should have correct title")
+        #expect(
             OnboardingStep.notifications.title == "Enable Notifications",
             "Notifications step should have correct title")
         #expect(
@@ -95,7 +98,7 @@ struct OnboardingViewModelCoverageTests {
 
         // Test allCases
         let allSteps = OnboardingStep.allCases
-        #expect(allSteps.count == 6, "Should have 6 onboarding steps")
+        #expect(allSteps.count == 7, "Should have 7 onboarding steps")
         #expect(allSteps.first == .welcome, "First step should be welcome")
         #expect(allSteps.last == .subscription, "Last step should be subscription")
     }
