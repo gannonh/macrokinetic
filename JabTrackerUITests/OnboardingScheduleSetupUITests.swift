@@ -275,11 +275,36 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
     func testMultipleRemindersToggle() throws {
         // GIVEN: User is on schedule setup step
+        try navigateToScheduleSetup()
+
         // WHEN: User views reminder preferences section
         // THEN: "Send multiple reminders" toggle is visible
-        // THEN: Toggle has descriptive label
+        let multipleRemindersToggle = app.switches["Enable multiple reminders"]
+        XCTAssertTrue(
+            multipleRemindersToggle.exists,
+            "Multiple reminders toggle should be visible")
+
+        // THEN: Toggle has descriptive label text
+        let toggleLabelText = app.staticTexts["Send multiple reminders"]
+        XCTAssertTrue(toggleLabelText.exists, "Toggle label text should be visible")
+
+        // THEN: Toggle has explanation text
+        let explanationText = app.staticTexts["Get reminded again if you haven't logged your dose"]
+        XCTAssertTrue(explanationText.exists, "Toggle explanation text should be visible")
+
         // WHEN: User taps toggle
+        let initialValue = multipleRemindersToggle.value as? String ?? ""
+        print("📊 Initial toggle value: \(initialValue)")
+
+        multipleRemindersToggle.tap()
+
         // THEN: Toggle state changes immediately
+        let updatedValue = multipleRemindersToggle.value as? String ?? ""
+        print("📊 Updated toggle value: \(updatedValue)")
+
+        XCTAssertNotEqual(
+            initialValue, updatedValue,
+            "Toggle state should change immediately after tap")
     }
 
     // MARK: - ACCEPTANCE CRITERION 7: Continue button validation
