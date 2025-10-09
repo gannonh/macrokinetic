@@ -81,11 +81,6 @@ For each context file, determine if updates are needed:
   - Update: New user stories, changed requirements
   - Include any pivot in product direction
 
-#### `project-brief.md` - **Rarely Update**
-  - Check: Only if fundamental project goals changed
-  - Update: Major scope changes, new objectives
-  - Usually remains stable
-
 #### `project-overview.md` - **Update for Major Milestones**
   - Check: Major features completed, significant progress
   - Update: Feature status, capability changes
@@ -237,7 +232,6 @@ Provide detailed summary of updates:
   ✅ Issue #41 - Test crash debugging process → progress.md
 
 ⏭️ Skipped Files (no changes):
-  - project-brief.md (last updated: 5 days ago)
   - project-vision.md (last updated: 2 weeks ago)
 
 ⚠️ Issues:

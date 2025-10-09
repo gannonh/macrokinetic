@@ -62,72 +62,12 @@ Screen Views (DashboardView, SettingsView)
 - **Session**: Published authentication state management
 
 ## Testing Patterns
+> **For comprehensive testing patterns, E2E processes, test data management, UI testing approaches, and test quality standards**, see `.claude/context/testing-config.md`
 
-### Test Organization Strategy
-```
-XCTestCase (Base) 
-    ↓
-Feature Test Suites (AuthenticationTests, MedicationTests)
-    ↓
-Individual Test Methods (testUserCreation, testDoseCalculation)
-```
-
-### Test Data Management
-- **Factories**: Centralized test data creation
-- **Mocks**: Minimal mocking, prefer real objects where possible
-- **Cleanup**: Automatic test data cleanup between tests
-- **Isolation**: Independent test execution without dependencies
-
-### UI Testing Approach
-- **Authentication Bypass**: `--ui-testing` launch argument
-- **Clean State**: `--reset-app-data` for fresh test environment
-- **Element Selection**: Accessibility identifiers over UI hierarchy
-- **Coordinate Precision**: `describe_ui` tool for exact element locations
-
-### UI Testing Essential Utilities
-- **`TestUtilities.debugElements()`** - Debug accessibility hierarchy
-- **`TestUtilities.clearAndEnterText()`** - Reliable text field interaction
-- Use **debug output** to identify correct element types before writing selectors
-
-### E2E Testing Patterns (Issues #41, #42 & #45 Learnings)
-- **SwiftData Relationship Testing**: Critical pattern for tests accessing relationships (dose.medication, user.doses) - must use proper ModelContainer with CloudKit disabled
-- **Test Container Setup**: ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` prevents CloudKit relationship validation errors
-- **Context Management**: Always insert models into context BEFORE setting relationships, then save context
-- **E2E Element Targeting**: TestUtilities.debugElements() is essential for identifying correct element types and selectors
-- **Text Field Utilities**: TestUtilities.clearAndEnterText() provides reliable text field interaction across all tests
-- **Debug Utilities**: Comprehensive element type mapping and accessibility hierarchy debugging prevents guesswork
-
-### Iterative E2E Testing Process (CRITICAL ANTI-PATTERN PREVENTION)
-**⚠️ NEVER write all E2E tests at once - this causes major implementation problems.**
-
-#### Correct E2E Development Process:
-1. **Stub all acceptance criteria** - Create test stubs with GIVEN/WHEN/THEN comments
-2. **One test at a time** - Pick one test method to implement fully
-3. **Debug-first approach** - Always start with `TestUtilities.debugElements()`
-4. **Single test verification** - Run: `./scripts/test.sh ui 1 TestClass/testMethod`
-5. **Commit working test** - Save progress before moving to next test
-6. **Iterate** - Repeat for each remaining test method
-
-#### E2E Implementation Anti-Patterns:
-- ❌ **Batch Implementation**: Writing 5+ tests before running any
-- ❌ **Element Guessing**: Assuming SwiftUI → accessibility mappings without debugging
-- ❌ **Multi-Test Execution**: Testing multiple new methods simultaneously
-- ❌ **Skip Debug Phase**: Writing selectors without `TestUtilities.debugElements()`
-
-### PKEngine E2E Testing Patterns (Issue #45)
-- **Debug-first approach mandatory**: Always use TestUtilities.debugElements() before writing element selectors
-- **Multiple element handling**: Use `.element(boundBy:)` indexing when multiple elements share accessibility identifiers
-- **SwiftUI rendering reality**: Lists render as CollectionViews in XCUITest, not Tables - check actual element types
-- **Performance timeout adjustments**: E2E tests require 5-10s timeouts vs 50ms unit test expectations
-- **Accessibility identifier child elements**: When parent uses `.accessibilityElement(children: .ignore)`, child elements need explicit identifiers
-- **Quick Dose Sheet pattern**: Preferred UI pattern over individual dose buttons for streamlined dose entry workflows
-- **Real-time calculation validation**: Test concentration recalculation after dose entry with appropriate wait times
-
-### SwiftUI Calendar Testing Patterns (Issue #42)
-- **Robust Element Finding**: Implement fallback logic for element targeting in dynamic UI components where accessibility identifiers may be unreliable
-- **Calendar Component Testing**: SwiftUI Calendar components require specialized element finding strategies in XCUITest environment
-- **Accessibility Identifier Implementation**: Use consistent patterns for calendar day cells, month headers, and navigation controls
-- **Fallback Element Selection**: When primary accessibility identifiers fail, use content-based element finding with NSPredicate filtering
+### Key Testing Integration Points
+- **SwiftData + Testing**: Test environment requires special handling to avoid relationship crashes
+- **XcodeGen + Testing**: Run `xcodegen generate` after adding test files
+- **Medical Testing Standards**: Patient safety requires rigorous testing of business logic
 
 ## Error Handling Patterns
 
@@ -213,29 +153,7 @@ var children: [Child] = []
 - **Business Logic**: 85%+ coverage for core functionality
 - **UI Components**: Focus on business logic, not view rendering
 
-### ⚠️ CRITICAL: SwiftData Relationship Testing Anti-Patterns
-**NEVER assign arrays to SwiftData relationships in tests - this ALWAYS crashes:**
-
-```swift
-// ❌ CRASH: Never do this in tests
-medicationProfile.doses = existingDoses
-user.medicationProfiles = [profile1, profile2]
-
-// ✅ SAFE: Use individual setters or avoid relationships
-dose.medication = medicationProfile  // Individual setter OK
-// OR pass arrays directly to methods without using relationships
-```
-
-### SwiftData Relationship Testing Patterns (Refer to testing-config.md for full anti-patterns)
-- **Insert Order Critical**: Must insert parent entities (User, MedicationProfile) BEFORE child entities (Dose) to prevent duplicate registration crashes
-- **Test Container Setup**: Use DataController.testContainer() consistently instead of creating custom ModelContainers
-- **CloudKit Test Environment**: Use ModelConfiguration with `isStoredInMemoryOnly: true, cloudKitDatabase: .none` for tests
-- **Context Management**: Always insert models into context BEFORE setting relationships, then save context
-- **CloudKit Relationship Requirements (Issue #174)**: All SwiftData relationships must be optional for CloudKit sync, and parent side must use `@Relationship(inverse:)` while child side uses plain property
-- **Circular Reference Prevention**: Never add `@Relationship` to both sides - causes "Circular reference resolving attached macro" error; only parent uses `@Relationship`
-- **Relationship Assignment Order**: Insert all objects into context BEFORE setting relationships to avoid "Duplicate registration attempt" crashes
-- **Computed Property Timing Precision**: When comparing `Date()` to stored dates in computed properties, add small tolerance (1 second) for boundary conditions to handle millisecond-level timing variations in tests
-- **ModelConfiguration Completeness**: Test ModelConfiguration must include ALL models in schema, not just those directly tested - incomplete configurations cause SwiftData crashes
+> **For SwiftData relationship testing anti-patterns, test container setup, and ModelConfiguration requirements**, see `.claude/context/testing-config.md`
 
 ## Key Development Patterns
 
@@ -308,17 +226,6 @@ struct UserAnalyticsSummary {
 - **Insight Generation**: Priority-based actionable recommendations
 - **Edge Case Handling**: Graceful degradation for incomplete data
 
-### Testing Patterns for Analytics
-- **@MainActor Compliance**: Required for SwiftData ModelContext access in tests
-- **Relationship Setup**: Insert parent entities (User, MedicationProfile) before children (Dose)
-- **Test Isolation**: Use `DataController.testContainer().container` with CloudKit disabled
-- **Performance Testing**: Validate <1 second execution time for comprehensive analytics
-
-### SwiftUI Calendar & Modal Testing Patterns (Issue #56)
-- **SwiftUI Calendar Modal Dismissal**: Complex calendar popover dismissal solved by tapping form elements (Notes field) below the calendar - navigation bar tapping fails due to modal overlay coverage
-- **XCUITest Calendar Interaction**: SwiftUI DatePicker calendar requires element-based dismissal rather than coordinate-based tapping; successful pattern: tap accessible form fields outside calendar bounds
-- **Historical Data Creation Patterns**: `createHistoricalChartData()` demonstrates robust pattern for E2E test data with date calculation, calendar navigation, and dose creation across multiple time periods
-- **SwiftLint Test Complexity Management**: Medical test functions require `// swiftlint:disable cyclomatic_complexity` blocks for comprehensive E2E scenarios while maintaining code quality standards
 
 ## Parallel Development Patterns (Issue #55)
 
@@ -329,10 +236,10 @@ struct UserAnalyticsSummary {
 - **Integration Points**: Clear file ownership prevents conflicts, with coordination through extension patterns
 
 ### TDD at Scale
-- **Embedded Testing**: Each stream follows rigorous TDD with embedded testing, eliminating separate test streams
+- **Embedded Testing**: Each stream follows rigorous TDD with embedded testing
 - **Stream Ownership**: Each agent owns both implementation and testing for their domain
-- **Performance Validation**: Real-time test feedback enables immediate TDD cycles
-- **Quality Gates**: All streams maintain test-driven approach with immediate feedback loops
+
+> **For TDD patterns, test-driven parallel streams, and testing workflows**, see `.claude/context/testing-config.md`
 
 ### Service Integration Patterns
 - **Extension Architecture**: ChartDataProcessor+Filtering demonstrates clean extension organization
@@ -342,20 +249,17 @@ struct UserAnalyticsSummary {
 
 ### Hybrid Parallel Development Strategy (Issue #175)
 - **Phase-Based Parallelization**: Phase 1 (Sequential foundation) → Phase 2 (Parallel execution) enables 2.4x speedup while respecting Swift compilation dependencies
-- **Extension-Based Service Architecture**: Using Swift extensions (ScheduleService+Projection, +Modifications, +Adherence, +Titration) prevents file conflicts during parallel development - each stream works on dedicated extension files
-- **@Observable Service Pattern**: ScheduleService successfully implements iOS 17+ @Observable pattern for real-time updates with ModelContext dependency injection - demonstrates modern service architecture for medical apps
-- **Test-Driven Parallel Streams**: Each stream follows TDD with embedded testing - no separate testing streams needed, agents own both implementation and tests for their domain
-- **Simulator Isolation for Parallel Testing**: Dedicated simulator assignment (1, 2, 3) per stream enables conflict-free parallel test execution - critical for TDD workflow during parallel development
-- **Error Enum Coordination**: Centralized error enum in base class with stream-specific cases added as needed prevents duplication - Stream A creates base ScheduleServiceError enum, Streams B & C add their cases
-- **Commit Strategy for Dependencies**: Stream A committed base class early (Phase 1) to unblock dependent streams - critical for parallel success when extensions depend on base class compilation
+- **Extension-Based Service Architecture**: Using Swift extensions (ScheduleService+Projection, +Modifications, +Adherence, +Titration) prevents file conflicts during parallel development
+- **@Observable Service Pattern**: ScheduleService successfully implements iOS 17+ @Observable pattern for real-time updates with ModelContext dependency injection
+- **Error Enum Coordination**: Centralized error enum in base class with stream-specific cases prevents duplication
+- **Commit Strategy for Dependencies**: Stream A committed base class early (Phase 1) to unblock dependent streams - critical when extensions depend on base class compilation
 
 ### NotificationService Parallel Development Patterns (Issue #176)
-- **3-Stream Parallel Development Success**: Successfully coordinated 3 parallel agents implementing NotificationService with extension-based architecture (Stream A: Core Infrastructure, Stream B: Background Refresh, Stream C: Action Handling) - completed 70 tests with 100% pass rate
-- **Extension Architecture for Parallel Services**: NotificationService+Actions.swift and NotificationService+Background.swift pattern prevents file conflicts during parallel development - each stream owns dedicated extension files for independent implementation
-- **Protocol-Based Testability Pattern**: NotificationCenterProtocol abstraction enables comprehensive unit testing of notification logic without requiring actual UNUserNotificationCenter - MockNotificationCenter provides test isolation
-- **UNUserNotificationCenter Unit Testing Limitations**: Framework-level notification scheduling and delivery cannot be fully unit tested - 2 tests marked as TODO for E2E validation (actual notification delivery and category registration verification)
-- **Test-Driven Parallel Development**: Each of the 3 streams followed TDD with embedded testing - no separate testing streams needed, each agent owns both implementation (70+ production methods) and comprehensive tests (70 test methods total)
-- **Quality Gate Validation in Parallel Workflows**: All 1,379 project tests passing before merge ensures parallel stream integration doesn't introduce regressions - demonstrates comprehensive quality assurance for complex service development
+- **3-Stream Parallel Success**: Successfully coordinated 3 parallel agents with extension-based architecture (Stream A: Core Infrastructure, Stream B: Background Refresh, Stream C: Action Handling)
+- **Extension Architecture for Parallel Services**: NotificationService+Actions.swift and NotificationService+Background.swift pattern prevents file conflicts
+- **Protocol-Based Testability**: NotificationCenterProtocol abstraction enables comprehensive unit testing without requiring actual UNUserNotificationCenter
+
+> **For parallel testing patterns, test-driven parallel development, simulator isolation, and quality gate validation**, see `.claude/context/testing-config.md`
 
 ## Security & Defensive Programming Patterns (Issue #55)
 
@@ -365,7 +269,6 @@ struct UserAnalyticsSummary {
 - **Finite Number Validation**: Medical calculations must validate `isFinite` to prevent infinite/NaN crashes in chart rendering
 - **Data Sanitization Patterns**: Sanitize data at model constructor level to prevent corrupted data propagation
 - **Graceful Degradation**: Medical apps must continue functioning even with malicious/corrupted input data
-- **Test-Driven Security**: Security vulnerabilities caught through comprehensive test scenarios and edge case validation
 
 ### Healthcare Application Security Standards
 - **Defensive Programming**: Every data entry point requires validation for medical-grade reliability
@@ -373,87 +276,30 @@ struct UserAnalyticsSummary {
 - **Medical Data Integrity**: Ensure calculations remain valid and finite throughout data processing pipeline
 - **Production Safety**: Apps must handle corrupted or malicious data without compromising patient safety
 
-## E2E Testing & Accessibility Patterns (Issue #56)
+> **For test-driven security and edge case validation testing**, see `.claude/context/testing-config.md`
 
-### SwiftUI Accessibility Testing Patterns
-- **SwiftUI Accessibility Hierarchy Override Prevention**: Parent-level accessibility identifiers (`accessibilityIdentifier("analytics-concentration-chart")`) override all child button identifiers - remove parent identifiers to enable proper child element targeting
-- **Multiple Element Matching Solutions**: `.firstMatch` pattern essential for XCUITest when multiple elements share identifiers - prevents "Multiple matching elements found" errors in complex UI hierarchies
-- **E2E Test Debug-First Methodology**: Use `TestUtilities.debugElements()` at start of every failing test to identify actual element types and identifiers before writing selectors
-- **Export Sheet Handling in E2E Tests**: Export functionality changes accessibility context - use `app.sheets.firstMatch.swipeDown()` for dismissal and verify chart functionality after modal interactions
+## SwiftUI Component Architecture Patterns
 
-### Medical App E2E Testing Excellence
-- **Comprehensive E2E Testing Implementation**: Systematic approach (display → interaction → time periods → accessibility → performance) covers all user acceptance criteria for medical applications
-- **Accessibility Debugging Workflow**: Parent accessibility override → child element debug → identifier removal → test validation enables systematic accessibility issue resolution
-- **E2E Test Verification Strategy**: Individual test method validation before full suite run prevents long debugging cycles in complex medical app testing
+### SwiftUI Gesture Integration
+- **Complex Gesture Handling**: Successful implementation of pinch-zoom, drag-pan with state management in ConcentrationTimelineChart
+- **Medical App Accessibility**: Comprehensive VoiceOver implementation with dynamic descriptions and trend analysis
+- **Professional Export Architecture**: ChartExportView demonstrates proper sheet presentation patterns with async operations
+- **Chart State Management**: Public API pattern (setZoomLevel, setPanOffset, resetZoomAndPan) enables programmatic control
 
-### CodeGen-Enhanced E2E Testing Patterns (Issue #57)
-- **CodeGen Element Access Pattern**: Use `staticTexts.matching(identifier:).element(boundBy:)` for reliable element access when multiple elements share identifiers
-- **TestUtilities Enhancement**: `findElementsUsingCodeGenPatterns()` function provides systematic CodeGen-based element discovery for complex UI hierarchies
-- **CodeGen Recording Strategy**: When `TestUtilities.debugElements()` insufficient for complex UI interactions, request user CodeGen recording for breakthrough insights
-- **SwiftUI Accessibility Reality Check**: Lists render as CollectionViews (not Tables), NavigationStack renders as CollectionView (not ScrollView) - CodeGen reveals actual structure vs assumptions
-- **Debug-First Methodology**: ALWAYS use `TestUtilities.debugElements()` before writing element selectors to understand actual accessibility hierarchy
-- **Test Quality Standards**: Write acceptance criteria first as spec; if elements missing/incomplete/wrong, implementation needs work, NOT test weakening
+### SwiftUI Accessibility Best Practices
+- **Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
+- **VoiceOver Excellence**: Comprehensive support with dynamic descriptions for medical data
 
-### Onboarding Integration E2E Testing Patterns (Issue #177)
-- **Back Button Access Pattern**: SwiftUI NavigationStack back buttons require explicit accessibility identifier (`app.buttons["onboarding-back-button"]`) - navigation bar element queries (`app.navigationBars.buttons.element(boundBy: 0)`) unreliable
-- **Iterative Test Development Success**: Implementing 12 E2E tests one at a time with debug-first approach achieved 100% pass rate on first full suite run (211 seconds total)
-- **Strategic Sleep Timing**: Use `sleep(3)` for navigation between onboarding steps and view rendering, `usleep(50_000)` for UI update timing - ensures reliable test execution
-- **State Preservation Validation**: Back/forward navigation tests confirm OnboardingViewModel maintains state (pattern selection, toggle values) across navigation - critical for onboarding UX
-- **Accessibility Without VoiceOver Simulation**: Validate accessibility properties (labels, values, hints) without simulating actual VoiceOver - enables efficient CI/CD accessibility testing
-- **Integration Test Flow Patterns**: Handle optional screens (notifications permission) with `waitForExistence(timeout:)` conditional logic - enables flexible onboarding flow validation
-- **Performance Testing Timeouts**: E2E tests use < 1 second timeouts (not < 200ms unit test expectations) - reflects real user interaction timing and chart rendering performance
-
-## SwiftUI Calendar & Modal Testing Patterns (Issue #56)
-
-### SwiftUI Calendar Integration Patterns
-- **SwiftUI Calendar Modal Dismissal**: Complex calendar popover dismissal solved by tapping form elements (Notes field) below the calendar - navigation bar tapping fails due to modal overlay coverage
-- **XCUITest Calendar Interaction**: SwiftUI DatePicker calendar requires element-based dismissal rather than coordinate-based tapping; successful pattern: tap accessible form fields outside calendar bounds
-- **Historical Data Creation Patterns**: `createHistoricalChartData()` demonstrates robust pattern for E2E test data with date calculation, calendar navigation, and dose creation across multiple time periods
-- **SwiftLint Test Complexity Management**: Medical test functions require `// swiftlint:disable cyclomatic_complexity` blocks for comprehensive E2E scenarios while maintaining code quality standards
-
-### SwiftUI Component Architecture Patterns
-- **SwiftUI Gesture Integration**: Successful implementation of complex gesture handling (pinch-zoom, drag-pan) with state management in ConcentrationTimelineChart
-- **Medical App Accessibility Excellence**: Comprehensive VoiceOver implementation with dynamic descriptions, trend analysis, and gesture instruction integration
-- **Professional Export Architecture**: ChartExportView demonstrates proper sheet presentation patterns with async operations and progress tracking
-- **Chart State Management**: Public API pattern (setZoomLevel, setPanOffset, resetZoomAndPan) enables programmatic control while maintaining encapsulation
-
-### SwiftUI Unit Testing Anti-Patterns
-- **Direct @State Manipulation Prevention**: Direct @State manipulation in tests doesn't work - use proper component initialization testing instead
-- **SwiftUI Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
-
-## Medical App Testing Excellence Patterns (Issue #71)
-
-### SwiftUI Testing Architecture for Medical Apps
-- **SwiftUI @State Testing Limitations**: Mutating methods on @State properties cannot be tested directly in unit tests; focus on testable pure functions and computed properties instead of attempting to test view state mutations
-- **SwiftUI Component Testing Architecture**: Successful patterns for testing view components like ProfileField with different content types and configurations - separate business logic from view state for testability
-- **Medical App Testing Standards**: Comprehensive accessibility testing patterns, edge case validation, and medical data accuracy verification are essential for healthcare applications
-
-### Test Development Process Patterns
-- **Debug-First Testing Approach**: Always examine actual implementation behavior before writing test expectations (concentration thresholds, dose formatting) to prevent test-code mismatches
-- **Iterative Single-File Testing**: Single-file-at-a-time approach prevents overwhelming debugging cycles when fixing multiple coverage gaps
-- **Swift Testing Framework Integration Excellence**: Successfully demonstrated @Test attribute and #expect assertions for comprehensive modern Swift testing across 85+ test methods
-
-### Test Coverage Excellence for Medical Apps
-- **Comprehensive Test Coverage Achievement**: Successfully improved 4 critical chart components from failing coverage (3%-50%) to meeting tier requirements (75%-85%) through systematic approach
-- **Medical App Coverage Standards**: 85+ test methods provide comprehensive validation for patient safety-critical chart components - demonstrates scalable approach for medical app testing
-- **Test File Organization Excellence**: Created dedicated test suites (ConcentrationChartStateTests, ConcentrationChartAccessibilityTests, ProfileFieldTests) with clear separation of concerns
+> **For E2E testing patterns, accessibility testing, CodeGen integration, medical app testing excellence, and test-driven validation**, see `.claude/context/testing-config.md`
 
 ## AdherenceInsights Business Logic Patterns (Issue #57)
 
-### SwiftData Relationship Testing Patterns
-- **SwiftData Relationship Testing**: Fixed crash by avoiding direct array assignment to @Relationship properties in tests - discovered during Issue #57
-- **Critical Testing Anti-Pattern**: Never assign arrays to SwiftData relationships in tests (`medicationProfile.doses = existingDoses`) - always crashes
-- **Safe Relationship Testing**: Use individual property setters or pass arrays directly to engine methods without using relationships
-
-### Test-Driven Business Logic Validation
-- **Test-First Business Logic Validation**: Tests revealed fundamental flaws in weekend gap detection and dose escalation algorithms - discovered during Issue #57
-- **Medical Algorithm Design**: Weekly medication patterns require different logic than daily medication assumptions
-- **Force Unwrapping Test Pattern**: Safe unwrapping as "fix" masks underlying logic problems - avoid this pattern, fix root cause instead
-
-### Medical App Testing Integrity
-- **CRITICAL: Never Bend Tests to Pass Bad Logic**: Initial approach of making tests more "lenient" to pass was fundamentally wrong - discovered during Issue #57
-- **Test-Driven Debugging**: Tests that fail reveal actual business requirements, not testing issues
+### Medical Algorithm Design
+- **Weekly Medication Patterns**: Weekly medication patterns require different logic than daily medication assumptions
+- **Test-First Validation**: Tests revealed fundamental flaws in weekend gap detection and dose escalation algorithms
 - **Medical App Development Standards**: Test workarounds compromise patient safety - always fix root cause business logic
+
+> **For SwiftData relationship testing patterns and test-driven debugging**, see `.claude/context/testing-config.md`
 
 ## Design Review & Polish Patterns (Issue #59)
 

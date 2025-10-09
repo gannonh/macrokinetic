@@ -86,8 +86,7 @@ Generate the following initial context files:
     - Include: Design patterns observed, architectural style, data flow
   - `product-context.md` - Define product requirements, target users, and core functionality
     - Include: User personas, core features, use cases
-  - `project-brief.md` - Establish project scope, goals, and key objectives
-    - Include: What it does, why it exists, success criteria
+
   - `project-overview.md` - Provide a high-level summary of features and capabilities
     - Include: Feature list, current state, integration points
   - `project-vision.md` - Articulate long-term vision and strategic direction

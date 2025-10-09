@@ -102,28 +102,13 @@ author: Claude Code PM System
 - **Offline Capability**: Full functionality without network
 - **ProMotion Support**: 120Hz display optimization
 
-## Testing Framework Insights (Issue #41 Learnings)
-### CloudKit vs Testing
-- **CloudKit Requirements**: All relationships need proper inverses, but tests should disable CloudKit entirely
-- **Test Environment Detection**: DataController properly detects test environment and disables CloudKit automatically
-- **SwiftData Testing**: Requires proper ModelContainer setup in tests (see testing-config.md for critical anti-patterns)
+## Testing Framework Integration
+> **Note**: For comprehensive testing patterns, anti-patterns, E2E processes, and test configuration, see `.claude/context/testing-config.md`
 
-### SwiftUI Accessibility Hierarchy (Critical for UI Tests)
-- **List Rendering**: SwiftUI List renders as CollectionView (not Table/ScrollView as expected)
-- **NavigationStack**: Renders as CollectionView in accessibility hierarchy
-- **Element Queries**: XCUIElementQuery has `.count` property, not `.isEmpty` (SwiftLint auto-fix incorrectly converts)
-- **Text Field Interaction**: XCUITest text clearing requires delete character string approach, not selectAll() or keys["Delete"]
-
-### Framework Limitations and Workarounds
-- **SwiftLint Auto-fix Issues**: "Empty Count" rule breaks XCUIElementQuery usage by converting `.count == 0` to `.isEmpty`
-- **Element Targeting**: SwiftUI accessibility hierarchy doesn't match visual structure - requires debug-first approach
-- **Test Reliability**: Complex element targeting needs systematic debugging with TestUtilities.debugElements()
-
-### SwiftUI Calendar Integration (Issue #42 Learnings)
-- **SwiftUI Calendar Rendering**: Native Calendar components in XCUITest environment require specialized element finding
-- **XCUIElementQuery vs Array**: XCUIElementQuery doesn't have `.isEmpty` property but Array does - causes compilation errors
-- **SwiftLint Integration Conflicts**: Remove `empty_count` rule to prevent UI testing framework compatibility issues
-- **Accessibility Identifier Reliability**: Complex SwiftUI hierarchies may have unreliable accessibility identifiers requiring fallback strategies
+### Key Technology-Testing Integration Points
+- **CloudKit + Testing**: Tests must disable CloudKit entirely (`cloudKitDatabase: .none`) to avoid relationship validation errors
+- **SwiftUI Accessibility**: List renders as CollectionView, NavigationStack renders as CollectionView in XCUITest accessibility hierarchy
+- **XcodeGen + Testing**: Run `xcodegen generate` after adding test files for them to appear in test runs
 
 ## Medical Visualization (Issue #55)
 
@@ -177,62 +162,11 @@ author: Claude Code PM System
 - **Modal Calendar Interaction**: DatePicker calendar requires element-based dismissal through accessible form fields rather than coordinate-based tapping
 - **Historical Data Entry**: 30-day historical dose entry enables patients to catch up on missed doses or correct entry errors
 
-### XCUITest Advanced Patterns
-- **Element Targeting Debug-First**: `TestUtilities.debugElements()` essential for calendar interaction discovery - revealed navigation bar inaccessibility during modal presentation
-- **Calendar Navigation Testing**: Complex E2E test data creation with date calculation, calendar navigation, and dose creation across multiple time periods
-- **E2E Test Performance**: Historical dose creation with calendar navigation achieves acceptable performance (~85 seconds for 5 doses) for comprehensive medical app validation
+### SwiftLint Integration with Testing
+- **Pre-commit Integration**: Pre-commit hooks enable catch-and-fix workflow during development
+- **XCUITest Considerations**: XCUIElementQuery has `.count` property but not `.isEmpty` - SwiftLint auto-fixes can break UI tests
 
-### SwiftLint Integration Enhancements
-- **Pre-commit Integration**: Pre-commit hooks enable catch-and-fix workflow for violations (force unwrapping, for-where, cyclomatic complexity) during implementation
-- **Medical Test Complexity**: Medical test functions require `// swiftlint:disable cyclomatic_complexity` blocks for comprehensive E2E scenarios while maintaining code quality standards
-
-## E2E Testing Process Patterns (CRITICAL FOR AGENTS)
-
-### Iterative E2E Implementation (Anti-Batch-Writing Pattern)
-**⚠️ AGENTS: Never write all E2E tests simultaneously - this creates debugging chaos and wastes development time.**
-
-#### Required Agent E2E Process:
-1. **Acceptance Criteria Phase**: Stub all E2E tests with GIVEN/WHEN/THEN comments only
-2. **Single Test Implementation**: Pick ONE test method and implement fully
-3. **Debug-First Approach**: Always start with `TestUtilities.debugElements()`
-4. **Individual Test Execution**: Run `./scripts/test.sh ui 1 TestClass/testMethod`
-5. **Commit Working Test**: Save progress before implementing next test
-6. **Iterative Development**: Repeat for each remaining test method
-
-#### Agent Implementation Anti-Patterns:
-- ❌ **Batch E2E Writing**: Implementing 3+ E2E tests before running any
-- ❌ **Element Assumption**: Writing selectors without debug utility output
-- ❌ **Multi-Test Debugging**: Attempting to fix multiple broken E2E tests simultaneously
-- ❌ **Skip Verification**: Moving to next test before current test passes
-
-## E2E Testing & SwiftLint Integration (Issue #56 Session 2025-09-24)
-
-### SwiftLint Configuration Management
-- **SwiftLint Rule Conflict Resolution**: `closure_parameter_position` rule conflicts with disabled `opening_brace` rule - add to disabled_rules to resolve conflicts without compromising code quality
-- **XCUITest Element Query vs Array**: XCUIElementQuery has `.count` property but not `.isEmpty` - SwiftLint auto-fixes incorrectly convert to `.isEmpty` breaking UI tests
-- **SwiftLint Integration with E2E Development**: Pre-commit hooks catch violations during implementation - iterative fix workflow enables compliance without blocking development
-
-### SwiftUI Accessibility & E2E Testing Patterns
-- **SwiftUI Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
-- **E2E Performance Testing Patterns**: Medical E2E tests with multiple dose creation achieve ~85s for comprehensive validation - acceptable for healthcare app verification
-
-## CodeGen-Enhanced E2E Testing Framework (Issue #57 Session 2025-09-26)
-
-### CodeGen Element Access Breakthrough
-- **CodeGen Pattern Discovery**: `staticTexts.matching(identifier:).element(boundBy:)` pattern provides reliable element access when multiple elements share accessibility identifiers
-- **TestUtilities Enhancement**: `findElementsUsingCodeGenPatterns()` function systematically applies CodeGen-discovered patterns for robust element targeting
-- **SwiftUI Reality vs Assumptions**: CodeGen recordings reveal Lists render as CollectionViews (not Tables), NavigationStack as CollectionView (not ScrollView)
-- **User CodeGen Recording Strategy**: When `TestUtilities.debugElements()` insufficient, request user CodeGen recording for complex UI interaction breakthroughs
-
-### Advanced Element Targeting Patterns
-- **Multiple Element Disambiguation**: Use `.element(boundBy: index)` pattern when multiple elements share identifiers - discovered through CodeGen analysis
-- **Accessibility Hierarchy Understanding**: CodeGen provides ground truth for SwiftUI accessibility structure vs developer assumptions
-- **Complex UI Interaction Solutions**: Calendar modal dismissal, sheet presentation, and nested navigation solved through CodeGen pattern analysis
-
-### Test Quality Framework Integration
-- **Acceptance Criteria First**: Write acceptance criteria as spec; implement and wire up test methods; if elements missing/wrong, fix implementation, NOT test
-- **CodeGen Collaboration Pattern**: When element targeting fails after debug utilities, collaborate with user through CodeGen recording for solution discovery
-- **Implementation Validation**: Tests validate expected behavior - element targeting issues indicate implementation problems, not test framework limitations
+> **For E2E testing patterns, element targeting, CodeGen integration, and test quality frameworks**, see `.claude/context/testing-config.md`
 
 ## Swift Charts & Advanced UI Integration (Issue #56 Completion)
 
@@ -251,32 +185,13 @@ author: Claude Code PM System
 - **Public API Design**: Chart control public API pattern (setZoomLevel, setPanOffset, resetZoomAndPan) provides programmatic control with proper encapsulation
 - **Accessibility Architecture**: Comprehensive VoiceOver support with dynamic descriptions and trend analysis requires thoughtful component design patterns
 
-## Medical App Testing & Coverage Management (Issue #71)
+## Medical App Quality & Testing
+> **For testing patterns, coverage management, Swift Testing framework usage, and medical app testing standards**, see `.claude/context/testing-config.md`
 
-### Coverage Configuration Management
-- **Coverage Configuration File Path Requirements**: File paths in coverage-config.json must match actual directory structure relative to target (not simplified names) - critical for pre-commit hook validation
-- **XcodeGen Project Management for Tests**: Automatic test file inclusion requires `xcodegen generate` after adding new Swift files - essential for new test files to appear in test runs
-
-### Swift Testing Framework Enhancement
-- **Test Compilation Error Resolution Patterns**: Fixed heterogeneous collection issues and type annotation problems in Swift Testing framework - requires careful type specification in test data creation
-- **Chart Data Type Integration**: Successfully resolved compilation issues with AdvancedDoseMarker, DoseAlertLevel, and DoseMarkerMetadata types through proper enum value usage and type annotation
-
-### Medical App Quality Gates
-- **Pre-Commit Hook Integration**: SwiftLint, coverage validation, and build verification in pre-commit hooks ensure medical-grade code quality standards are maintained automatically
-- **Coverage Validation Workflow**: Fix coverage configuration before attempting commits to prevent pre-commit hook failures - configuration validation must pass before code changes
-
-## AdherenceInsights Technology Integration (Issue #57)
-
-### Swift Testing Framework Debugging
-- **Swift Testing Framework**: Debug output in tests effectively reveals business logic issues - discovered during Issue #57
-- **Force Unwrapping in Tests**: Safe unwrapping as "fix" masks underlying logic problems - avoid this pattern, fix root cause instead
-- **Business Logic Validation**: Unit tests are critical for validating medical calculation accuracy
-- **Medical Testing Standards**: Healthcare applications require rigorous testing to ensure patient safety through accurate calculations
-
-### Medical Algorithm Testing Patterns
-- **SwiftData Testing Integration**: Test environment requires special handling to avoid relationship crashes
-- **Medical Calculation Validation**: Unit tests must validate medical algorithm accuracy, not work around bad logic
-- **Weekly vs Daily Dosing Patterns**: Algorithm design must account for different medication schedules
+### Key Medical Testing Insights
+- **Medical Calculation Accuracy**: Business logic validation critical for patient safety
+- **Weekly vs Daily Dosing**: Algorithm design must account for different medication schedules
+- **SwiftData Testing**: Test environment requires special handling to avoid relationship crashes
 
 ## Analytics UI/UX Integration (Issue #59)
 
@@ -297,20 +212,16 @@ author: Claude Code PM System
 
 ## Dose Scheduling Models Integration (Issue #174)
 
-### SwiftData Model Testing Anti-Patterns
-- **Incomplete ModelConfiguration**: Fixed systematic issue across multiple test files - ModelConfiguration in tests must include ALL models (not just those directly tested) and `cloudKitDatabase: .none` for proper test isolation
+### SwiftData Model Requirements
 - **CloudKit Relationship Optionality**: All SwiftData relationships must be optional for CloudKit sync compatibility - non-optional relationships cause sync failures
-- **Schema Evolution Testing**: When adding new models (DoseSchedule, ScheduledDose, DoseEvent), all existing tests checking entity counts must be updated
+- **Schema Evolution**: When adding new models (DoseSchedule, ScheduledDose, DoseEvent), consider impact on existing queries and entity counts
 
-### Test Coverage Patterns for Computed Properties
-- **Uncovered Closure Testing**: Computed properties with closures (filter, min, map) require specific test scenarios that exercise the closure code paths
-- **Boundary Condition Testing**: Computed properties comparing dates need tests at exact boundaries with 1-second tolerance for timing precision
-- **Status Enum Testing**: Computed properties returning status enums need comprehensive tests for all possible state transitions
+### Parallel Stream Development Success
+- **4-Stream Coordination**: Successfully completed 4 parallel streams with no merge conflicts
+- **File Ownership Strategy**: Clear file ownership prevents conflicts - each stream owns specific model files
+- **Integration Validation**: Dedicated integration stream validates cross-model interactions
 
-### Parallel Stream Development Success (Issue #174)
-- **4-Stream Parallel Coordination**: Successfully completed 4 parallel streams (ScheduledDose: 29 tests, DoseSchedule: 20 tests, DoseEvent: 20 tests, Integration: 6 tests) with no merge conflicts
-- **File Ownership Strategy**: Clear file ownership prevents conflicts - each stream owns specific model files and test files
-- **Integration Stream Value**: Dedicated integration stream (Stream D) validates cross-model interactions and catches integration bugs early
+> **For SwiftData testing anti-patterns, test coverage patterns, and ModelConfiguration requirements**, see `.claude/context/testing-config.md`
 
 ## ScheduleService Architecture (Issue #175)
 
@@ -334,37 +245,23 @@ author: Claude Code PM System
 - **Category Per Service**: Each service gets its own logging category for easy filtering and debugging
 - **Extension Logging**: Extensions inherit logging category from base service for consistent log organization
 
-## Onboarding Integration E2E Testing (Issue #177)
-
-### XCUITest Back Button Access Patterns
-- **Back Button Element Discovery**: SwiftUI back buttons in NavigationStack require explicit accessibility identifier (`app.buttons["onboarding-back-button"]`) - navigation bar queries (`app.navigationBars.buttons.element(boundBy: 0)`) unreliable
-- **Debug Output Verification**: `TestUtilities.debugElements()` reveals back button in Buttons list with specific identifier - more reliable than accessibility hierarchy assumptions
-- **Element Type Verification**: Back buttons appear as standard Button elements in accessibility hierarchy, not as NavigationBar sub-elements
-
-### Onboarding Flow E2E Testing Patterns
-- **Schedule Setup Integration**: E2E tests validate complete onboarding flow (welcome → medication → dose → schedule setup → notifications → main app)
-- **Optional Screen Handling**: Use `waitForExistence(timeout:)` for optional screens like notifications permission - enables flexible flow validation
-- **Tab Bar Verification**: Tab bar existence sufficient for main app verification in integration tests - confirms successful onboarding completion
-- **Navigation Timing**: Strategic `sleep(3)` placement for navigation between onboarding steps - ensures view rendering completion
+## Onboarding Integration (Issue #177)
 
 ### Concentration Chart Preview Performance
-- **Chart Rendering Validation**: Concentration curve preview renders reliably in < 1 second during onboarding schedule setup - meets NFR1 requirement
-- **Pattern Update Performance**: Chart updates on schedule pattern change complete within E2E-appropriate timeouts (< 1s) - validated through performance tests
-- **Swift Charts Integration**: PharmacokineticsEngine integration with Swift Charts for onboarding concentration preview demonstrates medical-grade chart rendering performance
+- **Chart Rendering**: Concentration curve preview renders reliably in < 1 second during onboarding schedule setup - meets NFR1 requirement
+- **Pattern Update Performance**: Chart updates on schedule pattern change complete within appropriate timeouts (< 1s)
+- **Swift Charts Integration**: PharmacokineticsEngine integration with Swift Charts demonstrates medical-grade chart rendering
+
+> **For onboarding E2E testing patterns, XCUITest element access, and navigation timing**, see `.claude/context/testing-config.md`
 
 ## NotificationService Architecture (Issue #176)
 
 ### iOS User Notifications Framework Integration
-- **UNUserNotificationCenterDelegate Integration**: UNUserNotificationCenterDelegate integration requires careful coordination with @Observable pattern - delegate methods run on background threads requiring ModelContext management
-- **Notification Queue Management Patterns**: 30-day rolling window with 64-notification iOS limit requires prioritization logic and periodic refresh - background refresh ensures queue stays current
-- **SwiftData ModelContext Thread Safety**: Notification action handling in delegate methods requires careful ModelContext access from background threads - @MainActor isolation critical for data integrity
-- **Mock Framework Design**: Comprehensive mock implementation (MockNotificationCenter with 8 methods, 5 internal arrays) enables testing of complex notification workflows including authorization, scheduling, cancellation, delivery, and badge management
+- **UNUserNotificationCenterDelegate Integration**: Requires careful coordination with @Observable pattern - delegate methods run on background threads requiring ModelContext management
+- **Notification Queue Management**: 30-day rolling window with 64-notification iOS limit requires prioritization logic and periodic refresh
+- **SwiftData ModelContext Thread Safety**: Notification action handling requires careful ModelContext access from background threads - @MainActor isolation critical for data integrity
 
-### UNUserNotificationCenter Testing Patterns
-- **Protocol-Based Abstraction**: NotificationCenterProtocol abstraction enables comprehensive unit testing of notification logic without requiring actual UNUserNotificationCenter implementation
-- **Mock Implementation Complexity**: MockNotificationCenter requires tracking multiple internal states (pending notifications, delivered notifications, badge count, authorization status, registered categories) to accurately simulate framework behavior
-- **Unit Testing Limitations**: Framework-level notification scheduling and delivery cannot be fully unit tested - requires E2E validation for actual notification delivery and category registration verification
-- **Test Isolation Benefits**: Protocol-based mocking enables testing notification logic in isolation from iOS system frameworks - critical for reliable CI/CD test execution
+> **For NotificationService testing patterns, protocol-based abstraction, and mock framework design**, see `.claude/context/testing-config.md`
 
 ## Update History
 - 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing section (Issue #177) - XCUITest back button access patterns, onboarding flow E2E testing patterns, and concentration chart preview performance validation for schedule setup integration
