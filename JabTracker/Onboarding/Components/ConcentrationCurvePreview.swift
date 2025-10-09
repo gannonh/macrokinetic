@@ -97,6 +97,7 @@ struct ConcentrationCurvePreview: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.gray.opacity(0.05))
         )
+        .accessibilityIdentifier("concentration-curve-preview")
         .task {
             await updateConcentrationData()
         }

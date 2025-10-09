@@ -18,15 +18,80 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         app.launch()
     }
 
+    // MARK: - Helper Methods
+
+    /// Navigate from app launch through onboarding to schedule setup step
+    private func navigateToScheduleSetup() throws {
+        // Welcome screen
+        let welcomeContinue = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(welcomeContinue.waitForExistence(timeout: 5), "Continue button should exist on welcome screen")
+        welcomeContinue.tap()
+
+        // Medication selection - use the actual medication button identifier
+        let semaglutideButton = app.buttons["medication-semaglutide"]
+        XCTAssertTrue(semaglutideButton.waitForExistence(timeout: 5), "Semaglutide button should exist")
+        semaglutideButton.tap()
+
+        // Continue to dose setup
+        let medicationContinue = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(
+            medicationContinue.waitForExistence(timeout: 5), "Continue button should exist after medication selection")
+        medicationContinue.tap()
+
+        // Dose setup - select 0.25mg dose button
+        let doseButton = app.buttons["dose-button-0.25"]
+        XCTAssertTrue(doseButton.waitForExistence(timeout: 5), "Dose button should exist")
+        doseButton.tap()
+
+        // Select injection site (required to proceed)
+        let abdomenSite = app.buttons["injection-site-abdomen"]
+        XCTAssertTrue(abdomenSite.waitForExistence(timeout: 2), "Injection site button should exist")
+        abdomenSite.tap()
+
+        // Continue to schedule setup (button should be enabled now)
+        let doseContinue = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(doseContinue.exists, "Continue button should exist after dose entry")
+        doseContinue.tap()
+
+        // Wait for schedule setup view to appear (give extra time for navigation)
+        // Debug what we see
+        sleep(3)
+        TestUtilities.debugElements(in: app, containing: "")
+
+        // Try different element types for schedule setup view
+        var scheduleView = app.scrollViews["schedule-setup-view"]
+        if !scheduleView.exists {
+            scheduleView = app.otherElements["schedule-setup-view"]
+        }
+
+        XCTAssertTrue(scheduleView.waitForExistence(timeout: 10), "Schedule setup view should appear")
+    }
+
     // MARK: - ACCEPTANCE CRITERION 1: Schedule setup appears after dose setup step
 
     func testScheduleSetupAppearsAfterDoseSetup() throws {
         // GIVEN: User completes welcome, medication selection, and dose setup steps
         // WHEN: User taps Continue on dose setup step
+        try navigateToScheduleSetup()
+
+        // Debug elements to understand actual accessibility hierarchy
+        TestUtilities.debugElements(in: app, containing: "schedule")
+
         // THEN: Schedule setup view appears with "Set Up Your Schedule" title
+        let titleText = app.staticTexts["Set Up Your Schedule"]
+        XCTAssertTrue(titleText.exists, "Schedule setup title should be visible")
+
         // THEN: Schedule pattern picker is visible
+        let weeklyCard = app.buttons["pattern-card-weekly"]
+        XCTAssertTrue(weeklyCard.exists, "Weekly pattern card should be visible")
+
         // THEN: Concentration preview section is visible
+        let preview = app.otherElements["concentration-curve-preview"]
+        XCTAssertTrue(preview.exists, "Concentration preview should be visible")
+
         // THEN: Reminder preferences section is visible
+        let reminderPicker = app.buttons["reminder-time-picker"]
+        XCTAssertTrue(reminderPicker.exists, "Reminder picker should be visible")
     }
 
     // MARK: - ACCEPTANCE CRITERION 2: User can select from 3 schedule patterns

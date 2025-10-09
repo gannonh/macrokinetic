@@ -49,6 +49,7 @@ struct SchedulePatternCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("pattern-card-\(pattern.rawValue)")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(pattern.displayName)
         .accessibilityHint(pattern.description)
