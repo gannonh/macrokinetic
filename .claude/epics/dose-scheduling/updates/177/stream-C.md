@@ -2,7 +2,7 @@
 
 **Assignee**: parallel-stream-developer agent
 **Started**: 2025-10-09
-**Status**: In Progress - Implementation Issue Discovered
+**Status**: In Progress - First Test Passing ✅
 **Target**: 12 E2E acceptance tests for onboarding schedule setup
 
 ## Scope
@@ -10,7 +10,7 @@
 Implement comprehensive E2E test coverage for Issue #177 onboarding schedule setup flow.
 
 ### Test Coverage (12 Tests)
-1. ✅ Navigation: Schedule setup appears after dose setup (PARTIALLY IMPLEMENTED)
+1. ✅ Navigation: Schedule setup appears after dose setup (COMPLETE - 14.4s)
 2. ⏳ Pattern Selection: User can select 3 schedule patterns
 3. ⏳ Preview Updates: Concentration preview updates on pattern change
 4. ⏳ Peak/Trough Display: Peak and trough levels annotated
@@ -39,27 +39,19 @@ Implement comprehensive E2E test coverage for Issue #177 onboarding schedule set
    - Checks for pattern picker, concentration preview, reminder section
    - Uses `TestUtilities.debugElements()` for element discovery
 
-### Critical Issue Discovered
+### Initial Issue (RESOLVED)
 
-**Problem**: Schedule setup step does not appear in onboarding flow
+**Perceived Problem**: Test failed with "Schedule setup view should appear"
 
-**Symptoms**:
-- After completing dose setup step (selecting dose + injection site)
-- Tapping Continue button goes directly to dashboard
-- Schedule setup view never displays
-- Debug output shows dashboard tab bar instead of schedule setup elements
+**Actual Root Cause**: Missing accessibility identifiers in UI components (not broken navigation)
 
-**Investigation Needed**:
-1. Verify OnboardingViewModel navigation logic
-2. Check if schedule setup step is being skipped by a condition
-3. Confirm OnboardingStep enum order
-4. Verify OnboardingView switch statement includes `.scheduleSetup` case
+**User's Correction**: Manual testing screenshots proved schedule setup view was appearing correctly. The issue was E2E test element discovery, not implementation.
 
-**Possible Root Causes**:
-1. Early onboarding completion (bypassing schedule setup)
-2. Missing `.scheduleSetup` case in OnboardingView navigation
-3. Condition in OnboardingViewModel skipping schedule step
-4. OnboardingStep order issue
+**Debug Output Analysis**:
+- Test navigation worked correctly through all onboarding steps
+- Schedule setup view was rendering on screen
+- Test failed because components lacked `.accessibilityIdentifier()` modifiers
+- Empty string `""` in ScrollViews debug output was the schedule view without identifier
 
 ### Files Modified
 
@@ -67,19 +59,6 @@ Implement comprehensive E2E test coverage for Issue #177 onboarding schedule set
   - Added `navigateToScheduleSetup()` helper (lines 23-67)
   - Implemented `testScheduleSetupAppearsAfterDoseSetup()` (lines 71-94)
   - Uses debug-first approach with `TestUtilities.debugElements()`
-
-### Blocker
-
-**Cannot proceed with remaining 11 tests until schedule setup navigation is fixed.**
-
-The E2E tests are correctly written but cannot pass because the UI flow itself is broken. This is an implementation issue in Stream A or Stream B, not a testing issue.
-
-## Next Steps
-
-1. **Manual Verification**: Run app manually to confirm schedule setup doesn't appear
-2. **Root Cause Analysis**: Investigate OnboardingViewModel and OnboardingView navigation
-3. **Fix Implementation**: Correct navigation logic to show schedule setup step
-4. **Resume Testing**: Once navigation works, implement remaining 11 tests
 
 ## Testing Approach
 
@@ -99,17 +78,61 @@ Following iterative E2E process from testing-config.md:
 
 ## Dependencies
 
-**Blocked By**:
-- Schedule setup navigation implementation issue
-
-**Requires**:
+**Requires** (All Complete ✅):
 - Stream A: ScheduleSetupView and components (COMPLETE)
 - Stream B: OnboardingViewModel integration (COMPLETE)
-- Working onboarding navigation to schedule setup step (BROKEN)
+- Accessibility identifiers for E2E element discovery (COMPLETE - Session 2)
+
+## Session 2: 2025-10-09 (Accessibility Identifier Fixes)
+
+### Problem Resolution
+
+**User Correction**: User provided screenshots proving schedule setup view WAS appearing correctly during manual testing. The issue was not broken navigation - it was missing accessibility identifiers in UI components.
+
+**Root Cause**: UI components had accessibility labels/hints but not accessibility **identifiers** that XCUITest requires for element queries.
+
+### Accessibility Identifiers Added
+
+1. **ScheduleSetupView.swift** (line 81)
+   - Added `.accessibilityIdentifier("schedule-setup-view")` to ScrollView
+   - Enables: `app.scrollViews["schedule-setup-view"]`
+
+2. **SchedulePatternCard.swift** (line 52)
+   - Added `.accessibilityIdentifier("pattern-card-\(pattern.rawValue)")`
+   - Creates: `"pattern-card-weekly"`, `"pattern-card-splitDose"`, `"pattern-card-custom"`
+
+3. **ConcentrationCurvePreview.swift** (line 100)
+   - Added `.accessibilityIdentifier("concentration-curve-preview")` to VStack
+   - Enables: `app.otherElements["concentration-curve-preview"]`
+
+4. **ReminderPreferencesView.swift** (line 40)
+   - Added `.accessibilityIdentifier("reminder-time-picker")` to Picker
+   - Enables: `app.buttons["reminder-time-picker"]`
+
+### Test Results
+
+✅ **testScheduleSetupAppearsAfterDoseSetup()** - PASSING (14.4s)
+- Verifies schedule setup view appears after dose setup
+- Validates all UI components are accessible with correct identifiers
+- Comprehensive assertions for title, pattern cards, preview, and reminders
+
+### Commits
+
+- **e2486fe**: "fix(#177): Add missing accessibility identifiers for E2E testing"
+  - 4 UI components updated
+  - 1/12 tests passing
+  - All pre-commit checks passed
+
+### Next Steps
+
+- Implement test #2: Pattern Selection (one test at a time, following iterative E2E process)
+- Follow debug-first approach with TestUtilities.debugElements()
+- Commit after each test passes
 
 ## Timeline
 
-- Session 1 (2025-10-09): Navigation helper + first test + issue discovery
-- Session 2 (TBD): Resume after navigation fix - implement tests 2-6
-- Session 3 (TBD): Implement tests 7-12
-- Session 4 (TBD): Verify all tests pass, commit, update documentation
+- Session 1 (2025-10-09 06:30-07:00): Navigation helper + first test + perceived issue discovery
+- Session 2 (2025-10-09 10:45-11:00): Accessibility identifier fixes + first test passing ✅
+- Session 3 (TBD): Implement tests 2-6 (one at a time)
+- Session 4 (TBD): Implement tests 7-12 (one at a time)
+- Session 5 (TBD): Verify all tests pass, final commit, update documentation
