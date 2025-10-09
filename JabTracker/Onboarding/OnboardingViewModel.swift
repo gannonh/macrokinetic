@@ -248,6 +248,12 @@ class OnboardingViewModel: ObservableObject {
         medicationProfile.user = user
         context.insert(medicationProfile)
 
+        // Save medication profile first
+        try context.save()
+
+        // Create initial dose schedule
+        try await createInitialSchedule(for: medicationProfile, in: context)
+
         // Mark user onboarding as complete
         user.hasCompletedOnboarding = true
         user.onboardingCompletedAt = Date()
@@ -258,6 +264,42 @@ class OnboardingViewModel: ObservableObject {
         // Store completion in UserDefaults as backup
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
+    }
+
+    /// Creates initial dose schedule for the medication profile
+    private func createInitialSchedule(
+        for medicationProfile: MedicationProfile,
+        in context: ModelContext
+    ) async throws {
+        // Create schedule service
+        let scheduleService = ScheduleService(context: context)
+
+        // Build schedule configuration
+        let scheduleConfig = ScheduleConfiguration(
+            dayOfWeek: Calendar.current.component(.weekday, from: selectedStartDate),
+            timeOfDay: TimeComponents(
+                hour: Calendar.current.component(.hour, from: selectedStartDate),
+                minute: Calendar.current.component(.minute, from: selectedStartDate)
+            ),
+            interval: 7,  // Weekly by default
+            doseAmount: selectedDose,
+            windowMinutesBefore: 120,  // 2 hours before
+            windowMinutesAfter: 120,  // 2 hours after
+            splitDoseCount: schedulePattern == .splitDose ? 2 : nil,
+            splitIntervalMinutes: schedulePattern == .splitDose ? 720 : nil,  // 12 hours
+            customRecurrence: nil  // Custom patterns not yet supported in onboarding
+        )
+
+        // Create the schedule
+        _ = try scheduleService.createSchedule(
+            for: medicationProfile,
+            pattern: schedulePattern,
+            startDate: selectedStartDate,
+            baseSchedule: scheduleConfig
+        )
+
+        // Note: Notification scheduling will be handled by NotificationService
+        // in a future update when the user grants notification permissions
     }
 
     private func updateProgress() {
