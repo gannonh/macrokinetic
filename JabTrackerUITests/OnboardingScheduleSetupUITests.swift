@@ -53,10 +53,8 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(doseContinue.exists, "Continue button should exist after dose entry")
         doseContinue.tap()
 
-        // Wait for schedule setup view to appear (give extra time for navigation)
-        // Debug what we see
+        // Wait for schedule setup view to appear
         sleep(3)
-        TestUtilities.debugElements(in: app, containing: "")
 
         // Try different element types for schedule setup view
         var scheduleView = app.scrollViews["schedule-setup-view"]
@@ -73,9 +71,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // GIVEN: User completes welcome, medication selection, and dose setup steps
         // WHEN: User taps Continue on dose setup step
         try navigateToScheduleSetup()
-
-        // Debug elements to understand actual accessibility hierarchy
-        TestUtilities.debugElements(in: app, containing: "schedule")
 
         // THEN: Schedule setup view appears with "Set Up Your Schedule" title
         let titleText = app.staticTexts["Set Up Your Schedule"]
@@ -153,13 +148,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(peakLabel.waitForExistence(timeout: 5), "Peak concentration label should exist")
         XCTAssertTrue(troughLabel.exists, "Trough concentration label should exist")
 
-        // Get accessibility values (which include "Title: Value" format)
-        let initialPeakValue = peakLabel.value as? String ?? ""
-        let initialTroughValue = troughLabel.value as? String ?? ""
-
-        print("📊 Initial concentrations - Peak label: \(peakLabel.label), value: \(initialPeakValue)")
-        print("📊 Initial concentrations - Trough label: \(troughLabel.label), value: \(initialTroughValue)")
-
         // WHEN: User selects "Split Dose" pattern
         let splitDoseCard = app.buttons["pattern-card-splitDose"]
         XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should exist")
@@ -171,28 +159,13 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Wait for labels to be stable (small delay for UI to update)
         usleep(100_000)  // 0.1 second
 
-        // THEN: Peak concentration label updates
-        let updatedPeakValue = peakLabel.value as? String ?? ""
         let updateDuration = Date().timeIntervalSince(updateStartTime)
-        print("📊 Updated peak concentration value: \(updatedPeakValue)")
 
-        // THEN: Trough concentration label updates
-        let updatedTroughValue = troughLabel.value as? String ?? ""
-        print("📊 Updated trough concentration value: \(updatedTroughValue)")
-
-        // Verify labels still exist and are displaying values after pattern change
-        // Note: During onboarding with no dose history, concentration values may be
-        // calculated from projected doses, so we just verify labels are present and updated
+        // THEN: Labels still exist and are displaying values after pattern change
         XCTAssertTrue(peakLabel.exists, "Peak label should still exist after pattern change")
         XCTAssertTrue(troughLabel.exists, "Trough label should still exist after pattern change")
 
-        // Values should either change (if preview recalculates) or stay the same (if showing placeholder)
-        // The important thing is the preview updated without crashing
-        print("📊 Concentration values - Initial: Peak=\(initialPeakValue), Trough=\(initialTroughValue)")
-        print("📊 Concentration values - Updated: Peak=\(updatedPeakValue), Trough=\(updatedTroughValue)")
-
         // THEN: Preview update completes in <1 second (already measured above)
-        print("⏱️ Update duration: \(String(format: "%.3f", updateDuration))s")
         XCTAssertLessThan(
             updateDuration, 1.0,
             "Preview update should complete in less than 1 second (NFR requirement)")
@@ -216,13 +189,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Verify labels show title and value text
         XCTAssertEqual(peakLabel.label, "Peak", "Peak label should show 'Peak' title")
         XCTAssertEqual(troughLabel.label, "Trough", "Trough label should show 'Trough' title")
-
-        print("📊 Peak label: \(peakLabel.label), accessibility value: \(String(describing: peakLabel.value))")
-        print("📊 Trough label: \(troughLabel.label), accessibility value: \(String(describing: troughLabel.value))")
-
-        // Note: Peak/trough numeric values are displayed but during onboarding without dose history,
-        // the pharmacokinetic engine may show placeholder values. The important validation is that
-        // both labels are present and accessible.
     }
 
     // MARK: - ACCEPTANCE CRITERION 5: Reminder preferences configurable
@@ -235,13 +201,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         let reminderPicker = app.buttons["reminder-time-picker"]
         XCTAssertTrue(reminderPicker.exists, "Reminder picker should be visible")
 
-        // Verify picker is initially present
-        print("📊 Initial reminder picker value: \(reminderPicker.value ?? "nil")")
-
-        // Note: Testing picker option selection in UI tests is complex as menu pickers
-        // present as system UI elements. The important validation is that the picker exists
-        // and is accessible with the correct identifier.
-
         // THEN: Verify multiple reminders toggle exists and is accessible
         let multipleRemindersToggle = app.switches["Enable multiple reminders"]
         XCTAssertTrue(
@@ -250,14 +209,12 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         // Verify toggle starts in off state
         let initialValue = multipleRemindersToggle.value as? String ?? ""
-        print("📊 Initial toggle value: \(initialValue)")
 
         // WHEN: User toggles "Send multiple reminders"
         multipleRemindersToggle.tap()
 
         // THEN: Toggle switches on/off correctly
         let updatedValue = multipleRemindersToggle.value as? String ?? ""
-        print("📊 Updated toggle value: \(updatedValue)")
         XCTAssertNotEqual(
             initialValue, updatedValue,
             "Toggle value should change after tap")
@@ -265,7 +222,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Tap again to verify it toggles back
         multipleRemindersToggle.tap()
         let finalValue = multipleRemindersToggle.value as? String ?? ""
-        print("📊 Final toggle value: \(finalValue)")
         XCTAssertEqual(
             initialValue, finalValue,
             "Toggle should return to initial state after second tap")
@@ -294,14 +250,10 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         // WHEN: User taps toggle
         let initialValue = multipleRemindersToggle.value as? String ?? ""
-        print("📊 Initial toggle value: \(initialValue)")
-
         multipleRemindersToggle.tap()
 
         // THEN: Toggle state changes immediately
         let updatedValue = multipleRemindersToggle.value as? String ?? ""
-        print("📊 Updated toggle value: \(updatedValue)")
-
         XCTAssertNotEqual(
             initialValue, updatedValue,
             "Toggle state should change immediately after tap")
@@ -322,24 +274,17 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(continueButton.exists, "Continue button should exist")
         XCTAssertTrue(continueButton.isEnabled, "Continue button should be enabled when pattern is selected")
 
-        print("📊 Continue button state with pattern selected - enabled: \(continueButton.isEnabled)")
-
         // WHEN: User taps Continue button
         continueButton.tap()
 
         // THEN: User proceeds to notifications/permissions step
-        // Wait for next screen to appear (either permissions or notifications)
         sleep(2)  // Give time for navigation
-
-        // Debug to see what elements we have on next screen
-        TestUtilities.debugElements(in: app, containing: "")
 
         // Verify we've left schedule setup screen
         let scheduleView = app.scrollViews["schedule-setup-view"]
         XCTAssertFalse(scheduleView.exists, "Should have navigated away from schedule setup view")
 
         // Verify we're on a new screen (permissions request view typically appears next)
-        // This could be "Notifications" or "Permissions" depending on onboarding flow
         let navigationProgressed = !scheduleView.exists
         XCTAssertTrue(
             navigationProgressed,
@@ -357,8 +302,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(weeklyCard.isSelected, "Weekly pattern should be selected by default")
 
         // WHEN: User verifies reminder preferences are accessible
-        // Note: Picker option selection is complex in XCUITest (system UI)
-        // We verify the picker exists but don't change the default value
         let reminderPicker = app.buttons["reminder-time-picker"]
         XCTAssertTrue(reminderPicker.exists, "Reminder picker should be visible")
 
@@ -370,7 +313,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         let toggleValue = multipleRemindersToggle.value as? String ?? "0"
         if toggleValue == "0" {
             multipleRemindersToggle.tap()
-            print("📊 Enabled multiple reminders toggle")
         }
 
         // WHEN: User taps Continue to proceed to next step
@@ -381,45 +323,26 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Wait for next screen (permissions or completion)
         sleep(3)
 
-        // Debug what we see next
-        TestUtilities.debugElements(in: app, containing: "")
-
         // WHEN: User completes remaining onboarding steps
-        // Note: Notifications permission screen may appear
-        // We'll look for notification buttons or the main app tab bar
-
         // Try to find and handle notifications screen if present
         let notificationsEnableButton = app.buttons["notifications-enable-button"]
         let notificationsSkipButton = app.buttons["notifications-skip-button"]
 
         if notificationsEnableButton.waitForExistence(timeout: 5) {
-            print("📊 Notifications screen appeared - skipping notifications")
-            // Skip notifications for testing (can also enable if needed)
             notificationsSkipButton.tap()
             sleep(2)
         } else if notificationsSkipButton.exists {
-            print("📊 Notifications screen appeared - skipping notifications")
             notificationsSkipButton.tap()
             sleep(2)
         }
 
         // THEN: User reaches main app with tab bar visible
-        // The main app should show the tab bar with Dashboard, Add, History, Analytics, Settings
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(
             tabBar.waitForExistence(timeout: 10),
             "Main app tab bar should appear after completing onboarding")
 
-        // Verify we can access the main app (tab bar exists is sufficient)
-        // Individual tab button identifiers may vary, so we just check tab bar exists
         XCTAssertTrue(tabBar.exists, "Tab bar should be accessible in main app")
-
-        print("📊 Successfully completed onboarding flow with weekly schedule")
-
-        // THEN: User has completed onboarding (implicitly verified by reaching main app)
-        // Note: Verifying DoseSchedule entity creation would require database access
-        // which isn't available in E2E tests. The presence of the main app tab bar
-        // confirms successful onboarding completion.
     }
 
     // MARK: - ACCEPTANCE CRITERION 9: Complete onboarding with split-dose schedule
@@ -439,11 +362,8 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Tap split dose pattern
         splitDoseCard.tap()
         XCTAssertTrue(splitDoseCard.isSelected, "Split dose pattern should be selected after tap")
-        print("📊 Selected split-dose pattern")
 
         // WHEN: User configures reminder for "1 hour before"
-        // Note: Picker option selection is complex in XCUITest (system UI)
-        // We verify the picker exists but testing specific option selection is not reliable
         let reminderPicker = app.buttons["reminder-time-picker"]
         XCTAssertTrue(reminderPicker.exists, "Reminder picker should be visible")
 
@@ -454,7 +374,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         // Wait for next screen
         sleep(3)
-        TestUtilities.debugElements(in: app, containing: "")
 
         // WHEN: User completes remaining onboarding steps
         // Try to find and handle notifications screen if present
@@ -462,11 +381,9 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         let notificationsSkipButton = app.buttons["notifications-skip-button"]
 
         if notificationsEnableButton.waitForExistence(timeout: 5) {
-            print("📊 Notifications screen appeared - skipping notifications")
             notificationsSkipButton.tap()
             sleep(2)
         } else if notificationsSkipButton.exists {
-            print("📊 Notifications screen appeared - skipping notifications")
             notificationsSkipButton.tap()
             sleep(2)
         }
@@ -478,13 +395,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
             "Main app tab bar should appear after completing onboarding")
 
         XCTAssertTrue(tabBar.exists, "Tab bar should be accessible in main app")
-        print("📊 Successfully completed onboarding flow with split-dose schedule")
-
-        // THEN: DoseSchedule entity is created with split-dose pattern
-        // THEN: User reaches main app with twice-weekly schedule configured
-        // Note: Verifying DoseSchedule entity and twice-weekly configuration would require database access
-        // which isn't available in E2E tests. The presence of the main app tab bar
-        // confirms successful onboarding completion with the selected pattern.
     }
 
     // MARK: - ACCESSIBILITY: VoiceOver navigation
@@ -492,9 +402,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
     func testVoiceOverNavigation() throws {
         // GIVEN: User is on schedule setup step
         try navigateToScheduleSetup()
-
-        // WHEN: VoiceOver is enabled (simulated by checking accessibility properties)
-        // Note: XCUITest doesn't simulate actual VoiceOver, but we can verify accessibility properties
 
         // THEN: All pattern cards are accessible with descriptive labels
         let weeklyCard = app.buttons["pattern-card-weekly"]
@@ -512,8 +419,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
             "Split dose card should have descriptive label")
         XCTAssertEqual(customCard.label, "Custom Pattern", "Custom card should have descriptive label")
 
-        print("📊 Pattern cards accessibility verified")
-
         // THEN: Concentration preview has accessibility label describing trend
         let peakLabel = app.staticTexts.matching(identifier: "concentration-label-peak").element(boundBy: 0)
         let troughLabel = app.staticTexts.matching(identifier: "concentration-label-trough").element(boundBy: 0)
@@ -525,8 +430,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertEqual(peakLabel.label, "Peak", "Peak label should have proper accessibility label")
         XCTAssertEqual(troughLabel.label, "Trough", "Trough label should have proper accessibility label")
 
-        print("📊 Concentration preview accessibility verified")
-
         // THEN: Reminder picker announces selected value
         let reminderPicker = app.buttons["reminder-time-picker"]
         XCTAssertTrue(reminderPicker.exists, "Reminder picker should exist")
@@ -534,7 +437,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Verify picker has accessibility value
         let pickerValue = reminderPicker.value as? String
         XCTAssertNotNil(pickerValue, "Reminder picker should have accessibility value")
-        print("📊 Reminder picker accessibility value: \(pickerValue ?? "nil")")
 
         // THEN: Multiple reminders toggle announces state
         let multipleRemindersToggle = app.switches["Enable multiple reminders"]
@@ -543,7 +445,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Verify toggle has proper accessibility value indicating state
         let toggleValue = multipleRemindersToggle.value as? String
         XCTAssertNotNil(toggleValue, "Toggle should have accessibility value indicating state")
-        print("📊 Multiple reminders toggle accessibility value: \(toggleValue ?? "nil")")
 
         // THEN: Continue button announces enabled/disabled state with reason
         let continueButton = app.buttons["onboarding-continue-button"]
@@ -553,10 +454,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // Verify button has proper accessibility label
         let buttonLabel = continueButton.label
         XCTAssertFalse(buttonLabel.isEmpty, "Continue button should have accessibility label")
-        print("📊 Continue button accessibility label: \(buttonLabel)")
-        print("📊 Continue button enabled state: \(continueButton.isEnabled)")
-
-        print("📊 All accessibility properties verified for VoiceOver navigation")
     }
 
     // MARK: - PERFORMANCE: Chart preview rendering
@@ -566,8 +463,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         try navigateToScheduleSetup()
 
         // WHEN: User views concentration preview (already rendered)
-        // THEN: Concentration curve preview renders in <1 second (NFR1)
-        // Note: navigateToScheduleSetup() already includes 3s sleep, so preview is rendered
         let preview = app.otherElements["concentration-curve-preview"]
         XCTAssertTrue(preview.exists, "Concentration preview should be rendered")
 
@@ -577,8 +472,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         XCTAssertTrue(peakLabel.exists, "Peak label should be rendered")
         XCTAssertTrue(troughLabel.exists, "Trough label should be rendered")
-
-        print("📊 Initial chart preview rendered successfully")
 
         // WHEN: User changes pattern
         let weeklyCard = app.buttons["pattern-card-weekly"]
@@ -597,11 +490,8 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(splitDoseCard.isSelected, "Split dose pattern should be selected after tap")
 
         let updateDuration = Date().timeIntervalSince(updateStartTime)
-        print("⏱️ Pattern change and UI update duration: \(String(format: "%.3f", updateDuration))s")
 
         // THEN: Preview updates in reasonable time
-        // Note: In E2E tests, <200ms is unrealistic due to rendering overhead
-        // We validate <1 second which is a reasonable E2E expectation
         XCTAssertLessThan(
             updateDuration, 1.0,
             "Preview update should complete in less than 1 second for E2E test (NFR requirement)")
@@ -610,8 +500,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(preview.exists, "Preview should still exist after pattern change")
         XCTAssertTrue(peakLabel.exists, "Peak label should still exist after pattern change")
         XCTAssertTrue(troughLabel.exists, "Trough label should still exist after pattern change")
-
-        print("📊 Chart preview performance validated - initial render and pattern change both working correctly")
     }
 
     // MARK: - NAVIGATION: Back button preserves state
@@ -625,13 +513,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should exist")
         splitDoseCard.tap()
         XCTAssertTrue(splitDoseCard.isSelected, "Split dose pattern should be selected")
-        print("📊 Selected split-dose pattern")
-
-        // WHEN: User configures reminder for "1 hour before"
-        // Note: Picker option selection is complex in XCUITest (system UI)
-        // We skip picker configuration in this test and focus on pattern + toggle state
-        let reminderPicker = app.buttons["reminder-time-picker"]
-        XCTAssertTrue(reminderPicker.exists, "Reminder picker should exist")
 
         // WHEN: User enables multiple reminders
         let multipleRemindersToggle = app.switches["Enable multiple reminders"]
@@ -640,7 +521,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         let toggleValue = multipleRemindersToggle.value as? String ?? "0"
         if toggleValue == "0" {
             multipleRemindersToggle.tap()
-            print("📊 Enabled multiple reminders toggle")
         }
 
         // Verify toggle is now enabled
@@ -655,13 +535,10 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         sleep(2)  // Wait for navigation
 
         // THEN: User returns to dose setup step
-        // Verify we're on dose setup by checking for dose button
         let doseButton = app.buttons["dose-button-0.25"]
         XCTAssertTrue(
             doseButton.waitForExistence(timeout: 5),
             "Should be back on dose setup step with dose button visible")
-
-        print("📊 Navigated back to dose setup step")
 
         // WHEN: User taps Continue to return to schedule setup
         let continueButton = app.buttons["onboarding-continue-button"]
@@ -680,21 +557,11 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(restoredSplitDoseCard.isSelected, "Split dose pattern should still be selected")
         XCTAssertFalse(weeklyCard.isSelected, "Weekly pattern should not be selected")
 
-        print("📊 Split-dose pattern selection preserved after back navigation")
-
-        // THEN: Previously configured reminder time is preserved
-        // Note: We verify picker still exists (value preservation is handled by ViewModel)
-        let restoredReminderPicker = app.buttons["reminder-time-picker"]
-        XCTAssertTrue(restoredReminderPicker.exists, "Reminder picker should still exist")
-
         // THEN: Multiple reminders toggle state is preserved
         let restoredToggle = app.switches["Enable multiple reminders"]
         XCTAssertTrue(restoredToggle.exists, "Toggle should still exist")
 
         let finalToggleValue = restoredToggle.value as? String ?? "0"
         XCTAssertNotEqual(finalToggleValue, "0", "Multiple reminders toggle should still be enabled")
-
-        print("📊 Multiple reminders toggle state preserved after back navigation")
-        print("📊 Back navigation successfully preserves all schedule setup state")
     }
 }

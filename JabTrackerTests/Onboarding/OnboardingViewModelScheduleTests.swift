@@ -17,7 +17,7 @@ struct OnboardingViewModelScheduleTests {
     /// Creates a test OnboardingViewModel with required dependencies
     @MainActor
     private func createTestViewModel() -> OnboardingViewModel {
-        let dataController = DataController.shared
+        let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         return OnboardingViewModel(dataController: dataController, authManager: authManager)
     }
