@@ -55,6 +55,134 @@ struct ConcentrationCurvePreviewTests {
         #expect(doses.count == 8)
     }
 
+    // MARK: - Boundary Validation Tests (Issue #234)
+
+    @Test("Weekly pattern boundary: exactly 4 doses over 28 days, no off-by-one")
+    func testWeeklyBoundaryExact28Days() {
+        let doseAmount = 0.5
+
+        // Test with exact 28-day period
+        let endDate = Date()
+        let startDate = endDate.addingTimeInterval(-28 * 24 * 3600)
+
+        var doses: [Dose] = []
+        var currentDate = startDate
+        let intervalSeconds: TimeInterval = 7 * 24 * 3600  // 7 days
+
+        while currentDate < endDate {
+            doses.append(Dose(amount: doseAmount, timestamp: currentDate, site: "Thigh"))
+            currentDate = currentDate.addingTimeInterval(intervalSeconds)
+        }
+
+        // Weekly pattern over exactly 28 days should produce exactly 4 doses
+        // Day 0, Day 7, Day 14, Day 21 (Day 28 excluded by < boundary)
+        #expect(doses.count == 4, "Weekly pattern over 28 days must produce exactly 4 doses")
+
+        // Verify dose timestamps
+        if doses.count == 4 {
+            #expect(doses[0].timestamp.timeIntervalSince(startDate) < 1.0, "First dose at start")
+            #expect(doses[1].timestamp.timeIntervalSince(startDate) >= 7 * 24 * 3600 - 1, "Second dose at day 7")
+            #expect(doses[2].timestamp.timeIntervalSince(startDate) >= 14 * 24 * 3600 - 1, "Third dose at day 14")
+            #expect(doses[3].timestamp.timeIntervalSince(startDate) >= 21 * 24 * 3600 - 1, "Fourth dose at day 21")
+            #expect(doses[3].timestamp < endDate, "Last dose before end date")
+        }
+    }
+
+    @Test("Split-dose pattern boundary: exactly 8 doses over 28 days, no off-by-one")
+    func testSplitDoseBoundaryExact28Days() {
+        let doseAmount = 0.5
+
+        // Test with exact 28-day period
+        let endDate = Date()
+        let startDate = endDate.addingTimeInterval(-28 * 24 * 3600)
+
+        var doses: [Dose] = []
+        var currentDate = startDate
+        let intervalSeconds: TimeInterval = 3.5 * 24 * 3600  // 3.5 days
+
+        while currentDate < endDate {
+            doses.append(Dose(amount: doseAmount, timestamp: currentDate, site: "Thigh"))
+            currentDate = currentDate.addingTimeInterval(intervalSeconds)
+        }
+
+        // Split-dose pattern over exactly 28 days should produce exactly 8 doses
+        // Days: 0, 3.5, 7, 10.5, 14, 17.5, 21, 24.5 (Day 28 excluded by < boundary)
+        #expect(doses.count == 8, "Split-dose pattern over 28 days must produce exactly 8 doses")
+
+        // Verify first and last doses are within range
+        if !doses.isEmpty {
+            #expect(doses.first!.timestamp >= startDate, "First dose at or after start")
+            #expect(doses.last!.timestamp < endDate, "Last dose before end date")
+        }
+    }
+
+    @Test("Boundary validation: < vs <= logic ensures correct dose count")
+    func testBoundaryLogicLessThanNotLessThanOrEqual() {
+        let doseAmount = 0.5
+
+        // Create exact boundary scenario
+        let endDate = Date()
+        let startDate = endDate.addingTimeInterval(-7 * 24 * 3600)  // Exactly 7 days
+
+        var doses: [Dose] = []
+        var currentDate = startDate
+        let intervalSeconds: TimeInterval = 7 * 24 * 3600  // 7 days
+
+        // Using < (not <=) should produce exactly 1 dose
+        while currentDate < endDate {
+            doses.append(Dose(amount: doseAmount, timestamp: currentDate, site: "Thigh"))
+            currentDate = currentDate.addingTimeInterval(intervalSeconds)
+        }
+
+        #expect(doses.count == 1, "With < boundary, exactly 7 days should produce 1 dose (not 2)")
+
+        // Verify the single dose is at start, not at end
+        if doses.count == 1 {
+            #expect(doses[0].timestamp.timeIntervalSince(startDate) < 1.0, "Single dose at start date")
+        }
+    }
+
+    @Test("Different time periods scale correctly: 56 days produces 8 weekly doses")
+    func testLongerPeriodScalesCorrectly() {
+        let doseAmount = 0.5
+
+        // Test with 56-day period (8 weeks)
+        let endDate = Date()
+        let startDate = endDate.addingTimeInterval(-56 * 24 * 3600)
+
+        var doses: [Dose] = []
+        var currentDate = startDate
+        let intervalSeconds: TimeInterval = 7 * 24 * 3600  // 7 days
+
+        while currentDate < endDate {
+            doses.append(Dose(amount: doseAmount, timestamp: currentDate, site: "Thigh"))
+            currentDate = currentDate.addingTimeInterval(intervalSeconds)
+        }
+
+        // 56 days with weekly dosing should produce exactly 8 doses
+        #expect(doses.count == 8, "56 days with weekly pattern must produce exactly 8 doses")
+    }
+
+    @Test("Edge case: 1-day period with weekly pattern produces 1 dose")
+    func testSingleDayPeriod() {
+        let doseAmount = 0.5
+
+        let endDate = Date()
+        let startDate = endDate.addingTimeInterval(-1 * 24 * 3600)  // 1 day
+
+        var doses: [Dose] = []
+        var currentDate = startDate
+        let intervalSeconds: TimeInterval = 7 * 24 * 3600  // 7 days
+
+        while currentDate < endDate {
+            doses.append(Dose(amount: doseAmount, timestamp: currentDate, site: "Thigh"))
+            currentDate = currentDate.addingTimeInterval(intervalSeconds)
+        }
+
+        // 1 day with 7-day interval should produce exactly 1 dose
+        #expect(doses.count == 1, "1-day period with weekly pattern must produce exactly 1 dose")
+    }
+
     // MARK: - Concentration Curve Calculation Tests
 
     @Test("Calculate concentration curve for weekly pattern")

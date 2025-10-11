@@ -20,7 +20,7 @@ struct OnboardingIntegrationTests {
     private func createTestEnvironment() throws -> (
         viewModel: OnboardingViewModel, context: ModelContext
     ) {
-        let dataController = DataController.shared
+        let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
 
@@ -151,7 +151,7 @@ struct OnboardingIntegrationTests {
     @MainActor
     func testCompleteOnboardingFailsWithoutUser() async throws {
         // GIVEN: ViewModel without authenticated user
-        let dataController = DataController.shared
+        let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
         authManager.currentUser = nil  // No authenticated user
 
