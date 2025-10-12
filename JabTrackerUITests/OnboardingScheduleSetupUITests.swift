@@ -53,12 +53,9 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(doseContinue.exists, "Continue button should exist after dose entry")
         doseContinue.tap()
 
-        // Wait for schedule setup view to appear
-        sleep(3)
-
         // Try different element types for schedule setup view
         var scheduleView = app.scrollViews["schedule-setup-view"]
-        if !scheduleView.exists {
+        if !scheduleView.waitForExistence(timeout: 10) {
             scheduleView = app.otherElements["schedule-setup-view"]
         }
 
@@ -278,11 +275,15 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         continueButton.tap()
 
         // THEN: User proceeds to notifications/permissions step
-        sleep(2)  // Give time for navigation
-
         // Verify we've left schedule setup screen
         let scheduleView = app.scrollViews["schedule-setup-view"]
-        XCTAssertFalse(scheduleView.exists, "Should have navigated away from schedule setup view")
+
+        // Wait for navigation to complete by checking if schedule view disappears
+        let navigationCompleted = NSPredicate(format: "exists == false")
+        let expectation = XCTNSPredicateExpectation(predicate: navigationCompleted, object: scheduleView)
+        let result = XCTWaiter().wait(for: [expectation], timeout: 5)
+
+        XCTAssertEqual(result, .completed, "Should have navigated away from schedule setup view")
 
         // Verify we're on a new screen (permissions request view typically appears next)
         let navigationProgressed = !scheduleView.exists
@@ -320,9 +321,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(continueButton.exists, "Continue button should exist")
         continueButton.tap()
 
-        // Wait for next screen (permissions or completion)
-        sleep(3)
-
         // WHEN: User completes remaining onboarding steps
         // Try to find and handle notifications screen if present
         let notificationsEnableButton = app.buttons["notifications-enable-button"]
@@ -330,10 +328,8 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         if notificationsEnableButton.waitForExistence(timeout: 5) {
             notificationsSkipButton.tap()
-            sleep(2)
         } else if notificationsSkipButton.exists {
             notificationsSkipButton.tap()
-            sleep(2)
         }
 
         // THEN: User reaches main app with tab bar visible
@@ -372,9 +368,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(continueButton.exists, "Continue button should exist")
         continueButton.tap()
 
-        // Wait for next screen
-        sleep(3)
-
         // WHEN: User completes remaining onboarding steps
         // Try to find and handle notifications screen if present
         let notificationsEnableButton = app.buttons["notifications-enable-button"]
@@ -382,10 +375,8 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         if notificationsEnableButton.waitForExistence(timeout: 5) {
             notificationsSkipButton.tap()
-            sleep(2)
         } else if notificationsSkipButton.exists {
             notificationsSkipButton.tap()
-            sleep(2)
         }
 
         // THEN: User reaches main app with tab bar visible
@@ -532,8 +523,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(backButton.exists, "Back button should exist in navigation bar")
         backButton.tap()
 
-        sleep(2)  // Wait for navigation
-
         // THEN: User returns to dose setup step
         let doseButton = app.buttons["dose-button-0.25"]
         XCTAssertTrue(
@@ -544,8 +533,6 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         let continueButton = app.buttons["onboarding-continue-button"]
         XCTAssertTrue(continueButton.exists, "Continue button should exist")
         continueButton.tap()
-
-        sleep(3)  // Wait for schedule setup to load
 
         // THEN: Previously selected pattern is still selected
         let weeklyCard = app.buttons["pattern-card-weekly"]

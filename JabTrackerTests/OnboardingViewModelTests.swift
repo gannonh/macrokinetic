@@ -100,7 +100,13 @@ struct OnboardingViewModelTests {
         viewModel.selectedSites = ["Thigh"]
 
         // Complete onboarding
-        try await viewModel.completeOnboarding()
+        let result = await viewModel.completeOnboarding()
+
+        // Verify success result
+        guard case .success = result else {
+            Issue.record("Expected .success result, got \(result)")
+            return
+        }
 
         // Verify user is marked as completed
         #expect(user.hasCompletedOnboarding)
@@ -322,13 +328,17 @@ struct OnboardingViewModelTests {
         viewModel.selectedSites = ["Abdomen"]
 
         // Try to complete onboarding without user - should handle gracefully
-        do {
-            try await viewModel.completeOnboarding()
-            // If no error thrown, that's also acceptable (graceful handling)
-        } catch {
-            // Expected to handle missing user case
-            #expect(true, "Appropriately handled missing user case")
+        let result = await viewModel.completeOnboarding()
+
+        // Should return failed result
+        guard case .failed(let error) = result else {
+            Issue.record("Expected .failed result, got \(result)")
+            return
         }
+
+        // Verify error message was set
+        #expect(viewModel.errorMessage != nil, "Error message should be set for missing user")
+        #expect(error is OnboardingError, "Should return OnboardingError")
     }
 
     @Test("Multiple medication selections")

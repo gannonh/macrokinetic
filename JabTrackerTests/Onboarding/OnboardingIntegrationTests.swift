@@ -78,7 +78,13 @@ struct OnboardingIntegrationTests {
         setupForOnboarding(viewModel: viewModel)
 
         // WHEN: Completing onboarding
-        try await viewModel.completeOnboarding()
+        let result = await viewModel.completeOnboarding()
+
+        // THEN: Should return success
+        guard case .success = result else {
+            Issue.record("Expected .success result, got \(result)")
+            return
+        }
 
         // THEN: Both MedicationProfile and DoseSchedule created
         let profiles = try context.fetch(FetchDescriptor<MedicationProfile>())
@@ -102,7 +108,13 @@ struct OnboardingIntegrationTests {
         setupForOnboarding(viewModel: viewModel, pattern: .weekly)
 
         // WHEN: Completing onboarding
-        try await viewModel.completeOnboarding()
+        let result = await viewModel.completeOnboarding()
+
+        // THEN: Should return success
+        guard case .success = result else {
+            Issue.record("Expected .success result, got \(result)")
+            return
+        }
 
         // THEN: Schedule has weekly pattern
         let schedules = try context.fetch(FetchDescriptor<DoseSchedule>())
@@ -119,7 +131,13 @@ struct OnboardingIntegrationTests {
         setupForOnboarding(viewModel: viewModel, medication: .tirzepatide, pattern: .splitDose)
 
         // WHEN: Completing onboarding
-        try await viewModel.completeOnboarding()
+        let result = await viewModel.completeOnboarding()
+
+        // THEN: Should return success
+        guard case .success = result else {
+            Issue.record("Expected .success result, got \(result)")
+            return
+        }
 
         // THEN: Schedule has splitDose pattern
         let schedules = try context.fetch(FetchDescriptor<DoseSchedule>())
@@ -135,7 +153,13 @@ struct OnboardingIntegrationTests {
         setupForOnboarding(viewModel: viewModel, dose: 0.25)
 
         // WHEN: Completing onboarding
-        try await viewModel.completeOnboarding()
+        let result = await viewModel.completeOnboarding()
+
+        // THEN: Should return success
+        guard case .success = result else {
+            Issue.record("Expected .success result, got \(result)")
+            return
+        }
 
         // THEN: Schedule configuration has correct dose
         let schedules = try context.fetch(FetchDescriptor<DoseSchedule>())
@@ -161,10 +185,16 @@ struct OnboardingIntegrationTests {
         )
         setupForOnboarding(viewModel: viewModel)
 
-        // WHEN/THEN: Should throw error
-        await #expect(throws: OnboardingError.self) {
-            try await viewModel.completeOnboarding()
+        // WHEN: Attempting to complete onboarding without user
+        let result = await viewModel.completeOnboarding()
+
+        // THEN: Should return failed result with OnboardingError
+        guard case .failed(let error) = result else {
+            Issue.record("Expected .failed result, got \(result)")
+            return
         }
+        #expect(error is OnboardingError, "Error should be OnboardingError")
+        #expect(viewModel.errorMessage != nil, "Error message should be set")
     }
 
     @Test("completeOnboarding fails gracefully without selected medication")
@@ -176,9 +206,15 @@ struct OnboardingIntegrationTests {
         viewModel.selectedDose = 0.5
         viewModel.selectedSites = ["Abdomen"]
 
-        // WHEN/THEN: Should throw error
-        await #expect(throws: OnboardingError.self) {
-            try await viewModel.completeOnboarding()
+        // WHEN: Attempting to complete onboarding without medication
+        let result = await viewModel.completeOnboarding()
+
+        // THEN: Should return failed result with OnboardingError
+        guard case .failed(let error) = result else {
+            Issue.record("Expected .failed result, got \(result)")
+            return
         }
+        #expect(error is OnboardingError, "Error should be OnboardingError")
+        #expect(viewModel.errorMessage != nil, "Error message should be set")
     }
 }

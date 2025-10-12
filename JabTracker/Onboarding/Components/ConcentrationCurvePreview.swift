@@ -21,6 +21,7 @@ struct ConcentrationCurvePreview: View {
 
     @State private var concentrationData: [PreviewConcentrationPoint] = []
     @State private var isCalculating = false
+    @State private var calculationTask: Task<Void, Never>?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -102,10 +103,16 @@ struct ConcentrationCurvePreview: View {
             await updateConcentrationData()
         }
         .onChange(of: pattern) { _, _ in
-            Task { await updateConcentrationData() }
+            calculationTask?.cancel()
+            calculationTask = Task { await updateConcentrationData() }
         }
         .onChange(of: medication?.rawValue) { _, _ in
-            Task { await updateConcentrationData() }
+            calculationTask?.cancel()
+            calculationTask = Task { await updateConcentrationData() }
+        }
+        .onDisappear {
+            calculationTask?.cancel()
+            calculationTask = nil
         }
     }
 
@@ -145,6 +152,9 @@ struct ConcentrationCurvePreview: View {
             return
         }
 
+        // Check for cancellation before starting heavy work
+        guard !Task.isCancelled else { return }
+
         isCalculating = true
         defer { isCalculating = false }
 
@@ -154,6 +164,9 @@ struct ConcentrationCurvePreview: View {
             medication: medication,
             doseAmount: doseAmount
         )
+
+        // Check for cancellation before calculation
+        guard !Task.isCancelled else { return }
 
         // Calculate concentration curve over 28 days
         concentrationData = calculateConcentrationCurve(
@@ -213,6 +226,9 @@ struct ConcentrationCurvePreview: View {
         let intervalHours: Double = 12
 
         while currentTime <= endDate {
+            // Check for cancellation during intensive calculation
+            guard !Task.isCancelled else { return [] }
+
             let concentration = pkEngine.calculateConcentration(
                 from: doses,
                 medication: medication,
