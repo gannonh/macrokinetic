@@ -206,8 +206,14 @@ struct OnboardingViewModelCoverageTests {
         viewModel.selectedStartDate = Date()
         viewModel.toggleInjectionSite("Abdomen")
 
-        // Try to complete onboarding - should detect existing profile and mark complete
-        try await viewModel.completeOnboarding()
+        // Try to complete onboarding - should detect existing profile and return alreadyCompleted
+        let result = await viewModel.completeOnboarding()
+
+        // Should return alreadyCompleted result
+        guard case .alreadyCompleted = result else {
+            Issue.record("Expected .alreadyCompleted result, got \(result)")
+            return
+        }
 
         // User should have onboarding marked complete
         #expect(user.hasCompletedOnboarding == true, "User should have onboarding marked complete")
@@ -216,6 +222,9 @@ struct OnboardingViewModelCoverageTests {
         // Should still only have 1 profile (no duplicate created)
         let profilesCount = (user.medicationProfiles ?? []).count
         #expect(profilesCount == 1, "Should have exactly 1 profile (no duplicate created)")
+
+        // Verify error message was set
+        #expect(viewModel.errorMessage != nil, "Error message should be set for already completed")
     }
 
     @Test("currentStepIndex returns correct index for all steps")

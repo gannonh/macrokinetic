@@ -3,6 +3,13 @@ import HealthKit
 import SwiftData
 import UserNotifications
 
+/// Result type for onboarding completion with explicit success, duplicate, and error states
+enum OnboardingCompletionResult {
+    case success
+    case alreadyCompleted
+    case failed(Error)
+}
+
 @MainActor
 class OnboardingViewModel: ObservableObject {
     @Published var currentStep: OnboardingStep = .welcome {
@@ -200,6 +207,14 @@ class OnboardingViewModel: ObservableObject {
         reminderMinutes: Int,
         enableMultiple: Bool
     ) {
+        // Validate reminder minutes input
+        let validReminderMinutes = [15, 30, 60, 120]  // 15 min, 30 min, 1 hour, 2 hours
+        guard validReminderMinutes.contains(reminderMinutes) else {
+            self.errorMessage =
+                "Invalid reminder time. Please select from available options (15, 30, 60, or 120 minutes)."
+            return
+        }
+
         // Temporarily save pattern to validate
         let originalPattern = self.schedulePattern
         self.schedulePattern = pattern
@@ -223,11 +238,12 @@ class OnboardingViewModel: ObservableObject {
         moveToNextStep()
     }
 
-    func completeOnboarding() async throws {
+    func completeOnboarding() async -> OnboardingCompletionResult {
         guard let user = authManager.currentUser,
             let selectedMedication
         else {
-            throw OnboardingError.missingRequiredData
+            self.errorMessage = "Missing required onboarding data. Please complete all steps."
+            return .failed(OnboardingError.missingRequiredData)
         }
 
         self.isLoading = true
@@ -236,34 +252,68 @@ class OnboardingViewModel: ObservableObject {
         let context = self.dataController.container.mainContext
 
         // Check for existing profiles and prevent duplicates
-        if try checkAndPreventDuplicateProfiles(for: user, in: context) {
-            return  // User already has profiles, onboarding marked complete
+        do {
+            let alreadyCompleted = try checkAndPreventDuplicateProfiles(for: user, in: context)
+            if alreadyCompleted {
+                self.errorMessage = "Onboarding has already been completed for this account."
+                return .alreadyCompleted
+            }
+        } catch {
+            self.errorMessage = "Failed to check existing profiles: \(error.localizedDescription)"
+            return .failed(error)
         }
 
-        // Create medication profile
-        let medicationProfile = MedicationProfile(
-            genericName: selectedMedication.displayName,
-            brandName: selectedMedication.brands.first ?? "",
-            currentDose: self.selectedDose,
-            startDate: self.selectedStartDate,
-            medicationType: selectedMedication.rawValue,
-            preferredInjectionSites: Array(self.selectedSites))
-
-        // Link medication profile to user
-        medicationProfile.user = user
-        context.insert(medicationProfile)
-
-        #if DEBUG
-            print("   ✅ Created new profile: \(medicationProfile.genericName) - \(medicationProfile.brandName)")
-        #endif
-
-        // Save medication profile first
-        try context.save()
+        // Create and save medication profile
+        let medicationProfile = createMedicationProfile(for: user, with: selectedMedication, in: context)
+        do {
+            try context.save()
+        } catch {
+            self.errorMessage = "Failed to save medication profile: \(error.localizedDescription)"
+            return .failed(error)
+        }
 
         // Create initial dose schedule
-        try await createInitialSchedule(for: medicationProfile, in: context)
+        do {
+            try await createInitialSchedule(for: medicationProfile, in: context)
+        } catch {
+            self.errorMessage = "Failed to create dose schedule: \(error.localizedDescription)"
+            return .failed(error)
+        }
 
-        // Mark user onboarding as complete
+        // Finalize onboarding completion
+        do {
+            try finalizeOnboarding(for: user, in: context)
+        } catch {
+            self.errorMessage = "Failed to finalize onboarding: \(error.localizedDescription)"
+            return .failed(error)
+        }
+
+        // Clear any error messages on success
+        self.errorMessage = nil
+        return .success
+    }
+
+    /// Creates medication profile for the user
+    private func createMedicationProfile(
+        for user: User,
+        with medication: Medication,
+        in context: ModelContext
+    ) -> MedicationProfile {
+        let medicationProfile = MedicationProfile(
+            genericName: medication.displayName,
+            brandName: medication.brands.first ?? "",
+            currentDose: self.selectedDose,
+            startDate: self.selectedStartDate,
+            medicationType: medication.rawValue,
+            preferredInjectionSites: Array(self.selectedSites))
+
+        medicationProfile.user = user
+        context.insert(medicationProfile)
+        return medicationProfile
+    }
+
+    /// Finalizes onboarding by marking user as complete and persisting to UserDefaults
+    private func finalizeOnboarding(for user: User, in context: ModelContext) throws {
         user.hasCompletedOnboarding = true
         user.onboardingCompletedAt = Date()
         user.updatedAt = Date()
@@ -273,10 +323,6 @@ class OnboardingViewModel: ObservableObject {
         // Store completion in UserDefaults as backup
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
-
-        #if DEBUG
-            print("   ✅ Onboarding completed successfully")
-        #endif
     }
 
     /// Checks for existing medication profiles and prevents duplicate creation
@@ -286,16 +332,7 @@ class OnboardingViewModel: ObservableObject {
     /// - Returns: true if user already has profiles (onboarding marked complete), false otherwise
     /// - Throws: SwiftData fetch errors
     private func checkAndPreventDuplicateProfiles(for user: User, in context: ModelContext) throws -> Bool {
-        // Use the user's medicationProfiles relationship to check for existing profiles
         let existingProfiles = user.medicationProfiles ?? []
-
-        #if DEBUG
-            print("   🔍 Checking for existing profiles...")
-            print("   Found \(existingProfiles.count) existing profile(s) for user")
-            for (index, profile) in existingProfiles.enumerated() {
-                print("   Profile \(index + 1): \(profile.genericName) - \(profile.brandName)")
-            }
-        #endif
 
         if !existingProfiles.isEmpty {
             // User already has profiles, mark onboarding as complete
@@ -308,12 +345,6 @@ class OnboardingViewModel: ObservableObject {
             // Store completion in UserDefaults as backup
             UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
             UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
-
-            #if DEBUG
-                print("   ⚠️ User already has profiles, skipping duplicate creation")
-                print("   ✅ Onboarding marked as complete")
-            #endif
-
             return true
         }
 
