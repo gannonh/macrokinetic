@@ -1,1 +1,1 @@
-Issue #177: Initialize branch for onboarding integration development
+Issue #178: Initialize branch for calendar integration issue tracking
