@@ -58,5 +58,33 @@ issue/178-calendar-integration
 - [ ] **Test8**: Accessibility test: VoiceOver describes scheduled vs logged doses correctly
 
 ## Progress
-- Phase 1: Establishing foundation for DoseCalendarView scheduled dose infrastructure
-- This stream completes first - Phase 2 streams (B & C) will build on this foundation
+
+### Session 1 - 2025-10-13 (TDD Phases 1-2 Complete)
+
+**✅ Phase 1: E2E Test Stubs (Complete)**
+- Created `CalendarScheduledDosesUITests.swift` with 8 E2E acceptance test stubs
+- Created `CalendarAccessibilityUITests.swift` with 5 accessibility E2E test stubs
+- All tests properly structured with GIVEN/WHEN/THEN acceptance criteria
+
+**✅ Phase 2: Unit Test Framework (Complete)**
+- Created `ScheduledDoseIndicatorTests.swift` - 10 tests for visual indicator component
+- Created `DoseCalendarScheduledDosesTests.swift` - 9 tests for scheduled dose loading logic
+- Created `CalendarDayScheduledDosesTests.swift` - 12 tests for day view indicator display
+- All tests properly failing with descriptive error messages
+- Tests cover AC1, AC2, AC9, NFR1, NFR3, NFR5, Test1, Test2, Test4, Test8
+
+**Commits:**
+- `59a3791` - Issue #178: Add E2E test stubs for Stream A (calendar scheduled dose indicators)
+- `60051a7` - Issue #178: Add failing unit tests for Stream A (scheduled dose indicators and calendar extensions)
+
+**Next Steps:**
+- Phase 3: Implement ScheduledDoseIndicator and DoseIndicatorsView components
+- Phase 4: Extend DoseCalendarView with scheduled dose loading methods
+- Phase 5: Extend CalendarDayView to display scheduled dose indicators
+- Phase 6: Implement E2E tests one at a time following debug-first approach
+
+**Architecture Notes:**
+- Existing codebase uses @Query pattern directly in DoseCalendarView (no separate ViewModel)
+- Will extend DoseCalendarView following existing patterns
+- Will use DoseEvent model for combining scheduled and logged doses
+- Phase 1 responsibility: establish foundation for Phase 2 streams to build upon
