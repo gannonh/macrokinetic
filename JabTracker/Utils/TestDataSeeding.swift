@@ -220,6 +220,25 @@
                 }
             }
 
+            // Create DoseSchedule entity for calendar scheduled dose display
+            // Use the last logged dose time as the base for the schedule
+            if let lastDose = createdDoses.last {
+                let calendar = Calendar.current
+                let components = calendar.dateComponents([.hour, .minute], from: lastDose.timestamp)
+
+                let schedule = DoseSchedule(
+                    medicationProfile: profile,
+                    doseAmount: config.doseAmount,
+                    frequency: config.medication.frequency,
+                    timeOfDay: components,
+                    windowStart: -2 * 3600,  // 2 hours before
+                    windowEnd: 2 * 3600,  // 2 hours after
+                    startDate: lastDose.timestamp,
+                    isActive: true
+                )
+                context.insert(schedule)
+            }
+
             // Save context
             try context.save()
 
@@ -371,7 +390,7 @@
                 cloudKitDatabase: .none
             )
             return try ModelContainer(
-                for: User.self, MedicationProfile.self, Dose.self,
+                for: User.self, MedicationProfile.self, Dose.self, DoseSchedule.self, ScheduledDose.self,
                 configurations: config
             )
         }
