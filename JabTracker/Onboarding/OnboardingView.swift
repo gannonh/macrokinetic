@@ -101,13 +101,19 @@ struct OnboardingView: View {
     }
 
     private func completeOnboarding() async {
-        do {
-            try await self.viewModel.completeOnboarding()
+        let result = await self.viewModel.completeOnboarding()
+
+        switch result {
+        case .success:
             withAnimation(.spring()) {
                 self.isPresented = false
             }
-        } catch {
-            self.viewModel.errorMessage = "Failed to complete onboarding: \(error.localizedDescription)"
+        case .alreadyCompleted:
+            // Error message already set by viewModel
+            break
+        case .failed:
+            // Error message already set by viewModel
+            break
         }
     }
 }
