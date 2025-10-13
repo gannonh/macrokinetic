@@ -107,7 +107,7 @@ struct DoseCalendarView: View {
 
     private var calendarGridView: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 1) {
-            ForEach(self.daysInMonth, id: \.self) { date in
+            ForEach(Array(self.daysInMonth.enumerated()), id: \.offset) { _, date in
                 if let date {
                     CalendarDayView(
                         date: date,
@@ -235,32 +235,33 @@ struct DoseCalendarView: View {
 
         var events: [DoseEvent] = []
 
-        // Add logged doses as events
+        // Get logged doses and scheduled doses for this date
         let loggedDoses = self.dosesForDate(date)
-        events.append(contentsOf: loggedDoses.map { DoseEvent.from(actualDose: $0) })
-
-        // Add scheduled doses as events (excluding those already logged)
         let scheduledDoses = self.scheduledDosesForMonth.filter { scheduled in
             scheduled.scheduledTime >= startOfDay && scheduled.scheduledTime < endOfDay
         }
 
-        for scheduledDose in scheduledDoses {
-            // Check if this scheduled dose has been logged
-            if let actualDose = scheduledDose.actualDose {
-                // Use combined event if within window, otherwise separate
-                let wasWithinWindow =
-                    actualDose.timestamp >= scheduledDose.windowStart
-                    && actualDose.timestamp <= scheduledDose.windowEnd
+        // Add logged doses as events
+        events.append(contentsOf: loggedDoses.map { DoseEvent.from(actualDose: $0) })
 
-                if wasWithinWindow {
-                    events.append(DoseEvent.combined(scheduled: scheduledDose, actual: actualDose))
+        // Add scheduled doses ONLY if they haven't been logged
+        for scheduledDose in scheduledDoses {
+            // Check if any logged dose on this date falls within this scheduled dose's window
+            let wasLogged = loggedDoses.contains { dose in
+                dose.timestamp >= scheduledDose.windowStart && dose.timestamp <= scheduledDose.windowEnd
+            }
+
+            // Only add scheduled dose if it wasn't logged
+            if !wasLogged {
+                // Check if it's in the past (missed) or future (scheduled)
+                let now = Date()
+                if scheduledDose.windowEnd < now {
+                    // Missed dose - past the adherence window
+                    events.append(DoseEvent.from(scheduledDose: scheduledDose))
                 } else {
-                    // Separate events for out-of-window doses
+                    // Future scheduled dose
                     events.append(DoseEvent.from(scheduledDose: scheduledDose))
                 }
-            } else {
-                // Unlogged scheduled dose
-                events.append(DoseEvent.from(scheduledDose: scheduledDose))
             }
         }
 
