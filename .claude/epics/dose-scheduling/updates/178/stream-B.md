@@ -56,5 +56,51 @@ issue/178-calendar-integration
 - [ ] **Test7**: E2E test: Long-press scheduled dose → skip → verify removed from calendar
 
 ## Progress
-- Phase 2: Building upon Stream A's calendar extension foundation
-- Waiting to start after Stream A completion
+
+### Session 1 - 2025-10-13 (Implementation Complete)
+
+**Status**: ✅ ALL UNIT TESTS PASSING (17/17) - Ready for smoke testing
+
+**Implementation Complete:**
+1. ✅ Created stub E2E tests (CalendarDoseActionsUITests.swift - 10 stubs)
+2. ✅ Created stub E2E tests (CalendarQuickDoseIntegrationUITests.swift - 4 stubs)
+3. ✅ Added `markAsSkipped()` and `reschedule()` methods to ScheduledDose model
+4. ✅ Created DoseActionSheet component with all 4 actions (log, reschedule, skip, cancel)
+5. ✅ Created RescheduleDoseSheet with date validation and smart suggestions
+6. ✅ Added long-press gesture handling to CalendarDayView
+7. ✅ Integrated action sheet presentation in DoseCalendarView
+8. ✅ QuickDoseSheet pre-population wrapper for calendar logging
+
+**Unit Test Results:**
+- DoseActionSheetTests: 6/6 tests passing ✅
+- RescheduleDoseSheetTests: 11/11 tests passing ✅
+- Total: 17/17 unit tests passing
+
+**Files Created:**
+- `/JabTracker/Views/History/Components/DoseActionSheet.swift` (new)
+- `/JabTracker/Views/History/Components/RescheduleDoseSheet.swift` (new)
+- `/JabTrackerTests/Views/DoseActionSheetTests.swift` (6 tests)
+- `/JabTrackerTests/Views/RescheduleDoseSheetTests.swift` (11 tests)
+- `/JabTrackerUITests/CalendarDoseActionsUITests.swift` (stub E2E tests)
+- `/JabTrackerUITests/CalendarQuickDoseIntegrationUITests.swift` (stub E2E tests)
+
+**Files Modified:**
+- `/JabTracker/Models/ScheduledDose.swift` (added markAsSkipped() and reschedule() methods)
+- `/JabTracker/Views/History/DoseCalendarView.swift` (added long-press state and sheet)
+- `/JabTracker/Views/History/CalendarDayView.swift` (added onLongPress handler)
+
+**Acceptance Criteria Status:**
+- ✅ AC3: Long-press opens DoseActionSheet - IMPLEMENTED
+- ✅ AC4: Action sheet displays all 4 actions - IMPLEMENTED
+- ✅ AC5: "Log Dose" opens QuickDoseSheet with pre-population - IMPLEMENTED
+- ✅ AC6: "Reschedule" opens RescheduleDoseSheet with date picker and suggestions - IMPLEMENTED
+- ✅ AC7: "Skip" marks dose as skipped - IMPLEMENTED
+
+**Non-Functional Requirements Status:**
+- ✅ NFR2: Long-press gesture detection <300ms - IMPLEMENTED (SwiftUI native gesture)
+- ✅ NFR4: VoiceOver support for all actions - IMPLEMENTED (accessibility identifiers and labels)
+
+**Next Steps:**
+- 🎯 USER SMOKE TESTING REQUIRED
+- 🎯 E2E test implementation after smoke test confirmation
+- 🎯 Integration testing with Stream A and Stream C
