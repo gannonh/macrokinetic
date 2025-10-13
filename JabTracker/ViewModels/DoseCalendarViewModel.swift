@@ -12,6 +12,14 @@ import SwiftData
 /// View model for calendar-based dose tracking with statistics
 @MainActor
 class DoseCalendarViewModel: ObservableObject {
+    // MARK: - Stream C: Schedule Integration Properties (Issue #178)
+
+    /// Schedule service for adherence calculations
+    var scheduleService: ScheduleService?
+
+    /// Active dose schedule
+    var activeSchedule: DoseSchedule?
+
     // MARK: - Published Properties
 
     /// All doses fetched from SwiftData
@@ -210,11 +218,14 @@ class DoseCalendarViewModel: ObservableObject {
             dose.timestamp >= monthInterval.start && dose.timestamp < monthInterval.end
         }
 
+        // MARK: - Stream C: Include Schedule Service Integration
         return AdherenceStatisticsCalculator.calculate(
             doses: monthDoses,
             periodStart: monthInterval.start,
             periodEnd: monthInterval.end,
-            medicationFrequency: .weekly  // Default to weekly, could be made configurable
+            medicationFrequency: .weekly,  // Default to weekly, could be made configurable
+            scheduleService: self.scheduleService,
+            schedule: self.activeSchedule
         )
     }
 

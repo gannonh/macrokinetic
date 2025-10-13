@@ -114,6 +114,12 @@ struct MonthlyStatsView: View {
             // Adherence section
             self.adherenceSection
 
+            // MARK: - Stream C: Schedule Adherence Display
+            // Schedule adherence section (Issue #178)
+            if self.statistics.totalScheduledDoses > 0 {
+                self.scheduleAdherenceSection
+            }
+
             // Dose information section
             self.doseInformationSection
 
@@ -248,6 +254,67 @@ struct MonthlyStatsView: View {
         }
     }
 
+    // MARK: - Stream C: Schedule Adherence Section
+
+    @ViewBuilder
+    private var scheduleAdherenceSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            self.sectionHeader("Schedule Adherence", icon: "calendar.badge.checkmark", color: .blue)
+
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Rate: \(self.statistics.scheduleAdherenceRatePercentage)")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .accessibilityLabel(
+                            "Schedule adherence rate: \(self.statistics.scheduleAdherenceRatePercentage)"
+                        )
+
+                    Text(self.scheduleBreakdownText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel(self.scheduleBreakdownAccessibilityLabel)
+                }
+
+                Spacer()
+
+                // Schedule adherence progress circle
+                ZStack {
+                    Circle()
+                        .stroke(Color(.systemGray5), lineWidth: 4)
+                        .frame(width: 50, height: 50)
+
+                    Circle()
+                        .trim(from: 0, to: self.statistics.scheduleAdherenceRate)
+                        .stroke(
+                            self.scheduleAdherenceColor,
+                            style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                        )
+                        .frame(width: 50, height: 50)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeInOut(duration: 0.5), value: self.statistics.scheduleAdherenceRate)
+                }
+                .accessibilityHidden(true)  // Rate already announced in text
+            }
+
+            // Breakdown grid
+            LazyVGrid(columns: self.detailedGridColumns, spacing: 8) {
+                DetailStatRow(
+                    label: "Scheduled",
+                    value: "\(self.statistics.totalScheduledDoses)")
+                DetailStatRow(
+                    label: "Taken",
+                    value: "\(self.statistics.takenScheduledDoses)")
+                DetailStatRow(
+                    label: "Missed",
+                    value: "\(self.statistics.missedScheduledDoses)")
+                DetailStatRow(
+                    label: "Skipped",
+                    value: "\(self.statistics.skippedScheduledDoses)")
+            }
+        }
+    }
+
     // MARK: - Helper Views
 
     @ViewBuilder
@@ -313,6 +380,34 @@ struct MonthlyStatsView: View {
             GridItem(.flexible(), spacing: 8),
             GridItem(.flexible(), spacing: 8),
         ]
+    }
+
+    // MARK: - Stream C: Schedule Adherence Computed Properties
+
+    private var scheduleBreakdownText: String {
+        let taken = self.statistics.takenScheduledDoses
+        let scheduled = self.statistics.totalScheduledDoses
+        let missed = self.statistics.missedScheduledDoses
+        let skipped = self.statistics.skippedScheduledDoses
+
+        return "\(taken) taken / \(scheduled) scheduled (\(missed) missed, \(skipped) skipped)"
+    }
+
+    private var scheduleBreakdownAccessibilityLabel: String {
+        let taken = self.statistics.takenScheduledDoses
+        let scheduled = self.statistics.totalScheduledDoses
+        let missed = self.statistics.missedScheduledDoses
+        let skipped = self.statistics.skippedScheduledDoses
+
+        return
+            "\(taken) doses taken out of \(scheduled) scheduled. \(missed) doses missed, \(skipped) doses skipped."
+    }
+
+    private var scheduleAdherenceColor: Color {
+        let rate = self.statistics.scheduleAdherenceRate
+        if rate >= 0.9 { return .green }
+        if rate >= 0.7 { return .orange }
+        return .red
     }
 }
 
@@ -407,7 +502,12 @@ struct DetailStatRow: View {
         isCurrentStreakActive: true,
         siteDistribution: ["Thigh": 6, "Abdomen": 4, "Arm": 2],
         periodStart: Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date(),
-        periodEnd: Date())
+        periodEnd: Date(),
+        // Stream C: Schedule adherence preview data
+        totalScheduledDoses: 13,
+        takenScheduledDoses: 11,
+        missedScheduledDoses: 1,
+        skippedScheduledDoses: 1)
 
     return MonthlyStatsView(statistics: sampleStats, showDetailedView: true)
         .padding()

@@ -178,15 +178,64 @@ extension AdherenceStatistics {
     }
 }
 
+// MARK: - Stream C: Schedule Metrics Helper (Issue #178)
+
+/// Helper struct for schedule adherence metrics to avoid tuple complexity
+private struct ScheduleMetricsHelper {
+    let totalScheduled: Int
+    let taken: Int
+    let missed: Int
+    let skipped: Int
+}
+
 // MARK: - Statistics Calculator
 
 enum AdherenceStatisticsCalculator {
-    /// Calculate comprehensive adherence statistics for given doses and time period
+    // MARK: - Stream C: Schedule Integration (Issue #178)
+
+    /// Calculate comprehensive adherence statistics with schedule integration
     static func calculate(
         doses: [Dose],
         periodStart: Date,
         periodEnd: Date,
-        medicationFrequency: DoseFrequency = .weekly
+        medicationFrequency: DoseFrequency = .weekly,
+        scheduleService: ScheduleService? = nil,
+        schedule: DoseSchedule? = nil
+    ) -> AdherenceStatistics {
+        // Calculate schedule adherence if schedule provided
+        var scheduleMetrics: ScheduleMetricsHelper?
+
+        if let scheduleService = scheduleService, let schedule = schedule {
+            let adherenceMetrics = scheduleService.calculateAdherence(
+                for: schedule,
+                from: periodStart,
+                to: periodEnd
+            )
+
+            scheduleMetrics = ScheduleMetricsHelper(
+                totalScheduled: adherenceMetrics.totalScheduled,
+                taken: adherenceMetrics.totalTaken - adherenceMetrics.totalSkipped,  // Only count taken, not skipped
+                missed: adherenceMetrics.totalMissed,
+                skipped: adherenceMetrics.totalSkipped
+            )
+        }
+
+        return self.calculateInternal(
+            doses: doses,
+            periodStart: periodStart,
+            periodEnd: periodEnd,
+            medicationFrequency: medicationFrequency,
+            scheduleMetrics: scheduleMetrics
+        )
+    }
+
+    /// Internal calculation method
+    private static func calculateInternal(
+        doses: [Dose],
+        periodStart: Date,
+        periodEnd: Date,
+        medicationFrequency: DoseFrequency = .weekly,
+        scheduleMetrics: ScheduleMetricsHelper?
     ) -> AdherenceStatistics {
         // Filter doses to the specified period
         let periodDoses = doses.filter { dose in
@@ -231,6 +280,7 @@ enum AdherenceStatisticsCalculator {
         let longestStreak = streakResult.longest
         let isCurrentStreakActive = streakResult.isActive
 
+        // MARK: - Stream C: Include Schedule Metrics
         return AdherenceStatistics(
             totalDoses: totalDoses,
             skippedDoses: skippedDoses,
@@ -243,7 +293,12 @@ enum AdherenceStatisticsCalculator {
             isCurrentStreakActive: isCurrentStreakActive,
             siteDistribution: siteDistribution,
             periodStart: periodStart,
-            periodEnd: periodEnd)
+            periodEnd: periodEnd,
+            // Stream C: Schedule adherence metrics
+            totalScheduledDoses: scheduleMetrics?.totalScheduled ?? 0,
+            takenScheduledDoses: scheduleMetrics?.taken ?? 0,
+            missedScheduledDoses: scheduleMetrics?.missed ?? 0,
+            skippedScheduledDoses: scheduleMetrics?.skipped ?? 0)
     }
 
     // MARK: - Private Calculation Methods
