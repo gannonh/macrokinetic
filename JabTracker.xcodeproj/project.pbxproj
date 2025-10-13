@@ -15,7 +15,9 @@
 		04BD48B1D11D972CCE123D6E /* QuickDoseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6A35FA5E97B18A8453BE6DC /* QuickDoseViewModel.swift */; };
 		04BDEA6C809963AE85ABD0B4 /* StreakCounterViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730C909A8E9D99EAE1FAA3D9 /* StreakCounterViewTests.swift */; };
 		04EE77E76760029233829B96 /* DoseDataServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85139D894CC0783B0663F31F /* DoseDataServiceTests.swift */; };
+		05C579F51C4F7D391D2DE324 /* CalendarQuickDoseIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D086B35DDCD9394D12BE1AA5 /* CalendarQuickDoseIntegrationUITests.swift */; };
 		0647F301F805168D4392827B /* AdherenceTrendData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01A6A7F6B131EE8509708EA /* AdherenceTrendData.swift */; };
+		0676EC2EC7644DBB6FDDB94D /* CalendarStatsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4614C62282B8059E7287C7F9 /* CalendarStatsUITests.swift */; };
 		09A15E7573A4135042D77705 /* ConcentrationCurvePreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6BF07DD02813C719A348BA0 /* ConcentrationCurvePreviewTests.swift */; };
 		0BA200B66675107D84E20F1C /* OnboardingProgressIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED37E6CF93A56B751D7D6AA /* OnboardingProgressIndicator.swift */; };
 		0BD56B837BD28392D92A35D7 /* DoseHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AA8B3236297D2243A137B3 /* DoseHistoryView.swift */; };
@@ -47,6 +49,7 @@
 		1DC8EB6ECFCFE42AC5F986E2 /* DoseSearchServiceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDA1DE813A57DA3694E74303 /* DoseSearchServiceUnitTests.swift */; };
 		1E0D912C973F906C52EF582F /* DoseCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83944AE01C58D19D8AAEF994 /* DoseCalendarView.swift */; };
 		1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */; };
+		1EE2CA9BBF1F9B616F5BA430 /* DoseActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45108739B9FDF3CBD68635E0 /* DoseActionSheet.swift */; };
 		1F29DF1CFEF6729EF4D23A5E /* ConcentrationChartState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08ACEE088497C29D9FA48950 /* ConcentrationChartState.swift */; };
 		22FFEDD859C8DA50B26C0FB8 /* ChartDataProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF24FAF1F65F4ED96874B2B /* ChartDataProcessorTests.swift */; };
 		248733A6DBB8A6A34C2875AE /* ProfileValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23B2CB25BA56529BBA6E7DB /* ProfileValidationTests.swift */; };
@@ -91,6 +94,7 @@
 		4C8A1FFB3AA5F9B4FB81CC66 /* ConcentrationChartStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA5F565F4FA79596D9D6117 /* ConcentrationChartStateTests.swift */; };
 		4DCCEBCCBD61A49CFCEFE78B /* DataControllerBasicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982A546060F21F198D83B193 /* DataControllerBasicTests.swift */; };
 		4E5034BCD12D9189FD7D3310 /* TestError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171F89549A289C654CA8F6B9 /* TestError.swift */; };
+		4E7E5B55BFDFF8B463E6591B /* CalendarDoseActionsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E4D068F86F003F40B10E71 /* CalendarDoseActionsUITests.swift */; };
 		4E8EE8F7524651D468D5CF6F /* DoseSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B6CDF3795E3B15F9AB2AA1 /* DoseSearchService.swift */; };
 		51C14ED8C2F4671A32663786 /* ScheduleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97891FD50F133BE08A3974E8 /* ScheduleService.swift */; };
 		51F91DD2581422CA6D4484A3 /* MedicationFormComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B516236186681695C8B93C24 /* MedicationFormComponents.swift */; };
@@ -152,6 +156,7 @@
 		7B9403352834FAC65D8CBBF0 /* MedicationAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B20942E8632D13C2463169 /* MedicationAnalyticsTests.swift */; };
 		7BB9039CECE9F2568B677D7B /* DoseEntryPKSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06F3655D8833409426DDC09E /* DoseEntryPKSection.swift */; };
 		7CB3F248F0FA31F94A183750 /* DoseEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBFA1272C12684111836F5E8 /* DoseEventTests.swift */; };
+		7D616F45B04F17B2DD6586EB /* CalendarPerformanceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DE6524F55F667F0BB03B676 /* CalendarPerformanceUITests.swift */; };
 		7E41453C5E9C8E643B299EF2 /* ChartDataProcessorFilteringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26DCB66D6BE12C54FBEF601 /* ChartDataProcessorFilteringTests.swift */; };
 		7E480584DB7AE55CADF378F3 /* DoseButtonUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59476CC561EE12026913348A /* DoseButtonUITests.swift */; };
 		8028FC4C576731EA49792A87 /* Medication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 345FCEAEFAE46B98B3CD4E7B /* Medication.swift */; };
@@ -159,6 +164,7 @@
 		80F00B03F4A9C63A52D46AAE /* JabTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45ABB67198C53503C20D15E /* JabTrackerApp.swift */; };
 		81648DADD41FA3A7E06A79E2 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = DA98E9D9A3599F7678DB1C83 /* .swiftlint.yml */; };
 		82281993EB5BEFB11F06233C /* SubscriptionManagerMoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982BEC8C7EF1C6A76703D2FF /* SubscriptionManagerMoreTests.swift */; };
+		82A33932CA0EA17B714A17A4 /* RescheduleDoseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6809EC624F5CD58572747597 /* RescheduleDoseSheet.swift */; };
 		857D9E2C0D6399A70E5FAC20 /* AdherenceProgressIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C45AF287FCA564EF5A70F3D /* AdherenceProgressIndicator.swift */; };
 		85E36AF8DB48413312EA46E8 /* DoseCalendarViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F103765B39CA0C6509686 /* DoseCalendarViewModelTests.swift */; };
 		86BFBEB2E2BE5AEC1807DE71 /* ProfileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DD385076B17502B720F566 /* ProfileValidation.swift */; };
@@ -175,6 +181,7 @@
 		969E6F375A4DCB7965D2194F /* MedicationProfileEnhancementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72833DFDEE7BFE9D0870B3CA /* MedicationProfileEnhancementTests.swift */; };
 		9797845E47F6FDF1C702E322 /* AdherenceInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1F0F4BA63832CABDA576D3 /* AdherenceInsight.swift */; };
 		97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */; };
+		98502D00C8E2AD581E8E9E87 /* DoseActionSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2BBEA50E8B882B058BD94D /* DoseActionSheetTests.swift */; };
 		99133DB3B673F129F771D8E4 /* ScreenshotCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0163698824BFDAF5363CEEB /* ScreenshotCapture.swift */; };
 		99DF0EB38C8631AD698774C3 /* ConcentrationCurvePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A5FE12893548A3E5AF9A6 /* ConcentrationCurvePreview.swift */; };
 		99ED058D57A5C6D08F3AE6B3 /* StoreKitConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E2EF906ADB897D77E416C9B /* StoreKitConfigurationTests.swift */; };
@@ -229,6 +236,7 @@
 		C37C33130408C521AE68DCBF /* CalendarAccessibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7C3B0C007CFE71B5FE56C1 /* CalendarAccessibilityUITests.swift */; };
 		C3A347C9C7CBA45680B8CCF2 /* ScheduleServiceModificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB13A43CB0C2E01BC2AA642B /* ScheduleServiceModificationTests.swift */; };
 		C4DA17510899776E9CA1CA99 /* ScheduleSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F93E327E8A9148A16246588 /* ScheduleSetupView.swift */; };
+		C4ED1DFE1CB042935C7E34DE /* RescheduleDoseSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B31DE0C0D0ED5E7B59F06DE /* RescheduleDoseSheetTests.swift */; };
 		C58F9C3E622882A3CAB09EC5 /* SubscriptionUINetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */; };
 		C5B289EC33F6AA3464E07D3C /* DoseHistoryViewModelErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1B06AAB60967FA3C0B9B69 /* DoseHistoryViewModelErrorTests.swift */; };
 		C973ADE77CA780B351B507F4 /* QuickDoseEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F473B4ACD616736B51CFBE /* QuickDoseEntryTests.swift */; };
@@ -353,10 +361,12 @@
 		19288A54A3628E97CAAE3AFA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1AA9DA110557507873F712DE /* AnalyticsServiceIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsServiceIntegrationTests.swift; sourceTree = "<group>"; };
 		1B1A6A35E0935F2249EC4A8C /* AdherenceInsightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceInsightTests.swift; sourceTree = "<group>"; };
+		1B31DE0C0D0ED5E7B59F06DE /* RescheduleDoseSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RescheduleDoseSheetTests.swift; sourceTree = "<group>"; };
 		1B7F23B9040185766D116EAD /* BiometricTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricTestingTests.swift; sourceTree = "<group>"; };
 		1C4BBA1255611FD1860F249B /* DoseSearchAndFilterViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseSearchAndFilterViewTests.swift; sourceTree = "<group>"; };
 		1CDAA0E6A2199F895649643B /* MedicationSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationSelectionView.swift; sourceTree = "<group>"; };
 		1D1F0F4BA63832CABDA576D3 /* AdherenceInsight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceInsight.swift; sourceTree = "<group>"; };
+		1DE6524F55F667F0BB03B676 /* CalendarPerformanceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarPerformanceUITests.swift; sourceTree = "<group>"; };
 		1E85D71DEA9A2FD064F16C0B /* DoseCalendarViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseCalendarViewTests.swift; sourceTree = "<group>"; };
 		1E94E4AE5BAB59EDF35956F6 /* OnboardingViewModelCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelCoverageTests.swift; sourceTree = "<group>"; };
 		1F7CF957925F9C87FDA1339E /* DoseEntryPhotoSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseEntryPhotoSection.swift; sourceTree = "<group>"; };
@@ -373,6 +383,7 @@
 		26AE7A45FA75867366A66399 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		27AA8B3236297D2243A137B3 /* DoseHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryView.swift; sourceTree = "<group>"; };
 		27F2B185BE76B19722DDAFDE /* NotificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceTests.swift; sourceTree = "<group>"; };
+		2A2BBEA50E8B882B058BD94D /* DoseActionSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseActionSheetTests.swift; sourceTree = "<group>"; };
 		2C3D700222E5DD539C0BCB43 /* AuthenticationDelegateIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationDelegateIntegrationTests.swift; sourceTree = "<group>"; };
 		2D4BDB02307ED97D84DEDBAD /* QuickDoseButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickDoseButton.swift; sourceTree = "<group>"; };
 		2D51E304C8E3F02B581E6570 /* ChartDataEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataEnums.swift; sourceTree = "<group>"; };
@@ -410,7 +421,9 @@
 		4442B7182D0A1D85A9F16B37 /* AdherenceStatisticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceStatisticsTests.swift; sourceTree = "<group>"; };
 		446D430EE4591305230D8BF7 /* ScheduleService+Titration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScheduleService+Titration.swift"; sourceTree = "<group>"; };
 		44D0A0FA309830D40F9CECA3 /* MonthlyStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyStatsView.swift; sourceTree = "<group>"; };
+		45108739B9FDF3CBD68635E0 /* DoseActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseActionSheet.swift; sourceTree = "<group>"; };
 		45CA19BCF65A3BA0D292D435 /* ManualAuthenticationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualAuthenticationUITests.swift; sourceTree = "<group>"; };
+		4614C62282B8059E7287C7F9 /* CalendarStatsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarStatsUITests.swift; sourceTree = "<group>"; };
 		48C7EC3107C2A82D88EE76BA /* ConcentrationLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationLabel.swift; sourceTree = "<group>"; };
 		4BF63924BEDAD57B9C3C47C6 /* DoseMarkerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseMarkerOverlay.swift; sourceTree = "<group>"; };
 		4C45AF287FCA564EF5A70F3D /* AdherenceProgressIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceProgressIndicator.swift; sourceTree = "<group>"; };
@@ -448,6 +461,7 @@
 		6519CA320978C5B82231B1E1 /* MedicationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationManagerTests.swift; sourceTree = "<group>"; };
 		65714DDE038569FC5C471011 /* DesignSystemUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemUITests.swift; sourceTree = "<group>"; };
 		67D9360EE9CBE29C1BF3DE26 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		6809EC624F5CD58572747597 /* RescheduleDoseSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RescheduleDoseSheet.swift; sourceTree = "<group>"; };
 		68B3D664292BAEEAE6B7308C /* PricingCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingCalculatorTests.swift; sourceTree = "<group>"; };
 		68D55E286623590BE52B2E8F /* ConcentrationTimelineChartUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationTimelineChartUITests.swift; sourceTree = "<group>"; };
 		6A5D10958F733EFFFF528C2B /* DataControllerPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerPreviewTests.swift; sourceTree = "<group>"; };
@@ -580,6 +594,7 @@
 		CE2E4DCF3A284F0E06D02ADC /* OnboardingScheduleSetupUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingScheduleSetupUITests.swift; sourceTree = "<group>"; };
 		CECF6BE24F720B373F8E66DB /* JabTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JabTrackerTests.swift; sourceTree = "<group>"; };
 		D01A6A7F6B131EE8509708EA /* AdherenceTrendData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceTrendData.swift; sourceTree = "<group>"; };
+		D086B35DDCD9394D12BE1AA5 /* CalendarQuickDoseIntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarQuickDoseIntegrationUITests.swift; sourceTree = "<group>"; };
 		D08C39CD2D716C0C6EBE0ED0 /* DoseValidationAmountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseValidationAmountTests.swift; sourceTree = "<group>"; };
 		D19ED94642648431EBF971DB /* DoseIndicatorsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseIndicatorsView.swift; sourceTree = "<group>"; };
 		D1A28184EA9CEAE9BCD8B890 /* DoseHistoryViewModelDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryViewModelDataTests.swift; sourceTree = "<group>"; };
@@ -615,6 +630,7 @@
 		F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewTests.swift; sourceTree = "<group>"; };
 		F34F27A0FE76AB78F5C77DB6 /* JabTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JabTracker.entitlements; sourceTree = "<group>"; };
 		F367279B9EF6BF30DBEFDFD3 /* NotificationCenterProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCenterProtocol.swift; sourceTree = "<group>"; };
+		F4E4D068F86F003F40B10E71 /* CalendarDoseActionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDoseActionsUITests.swift; sourceTree = "<group>"; };
 		F78094472F5DE7764EA9C5CA /* CalendarDisplayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDisplayUITests.swift; sourceTree = "<group>"; };
 		F7B5C1C6B254C39E621F78F3 /* DoseMarkerOverlayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseMarkerOverlayTests.swift; sourceTree = "<group>"; };
 		F8A338211690FAB2A0B655AD /* TestDataSeedingExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDataSeedingExamples.swift; sourceTree = "<group>"; };
@@ -712,6 +728,15 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
+		4BC96C250963376538C199FF /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				45108739B9FDF3CBD68635E0 /* DoseActionSheet.swift */,
+				6809EC624F5CD58572747597 /* RescheduleDoseSheet.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		4CFB1BEA18883704759FF8DE /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -745,6 +770,7 @@
 				7C74ED44FFF6344C1F7DD461 /* HistoryView.swift */,
 				44D0A0FA309830D40F9CECA3 /* MonthlyStatsView.swift */,
 				D84DBE2037D1CC46F582F191 /* ScheduledDoseIndicator.swift */,
+				4BC96C250963376538C199FF /* Components */,
 			);
 			path = History;
 			sourceTree = "<group>";
@@ -851,9 +877,11 @@
 				5340248C9846270782F9BE88 /* ConcentrationCardTests.swift */,
 				AEC44C6E43E58A59A88BEAE3 /* ConcentrationTimelineChartTests.swift */,
 				7221B7F59FA69A911F5BBCF8 /* ContentViewChartDataTests.swift */,
+				2A2BBEA50E8B882B058BD94D /* DoseActionSheetTests.swift */,
 				37843A7108D2DE76B2015B03 /* DoseCalendarScheduledDosesTests.swift */,
 				F7B5C1C6B254C39E621F78F3 /* DoseMarkerOverlayTests.swift */,
 				64F473B4ACD616736B51CFBE /* QuickDoseEntryTests.swift */,
+				1B31DE0C0D0ED5E7B59F06DE /* RescheduleDoseSheetTests.swift */,
 				4CA92B6F0206D7EAD23CF381 /* ScheduledDoseIndicatorTests.swift */,
 				9E55049840BBEB93EE5F07BC /* Analytics */,
 				FA4A6867C421ADF1175B0FA8 /* Components */,
@@ -1149,9 +1177,13 @@
 				2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */,
 				DD7C3B0C007CFE71B5FE56C1 /* CalendarAccessibilityUITests.swift */,
 				F78094472F5DE7764EA9C5CA /* CalendarDisplayUITests.swift */,
+				F4E4D068F86F003F40B10E71 /* CalendarDoseActionsUITests.swift */,
 				9636B2D1B47D1281AE836554 /* CalendarIntegrationUITests.swift */,
 				43308032C5E6351BCCFBB56C /* CalendarNavigationUITests.swift */,
+				1DE6524F55F667F0BB03B676 /* CalendarPerformanceUITests.swift */,
+				D086B35DDCD9394D12BE1AA5 /* CalendarQuickDoseIntegrationUITests.swift */,
 				885F303830AF5C665A2B2455 /* CalendarScheduledDosesUITests.swift */,
+				4614C62282B8059E7287C7F9 /* CalendarStatsUITests.swift */,
 				3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */,
 				B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */,
 				7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */,
@@ -1380,9 +1412,13 @@
 				682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */,
 				C37C33130408C521AE68DCBF /* CalendarAccessibilityUITests.swift in Sources */,
 				3387C0D71C02960DAB78A36F /* CalendarDisplayUITests.swift in Sources */,
+				4E7E5B55BFDFF8B463E6591B /* CalendarDoseActionsUITests.swift in Sources */,
 				DF59CA22B1515D5F4988AE8A /* CalendarIntegrationUITests.swift in Sources */,
 				0DADE6D238B3E8607FFC7A10 /* CalendarNavigationUITests.swift in Sources */,
+				7D616F45B04F17B2DD6586EB /* CalendarPerformanceUITests.swift in Sources */,
+				05C579F51C4F7D391D2DE324 /* CalendarQuickDoseIntegrationUITests.swift in Sources */,
 				DC794C7815C43046B8BE2824 /* CalendarScheduledDosesUITests.swift in Sources */,
+				0676EC2EC7644DBB6FDDB94D /* CalendarStatsUITests.swift in Sources */,
 				AE24DAB538FBC6A2E26EBFB2 /* ChartControlsUITests.swift in Sources */,
 				76DBBD40F4E6C9A43FAE3010 /* ChartPerformanceUITests.swift in Sources */,
 				97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */,
@@ -1476,6 +1512,7 @@
 				DA3B864C22E15DF6EE91CB83 /* DataControllerSyncTests.swift in Sources */,
 				55D4B2F20F400995B8CA7DD8 /* DataControllerTests.swift in Sources */,
 				D620D4D470F1A3912620A111 /* DesignSystemTests.swift in Sources */,
+				98502D00C8E2AD581E8E9E87 /* DoseActionSheetTests.swift in Sources */,
 				6E803EE63051E97A55E968B9 /* DoseAnalyticsTests.swift in Sources */,
 				25A2F23E527CB3DC6445A0EA /* DoseArrayExtensionTests.swift in Sources */,
 				DEB75D56397849C2696CD0B8 /* DoseCalendarScheduledDosesTests.swift in Sources */,
@@ -1531,6 +1568,7 @@
 				C973ADE77CA780B351B507F4 /* QuickDoseEntryTests.swift in Sources */,
 				F4D76DF89B8CF9F0061E5FD1 /* QuickDoseViewModelTests.swift in Sources */,
 				7AE23FFC36E2C777FBD029B2 /* ReconstitutionCalculatorTests.swift in Sources */,
+				C4ED1DFE1CB042935C7E34DE /* RescheduleDoseSheetTests.swift in Sources */,
 				189044C73C63F63FFE640F87 /* ScheduleServiceAdherenceTests.swift in Sources */,
 				C3A347C9C7CBA45680B8CCF2 /* ScheduleServiceModificationTests.swift in Sources */,
 				A1015337C960BE10DD516198 /* ScheduleServiceProjectionTests.swift in Sources */,
@@ -1606,6 +1644,7 @@
 				25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */,
 				F6F8AA08B511F3FDF37C27B4 /* Dose+Filtering.swift in Sources */,
 				E4E2E302D5AC11A67F4A584B /* Dose.swift in Sources */,
+				1EE2CA9BBF1F9B616F5BA430 /* DoseActionSheet.swift in Sources */,
 				1E0D912C973F906C52EF582F /* DoseCalendarView.swift in Sources */,
 				BA31440BC731D9DCE897FAE2 /* DoseCalendarViewModel.swift in Sources */,
 				9E1018B257D629B301FA9AEE /* DoseDataService.swift in Sources */,
@@ -1662,6 +1701,7 @@
 				020BA0D09ABD698851900B09 /* ReconstitutionCalculator.swift in Sources */,
 				7B7A0BEDA7FA80891EA27BE7 /* ReconstitutionCalculatorView.swift in Sources */,
 				63593CF8E9489B19099E836C /* ReminderPreferencesView.swift in Sources */,
+				82A33932CA0EA17B714A17A4 /* RescheduleDoseSheet.swift in Sources */,
 				ADEA9CFD18B1FC49C3386247 /* SchedulePatternCard.swift in Sources */,
 				DCC706DA795AE15DEAD6C5C1 /* SchedulePatternPicker.swift in Sources */,
 				5AB9AC3D54C026D4475819C6 /* ScheduleService+Adherence.swift in Sources */,

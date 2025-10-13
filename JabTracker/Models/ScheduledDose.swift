@@ -168,6 +168,50 @@ final class ScheduledDose {
         // Default: Dose is pending
         return .pending
     }
+
+    // MARK: - Stream B: Dose Action Methods (Issue #178)
+
+    /**
+     Mark this scheduled dose as intentionally skipped.
+
+     Sets `skippedAt` to the current time and records an optional reason.
+     Does not modify status if the dose has already been taken.
+
+     - Parameter reason: Optional reason for skipping the dose
+     */
+    func markAsSkipped(reason: String? = nil) {
+        // Don't allow skipping if dose already taken
+        guard actualDose == nil else { return }
+
+        self.skippedAt = Date()
+        self.skipReason = reason
+        self.updatedAt = Date()
+    }
+
+    /**
+     Reschedule this dose to a new time.
+
+     Updates `scheduledTime` and adjusts the adherence window accordingly.
+     Tracks the original scheduled time in `rescheduledFrom` for adherence analysis.
+
+     - Parameter newTime: The new scheduled time for this dose
+     */
+    func reschedule(to newTime: Date) {
+        // Track original time if this is the first reschedule
+        if self.rescheduledFrom == nil {
+            self.rescheduledFrom = self.scheduledTime
+        }
+
+        // Update scheduled time
+        self.scheduledTime = newTime
+
+        // Recalculate adherence window (±2 hours)
+        let twoHours: TimeInterval = 2 * 60 * 60
+        self.windowStart = newTime.addingTimeInterval(-twoHours)
+        self.windowEnd = newTime.addingTimeInterval(twoHours)
+
+        self.updatedAt = Date()
+    }
 }
 
 // MARK: - Supporting Enums

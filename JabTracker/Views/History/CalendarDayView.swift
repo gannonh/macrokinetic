@@ -15,6 +15,10 @@ struct CalendarDayView: View {
     let isSelected: Bool
     let onTap: () -> Void
 
+    // MARK: - Stream B: Long-Press Handler
+
+    var onLongPress: ((DoseEvent) -> Void)?
+
     private let calendar = Calendar.current
 
     // MARK: - Stream A: Legacy Support
@@ -44,6 +48,10 @@ struct CalendarDayView: View {
         }
         .buttonStyle(.plain)
         .frame(height: 44)
+        .onLongPressGesture {
+            // Stream B: Handle long-press for scheduled doses
+            handleLongPress()
+        }
         .accessibilityIdentifier("calendar-day-\(self.dayNumber)")
         .accessibilityLabel(self.accessibilityLabel)
         .accessibilityHint(self.accessibilityHint)
@@ -181,6 +189,18 @@ struct CalendarDayView: View {
             return .purple
         default:
             return .accentColor  // Default color for unknown or nil sites
+        }
+    }
+
+    // MARK: - Stream B: Long-Press Handling
+
+    /// Handle long-press gesture on calendar day
+    ///
+    /// Finds the first scheduled dose event and triggers the long-press handler
+    private func handleLongPress() {
+        // Find first scheduled dose event
+        if let scheduledEvent = events.first(where: { $0.type == .scheduled }) {
+            onLongPress?(scheduledEvent)
         }
     }
 }

@@ -25,6 +25,11 @@ struct DoseCalendarView: View {
     @State private var selectedDate: Date?
     @State private var showingDayDetail = false
 
+    // MARK: - Stream B: Long-Press Gesture Handling
+
+    @State private var selectedDoseEvent: DoseEvent?
+    @State private var showingActionSheet = false
+
     private let calendar = Calendar.current
 
     var body: some View {
@@ -45,6 +50,11 @@ struct DoseCalendarView: View {
                 DoseDayDetailView(
                     date: selectedDate,
                     doses: self.dosesForDate(selectedDate))
+            }
+        }
+        .sheet(isPresented: self.$showingActionSheet) {
+            if let event = selectedDoseEvent {
+                DoseActionSheet(event: event)
             }
         }
         .accessibilityIdentifier("dose-calendar-view")
@@ -104,11 +114,17 @@ struct DoseCalendarView: View {
                         events: self.doseEventsForDate(date),
                         isToday: self.calendar.isDateInToday(date),
                         isSelected: self.selectedDate.map { self.calendar.isDate($0, inSameDayAs: date) }
-                            ?? false
-                    ) {
-                        self.selectedDate = date
-                        self.showingDayDetail = true
-                    }
+                            ?? false,
+                        onTap: {
+                            self.selectedDate = date
+                            self.showingDayDetail = true
+                        },
+                        onLongPress: { event in
+                            // Stream B: Handle long-press for dose actions
+                            self.selectedDoseEvent = event
+                            self.showingActionSheet = true
+                        }
+                    )
                 } else {
                     // Empty day cell for padding
                     Rectangle()
