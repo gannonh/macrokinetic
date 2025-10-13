@@ -28,7 +28,7 @@ struct DoseActionSheet: View {
                 // Event details section
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        if let medicationName = event.scheduledDose?.schedule?.medicationProfile?.brandName {
+                        if let medicationName = event.medicationBrandName {
                             Text(medicationName)
                                 .font(.headline)
                                 .accessibilityIdentifier("dose-action-medication-name")
@@ -39,12 +39,10 @@ struct DoseActionSheet: View {
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("dose-action-scheduled-time")
 
-                        if let amount = event.scheduledDose?.doseAmount {
-                            Text("\(amount, specifier: "%.2f") mg")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .accessibilityIdentifier("dose-action-amount")
-                        }
+                        Text("\(event.doseAmount, specifier: "%.2f") mg")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .accessibilityIdentifier("dose-action-amount")
                     }
                     .padding(.vertical, 8)
                 }
@@ -108,16 +106,23 @@ struct DoseActionSheet: View {
         .presentationDetents([.medium])
         .accessibilityIdentifier("dose-action-sheet")
         .sheet(isPresented: $showQuickDoseSheet) {
-            if let profile = event.scheduledDose?.schedule?.medicationProfile,
-                let amount = event.scheduledDose?.doseAmount
-            {
-                QuickDoseEntrySheet(
-                    preSelectedProfile: profile,
-                    prePopulatedAmount: amount,
-                    onDoseLogged: {
-                        dismiss()
+            // Query for the medication profile using stored medication names
+            if let brandName = event.medicationBrandName {
+                let descriptor = FetchDescriptor<MedicationProfile>(
+                    predicate: #Predicate { profile in
+                        profile.brandName == brandName
                     }
                 )
+
+                if let profile = try? modelContext.fetch(descriptor).first {
+                    QuickDoseEntrySheet(
+                        preSelectedProfile: profile,
+                        prePopulatedAmount: event.doseAmount,
+                        onDoseLogged: {
+                            dismiss()
+                        }
+                    )
+                }
             }
         }
         .sheet(isPresented: $showRescheduleSheet) {
@@ -298,7 +303,11 @@ private struct QuickDoseEntrySheet: View {
     )
     scheduledDose.schedule = schedule
 
-    let event = DoseEvent.from(scheduledDose: scheduledDose)
+    let event = DoseEvent.from(
+        scheduledDose: scheduledDose,
+        medicationBrandName: "Ozempic",
+        medicationGenericName: "semaglutide"
+    )
 
     return DoseActionSheet(event: event)
         .modelContainer(DataController.preview.container)

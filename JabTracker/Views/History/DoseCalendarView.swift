@@ -253,14 +253,28 @@ struct DoseCalendarView: View {
 
             // Only add scheduled dose if it wasn't logged
             if !wasLogged {
+                // Get medication profile information from the schedule
+                let medicationBrandName = scheduledDose.schedule?.medicationProfile?.brandName
+                let medicationGenericName = scheduledDose.schedule?.medicationProfile?.genericName
+
                 // Check if it's in the past (missed) or future (scheduled)
                 let now = Date()
                 if scheduledDose.windowEnd < now {
                     // Missed dose - past the adherence window
-                    events.append(DoseEvent.from(scheduledDose: scheduledDose))
+                    events.append(
+                        DoseEvent.from(
+                            scheduledDose: scheduledDose,
+                            medicationBrandName: medicationBrandName,
+                            medicationGenericName: medicationGenericName
+                        ))
                 } else {
                     // Future scheduled dose
-                    events.append(DoseEvent.from(scheduledDose: scheduledDose))
+                    events.append(
+                        DoseEvent.from(
+                            scheduledDose: scheduledDose,
+                            medicationBrandName: medicationBrandName,
+                            medicationGenericName: medicationGenericName
+                        ))
                 }
             }
         }

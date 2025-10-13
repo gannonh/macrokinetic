@@ -53,6 +53,12 @@ struct DoseEvent: Identifiable, Comparable {
     /// Adherence status for this event
     let adherenceStatus: DoseAdherenceStatus
 
+    /// Medication brand name (e.g., "Ozempic", "Mounjaro")
+    let medicationBrandName: String?
+
+    /// Medication generic name (e.g., "semaglutide", "tirzepatide")
+    let medicationGenericName: String?
+
     // MARK: - Computed Properties
 
     /// Whether this event represents adherent behavior
@@ -73,9 +79,16 @@ struct DoseEvent: Identifiable, Comparable {
     /// - `.skipped`: Intentionally skipped → type: skipped, adherence: adherent (valid skip)
     /// - `.missed`: Past window without dose → type: missed, adherence: non-adherent
     ///
-    /// - Parameter scheduledDose: The scheduled dose to convert
+    /// - Parameters:
+    ///   - scheduledDose: The scheduled dose to convert
+    ///   - medicationBrandName: Optional medication brand name (e.g., "Ozempic")
+    ///   - medicationGenericName: Optional medication generic name (e.g., "semaglutide")
     /// - Returns: DoseEvent representing the scheduled dose
-    static func from(scheduledDose: ScheduledDose) -> DoseEvent {
+    static func from(
+        scheduledDose: ScheduledDose,
+        medicationBrandName: String? = nil,
+        medicationGenericName: String? = nil
+    ) -> DoseEvent {
         let status = scheduledDose.status
 
         let type: DoseEventType
@@ -103,7 +116,9 @@ struct DoseEvent: Identifiable, Comparable {
             scheduledDose: scheduledDose,
             actualDose: scheduledDose.actualDose,
             doseAmount: scheduledDose.doseAmount,
-            adherenceStatus: adherenceStatus
+            adherenceStatus: adherenceStatus,
+            medicationBrandName: medicationBrandName,
+            medicationGenericName: medicationGenericName
         )
     }
 
@@ -122,7 +137,9 @@ struct DoseEvent: Identifiable, Comparable {
             scheduledDose: nil,
             actualDose: actualDose,
             doseAmount: actualDose.amount,
-            adherenceStatus: .adherent  // Unscheduled doses are adherent
+            adherenceStatus: .adherent,  // Unscheduled doses are adherent
+            medicationBrandName: actualDose.medication?.brandName,
+            medicationGenericName: actualDose.medication?.genericName
         )
     }
 
@@ -150,7 +167,9 @@ struct DoseEvent: Identifiable, Comparable {
             scheduledDose: scheduled,
             actualDose: actual,
             doseAmount: actual.amount,
-            adherenceStatus: adherenceStatus
+            adherenceStatus: adherenceStatus,
+            medicationBrandName: actual.medication?.brandName,
+            medicationGenericName: actual.medication?.genericName
         )
     }
 
