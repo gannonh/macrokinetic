@@ -14,6 +14,13 @@ struct DoseCalendarView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Dose.timestamp, order: .reverse) private var allDoses: [Dose]
 
+    // MARK: - Stream A: Scheduled Dose Loading
+
+    @Query(filter: #Predicate<DoseSchedule> { $0.isActive })
+    private var activeSchedules: [DoseSchedule]
+
+    @State private var scheduledDosesForMonth: [ScheduledDose] = []
+
     @State private var currentDate = Date()
     @State private var selectedDate: Date?
     @State private var showingDayDetail = false
@@ -94,7 +101,7 @@ struct DoseCalendarView: View {
                 if let date {
                     CalendarDayView(
                         date: date,
-                        doses: self.dosesForDate(date),
+                        events: self.doseEventsForDate(date),
                         isToday: self.calendar.isDateInToday(date),
                         isSelected: self.selectedDate.map { self.calendar.isDate($0, inSameDayAs: date) }
                             ?? false
@@ -111,6 +118,12 @@ struct DoseCalendarView: View {
             }
         }
         .padding(.horizontal)
+        .onAppear {
+            self.loadScheduledDosesForMonth()
+        }
+        .onChange(of: self.currentDate) {
+            self.loadScheduledDosesForMonth()
+        }
     }
 
     // MARK: - Computed Properties
@@ -172,6 +185,70 @@ struct DoseCalendarView: View {
                 self.currentDate = newDate
             }
         }
+    }
+
+    // MARK: - Stream A: Scheduled Dose Methods
+
+    /// Load scheduled doses for the currently displayed month (lazy loading per NFR3)
+    private func loadScheduledDosesForMonth() {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: currentDate) else {
+            self.scheduledDosesForMonth = []
+            return
+        }
+
+        let scheduleService = ScheduleService(context: modelContext)
+        var allScheduledDoses: [ScheduledDose] = []
+
+        // Generate scheduled doses for each active schedule
+        for schedule in activeSchedules {
+            let doses = scheduleService.generateScheduledDoses(
+                for: schedule,
+                from: monthInterval.start,
+                to: monthInterval.end
+            )
+            allScheduledDoses.append(contentsOf: doses)
+        }
+
+        self.scheduledDosesForMonth = allScheduledDoses
+    }
+
+    /// Get dose events (combination of logged and scheduled doses) for a specific date
+    private func doseEventsForDate(_ date: Date) -> [DoseEvent] {
+        let startOfDay = self.calendar.startOfDay(for: date)
+        let endOfDay = self.calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
+
+        var events: [DoseEvent] = []
+
+        // Add logged doses as events
+        let loggedDoses = self.dosesForDate(date)
+        events.append(contentsOf: loggedDoses.map { DoseEvent.from(actualDose: $0) })
+
+        // Add scheduled doses as events (excluding those already logged)
+        let scheduledDoses = self.scheduledDosesForMonth.filter { scheduled in
+            scheduled.scheduledTime >= startOfDay && scheduled.scheduledTime < endOfDay
+        }
+
+        for scheduledDose in scheduledDoses {
+            // Check if this scheduled dose has been logged
+            if let actualDose = scheduledDose.actualDose {
+                // Use combined event if within window, otherwise separate
+                let wasWithinWindow =
+                    actualDose.timestamp >= scheduledDose.windowStart
+                    && actualDose.timestamp <= scheduledDose.windowEnd
+
+                if wasWithinWindow {
+                    events.append(DoseEvent.combined(scheduled: scheduledDose, actual: actualDose))
+                } else {
+                    // Separate events for out-of-window doses
+                    events.append(DoseEvent.from(scheduledDose: scheduledDose))
+                }
+            } else {
+                // Unlogged scheduled dose
+                events.append(DoseEvent.from(scheduledDose: scheduledDose))
+            }
+        }
+
+        return events.sorted { $0.timestamp < $1.timestamp }
     }
 }
 
