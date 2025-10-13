@@ -2,8 +2,8 @@
 name: dose-scheduling
 status: in-progress
 created: 2025-10-04T22:00:03Z
-progress: 30%
-updated: 2025-10-08T20:36:31Z
+progress: 40%
+updated: 2025-10-13T16:59:49Z
 prd: .claude/prds/dose-scheduling.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/173
 ---
@@ -462,10 +462,10 @@ High-level task categories that will be created during epic decomposition:
 8. **Consolidation into 10 Tasks**: Grouping related work (e.g., all notification features in one task) reduces overhead and enables focused delivery
 
 ## Tasks Created
-- [ ] #174 - SwiftData Models - DoseSchedule, ScheduledDose, DoseEvent
-- [ ] #175 - ScheduleService Core - Schedule Management and Calculation Algorithms
-- [ ] #176 - NotificationService - Smart Dose Reminders and Notification Management
-- [ ] #177 - Onboarding Integration
+- [x] #174 - SwiftData Models - DoseSchedule, ScheduledDose, DoseEvent
+- [x] #175 - ScheduleService Core - Schedule Management and Calculation Algorithms
+- [x] #176 - NotificationService - Smart Dose Reminders and Notification Management
+- [x] #177 - Onboarding Integration
 - [ ] #178 - Calendar Integration
 - [ ] #179 - Medication Profile CRUD
 - [ ] #180 - Split-Dose Support
