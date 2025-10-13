@@ -7,8 +7,6 @@ argument-hint: [pr-number]
 
 Merge completed PR from branch to main using GitHub Pull Request workflow.
 
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
-
 ## Quick Check
 
 1. **Check PR status:**
@@ -108,8 +106,9 @@ Step 4: Request Review
   4. Once all reviews are completed, come back and resume this merge process from Step 5: `/pm:issue-merge $ARGUMENTS`
 ---
 
-### 5. Process PR Comments
+**important:** Do NOT proceed to Step 5 until explicitly asked to do so by the user.
 
+### 5. Process PR Comments
 
 #### 5.1. Create GitHub Issues from PR Feedback
 
@@ -163,9 +162,10 @@ gh issue create \
 
 **Guidelines for Issue Creation:**
 
-- **Large analyzer reports** (test quality, code quality): Parse them to extract individual issues
-  - Example: Don't create 1 issue for "test quality report"
-  - DO create: Issue for "6 placeholder tests", separate issue for "missed dose coverage", etc.
+- **Large analyzer reports** (test quality, code quality): Parse them to extract **individual issues**
+  - Example: 
+    - DO NOT: create 1 issue for "test quality report"
+    - DO: create Issue for "6 placeholder tests", separate issue for "missed dose coverage", etc.
 - **Related recommendations**: Group similar items into one issue when it makes sense
   - Example: 4 Copilot comments about "hardcoded scheduledDoseId" → 1 grouped issue
 - **Individual comments**: Each specific recommendation gets its own issue
@@ -173,16 +173,16 @@ gh issue create \
 - **Traceability**: Always prefix with "PR #$ARGUMENTS - "
 
 **Important:**
-- Use your judgment - this is NOT automated
+- Use your judgment - this is NOT an automated process
 - Parse long reports carefully to extract all actionable items
 - Don't skip the analyzer reports - they contain the most important feedback
 - Check for duplicates before creating issues
+- Don't let anything slip through the cracks!
 
 #### 5.2. Triage & Label GitHub Issues
-For each newly created issue from the PR comments, evaluate, prioritize and label.
+For each newly created issue: evaluate, prioritize and label.
 
 - Evaluate each new issue
-- Read the issue
 - Read the relevant code files for context
 - Prioritize each issue based on severity and impact using GitHub labels:
   - [P0] Critical: Must be fixed before merge
