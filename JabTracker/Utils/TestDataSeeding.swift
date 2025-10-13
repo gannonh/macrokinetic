@@ -6,10 +6,14 @@
 //  Supports large dataset generation for performance testing
 //
 //  IMPORTANT: Only compiled when building for testing (DEBUG or testing environments)
+// swiftlint:disable file_length
 
 #if DEBUG || TEST
     import Foundation
+    import OSLog
     import SwiftData
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "TestDataSeeding")
 
     /// Configuration for generating test data
     struct TestDataSeedingConfig {
@@ -221,21 +225,50 @@
             }
 
             // Create DoseSchedule entity for calendar scheduled dose display
-            // Use the last logged dose time as the base for the schedule
-            if let lastDose = createdDoses.last {
+            // Use the FIRST logged dose time to cover entire historical period
+            if let firstDose = createdDoses.first {
                 let calendar = Calendar.current
-                let components = calendar.dateComponents([.hour, .minute], from: lastDose.timestamp)
+                let components = calendar.dateComponents([.hour, .minute], from: firstDose.timestamp)
 
+                // Create schedule configuration
+                let scheduleConfig = ScheduleConfiguration(
+                    dayOfWeek: config.medication.frequency == .weekly
+                        ? calendar.component(.weekday, from: firstDose.timestamp) : nil,
+                    timeOfDay: TimeComponents(hour: components.hour ?? 9, minute: components.minute ?? 0),
+                    interval: config.medication.frequency == .weekly ? 7 : 1,
+                    doseAmount: config.doseAmount,
+                    windowMinutesBefore: 120,  // 2 hours before
+                    windowMinutesAfter: 120,  // 2 hours after
+                    splitDoseCount: nil,
+                    splitIntervalMinutes: nil,
+                    customRecurrence: nil
+                )
+
+                // Encode configuration to Data
+                let encoder = JSONEncoder()
+                guard let scheduleData = try? encoder.encode(scheduleConfig) else {
+                    // If encoding fails, skip schedule creation but continue with test data
+                    logger.warning("Failed to encode schedule configuration for test data")
+                    try context.save()
+                    return TestDataSeedingResult(
+                        user: user,
+                        medicationProfile: profile,
+                        doses: createdDoses,
+                        skippedDoses: skippedDoses,
+                        expectedDoseCount: doseSchedule.count,
+                        actualDoseCount: createdDoses.count,
+                        adherenceRate: Double(createdDoses.count) / Double(doseSchedule.count)
+                    )
+                }
+
+                // Create DoseSchedule with encoded configuration
                 let schedule = DoseSchedule(
                     medicationProfile: profile,
-                    doseAmount: config.doseAmount,
-                    frequency: config.medication.frequency,
-                    timeOfDay: components,
-                    windowStart: -2 * 3600,  // 2 hours before
-                    windowEnd: 2 * 3600,  // 2 hours after
-                    startDate: lastDose.timestamp,
+                    patternType: .weekly,
+                    baseSchedule: scheduleData,
                     isActive: true
                 )
+                schedule.createdAt = firstDose.timestamp  // Set start date to FIRST dose for full historical coverage
                 context.insert(schedule)
             }
 

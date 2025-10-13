@@ -29,26 +29,27 @@ struct CalendarDayView: View {
     }
 
     var body: some View {
-        Button(action: self.onTap) {
-            ZStack {
-                // Background
-                self.backgroundView
+        ZStack {
+            // Background
+            self.backgroundView
 
-                VStack(spacing: 2) {
-                    // Day number
-                    Text("\(self.dayNumber)")
-                        .font(.system(.body, design: .rounded))
-                        .fontWeight(self.isToday ? .bold : .medium)
-                        .foregroundColor(self.textColor)
+            VStack(spacing: 2) {
+                // Day number
+                Text("\(self.dayNumber)")
+                    .font(.system(.body, design: .rounded))
+                    .fontWeight(self.isToday ? .bold : .medium)
+                    .foregroundColor(self.textColor)
 
-                    // Dose indicators
-                    self.doseIndicatorView
-                }
+                // Dose indicators
+                self.doseIndicatorView
             }
         }
-        .buttonStyle(.plain)
         .frame(height: 44)
-        .onLongPressGesture {
+        .contentShape(Rectangle())  // Make entire frame tappable
+        .onTapGesture {
+            self.onTap()
+        }
+        .onLongPressGesture(minimumDuration: 0.5) {
             // Stream B: Handle long-press for scheduled doses
             handleLongPress()
         }
