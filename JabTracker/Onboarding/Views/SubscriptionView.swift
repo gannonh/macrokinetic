@@ -259,7 +259,11 @@ struct SubscriptionView: View {
             try await self.subscriptionManager.purchase(productId: productId)
 
             // If purchase succeeds, complete onboarding
-            try await self.viewModel.completeOnboarding()
+            let result = await self.viewModel.completeOnboarding()
+            if case .failed(let error) = result {
+                Self.logger.error(
+                    "🛒 SubscriptionView: Onboarding completion failed: \(error.localizedDescription, privacy: .public)")
+            }
         } catch {
             Self.logger.error(
                 "🛒 SubscriptionView: Purchase failed: \(error.localizedDescription, privacy: .public)")
@@ -268,7 +272,7 @@ struct SubscriptionView: View {
                 // In test environment, if StoreKit purchase fails, simulate successful completion
                 // This ensures UI tests can complete the flow even if StoreKit isn't working properly
                 Self.logger.info("🛒 SubscriptionView: Test environment - simulating successful purchase")
-                try? await self.viewModel.completeOnboarding()
+                _ = await self.viewModel.completeOnboarding()
             } else {
                 // In production, show the actual error to the user
                 self.subscriptionManager.errorMessage = "Purchase failed: \(error.localizedDescription)"
