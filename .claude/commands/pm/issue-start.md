@@ -74,10 +74,11 @@ Additional context (if any): $2
 ### 3. Check for Analysis
    ```bash
    test -f .claude/epics/*/$1-analysis.md || echo "❌ No analysis found for issue #$1
-
-   Run: /pm:issue-analyze $1 first
    ```
-   If no analysis exists and no --analyze flag, stop execution.
+   If no analysis exists and no --analyze flag, run the following slash command to generate it:
+  
+   /pm:issue-analyze $1
+   
 
 ### 4. Create or Checkout Issue Branch
 
