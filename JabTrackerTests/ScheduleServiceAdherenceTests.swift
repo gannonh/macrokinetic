@@ -548,4 +548,215 @@ struct ScheduleServiceAdherenceTests {
         #expect(rescheduleIssue != nil)
         #expect(rescheduleIssue?.severity == .medium)
     }
+
+    // MARK: - Stream C: Calendar Adherence Statistics Tests
+
+    @Test("Calculate calendar schedule adherence with mixed dose states")
+    func testCalculateCalendarScheduleAdherenceWithMixedDoseStates() throws {
+        let context = createTestContext()
+        let profile = createTestProfile(context: context)
+        let schedule = try createTestSchedule(context: context, profile: profile)
+
+        let now = Date()
+
+        // Create 10 scheduled doses with varied states:
+        // 6 taken, 2 missed, 2 skipped
+        // Note: createTestScheduledDose creates window: scheduledTime ± 2 hours
+        for index in 0..<10 {
+            // Space doses 3 days apart, starting 30 days ago
+            // This ensures windowEnd is well in the past for missed doses
+            let scheduledTime = Calendar.current.date(byAdding: .day, value: -30 + (index * 3), to: now)!
+            let dose = createTestScheduledDose(
+                context: context,
+                schedule: schedule,
+                scheduledTime: scheduledTime
+            )
+
+            if index < 6 {
+                // Mark first 6 as taken
+                let actualDose = Dose(
+                    amount: 0.5,
+                    timestamp: scheduledTime,
+                    site: "Abdomen"
+                )
+                actualDose.medication = profile
+                context.insert(actualDose)
+                dose.actualDose = actualDose
+            } else if index >= 8 {
+                // Mark last 2 as skipped (indices 8 and 9)
+                // Use Stream B's markAsSkipped method
+                dose.markAsSkipped(reason: "Feeling unwell")
+            }
+            // Indices 6 and 7: Mark as missed (no actualDose, no skippedAt, past window)
+            // These will automatically be .missed due to windowEnd < now
+        }
+
+        try context.save()
+
+        let service = ScheduleService(context: context)
+        let startDate = Calendar.current.date(byAdding: .day, value: -31, to: now)!
+        let endDate = now
+
+        let metrics = service.calculateAdherence(
+            for: schedule,
+            from: startDate,
+            to: endDate
+        )
+
+        // Verify adherence calculation
+        // 6 taken / (6 taken + 2 missed) = 75%
+        // Skipped doses don't count against adherence
+        #expect(metrics.totalTaken == 6)
+        #expect(metrics.totalMissed == 2)
+        #expect(metrics.totalSkipped == 2)
+        #expect(metrics.adherencePercentage == 0.75)
+    }
+
+    @Test("Calculate schedule adherence for specific month range")
+    func testCalculateScheduleAdherenceForSpecificMonthRange() throws {
+        let context = createTestContext()
+        let profile = createTestProfile(context: context)
+        let schedule = try createTestSchedule(context: context, profile: profile)
+
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Use a past month to ensure all doses are definitely past their windows
+        // Go back 2 months to be safe
+        let pastDate = calendar.date(byAdding: .month, value: -2, to: now)!
+        let components = calendar.dateComponents([.year, .month], from: pastDate)
+        let startOfMonth = calendar.date(from: components)!
+        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
+
+        // Create 4 scheduled doses within that past month (weekly schedule)
+        var scheduledTimes: [Date] = []
+        var currentDate = startOfMonth
+        while currentDate <= endOfMonth {
+            if calendar.component(.weekday, from: currentDate) == 2 {  // Monday
+                scheduledTimes.append(currentDate)
+            }
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+        }
+
+        // Create scheduled doses and mark some as taken
+        for (index, scheduledTime) in scheduledTimes.enumerated() {
+            let dose = createTestScheduledDose(
+                context: context,
+                schedule: schedule,
+                scheduledTime: scheduledTime
+            )
+
+            if index < 3 {
+                // Mark first 3 as taken
+                let actualDose = Dose(
+                    amount: 0.5,
+                    timestamp: scheduledTime,
+                    site: "Abdomen"
+                )
+                actualDose.medication = profile
+                context.insert(actualDose)
+                dose.actualDose = actualDose
+            }
+            // Last one remains missed (past windowEnd, no actualDose, no skippedAt = .missed)
+        }
+
+        try context.save()
+
+        let service = ScheduleService(context: context)
+        let metrics = service.calculateAdherence(
+            for: schedule,
+            from: startOfMonth,
+            to: endOfMonth
+        )
+
+        // Verify monthly adherence
+        #expect(metrics.totalScheduled >= 4)  // At least 4 Mondays in a month
+        #expect(metrics.totalTaken == 3)
+        #expect(metrics.totalMissed == 1)
+        #expect(metrics.adherencePercentage == 0.75)  // 3/4 = 75%
+    }
+
+    @Test("Calculate schedule adherence with zero scheduled doses")
+    func testCalculateScheduleAdherenceWithZeroScheduledDoses() throws {
+        let context = createTestContext()
+        let profile = createTestProfile(context: context)
+        let schedule = try createTestSchedule(context: context, profile: profile)
+
+        let now = Date()
+        let startDate = Calendar.current.date(byAdding: .month, value: 1, to: now)!  // Future month
+        let endDate = Calendar.current.date(byAdding: .month, value: 2, to: now)!
+
+        let service = ScheduleService(context: context)
+        let metrics = service.calculateAdherence(
+            for: schedule,
+            from: startDate,
+            to: endDate
+        )
+
+        // Should handle zero scheduled doses gracefully
+        #expect(metrics.totalScheduled == 0)
+        #expect(metrics.totalTaken == 0)
+        #expect(metrics.totalMissed == 0)
+        #expect(metrics.adherencePercentage == 0.0)  // Or 1.0 if no misses means 100%
+    }
+
+    @Test("Calculate schedule adherence stats for calendar display")
+    func testCalculateScheduleAdherenceStatsForCalendarDisplay() throws {
+        let context = createTestContext()
+        let profile = createTestProfile(context: context)
+        let schedule = try createTestSchedule(context: context, profile: profile)
+
+        let now = Date()
+
+        // Create 20 scheduled doses with varied states
+        for index in 0..<20 {
+            let scheduledTime = Calendar.current.date(byAdding: .day, value: -60 + (index * 3), to: now)!
+            let dose = createTestScheduledDose(
+                context: context,
+                schedule: schedule,
+                scheduledTime: scheduledTime
+            )
+
+            if index < 15 {
+                // 15 taken
+                let actualDose = Dose(
+                    amount: 0.5,
+                    timestamp: scheduledTime,
+                    site: "Abdomen"
+                )
+                actualDose.medication = profile
+                context.insert(actualDose)
+                dose.actualDose = actualDose
+            } else if index >= 17 {
+                // Last 3 skipped (indices 17, 18, 19)
+                // Use Stream B's markAsSkipped method
+                dose.markAsSkipped(reason: "Side effects")
+            }
+            // Indices 15 and 16: 2 missed
+            // Leave unhandled past window (no actualDose, no skippedAt, past windowEnd = missed)
+        }
+
+        try context.save()
+
+        let service = ScheduleService(context: context)
+        let startDate = Calendar.current.date(byAdding: .day, value: -61, to: now)!
+        let endDate = now
+
+        let metrics = service.calculateAdherence(
+            for: schedule,
+            from: startDate,
+            to: endDate
+        )
+
+        // Verify stats suitable for calendar display
+        #expect(metrics.totalScheduled == 20)
+        #expect(metrics.totalTaken == 15)
+        #expect(metrics.totalMissed == 2)
+        #expect(metrics.totalSkipped == 3)
+        #expect(metrics.adherencePercentage == 15.0 / 17.0)  // 15 taken / (15 taken + 2 missed)
+
+        // Verify on-time percentage calculation
+        #expect(metrics.onTimePercentage >= 0.0)
+        #expect(metrics.onTimePercentage <= 1.0)
+    }
 }

@@ -88,6 +88,34 @@ struct AdherenceStatistics {
         return max(1, components.day ?? 1)
     }
 
+    // MARK: - Stream C: Schedule Adherence Statistics (Issue #178)
+
+    /// Total scheduled doses from DoseSchedule
+    let totalScheduledDoses: Int
+
+    /// Scheduled doses that were taken
+    let takenScheduledDoses: Int
+
+    /// Scheduled doses that were missed
+    let missedScheduledDoses: Int
+
+    /// Scheduled doses that were intentionally skipped
+    let skippedScheduledDoses: Int
+
+    /// Schedule adherence rate (taken / (taken + missed))
+    /// Skipped doses are not counted against adherence
+    var scheduleAdherenceRate: Double {
+        let denominator = self.takenScheduledDoses + self.missedScheduledDoses
+        guard denominator > 0 else { return 0.0 }
+        return Double(self.takenScheduledDoses) / Double(denominator)
+    }
+
+    /// Schedule adherence rate as percentage string (0% to 100%)
+    var scheduleAdherenceRatePercentage: String {
+        let percentage = self.scheduleAdherenceRate * 100
+        return String(format: "%.1f%%", percentage)
+    }
+
     // MARK: - Initialization
 
     init(
@@ -102,7 +130,12 @@ struct AdherenceStatistics {
         isCurrentStreakActive: Bool,
         siteDistribution: [String: Int],
         periodStart: Date,
-        periodEnd: Date
+        periodEnd: Date,
+        // Stream C: Schedule adherence parameters
+        totalScheduledDoses: Int = 0,
+        takenScheduledDoses: Int = 0,
+        missedScheduledDoses: Int = 0,
+        skippedScheduledDoses: Int = 0
     ) {
         self.totalDoses = totalDoses
         self.skippedDoses = skippedDoses
@@ -116,6 +149,11 @@ struct AdherenceStatistics {
         self.siteDistribution = siteDistribution
         self.periodStart = periodStart
         self.periodEnd = periodEnd
+        // Stream C: Schedule adherence assignments
+        self.totalScheduledDoses = totalScheduledDoses
+        self.takenScheduledDoses = takenScheduledDoses
+        self.missedScheduledDoses = missedScheduledDoses
+        self.skippedScheduledDoses = skippedScheduledDoses
     }
 }
 

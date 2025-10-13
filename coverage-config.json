@@ -181,7 +181,9 @@
       "Views/Settings/MedicationProfileSettingsView.swift",
       "Views/Settings/SettingsView.swift",
       "Views/SplashView.swift",
-      "Views/UserProfileView.swift"
+      "Views/UserProfileView.swift",
+      "Views/History/Components/DoseActionSheet.swift",
+      "Views/History/Components/RescheduleDoseSheet.swift"
     ]
   },
   "special_testing_notes": {
