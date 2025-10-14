@@ -298,13 +298,11 @@ private struct QuickDoseEntrySheet: View {
                 // Pre-select medication profile
                 viewModel.selectedMedicationProfile = preSelectedProfile
 
-                // Pre-populate date/time if provided (for scheduled doses)
-                if let timestamp = prePopulatedTimestamp {
-                    viewModel.doseDate = timestamp
-                    viewModel.doseTime = timestamp
-                }
-
-                viewModel.loadSmartDefaults(context: modelContext)
+                // Load smart defaults with pre-populated timestamp if provided
+                viewModel.loadSmartDefaults(
+                    context: modelContext,
+                    prePopulatedTimestamp: prePopulatedTimestamp
+                )
             }
         }
         .presentationDetents([.medium, .large])

@@ -75,11 +75,20 @@ class QuickDoseViewModel: ObservableObject {
     // MARK: - Smart Defaults Loading
 
     /// Loads smart defaults from user's medication profiles and dose history
-    func loadSmartDefaults(context: ModelContext) {
+    /// - Parameters:
+    ///   - context: ModelContext for fetching medication profiles
+    ///   - prePopulatedTimestamp: Optional timestamp to pre-populate date/time (for scheduled doses)
+    func loadSmartDefaults(context: ModelContext, prePopulatedTimestamp: Date? = nil) {
         Task { @MainActor in
             do {
                 self.isLoading = true
                 self.errorMessage = nil
+
+                // Pre-populate date/time if provided (for scheduled doses)
+                if let timestamp = prePopulatedTimestamp {
+                    self.doseDate = timestamp
+                    self.doseTime = timestamp
+                }
 
                 // Fetch all medication profiles for the current user
                 let profileDescriptor = FetchDescriptor<MedicationProfile>()
