@@ -51,7 +51,6 @@ struct DoseActionSheet: View {
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("dose-action-amount")
                     }
-                    .padding(.vertical, 8)
                 }
 
                 // Actions section
