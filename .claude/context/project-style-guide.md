@@ -528,6 +528,85 @@ func calculateConcentration() async throws -> Double {
 }
 ```
 
+## Logging Patterns
+
+### OSLog for Debugging
+
+**Always use OSLog instead of print() for debugging and logging:**
+
+```swift
+import os
+
+// ✅ CORRECT: Use OSLog with subsystem and category
+private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ScheduleService")
+
+func scheduleNotification() {
+    logger.debug("Scheduling notification for dose at \(scheduledTime)")
+
+    // Implementation
+
+    logger.info("Successfully scheduled notification with ID: \(notificationId)")
+}
+
+// ❌ WRONG: Don't use print() for debugging
+func scheduleNotification() {
+    print("Scheduling notification...")  // ❌ Avoid this
+}
+```
+
+### Log Levels
+
+Use appropriate log levels based on the importance of the message:
+
+```swift
+// Debug: Detailed information for debugging during development
+logger.debug("Cache hit for chart data: \(key)")
+
+// Info: Informational messages about normal operations
+logger.info("User authenticated successfully: \(userId)")
+
+// Notice: Important but normal events
+logger.notice("Background refresh started")
+
+// Warning: Potentially problematic situations
+logger.warning("CloudKit sync delayed due to network issues")
+
+// Error: Error events that might still allow the app to continue
+logger.error("Failed to save dose: \(error.localizedDescription)")
+
+// Fault: Critical errors requiring immediate attention
+logger.fault("Fatal error in data migration: \(error)")
+```
+
+### Logger Organization
+
+Organize loggers by subsystem and category for better filtering:
+
+```swift
+// One logger per service/class with descriptive category
+class NotificationService {
+    private let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "NotificationService"
+    )
+}
+
+class ChartDataProcessor {
+    private let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "ChartDataProcessor"
+    )
+}
+```
+
+### Benefits of OSLog
+
+- **Performance**: OSLog is optimized and can be disabled in release builds
+- **Privacy**: Automatic redaction of sensitive data
+- **Integration**: Works seamlessly with Xcode Console and Instruments
+- **Filtering**: Easy to filter logs by subsystem, category, and level
+- **Structured Logging**: Better than unstructured print() statements
+
 ## Performance Guidelines
 
 ### SwiftData Best Practices

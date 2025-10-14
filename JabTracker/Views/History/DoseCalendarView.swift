@@ -300,11 +300,12 @@ struct DoseCalendarView: View {
             return nil
         }
 
-        logger.debug("scheduledDose.schedule.persistentModelID = \(schedule.persistentModelID)")
+        logger.debug("scheduledDose.schedule.persistentModelID = \(String(describing: schedule.persistentModelID))")
         logger.debug("activeSchedules count = \(self.activeSchedules.count)")
 
         for (index, activeSchedule) in activeSchedules.enumerated() {
-            logger.debug("activeSchedules[\(index)].persistentModelID = \(activeSchedule.persistentModelID)")
+            logger.debug(
+                "activeSchedules[\(index)].persistentModelID = \(String(describing: activeSchedule.persistentModelID))")
             let brandName = activeSchedule.medicationProfile?.brandName ?? "nil"
             logger.debug("activeSchedules[\(index)].medicationProfile = \(brandName)")
         }
