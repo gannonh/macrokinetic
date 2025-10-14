@@ -41,7 +41,7 @@ struct ScheduledDoseIndicator: View {
         case .missed:
             return .red
         case .skipped:
-            return .gray
+            return .orange
         }
     }
 
@@ -54,7 +54,7 @@ struct ScheduledDoseIndicator: View {
         case .missed:
             return .red  // Filled
         case .skipped:
-            return .gray  // Filled
+            return .orange  // Filled
         }
     }
 

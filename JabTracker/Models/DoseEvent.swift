@@ -153,6 +153,21 @@ struct DoseEvent: Identifiable, Comparable {
     ///   - actual: The actual dose taken
     /// - Returns: DoseEvent combining both scheduled and actual information
     static func combined(scheduled: ScheduledDose, actual: Dose) -> DoseEvent {
+        // Handle skipped doses - these are intentional skips marked via swipe action
+        if actual.skipped {
+            return DoseEvent(
+                id: UUID(),
+                timestamp: actual.timestamp,
+                type: .skipped,
+                scheduledDose: scheduled,
+                actualDose: actual,
+                doseAmount: actual.amount,
+                adherenceStatus: .adherent,  // Intentional skip is adherent
+                medicationBrandName: actual.medication?.brandName,
+                medicationGenericName: actual.medication?.genericName
+            )
+        }
+
         // Check if dose was taken within the adherence window
         let wasWithinWindow =
             actual.timestamp >= scheduled.windowStart

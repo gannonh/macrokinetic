@@ -232,6 +232,7 @@ struct DoseCalendarView: View {
         let endOfDay = self.calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
 
         var events: [DoseEvent] = []
+        var matchedDoses: Set<UUID> = []  // Track which logged doses we've matched to schedules
 
         // Get logged doses and scheduled doses for this date
         let loggedDoses = self.dosesForDate(date)
@@ -239,25 +240,29 @@ struct DoseCalendarView: View {
             scheduled.scheduledTime >= startOfDay && scheduled.scheduledTime < endOfDay
         }
 
-        // Add logged doses as events
-        events.append(contentsOf: loggedDoses.map { DoseEvent.from(actualDose: $0) })
-
-        // Add scheduled doses ONLY if they haven't been logged
+        // Process each scheduled dose, trying to find a matching logged dose
         for scheduledDose in scheduledDoses {
-            // Check if any logged dose on this date falls within this scheduled dose's window
-            // EXCLUDE skipped doses - they shouldn't count as "logged" for scheduling purposes
-            let wasLogged = loggedDoses.contains { dose in
-                !dose.skipped && dose.timestamp >= scheduledDose.windowStart
+            // Get medication profile information by looking up the schedule in activeSchedules
+            // (scheduledDose.schedule relationship is unreliable on in-memory objects)
+            let medicationProfile = self.getMedicationProfile(for: scheduledDose)
+
+            // First, try to find a dose within the adherence window (on-time or skipped)
+            if let matchedDose = loggedDoses.first(where: { dose in
+                dose.timestamp >= scheduledDose.windowStart
                     && dose.timestamp <= scheduledDose.windowEnd
-            }
-
-            // Only add scheduled dose if it wasn't logged
-            if !wasLogged {
-                // Get medication profile information by looking up the schedule in activeSchedules
-                // (scheduledDose.schedule relationship is unreliable on in-memory objects)
-                let medicationProfile = self.getMedicationProfile(for: scheduledDose)
-
-                // Check if it's in the past (missed) or future (scheduled)
+            }) {
+                // Found a dose within window - create combined event (skipped or taken)
+                events.append(DoseEvent.combined(scheduled: scheduledDose, actual: matchedDose))
+                matchedDoses.insert(matchedDose.id)
+            } else if let matchedDose = loggedDoses.first(where: { dose in
+                // Fallback: look for any dose on this day (late dose)
+                !matchedDoses.contains(dose.id)
+            }) {
+                // Found a late dose - create combined event (will be marked as non-adherent)
+                events.append(DoseEvent.combined(scheduled: scheduledDose, actual: matchedDose))
+                matchedDoses.insert(matchedDose.id)
+            } else {
+                // No dose found - add as missed/scheduled
                 let now = Date()
                 if scheduledDose.windowEnd < now {
                     // Missed dose - past the adherence window
@@ -277,6 +282,11 @@ struct DoseCalendarView: View {
                         ))
                 }
             }
+        }
+
+        // Add any unmatched logged doses (manual/unscheduled entries)
+        for dose in loggedDoses where !matchedDoses.contains(dose.id) {
+            events.append(DoseEvent.from(actualDose: dose))
         }
 
         return events.sorted { $0.timestamp < $1.timestamp }
