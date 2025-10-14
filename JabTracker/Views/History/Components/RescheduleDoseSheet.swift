@@ -35,13 +35,23 @@ struct RescheduleDoseSheet: View {
                 // Date picker section
                 Section {
                     DatePicker(
-                        "New Date & Time",
+                        "Date",
                         selection: $newDate,
                         in: Date()...,  // Prevent past dates
-                        displayedComponents: [.date, .hourAndMinute]
+                        displayedComponents: .date
                     )
                     .accessibilityIdentifier("reschedule-date-picker")
-                    .accessibilityLabel("Select new date and time")
+                    .accessibilityLabel("Select new date")
+
+                    DatePicker(
+                        "Time",
+                        selection: $newDate,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .accessibilityIdentifier("reschedule-time-picker")
+                    .accessibilityLabel("Select new time")
+                } header: {
+                    Text("New Date & Time")
                 }
 
                 // Quick options section
