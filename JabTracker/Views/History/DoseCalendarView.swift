@@ -252,57 +252,44 @@ struct DoseCalendarView: View {
             }
 
             // Only add scheduled dose if it wasn't logged
-            if !wasLogged {
-                // Get medication profile information by looking up the schedule in activeSchedules
-                // (scheduledDose.schedule relationship is unreliable on in-memory objects)
-                let medicationProfile = self.getMedicationProfile(for: scheduledDose)
+            guard !wasLogged else { continue }
 
-                // Check if it's in the past (missed) or future (scheduled)
-                let now = Date()
-                if scheduledDose.windowEnd < now {
-                    // Missed dose - past the adherence window
-                    events.append(
-                        DoseEvent.from(
-                            scheduledDose: scheduledDose,
-                            medicationBrandName: medicationProfile?.brandName,
-                            medicationGenericName: medicationProfile?.genericName
-                        ))
-                } else {
-                    // Future scheduled dose
-                    events.append(
-                        DoseEvent.from(
-                            scheduledDose: scheduledDose,
-                            medicationBrandName: medicationProfile?.brandName,
-                            medicationGenericName: medicationProfile?.genericName
-                        ))
-                }
-            }
+            // Match scheduled dose to its source schedule by dose amount
+            let medicationProfile = self.findMedicationProfile(for: scheduledDose)
+
+            // Add event based on timing (missed if past window, scheduled if future)
+            let now = Date()
+            events.append(
+                DoseEvent.from(
+                    scheduledDose: scheduledDose,
+                    medicationBrandName: medicationProfile?.brandName,
+                    medicationGenericName: medicationProfile?.genericName
+                ))
         }
 
         return events.sorted { $0.timestamp < $1.timestamp }
     }
 
-    /// Look up the medication profile for a scheduled dose from activeSchedules
+    /// Find medication profile for a scheduled dose by matching dose amount
     ///
-    /// Since ScheduledDose objects are generated in-memory, their schedule.medicationProfile
-    /// relationship may not be accessible. This helper finds the schedule in activeSchedules
-    /// to get the medication profile information.
-    private func getMedicationProfile(for scheduledDose: ScheduledDose) -> MedicationProfile? {
-        // Find the schedule in activeSchedules by matching the schedule reference
-        guard let schedule = scheduledDose.schedule else { return nil }
+    /// Since in-memory ScheduledDose objects don't have reliable relationship chains,
+    /// we match based on the dose amount configured in the schedule.
+    private func findMedicationProfile(for scheduledDose: ScheduledDose) -> MedicationProfile? {
+        // Match by dose amount (with small tolerance for floating point comparison)
+        for schedule in activeSchedules where abs(scheduledDose.doseAmount - schedule.doseAmount) < 0.01 {
+            let medication = schedule.medicationProfile?.brandName ?? "nil"
+            print("🔍 DEBUG: Matched \(scheduledDose.doseAmount)mg to \(medication)")
+            return schedule.medicationProfile
+        }
 
-        // Find matching schedule in activeSchedules (same persistent ID)
-        if let matchingSchedule = activeSchedules.first(where: { $0.persistentModelID == schedule.persistentModelID }) {
-            return matchingSchedule.medicationProfile
+        // Debug: No match found
+        print("⚠️ DEBUG: No profile for \(scheduledDose.doseAmount)mg on \(scheduledDose.scheduledTime)")
+        print("⚠️ DEBUG: Active schedules: \(activeSchedules.count)")
+        for schedule in activeSchedules {
+            let medication = schedule.medicationProfile?.brandName ?? "nil"
+            print("⚠️ DEBUG: Schedule \(schedule.doseAmount)mg → \(medication)")
         }
 
         return nil
     }
-}
-
-#Preview {
-    NavigationStack {
-        DoseCalendarView()
-    }
-    .modelContainer(DataController.preview.container)
 }
