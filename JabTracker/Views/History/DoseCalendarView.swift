@@ -253,9 +253,9 @@ struct DoseCalendarView: View {
 
             // Only add scheduled dose if it wasn't logged
             if !wasLogged {
-                // Get medication profile information from the schedule
-                let medicationBrandName = scheduledDose.schedule?.medicationProfile?.brandName
-                let medicationGenericName = scheduledDose.schedule?.medicationProfile?.genericName
+                // Get medication profile information by looking up the schedule in activeSchedules
+                // (scheduledDose.schedule relationship is unreliable on in-memory objects)
+                let medicationProfile = self.getMedicationProfile(for: scheduledDose)
 
                 // Check if it's in the past (missed) or future (scheduled)
                 let now = Date()
@@ -264,22 +264,39 @@ struct DoseCalendarView: View {
                     events.append(
                         DoseEvent.from(
                             scheduledDose: scheduledDose,
-                            medicationBrandName: medicationBrandName,
-                            medicationGenericName: medicationGenericName
+                            medicationBrandName: medicationProfile?.brandName,
+                            medicationGenericName: medicationProfile?.genericName
                         ))
                 } else {
                     // Future scheduled dose
                     events.append(
                         DoseEvent.from(
                             scheduledDose: scheduledDose,
-                            medicationBrandName: medicationBrandName,
-                            medicationGenericName: medicationGenericName
+                            medicationBrandName: medicationProfile?.brandName,
+                            medicationGenericName: medicationProfile?.genericName
                         ))
                 }
             }
         }
 
         return events.sorted { $0.timestamp < $1.timestamp }
+    }
+
+    /// Look up the medication profile for a scheduled dose from activeSchedules
+    ///
+    /// Since ScheduledDose objects are generated in-memory, their schedule.medicationProfile
+    /// relationship may not be accessible. This helper finds the schedule in activeSchedules
+    /// to get the medication profile information.
+    private func getMedicationProfile(for scheduledDose: ScheduledDose) -> MedicationProfile? {
+        // Find the schedule in activeSchedules by matching the schedule reference
+        guard let schedule = scheduledDose.schedule else { return nil }
+
+        // Find matching schedule in activeSchedules (same persistent ID)
+        if let matchingSchedule = activeSchedules.first(where: { $0.persistentModelID == schedule.persistentModelID }) {
+            return matchingSchedule.medicationProfile
+        }
+
+        return nil
     }
 }
 
