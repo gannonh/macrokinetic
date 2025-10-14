@@ -150,8 +150,37 @@ struct DoseActionSheet: View {
 
         isSkipping = true
 
-        // Mark as skipped
-        scheduledDose.markAsSkipped(reason: "User skipped from calendar")
+        // Create a persisted skipped Dose entity to track this skip
+        // Query for the medication profile using stored medication names
+        if let brandName = event.medicationBrandName {
+            let descriptor = FetchDescriptor<MedicationProfile>(
+                predicate: #Predicate { profile in
+                    profile.brandName == brandName
+                }
+            )
+
+            if let profile = try? modelContext.fetch(descriptor).first {
+                // Create skipped dose with scheduled time
+                let skippedDose = Dose(
+                    amount: scheduledDose.doseAmount,
+                    timestamp: scheduledDose.scheduledTime,
+                    site: nil,
+                    notes: "Skipped from calendar",
+                    imageData: nil,
+                    skipped: true,
+                    user: profile.user,
+                    medication: profile
+                )
+
+                modelContext.insert(skippedDose)
+
+                do {
+                    try modelContext.save()
+                } catch {
+                    logger.error("Failed to save skipped dose: \(error)")
+                }
+            }
+        }
 
         // Small delay for UI feedback
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
