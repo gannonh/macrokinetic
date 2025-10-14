@@ -249,8 +249,18 @@ struct DoseCalendarView: View {
         // Add scheduled doses ONLY if they haven't been logged
         for scheduledDose in scheduledDoses {
             // Check if any logged dose on this date falls within this scheduled dose's window
+            // EXCLUDE skipped doses - they shouldn't count as "logged" for scheduling purposes
             let wasLogged = loggedDoses.contains { dose in
-                dose.timestamp >= scheduledDose.windowStart && dose.timestamp <= scheduledDose.windowEnd
+                !dose.skipped && dose.timestamp >= scheduledDose.windowStart
+                    && dose.timestamp <= scheduledDose.windowEnd
+            }
+
+            logger.debug("Scheduled dose at \(scheduledDose.scheduledTime): wasLogged = \(wasLogged)")
+            if !wasLogged {
+                logger.debug("Logged doses for this date:")
+                for dose in loggedDoses {
+                    logger.debug("  - \(dose.timestamp), skipped=\(dose.skipped)")
+                }
             }
 
             // Only add scheduled dose if it wasn't logged

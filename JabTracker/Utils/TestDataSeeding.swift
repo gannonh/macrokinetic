@@ -181,9 +181,15 @@
                 // Determine if this dose should be skipped based on adherence rate
                 let shouldSkip = config.includeSkippedDoses && Double.random(in: 0...1) > config.adherenceRate
 
+                // SKIP creating a logged Dose entity for skipped doses
+                // They will only appear as scheduled doses that weren't fulfilled
+                if shouldSkip {
+                    continue  // Don't create a logged dose for skipped doses
+                }
+
                 // Add timing variability if configured
                 var actualTimestamp = scheduledDate
-                if config.addTimingVariability && !shouldSkip {
+                if config.addTimingVariability {
                     let variabilitySeconds = Double.random(in: -7200...7200)  // ±2 hours
                     actualTimestamp = scheduledDate.addingTimeInterval(variabilitySeconds)
                 }
@@ -192,36 +198,27 @@
                 let siteIndex = index % config.injectionSites.count
                 let injectionSite = config.injectionSites[siteIndex]
 
-                // Create dose
+                // Create dose (only for actually logged doses)
                 let dose = Dose(
                     amount: config.doseAmount,
                     timestamp: actualTimestamp,
                     site: injectionSite,
-                    skipped: shouldSkip
+                    skipped: false  // Only logged doses are created, so skipped is always false
                 )
 
                 // Set analytics metadata
                 dose.expectedTimestamp = scheduledDate
-                dose.actualTimestamp = shouldSkip ? nil : actualTimestamp
+                dose.actualTimestamp = actualTimestamp
 
-                if shouldSkip {
-                    dose.analyticsTags = ["skipped", "missed"]
-                } else {
-                    let isOnTime = abs(actualTimestamp.timeIntervalSince(scheduledDate)) < 3600  // Within 1 hour
-                    dose.analyticsTags = isOnTime ? ["on_time"] : ["late"]
-                }
+                let isOnTime = abs(actualTimestamp.timeIntervalSince(scheduledDate)) < 3600  // Within 1 hour
+                dose.analyticsTags = isOnTime ? ["on_time"] : ["late"]
 
                 // Set relationships
                 dose.user = user
                 dose.medication = profile
 
                 context.insert(dose)
-
-                if shouldSkip {
-                    skippedDoses.append(dose)
-                } else {
-                    createdDoses.append(dose)
-                }
+                createdDoses.append(dose)
             }
 
             // Create DoseSchedule entity for calendar scheduled dose display
