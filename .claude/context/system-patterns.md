@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-08T20:37:55Z
-version: 2.6
+last_updated: 2025-10-14T17:00:00Z
+version: 2.7
 author: Claude Code PM System
 ---
 
@@ -154,6 +154,38 @@ var children: [Child] = []
 - **UI Components**: Focus on business logic, not view rendering
 
 > **For SwiftData relationship testing anti-patterns, test container setup, and ModelConfiguration requirements**, see `.claude/context/testing-config.md`
+
+## Version Control Patterns
+
+### Commit Verification Discipline
+- **Verify Before Commit**: Never commit code changes until they are verified to work correctly
+- **Test-Driven Commits**: Run relevant tests and verify functionality before committing fixes
+- **Avoid False History**: Multiple commits claiming to "fix" the same issue creates misleading and confusing git history
+- **Atomic Commits**: Each commit should represent a complete, working change that builds and functions as intended
+- **Commit Message Accuracy**: Commit messages should accurately reflect what was accomplished, not what was attempted
+
+**Anti-pattern Example:**
+```bash
+# ❌ WRONG: Committing unverified fixes creates confusing history
+git commit -m "fix: Resolve authentication bug"              # Not verified, bug still exists
+git commit -m "fix: Actually fix authentication bug"          # Still broken
+git commit -m "fix: Fix authentication bug for real"          # Misleading git history
+```
+
+**Correct Pattern:**
+```bash
+# ✅ CORRECT: Verify before commit
+./scripts/test.sh unit 1 AuthenticationTests  # Run relevant tests first
+# Verify tests pass and functionality works
+git commit -m "fix: Resolve authentication state persistence issue"  # Single accurate commit
+```
+
+### Verification Checklist Before Commit
+1. **Run Relevant Tests**: Execute unit tests for changed code areas
+2. **Manual Verification**: Test the specific functionality that was modified
+3. **Build Verification**: Ensure the project builds without errors or warnings
+4. **Lint Checks**: Run SwiftLint to catch code quality violations (`swiftlint`)
+5. **Integration Check**: Verify changes don't break related functionality
 
 ## Key Development Patterns
 
@@ -328,6 +360,7 @@ struct UserAnalyticsSummary {
 - **Review History**: Track feedback and implementation status over time
 
 ## Update History
+- 2025-10-14T17:00:00Z: Added Version Control Patterns section with commit verification discipline - emphasizes verifying work before committing to avoid false git history with multiple failed fix attempts
 - 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing Patterns from Issue #177 - back button access patterns, iterative test development success, strategic sleep timing, state preservation validation, accessibility testing without VoiceOver simulation, and performance testing timeouts
 - 2025-10-08T20:37:55Z: Added NotificationService Parallel Development Patterns from Issue #176 - 3-stream parallel coordination, extension architecture, protocol-based testability, and UNUserNotificationCenter testing limitations
 - 2025-10-06T20:59:29Z: Added Hybrid Parallel Development Strategy from Issue #175 - phase-based parallelization, extension architecture, @Observable service pattern, error enum coordination, and commit strategies for parallel streams
