@@ -6,6 +6,7 @@
 //  Stream B: Action Sheet UI & Dose Management (Issue #178)
 //
 
+import OSLog
 import SwiftData
 import SwiftUI
 
@@ -22,6 +23,8 @@ struct DoseActionSheet: View {
     @State private var showRescheduleSheet = false
     @State private var isSkipping = false
 
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DoseActionSheet")
+
     var body: some View {
         NavigationStack {
             List {
@@ -32,6 +35,10 @@ struct DoseActionSheet: View {
                             Text(medicationName)
                                 .font(.headline)
                                 .accessibilityIdentifier("dose-action-medication-name")
+                        } else {
+                            Text("DEBUG: medicationBrandName is nil")
+                                .font(.headline)
+                                .foregroundColor(.red)
                         }
 
                         Text("Scheduled for \(event.timestamp.formatted(date: .long, time: .shortened))")
@@ -45,6 +52,13 @@ struct DoseActionSheet: View {
                             .accessibilityIdentifier("dose-action-amount")
                     }
                     .padding(.vertical, 8)
+                    .onAppear {
+                        logger.debug("brandName = \(String(describing: event.medicationBrandName))")
+                        logger.debug("genericName = \(String(describing: event.medicationGenericName))")
+                        logger.debug("doseAmount = \(event.doseAmount)")
+                        logger.debug("timestamp = \(event.timestamp)")
+                        logger.debug("type = \(event.type.rawValue)")
+                    }
                 }
 
                 // Actions section
