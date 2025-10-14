@@ -29,7 +29,6 @@ struct DoseCalendarView: View {
     // MARK: - Stream B: Long-Press Gesture Handling
 
     @State private var selectedDoseEvent: DoseEvent?
-    @State private var showingActionSheet = false
 
     private let calendar = Calendar.current
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DoseCalendarView")
@@ -54,10 +53,8 @@ struct DoseCalendarView: View {
                     doses: self.dosesForDate(selectedDate))
             }
         }
-        .sheet(isPresented: self.$showingActionSheet) {
-            if let event = selectedDoseEvent {
-                DoseActionSheet(event: event)
-            }
+        .sheet(item: self.$selectedDoseEvent) { event in
+            DoseActionSheet(event: event)
         }
         .accessibilityIdentifier("dose-calendar-view")
     }
@@ -124,7 +121,6 @@ struct DoseCalendarView: View {
                         onLongPress: { event in
                             // Stream B: Handle long-press for dose actions
                             self.selectedDoseEvent = event
-                            self.showingActionSheet = true
                         }
                     )
                 } else {
@@ -255,23 +251,11 @@ struct DoseCalendarView: View {
                     && dose.timestamp <= scheduledDose.windowEnd
             }
 
-            logger.debug("Scheduled dose at \(scheduledDose.scheduledTime): wasLogged = \(wasLogged)")
-            if !wasLogged {
-                logger.debug("Logged doses for this date:")
-                for dose in loggedDoses {
-                    logger.debug("  - \(dose.timestamp), skipped=\(dose.skipped)")
-                }
-            }
-
             // Only add scheduled dose if it wasn't logged
             if !wasLogged {
                 // Get medication profile information by looking up the schedule in activeSchedules
                 // (scheduledDose.schedule relationship is unreliable on in-memory objects)
                 let medicationProfile = self.getMedicationProfile(for: scheduledDose)
-
-                logger.debug("Creating DoseEvent for scheduled dose on \(scheduledDose.scheduledTime)")
-                logger.debug("brandName = \(String(describing: medicationProfile?.brandName))")
-                logger.debug("genericName = \(String(describing: medicationProfile?.genericName))")
 
                 // Check if it's in the past (missed) or future (scheduled)
                 let now = Date()
@@ -306,28 +290,14 @@ struct DoseCalendarView: View {
     private func getMedicationProfile(for scheduledDose: ScheduledDose) -> MedicationProfile? {
         // Find the schedule in activeSchedules by matching the schedule reference
         guard let schedule = scheduledDose.schedule else {
-            logger.warning("scheduledDose.schedule is nil")
             return nil
-        }
-
-        logger.debug("scheduledDose.schedule.persistentModelID = \(String(describing: schedule.persistentModelID))")
-        logger.debug("activeSchedules count = \(self.activeSchedules.count)")
-
-        for (index, activeSchedule) in activeSchedules.enumerated() {
-            logger.debug(
-                "activeSchedules[\(index)].persistentModelID = \(String(describing: activeSchedule.persistentModelID))")
-            let brandName = activeSchedule.medicationProfile?.brandName ?? "nil"
-            logger.debug("activeSchedules[\(index)].medicationProfile = \(brandName)")
         }
 
         // Find matching schedule in activeSchedules (same persistent ID)
         if let matchingSchedule = activeSchedules.first(where: { $0.persistentModelID == schedule.persistentModelID }) {
-            let profileName = matchingSchedule.medicationProfile?.brandName ?? "nil"
-            logger.debug("Found matching schedule, medicationProfile = \(profileName)")
             return matchingSchedule.medicationProfile
         }
 
-        logger.warning("No matching schedule found in activeSchedules")
         return nil
     }
 }

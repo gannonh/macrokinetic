@@ -52,13 +52,6 @@ struct DoseActionSheet: View {
                             .accessibilityIdentifier("dose-action-amount")
                     }
                     .padding(.vertical, 8)
-                    .onAppear {
-                        logger.debug("brandName = \(String(describing: event.medicationBrandName))")
-                        logger.debug("genericName = \(String(describing: event.medicationGenericName))")
-                        logger.debug("doseAmount = \(event.doseAmount)")
-                        logger.debug("timestamp = \(event.timestamp)")
-                        logger.debug("type = \(event.type.rawValue)")
-                    }
                 }
 
                 // Actions section

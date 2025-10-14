@@ -199,8 +199,8 @@ struct CalendarDayView: View {
     ///
     /// Finds the first scheduled dose event and triggers the long-press handler
     private func handleLongPress() {
-        // Find first scheduled dose event
-        if let scheduledEvent = events.first(where: { $0.type == .scheduled }) {
+        // Find first scheduled dose event (including missed and scheduled)
+        if let scheduledEvent = events.first(where: { $0.type == .scheduled || $0.type == .missed }) {
             onLongPress?(scheduledEvent)
         }
     }
