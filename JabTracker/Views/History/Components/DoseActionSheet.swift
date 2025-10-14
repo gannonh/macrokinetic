@@ -124,6 +124,7 @@ struct DoseActionSheet: View {
                     QuickDoseEntrySheet(
                         preSelectedProfile: profile,
                         prePopulatedAmount: event.doseAmount,
+                        prePopulatedTimestamp: event.timestamp,
                         onDoseLogged: {
                             dismiss()
                         }
@@ -196,11 +197,24 @@ struct DoseActionSheet: View {
 private struct QuickDoseEntrySheet: View {
     let preSelectedProfile: MedicationProfile
     let prePopulatedAmount: Double
+    let prePopulatedTimestamp: Date?
     let onDoseLogged: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @StateObject private var viewModel = QuickDoseViewModel()
+
+    init(
+        preSelectedProfile: MedicationProfile,
+        prePopulatedAmount: Double,
+        prePopulatedTimestamp: Date? = nil,
+        onDoseLogged: @escaping () -> Void
+    ) {
+        self.preSelectedProfile = preSelectedProfile
+        self.prePopulatedAmount = prePopulatedAmount
+        self.prePopulatedTimestamp = prePopulatedTimestamp
+        self.onDoseLogged = onDoseLogged
+    }
 
     var body: some View {
         NavigationStack {
@@ -283,6 +297,13 @@ private struct QuickDoseEntrySheet: View {
             .onAppear {
                 // Pre-select medication profile
                 viewModel.selectedMedicationProfile = preSelectedProfile
+
+                // Pre-populate date/time if provided (for scheduled doses)
+                if let timestamp = prePopulatedTimestamp {
+                    viewModel.doseDate = timestamp
+                    viewModel.doseTime = timestamp
+                }
+
                 viewModel.loadSmartDefaults(context: modelContext)
             }
         }
