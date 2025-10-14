@@ -53,14 +53,18 @@ class QuickDoseViewModel: ObservableObject {
         guard self.selectedMedicationProfile != nil else { return false }
         guard self.doseAmount > 0 else { return false }
         guard !self.selectedInjectionSite.isEmpty else { return false }
-        // Prevent future dates beyond today
-        guard doseDateTime <= Date() else { return false }
-        // Allow reasonable past dates (30 days back)
+
+        // Allow dates within reasonable range (30 days past to 30 days future)
+        // This supports both historical dose entry and logging scheduled future doses
         let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        let thirtyDaysAhead = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
+
         // Use date-only comparison to avoid second-level precision issues
         let doseDateOnly = Calendar.current.startOfDay(for: doseDateTime)
         let thirtyDaysAgoDateOnly = Calendar.current.startOfDay(for: thirtyDaysAgo)
-        guard doseDateOnly >= thirtyDaysAgoDateOnly else { return false }
+        let thirtyDaysAheadDateOnly = Calendar.current.startOfDay(for: thirtyDaysAhead)
+
+        guard doseDateOnly >= thirtyDaysAgoDateOnly && doseDateOnly <= thirtyDaysAheadDateOnly else { return false }
         return true
     }
 
@@ -79,16 +83,17 @@ class QuickDoseViewModel: ObservableObject {
     ///   - context: ModelContext for fetching medication profiles
     ///   - prePopulatedTimestamp: Optional timestamp to pre-populate date/time (for scheduled doses)
     func loadSmartDefaults(context: ModelContext, prePopulatedTimestamp: Date? = nil) {
+        // Pre-populate date/time SYNCHRONOUSLY if provided (for scheduled doses)
+        // This must happen BEFORE the async Task so date pickers bind to correct values
+        if let timestamp = prePopulatedTimestamp {
+            self.doseDate = timestamp
+            self.doseTime = timestamp
+        }
+
         Task { @MainActor in
             do {
                 self.isLoading = true
                 self.errorMessage = nil
-
-                // Pre-populate date/time if provided (for scheduled doses)
-                if let timestamp = prePopulatedTimestamp {
-                    self.doseDate = timestamp
-                    self.doseTime = timestamp
-                }
 
                 // Fetch all medication profiles for the current user
                 let profileDescriptor = FetchDescriptor<MedicationProfile>()

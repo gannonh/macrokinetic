@@ -247,10 +247,12 @@ private struct QuickDoseEntrySheet: View {
                     .accessibilityIdentifier("quick-dose-entry-site-picker")
 
                     // Date Selection
+                    // Allow past dates (30 days) and future dates (30 days) for logging scheduled doses
                     DatePicker(
                         "Date",
                         selection: $viewModel.doseDate,
-                        in: (Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...Date(),
+                        in: (Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...(Calendar
+                            .current.date(byAdding: .day, value: 30, to: Date()) ?? Date()),
                         displayedComponents: .date
                     )
                     .accessibilityIdentifier("quick-dose-entry-date-picker")
