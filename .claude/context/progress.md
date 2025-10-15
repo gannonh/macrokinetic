@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-13T17:02:22Z
-version: 4.3
+last_updated: 2025-10-15T18:06:05Z
+version: 4.4
 author: Claude Code PM System
 ---
 
@@ -303,7 +303,25 @@ author: Claude Code PM System
 - **Chart Preview Performance**: Concentration curve preview renders in < 1 second, meeting NFR1 requirement
 - **Pattern Update Responsiveness**: Chart updates on pattern change complete within acceptable E2E timeouts
 
+## Lessons Learned (Recent - Issue #178 Session 2025-10-14/15)
+
+### Smoke Testing Value and Bug Discovery
+- **User Smoke Testing Effectiveness**: Real-world testing by user revealed 5 critical integration bugs not caught by automated tests - emphasizes importance of testing beyond automated test suites
+- **Integration Bug Patterns**: Smoke testing revealed subtle integration issues (DatePicker range clamping, placeholder methods with random data, chart performance degradation) that unit tests missed
+- **Test Coverage Limitations**: Even with comprehensive test coverage, integration bugs slip through - real-world usage testing remains essential for medical apps
+
+### Iterative Bug Fixing Approach
+- **Root Cause vs Symptoms**: Date pre-population bug required 3 fix attempts to find root cause (DatePicker range restriction) vs treating symptoms (wrong date displayed)
+- **Understanding Frameworks**: SwiftUI DatePicker silently clamps dates outside range without error - requires understanding framework behavior to diagnose correctly
+- **Systematic Debugging**: Testing with actual scheduled doses (Oct 21) vs today's date (Oct 14) revealed the exact 7-day difference that pointed to range restriction issue
+
+### Placeholder Code Cleanup Process
+- **Pre-Release Code Audit**: Always search codebase for "random", "sample", "placeholder" keywords before release - AnalyticsViewModel had undetected random data generators
+- **Production Code Quality Standards**: Placeholder methods with random/hardcoded data must never reach production - use TODO comments or feature flags instead
+- **User Trust Impact**: Random adherence data showing "declining trend" and "5 missed Sunday doses" with perfect adherence undermines app credibility and confuses users
+
 ## Update History
+- 2025-10-15T18:06:05Z: Added Lessons Learned from Issue #178 Session (Oct 14-15) - smoke testing value, iterative bug fixing approach, and placeholder code cleanup process from calendar integration bug fixes
 - 2025-10-13T17:02:22Z: Issue #177 CLOSED AND MERGED - PR #227 merged to main, epic progress updated to 40%, added completed feature entry
 - 2025-10-09T21:00:00Z: Context consolidation - reduced progress.md from 643 to ~320 lines, consolidated lessons learned into core principles, archived older session work and update history
 - 2025-10-09T20:27:54Z: Issue #177 COMPLETE - Onboarding Schedule Setup with 12 E2E tests (100% pass rate), all 3 streams complete

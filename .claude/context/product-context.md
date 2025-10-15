@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-09T21:00:00Z
-version: 2.5
+last_updated: 2025-10-15T18:06:05Z
+version: 2.6
 author: Claude Code PM System
 ---
 
@@ -331,7 +331,30 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Weekly Background Refresh Maintains Queue Accuracy**: Background refresh maintains notification queue accuracy without user intervention - ensures reliable dose reminders even when app not actively used
 - **Notification Action UX Patterns**: Inline notification actions enable dose logging without opening app - reduces friction in daily medication adherence workflow
 
+## Product Insights from Issue #178 Calendar Integration Bug Fixes (2025-10-14/15)
+
+### User Expectations for Calendar Actions
+- **Temporal Context Preservation**: Users expect "Log Dose Now" action from calendar to pre-populate with scheduled dose date, not today's date - maintaining temporal context is critical for scheduled dose logging
+- **Future Dose Logging Workflow**: Long-pressing Oct 21 scheduled dose and selecting "Log Dose Now" should show Oct 21 in date picker, not Oct 14 (today) - primary calendar interaction pattern requires proper date handling
+- **User Mental Model**: When acting on a scheduled dose from calendar, users expect the scheduled date to be preserved throughout the logging workflow - breaking this expectation causes confusion and data entry errors
+
+### Analytics Accuracy and User Trust
+- **Random Data Undermines Credibility**: Analytics showing random/fake adherence data (declining trend, 5 missed Sunday doses) with perfect adherence confuses users and destroys app credibility
+- **Placeholder Methods in Production**: Never ship placeholder methods with random/hardcoded data - AnalyticsViewModel `generateTrendData()` with `Double.random(in: 0.6...0.95)` showed "declining adherence" even with 100% compliance
+- **Medical App Integrity**: Healthcare applications must show real data or no data - fake analytics suggesting adherence problems when none exist could cause unnecessary medical anxiety or incorrect treatment adjustments
+
+### Performance Perception Standards
+- **Chart Load Time Expectations**: 163-second chart load time for 12 doses is unacceptable - users expect instant (<1s) rendering for small datasets
+- **Performance vs Dataset Size**: User perception of "reasonable" performance varies dramatically by dataset size - 12 doses should be instant, 365 doses can take a few seconds
+- **Medical App Responsiveness**: Slow chart rendering suggests unreliability - in medical apps, performance directly impacts perceived accuracy and trustworthiness
+
+### Calendar Interaction Patterns
+- **Long-Press as Primary Workflow**: Long-press on scheduled dose followed by "Log Now" is the primary calendar interaction for medication logging - date pre-population critical for this workflow
+- **Scheduled Date Persistence**: Scheduled dose date must persist through all UI interactions (action sheet → QuickDoseSheet → DatePicker) - losing context anywhere breaks the workflow
+- **Multi-Step Form Context**: When forms are triggered from contextual actions (calendar date), that context must flow through entire form submission process
+
 ## Update History
+- 2025-10-15T18:06:05Z: Added Product Insights from Issue #178 Calendar Integration Bug Fixes - user expectations for calendar actions, analytics accuracy and user trust, performance perception standards, and calendar interaction patterns
 - 2025-10-09T21:00:00Z: Consolidated context files - merged project-brief.md content (scope, constraints, risks), established testing-config.md as single source of truth for testing patterns, reduced duplication across tech-context, system-patterns, and project-style-guide
 - 2025-10-08T20:37:55Z: Added Product Insights from Issue #176 NotificationService - smart notification value proposition (actionable notifications, missed dose detection), and background refresh user experience patterns
 - 2025-10-06T20:59:29Z: Added Product Insights from Issue #175 ScheduleService Core - schedule management complexity, medical accuracy requirements (90%+ coverage mandate), and performance as user experience (<100ms requirement)
