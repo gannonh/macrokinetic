@@ -234,49 +234,123 @@ class AnalyticsViewModel {
         }
     }
 
-    // MARK: - Sample Data Generation
+    // MARK: - Real Adherence Calculations
 
-    /// Generate sample trend data for adherence visualization
-    /// - Parameter user: User to generate trend data for
+    /// Calculate real adherence trend data using ScheduleService
+    /// - Parameters:
+    ///   - user: User to generate trend data for
+    ///   - profiles: Medication profiles to analyze
+    ///   - context: ModelContext for fetching schedules
     /// - Returns: Array of adherence trend points for the last 4 weeks
-    func generateTrendData(for user: User) -> [AdherenceTrendPoint] {
+    func generateTrendData(
+        for user: User,
+        profiles: [MedicationProfile],
+        context: ModelContext
+    ) -> [AdherenceTrendPoint] {
         let calendar = Calendar.current
         let now = Date()
         var trendData: [AdherenceTrendPoint] = []
 
+        // Get all dose schedules for the user's profiles
+        let schedules = profiles.compactMap { $0.schedules?.first }
+        guard !schedules.isEmpty else {
+            return []  // No schedules = no adherence data
+        }
+
+        // Create ScheduleService with the provided context
+        let scheduleService = ScheduleService(context: context)
+
+        // Calculate adherence for each of the last 4 weeks
         for weekOffset in 0..<4 {
-            if let weekDate = calendar.date(byAdding: .weekOfYear, value: -weekOffset, to: now) {
-                let adherenceRate = Double.random(in: 0.6...0.95)
-                trendData.append(
-                    AdherenceTrendPoint(
-                        date: weekDate,
-                        adherenceRate: adherenceRate,
-                        period: "Week \(4 - weekOffset)"
-                    ))
+            guard let weekEndDate = calendar.date(byAdding: .weekOfYear, value: -weekOffset, to: now),
+                let weekStartDate = calendar.date(byAdding: .day, value: -6, to: weekEndDate)
+            else { continue }
+
+            // Calculate combined adherence across all schedules for this week
+            var totalTaken = 0
+            var totalMissed = 0
+
+            for schedule in schedules {
+                let metrics = scheduleService.calculateAdherence(
+                    for: schedule,
+                    from: weekStartDate,
+                    to: weekEndDate
+                )
+                totalTaken += metrics.totalTaken
+                totalMissed += metrics.totalMissed
             }
+
+            // Calculate overall adherence for the week
+            let adherenceRate: Double
+            if totalTaken + totalMissed > 0 {
+                adherenceRate = Double(totalTaken) / Double(totalTaken + totalMissed)
+            } else {
+                adherenceRate = 0.0
+            }
+
+            trendData.append(
+                AdherenceTrendPoint(
+                    date: weekEndDate,
+                    adherenceRate: adherenceRate,
+                    period: "Week \(4 - weekOffset)"
+                ))
         }
 
         return trendData.sorted { $0.date < $1.date }
     }
 
-    /// Generate sample missed dose patterns for visualization
-    /// - Parameter user: User to generate missed dose patterns for
-    /// - Returns: Array of missed dose patterns
-    func generateMissedDosePatterns(for user: User) -> [MissedDosePattern] {
+    /// Calculate real missed dose patterns using ScheduleService
+    /// - Parameters:
+    ///   - user: User to generate missed dose patterns for
+    ///   - profiles: Medication profiles to analyze
+    ///   - context: ModelContext for fetching schedules
+    /// - Returns: Array of missed dose patterns grouped by day of week
+    func generateMissedDosePatterns(
+        for user: User,
+        profiles: [MedicationProfile],
+        context: ModelContext
+    ) -> [MissedDosePattern] {
         let calendar = Calendar.current
         let now = Date()
+        let startDate = calendar.date(byAdding: .day, value: -30, to: now) ?? now
 
-        return [
+        // Get all dose schedules
+        let schedules = profiles.compactMap { $0.schedules?.first }
+        guard !schedules.isEmpty else {
+            return []  // No schedules = no missed dose data
+        }
+
+        // Collect all missed doses from all schedules
+        var missedDosesByDay: [String: (date: Date, count: Int)] = [:]
+
+        for schedule in schedules {
+            // Get missed scheduled doses in the time period
+            let allScheduledDoses = schedule.scheduledDoses ?? []
+            let scheduledDoses = allScheduledDoses.filter { dose in
+                dose.scheduledTime >= startDate
+                    && dose.scheduledTime <= now
+                    && dose.status == .missed
+            }
+
+            for dose in scheduledDoses {
+                let dayOfWeek = calendar.weekdaySymbols[calendar.component(.weekday, from: dose.scheduledTime) - 1]
+
+                if var existing = missedDosesByDay[dayOfWeek] {
+                    existing.count += 1
+                    missedDosesByDay[dayOfWeek] = existing
+                } else {
+                    missedDosesByDay[dayOfWeek] = (date: dose.scheduledTime, count: 1)
+                }
+            }
+        }
+
+        // Convert to MissedDosePattern array and sort by count (descending)
+        return missedDosesByDay.map { dayOfWeek, value in
             MissedDosePattern(
-                date: calendar.date(byAdding: .day, value: -6, to: now) ?? now,
-                dayOfWeek: "Saturday",
-                missedCount: 2
-            ),
-            MissedDosePattern(
-                date: calendar.date(byAdding: .day, value: -5, to: now) ?? now,
-                dayOfWeek: "Sunday",
-                missedCount: 3
-            ),
-        ]
+                date: value.date,
+                dayOfWeek: dayOfWeek,
+                missedCount: value.count
+            )
+        }.sorted { $0.missedCount > $1.missedCount }
     }
 }
