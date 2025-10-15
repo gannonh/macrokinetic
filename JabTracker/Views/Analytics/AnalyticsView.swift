@@ -212,13 +212,21 @@ struct AnalyticsView: View {
 
             // Adherence Trend Chart
             AdherenceTrendChart(
-                trendData: viewModel.generateTrendData(for: user),
+                trendData: viewModel.generateTrendData(
+                    for: user,
+                    profiles: medicationProfiles,
+                    context: modelContext
+                ),
                 timePeriod: .weekly
             )
 
             // Missed Dose Pattern Visualization
             MissedDosePatternView(
-                missedDoses: viewModel.generateMissedDosePatterns(for: user),
+                missedDoses: viewModel.generateMissedDosePatterns(
+                    for: user,
+                    profiles: medicationProfiles,
+                    context: modelContext
+                ),
                 style: .calendar
             )
         }
