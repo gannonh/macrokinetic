@@ -90,7 +90,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .adherent
+                adherenceStatus: .adherent,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
             DoseEvent(
                 id: UUID(),
@@ -99,7 +101,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .adherent
+                adherenceStatus: .adherent,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
         ]
 
@@ -108,7 +112,7 @@ struct ScheduledDoseIndicatorTests {
 
         // THEN: 2 indicators are configured
         #expect(view.events.count == 2)
-        #expect(view.events.allSatisfy { $0.type == .taken })
+        #expect(view.events.allSatisfy { $0.type == DoseEventType.taken })
     }
 
     @Test("DoseIndicatorsView displays scheduled doses")
@@ -123,7 +127,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .pending
+                adherenceStatus: .pending,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             )
         ]
 
@@ -132,7 +138,7 @@ struct ScheduledDoseIndicatorTests {
 
         // THEN: 1 scheduled indicator is configured
         #expect(view.events.count == 1)
-        #expect(view.events.first?.type == .scheduled)
+        #expect(view.events.first?.type == DoseEventType.scheduled)
     }
 
     @Test("DoseIndicatorsView displays mixed logged and scheduled doses")
@@ -147,7 +153,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .adherent
+                adherenceStatus: .adherent,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
             DoseEvent(
                 id: UUID(),
@@ -156,7 +164,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .adherent
+                adherenceStatus: .adherent,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
             DoseEvent(
                 id: UUID(),
@@ -165,7 +175,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .pending
+                adherenceStatus: .pending,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
         ]
 
@@ -174,8 +186,8 @@ struct ScheduledDoseIndicatorTests {
 
         // THEN: All 3 events are present
         #expect(view.events.count == 3)
-        let takenCount = view.events.filter { $0.type == .taken }.count
-        let scheduledCount = view.events.filter { $0.type == .scheduled }.count
+        let takenCount = view.events.filter { $0.type == DoseEventType.taken }.count
+        let scheduledCount = view.events.filter { $0.type == DoseEventType.scheduled }.count
         #expect(takenCount == 2)
         #expect(scheduledCount == 1)
     }
@@ -192,7 +204,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .adherent
+                adherenceStatus: .adherent,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
             DoseEvent(
                 id: UUID(),
@@ -201,7 +215,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .adherent
+                adherenceStatus: .adherent,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
             DoseEvent(
                 id: UUID(),
@@ -210,7 +226,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .adherent
+                adherenceStatus: .adherent,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
             DoseEvent(
                 id: UUID(),
@@ -219,7 +237,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .pending
+                adherenceStatus: .pending,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
             DoseEvent(
                 id: UUID(),
@@ -228,7 +248,9 @@ struct ScheduledDoseIndicatorTests {
                 scheduledDose: nil,
                 actualDose: nil,
                 doseAmount: 1.0,
-                adherenceStatus: .pending
+                adherenceStatus: .pending,
+                medicationBrandName: nil,
+                medicationGenericName: nil
             ),
         ]
 
