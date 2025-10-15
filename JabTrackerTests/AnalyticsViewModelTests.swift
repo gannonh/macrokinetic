@@ -308,10 +308,20 @@ struct AnalyticsViewModelTests {
 
     @Test("generateTrendData creates 4 weeks of trend data")
     @MainActor func generateTrendDataCreates4Weeks() throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
         let viewModel = AnalyticsViewModel()
         let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
 
-        let trendData = viewModel.generateTrendData(for: user)
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        try context.save()
+
+        let trendData = viewModel.generateTrendData(for: user, profiles: [profile], context: context)
 
         #expect(trendData.count == 4, "Should generate 4 weeks of trend data")
 
@@ -321,31 +331,32 @@ struct AnalyticsViewModelTests {
                 trendData[index].date < trendData[index + 1].date, "Trend data should be sorted by date")
         }
 
-        // Verify adherence rates are within expected range
+        // Verify adherence rates are valid (0.0-1.0 range)
         for point in trendData {
             #expect(
-                point.adherenceRate >= 0.6 && point.adherenceRate <= 0.95,
-                "Adherence rate should be between 0.6 and 0.95")
+                point.adherenceRate >= 0.0 && point.adherenceRate <= 1.0,
+                "Adherence rate should be between 0.0 and 1.0")
         }
     }
 
-    @Test("generateMissedDosePatterns creates weekend patterns")
-    @MainActor func generateMissedDosePatternsCreatesWeekendPatterns() throws {
+    @Test("generateMissedDosePatterns returns empty for no missed doses")
+    @MainActor func generateMissedDosePatternsEmptyForNoMissedDoses() throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
         let viewModel = AnalyticsViewModel()
         let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
 
-        let patterns = viewModel.generateMissedDosePatterns(for: user)
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
 
-        #expect(patterns.count == 2, "Should generate 2 missed dose patterns")
+        try context.save()
 
-        let daysOfWeek = patterns.map { $0.dayOfWeek }
-        #expect(daysOfWeek.contains("Saturday"), "Should include Saturday pattern")
-        #expect(daysOfWeek.contains("Sunday"), "Should include Sunday pattern")
+        let patterns = viewModel.generateMissedDosePatterns(for: user, profiles: [profile], context: context)
 
-        // Verify missed counts are reasonable
-        for pattern in patterns {
-            #expect(pattern.missedCount > 0, "Missed count should be positive")
-        }
+        #expect(patterns.count == 0, "Should return empty array when no missed doses")
     }
 
     // MARK: - Time Period Mapping Tests
