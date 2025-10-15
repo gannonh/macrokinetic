@@ -446,12 +446,12 @@ final class ChartDataProcessor {
     /// - Parameters:
     ///   - medicationProfile: The medication profile to analyze
     ///   - timeRange: Date range for timeline generation
-    ///   - intervalHours: Time interval between calculated points (defaults to 0.5 hours, per standardSamplingInterval)
+    ///   - intervalHours: Time interval between calculated points (defaults to 6 hours for performance)
     /// - Returns: Array of concentration points calculated using pharmacokinetic models
     func generateConcentrationTimeline(
         for medicationProfile: MedicationProfile,
         timeRange: ClosedRange<Date>,
-        intervalHours: Double = 0.5  // Uses standardSamplingInterval (0.5 * 3600 seconds)
+        intervalHours: Double = 6.0  // 6 hours provides smooth curves with ~12x better performance
     ) -> [ConcentrationPoint] {
         guard medicationProfile.medication != nil,
             let doses = medicationProfile.doses
@@ -472,7 +472,7 @@ final class ChartDataProcessor {
         for medicationProfile: MedicationProfile,
         doses: [Dose],
         timeRange: ClosedRange<Date>,
-        intervalHours: Double = 0.5
+        intervalHours: Double = 6.0
     ) -> [ConcentrationPoint] {
         Self.logger.debug(
             """
