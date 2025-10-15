@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-14T17:00:00Z
-version: 2.7
+last_updated: 2025-10-15T18:06:05Z
+version: 2.8
 author: Claude Code PM System
 ---
 
@@ -359,7 +359,28 @@ struct UserAnalyticsSummary {
 - **Recommendations Summary**: Actionable next steps with clear must-have/should-have/nice-to-have breakdown
 - **Review History**: Track feedback and implementation status over time
 
+## Calendar Integration Patterns (Issue #178)
+
+### SwiftUI DatePicker Range Validation
+- **Silent Clamping Behavior**: DatePicker with `in: startDate...endDate` range silently clamps selected dates to range boundaries without error
+- **Business Requirements Alignment**: Always validate DatePicker range matches business requirements (e.g., future dose logging requires future date range)
+- **User Expectation Mismatch**: Range restrictions can cause subtle bugs when user expectations don't match range constraints - "Log Dose Now" for Oct 21 scheduled dose showed Oct 14 when range limited to past/present
+- **Solution Pattern**: Extend DatePicker range to accommodate all valid use cases: `(Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...Calendar.current.date(byAdding: .day, value: 30, to: Date())!` for 30-day historical + 30-day future logging
+
+### Placeholder Method Anti-Pattern
+- **Never Commit Placeholders**: Never commit placeholder methods with random/hardcoded data to production code
+- **Proper Alternatives**: Use TODO comments, feature flags, or commented-out implementation notes instead
+- **Detection Strategy**: Search codebase for "random", "sample", "placeholder" keywords before release
+- **Real-World Impact**: AnalyticsViewModel had `generateTrendData()` with `Double.random(in: 0.6...0.95)` and `generateMissedDosePatterns()` with hardcoded "Saturday: 2, Sunday: 3" - showed fake declining adherence even with 100% perfect adherence
+
+### Chart Performance Tuning Patterns
+- **Sampling Density Trade-off**: Chart sampling intervals must balance visual smoothness with generation performance
+- **Weekly GLP-1 Optimization**: 6-hour intervals provide smooth concentration curves for weekly medications while maintaining <10s generation time
+- **Performance Impact**: 0.5h sampling created 6,860 points for 90 days (163s generation), 6h sampling created ~600 points (<15s generation) - 12x performance improvement
+- **General Guideline**: Aim for <1,000 chart points for <10s generation, <10,000 points for <60s generation on typical iOS devices
+
 ## Update History
+- 2025-10-15T18:06:05Z: Added Calendar Integration Patterns from Issue #178 - SwiftUI DatePicker range validation, placeholder method anti-pattern, and chart performance tuning for medical apps
 - 2025-10-14T17:00:00Z: Added Version Control Patterns section with commit verification discipline - emphasizes verifying work before committing to avoid false git history with multiple failed fix attempts
 - 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing Patterns from Issue #177 - back button access patterns, iterative test development success, strategic sleep timing, state preservation validation, accessibility testing without VoiceOver simulation, and performance testing timeouts
 - 2025-10-08T20:37:55Z: Added NotificationService Parallel Development Patterns from Issue #176 - 3-stream parallel coordination, extension architecture, protocol-based testability, and UNUserNotificationCenter testing limitations

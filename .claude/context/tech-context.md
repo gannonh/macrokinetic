@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-08T20:37:55Z
-version: 2.6
+last_updated: 2025-10-15T18:06:05Z
+version: 2.7
 author: Claude Code PM System
 ---
 
@@ -263,7 +263,36 @@ author: Claude Code PM System
 
 > **For NotificationService testing patterns, protocol-based abstraction, and mock framework design**, see `.claude/context/testing-config.md`
 
+## Calendar Integration Technology Insights (Issue #178)
+
+### SwiftUI DatePicker Range Behavior
+- **Silent Date Clamping**: DatePicker with `in: startDate...endDate` parameter silently clamps selected dates to range boundaries without throwing error or showing warning
+- **No User Feedback**: Users have no indication that date selection is being restricted - can lead to confusion when selected date doesn't match intended date
+- **Business Logic Impact**: Range restrictions cause subtle bugs when user workflow expectations don't match programmatic range constraints
+- **Example Bug**: QuickDoseSheet DatePicker restricted to past/present dates (`in: ...Date()`) caused future scheduled dose logging to show today's date instead of scheduled date
+
+### ScheduleService ModelContext Integration Requirements
+- **Context Dependency**: ScheduleService requires `ModelContext` parameter in initializer: `ScheduleService(context: ModelContext)`
+- **Cannot Store as Property**: Cannot create ScheduleService instance as ViewModel property due to ModelContext requirement
+- **Solution Pattern**: Create ScheduleService instance inside methods that have access to ModelContext parameter
+- **Example**: `func generateTrendData(for user: User, profiles: [MedicationProfile], context: ModelContext)` creates `ScheduleService(context: context)` internally
+
+### ChartDataProcessor Performance Characteristics
+- **Sampling Density Impact**: Sampling interval directly controls chart generation performance - smaller intervals = more points = longer generation time
+- **0.5h Sampling**: 0.5-hour intervals create ~6,860 concentration points for 90-day dataset (163 seconds generation time)
+- **6h Sampling**: 6-hour intervals create ~600 concentration points for 90-day dataset (~10-15 seconds generation time)
+- **Performance Improvement**: 12x performance improvement achieved by adjusting sampling density from 0.5h to 6h
+- **Visual Quality**: 6-hour intervals maintain smooth curves for weekly GLP-1 medications without visible degradation
+- **General Guideline**: Target <1,000 chart points for <10s generation, <10,000 points for <60s generation on typical iOS devices
+
+### AnalyticsViewModel ModelContext Threading
+- **Method Signature Pattern**: Methods requiring ScheduleService access must accept ModelContext as parameter
+- **Thread Safety**: AnalyticsView passes `modelContext` from SwiftUI environment directly to ViewModel methods
+- **Service Instantiation**: Create service instances locally within methods rather than storing as properties
+- **MedicationProfile Relationship**: Access schedules via `profiles.compactMap { $0.schedules?.first }` for primary schedule
+
 ## Update History
+- 2025-10-15T18:06:05Z: Added Calendar Integration Technology Insights from Issue #178 - SwiftUI DatePicker range behavior, ScheduleService ModelContext integration requirements, ChartDataProcessor performance characteristics, and AnalyticsViewModel threading patterns
 - 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing section (Issue #177) - XCUITest back button access patterns, onboarding flow E2E testing patterns, and concentration chart preview performance validation for schedule setup integration
 - 2025-10-08T20:37:55Z: Added NotificationService Architecture section (Issue #176) - iOS User Notifications Framework integration, UNUserNotificationCenter testing patterns, protocol-based abstraction, and mock framework design for notification workflows
 - 2025-10-06T20:59:29Z: Added ScheduleService Architecture section (Issue #175) - Swift extension compilation requirements, ScheduleConfiguration Codable pattern, SwiftData soft delete pattern, and OSLog category organization for parallel service development
