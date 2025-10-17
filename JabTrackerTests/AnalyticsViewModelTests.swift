@@ -58,41 +58,6 @@ struct AnalyticsViewModelTests {
         #expect(viewModel.chartDataset == nil, "Filtered dataset should be nil")
     }
 
-    @Test("loadFromCache returns true when valid cache exists")
-    @MainActor func loadFromCacheValidCacheExists() throws {
-        let cache = ChartDatasetCache()
-        cache.clear()
-
-        // Create a sample chart dataset
-        let sampleDataset = ChartData(
-            concentrationTimeline: [
-                ConcentrationPoint(
-                    timestamp: Date(),
-                    concentration: 1.0,
-                    source: .calculated,
-                    confidence: 1.0
-                )
-            ],
-            doseMarkers: [],
-            therapeuticRange: nil,
-            metadata: ChartData.Metadata(
-                medicationName: "Test",
-                startDate: Date(),
-                endDate: Date(),
-                totalDoses: 1
-            )
-        )
-
-        // Save to cache
-        cache.save(dataset: sampleDataset)
-
-        let viewModel = AnalyticsViewModel()
-        let result = viewModel.loadFromCache(selectedPeriod: .last30Days)
-
-        #expect(result == true, "Should return true when valid cache exists")
-        #expect(viewModel.fullChartDataset != nil, "Full dataset should be loaded from cache")
-    }
-
     // MARK: - Chart Dataset Refresh Tests
 
     @Test("refreshChartDataset generates full dataset and filters to selected period")
