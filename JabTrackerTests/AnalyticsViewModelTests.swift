@@ -430,6 +430,150 @@ struct AnalyticsViewModelTests {
         }
     }
 
+    // MARK: - Comprehensive Refresh Tests
+
+    @Test("refreshChartDataset with real data exercises all private paths")
+    @MainActor func refreshChartDatasetComprehensivePaths() async throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        // Create multiple doses to exercise fetch and generation paths
+        for daysAgo in [1, 3, 7, 14, 21, 28] {
+            let dose = self.createTestDose(
+                amount: 1.0, medicationProfile: profile, user: user, daysAgo: daysAgo)
+            dose.user = user
+            dose.medication = profile
+            context.insert(dose)
+        }
+
+        try context.save()
+
+        let doseService = DoseDataService()
+        let chartService = ChartDatasetService()
+        let viewModel = AnalyticsViewModel()
+
+        let config = AnalyticsViewModel.RefreshConfig(
+            user: user,
+            profiles: [profile],
+            doseService: doseService,
+            chartService: chartService,
+            context: context,
+            selectedPeriod: .last30Days
+        )
+
+        // Exercise fetchAllDoses, generateFullDataset, and updateAndPersistDataset
+        await viewModel.refreshChartDataset(config: config)
+
+        #expect(viewModel.fullChartDataset != nil, "Should generate full dataset")
+        #expect(viewModel.chartDataset != nil, "Should generate filtered dataset")
+    }
+
+    @Test("refreshChartDataset with multiple profiles exercises coordination")
+    @MainActor func refreshChartDatasetMultiProfileCoordination() async throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let user = self.createTestUser()
+        let profile1 = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+        let profile2 = self.createTestMedicationProfile(medication: .tirzepatide, user: user)
+
+        context.insert(user)
+        profile1.user = user
+        profile2.user = user
+        context.insert(profile1)
+        context.insert(profile2)
+
+        // Create doses for both profiles
+        let dose1 = self.createTestDose(
+            amount: 1.0, medicationProfile: profile1, user: user, daysAgo: 7)
+        let dose2 = self.createTestDose(
+            amount: 2.5, medicationProfile: profile2, user: user, daysAgo: 10)
+        let dose3 = self.createTestDose(
+            amount: 1.0, medicationProfile: profile1, user: user, daysAgo: 14)
+
+        dose1.user = user
+        dose1.medication = profile1
+        dose2.user = user
+        dose2.medication = profile2
+        dose3.user = user
+        dose3.medication = profile1
+
+        context.insert(dose1)
+        context.insert(dose2)
+        context.insert(dose3)
+
+        try context.save()
+
+        let doseService = DoseDataService()
+        let chartService = ChartDatasetService()
+        let viewModel = AnalyticsViewModel()
+
+        let config = AnalyticsViewModel.RefreshConfig(
+            user: user,
+            profiles: [profile1, profile2],
+            doseService: doseService,
+            chartService: chartService,
+            context: context,
+            selectedPeriod: .last90Days
+        )
+
+        await viewModel.refreshChartDataset(config: config)
+
+        #expect(viewModel.fullChartDataset != nil, "Should coordinate multiple profiles")
+    }
+
+    @Test("refreshChartDataset caching behavior")
+    @MainActor func refreshChartDatasetCaching() async throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        let dose = self.createTestDose(
+            amount: 1.0, medicationProfile: profile, user: user, daysAgo: 5)
+        dose.user = user
+        dose.medication = profile
+        context.insert(dose)
+
+        try context.save()
+
+        let doseService = DoseDataService()
+        let chartService = ChartDatasetService()
+        let viewModel = AnalyticsViewModel()
+
+        let config = AnalyticsViewModel.RefreshConfig(
+            user: user,
+            profiles: [profile],
+            doseService: doseService,
+            chartService: chartService,
+            context: context,
+            selectedPeriod: .last30Days
+        )
+
+        // First refresh - exercises cache save path
+        await viewModel.refreshChartDataset(config: config)
+
+        let firstDataset = viewModel.fullChartDataset
+
+        // Refresh again - exercises update and persist paths
+        await viewModel.refreshChartDataset(config: config)
+
+        // Should have refreshed data
+        #expect(viewModel.fullChartDataset != nil, "Should have dataset after refresh")
+    }
+
     // MARK: - Time Period Mapping Tests
 
     @Test("filterChartDataset maps all time periods correctly")
