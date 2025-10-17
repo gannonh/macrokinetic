@@ -149,3 +149,55 @@ issue/178-calendar-integration
 - `JabTracker/Views/History/ScheduledDoseIndicator.swift` - New file (150 lines)
 - `JabTracker/Views/History/DoseIndicatorsView.swift` - New file (229 lines)
 - `coverage-config.json` - Added 2 view files to exclusions
+
+### Session 2 - 2025-10-15 to 2025-10-17 (E2E Test Implementation Complete)
+
+**Status**: ✅ ALL STREAM A E2E TESTS PASSING
+
+**E2E Tests Implemented:**
+
+1. **CalendarScheduledDosesUITests.swift** - 8/8 tests passing
+   - `testCalendarDisplaysScheduledDoses` (f6cd6f0) - AC1 validated
+   - `testScheduledDoseIndicatorAppearance` (4f08d00) - AC2 validated
+   - `testLoggedDoseIndicatorAppearance` (4dece1e) - AC2 validated
+   - `testMissedDoseIndicatorAppearance` (7cbfd2d) - AC2 validated
+   - `testSkippedDoseIndicatorAppearance` (ca04ab7) - AC2 validated
+   - `testCalendarRefreshesWithScheduledDoses` (92186b3) - AC9 validated
+   - `testCalendarRenderingPerformanceWith90Days` (3b85217) - NFR1 validated
+   - `testScheduledDosesLazyLoadedPerMonth` (67a96ab) - NFR3 validated
+
+2. **CalendarAccessibilityUITests.swift** - 5/5 tests passing (56a12f0)
+   - VoiceOver support for calendar navigation
+   - Accessibility labels for scheduled doses
+   - Accessibility labels for logged doses
+   - Accessibility labels for missed doses
+   - Accessibility hints for dose management
+
+**Acceptance Criteria Status:**
+- ✅ AC1: Scheduled dose indicators appear - E2E VALIDATED
+- ✅ AC2: Visual distinction (scheduled, logged, missed, skipped) - E2E VALIDATED
+- ✅ AC9: Calendar refreshes properly - E2E VALIDATED
+
+**Non-Functional Requirements Status:**
+- ✅ NFR1: Calendar rendering <500ms (actual: <100ms in E2E test)
+- ✅ NFR3: Lazy loading per month - E2E VALIDATED
+- ✅ NFR5: Accessibility labels - E2E VALIDATED (5 tests passing)
+
+**Testing Requirements Status:**
+- ✅ Test1: Unit tests for scheduled dose filtering - PASSING
+- ✅ Test2: Unit tests for indicator display - PASSING (10/10)
+- ✅ Test4: E2E test: View calendar with scheduled doses - PASSING
+- ✅ Test8: Accessibility test: VoiceOver descriptions - PASSING (5 tests)
+
+**Integration Status:**
+- ✅ DoseCalendarView loads scheduled doses correctly
+- ✅ CalendarDayView displays indicators correctly
+- ✅ DoseIndicatorsView accessibility working
+- ✅ ScheduledDoseIndicator color-coding validated
+
+**Bug Fixes During E2E Testing:**
+- Fixed hanging permission tests (bb55baf)
+- Fixed generateTrendData crash (bb55baf)
+- File rename cleanup (7669472)
+
+**STREAM A: COMPLETE WITH E2E VALIDATION ✅**
