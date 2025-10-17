@@ -273,12 +273,14 @@ struct OnboardingViewModelCoverageTests {
         let result = await viewModel.completeOnboarding()
 
         // Should fail with missing required data
-        guard case .failed(let error) = result else {
-            Issue.record("Expected .failed result, got \(result)")
+        guard case .failed(let error) = result,
+            let onboardingError = error as? OnboardingError
+        else {
+            Issue.record("Expected .failed result with OnboardingError, got \(result)")
             return
         }
 
-        #expect(error == .missingRequiredData, "Should fail with missing required data error")
+        #expect(onboardingError == .missingRequiredData, "Should fail with missing required data error")
         #expect(viewModel.errorMessage != nil, "Should have error message")
         #expect(
             viewModel.errorMessage?.contains("Missing required") == true,
@@ -307,11 +309,13 @@ struct OnboardingViewModelCoverageTests {
         let result = await viewModel.completeOnboarding()
 
         // Should fail with missing required data
-        guard case .failed(let error) = result else {
-            Issue.record("Expected .failed result, got \(result)")
+        guard case .failed(let error) = result,
+            let onboardingError = error as? OnboardingError
+        else {
+            Issue.record("Expected .failed result with OnboardingError, got \(result)")
             return
         }
 
-        #expect(error == .missingRequiredData, "Should fail with missing required data error")
+        #expect(onboardingError == .missingRequiredData, "Should fail with missing required data error")
     }
 }
