@@ -278,6 +278,36 @@ struct DoseEventTests {
         #expect(!event.isAdherent)
     }
 
+    @Test("Combined event with skipped dose marked as adherent")
+    @MainActor
+    func combinedEventWithSkippedDose() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let scheduledTime = Date()
+        let scheduledDose = try createTestScheduledDose(
+            context: context,
+            scheduledTime: scheduledTime,
+            status: .pending,
+            doseAmount: 0.5
+        )
+
+        // Create a skipped dose
+        let actualTime = scheduledTime.addingTimeInterval(3600)
+        let actualDose = try createTestDose(context: context, amount: 0.5, timestamp: actualTime)
+        actualDose.skipped = true
+        try context.save()
+
+        let event = DoseEvent.combined(scheduled: scheduledDose, actual: actualDose)
+
+        #expect(event.type == .skipped)
+        #expect(event.adherenceStatus == .adherent)  // Intentional skip is adherent
+        #expect(event.timestamp == actualTime)
+        #expect(!event.isAdherent)  // Computed property returns false for skipped
+        #expect(event.scheduledDose?.id == scheduledDose.id)
+        #expect(event.actualDose?.id == actualDose.id)
+    }
+
     @Test("isAdherent computed property for pending status")
     @MainActor
     func isAdherentPendingStatus() throws {
