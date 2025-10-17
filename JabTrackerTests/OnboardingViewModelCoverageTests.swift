@@ -209,4 +209,109 @@ struct OnboardingViewModelCoverageTests {
                 "currentStepIndex should be \(expectedIndex) for step \(step), got \(actualIndex)")
         }
     }
+
+    @Test("saveScheduleConfiguration validates reminder minutes")
+    @MainActor
+    func saveScheduleConfigurationValidatesReminderMinutes() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Navigate to schedule setup step
+        viewModel.currentStep = .scheduleSetup
+
+        // Try to save with invalid reminder minutes (not in [15, 30, 60, 120])
+        viewModel.saveScheduleConfiguration(pattern: .weekly, reminderMinutes: 45, enableMultiple: false)
+
+        // Should set error message
+        #expect(viewModel.errorMessage != nil, "Error message should be set for invalid reminder minutes")
+        #expect(
+            viewModel.errorMessage?.contains("Invalid reminder time") == true,
+            "Error should mention invalid reminder time")
+
+        // Should not have moved to next step
+        #expect(viewModel.currentStep == .scheduleSetup, "Should stay on schedule setup step after error")
+    }
+
+    @Test("saveScheduleConfiguration with valid parameters")
+    @MainActor
+    func saveScheduleConfigurationWithValidParameters() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Navigate to schedule setup step
+        viewModel.currentStep = .scheduleSetup
+
+        // Save with valid parameters
+        viewModel.saveScheduleConfiguration(pattern: .weekly, reminderMinutes: 30, enableMultiple: true)
+
+        // Should have no error
+        #expect(viewModel.errorMessage == nil, "Should have no error message with valid parameters")
+
+        // Should have updated configuration
+        #expect(viewModel.schedulePattern == .weekly, "Schedule pattern should be updated")
+        #expect(viewModel.reminderMinutes == 30, "Reminder minutes should be updated")
+        #expect(viewModel.enableMultipleReminders == true, "Multiple reminders should be enabled")
+
+        // Should have moved to next step
+        #expect(viewModel.currentStep == .notifications, "Should move to notifications step")
+    }
+
+    @Test("completeOnboarding with missing user")
+    @MainActor
+    func completeOnboardingWithMissingUser() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Don't set current user - authManager.currentUser will be nil
+        viewModel.selectMedication(.semaglutide)
+        viewModel.selectedDose = 0.5
+
+        // Try to complete onboarding
+        let result = await viewModel.completeOnboarding()
+
+        // Should fail with missing required data
+        guard case .failed(let error) = result else {
+            Issue.record("Expected .failed result, got \(result)")
+            return
+        }
+
+        #expect(error == .missingRequiredData, "Should fail with missing required data error")
+        #expect(viewModel.errorMessage != nil, "Should have error message")
+        #expect(
+            viewModel.errorMessage?.contains("Missing required") == true,
+            "Error should mention missing required data")
+    }
+
+    @Test("completeOnboarding with missing medication")
+    @MainActor
+    func completeOnboardingWithMissingMedication() async throws {
+        let dataController = DataController.testContainer()
+        let context = dataController.container.mainContext
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        // Create and set user
+        let user = User(email: "test@example.com", name: "Test User")
+        context.insert(user)
+        try context.save()
+        authManager.currentUser = user
+
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Don't select medication - selectedMedication will be nil
+        viewModel.selectedDose = 0.5
+
+        // Try to complete onboarding
+        let result = await viewModel.completeOnboarding()
+
+        // Should fail with missing required data
+        guard case .failed(let error) = result else {
+            Issue.record("Expected .failed result, got \(result)")
+            return
+        }
+
+        #expect(error == .missingRequiredData, "Should fail with missing required data error")
+    }
 }
