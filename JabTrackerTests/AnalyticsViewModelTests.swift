@@ -58,6 +58,41 @@ struct AnalyticsViewModelTests {
         #expect(viewModel.chartDataset == nil, "Filtered dataset should be nil")
     }
 
+    @Test("loadFromCache returns true when valid cache exists")
+    @MainActor func loadFromCacheValidCacheExists() throws {
+        let cache = ChartDatasetCache()
+        cache.clear()
+
+        // Create a sample chart dataset
+        let sampleDataset = ChartData(
+            concentrationTimeline: [
+                ConcentrationPoint(
+                    timestamp: Date(),
+                    concentration: 1.0,
+                    source: .calculated,
+                    confidence: 1.0
+                )
+            ],
+            doseMarkers: [],
+            therapeuticRange: nil,
+            metadata: ChartData.Metadata(
+                medicationName: "Test",
+                startDate: Date(),
+                endDate: Date(),
+                totalDoses: 1
+            )
+        )
+
+        // Save to cache
+        cache.save(dataset: sampleDataset)
+
+        let viewModel = AnalyticsViewModel()
+        let result = viewModel.loadFromCache(selectedPeriod: .last30Days)
+
+        #expect(result == true, "Should return true when valid cache exists")
+        #expect(viewModel.fullChartDataset != nil, "Full dataset should be loaded from cache")
+    }
+
     // MARK: - Chart Dataset Refresh Tests
 
     @Test("refreshChartDataset generates full dataset and filters to selected period")
@@ -358,6 +393,76 @@ struct AnalyticsViewModelTests {
         let patterns = viewModel.generateMissedDosePatterns(for: user, profiles: [profile], context: context)
 
         #expect(patterns.count == 0, "Should return empty array when no missed doses")
+    }
+
+    @Test("generateMissedDosePatterns with profiles but no schedules")
+    @MainActor func generateMissedDosePatternsNoSchedules() throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let viewModel = AnalyticsViewModel()
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        // Add some doses but no schedule
+        let dose1 = self.createTestDose(amount: 1.0, medicationProfile: profile, user: user, daysAgo: 7)
+        dose1.user = user
+        dose1.medication = profile
+        context.insert(dose1)
+
+        try context.save()
+
+        let patterns = viewModel.generateMissedDosePatterns(for: user, profiles: [profile], context: context)
+
+        // Should handle profiles without schedules gracefully
+        #expect(patterns.count == 0, "Should return empty when no schedules exist")
+    }
+
+    @Test("generateTrendData handles empty profiles list")
+    @MainActor func generateTrendDataEmptyProfiles() throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let viewModel = AnalyticsViewModel()
+        let user = self.createTestUser()
+
+        context.insert(user)
+        try context.save()
+
+        let trendData = viewModel.generateTrendData(for: user, profiles: [], context: context)
+
+        #expect(trendData.count == 4, "Should still generate 4 week structure even with no profiles")
+    }
+
+    @Test("generateTrendData with profiles but no schedules")
+    @MainActor func generateTrendDataNoSchedules() throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let viewModel = AnalyticsViewModel()
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        try context.save()
+
+        let trendData = viewModel.generateTrendData(for: user, profiles: [profile], context: context)
+
+        #expect(trendData.count == 4, "Should generate 4 weeks even without schedules")
+
+        // Verify all adherence rates are valid
+        for point in trendData {
+            #expect(
+                point.adherenceRate >= 0.0 && point.adherenceRate <= 1.0,
+                "Adherence rate should be between 0.0 and 1.0")
+        }
     }
 
     // MARK: - Time Period Mapping Tests
