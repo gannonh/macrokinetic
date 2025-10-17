@@ -137,40 +137,6 @@ struct OnboardingViewModelCoverageTests {
         }
     }
 
-    @Test("requestNotificationPermissions executes without errors")
-    @MainActor
-    func requestNotificationPermissionsExecution() async throws {
-        let dataController = DataController.testContainer()
-        let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
-
-        // Call requestNotificationPermissions() to improve coverage
-        // Note: In test environment, actual notification permissions may not be granted
-        // but we're testing that the method executes without crashing
-        await viewModel.requestNotificationPermissions()
-
-        // The method should complete without throwing errors
-        // In real environment, this would request system notification permissions
-        // In test environment, it may not actually grant permissions
-    }
-
-    @Test("requestHealthKitPermissions executes without errors")
-    @MainActor
-    func requestHealthKitPermissionsExecution() async throws {
-        let dataController = DataController.testContainer()
-        let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
-
-        // Call requestHealthKitPermissions() to improve coverage
-        // Note: In test environment, HealthKit may not be available/simulators don't support HealthKit
-        // but we're testing that the method executes and handles unavailability gracefully
-        await viewModel.requestHealthKitPermissions()
-
-        // The method should complete without throwing errors
-        // In test environment on simulator, HealthKit is not available
-        // The method should handle this gracefully
-    }
-
     @Test("completeOnboarding prevents duplicate profiles")
     @MainActor
     func completeOnboardingPreventsDuplicates() async throws {

@@ -325,7 +325,8 @@ struct AnalyticsViewModelTests {
 
         #expect(trendData.count == 4, "Should generate 4 weeks of trend data")
 
-        // Verify trend data is sorted by date
+        // Verify trend data is sorted by date (only if we have multiple data points)
+        guard trendData.count > 1 else { return }
         for index in 0..<(trendData.count - 1) {
             #expect(
                 trendData[index].date < trendData[index + 1].date, "Trend data should be sorted by date")
