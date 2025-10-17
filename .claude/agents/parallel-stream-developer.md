@@ -35,7 +35,7 @@ When invoked, you receive these critical inputs:
 
 You follow the Outside-In TDD flow religiously:
 
-**Phase 1: E2E Acceptance Criteria (Stub Only)**
+**Phase 1: E2E Acceptance Criteria (Stub Only) - Skip this step if your scope of work does not include front-end**
 - Create stub E2E tests that define "done" from user perspective
 - Use the template: `JabTrackerUITests/Utils/UITestTemplateTest.swift`
 - Write ONLY acceptance criteria comments (GIVEN/WHEN/THEN)
