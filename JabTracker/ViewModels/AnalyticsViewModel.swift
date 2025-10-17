@@ -253,11 +253,8 @@ class AnalyticsViewModel {
 
         // Get all dose schedules for the user's profiles
         let schedules = profiles.compactMap { $0.schedules?.first }
-        guard !schedules.isEmpty else {
-            return []  // No schedules = no adherence data
-        }
 
-        // Create ScheduleService with the provided context
+        // Create ScheduleService with the provided context (even if no schedules yet)
         let scheduleService = ScheduleService(context: context)
 
         // Calculate adherence for each of the last 4 weeks
