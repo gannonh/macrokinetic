@@ -355,7 +355,7 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 
 ## Update History
 - 2025-10-15T18:06:05Z: Added Product Insights from Issue #178 Calendar Integration Bug Fixes - user expectations for calendar actions, analytics accuracy and user trust, performance perception standards, and calendar interaction patterns
-- 2025-10-09T21:00:00Z: Consolidated context files - merged project-brief.md content (scope, constraints, risks), established testing-config.md as single source of truth for testing patterns, reduced duplication across tech-context, system-patterns, and project-style-guide
+- 2025-10-09T21:00:00Z: Consolidated context files - merged project-brief.md content (scope, constraints, risks), established testing.md as single source of truth for testing patterns, reduced duplication across tech-context, system-patterns, and project-style-guide
 - 2025-10-08T20:37:55Z: Added Product Insights from Issue #176 NotificationService - smart notification value proposition (actionable notifications, missed dose detection), and background refresh user experience patterns
 - 2025-10-06T20:59:29Z: Added Product Insights from Issue #175 ScheduleService Core - schedule management complexity, medical accuracy requirements (90%+ coverage mandate), and performance as user experience (<100ms requirement)
 - 2025-10-05T23:08:25Z: Added Product Insights from Issue #174 Dose Scheduling Models - medical adherence definitions, scheduling window requirements, and dose scheduling architecture value for patient workflows

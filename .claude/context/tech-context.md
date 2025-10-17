@@ -103,7 +103,7 @@ author: Claude Code PM System
 - **ProMotion Support**: 120Hz display optimization
 
 ## Testing Framework Integration
-> **Note**: For comprehensive testing patterns, anti-patterns, E2E processes, and test configuration, see `.claude/context/testing-config.md`
+> **Note**: For comprehensive testing patterns, anti-patterns, E2E processes, and test configuration, see `.claude/context/testing.md`
 
 ### Key Technology-Testing Integration Points
 - **CloudKit + Testing**: Tests must disable CloudKit entirely (`cloudKitDatabase: .none`) to avoid relationship validation errors
@@ -166,7 +166,7 @@ author: Claude Code PM System
 - **Pre-commit Integration**: Pre-commit hooks enable catch-and-fix workflow during development
 - **XCUITest Considerations**: XCUIElementQuery has `.count` property but not `.isEmpty` - SwiftLint auto-fixes can break UI tests
 
-> **For E2E testing patterns, element targeting, CodeGen integration, and test quality frameworks**, see `.claude/context/testing-config.md`
+> **For E2E testing patterns, element targeting, CodeGen integration, and test quality frameworks**, see `.claude/context/testing.md`
 
 ## Swift Charts & Advanced UI Integration (Issue #56 Completion)
 
@@ -186,7 +186,7 @@ author: Claude Code PM System
 - **Accessibility Architecture**: Comprehensive VoiceOver support with dynamic descriptions and trend analysis requires thoughtful component design patterns
 
 ## Medical App Quality & Testing
-> **For testing patterns, coverage management, Swift Testing framework usage, and medical app testing standards**, see `.claude/context/testing-config.md`
+> **For testing patterns, coverage management, Swift Testing framework usage, and medical app testing standards**, see `.claude/context/testing.md`
 
 ### Key Medical Testing Insights
 - **Medical Calculation Accuracy**: Business logic validation critical for patient safety
@@ -221,7 +221,7 @@ author: Claude Code PM System
 - **File Ownership Strategy**: Clear file ownership prevents conflicts - each stream owns specific model files
 - **Integration Validation**: Dedicated integration stream validates cross-model interactions
 
-> **For SwiftData testing anti-patterns, test coverage patterns, and ModelConfiguration requirements**, see `.claude/context/testing-config.md`
+> **For SwiftData testing anti-patterns, test coverage patterns, and ModelConfiguration requirements**, see `.claude/context/testing.md`
 
 ## ScheduleService Architecture (Issue #175)
 
@@ -252,7 +252,7 @@ author: Claude Code PM System
 - **Pattern Update Performance**: Chart updates on schedule pattern change complete within appropriate timeouts (< 1s)
 - **Swift Charts Integration**: PharmacokineticsEngine integration with Swift Charts demonstrates medical-grade chart rendering
 
-> **For onboarding E2E testing patterns, XCUITest element access, and navigation timing**, see `.claude/context/testing-config.md`
+> **For onboarding E2E testing patterns, XCUITest element access, and navigation timing**, see `.claude/context/testing.md`
 
 ## NotificationService Architecture (Issue #176)
 
@@ -261,7 +261,7 @@ author: Claude Code PM System
 - **Notification Queue Management**: 30-day rolling window with 64-notification iOS limit requires prioritization logic and periodic refresh
 - **SwiftData ModelContext Thread Safety**: Notification action handling requires careful ModelContext access from background threads - @MainActor isolation critical for data integrity
 
-> **For NotificationService testing patterns, protocol-based abstraction, and mock framework design**, see `.claude/context/testing-config.md`
+> **For NotificationService testing patterns, protocol-based abstraction, and mock framework design**, see `.claude/context/testing.md`
 
 ## Calendar Integration Technology Insights (Issue #178)
 

@@ -96,7 +96,7 @@ For each context file, determine if updates are needed:
   - Update: Convention changes, new patterns adopted
   - Include examples of new patterns
 
-#### `testing-config.md` - **Update if Testing Practices Changed**
+#### `testing.md` - **Update if Testing Practices Changed**
   - Check: New testing frameworks, coverage changes
   - Update: Testing strategies, new tools
   - Include coverage policies

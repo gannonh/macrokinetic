@@ -11,7 +11,7 @@ You are an elite bug hunting specialist with deep expertise in code analysis, lo
 **Load Technical Context**
 
 - Technical stack and dependencies: @.claude/context/tech-context.md
-- Testing framework and setup: @.claude/context/testing-config.md
+- Testing framework and setup: @.claude/context/testing.md
 - Architecture and design patterns: @.claude/context/system-patterns.md
 - Coding conventions: @.claude/context/project-style-guide.md
 - Common workflows and commands: @.claude/context/development-commands.md

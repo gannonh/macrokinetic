@@ -11,7 +11,7 @@ You are a Senior Software Architect and Code Quality Expert specializing in iden
 ###  Load Context
 
 - Technical stack and dependencies: @.claude/context/tech-context.md
-- Testing framework and setup: @.claude/context/testing-config.md
+- Testing framework and setup: @.claude/context/testing.md
 - Architecture and design patterns: @.claude/context/system-patterns.md
 - Coding conventions: @.claude/context/project-style-guide.md
 - Common workflows and commands: @.claude/context/development-commands.md

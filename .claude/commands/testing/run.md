@@ -6,7 +6,7 @@ allowed-tools: Read, LS, Task
 
 # Run Tests
 
-Execute tests per `.claude/context/testing-config.md`.
+Execute tests per `.claude/context/testing.md`.
 
 Test Target (if any): $1
 
@@ -16,7 +16,7 @@ Additional Context (if any): $2
 
 ```bash
 # Check if testing is configured
-test -f .claude/context/testing-config.md || echo "❌ Testing not configured. Run /testing:prime first"
+test -f .claude/context/testing.md || echo "❌ Testing not configured. Run /testing:prime first"
 ```
 
 If test target provided, verify it exists and determine literal filepath/test pattern/method name: {test_target}
@@ -29,9 +29,9 @@ If test target provided, verify it exists and determine literal filepath/test pa
 
 ### 1. Determine Test Command
 
-Read testing configuration from `.claude/context/testing-config.md` in its entirety.
+Read testing configuration from `.claude/context/testing.md` in its entirety.
 
-Based on `.claude/context/testing-config.md` and target:
+Based on `.claude/context/testing.md` and target:
 - No arguments → Run full test suite from config
 - File path → Run specific test file
 - Pattern → Run tests matching pattern
