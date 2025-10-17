@@ -120,10 +120,17 @@ struct QuickDoseEntryTests {
 
         #expect(viewModel.canSaveDose, "Should be able to save dose with current date/time")
 
-        // Test future date (should be invalid)
+        // Test future date within 30 days (should be valid for scheduled doses - Issue #178)
         let futureDate = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
         viewModel.doseDate = futureDate
-        #expect(!viewModel.canSaveDose, "Should not be able to save dose with future date")
+        viewModel.doseTime = Date()  // Set time to ensure valid combined datetime
+        #expect(viewModel.canSaveDose, "Should be able to save dose with future date (scheduled dose support)")
+
+        // Test future date beyond 30 days (should be invalid)
+        let farFutureDate = Calendar.current.date(byAdding: .day, value: 31, to: Date())!
+        viewModel.doseDate = farFutureDate
+        viewModel.doseTime = Date()
+        #expect(!viewModel.canSaveDose, "Should not be able to save dose with date more than 30 days in future")
 
         // Test date 30 days ago (should be valid)
         viewModel.doseDate = thirtyDaysAgo
