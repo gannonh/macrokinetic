@@ -61,14 +61,28 @@ struct CalendarPerformanceTests {
     ) throws -> DoseSchedule {
         let startDate = Calendar.current.date(byAdding: .day, value: -daysOfScheduledDoses, to: Date()) ?? Date()
 
+        // Create a valid weekly schedule configuration
+        let scheduleConfig = """
+            {
+                "dayOfWeek": 1,
+                "timeOfDay": {"hour": 9, "minute": 0},
+                "interval": 7,
+                "doseAmount": 1.0,
+                "windowMinutesBefore": 120,
+                "windowMinutesAfter": 120
+            }
+            """
+
         // Create schedule with weekly pattern
         let schedule = DoseSchedule(
             medicationProfile: profile,
             patternType: .weekly,
+            baseSchedule: scheduleConfig.data(using: .utf8) ?? Data(),
             isActive: true)
         schedule.createdAt = startDate
 
         context.insert(schedule)
+        try context.save()  // Save schedule first
 
         // Generate scheduled doses using ScheduleService
         let scheduleService = ScheduleService(context: context)
@@ -78,12 +92,17 @@ struct CalendarPerformanceTests {
             to: Date()
         )
 
-        // Insert scheduled doses
+        // Initialize the relationship array explicitly
+        schedule.scheduledDoses = []
+
+        // Insert scheduled doses and link them to the schedule
         for dose in scheduledDoses {
             context.insert(dose)
+            dose.schedule = schedule  // Set child's parent
+            schedule.scheduledDoses?.append(dose)  // Manually add to parent array
         }
 
-        try context.save()
+        try context.save()  // Save scheduled doses
 
         return schedule
     }

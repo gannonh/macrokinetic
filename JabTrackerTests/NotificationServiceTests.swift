@@ -32,28 +32,32 @@ struct NotificationServiceTests {
 
     @Test("Request authorization - granted")
     func testRequestAuthorizationGranted() async throws {
-        // GIVEN: NotificationService instance
+        // GIVEN: NotificationService instance with mock
         let scheduleService = try createTestScheduleService()
+        let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
-            notificationCenter: createMockNotificationCenter()
+            notificationCenter: mockCenter
         )
 
-        // WHEN: Request authorization (will use system notification center in simulator)
-        // NOTE: This test validates the authorization request flow without requiring user interaction
-        // In automated CI, this will fail gracefully if notifications aren't authorized
-        // For local testing with simulator, this validates the entire authorization flow
+        // WHEN: Request authorization
+        // NOTE: MockNotificationCenter returns true for authorization (simulates user granting permission)
+        // Framework limitation: UNNotificationSettings cannot be properly mocked because it can't be initialized
+        // Therefore, we verify the authorization return value but not the authorizationStatus property
 
-        // We can validate that the method exists and can be called
         do {
             let granted = try await notificationService.requestAuthorization()
-            // THEN: If granted, status should be authorized
-            if granted {
-                #expect(notificationService.authorizationStatus == .authorized)
-            }
+
+            // THEN: Authorization should be granted (mock returns true)
+            #expect(granted == true, "Mock should grant authorization")
+
+            // NOTE: We cannot reliably verify notificationService.authorizationStatus here
+            // because MockNotificationCenter.notificationSettings() returns real system settings
+            // Testing authorization status updates requires E2E testing on a real device
+
         } catch NotificationServiceError.authorizationDenied {
             // THEN: If denied, error is thrown correctly
-            #expect(true, "Authorization denied error thrown as expected")
+            #expect(Bool(false), "Authorization should be granted by mock, not denied")
         } catch {
             // Other errors are unexpected in this test
             throw error
