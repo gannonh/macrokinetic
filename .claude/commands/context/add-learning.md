@@ -8,7 +8,7 @@ allowed-tools:
 
 ## 1. Load Context:
 
-@.claude/context/testing-config.md
+@.claude/context/testing.md
 @.claude/context/tech-context.md
 @.claude/context/system-patterns.md
 @.claude/context/project-style-guide.md

@@ -219,7 +219,7 @@ let container = try ModelContainer(for: schema, configurations: [config])
 
 ## Testing Standards
 
-> **For comprehensive E2E testing patterns, element targeting best practices, iterative development process, and debug-first approaches**, see `.claude/context/testing-config.md`
+> **For comprehensive E2E testing patterns, element targeting best practices, iterative development process, and debug-first approaches**, see `.claude/context/testing.md`
 
 ### Key Testing Style Points
 - **SwiftUI → Accessibility Mapping**: List renders as CollectionView, NavigationStack renders as CollectionView in XCUITest

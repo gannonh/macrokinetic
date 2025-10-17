@@ -205,7 +205,7 @@ author: Claude Code PM System
 
 ## Core Development Principles
 
-> **Note**: For detailed testing patterns, parallel development strategies, and architectural patterns, see respective context files: `testing-config.md`, `system-patterns.md`, and `tech-context.md`
+> **Note**: For detailed testing patterns, parallel development strategies, and architectural patterns, see respective context files: `testing.md`, `system-patterns.md`, and `tech-context.md`
 
 ### Critical Testing Standards
 - **Debug-First E2E Testing**: ALWAYS use `TestUtilities.debugElements()` before writing element selectors - SwiftUI accessibility hierarchy differs from visual structure

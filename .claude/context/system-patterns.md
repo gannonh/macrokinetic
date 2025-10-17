@@ -62,7 +62,7 @@ Screen Views (DashboardView, SettingsView)
 - **Session**: Published authentication state management
 
 ## Testing Patterns
-> **For comprehensive testing patterns, E2E processes, test data management, UI testing approaches, and test quality standards**, see `.claude/context/testing-config.md`
+> **For comprehensive testing patterns, E2E processes, test data management, UI testing approaches, and test quality standards**, see `.claude/context/testing.md`
 
 ### Key Testing Integration Points
 - **SwiftData + Testing**: Test environment requires special handling to avoid relationship crashes
@@ -153,7 +153,7 @@ var children: [Child] = []
 - **Business Logic**: 85%+ coverage for core functionality
 - **UI Components**: Focus on business logic, not view rendering
 
-> **For SwiftData relationship testing anti-patterns, test container setup, and ModelConfiguration requirements**, see `.claude/context/testing-config.md`
+> **For SwiftData relationship testing anti-patterns, test container setup, and ModelConfiguration requirements**, see `.claude/context/testing.md`
 
 ## Version Control Patterns
 
@@ -271,7 +271,7 @@ struct UserAnalyticsSummary {
 - **Embedded Testing**: Each stream follows rigorous TDD with embedded testing
 - **Stream Ownership**: Each agent owns both implementation and testing for their domain
 
-> **For TDD patterns, test-driven parallel streams, and testing workflows**, see `.claude/context/testing-config.md`
+> **For TDD patterns, test-driven parallel streams, and testing workflows**, see `.claude/context/testing.md`
 
 ### Service Integration Patterns
 - **Extension Architecture**: ChartDataProcessor+Filtering demonstrates clean extension organization
@@ -291,7 +291,7 @@ struct UserAnalyticsSummary {
 - **Extension Architecture for Parallel Services**: NotificationService+Actions.swift and NotificationService+Background.swift pattern prevents file conflicts
 - **Protocol-Based Testability**: NotificationCenterProtocol abstraction enables comprehensive unit testing without requiring actual UNUserNotificationCenter
 
-> **For parallel testing patterns, test-driven parallel development, simulator isolation, and quality gate validation**, see `.claude/context/testing-config.md`
+> **For parallel testing patterns, test-driven parallel development, simulator isolation, and quality gate validation**, see `.claude/context/testing.md`
 
 ## Security & Defensive Programming Patterns (Issue #55)
 
@@ -308,7 +308,7 @@ struct UserAnalyticsSummary {
 - **Medical Data Integrity**: Ensure calculations remain valid and finite throughout data processing pipeline
 - **Production Safety**: Apps must handle corrupted or malicious data without compromising patient safety
 
-> **For test-driven security and edge case validation testing**, see `.claude/context/testing-config.md`
+> **For test-driven security and edge case validation testing**, see `.claude/context/testing.md`
 
 ## SwiftUI Component Architecture Patterns
 
@@ -322,7 +322,7 @@ struct UserAnalyticsSummary {
 - **Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
 - **VoiceOver Excellence**: Comprehensive support with dynamic descriptions for medical data
 
-> **For E2E testing patterns, accessibility testing, CodeGen integration, medical app testing excellence, and test-driven validation**, see `.claude/context/testing-config.md`
+> **For E2E testing patterns, accessibility testing, CodeGen integration, medical app testing excellence, and test-driven validation**, see `.claude/context/testing.md`
 
 ## AdherenceInsights Business Logic Patterns (Issue #57)
 
@@ -331,7 +331,7 @@ struct UserAnalyticsSummary {
 - **Test-First Validation**: Tests revealed fundamental flaws in weekend gap detection and dose escalation algorithms
 - **Medical App Development Standards**: Test workarounds compromise patient safety - always fix root cause business logic
 
-> **For SwiftData relationship testing patterns and test-driven debugging**, see `.claude/context/testing-config.md`
+> **For SwiftData relationship testing patterns and test-driven debugging**, see `.claude/context/testing.md`
 
 ## Design Review & Polish Patterns (Issue #59)
 

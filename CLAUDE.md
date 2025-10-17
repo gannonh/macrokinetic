@@ -66,7 +66,7 @@ The code-analyzer agent is an expert in code analysis, logic tracing, and vulner
 
 1. High-level understanding of the project: @.claude/context/product-context.md
 2. Technical stack and dependencies: @.claude/context/tech-context.md
-3. Testing framework and setup: @.claude/context/testing-config.md
+3. Testing framework and setup: @.claude/context/testing.md
 
 ### Current State
 

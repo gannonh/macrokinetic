@@ -63,7 +63,7 @@ Implement comprehensive E2E test coverage for Issue #177 onboarding schedule set
 
 ## Testing Approach
 
-Following iterative E2E process from testing-config.md:
+Following iterative E2E process from testing.md:
 - ✅ Debug-first approach with `TestUtilities.debugElements()`
 - ✅ One test at a time implementation
 - ⏳ Individual test verification (blocked by navigation issue)

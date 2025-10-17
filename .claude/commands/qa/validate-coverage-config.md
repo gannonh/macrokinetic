@@ -9,7 +9,7 @@ model: claude-sonnet-4-20250514
 
 ## Background Context
 
-@.claude/context/testing-config.md
+@.claude/context/testing.md
 
 ## Instructions
 
