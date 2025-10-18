@@ -7,8 +7,6 @@ argument-hint: Issue number (e.g., 42)
 
 Push local updates as GitHub issue comments for transparent audit trail.
 
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
-
 ## Required Rules
 
 **IMPORTANT:** Before executing this command, read and follow:

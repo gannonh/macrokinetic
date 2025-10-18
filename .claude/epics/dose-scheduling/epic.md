@@ -2,8 +2,8 @@
 name: dose-scheduling
 status: in-progress
 created: 2025-10-04T22:00:03Z
-progress: 45%
-updated: 2025-10-18T18:16:32Z
+progress: 50%
+updated: 2025-10-18T18:39:54Z
 prd: .claude/prds/dose-scheduling.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/173
 ---
@@ -26,11 +26,11 @@ Implement a flexible dose scheduling system that transforms JabTracker from pass
 - [ ] #260 - Notification UI & Configuration - Settings Integration and Permission Management
 - [ ] #180 - Split-Dose Support
 - [ ] #181 - Analytics Integration - Schedule Adherence Tracking & Timeline View
-- [ ] #182 - Testing Suite - Comprehensive Unit, Integration & E2E Tests for Scheduling
+- [~] #182 - Testing Suite - Comprehensive Unit, Integration & E2E Tests for Scheduling (closed: not planned - TDD integrated into feature development)
 - [ ] #183 - Performance & Polish - Optimization, Accessibility Audit & Edge Cases
 
 **Total tasks:** 11
-**Progress:** 5/11 complete (45%)
+**Progress:** 5/10 complete (50%) - excluding closed/not planned task
 **Parallel tasks:** 4
 **Sequential tasks:** 7
 
@@ -383,10 +383,10 @@ High-level task categories that will be created during epic decomposition:
 - [ ] **Split-Dose Support**: Implement split-dose calculations and UI configuration
 - [ ] **Notification UI & Configuration**: Settings screen integration, enable/disable toggle, reminder preferences, deeplink handling
 - [ ] **Analytics Integration**: Extend AnalyticsService with schedule adherence tracking
-- [ ] **Testing Suite**: Comprehensive unit, integration, and E2E tests for all scheduling features
+- [~] **Testing Suite**: Comprehensive unit, integration, and E2E tests for all scheduling features (closed: not planned - TDD integrated into feature development)
 - [ ] **Performance & Polish**: Optimize performance, accessibility audit, edge case handling
 
-**Estimated Total Tasks**: 11 (notification backend and UI separated for clear ownership)
+**Estimated Total Tasks**: 10 active (11 total, 1 closed as not planned - TDD integrated into feature development)
 
 ## Dependencies
 
