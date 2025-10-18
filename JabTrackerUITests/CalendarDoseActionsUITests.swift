@@ -155,7 +155,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
         print("ℹ️  Actual RescheduleDoseSheet validation requires implemented functionality")
     }
 
-    func testRescheduleDosePreventssPastDates() throws {
+    func testRescheduleDosePreventsPastDates() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
         app = TestUtilities.launchAppWithSeededData(preset: preset)
