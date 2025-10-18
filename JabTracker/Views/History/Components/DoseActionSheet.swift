@@ -35,11 +35,6 @@ struct DoseActionSheet: View {
                             .font(.headline)
                             .foregroundColor(event.medicationBrandName == nil ? .secondary : .primary)
                             .accessibilityIdentifier("dose-action-medication-name")
-                            .onAppear {
-                                if event.medicationBrandName == nil {
-                                    logger.error("Missing medication brand name for dose event")
-                                }
-                            }
 
                         Text("Scheduled for \(event.timestamp.formatted(date: .long, time: .shortened))")
                             .font(.subheadline)
@@ -50,6 +45,11 @@ struct DoseActionSheet: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("dose-action-amount")
+                    }
+                    .onAppear {
+                        if event.medicationBrandName == nil {
+                            logger.error("Missing medication brand name for dose event")
+                        }
                     }
                 }
 
@@ -129,7 +129,11 @@ struct DoseActionSheet: View {
                             dismiss()
                         }
                     )
+                } else {
+                    EmptyView()
                 }
+            } else {
+                EmptyView()
             }
         }
         .sheet(isPresented: $showRescheduleSheet) {
@@ -140,6 +144,8 @@ struct DoseActionSheet: View {
                         dismiss()
                     }
                 )
+            } else {
+                EmptyView()
             }
         }
     }
