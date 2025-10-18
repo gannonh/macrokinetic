@@ -150,38 +150,42 @@ struct ScheduleSummaryView: View {
 
     /// Titration warning section (AC11-13)
     private func titrationWarningSection(warning: String) -> some View {
-Button(action: {
-            onTitrationWarningTap?()
-        }, label: {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.title3)
-                    .foregroundStyle(.orange)
+        Button(
+            action: {
+                onTitrationWarningTap?()
+            },
+            label: {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.orange)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Upcoming Dose Change")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Upcoming Dose Change")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
 
-                    Text(warning)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.leading)
+                        Text(warning)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
             }
-            .padding()
-            .background(Color.orange.opacity(0.1))
-            .cornerRadius(8)
-        })
+        )
         .buttonStyle(.plain)
         .accessibilityLabel("Upcoming dose change: \(warning)")
         .accessibilityHint("Tap to view dose titration plan")
+    }
 
     // MARK: - Helper Functions
 
