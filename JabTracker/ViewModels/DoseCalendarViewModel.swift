@@ -223,7 +223,7 @@ class DoseCalendarViewModel: ObservableObject {
             doses: monthDoses,
             periodStart: monthInterval.start,
             periodEnd: monthInterval.end,
-            medicationFrequency: .weekly,  // Default to weekly, could be made configurable
+            medicationFrequency: .weekly,  // TODO: Defaults to weekly, could be made configurable
             scheduleService: self.scheduleService,
             schedule: self.activeSchedule
         )
