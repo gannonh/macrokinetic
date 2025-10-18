@@ -150,9 +150,9 @@ struct ScheduleSummaryView: View {
 
     /// Titration warning section (AC11-13)
     private func titrationWarningSection(warning: String) -> some View {
-        Button {
+        Button(action: {
             onTitrationWarningTap?()
-        } label: {
+        }, label: {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.title3)
