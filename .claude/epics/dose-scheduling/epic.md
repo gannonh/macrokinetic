@@ -2,8 +2,8 @@
 name: dose-scheduling
 status: in-progress
 created: 2025-10-04T22:00:03Z
-progress: 50%
-updated: 2025-10-18T17:48:10Z
+progress: 45%
+updated: 2025-10-18T18:16:32Z
 prd: .claude/prds/dose-scheduling.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/173
 ---
@@ -15,6 +15,24 @@ github: https://github.com/gannonh/jab-tracker-ios/issues/173
 Implement a flexible dose scheduling system that transforms JabTracker from passive logging to active medication management. The system will enable users to configure weekly/split-dose/custom patterns, receive smart notifications, and manage schedules with flexibility (reschedule, skip, pause). This leverages existing infrastructure (SwiftData, PharmacokineticsEngine, Calendar) while adding minimal new models and comprehensive scheduling logic.
 
 **Key Technical Approach**: Extend existing SwiftData models with new `DoseSchedule`, `ScheduledDose`, and `DoseEvent` models. Create `ScheduleService` for schedule calculations and `NotificationService` for iOS notification queue management. Integrate scheduling into onboarding flow, medication profile management, and calendar view.
+
+## Tasks Created
+- [x] #174 - SwiftData Models - DoseSchedule, ScheduledDose, DoseEvent
+- [x] #175 - ScheduleService Core - Schedule Management and Calculation Algorithms
+- [x] #176 - NotificationService - Smart Dose Reminders and Notification Management
+- [x] #177 - Onboarding Integration
+- [x] #178 - Calendar Integration
+- [ ] #179 - Medication Profile CRUD
+- [ ] #260 - Notification UI & Configuration - Settings Integration and Permission Management
+- [ ] #180 - Split-Dose Support
+- [ ] #181 - Analytics Integration - Schedule Adherence Tracking & Timeline View
+- [ ] #182 - Testing Suite - Comprehensive Unit, Integration & E2E Tests for Scheduling
+- [ ] #183 - Performance & Polish - Optimization, Accessibility Audit & Edge Cases
+
+**Total tasks:** 11
+**Progress:** 5/11 complete (45%)
+**Parallel tasks:** 4
+**Sequential tasks:** 7
 
 ## Architecture Decisions
 
@@ -356,18 +374,19 @@ enum SchedulePattern: String, Codable {
 
 High-level task categories that will be created during epic decomposition:
 
-- [ ] **SwiftData Models**: Create DoseSchedule, ScheduledDose, DoseEvent models with proper relationships
-- [ ] **ScheduleService Core**: Implement schedule CRUD, calculation algorithms, adherence metrics
-- [ ] **NotificationService**: Build notification queue management, background refresh, action handling
-- [ ] **Onboarding Integration**: Add schedule setup step to onboarding flow with UI components
-- [ ] **Calendar Integration**: Extend calendar view with scheduled dose indicators and actions
+- [X] **SwiftData Models**: Create DoseSchedule, ScheduledDose, DoseEvent models with proper relationships
+- [X] **ScheduleService Core**: Implement schedule CRUD, calculation algorithms, adherence metrics
+- [X] **NotificationService**: Build notification queue management, background refresh, action handling
+- [X] **Onboarding Integration**: Add schedule setup step to onboarding flow with UI components
+- [X] **Calendar Integration**: Extend calendar view with scheduled dose indicators and actions
 - [ ] **Medication Profile CRUD**: Integrate schedule management into medication profile editing
 - [ ] **Split-Dose Support**: Implement split-dose calculations and UI configuration
+- [ ] **Notification UI & Configuration**: Settings screen integration, enable/disable toggle, reminder preferences, deeplink handling
 - [ ] **Analytics Integration**: Extend AnalyticsService with schedule adherence tracking
 - [ ] **Testing Suite**: Comprehensive unit, integration, and E2E tests for all scheduling features
 - [ ] **Performance & Polish**: Optimize performance, accessibility audit, edge case handling
 
-**Estimated Total Tasks**: 10 (adhering to 10 task limit through consolidation)
+**Estimated Total Tasks**: 11 (notification backend and UI separated for clear ownership)
 
 ## Dependencies
 
@@ -459,20 +478,5 @@ High-level task categories that will be created during epic decomposition:
 5. **Last-Write-Wins Sync**: Avoids complex conflict resolution for schedule modifications
 6. **Extend Existing Services**: AnalyticsService and OnboardingViewModel extended rather than creating parallel systems
 7. **Visual Feedback Over Complex Logic**: Concentration curve preview guides users, reducing need for automated recommendations
-8. **Consolidation into 10 Tasks**: Grouping related work (e.g., all notification features in one task) reduces overhead and enables focused delivery
+8. **Consolidation into 11 Tasks**: Grouping related work (e.g., backend notification service separate from UI configuration) enables focused delivery while maintaining clear separation of concerns
 
-## Tasks Created
-- [x] #174 - SwiftData Models - DoseSchedule, ScheduledDose, DoseEvent
-- [x] #175 - ScheduleService Core - Schedule Management and Calculation Algorithms
-- [x] #176 - NotificationService - Smart Dose Reminders and Notification Management
-- [x] #177 - Onboarding Integration
-- [x] #178 - Calendar Integration
-- [ ] #179 - Medication Profile CRUD
-- [ ] #180 - Split-Dose Support
-- [ ] #181 - Analytics Integration - Schedule Adherence Tracking & Timeline View
-- [ ] #182 - Testing Suite - Comprehensive Unit, Integration & E2E Tests for Scheduling
-- [ ] #183 - Performance & Polish - Optimization, Accessibility Audit & Edge Cases
-
-Total tasks: 10
-Parallel tasks: 4
-Sequential tasks: 6

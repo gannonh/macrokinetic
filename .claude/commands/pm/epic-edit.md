@@ -1,6 +1,6 @@
 ---
 description: Edit epic details after creation.
-argument-hint: Epic name (e.g., dose-tracking)
+argument-hint: [Epic name (e.g., dose-tracking)] [Additional context (optional)]
 allowed-tools: Read, Write, LS
 ---
 
@@ -8,13 +8,14 @@ allowed-tools: Read, Write, LS
 
 Edit epic details after creation.
 
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
+Addition context (optional): $2
+
 
 ## Instructions
 
 ### 1. Read Current Epic
 
-Read `.claude/epics/$ARGUMENTS/epic.md`:
+Read `.claude/epics/$1/epic.md`:
 - Parse frontmatter
 - Read content sections
 
@@ -44,18 +45,18 @@ Ask: "Update GitHub issue? (yes/no)"
 
 If yes:
 ```bash
-gh issue edit {issue_number} --body-file .claude/epics/$ARGUMENTS/epic.md
+gh issue edit {issue_number} --body-file .claude/epics/$1/epic.md
 ```
 
 ### 5. Output
 
 ```
-✅ Updated epic: $ARGUMENTS
+✅ Updated epic: $1
   Changes made to: {sections_edited}
   
 {If GitHub updated}: GitHub issue updated ✅
 
-View epic: /pm:epic-show $ARGUMENTS
+View epic: /pm:epic-show $1
 ```
 
 ## Important Notes
