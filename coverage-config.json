@@ -187,6 +187,7 @@
       "Views/Settings/Components/ScheduleHistoryItem.swift",
       "Views/Settings/Components/ScheduleHistoryRow.swift",
       "Views/Settings/Components/ScheduleSummaryView.swift",
+      "Views/Settings/DoseScheduleEditView.swift",
       "Views/Settings/MedicationFormComponents.swift",
       "Views/Settings/MedicationProfileSettingsView.swift",
       "Views/Settings/MedicationProfileViewModel.swift",
