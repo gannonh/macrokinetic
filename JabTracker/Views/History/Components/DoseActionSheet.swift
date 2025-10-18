@@ -31,15 +31,15 @@ struct DoseActionSheet: View {
                 // Event details section
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        if let medicationName = event.medicationBrandName {
-                            Text(medicationName)
-                                .font(.headline)
-                                .accessibilityIdentifier("dose-action-medication-name")
-                        } else {
-                            Text("DEBUG: medicationBrandName is nil")
-                                .font(.headline)
-                                .foregroundColor(.red)
-                        }
+                        Text(event.medicationBrandName ?? "Medication")
+                            .font(.headline)
+                            .foregroundColor(event.medicationBrandName == nil ? .secondary : .primary)
+                            .accessibilityIdentifier("dose-action-medication-name")
+                            .onAppear {
+                                if event.medicationBrandName == nil {
+                                    logger.error("Missing medication brand name for dose event")
+                                }
+                            }
 
                         Text("Scheduled for \(event.timestamp.formatted(date: .long, time: .shortened))")
                             .font(.subheadline)
@@ -183,10 +183,13 @@ struct DoseActionSheet: View {
             }
         }
 
-        // Small delay for UI feedback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            isSkipping = false
-            dismiss()
+        // Small delay for UI feedback using structured concurrency
+        Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            await MainActor.run {
+                isSkipping = false
+                dismiss()
+            }
         }
     }
 }
@@ -203,6 +206,16 @@ private struct QuickDoseEntrySheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @StateObject private var viewModel = QuickDoseViewModel()
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseEntrySheet")
+
+    /// Date range for dose logging (30 days past to 30 days future)
+    private var dateRange: ClosedRange<Date> {
+        let now = Date()
+        let pastDate = Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now
+        let futureDate = Calendar.current.date(byAdding: .day, value: 30, to: now) ?? now
+        return pastDate...futureDate
+    }
 
     init(
         preSelectedProfile: MedicationProfile,
@@ -251,8 +264,7 @@ private struct QuickDoseEntrySheet: View {
                     DatePicker(
                         "Date",
                         selection: $viewModel.doseDate,
-                        in: (Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...(Calendar
-                            .current.date(byAdding: .day, value: 30, to: Date()) ?? Date()),
+                        in: dateRange,
                         displayedComponents: .date
                     )
                     .accessibilityIdentifier("quick-dose-entry-date-picker")
@@ -331,7 +343,8 @@ private struct QuickDoseEntrySheet: View {
             onDoseLogged()
             dismiss()
         } catch {
-            print("Error saving dose: \(error)")
+            logger.error("Failed to save dose: \(error.localizedDescription)")
+            // TODO: Show error alert to user
         }
     }
 }
