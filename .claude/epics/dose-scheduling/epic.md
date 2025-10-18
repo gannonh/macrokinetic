@@ -2,8 +2,8 @@
 name: dose-scheduling
 status: in-progress
 created: 2025-10-04T22:00:03Z
-progress: 40%
-updated: 2025-10-13T16:59:49Z
+progress: 50%
+updated: 2025-10-18T17:48:10Z
 prd: .claude/prds/dose-scheduling.md
 github: https://github.com/gannonh/jab-tracker-ios/issues/173
 ---
@@ -466,7 +466,7 @@ High-level task categories that will be created during epic decomposition:
 - [x] #175 - ScheduleService Core - Schedule Management and Calculation Algorithms
 - [x] #176 - NotificationService - Smart Dose Reminders and Notification Management
 - [x] #177 - Onboarding Integration
-- [ ] #178 - Calendar Integration
+- [x] #178 - Calendar Integration
 - [ ] #179 - Medication Profile CRUD
 - [ ] #180 - Split-Dose Support
 - [ ] #181 - Analytics Integration - Schedule Adherence Tracking & Timeline View
