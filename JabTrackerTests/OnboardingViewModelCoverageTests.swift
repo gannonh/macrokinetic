@@ -319,6 +319,60 @@ struct OnboardingViewModelCoverageTests {
         #expect(onboardingError == .missingRequiredData, "Should fail with missing required data error")
     }
 
+    @Test("requestHealthKitPermissions with forced authorization granted")
+    @MainActor
+    func requestHealthKitPermissionsGranted() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Use test hooks to simulate HealthKit availability and forced grant
+        viewModel.testIsHealthDataAvailable = true
+        viewModel.testForcedHealthAuthResult = true
+
+        // Request permissions (should use forced result)
+        await viewModel.requestHealthKitPermissions()
+
+        // Should be granted via forced result
+        #expect(viewModel.healthKitGranted == true, "HealthKit should be granted via forced result")
+        #expect(viewModel.errorMessage == nil, "Should have no error message")
+    }
+
+    @Test("requestHealthKitPermissions with forced authorization denied")
+    @MainActor
+    func requestHealthKitPermissionsDenied() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Use test hooks to simulate HealthKit availability but forced denial
+        viewModel.testIsHealthDataAvailable = true
+        viewModel.testForcedHealthAuthResult = false
+
+        // Request permissions (should use forced result)
+        await viewModel.requestHealthKitPermissions()
+
+        // Should be denied via forced result
+        #expect(viewModel.healthKitGranted == false, "HealthKit should be denied via forced result")
+    }
+
+    @Test("requestHealthKitPermissions when HealthKit unavailable")
+    @MainActor
+    func requestHealthKitPermissionsUnavailable() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Use test hooks to simulate HealthKit being unavailable
+        viewModel.testIsHealthDataAvailable = false
+
+        // Request permissions (should handle unavailability)
+        await viewModel.requestHealthKitPermissions()
+
+        // Should be denied because HealthKit is unavailable
+        #expect(viewModel.healthKitGranted == false, "HealthKit should be denied when unavailable")
+    }
+
     // NOTE: requestNotificationPermissions() test removed - it hangs in unit tests
     // because UNUserNotificationCenter.requestAuthorization() requires user interaction
     // in the simulator. This method should be tested in E2E/UI tests instead.
