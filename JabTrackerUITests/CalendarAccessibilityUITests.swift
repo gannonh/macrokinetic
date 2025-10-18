@@ -27,7 +27,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
     func testVoiceOverDescribesScheduledDoses() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -51,7 +51,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
     func testVoiceOverDescribesLoggedDoses() throws {
         // GIVEN: Calendar view with logged dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -75,7 +75,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
     func testVoiceOverDescribesMixedDoses() throws {
         // GIVEN: Calendar view with both scheduled and logged doses
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -99,7 +99,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
     func testVoiceOverDescribesMissedDose() throws {
         // GIVEN: Calendar view with missed dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -123,7 +123,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
     func testVoiceOverDescribesScheduledDoseIndicators() throws {
         // GIVEN: Calendar view with multiple scheduled doses
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
