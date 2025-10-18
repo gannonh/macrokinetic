@@ -1,0 +1,70 @@
+This file documents the changes needed to MedicationProfileDetailView:
+
+1. Add viewModel property after modelContext:
+   @State private var viewModel: MedicationProfileViewModel?
+
+2. Insert schedule section BEFORE "// Calculator Tools" comment (around line 415):
+                // Dose Schedule Section
+                if let vm = viewModel {
+                    MedicationProfileScheduleSection(viewModel: vm)
+                }
+
+3. Add sheet modifiers AFTER .sheet(isPresented: self.$showingDoseTitration):
+        .sheet(isPresented: Binding(
+            get: { viewModel?.showScheduleEditSheet ?? false },
+            set: { newValue in viewModel?.showScheduleEditSheet = newValue }
+        )) {
+            if let vm = viewModel {
+                DoseScheduleEditView(
+                    medicationProfile: profile,
+                    existingSchedule: vm.activeSchedule,
+                    onSave: { updatedSchedule in
+                        vm.updateSchedule(updatedSchedule)
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { viewModel?.showPauseScheduleSheet ?? false },
+            set: { newValue in viewModel?.showPauseScheduleSheet = newValue }
+        )) {
+            if let vm = viewModel, let schedule = vm.activeSchedule {
+                PauseScheduleSheet(
+                    schedule: schedule,
+                    onPause: { pauseUntilDate in
+                        vm.pauseSchedule(until: pauseUntilDate)
+                    }
+                )
+            }
+        }
+        .confirmationDialog(
+            "Deactivate Schedule",
+            isPresented: Binding(
+                get: { viewModel?.showDeactivateConfirmation ?? false },
+                set: { newValue in viewModel?.showDeactivateConfirmation = newValue }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Deactivate Schedule", role: .destructive) {
+                viewModel?.deactivateSchedule()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will stop all scheduled doses and reminders. You can create a new schedule later.")
+        }
+
+4. Add .onAppear AFTER all sheet modifiers (at the very end before closing brace):
+        .onAppear {
+            // Initialize viewModel on appear
+            if viewModel == nil {
+                viewModel = MedicationProfileViewModel(
+                    medicationProfile: profile,
+                    context: modelContext
+                )
+            }
+
+            Task {
+                await viewModel?.loadActiveSchedule()
+                await viewModel?.loadScheduleHistory()
+            }
+        }
