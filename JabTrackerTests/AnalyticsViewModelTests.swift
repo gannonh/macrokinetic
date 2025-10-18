@@ -387,6 +387,80 @@ struct AnalyticsViewModelTests {
         #expect(patterns.count == 0, "Should return empty when no schedules exist")
     }
 
+    @Test("generateMissedDosePatterns with actual missed doses")
+    @MainActor func generateMissedDosePatternsWithMissedDoses() throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let viewModel = AnalyticsViewModel()
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        // Create a dose schedule
+        let calendar = Calendar.current
+        let now = Date()
+        let startDate = calendar.date(byAdding: .day, value: -28, to: now)!
+
+        let schedule = DoseSchedule(
+            patternType: .weekly
+        )
+        schedule.medicationProfile = profile
+        schedule.createdAt = startDate
+        context.insert(schedule)
+
+        // Create multiple missed scheduled doses across different days of the week
+        // Sunday (day 1), Monday (day 2), Friday (day 6)
+        let sundayDate = calendar.date(byAdding: .day, value: -7, to: now)!  // 1 week ago
+        let mondayDate = calendar.date(byAdding: .day, value: -13, to: now)!  // 2 weeks ago - Monday
+        let fridayDate = calendar.date(byAdding: .day, value: -3, to: now)!  // 3 days ago - Friday
+
+        let missedDose1 = ScheduledDose(
+            scheduledTime: sundayDate,
+            doseAmount: 1.0,
+            windowStart: sundayDate.addingTimeInterval(-2 * 3600),
+            windowEnd: sundayDate.addingTimeInterval(-1)  // Window ended in past = missed
+        )
+        missedDose1.schedule = schedule
+        context.insert(missedDose1)
+
+        let missedDose2 = ScheduledDose(
+            scheduledTime: mondayDate,
+            doseAmount: 1.0,
+            windowStart: mondayDate.addingTimeInterval(-2 * 3600),
+            windowEnd: mondayDate.addingTimeInterval(-1)  // Window ended in past = missed
+        )
+        missedDose2.schedule = schedule
+        context.insert(missedDose2)
+
+        let missedDose3 = ScheduledDose(
+            scheduledTime: fridayDate,
+            doseAmount: 1.0,
+            windowStart: fridayDate.addingTimeInterval(-2 * 3600),
+            windowEnd: fridayDate.addingTimeInterval(-1)  // Window ended in past = missed
+        )
+        missedDose3.schedule = schedule
+        context.insert(missedDose3)
+
+        try context.save()
+
+        let patterns = viewModel.generateMissedDosePatterns(for: user, profiles: [profile], context: context)
+
+        // Should detect missed doses and group by day of week
+        #expect(patterns.count > 0, "Should detect missed dose patterns")
+
+        // Verify patterns are sorted by count (descending)
+        guard patterns.count > 1 else { return }
+        for index in 0..<(patterns.count - 1) {
+            #expect(
+                patterns[index].missedCount >= patterns[index + 1].missedCount,
+                "Patterns should be sorted by count descending")
+        }
+    }
+
     @Test("generateTrendData handles empty profiles list")
     @MainActor func generateTrendDataEmptyProfiles() throws {
         let container = self.createTestContainer()
