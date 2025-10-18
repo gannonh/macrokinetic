@@ -29,7 +29,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
     func testQuickDoseSheetPrePopulatedFromSchedule() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -53,7 +53,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
     func testLogDoseFromCalendarUpdatesIndicators() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -77,7 +77,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
     func testLogDoseFromCalendarWithModifications() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -103,7 +103,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
     func testLogDoseWithMultipleMedicationProfiles() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 

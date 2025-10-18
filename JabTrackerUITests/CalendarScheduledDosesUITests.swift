@@ -27,7 +27,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testViewCalendarWithScheduledDosesDisplayed() throws {
         // GIVEN: App launched with test data including scheduled doses
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to History tab and views calendar
         TestUtilities.navigateToHistoryView(in: app)
@@ -70,7 +70,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testScheduledDoseIndicatorAppearance() throws {
         // GIVEN: Calendar displays days with scheduled and logged doses
         let preset = TestUtilities.TestDataPreset.thirtyDays  // Contains both scheduled and logged doses
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to calendar view
         TestUtilities.navigateToHistoryView(in: app)
@@ -108,7 +108,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testLoggedDoseIndicatorAppearance() throws {
         // GIVEN: Calendar displays days with logged doses
         let preset = TestUtilities.TestDataPreset.thirtyDays  // Contains logged doses
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to calendar view
         TestUtilities.navigateToHistoryView(in: app)
@@ -139,7 +139,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testMissedDoseIndicatorAppearance() throws {
         // GIVEN: Calendar with potential missed doses
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to calendar view
         TestUtilities.navigateToHistoryView(in: app)
@@ -171,7 +171,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testSkippedDoseIndicatorAppearance() throws {
         // GIVEN: Calendar with potential skipped doses
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to calendar view
         TestUtilities.navigateToHistoryView(in: app)
@@ -205,7 +205,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testCalendarRefreshesWithScheduledDoses() throws {
         // GIVEN: App launched with scheduled doses
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to calendar view
         TestUtilities.navigateToHistoryView(in: app)
@@ -251,7 +251,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testCalendarRenderingPerformanceWith90Days() throws {
         // GIVEN: Calendar with 90 days of scheduled and logged doses
         let preset = TestUtilities.TestDataPreset.ninetyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to History tab calendar view
         TestUtilities.navigateToHistoryView(in: app)
@@ -296,7 +296,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
     func testScheduledDosesLazyLoadedPerMonth() throws {
         // GIVEN: Calendar view with multiple months of scheduled doses
         let preset = TestUtilities.TestDataPreset.ninetyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User views current month calendar
         TestUtilities.navigateToHistoryView(in: app)

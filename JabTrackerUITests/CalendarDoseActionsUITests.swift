@@ -29,7 +29,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testLongPressScheduledDoseOpensActionSheet() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to calendar view
         TestUtilities.navigateToHistoryView(in: app)
@@ -82,7 +82,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testActionSheetDisplaysAllActions() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -108,7 +108,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testLogDoseActionOpensQuickDoseSheet() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -134,7 +134,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testRescheduleActionOpensRescheduleDoseSheet() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -158,7 +158,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testRescheduleDosePreventssPastDates() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -182,7 +182,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testRescheduleDoseWithSmartSuggestion() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -208,7 +208,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testSkipDoseMarksAsSkipped() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -234,7 +234,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testLongPressGestureResponseTime() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
@@ -260,7 +260,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
     func testVoiceOverLabelsForDoseActions() throws {
         // GIVEN: Calendar view with scheduled dose
         let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
+        app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
 
