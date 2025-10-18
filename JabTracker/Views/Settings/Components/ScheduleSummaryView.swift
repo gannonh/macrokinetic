@@ -150,7 +150,7 @@ struct ScheduleSummaryView: View {
 
     /// Titration warning section (AC11-13)
     private func titrationWarningSection(warning: String) -> some View {
-        Button(action: {
+Button(action: {
             onTitrationWarningTap?()
         }, label: {
             HStack(alignment: .top, spacing: 12) {
@@ -178,11 +178,10 @@ struct ScheduleSummaryView: View {
             .padding()
             .background(Color.orange.opacity(0.1))
             .cornerRadius(8)
-        }
+        })
         .buttonStyle(.plain)
         .accessibilityLabel("Upcoming dose change: \(warning)")
         .accessibilityHint("Tap to view dose titration plan")
-    }
 
     // MARK: - Helper Functions
 
