@@ -183,6 +183,8 @@
       "Views/History/ScheduledDoseIndicator.swift",
       "Views/MedicationProfile/DoseTitrationView.swift",
       "Views/MedicationProfile/ReconstitutionCalculatorView.swift",
+      "Views/Settings/Components/MedicationProfileHeader.swift",
+      "Views/Settings/Components/MedicationScheduleSection.swift",
       "Views/Settings/Components/PauseScheduleSheet.swift",
       "Views/Settings/Components/ScheduleHistoryItem.swift",
       "Views/Settings/Components/ScheduleHistoryRow.swift",

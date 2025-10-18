@@ -354,6 +354,7 @@ struct AddMedicationProfileView: View {
 struct MedicationProfileDetailView: View {
     let profile: MedicationProfile
     @ObservedObject var medicationManager: MedicationManager
+    @State private var viewModel: MedicationProfileViewModel?
     @State private var showingEditSheet = false
     @State private var showingReconstitutionCalculator = false
     @State private var showingDoseTitration = false
@@ -365,127 +366,194 @@ struct MedicationProfileDetailView: View {
     }
 
     var body: some View {
+        mainContent
+            .navigationTitle(self.profile.brandName)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Edit") {
+                        self.showingEditSheet = true
+                    }
+                    .accessibilityIdentifier("edit-medication-profile")
+                }
+            }
+            .sheet(isPresented: self.$showingEditSheet) {
+                EditMedicationProfileView(profile: self.profile, medicationManager: self.medicationManager)
+            }
+            .sheet(isPresented: self.$showingDoseTitration) {
+                DoseTitrationView(profile: self.profile)
+            }
+            .modifier(ScheduleSheetsPresentationModifier(viewModel: viewModel, profile: profile))
+            .modifier(
+                ReconstitutionSheetPresentationModifier(
+                    isPresented: $showingReconstitutionCalculator,
+                    profile: profile,
+                    medicationManager: medicationManager
+                )
+            )
+            .onAppear {
+                if viewModel == nil {
+                    viewModel = MedicationProfileViewModel(
+                        medicationProfile: profile,
+                        context: modelContext
+                    )
+                }
+                Task {
+                    await viewModel?.loadActiveSchedule()
+                    await viewModel?.loadScheduleHistory()
+                }
+            }
+    }
+
+    private var mainContent: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Profile Header
-                DesignCard {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Medication Details")
-                            .font(DesignTokens.Typography.headline)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            DetailRow(title: "Medication", value: self.profile.medicationType.capitalized)
-                            DetailRow(title: "Brand", value: self.profile.brandName)
-                            DetailRow(
-                                title: "Current Dose",
-                                value: "\(String(format: "%.2f", self.profile.currentDose)) mg")
-                            DetailRow(
-                                title: "Start Date",
-                                value: self.profile.startDate.formatted(date: .abbreviated, time: .omitted))
-                            DetailRow(
-                                title: "Preferred Sites",
-                                value: self.profile.preferredInjectionSites.joined(separator: ", "))
-
-                            // Show reconstitution data for compounded medications
-                            if self.profile.isCompounded {
-                                if let concentration = self.profile.concentration {
-                                    DetailRow(
-                                        title: "Concentration",
-                                        value: "\(String(format: "%.2f", concentration)) mg/ml")
-                                }
-                                if let unitsPerDose = self.profile.unitsPerDose {
-                                    DetailRow(
-                                        title: "Dose in Units",
-                                        value: "\(String(format: "%.1f", unitsPerDose)) units")
-                                }
-                            }
-
-                            if let medication = Medication(rawValue: profile.medicationType) {
-                                DetailRow(
-                                    title: "Half-life",
-                                    value: "\(String(format: "%.1f", medication.halfLifeDays)) days")
-                                DetailRow(
-                                    title: "Frequency",
-                                    value: medication.frequency == .daily ? "Daily" : "Weekly")
-                            }
-                        }
-                    }
-                }
-
-                // Calculator Tools
-                if self.profile.isCompounded {
-                    Button {
-                        self.showingReconstitutionCalculator = true
-                    } label: {
-                        CalculatorCard(
-                            title: "Reconstitution Calculator",
-                            description: "Calculate water volume and units per dose",
-                            icon: "drop.fill")
-                    }
-                    .accessibilityIdentifier("detail-reconstitution-calculator")
-                }
-
-                // Dose Titration Management
-                Button {
-                    self.showingDoseTitration = true
-                } label: {
-                    CalculatorCard(
-                        title: "Dose Titration Plan",
-                        description: "Schedule and track dose increases",
-                        icon: "chart.line.uptrend.xyaxis")
-                }
-                .accessibilityIdentifier("dose-escalation-button")
-
+                MedicationProfileHeader(profile: self.profile)
+                calculatorTools
+                scheduleSection
                 Spacer()
             }
             .padding(.horizontal, 16)
         }
-        .navigationTitle(self.profile.brandName)
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Edit") {
-                    self.showingEditSheet = true
-                }
-                .accessibilityIdentifier("edit-medication-profile")
-            }
-        }
-        .sheet(isPresented: self.$showingEditSheet) {
-            EditMedicationProfileView(profile: self.profile, medicationManager: self.medicationManager)
-        }
-        .reconstitutionCalculatorSheet(
-            isPresented: self.$showingReconstitutionCalculator,
-            vialStrength: self.profile.vialStrength ?? 1.0,
-            targetDose: self.profile.currentDose,
-            waterVolume: self.profile.reconstitutionVolume ?? 1.0,
-            onSave: { vialStrength, targetDose, waterVolume in
-                // Calculate and store concentration and units per dose
-                do {
-                    let result = try ReconstitutionCalculator.calculate(
-                        vialStrength: vialStrength,
-                        targetDose: targetDose,
-                        waterVolume: waterVolume)
+    }
 
-                    // Update the profile with new values
-                    try self.medicationManager.updateProfile(
-                        self.profile,
-                        medication: self.profile.medication,
-                        brandName: self.profile.brandName,
-                        currentDose: targetDose,
-                        isCompounded: self.profile.isCompounded,
-                        vialStrength: vialStrength,
-                        reconstitutionVolume: waterVolume,
-                        concentration: result.concentration,
-                        unitsPerDose: result.unitsPerDose,
-                        notes: self.profile.notes)
-                } catch {
-                    print("Failed to update profile with reconstitution values: \(error)")
+    private var calculatorTools: some View {
+        Group {
+            if self.profile.isCompounded {
+                Button {
+                    self.showingReconstitutionCalculator = true
+                } label: {
+                    CalculatorCard(
+                        title: "Reconstitution Calculator",
+                        description: "Calculate water volume and units per dose",
+                        icon: "drop.fill")
+                }
+                .accessibilityIdentifier("detail-reconstitution-calculator")
+            }
+
+            Button {
+                self.showingDoseTitration = true
+            } label: {
+                CalculatorCard(
+                    title: "Dose Titration Plan",
+                    description: "Schedule and track dose increases",
+                    icon: "chart.line.uptrend.xyaxis")
+            }
+            .accessibilityIdentifier("dose-escalation-button")
+        }
+    }
+
+    private var scheduleSection: some View {
+        Group {
+            if let vm = viewModel {
+                MedicationScheduleSection(viewModel: vm)
+
+                if !vm.scheduleHistory.isEmpty {
+                    ScheduleHistorySection(historyItems: vm.scheduleHistory)
                 }
             }
-        )
-        .sheet(isPresented: self.$showingDoseTitration) {
-            DoseTitrationView(profile: self.profile)
         }
+    }
+}
+
+// MARK: - View Modifiers
+
+private struct ScheduleSheetsPresentationModifier: ViewModifier {
+    let viewModel: MedicationProfileViewModel?
+    let profile: MedicationProfile
+
+    // swiftlint:disable:next function_body_length
+    func body(content: Content) -> some View {
+        content
+            .sheet(
+                isPresented: Binding(
+                    get: { viewModel?.showScheduleEditSheet ?? false },
+                    set: { viewModel?.showScheduleEditSheet = $0 }
+                )
+            ) {
+                if let vm = viewModel {
+                    DoseScheduleEditView(
+                        medicationProfile: profile,
+                        existingSchedule: vm.activeSchedule,
+                        onSave: { config, pattern in
+                            Task {
+                                await vm.updateSchedule(config, pattern: pattern)
+                            }
+                        }
+                    )
+                }
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: { viewModel?.showPauseScheduleSheet ?? false },
+                    set: { viewModel?.showPauseScheduleSheet = $0 }
+                )
+            ) {
+                if let vm = viewModel {
+                    PauseScheduleSheet(
+                        onPause: { pauseUntilDate in
+                            Task {
+                                await vm.pauseSchedule(until: pauseUntilDate)
+                            }
+                        }
+                    )
+                }
+            }
+            .confirmationDialog(
+                "Deactivate Schedule",
+                isPresented: Binding(
+                    get: { viewModel?.showDeactivateConfirmation ?? false },
+                    set: { viewModel?.showDeactivateConfirmation = $0 }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Deactivate Schedule", role: .destructive) {
+                    Task {
+                        await viewModel?.deactivateSchedule()
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will stop all scheduled doses and reminders. You can create a new schedule later.")
+            }
+    }
+}
+
+private struct ReconstitutionSheetPresentationModifier: ViewModifier {
+    @Binding var isPresented: Bool
+    let profile: MedicationProfile
+    let medicationManager: MedicationManager
+
+    func body(content: Content) -> some View {
+        content
+            .reconstitutionCalculatorSheet(
+                isPresented: $isPresented,
+                vialStrength: profile.vialStrength ?? 1.0,
+                targetDose: profile.currentDose,
+                waterVolume: profile.reconstitutionVolume ?? 1.0,
+                onSave: { vialStrength, targetDose, waterVolume in
+                    do {
+                        let result = try ReconstitutionCalculator.calculate(
+                            vialStrength: vialStrength,
+                            targetDose: targetDose,
+                            waterVolume: waterVolume)
+
+                        try medicationManager.updateProfile(
+                            profile,
+                            medication: profile.medication,
+                            brandName: profile.brandName,
+                            currentDose: targetDose,
+                            isCompounded: profile.isCompounded,
+                            vialStrength: vialStrength,
+                            reconstitutionVolume: waterVolume,
+                            concentration: result.concentration,
+                            unitsPerDose: result.unitsPerDose,
+                            notes: profile.notes)
+                    } catch {
+                        print("Failed to update profile with reconstitution values: \(error)")
+                    }
+                }
+            )
     }
 }
 
