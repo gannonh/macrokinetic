@@ -59,6 +59,9 @@ enum PauseDuration: String, CaseIterable, Identifiable {
 struct PauseScheduleSheet: View {
     // MARK: - Properties
 
+    /// Explanation text shown to user about pause behavior
+    static let explanationText = "Scheduled doses and reminders will be paused. You can still log doses manually."
+
     /// Currently selected pause duration
     @State private var selectedDuration: PauseDuration = .oneWeek
 
@@ -107,7 +110,7 @@ struct PauseScheduleSheet: View {
                 }
 
                 Section {
-                    Text("Scheduled doses and reminders will be paused. You can still log doses manually.")
+                    Text(PauseScheduleSheet.explanationText)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
