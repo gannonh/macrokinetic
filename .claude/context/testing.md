@@ -2,7 +2,7 @@
 framework: xcodebuild_swift_testing
 test_command: ./scripts/test.sh
 created: 2025-01-22T04:47:23Z
-last_updated: 2025-10-02T17:09:51Z
+last_updated: 2025-10-19T17:46:21Z
 ---
 
 # Test Driven Development
@@ -670,6 +670,75 @@ cat logs/latest/raw_output.txt | grep "DEBUG"
 3. Update test selector → Use correct element type (collectionViews/tables/buttons)
 4. Remove debug code → Clean up after fixing selector
 5. Document learning → Update style guide for future reference
+
+## E2E Test Timing Patterns (Issue #179)
+
+### The Sleep() Anti-Pattern - NEVER USE
+
+**❌ WRONG - Never use sleep() in E2E tests:**
+```swift
+// ❌ ANTI-PATTERN: Arbitrary delays are unreliable and slow
+saveButton.tap()
+sleep(2)  // BAD: Waiting arbitrary time
+let editScheduleButton = app.buttons["edit-schedule-button"]
+```
+
+**✅ CORRECT - Always use proper wait conditions:**
+```swift
+// ✅ CORRECT: Wait for specific element state
+saveButton.tap()
+let editScheduleButton = app.buttons["edit-schedule-button"]
+XCTAssertTrue(
+    editScheduleButton.waitForExistence(timeout: 5),
+    "Edit schedule button should appear after creating schedule")
+```
+
+### Wait Pattern Best Practices
+
+**Positive Assertions** (element should appear):
+```swift
+XCTAssertTrue(
+    element.waitForExistence(timeout: 5),
+    "Element should exist after action")
+```
+
+**Negative Assertions** (sheet dismissal verification):
+```swift
+// Verify sheet dismissed by checking save button no longer exists
+XCTAssertFalse(
+    saveButton.waitForExistence(timeout: 3),
+    "Sheet should dismiss after save")
+```
+
+### TestDataSeeding Performance Impact
+
+**Performance Improvement from Issue #179:**
+- **Before**: Manual medication profile creation + 18 sleep() calls = 228 seconds for 8 tests
+- **After**: TestDataSeeding via launch arguments + proper wait conditions = 80-120 seconds (2-3x faster)
+
+**Key Techniques:**
+1. **Pre-seed data in setUp()** - Eliminate navigation overhead
+2. **Use launch environment variables** - `TEST_DATA_SEED`, `TEST_DATA_MEDICATION`, etc.
+3. **Replace all sleep() with waitForExistence()** - Reliable, fast element validation
+4. **Negative assertions for dismissal** - `XCTAssertFalse(element.waitForExistence(timeout:))`
+
+### SwiftUI Element Interaction Patterns
+
+**Two-Step Picker Interaction:**
+```swift
+// Medication picker requires two taps (discovered in Issue #179)
+let medicationPicker = app.buttons["medication-picker"]
+medicationPicker.tap()  // Step 1: Open picker
+let semaglutideOption = app.buttons["medication-semaglutide"]
+semaglutideOption.tap()  // Step 2: Select option
+```
+
+**StaticText vs Button:**
+```swift
+// Injection site selections render as StaticText, not Button
+let injectionSite = app.staticTexts["add-injection-site-abdomen"]
+injectionSite.tap()
+```
 
 ## Test Execution Notes
 - All test runs automatically log to `./logs/{test_type}_YYYY-MM-DD_HH-MM-SS/`
