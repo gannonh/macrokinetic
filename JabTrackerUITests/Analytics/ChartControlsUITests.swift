@@ -200,21 +200,21 @@ final class ChartControlsUITests: XCTestCase {
 
         // Test actual button interactions
         lastWeekButton.tap()
-        // sleep(1)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Week selection")
 
         lastMonthButton.tap()
-        // sleep(1)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Month selection")
 
         lastQuarterButton.tap()
-        // sleep(1)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Quarter selection")
 
         // Measure interaction performance
         let interactionStart = Date()
         lastYearButton.tap()
-        // sleep(1)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Last Year selection")
         let interactionEnd = Date()
         let interactionTime = interactionEnd.timeIntervalSince(interactionStart) * 1000  // ms
@@ -374,25 +374,25 @@ final class ChartControlsUITests: XCTestCase {
 
         // Test sequential time period selection
         lastWeekButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Week selection")
 
         lastMonthButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Month selection")
 
         lastQuarterButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Quarter selection")
 
         lastYearButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain visible after Year selection")
 
         // Test switching back to earlier time periods
         let switchbackStart = Date()
         lastWeekButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should handle switching back to Week view")
         let switchbackEnd = Date()
         let switchbackTime = switchbackEnd.timeIntervalSince(switchbackStart) * 1000  // ms
@@ -476,13 +476,13 @@ final class ChartControlsUITests: XCTestCase {
 
         // Test that a selection change works from the default state
         lastMonthButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain functional after changing from default")
 
         // Switch back to verify default behavior is restorable
         let restoreStart = Date()
         lastWeekButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(
             chartElement.exists, "Chart should handle switching back to Week view from default")
         let restoreEnd = Date()

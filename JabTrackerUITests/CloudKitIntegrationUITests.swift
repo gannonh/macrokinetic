@@ -104,9 +104,6 @@ final class CloudKitIntegrationUITests: XCTestCase {
             // Some implementations might make the entire section tappable for retry
             syncStatusHeader.tap()
 
-            // Give time for retry operation
-            // // sleep(2)
-
             // Status should remain valid after retry
             let hasValidStatus =
                 app.staticTexts["Syncing with iCloud"].exists
@@ -192,9 +189,6 @@ final class CloudKitIntegrationUITests: XCTestCase {
             syncStatusHeader.waitForExistence(timeout: 10),
             "Sync Status section should appear")
 
-        // Wait for CloudKit status to stabilize
-        // sleep(5)
-
         // Capture the displayed status
         let allStatusTexts = app.staticTexts.allElementsBoundByIndex.map(\.label)
         let cloudKitStatusTexts = allStatusTexts.filter { text in
@@ -235,7 +229,6 @@ final class CloudKitIntegrationUITests: XCTestCase {
             for _ in 0..<5 {  // Max 5 steps to avoid infinite loop
                 if continueButton.exists, continueButton.isEnabled {
                     continueButton.tap()
-                    // sleep(1)
                 } else {
                     break
                 }
@@ -292,7 +285,6 @@ extension CloudKitIntegrationUITests {
                 lastStatus = currentStatus
             }
 
-            // sleep(1)
         }
     }
 

@@ -45,7 +45,6 @@ final class ManualAuthenticationUITests: XCTestCase {
         print("   5. Perfect for testing UI flows without Apple ID requirements!")
 
         // Give user a moment to read the instructions
-        // sleep(2)
 
         // Now trigger the Sign in with Apple button tap
         let signInButton = app.buttons["sign-in-with-apple-button"]
@@ -97,7 +96,6 @@ final class ManualAuthenticationUITests: XCTestCase {
 
         // Wait for authentication to complete (2 second delay)
         print("⏳ Authentication completing in ~2 seconds...")
-        // sleep(3)
 
         print("📱 ONBOARDING SHOULD NOW BE STARTING!")
         print("   Please manually go through the onboarding screens")
@@ -130,7 +128,6 @@ final class ManualAuthenticationUITests: XCTestCase {
                 }
             }
 
-            // sleep(1)
             attempts += 1
 
             // Progress feedback every 30 seconds

@@ -109,8 +109,6 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         duplicateButton.tap()
 
         // THEN: New dose is created with same data but current timestamp
-        // Wait a moment for the duplication to complete
-        // sleep(1)
 
         // Verify we're still on the History view
         let historyView = app.collectionViews["dose-history-list"]
@@ -167,7 +165,6 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
         // THEN: Dose row shows skipped styling/indicator
         // Wait a moment for the skip status to update
-        // sleep(1)
 
         // Verify we're still on the History view
         let historyView = app.collectionViews["dose-history-list"]

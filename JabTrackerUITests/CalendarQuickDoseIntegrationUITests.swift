@@ -42,8 +42,6 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for QuickDoseSheet pre-population testing
         // Note: QuickDoseSheet pre-population requires implemented action sheet
         print("✅ Calendar loaded - QuickDoseSheet pre-population structure test")
@@ -66,8 +64,6 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for indicator update testing
         // Note: Indicator updates require implemented dose logging from calendar
         print("✅ Calendar loaded - indicator update structure test")
@@ -89,8 +85,6 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
-
-        sleep(2)
 
         // THEN: Verify calendar is ready for modified dose logging testing
         // Note: Dose modifications require implemented QuickDoseSheet integration
@@ -115,8 +109,6 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
-
-        sleep(2)
 
         // THEN: Verify calendar is ready for multi-medication testing
         // Note: Multiple medication profiles require implemented action sheet

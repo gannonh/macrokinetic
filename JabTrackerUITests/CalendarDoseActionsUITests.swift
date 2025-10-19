@@ -43,7 +43,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)  // Wait for calendar to render
+        // Wait for calendar to render
 
         // WHEN: User long-presses on day with scheduled dose
         // Find a calendar day with a scheduled dose indicator
@@ -62,7 +62,7 @@ final class CalendarDoseActionsUITests: XCTestCase {
                 // THEN: DoseActionSheet should appear
                 // Note: This test validates UI structure - actual action sheet may not appear
                 // if there are no scheduled doses for the selected day
-                sleep(1)  // Wait for potential action sheet
+                // Wait for potential action sheet
 
                 print("✅ Long-press gesture completed on calendar day")
                 print("ℹ️  Action sheet appearance depends on scheduled dose presence")
@@ -95,8 +95,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for action sheet interactions
         // Note: Action sheet functionality depends on implementation
         print("✅ Calendar loaded - action sheet structure test")
@@ -120,8 +118,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
-
-        sleep(2)
 
         // THEN: Verify calendar is ready for dose logging interactions
         // Note: Action sheet "Log Dose Now" functionality depends on implementation
@@ -147,8 +143,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for reschedule interactions
         // Note: Action sheet "Reschedule" functionality depends on implementation
         print("✅ Calendar loaded - reschedule structure test")
@@ -171,8 +165,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for date validation testing
         // Note: DatePicker past date prevention requires implemented RescheduleDoseSheet
         print("✅ Calendar loaded - date validation structure test")
@@ -194,8 +186,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
-
-        sleep(2)
 
         // THEN: Verify calendar is ready for smart suggestion testing
         // Note: Smart suggestions require implemented RescheduleDoseSheet
@@ -221,8 +211,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for skip dose testing
         // Note: Skip dose functionality requires implemented action sheet
         print("✅ Calendar loaded - skip dose structure test")
@@ -247,8 +235,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for gesture performance testing
         // Note: Response time measurement requires implemented action sheet
         print("✅ Calendar loaded - gesture performance structure test")
@@ -272,8 +258,6 @@ final class CalendarDoseActionsUITests: XCTestCase {
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
-
-        sleep(2)
 
         // THEN: Verify calendar is ready for VoiceOver testing
         // Note: Accessibility labels require implemented action sheet
