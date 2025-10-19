@@ -190,7 +190,20 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             "Pause schedule button should exist with active schedule")
         pauseScheduleButton.tap()
 
-        // THEN: Schedule shows paused state and resume button appears
+        // THEN: Pause schedule sheet appears
+        let pauseConfirmButton = app.buttons["pause-confirm-button"]
+        XCTAssertTrue(
+            pauseConfirmButton.waitForExistence(timeout: 3),
+            "Pause confirmation button should appear in sheet")
+
+        // WHEN: User taps "Pause" to confirm
+        pauseConfirmButton.tap()
+
+        // THEN: Sheet dismisses and schedule shows paused state with resume button
+        XCTAssertFalse(
+            pauseConfirmButton.waitForExistence(timeout: 3),
+            "Pause sheet should dismiss after confirmation")
+
         let resumeScheduleButton = app.buttons["resume-schedule-button"]
         XCTAssertTrue(
             resumeScheduleButton.waitForExistence(timeout: 5),
@@ -228,6 +241,18 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             pauseScheduleButton.waitForExistence(timeout: 5),
             "Pause schedule button should exist")
         pauseScheduleButton.tap()
+
+        // Confirm pause in sheet
+        let pauseConfirmButton = app.buttons["pause-confirm-button"]
+        XCTAssertTrue(
+            pauseConfirmButton.waitForExistence(timeout: 3),
+            "Pause confirmation button should appear in sheet")
+        pauseConfirmButton.tap()
+
+        // Wait for sheet to dismiss
+        XCTAssertFalse(
+            pauseConfirmButton.waitForExistence(timeout: 3),
+            "Pause sheet should dismiss after confirmation")
 
         // WHEN: User taps "Resume Schedule" button
         let resumeScheduleButton = app.buttons["resume-schedule-button"]
@@ -277,17 +302,25 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         deactivateScheduleButton.tap()
 
         // THEN: Confirmation dialog appears
-        let alert = app.alerts.firstMatch
-        XCTAssertTrue(
-            alert.waitForExistence(timeout: 3),
-            "Confirmation alert should appear when deactivating schedule")
+        // Wait for dialog to present
+        usleep(500_000)  // 0.5 seconds
 
-        // WHEN: User taps "Deactivate Schedule" (destructive action)
-        let confirmButton = alert.buttons.matching(NSPredicate(format: "label CONTAINS 'Deactivate'")).firstMatch
-        XCTAssertTrue(
-            confirmButton.waitForExistence(timeout: 3),
-            "Deactivate confirmation button should exist in alert")
-        confirmButton.tap()
+        // WHEN: User taps "Deactivate Schedule" in confirmation dialog
+        // Confirmation dialog buttons don't have identifiers, find by label
+        let allButtons = app.buttons
+        var confirmButton: XCUIElement?
+
+        // Find button with "Deactivate Schedule" label that's NOT the original button
+        for index in 0..<allButtons.count {
+            let button = allButtons.element(boundBy: index)
+            if button.label == "Deactivate Schedule" && button.identifier == "" {
+                confirmButton = button
+                break
+            }
+        }
+
+        XCTAssertNotNil(confirmButton, "Deactivate confirmation button should exist in dialog")
+        confirmButton?.tap()
 
         // THEN: "Create Dose Schedule" button appears
         let createButton = app.buttons["create-schedule-button"]
@@ -329,17 +362,26 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             "Deactivate schedule button should exist")
         deactivateScheduleButton.tap()
 
-        // WHEN: User taps "Cancel"
-        let alert = app.alerts.firstMatch
-        XCTAssertTrue(
-            alert.waitForExistence(timeout: 3),
-            "Confirmation alert should appear when deactivating schedule")
+        // THEN: Confirmation dialog appears
+        // Wait for dialog to present
+        usleep(500_000)  // 0.5 seconds
 
-        let cancelButton = alert.buttons["Cancel"]
-        XCTAssertTrue(
-            cancelButton.waitForExistence(timeout: 3),
-            "Cancel button should exist in confirmation alert")
-        cancelButton.tap()
+        // WHEN: User taps "Cancel"
+        // Confirmation dialog buttons don't have identifiers, find by label
+        let allButtons = app.buttons
+        var cancelButton: XCUIElement?
+
+        // Find button with "Cancel" label that has no identifier (dialog button)
+        for index in 0..<allButtons.count {
+            let button = allButtons.element(boundBy: index)
+            if button.label == "Cancel" && button.identifier == "" {
+                cancelButton = button
+                break
+            }
+        }
+
+        XCTAssertNotNil(cancelButton, "Cancel button should exist in confirmation dialog")
+        cancelButton?.tap()
 
         // THEN: Dialog dismisses, schedule remains active
         let editScheduleButton = app.buttons["edit-schedule-button"]

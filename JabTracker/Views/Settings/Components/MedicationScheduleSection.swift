@@ -17,7 +17,7 @@ struct MedicationScheduleSection: View {
                         frequency: schedule.patternType == .weekly ? "Once weekly" : "Custom",
                         nextDose: schedule.nextScheduledDose,
                         reminderMinutes: 30,  // TODO: Add to model
-                        isPaused: !schedule.isActive,
+                        isPaused: schedule.pausedAt != nil,
                         titrationWarning: nil,  // TODO: Integrate with titration service
                         onTitrationWarningTap: nil
                     )
@@ -34,7 +34,7 @@ struct MedicationScheduleSection: View {
                         }
                         .accessibilityIdentifier("edit-schedule-button")
 
-                        if schedule.isActive {
+                        if schedule.pausedAt == nil {
                             Button {
                                 viewModel.showPauseScheduleSheet = true
                             } label: {
