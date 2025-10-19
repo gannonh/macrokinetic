@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-17T19:12:25Z
-version: 4.5
+last_updated: 2025-10-19T17:46:21Z
+version: 4.6
 author: Claude Code PM System
 ---
 
@@ -331,7 +331,25 @@ author: Claude Code PM System
 - **Production Code Quality Standards**: Placeholder methods with random/hardcoded data must never reach production - use TODO comments or feature flags instead
 - **User Trust Impact**: Random adherence data showing "declining trend" and "5 missed Sunday doses" with perfect adherence undermines app credibility and confuses users
 
+## Lessons Learned (Recent - Issue #179 Session 2025-10-19)
+
+### E2E Test Quality and Performance
+- **Sleep() Anti-Pattern Elimination**: Never use `sleep()` in E2E tests - always use `waitForExistence(timeout:)` with proper element validation for reliable, fast tests
+- **TestDataSeeding Performance Impact**: Pre-seeding test data via launch environment variables eliminates navigation overhead and achieves 2-3x performance improvement (228s → 80-120s for 8 tests)
+- **Refactoring After Completion**: Addressing technical debt (18 sleep() calls) immediately after feature completion improves long-term maintainability and test suite performance
+
+### Iterative E2E Development Success
+- **Individual Test Execution**: Running tests individually first (Tests 1-8) before full suite run validates proper test isolation and catches issues early
+- **Debug-First Approach Value**: Using `TestUtilities.debugElements()` for initial tests establishes correct element targeting patterns for subsequent tests
+- **Test Code Quality Matters**: Reducing test code from 493 to 437 lines (11%) through refactoring improves maintainability without sacrificing coverage
+
+### Negative Assertion Patterns
+- **Sheet Dismissal Verification**: Use `XCTAssertFalse(element.waitForExistence(timeout:))` to verify modal sheet dismissal - element should NOT exist after timeout
+- **Proper Wait Conditions**: Replace arbitrary delays with element-specific wait conditions tied to actual UI state changes
+- **SwiftUI Element Discovery**: Two-step picker interactions and StaticText vs Button differences require debug-first approach to discover
+
 ## Update History
+- 2025-10-19T17:46:21Z: Added Lessons Learned from Issue #179 Session (Oct 19) - E2E test quality and performance (sleep() anti-pattern elimination, TestDataSeeding performance impact), iterative E2E development success, and negative assertion patterns
 - 2025-10-17T19:12:25Z: Updated current state to reflect Issue #178 E2E testing completion - all 27 E2E tests passing across 4 test suites, all acceptance criteria and NFRs validated
 - 2025-10-15T18:06:05Z: Added Lessons Learned from Issue #178 Session (Oct 14-15) - smoke testing value, iterative bug fixing approach, and placeholder code cleanup process from calendar integration bug fixes
 - 2025-10-13T17:02:22Z: Issue #177 CLOSED AND MERGED - PR #227 merged to main, epic progress updated to 40%, added completed feature entry
