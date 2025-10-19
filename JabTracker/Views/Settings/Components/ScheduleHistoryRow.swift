@@ -16,8 +16,8 @@ struct ScheduleHistoryRow: View {
 
     // MARK: - Private Properties
 
-    /// Date formatter for displaying timestamp
-    private let dateFormatter: DateFormatter = {
+    /// Date formatter for displaying timestamp (static to avoid recreation)
+    private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
@@ -50,12 +50,12 @@ struct ScheduleHistoryRow: View {
             Spacer()
 
             // Timestamp
-            Text(dateFormatter.string(from: item.timestamp))
+            Text(Self.dateFormatter.string(from: item.timestamp))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 8)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
     }
 
@@ -63,7 +63,7 @@ struct ScheduleHistoryRow: View {
 
     /// Combined accessibility label for VoiceOver
     private var accessibilityText: String {
-        let formattedDate = dateFormatter.string(from: item.timestamp)
+        let formattedDate = Self.dateFormatter.string(from: item.timestamp)
         return "\(item.changeType.displayName): \(item.description), \(formattedDate)"
     }
 }
