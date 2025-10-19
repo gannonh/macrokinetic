@@ -114,8 +114,10 @@ struct PauseScheduleSheetTests {
 
     @Test("Pause explanation text is informative")
     func testPauseExplanationText() {
-        let explanationText = "Scheduled doses and reminders will be paused. You can still log doses manually."
+        // Retrieve the actual explanation text from the component
+        let explanationText = PauseScheduleSheet.explanationText
 
+        // Verify the text contains key information about pause behavior
         #expect(explanationText.contains("paused"), "Should mention pausing")
         #expect(explanationText.contains("manually"), "Should mention manual logging option")
         #expect(explanationText.contains("Scheduled doses"), "Should mention scheduled doses")
