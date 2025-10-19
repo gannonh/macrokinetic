@@ -170,8 +170,8 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             cancelButton.waitForExistence(timeout: 3),
             "Schedule edit sheet should appear")
 
-        // Verify pattern picker exists and has current value
-        let patternPicker = app.pickers["pattern-picker"]
+        // Verify pattern picker exists and has current value (it's a Button in SwiftUI)
+        let patternPicker = app.buttons.matching(identifier: "pattern-picker").firstMatch
         XCTAssertTrue(patternPicker.exists, "Pattern picker should exist")
 
         // WHEN: User changes pattern from weekly to split-dose
