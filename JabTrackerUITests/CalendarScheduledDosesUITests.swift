@@ -46,7 +46,6 @@ final class CalendarScheduledDosesUITests: XCTestCase {
 
         // THEN: Scheduled dose indicators appear on appropriate calendar days
         // Wait for calendar to load dose indicators
-        sleep(2)
 
         // Look for dose indicators on calendar days (rendered as StaticText elements)
         let calendarDays = app.staticTexts.matching(
@@ -84,7 +83,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)  // Wait for calendar to fully render dose indicators
+        // Wait for calendar to fully render dose indicators
 
         // THEN: Indicators with accessibility labels exist for different dose types
         // Note: XCUITest cannot verify visual properties (colors, fill states) directly
@@ -122,7 +121,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)  // Wait for calendar to fully render
+        // Wait for calendar to fully render
 
         // THEN: Logged dose indicators are accessible with correct labels
         let loggedIndicators = app.otherElements.matching(NSPredicate(format: "label == 'Logged dose'"))
@@ -153,7 +152,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)  // Wait for calendar to fully render
+        // Wait for calendar to fully render
 
         // THEN: Missed dose indicators (if any) have correct accessibility labels
         let missedIndicators = app.otherElements.matching(NSPredicate(format: "label == 'Missed dose'"))
@@ -185,7 +184,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)  // Wait for calendar to fully render
+        // Wait for calendar to fully render
 
         // THEN: Skipped dose indicators (if any) have correct accessibility labels
         let skippedIndicators = app.otherElements.matching(NSPredicate(format: "label == 'Skipped dose'"))
@@ -220,7 +219,6 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to render and load scheduled doses
-        sleep(2)
 
         // THEN: Calendar display updates to show scheduled doses automatically
         // Scheduled dose indicators should appear without requiring manual refresh
@@ -269,7 +267,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render with dose indicators
-        sleep(2)
+
         let renderTime = Date().timeIntervalSince(startTime) * 1000  // Convert to ms
 
         // THEN: Calendar renders within acceptable time
@@ -313,7 +311,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)  // Wait for calendar to fully render current month
+        // Wait for calendar to fully render current month
         let renderTime = Date().timeIntervalSince(startTime) * 1000  // Convert to ms
 
         print("⏱️  Initial calendar rendering: \(String(format: "%.1f", renderTime))ms")

@@ -89,7 +89,6 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for chart to load
-        // sleep(3)
 
         let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
         XCTAssertTrue(
@@ -111,7 +110,6 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         XCTAssertTrue(
             timePeriodButton.exists, "Time period controls should remain functional after interactions")
         timePeriodButton.tap()
-        // sleep(1)
 
         // Chart should still be responsive after interactive features
         XCTAssertTrue(chartElement.exists, "Chart should remain responsive after all interactions")
@@ -132,7 +130,6 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for chart to load
-        // sleep(3)
 
         let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
         XCTAssertTrue(
@@ -152,25 +149,25 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
         // Test sequential time period selection
         lastWeekButton.tap()
-        // sleep(2)
+
         // THEN: Chart displays correct time range data
         XCTAssertTrue(chartElement.exists, "Chart should display data for Last Week time period")
 
         lastMonthButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should display data for Last Month time period")
 
         lastQuarterButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should display data for Last Quarter time period")
 
         lastYearButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should display data for Last Year time period")
 
         // Verify chart maintains responsiveness across all time period selections
         lastWeekButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(
             chartElement.exists, "Chart should maintain responsiveness across time period changes")
 
@@ -189,7 +186,6 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for chart to load
-        // sleep(3)
 
         // WHEN: User navigates chart with VoiceOver enabled
         let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
@@ -228,7 +224,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
         // Test VoiceOver interaction with time period selection
         lastWeekButton.tap()
-        // sleep(1)
+
         XCTAssertTrue(chartElement.exists, "Chart should remain accessible after time period change")
 
         print("✅ Chart accessibility features work correctly - full VoiceOver support verified")
@@ -269,12 +265,12 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
             lastMonthButton.waitForExistence(timeout: 3), "Time period buttons should be available")
 
         lastMonthButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should handle time period changes with large dataset")
 
         let lastYearButton = app.buttons["1y-button"].firstMatch
         lastYearButton.tap()
-        // sleep(2)
+
         XCTAssertTrue(chartElement.exists, "Chart should handle year view with large dataset")
 
         let performanceTime = Date().timeIntervalSince(performanceStartTime)
@@ -286,7 +282,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         // Test chart controls responsiveness
         let resetButton = app.buttons["reset-chart-button"].firstMatch
         resetButton.tap()
-        // sleep(1)
+
         XCTAssertTrue(chartElement.exists, "Chart reset should work smoothly with large dataset")
 
         print(

@@ -40,8 +40,6 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
         // Note: Full VoiceOver validation requires accessibility label verification
         print("✅ Calendar loaded - VoiceOver scheduled doses structure test")
@@ -63,8 +61,6 @@ final class CalendarAccessibilityUITests: XCTestCase {
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
-
-        sleep(2)
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
         // Note: Full VoiceOver validation requires accessibility label verification
@@ -88,8 +84,6 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
         // Note: Full VoiceOver validation requires accessibility label verification
         print("✅ Calendar loaded - VoiceOver mixed doses structure test")
@@ -112,8 +106,6 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
-        sleep(2)
-
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
         // Note: Full VoiceOver validation requires accessibility label verification
         print("✅ Calendar loaded - VoiceOver missed dose structure test")
@@ -135,8 +127,6 @@ final class CalendarAccessibilityUITests: XCTestCase {
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
-
-        sleep(2)
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
         // Note: Full VoiceOver validation requires accessibility label verification
