@@ -29,3 +29,8 @@ ccpm/
 logs/
 
 .claude/commands/prompt.md
+
+# Backup files
+*.bak
+*.bak[0-9]
+*_Patch.txt

@@ -65,13 +65,25 @@ struct DoseScheduleEditView: View {
 
         // Initialize from existing or defaults
         _selectedPattern = State(initialValue: existingSchedule?.patternType ?? .weekly)
-        _dayOfWeek = State(initialValue: 1)  // Default: Monday
-        _timeOfDay = State(initialValue: TimeComponents(hour: 8, minute: 0))  // Default: 8 AM
-        _interval = State(initialValue: 7)  // Default: weekly
-        _windowMinutesBefore = State(initialValue: 120)  // Default: 2 hours
-        _windowMinutesAfter = State(initialValue: 120)  // Default: 2 hours
-
-        // TODO: Parse existing schedule baseSchedule Data to populate fields if editing
+        
+        // Parse existing schedule baseSchedule configuration if editing
+        if let schedule = existingSchedule,
+           let data = schedule.baseSchedule,
+           let config = try? JSONDecoder().decode(ScheduleConfiguration.self, from: data) {
+            // Populate fields from existing configuration
+            _dayOfWeek = State(initialValue: config.dayOfWeek ?? 1)
+            _timeOfDay = State(initialValue: config.timeOfDay)
+            _interval = State(initialValue: config.interval)
+            _windowMinutesBefore = State(initialValue: config.windowMinutesBefore)
+            _windowMinutesAfter = State(initialValue: config.windowMinutesAfter)
+        } else {
+            // Use defaults for new schedule
+            _dayOfWeek = State(initialValue: 1)  // Default: Monday
+            _timeOfDay = State(initialValue: TimeComponents(hour: 8, minute: 0))  // Default: 8 AM
+            _interval = State(initialValue: 7)  // Default: weekly
+            _windowMinutesBefore = State(initialValue: 120)  // Default: 2 hours
+            _windowMinutesAfter = State(initialValue: 120)  // Default: 2 hours
+        }
     }
 
     // MARK: - Body

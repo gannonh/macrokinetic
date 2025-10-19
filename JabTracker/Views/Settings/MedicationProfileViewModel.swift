@@ -192,15 +192,8 @@ final class MedicationProfileViewModel {
         logger.debug("Pausing schedule: \(schedule.id)")
 
         do {
-            if let until = date {
-                try scheduleService.pauseSchedule(schedule, until: until)
-            } else {
-                // Indefinite pause - set pausedAt but leave pausedUntil nil
-                schedule.pausedAt = Date()
-                schedule.pausedUntil = nil
-                schedule.updatedAt = Date()
-                try context.save()
-            }
+            // Always use scheduleService for pausing (supports nil for indefinite pause)
+            try scheduleService.pauseSchedule(schedule, until: date)
 
             // Reload schedule and history
             await loadActiveSchedule()
