@@ -251,23 +251,25 @@ final class ScheduleService {
     }
 
     /**
-     * Pauses a dose schedule until a specified date.
+     * Pauses a dose schedule until a specified date or indefinitely.
      *
      * - Parameters:
      *   - schedule: Schedule to pause
-     *   - until: Date when schedule should resume (must be in future)
+     *   - until: Date when schedule should resume (nil for indefinite pause)
      *
-     * - Throws: ScheduleServiceError.pauseUntilInPast if date is not in future
+     * - Throws: ScheduleServiceError.pauseUntilInPast if date is provided but not in future
      */
-    func pauseSchedule(_ schedule: DoseSchedule, until: Date) throws {
-        // Validate pause until date is in future
-        guard until > Date() else {
-            throw ScheduleServiceError.pauseUntilInPast
+    func pauseSchedule(_ schedule: DoseSchedule, until: Date? = nil) throws {
+        // If date provided, validate it's in the future
+        if let until = until {
+            guard until > Date() else {
+                throw ScheduleServiceError.pauseUntilInPast
+            }
         }
 
         // Set pause fields
         schedule.pausedAt = Date()
-        schedule.pausedUntil = until
+        schedule.pausedUntil = until  // nil for indefinite pause
         schedule.updatedAt = Date()
 
         // Save changes
