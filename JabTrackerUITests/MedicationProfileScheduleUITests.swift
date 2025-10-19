@@ -52,12 +52,17 @@ final class MedicationProfileScheduleUITests: XCTestCase {
                 addProfileButton.tap()
 
                 // Fill in medication profile form
-                let medicationPicker = app.buttons["medication-semaglutide"]
+                let medicationPicker = app.buttons["medication-picker"]
                 XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3), "Medication picker should exist")
                 medicationPicker.tap()
 
-                // Select injection site
-                let injectionSite = app.buttons["add-injection-site-abdomen"]
+                // Select semaglutide from the menu
+                let semaglutideOption = app.buttons["medication-semaglutide"]
+                XCTAssertTrue(semaglutideOption.waitForExistence(timeout: 3), "Semaglutide option should exist")
+                semaglutideOption.tap()
+
+                // Select injection site (it's a StaticText, not a Button)
+                let injectionSite = app.staticTexts["add-injection-site-abdomen"]
                 XCTAssertTrue(injectionSite.waitForExistence(timeout: 2), "Injection site should exist")
                 injectionSite.tap()
 
@@ -66,8 +71,13 @@ final class MedicationProfileScheduleUITests: XCTestCase {
                 XCTAssertTrue(saveButton.waitForExistence(timeout: 2), "Save button should exist")
                 saveButton.tap()
 
-                // Wait for profile to be created and detail view to appear
+                // Wait for profile to be created and list to appear, then tap on it
                 sleep(1)
+                let createdProfile = app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
+                XCTAssertTrue(
+                    createdProfile.waitForExistence(timeout: 3),
+                    "Created medication profile should appear in list")
+                createdProfile.tap()
             } else {
                 // Profile already exists, tap on first profile in list
                 let firstProfile = app.collectionViews.cells.firstMatch
@@ -84,8 +94,8 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         // GIVEN: User on medication profile settings with no active schedule
         try navigateToMedicationProfileSettings()
 
-        // Debug elements to understand the UI structure
-        TestUtilities.debugElements(in: app, containing: "schedule")
+        // Wait for view to fully load
+        sleep(1)
 
         // Look for create schedule button
         let createScheduleButton = app.buttons["create-schedule-button"]
@@ -103,8 +113,8 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             "Schedule edit sheet should appear")
 
         // WHEN: User selects weekly pattern (should be default), sets day/time
-        // Weekly pattern should be selected by default
-        let patternPicker = app.pickers["pattern-picker"]
+        // Pattern picker is actually rendered as a button in SwiftUI
+        let patternPicker = app.buttons.matching(identifier: "pattern-picker").firstMatch
         XCTAssertTrue(patternPicker.exists, "Pattern picker should exist")
 
         // Tap Save button
