@@ -65,11 +65,11 @@ struct DoseScheduleEditView: View {
 
         // Initialize from existing or defaults
         _selectedPattern = State(initialValue: existingSchedule?.patternType ?? .weekly)
-        
+
         // Parse existing schedule baseSchedule configuration if editing
         if let schedule = existingSchedule,
-           let data = schedule.baseSchedule,
-           let config = try? JSONDecoder().decode(ScheduleConfiguration.self, from: data) {
+            let config = try? JSONDecoder().decode(ScheduleConfiguration.self, from: schedule.baseSchedule)
+        {
             // Populate fields from existing configuration
             _dayOfWeek = State(initialValue: config.dayOfWeek ?? 1)
             _timeOfDay = State(initialValue: config.timeOfDay)
