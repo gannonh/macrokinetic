@@ -100,7 +100,12 @@ struct DoseScheduleEditViewTests {
 
         // Verify pattern is initialized from existing schedule
         #expect(view.selectedPattern == .weekly)
-        // Note: Other fields use defaults currently (TODO: parse baseSchedule)
+
+        // Verify save callback hasn't been triggered during initialization
+        #expect(saveCalled == false)
+
+        // Note: Other fields use defaults currently (TODO: parse baseSchedule into other view fields
+        // such as selectedDays, selectedTime, doseAmount, etc.)
     }
 
     @Test("Initialization without schedule uses default values")
@@ -121,7 +126,12 @@ struct DoseScheduleEditViewTests {
 
         // Verify default values are used
         #expect(view.selectedPattern == .weekly)
-        // Default values initialized in view
+
+        // Verify save callback hasn't been triggered during initialization
+        #expect(saveCalled == false)
+
+        // Note: Other default view state properties (selectedDays, selectedTime, doseAmount,
+        // occurrence values, etc.) are @State properties not accessible in unit tests
     }
 
     @Test("Medication info displays correctly")
@@ -144,13 +154,16 @@ struct DoseScheduleEditViewTests {
         #expect(view.medicationProfile.currentDose == 0.25)
     }
 
-    @Test("Pattern selection updates correctly")
+    @Test("Pattern initializes with default weekly value")
     @MainActor
-    func testPatternSelection() throws {
-        let container = try createTestContainer()
-        let context = container.mainContext
-
-        let profile = createTestProfile(context: context)
+    func testPatternInitializesWithDefault() throws {
+        // Create minimal test profile for view initialization
+        let profile = MedicationProfile(
+            brandName: "Ozempic",
+            currentDose: 0.25,
+            startDate: Date(),
+            medicationType: "semaglutide"
+        )
 
         let view = DoseScheduleEditView(
             medicationProfile: profile,
@@ -158,7 +171,10 @@ struct DoseScheduleEditViewTests {
             onSave: { _, _ in }
         )
 
-        // Test pattern selection
+        // Verify default pattern is weekly
         #expect(view.selectedPattern == .weekly)
+
+        // Note: Actual pattern selection updates would require SwiftUI interaction testing (E2E tests)
+        // since @State properties cannot be directly modified in unit tests
     }
 }

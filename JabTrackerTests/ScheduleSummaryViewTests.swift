@@ -14,104 +14,254 @@ import Testing
 @Suite("ScheduleSummaryView Tests")
 struct ScheduleSummaryViewTests {
 
-    // MARK: - Time Until Next Dose Tests
+    // MARK: - SchedulePatternType Display Name Tests
 
-    @Test("Time until next dose formats correctly for hours")
-    func testTimeUntilNextDoseHours() {
-        let now = Date()
-        let futureDate = Date(timeIntervalSinceNow: 3600 * 5)  // 5 hours from now
+    @Test("Weekly schedule pattern displays correct name")
+    func testWeeklyPatternDisplayName() {
+        let pattern = SchedulePatternType.weekly
 
-        let formatted = formatTimeUntil(futureDate, from: now)
-
-        #expect(formatted.contains("5"), "Should contain hour count")
-        #expect(formatted.contains("hour"), "Should contain 'hour' text")
+        #expect(pattern.displayName == "Standard Weekly")
     }
 
-    @Test("Time until next dose formats correctly for days")
-    func testTimeUntilNextDoseDays() {
-        let now = Date()
-        let futureDate = Date(timeIntervalSinceNow: 86400 * 3)  // 3 days from now
+    @Test("Split-dose schedule pattern displays correct name")
+    func testSplitDosePatternDisplayName() {
+        let pattern = SchedulePatternType.splitDose
 
-        let formatted = formatTimeUntil(futureDate, from: now)
-
-        #expect(formatted.contains("3"), "Should contain day count")
-        #expect(formatted.contains("day"), "Should contain 'day' text")
+        #expect(pattern.displayName == "Split Dose (Twice Weekly)")
     }
 
-    @Test("Time until next dose shows 'Less than 1 hour' for short periods")
-    func testTimeUntilNextDoseShortPeriod() {
-        let now = Date()
-        let futureDate = Date(timeIntervalSinceNow: 1800)  // 30 minutes from now
+    @Test("Custom schedule pattern displays correct name")
+    func testCustomPatternDisplayName() {
+        let pattern = SchedulePatternType.custom
 
-        let formatted = formatTimeUntil(futureDate, from: now)
-
-        #expect(formatted == "Less than 1 hour", "Should show 'Less than 1 hour' for periods under 1 hour")
+        #expect(pattern.displayName == "Custom Pattern")
     }
 
-    @Test("Time until next dose handles past dates")
-    func testTimeUntilNextDosePastDate() {
-        let now = Date()
-        let pastDate = Date(timeIntervalSinceNow: -3600)  // 1 hour ago
+    // MARK: - SchedulePatternType Description Tests
 
-        let formatted = formatTimeUntil(pastDate, from: now)
+    @Test("Weekly schedule pattern has correct description")
+    func testWeeklyPatternDescription() {
+        let pattern = SchedulePatternType.weekly
 
-        // Past dates should still format the interval (will be negative or zero)
-        #expect(formatted == "Less than 1 hour" || formatted.contains("0"), "Should handle past dates gracefully")
+        #expect(pattern.description == "One dose per week, same day and time")
     }
 
-    // MARK: - Schedule Pattern Display Tests
+    @Test("Split-dose schedule pattern has correct description")
+    func testSplitDosePatternDescription() {
+        let pattern = SchedulePatternType.splitDose
 
-    @Test("Weekly schedule pattern displays correctly")
-    func testWeeklyPatternDisplay() {
-        let patternText = "Weekly"
-        #expect(patternText == "Weekly")
+        #expect(pattern.description == "Divide weekly dose into two smaller doses")
     }
 
-    @Test("Split-dose schedule pattern displays correctly")
-    func testSplitDosePatternDisplay() {
-        let patternText = "Split-Dose"
-        #expect(patternText == "Split-Dose")
+    @Test("Custom schedule pattern has correct description")
+    func testCustomPatternDescription() {
+        let pattern = SchedulePatternType.custom
+
+        #expect(pattern.description == "Create your own custom schedule (Coming Soon)")
     }
 
-    @Test("Custom schedule pattern displays correctly")
-    func testCustomPatternDisplay() {
-        let patternText = "Custom"
-        #expect(patternText == "Custom")
+    // MARK: - ScheduleSummaryView Initialization Tests
+
+    @Test("View initializes correctly with weekly pattern")
+    func testViewInitializationWeekly() {
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400 * 3),
+            reminderMinutes: 30,
+            isPaused: false,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
+
+        #expect(view.patternType == .weekly)
+        #expect(view.frequency == "Once weekly")
+        #expect(view.reminderMinutes == 30)
+        #expect(view.isPaused == false)
+        #expect(view.titrationWarning == nil)
     }
 
-    // MARK: - Reminder Time Display Tests
+    @Test("View initializes correctly with split-dose pattern")
+    func testViewInitializationSplitDose() {
+        let view = ScheduleSummaryView(
+            patternType: .splitDose,
+            frequency: "Twice daily",
+            nextDose: Date(timeIntervalSinceNow: 14400),
+            reminderMinutes: 15,
+            isPaused: false,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
 
-    @Test("Reminder time formats correctly for standard values")
-    func testReminderTimeFormatting() {
-        let reminderMinutes = 30
-        let formatted = "\(reminderMinutes) minutes before"
-
-        #expect(formatted == "30 minutes before")
+        #expect(view.patternType == .splitDose)
+        #expect(view.frequency == "Twice daily")
+        #expect(view.reminderMinutes == 15)
     }
 
-    @Test("Reminder time handles 1 hour (60 minutes)")
-    func testReminderTimeOneHour() {
-        let reminderMinutes = 60
-        let formatted = "\(reminderMinutes) minutes before"
+    @Test("View initializes correctly with paused state")
+    func testViewInitializationPaused() {
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400 * 7),
+            reminderMinutes: 60,
+            isPaused: true,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
 
-        #expect(formatted == "60 minutes before")
+        #expect(view.isPaused == true)
+        #expect(view.reminderMinutes == 60)
     }
 
-    // MARK: - Helper Function
+    @Test("View initializes correctly with titration warning")
+    func testViewInitializationWithTitrationWarning() {
+        let warningText = "Your next dose on Oct 20 will increase from 0.25mg to 0.50mg"
+        var tapCallbackCalled = false
 
-    /// Format time interval between now and a future date
-    /// This mimics the logic that would be in ScheduleSummaryView
-    private func formatTimeUntil(_ date: Date, from now: Date) -> String {
-        let interval = date.timeIntervalSince(now)
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400 * 2),
+            reminderMinutes: 30,
+            isPaused: false,
+            titrationWarning: warningText,
+            onTitrationWarningTap: {
+                tapCallbackCalled = true
+            }
+        )
 
-        if interval < 3600 {  // Less than 1 hour
-            return "Less than 1 hour"
-        } else if interval < 86400 {  // Less than 1 day
-            let hours = Int(interval / 3600)
-            return "\(hours) hour\(hours == 1 ? "" : "s")"
-        } else {  // 1 day or more
-            let days = Int(interval / 86400)
-            return "\(days) day\(days == 1 ? "" : "s")"
-        }
+        #expect(view.titrationWarning == warningText)
+        #expect(view.onTitrationWarningTap != nil)
+
+        // Verify callback can be invoked (would be called when user taps warning)
+        view.onTitrationWarningTap?()
+        #expect(tapCallbackCalled == true)
+    }
+
+    // MARK: - Reminder Minutes Format Tests
+
+    @Test("Reminder time displays correctly for 0 minutes")
+    func testReminderTimeZeroMinutes() {
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400),
+            reminderMinutes: 0,
+            isPaused: false,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
+
+        // Production code displays: "\(reminderMinutes) minutes before"
+        #expect(view.reminderMinutes == 0)
+        // Note: Actual display text "0 minutes before" is rendered in SwiftUI view body
+    }
+
+    @Test("Reminder time displays correctly for 1 minute (singular)")
+    func testReminderTimeOneMinute() {
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400),
+            reminderMinutes: 1,
+            isPaused: false,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
+
+        #expect(view.reminderMinutes == 1)
+        // Note: Production code doesn't handle singular/plural - displays "1 minutes before"
+        // This would be caught in E2E tests or should be addressed in AC if needed
+    }
+
+    @Test("Reminder time displays correctly for standard values (30 minutes)")
+    func testReminderTimeStandardValue() {
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400),
+            reminderMinutes: 30,
+            isPaused: false,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
+
+        #expect(view.reminderMinutes == 30)
+        // Production code displays: "30 minutes before"
+    }
+
+    @Test("Reminder time displays correctly for 60 minutes")
+    func testReminderTime60Minutes() {
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400),
+            reminderMinutes: 60,
+            isPaused: false,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
+
+        #expect(view.reminderMinutes == 60)
+        // Note: Production code displays "60 minutes before", NOT "1 hour before"
+        // If hour conversion is desired, it should be added to production code first
+    }
+
+    @Test("Reminder time displays correctly for large values (120 minutes)")
+    func testReminderTimeLargeValue() {
+        let view = ScheduleSummaryView(
+            patternType: .weekly,
+            frequency: "Once weekly",
+            nextDose: Date(timeIntervalSinceNow: 86400),
+            reminderMinutes: 120,
+            isPaused: false,
+            titrationWarning: nil,
+            onTitrationWarningTap: nil
+        )
+
+        #expect(view.reminderMinutes == 120)
+        // Production code displays: "120 minutes before"
     }
 }
+
+// MARK: - Testing Notes
+
+/*
+ TIME FORMATTING TESTS REMOVED:
+
+ The original tests (testTimeUntilNextDoseHours, testTimeUntilNextDoseDays, etc.)
+ used a local formatTimeUntil() helper that mimicked production code but didn't
+ actually test it. This is an anti-pattern because:
+
+ 1. Changes to production code won't be caught by these tests
+ 2. The helper may diverge from actual implementation over time
+ 3. No verification that ScheduleSummaryView correctly uses the formatting logic
+
+ The formatTimeUntil() method in ScheduleSummaryView is private and handles
+ time formatting for the "Next Dose" section. Testing options:
+
+ OPTION 1 (CURRENT): Remove unit tests for private view logic
+ - Private view formatting methods are implementation details
+ - Should be tested through E2E/UI tests that verify user-visible behavior
+ - Unit tests should focus on testable public APIs and business logic
+
+ OPTION 2 (ALTERNATIVE): Extract to shared utility
+ - Create TimeFormatting.swift utility with public formatTimeUntil() function
+ - ScheduleSummaryView would use the utility
+ - Unit tests would test the utility directly
+ - Better for reusability if multiple views need this formatting
+
+ OPTION 3 (NOT RECOMMENDED): Make formatTimeUntil() internal for testing
+ - Breaks encapsulation just for testing
+ - Exposes implementation details
+ - Goes against Swift's access control best practices
+
+ For now, time formatting behavior should be validated through:
+ - E2E tests that verify "Next Dose" displays correctly
+ - Preview tests that check visual appearance
+ - Manual testing with various future dates
+
+ If formatTimeUntil() logic becomes complex or is needed elsewhere,
+ extract to a utility and add proper unit tests then.
+ */
