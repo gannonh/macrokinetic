@@ -28,41 +28,17 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         super.tearDown()
     }
 
-    // MARK: - Helper Methods
+    // MARK: - Test 2: Calendar Shows Twice-Weekly Pattern (NOT 14 doses/week)
 
-    /// Navigate to medication profile settings view (profile already pre-seeded)
-    private func navigateToMedicationProfileSettings() throws {
+    func testCalendarShowsTwiceWeeklyDosePattern() throws {
+        // GIVEN: User on medication profile settings with split-dose schedule
         app.launch()
 
         // Wait for app to load
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
 
-        // Navigate to Settings tab
-        let settingsTab = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(settingsTab.waitForExistence(timeout: 3), "Settings tab should exist")
-        settingsTab.tap()
-
-        // Tap Medication Profiles button
-        let medicationProfilesButton = app.buttons["Medication Profiles"]
-        XCTAssertTrue(
-            medicationProfilesButton.waitForExistence(timeout: 3),
-            "Medication Profiles button should exist in Settings")
-        medicationProfilesButton.tap()
-
-        // Tap on pre-seeded profile
-        let profile = app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
-        XCTAssertTrue(
-            profile.waitForExistence(timeout: 3),
-            "Pre-seeded medication profile should appear in list")
-        profile.tap()
-    }
-
-    // MARK: - Test 2: Calendar Shows Twice-Weekly Pattern (NOT 14 doses/week)
-
-    func testCalendarShowsTwiceWeeklyDosePattern() throws {
-        // GIVEN: User on medication profile settings with split-dose schedule
-        try navigateToMedicationProfileSettings()
+        TestUtilities.navigateToMedicationProfileSettings(app)
         try TestUtilities.createSplitDoseSchedule(app)
 
         // WHEN: User navigates to History tab calendar view (directly via tab bar)
@@ -85,21 +61,22 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         // Wait for scheduled doses to be generated and displayed
         usleep(500_000)  // 0.5 seconds for dose generation
 
-        // THEN: Calendar shows ~2 scheduled doses per 2-week period (NOT 14 doses/week for twice-daily)
-        let scheduledIndicators = app.otherElements.matching(
-            NSPredicate(format: "label == 'Scheduled dose'"))
+        // THEN: Calendar shows scheduled dose indicators with correct counts
+        // DoseIndicatorsView has accessibility labels like "1 scheduled", "2 scheduled", etc.
+        let indicatorsWithScheduled = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label CONTAINS 'scheduled'"))
 
-        // For split-dose (twice weekly), we expect ~2 doses per week (~8-9 for 30-day window)
-        // NOT 14 doses per week (which would be twice-daily pattern)
-        let scheduledCount = scheduledIndicators.count
-        print("📊 Found \(scheduledCount) scheduled dose indicators")
+        // For split-dose (twice weekly), we expect ~8-9 scheduled doses for 30-day window
+        // Each day with scheduled dose(s) has DoseIndicatorsView with label containing "scheduled"
+        let scheduledDaysCount = indicatorsWithScheduled.count
+        print("📊 Found \(scheduledDaysCount) calendar days with scheduled doses")
 
         XCTAssertGreaterThan(
-            scheduledCount, 0,
+            scheduledDaysCount, 0,
             "Calendar should show scheduled doses for split-dose pattern")
         XCTAssertLessThan(
-            scheduledCount, 15,
-            "Calendar should NOT show twice-daily pattern (14 doses/week)")
+            scheduledDaysCount, 15,
+            "Calendar should NOT show twice-daily pattern (14+ days with doses)")
 
         print("✅ Test 2 passed: Calendar shows twice-weekly pattern (NOT twice-daily)")
     }
@@ -108,7 +85,13 @@ final class SplitDoseIntegrationUITests: XCTestCase {
 
     func testSettingsShowsSplitDoseSchedule() throws {
         // GIVEN: User on medication profile settings with split-dose schedule
-        try navigateToMedicationProfileSettings()
+        app.launch()
+
+        // Wait for app to load
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
+
+        TestUtilities.navigateToMedicationProfileSettings(app)
         try TestUtilities.createSplitDoseSchedule(app)
 
         // THEN: Schedule summary shows split-dose pattern information
@@ -130,7 +113,13 @@ final class SplitDoseIntegrationUITests: XCTestCase {
 
     func testDashboardShowsCorrectSplitDoseConcentration() throws {
         // GIVEN: User with split-dose medication profile and schedule
-        try navigateToMedicationProfileSettings()
+        app.launch()
+
+        // Wait for app to load
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
+
+        TestUtilities.navigateToMedicationProfileSettings(app)
         try TestUtilities.createSplitDoseSchedule(app)
 
         // WHEN: User views dashboard (directly via tab bar)

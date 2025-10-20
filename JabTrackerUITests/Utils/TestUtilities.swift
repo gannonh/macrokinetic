@@ -836,6 +836,37 @@ enum TestUtilities {
             "Profile should be deleted and no longer exist")
     }
 
+    /// Navigate to medication profile settings view (assumes profile is already pre-seeded)
+    /// This is a common pattern for tests that need to interact with a specific medication profile's settings
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance (must be already launched)
+    ///   - profileIdentifier: The accessibility identifier of the profile to navigate to (default: "medication-profile-semaglutide-ozempic-0.25mg")
+    ///   - timeout: Maximum time to wait for navigation (default: 3 seconds)
+    static func navigateToMedicationProfileSettings(
+        _ app: XCUIApplication,
+        profileIdentifier: String = "medication-profile-semaglutide-ozempic-0.25mg",
+        timeout: TimeInterval = 3
+    ) {
+        // Navigate to Settings tab
+        let settingsTab = app.tabBars.buttons["Settings"]
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: timeout), "Settings tab should exist")
+        settingsTab.tap()
+
+        // Tap Medication Profiles button
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(
+            medicationProfilesButton.waitForExistence(timeout: timeout),
+            "Medication Profiles button should exist in Settings")
+        medicationProfilesButton.tap()
+
+        // Tap on pre-seeded profile
+        let profile = app.buttons[profileIdentifier]
+        XCTAssertTrue(
+            profile.waitForExistence(timeout: timeout),
+            "Pre-seeded medication profile should appear in list")
+        profile.tap()
+    }
+
     // MARK: - Dose Creation Helpers
 
     /// Create a test dose using the Quick Add Dose functionality
