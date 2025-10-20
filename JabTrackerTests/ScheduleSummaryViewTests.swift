@@ -50,7 +50,7 @@ struct ScheduleSummaryViewTests {
     func testSplitDosePatternDescription() {
         let pattern = SchedulePatternType.splitDose
 
-        #expect(pattern.description == "Divide weekly dose into two smaller doses")
+        #expect(pattern.description == "Divide weekly dose into two administrations (Wed/Sun pattern)")
     }
 
     @Test("Custom schedule pattern has correct description")

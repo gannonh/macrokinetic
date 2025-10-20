@@ -514,7 +514,7 @@ struct ScheduleServiceTests {
 
         #expect(didThrow == true, "Should throw error for daily medication")
         #expect(
-            errorMessage.contains("Split-dose only supported for weekly medications"),
+            errorMessage.contains("Split-dose is only supported for weekly medications"),
             "Error message should explain split-dose limitation")
     }
 

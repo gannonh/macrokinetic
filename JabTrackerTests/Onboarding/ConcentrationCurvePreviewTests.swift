@@ -27,7 +27,7 @@ struct ConcentrationCurvePreviewTests {
         let doseAmount = 0.5
         let days = 28  // 4 weeks
 
-        // Weekly dosing should produce 4 doses over 28 days
+        // Weekly dosing should produce 4 doses over 28 days (days -28, -21, -14, -7, exclusive of day 0)
         let doses = generateSampleDoses(
             pattern: .weekly,
             medication: medication,
@@ -35,7 +35,7 @@ struct ConcentrationCurvePreviewTests {
             days: days
         )
 
-        #expect(doses.count == 4)
+        #expect(doses.count == 4, "28-day period with 7-day intervals (exclusive end) = 4 doses")
     }
 
     @Test("Generate split-dose schedule produces correct dose count")
