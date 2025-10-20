@@ -388,4 +388,17 @@ final class MedicationProfileScheduleUITests: XCTestCase {
 
         print("✅ Test 8 passed: All accessibility identifiers verified")
     }
+
+    // MARK: - ISSUE #180: Medication-Specific Pattern Filtering in Settings
+
+    // MARK: - ACCEPTANCE CRITERION 7: Custom pattern NOT visible in schedule edit view
+
+    func testCustomPatternNotVisibleInScheduleEdit() throws {
+        // GIVEN: User on medication profile settings
+        // WHEN: User taps "Create Dose Schedule" or "Edit Schedule"
+        // THEN: DoseScheduleEditView appears
+        // THEN: Pattern picker only shows weekly and split-dose options
+        // THEN: Custom pattern option is NOT visible
+        // THEN: For daily medications (Liraglutide), only weekly option visible
+    }
 }

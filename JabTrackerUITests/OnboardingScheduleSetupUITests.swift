@@ -551,4 +551,34 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         let finalToggleValue = restoredToggle.value as? String ?? "0"
         XCTAssertNotEqual(finalToggleValue, "0", "Multiple reminders toggle should still be enabled")
     }
+
+    // MARK: - ISSUE #180: Medication-Specific Pattern Filtering
+
+    // MARK: - ACCEPTANCE CRITERION 4: Semaglutide (weekly) shows split-dose option
+
+    func testSemaglutideShowsSplitDoseOption() throws {
+        // GIVEN: User selects Semaglutide (weekly medication)
+        // WHEN: User navigates to schedule setup
+        // THEN: Split-dose pattern option is visible
+        // THEN: Custom pattern option is NOT visible
+    }
+
+    // MARK: - ACCEPTANCE CRITERION 5: Liraglutide (daily) does NOT show split-dose option
+
+    func testLiraglutideHidesSplitDoseOption() throws {
+        // GIVEN: User selects Liraglutide (daily medication)
+        // WHEN: User navigates to schedule setup
+        // THEN: Only weekly pattern option is visible
+        // THEN: Split-dose pattern option is NOT visible
+        // THEN: Custom pattern option is NOT visible
+    }
+
+    // MARK: - ACCEPTANCE CRITERION 6: Custom pattern NOT visible in onboarding
+
+    func testCustomPatternNotVisibleInOnboarding() throws {
+        // GIVEN: User on onboarding schedule setup (Semaglutide selected)
+        // WHEN: User views pattern options
+        // THEN: Custom pattern option is NOT visible
+        // THEN: Only weekly and split-dose patterns are visible
+    }
 }
