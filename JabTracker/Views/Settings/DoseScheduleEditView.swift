@@ -47,6 +47,10 @@ struct DoseScheduleEditView: View {
     /// Saving state
     @State private var isSaving: Bool = false
 
+    /// Error state for validation
+    @State private var showError: Bool = false
+    @State private var errorMessage: String = ""
+
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
@@ -126,6 +130,11 @@ struct DoseScheduleEditView: View {
                     .disabled(isSaving)
                     .accessibilityIdentifier("save-schedule-edit")
                 }
+            }
+            .alert("Invalid Input", isPresented: $showError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage)
             }
         }
     }
@@ -262,9 +271,51 @@ struct DoseScheduleEditView: View {
 
     // MARK: - Actions
 
+    /// Validate user inputs before saving
+    /// - Returns: Error message if validation fails, nil if all inputs are valid
+    private func validateInputs() -> String? {
+        // Validate day of week (1-7, Monday-Sunday)
+        if selectedPattern == .weekly && (dayOfWeek < 1 || dayOfWeek > 7) {
+            return "Please select a valid day of the week (1-7)"
+        }
+
+        // Validate time of day
+        if timeOfDay.hour < 0 || timeOfDay.hour > 23 {
+            return "Please select a valid hour (0-23)"
+        }
+
+        if timeOfDay.minute < 0 || timeOfDay.minute > 59 {
+            return "Please select a valid minute (0-59)"
+        }
+
+        // Validate interval
+        if interval < 1 {
+            return "Interval must be at least 1 day"
+        }
+
+        // Validate adherence windows (must be positive)
+        if windowMinutesBefore < 0 {
+            return "Adherence window before dose must be positive"
+        }
+
+        if windowMinutesAfter < 0 {
+            return "Adherence window after dose must be positive"
+        }
+
+        return nil  // All validations passed
+    }
+
     /// Save schedule configuration
     private func saveSchedule() {
         isSaving = true
+
+        // Validate inputs first
+        if let error = validateInputs() {
+            errorMessage = error
+            showError = true
+            isSaving = false
+            return
+        }
 
         // Build schedule configuration based on pattern
         let config: ScheduleConfiguration
