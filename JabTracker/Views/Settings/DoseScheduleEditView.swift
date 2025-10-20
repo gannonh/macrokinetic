@@ -139,8 +139,6 @@ struct DoseScheduleEditView: View {
         }
     }
 
-    // MARK: - Sections
-
     /// Medication information (read-only)
     private var medicationInfoSection: some View {
         Section("Medication") {
@@ -172,8 +170,12 @@ struct DoseScheduleEditView: View {
         Section {
             Picker("Pattern", selection: $selectedPattern) {
                 Text("Weekly").tag(SchedulePatternType.weekly)
-                Text("Split Dose").tag(SchedulePatternType.splitDose)
-                Text("Custom").tag(SchedulePatternType.custom)
+
+                // Only show split-dose for weekly medications
+                if medicationProfile.medication?.frequency == .weekly {
+                    Text("Split Dose").tag(SchedulePatternType.splitDose)
+                }
+                // Custom pattern removed from UI
             }
             .pickerStyle(.inline)
             .accessibilityIdentifier("pattern-picker")
@@ -255,21 +257,17 @@ struct DoseScheduleEditView: View {
         }
     }
 
-    // MARK: - Helper Properties
-
     /// Footer text for pattern selection
     private var patternFooterText: String {
         switch selectedPattern {
         case .weekly:
             return "Doses scheduled on the same day and time each week"
         case .splitDose:
-            return "Multiple doses per day (e.g., morning and evening)"
+            return "Divide weekly dose into two administrations (typically Wed/Sun or similar 3.5-day interval)"
         case .custom:
             return "Fully customizable schedule with specific dates and times"
         }
     }
-
-    // MARK: - Actions
 
     /// Validate user inputs before saving
     /// - Returns: Error message if validation fails, nil if all inputs are valid

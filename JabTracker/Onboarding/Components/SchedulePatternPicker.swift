@@ -11,9 +11,22 @@ import SwiftUI
 ///
 /// Displays available schedule patterns as cards and handles selection state.
 /// Notifies parent view when pattern changes for concentration preview updates.
+/// Filters patterns based on medication frequency (weekly meds can split, daily can't).
 struct SchedulePatternPicker: View {
+    let medication: Medication
     @Binding var selectedPattern: SchedulePatternType
     let onPatternChange: (SchedulePatternType) -> Void
+
+    /// Available patterns filtered by medication frequency
+    var availablePatterns: [SchedulePatternType] {
+        switch medication.frequency {
+        case .daily:
+            return [.weekly]  // Daily meds can't split further
+        case .weekly:
+            return [.weekly, .splitDose]  // Weekly meds can split
+        }
+        // Note: .custom is removed from all UIs
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -22,7 +35,7 @@ struct SchedulePatternPicker: View {
                 .foregroundColor(.primary)
 
             VStack(spacing: 12) {
-                ForEach([SchedulePatternType.weekly, .splitDose, .custom], id: \.self) { pattern in
+                ForEach(availablePatterns, id: \.self) { pattern in
                     SchedulePatternCard(
                         pattern: pattern,
                         isSelected: selectedPattern == pattern,
@@ -45,6 +58,7 @@ struct SchedulePatternPicker: View {
     @Previewable @State var selectedPattern: SchedulePatternType = .weekly
 
     SchedulePatternPicker(
+        medication: .semaglutide,
         selectedPattern: $selectedPattern,
         onPatternChange: { pattern in
             print("Pattern changed to: \(pattern)")
