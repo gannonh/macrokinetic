@@ -97,7 +97,7 @@ struct SchedulePatternFilteringTests {
             // THEN: Custom pattern should NOT be in the list
             #expect(
                 !patterns.contains(.custom),
-                "Custom pattern should be removed from \(medication.genericName)")
+                "Custom pattern should be removed from \(medication.displayName)")
         }
     }
 }

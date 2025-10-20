@@ -34,6 +34,7 @@ struct ScheduleSetupView: View {
 
                 // Pattern Selection
                 SchedulePatternPicker(
+                    medication: viewModel.selectedMedication ?? .semaglutide,
                     selectedPattern: $viewModel.schedulePattern,
                     onPatternChange: { _ in
                         // Pattern change triggers concentration preview update

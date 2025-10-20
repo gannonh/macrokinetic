@@ -78,7 +78,7 @@ extension SchedulePatternType {
         case .weekly:
             return "One dose per week, same day and time"
         case .splitDose:
-            return "Divide weekly dose into two smaller doses"
+            return "Divide weekly dose into two administrations (Wed/Sun pattern)"
         case .custom:
             return "Create your own custom schedule (Coming Soon)"
         }
