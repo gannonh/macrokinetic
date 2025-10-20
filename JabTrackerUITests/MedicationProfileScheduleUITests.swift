@@ -59,6 +59,27 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         profile.tap()
     }
 
+    /// Create a default schedule using the Create Schedule button
+    /// - Throws: XCTestError if schedule creation fails
+    private func createDefaultSchedule() throws {
+        let createScheduleButton = app.buttons["create-schedule-button"]
+        guard createScheduleButton.waitForExistence(timeout: 3) else {
+            XCTFail("Schedule already exists or view not ready")
+            return
+        }
+        createScheduleButton.tap()
+
+        let saveButton = app.buttons["save-schedule-edit"]
+        XCTAssertTrue(
+            saveButton.waitForExistence(timeout: 3),
+            "Save button should exist in schedule edit sheet")
+        saveButton.tap()
+
+        XCTAssertFalse(
+            saveButton.waitForExistence(timeout: 3),
+            "Sheet should dismiss after saving schedule")
+    }
+
     // MARK: - Test 1: Create Schedule Flow
 
     func testCreateWeeklySchedule() throws {
@@ -105,25 +126,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testEditExistingSchedule() throws {
         // GIVEN: User on medication profile settings with active weekly schedule
         try navigateToMedicationProfileSettings()
-
-        // Create a schedule first
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 3),
-            "Create schedule button should exist")
-        createScheduleButton.tap()
-
-        // Save with default weekly pattern
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after save")
+        try createDefaultSchedule()
 
         // WHEN: User taps "Edit Schedule" button
         let editScheduleButton = app.buttons["edit-schedule-button"]
@@ -164,24 +167,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testPauseScheduleOneWeek() throws {
         // GIVEN: User on medication profile settings with active schedule
         try navigateToMedicationProfileSettings()
-
-        // Create a schedule first
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 3),
-            "Create schedule button should exist")
-        createScheduleButton.tap()
-
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after save")
+        try createDefaultSchedule()
 
         // WHEN: User taps "Pause Schedule" button
         let pauseScheduleButton = app.buttons["pause-schedule-button"]
@@ -216,24 +202,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testResumeSchedule() throws {
         // GIVEN: User on medication profile settings with paused schedule
         try navigateToMedicationProfileSettings()
-
-        // Create and pause a schedule
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 3),
-            "Create schedule button should exist")
-        createScheduleButton.tap()
-
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after save")
+        try createDefaultSchedule()
 
         // Pause the schedule
         let pauseScheduleButton = app.buttons["pause-schedule-button"]
@@ -275,24 +244,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testDeactivateScheduleWithConfirmation() throws {
         // GIVEN: User on medication profile settings with active schedule
         try navigateToMedicationProfileSettings()
-
-        // Create a schedule first
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 3),
-            "Create schedule button should exist")
-        createScheduleButton.tap()
-
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after save")
+        try createDefaultSchedule()
 
         // WHEN: User taps "Deactivate Schedule" button
         let deactivateScheduleButton = app.buttons["deactivate-schedule-button"]
@@ -336,24 +288,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testCancelDeactivateSchedule() throws {
         // GIVEN: User on medication profile settings with active schedule
         try navigateToMedicationProfileSettings()
-
-        // Create a schedule first
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 3),
-            "Create schedule button should exist")
-        createScheduleButton.tap()
-
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after save")
+        try createDefaultSchedule()
 
         // WHEN: User taps "Deactivate Schedule", confirmation appears
         let deactivateScheduleButton = app.buttons["deactivate-schedule-button"]
@@ -397,24 +332,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testMultipleScheduleModifications() throws {
         // GIVEN: User on medication profile settings
         try navigateToMedicationProfileSettings()
-
-        // WHEN: User creates a schedule
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 3),
-            "Create schedule button should exist")
-        createScheduleButton.tap()
-
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after save")
+        try createDefaultSchedule()
 
         // WHEN: User edits the schedule
         let editScheduleButton = app.buttons["edit-schedule-button"]
@@ -448,10 +366,8 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         // GIVEN: User on medication profile settings
         try navigateToMedicationProfileSettings()
 
-        // Create a schedule to test all button states
-        let createScheduleButton = app.buttons["create-schedule-button"]
-
         // VERIFY: Create schedule button has proper accessibility identifier
+        let createScheduleButton = app.buttons["create-schedule-button"]
         XCTAssertTrue(
             createScheduleButton.waitForExistence(timeout: 3),
             "Create schedule button should exist")
@@ -460,19 +376,8 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             "create-schedule-button",
             "Create button should have correct accessibility identifier")
 
-        createScheduleButton.tap()
-
-        // Save to create schedule
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after save")
+        // Create schedule to test all button states
+        try createDefaultSchedule()
 
         // VERIFY: All buttons have proper accessibility identifiers
         let editScheduleButton = app.buttons["edit-schedule-button"]
