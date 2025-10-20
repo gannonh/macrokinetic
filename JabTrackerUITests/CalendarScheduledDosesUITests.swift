@@ -339,4 +339,5 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         print("✅ Calendar uses lazy loading - renders quickly without calculating all future months")
         print("ℹ️  Performance indicates doses calculated per-month on demand")
     }
+
 }

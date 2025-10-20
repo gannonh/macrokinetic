@@ -101,8 +101,9 @@ struct DoseScheduleEditView: View {
                 // Pattern selection section
                 patternSelectionSection
 
-                // Frequency stepper (if not custom)
-                if selectedPattern != .custom {
+                // Frequency stepper (only for weekly pattern)
+                // Split-dose has fixed 3.5-day interval, custom has its own config
+                if selectedPattern == .weekly {
                     frequencySection
                 }
 
@@ -336,12 +337,12 @@ struct DoseScheduleEditView: View {
             config = ScheduleConfiguration(
                 dayOfWeek: nil,
                 timeOfDay: timeOfDay,
-                interval: 1,  // Daily for split dose
+                interval: 7,  // Weekly base interval
                 doseAmount: medicationProfile.currentDose,
                 windowMinutesBefore: windowMinutesBefore,
                 windowMinutesAfter: windowMinutesAfter,
-                splitDoseCount: 2,  // Default: 2 doses per day
-                splitIntervalMinutes: 720,  // 12 hours apart
+                splitDoseCount: nil,  // Not used for twice-weekly pattern
+                splitIntervalMinutes: 5040,  // 3.5 days (twice weekly, not twice daily)
                 customRecurrence: nil
             )
 

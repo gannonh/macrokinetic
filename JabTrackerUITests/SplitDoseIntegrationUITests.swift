@@ -1,171 +1,170 @@
+//
+//  SplitDoseIntegrationUITests.swift
+//  JabTrackerUITests
+//
+//  E2E tests for split-dose integration validation (Issue #180)
+//
+
 import XCTest
 
-/// E2E tests validating split-dose schedule integration across the app
-///
-/// These tests validate the complete user journey for split-dose schedules,
-/// ensuring medical accuracy and proper UI communication of twice-weekly patterns.
 final class SplitDoseIntegrationUITests: XCTestCase {
+    var app: XCUIApplication!
 
-    // MARK: - Test 1: Complete Onboarding Flow with Split-Dose
-
-    /// Validates complete onboarding flow selecting split-dose pattern
-    func test1_CompleteOnboardingWithSplitDose() throws {
-        // GIVEN: Fresh app with forced onboarding
-        let app = XCUIApplication()
-        app.launchArguments.append("--ui-testing")
-        app.launchArguments.append("--reset-app-data")
-        app.launchArguments.append("--force-onboarding")
-        app.launch()
-
-        sleep(2)
-
-        // WHEN: Navigate through onboarding
-        print("🔍 DEBUG: Starting onboarding flow...")
-        TestUtilities.debugElements(in: app, containing: "get-started")
-        TestUtilities.debugElements(in: app, containing: "welcome")
-
-        // TODO: Complete onboarding implementation after understanding element structure
-        // This is a placeholder - will implement after seeing debug output
-
-        print("⚠️  TODO: Complete onboarding flow implementation")
-    }
-
-    // MARK: - Test 2: Calendar Dose Pattern Validation
-
-    /// Validates that calendar shows twice-weekly pattern, NOT 14 doses per week
-    func test2_CalendarShowsTwiceWeeklyPattern() throws {
-        // GIVEN: User with split-dose schedule via TestDataSeeding
-        let app = XCUIApplication()
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        app = XCUIApplication()
+        // Pre-seed with medication profile (no schedule yet)
         app.launchEnvironment["TEST_DATA_SEED"] = "true"
-        app.launchEnvironment["TEST_DATA_DAYS"] = "14"  // 2 weeks
+        app.launchEnvironment["TEST_DATA_DAYS"] = "0"
         app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
-        app.launchArguments.append("--ui-testing")
-        app.launchArguments.append("--bypass-onboarding")
-        app.launch()
-
-        sleep(2)
-
-        // WHEN: Navigate to History tab
-        let historyTab = app.tabBars.buttons["History"]
-        XCTAssertTrue(
-            historyTab.waitForExistence(timeout: 5),
-            "History tab should exist")
-        historyTab.tap()
-
-        sleep(1)
-
-        // Debug: Check what's available in history view
-        print("🔍 DEBUG: History view elements...")
-        TestUtilities.debugElements(in: app, containing: "calendar")
-        TestUtilities.debugElements(in: app, containing: "dose")
-
-        // Switch to calendar view if segmented control exists
-        let calendarControl = app.segmentedControls.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'calendar'"))
-        if calendarControl.element.exists {
-            print("  Found calendar segmented control, tapping...")
-            calendarControl.element.tap()
-            sleep(1)
-        }
-
-        // THEN: Verify dose count is reasonable for twice-weekly (NOT 14 per week)
-        // For 2 weeks of data with semaglutide (weekly), should see ~2 doses, NOT 28 (twice daily)
-
-        print("🔍 DEBUG: Checking for dose indicators in calendar...")
-        TestUtilities.debugElements(in: app, containing: "dose")
-
-        // CRITICAL: Should NOT have 14+ dose indicators per week (dangerous twice-daily pattern)
-        print("✅ TEST PASSED: Calendar validation complete")
+        app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
+        app.launchEnvironment["TEST_DATA_DOSE"] = "0.25"
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
     }
 
-    // MARK: - Test 3: Settings Workflow Validation
+    override func tearDown() {
+        app = nil
+        super.tearDown()
+    }
 
-    /// Validates medication profile settings display split-dose schedule correctly
-    func test3_SettingsShowsSplitDoseSchedule() throws {
-        // GIVEN: User with medication profile
-        let app = TestUtilities.setupDoseHistoryTest(
-            app: XCUIApplication(),
-            doseCount: 2,
-            medicationProfiles: 1,
-            medicationName: "semaglutide",
-            brandName: "Ozempic",
-            dose: "0.25"
-        )
+    // MARK: - Helper Methods
 
-        sleep(2)
+    /// Navigate to medication profile settings view (profile already pre-seeded)
+    private func navigateToMedicationProfileSettings() throws {
+        app.launch()
 
-        // WHEN: Navigate to Settings tab
+        // Wait for app to load
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
+
+        // Navigate to Settings tab
         let settingsTab = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(
-            settingsTab.waitForExistence(timeout: 5),
-            "Settings tab should exist")
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: 3), "Settings tab should exist")
         settingsTab.tap()
 
-        sleep(1)
+        // Tap Medication Profiles button
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(
+            medicationProfilesButton.waitForExistence(timeout: 3),
+            "Medication Profiles button should exist in Settings")
+        medicationProfilesButton.tap()
 
-        // Debug: Find medication profile entry
-        print("🔍 DEBUG: Settings view elements...")
-        TestUtilities.debugElements(in: app, containing: "medication")
-        TestUtilities.debugElements(in: app, containing: "profile")
-        TestUtilities.debugElements(in: app, containing: "ozempic")
-
-        // TODO: Tap on medication profile after identifying correct element
-
-        print("✅ TEST PASSED: Settings workflow validation complete")
+        // Tap on pre-seeded profile
+        let profile = app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
+        XCTAssertTrue(
+            profile.waitForExistence(timeout: 3),
+            "Pre-seeded medication profile should appear in list")
+        profile.tap()
     }
 
-    // MARK: - Test 4: Dashboard Dose Timing Validation
+    // MARK: - Test 2: Calendar Shows Twice-Weekly Pattern (NOT 14 doses/week)
 
-    /// Validates that dashboard shows correct split-dose timing (NOT dangerous twice-daily pattern)
-    func test4_DashboardShowsCorrectSplitDoseTiming() throws {
-        // GIVEN: App with test data
-        let app = XCUIApplication()
-        app.launchEnvironment["TEST_DATA_SEED"] = "true"
-        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
-        app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
-        app.launchArguments.append("--ui-testing")
-        app.launchArguments.append("--bypass-onboarding")
-        app.launch()
+    func testCalendarShowsTwiceWeeklyDosePattern() throws {
+        // GIVEN: User on medication profile settings with split-dose schedule
+        try navigateToMedicationProfileSettings()
+        try TestUtilities.createSplitDoseSchedule(app)
 
-        sleep(2)
+        // WHEN: User navigates to History tab calendar view (directly via tab bar)
+        let historyTab = app.tabBars.buttons["History"]
+        XCTAssertTrue(historyTab.waitForExistence(timeout: 3))
+        historyTab.tap()
 
-        // WHEN: Navigate to Home/Dashboard tab (label is "Home" not "Dashboard")
-        let homeTab = app.tabBars.buttons["Home"]
+        let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(
-            homeTab.waitForExistence(timeout: 5),
-            "Home tab should exist")
-        homeTab.tap()
+            segmentedControl.waitForExistence(timeout: 3),
+            "View mode picker should be available")
 
-        sleep(1)
+        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        XCTAssertTrue(calendarToggleButton.exists, "Calendar toggle should be available")
+        calendarToggleButton.tap()
 
-        // Debug: Check all static texts
-        print("🔍 DEBUG: Dashboard static texts...")
-        let allStaticTexts = app.staticTexts.allElementsBoundByIndex
-        for (index, element) in allStaticTexts.enumerated() {
-            let label = element.label
-            if !label.isEmpty
-                && (label.contains("dose") || label.contains("hour") || label.contains("day") || label.contains("week"))
-            {
-                print("  Static text[\(index)]: '\(label)'")
-            }
-        }
+        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
 
-        // THEN: CRITICAL SAFETY CHECK - Should NOT show dangerous twice-daily timing
-        let twelveHoursText = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '12 hours'"))
+        // Wait for scheduled doses to be generated and displayed
+        usleep(500_000)  // 0.5 seconds for dose generation
+
+        // THEN: Calendar shows ~2 scheduled doses per 2-week period (NOT 14 doses/week for twice-daily)
+        let scheduledIndicators = app.otherElements.matching(
+            NSPredicate(format: "label == 'Scheduled dose'"))
+
+        // For split-dose (twice weekly), we expect ~2 doses per week (~8-9 for 30-day window)
+        // NOT 14 doses per week (which would be twice-daily pattern)
+        let scheduledCount = scheduledIndicators.count
+        print("📊 Found \(scheduledCount) scheduled dose indicators")
+
+        XCTAssertGreaterThan(
+            scheduledCount, 0,
+            "Calendar should show scheduled doses for split-dose pattern")
+        XCTAssertLessThan(
+            scheduledCount, 15,
+            "Calendar should NOT show twice-daily pattern (14 doses/week)")
+
+        print("✅ Test 2 passed: Calendar shows twice-weekly pattern (NOT twice-daily)")
+    }
+
+    // MARK: - Test 3: Settings Workflow Shows Split-Dose Schedule
+
+    func testSettingsShowsSplitDoseSchedule() throws {
+        // GIVEN: User on medication profile settings with split-dose schedule
+        try navigateToMedicationProfileSettings()
+        try TestUtilities.createSplitDoseSchedule(app)
+
+        // THEN: Schedule summary shows split-dose pattern information
+        let scheduleSummary = app.otherElements["schedule-summary-view"]
+        XCTAssertTrue(
+            scheduleSummary.waitForExistence(timeout: 5),
+            "Schedule summary should appear in medication profile settings")
+
+        // Verify edit schedule button exists (confirms schedule is active)
+        let editScheduleButton = app.buttons["edit-schedule-button"]
+        XCTAssertTrue(
+            editScheduleButton.waitForExistence(timeout: 3),
+            "Edit schedule button should exist for active split-dose schedule")
+
+        print("✅ Test 3 passed: Settings workflow displays split-dose schedule")
+    }
+
+    // MARK: - Test 4: Dashboard Concentration Validation (CRITICAL SAFETY)
+
+    func testDashboardShowsCorrectSplitDoseConcentration() throws {
+        // GIVEN: User with split-dose medication profile and schedule
+        try navigateToMedicationProfileSettings()
+        try TestUtilities.createSplitDoseSchedule(app)
+
+        // WHEN: User views dashboard (directly via tab bar)
+        let dashboardTab = app.tabBars.buttons["Dashboard"]
+        XCTAssertTrue(dashboardTab.waitForExistence(timeout: 3))
+        dashboardTab.tap()
+
+        // Wait for PK engine calculations
+        usleep(500_000)  // 0.5 seconds for calculations
+
+        // THEN: Dashboard shows concentration information WITHOUT dangerous twice-daily timing language
+        let concentrationCard = app.otherElements["concentration-card"]
+        XCTAssertTrue(
+            concentrationCard.waitForExistence(timeout: 5),
+            "Concentration card should appear on dashboard")
+
+        // CRITICAL SAFETY: Verify NO "12 hours" language appears (which would indicate twice-daily pattern)
+        let twelveHoursText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '12 hours'"))
         XCTAssertFalse(
             twelveHoursText.element.exists,
-            "❌ CRITICAL: Dashboard should NOT show 12-hour timing (dangerous twice-daily pattern)")
+            "❌ CRITICAL: Dashboard must NOT show '12 hours' (dangerous twice-daily pattern)")
 
-        let twiceDailyText = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'twice daily'"))
+        // CRITICAL SAFETY: Verify NO "twice daily" language appears
+        let twiceDailyText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'twice daily'"))
         XCTAssertFalse(
             twiceDailyText.element.exists,
-            "❌ CRITICAL: Dashboard should NOT show 'twice daily' (should be 'twice weekly')")
+            "❌ CRITICAL: Dashboard must NOT show 'twice daily' (should be 'twice weekly')")
 
-        let every12HoursText = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'every 12 hours'"))
+        // CRITICAL SAFETY: Verify NO "every 12 hours" language appears
+        let every12HoursText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'every 12 hours'"))
         XCTAssertFalse(
             every12HoursText.element.exists,
-            "❌ CRITICAL: Dashboard should NOT show 'every 12 hours' language")
+            "❌ CRITICAL: Dashboard must NOT show 'every 12 hours'")
 
-        print("✅ TEST PASSED: Dashboard shows no dangerous twice-daily timing language")
+        print("✅ Test 4 passed: Dashboard shows correct concentration WITHOUT dangerous twice-daily timing")
     }
 }

@@ -59,8 +59,16 @@ You follow the Outside-In TDD flow religiously:
 **Phase 5: Implementation (GREEN)**
 - Implement code to satisfy integration tests
 - Refactor for clarity while keeping tests green
+- Ask the user to smoke test the implementation if needed/possible
+  - Give them clear instructions on what to verify
+  - Provide a checklist of key functionalities to test
+
+**IMPORTANT:** Do not move on to Phase 6: E2E Implementation until the basic implementation is verified by the user to ensure that the core functionality is working as expected.
 
 **Phase 6: E2E Implementation (GREEN - ACCEPTANCE)**
+
+**IMPORTANMT**: Do not begin this phase until the user has done manual smoke testing and all obvious issues are resolved
+
 - Implement full E2E tests from your stubs
 - Use `TestUtilities.debugElements()` FIRST to understand accessibility hierarchy
 - Verify complete user workflows

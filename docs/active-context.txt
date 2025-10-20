@@ -1,33 +1,62 @@
-  🧪 Ready for Your Smoke Testing
+ You're absolutely right. That test name is backwards - it's testing what we DON'T want instead of what we DO want. Let me analyze what we
+  actually need.
 
-  Please test the following workflows:
+  Current State Analysis
 
-  1. Calendar Display (Stream A)
+  Existing Tests (What We Have)
 
-  - Open History tab → Calendar view
-  - Verify scheduled dose indicators appear
-  - Check color coding (blue outline = scheduled, blue filled = logged, red = missed)
-  - Test month navigation
+  OnboardingScheduleSetupUITests.swift:
+  1. ✅ testCompleteOnboardingWithSplitDoseSchedule() - User selects split-dose in onboarding
+  2. ✅ testSemaglutideShowsSplitDoseOption() - Weekly meds show split-dose option
+  3. ✅ testLiraglutideHidesSplitDoseOption() - Daily meds hide split-dose option
+  4. ✅ testCustomPatternNotVisibleInOnboarding() - Custom pattern removed
 
-  2. Dose Actions (Stream B)
+  Integration Tests:
+  1. ✅ testSplitDoseIntegrationCreatesCorrectSchedule() - Service layer creates correct schedule
+  2. ✅ testSplitDoseFilteringIntegration() - UI filtering matches service logic
+  3. ✅ testSplitDosePreventsOverdosingRisk() - Validates 5040 minute interval
 
-  - Long-press on day with scheduled dose
-  - Verify action sheet appears
-  - Test "Log Dose" → QuickDoseSheet pre-population
-  - Test "Reschedule" → date picker + smart suggestions
-  - Test "Skip" → dose removed from calendar
+  What's Missing (The Gap)
 
-  3. Statistics Display (Stream C)
+  No E2E tests that verify the split-dose feature actually works end-to-end:
 
-  - Check MonthlyStatsView for schedule adherence section
-  - Verify adherence rate percentage displays
-  - Check breakdown: "X taken / Y scheduled (Z missed, W skipped)"
+  1. ❌ After onboarding with split-dose, verify schedule is created correctly
+    - Navigate through full onboarding with split-dose selection
+    - Check that resulting schedule has correct interval (not just that option was selected)
+  2. ❌ Verify calendar displays split-dose schedule correctly
+    - Create split-dose schedule
+    - Navigate to calendar
+    - Verify it shows ~2 doses per week (or 4 doses over 2 weeks)
+  3. ❌ Verify dashboard shows split-dose information
+    - Create split-dose schedule
+    - Check dashboard displays schedule info
+    - Verify timing information is reasonable
+  4. ❌ Verify settings displays split-dose schedule details
+    - Navigate to medication profile settings
+    - Verify split-dose schedule is displayed with correct interval
 
-  ---
-  📝 After Smoke Testing
+  Proposed Plan
 
-  Once you confirm the UI/UX works correctly:
+  Test 1: Verify Split-Dose Schedule Creation
 
-  1. I'll implement the 27 E2E test stubs using debug-first approach
-  2. Run full test suite to validate integration
-  3. Code review and final pol
+  File: OnboardingScheduleSetupUITests.swift (extend existing test)
+  Name: testSplitDoseScheduleCreatedWithCorrectInterval
+  Purpose: After completing onboarding with split-dose, verify the schedule was actually created
+
+  Test 2: Verify Calendar Shows Split-Dose Pattern
+
+  File: CalendarScheduledDosesUITests.swift
+  Name: testCalendarDisplaysSplitDoseSchedule
+  Purpose: With split-dose schedule, verify calendar shows ~2 doses per week
+
+  Test 3: Verify Dashboard Shows Split-Dose Timing
+
+  File: Create new DashboardUITests.swift or add to existing dashboard tests
+  Name: testDashboardDisplaysSplitDoseSchedule
+  Purpose: Verify dashboard shows split-dose schedule information
+
+  Test 4: Verify Settings Shows Split-Dose Schedule
+
+  File: MedicationProfileScheduleUITests.swift
+  Name: testSettingsDisplaysSplitDoseSchedule
+  Purpose: Verify medication profile settings show split-dose schedule details

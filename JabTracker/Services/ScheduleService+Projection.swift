@@ -231,10 +231,13 @@ extension ScheduleService {
 
     // swiftlint:enable function_body_length
 
+    // swiftlint:disable function_body_length
+    // Rationale: Split-dose algorithm requires complete pattern handling (alignment,
+    // pause periods, window calculations) in single coherent flow for medical accuracy.
     /**
      * Generates split-dose scheduled doses.
      *
-     * Creates multiple doses per scheduled day with configured intervals between them.
+     * Creates doses at splitInterval apart (e.g., every 3.5 days for twice-weekly dosing).
      *
      * - Parameters:
      *   - schedule: Parent DoseSchedule
@@ -250,9 +253,7 @@ extension ScheduleService {
         from startDate: Date,
         to endDate: Date
     ) -> [ScheduledDose] {
-        guard let splitCount = config.splitDoseCount,
-            let splitInterval = config.splitIntervalMinutes
-        else {
+        guard let splitInterval = config.splitIntervalMinutes else {
             return []
         }
 
@@ -268,41 +269,64 @@ extension ScheduleService {
         components.second = 0
         let alignedDate = calendar.date(from: components)!
 
-        // If aligned time is before start, move to next day
+        // If aligned time is before start, move forward by splitInterval
         if alignedDate < startDate {
-            currentDate = calendar.date(byAdding: .day, value: 1, to: alignedDate)!
+            // Calculate how many intervals needed to get past startDate
+            let intervalSeconds = TimeInterval(splitInterval * 60)
+            let timeSinceAligned = startDate.timeIntervalSince(alignedDate)
+            let intervalsNeeded = Int(ceil(timeSinceAligned / intervalSeconds))
+            currentDate = calendar.date(
+                byAdding: .minute,
+                value: splitInterval * intervalsNeeded,
+                to: alignedDate
+            )!
         } else {
             currentDate = alignedDate
         }
 
-        // Generate doses at daily interval
+        // Generate doses at splitInterval apart
         while currentDate <= endDate {
             // Skip if paused
             if let pausedUntil = schedule.pausedUntil,
                 let pausedAt = schedule.pausedAt,
                 currentDate >= pausedAt && currentDate < pausedUntil
             {
-                currentDate = calendar.date(byAdding: .day, value: config.interval, to: currentDate)!
+                currentDate = calendar.date(byAdding: .minute, value: splitInterval, to: currentDate)!
                 continue
             }
 
-            // Generate split doses for this day
-            let splitDoses = generateSplitDosesForDay(
-                baseTime: currentDate,
-                splitCount: splitCount,
-                splitInterval: splitInterval,
-                config: config,
-                schedule: schedule,
-                endDate: endDate
-            )
-            doses.append(contentsOf: splitDoses)
+            // Calculate scheduling window
+            let windowStart = calendar.date(
+                byAdding: .minute,
+                value: -config.windowMinutesBefore,
+                to: currentDate
+            )!
 
-            // Advance to next day
-            currentDate = calendar.date(byAdding: .day, value: config.interval, to: currentDate)!
+            let windowEnd = calendar.date(
+                byAdding: .minute,
+                value: config.windowMinutesAfter,
+                to: currentDate
+            )!
+
+            // Create scheduled dose
+            let scheduledDose = ScheduledDose(
+                scheduledTime: currentDate,
+                doseAmount: config.doseAmount,
+                windowStart: windowStart,
+                windowEnd: windowEnd
+            )
+            scheduledDose.schedule = schedule
+
+            doses.append(scheduledDose)
+
+            // Advance by splitInterval (e.g., 3.5 days for twice-weekly)
+            currentDate = calendar.date(byAdding: .minute, value: splitInterval, to: currentDate)!
         }
 
         return doses
     }
+
+    // swiftlint:enable function_body_length
 
     /**
      * Helper to generate split doses for a single day.
