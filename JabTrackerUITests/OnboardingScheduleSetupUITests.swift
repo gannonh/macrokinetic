@@ -558,9 +558,64 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
     func testSemaglutideShowsSplitDoseOption() throws {
         // GIVEN: User selects Semaglutide (weekly medication)
-        // WHEN: User navigates to schedule setup
+        // Navigate through onboarding to schedule setup
+
+        // Welcome screen
+        let welcomeContinue = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(welcomeContinue.waitForExistence(timeout: 5), "Continue button should exist on welcome screen")
+        welcomeContinue.tap()
+
+        // Medication selection - explicitly select Semaglutide
+        let semaglutideButton = app.buttons["medication-semaglutide"]
+        XCTAssertTrue(semaglutideButton.waitForExistence(timeout: 5), "Semaglutide button should exist")
+        semaglutideButton.tap()
+
+        // Continue to dose setup
+        let medicationContinue = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(
+            medicationContinue.waitForExistence(timeout: 5), "Continue button should exist after medication selection")
+        medicationContinue.tap()
+
+        // Dose setup - select 0.25mg dose button
+        let doseButton = app.buttons["dose-button-0.25"]
+        XCTAssertTrue(doseButton.waitForExistence(timeout: 5), "Dose button should exist")
+        doseButton.tap()
+
+        // Select injection site (required to proceed)
+        let abdomenSite = app.buttons["injection-site-abdomen"]
+        XCTAssertTrue(abdomenSite.waitForExistence(timeout: 2), "Injection site button should exist")
+        abdomenSite.tap()
+
+        // Continue to schedule setup
+        let doseContinue = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(doseContinue.exists, "Continue button should exist after dose entry")
+        doseContinue.tap()
+
+        // Wait for schedule setup view to appear
+        var scheduleView = app.scrollViews["schedule-setup-view"]
+        if !scheduleView.waitForExistence(timeout: 10) {
+            scheduleView = app.otherElements["schedule-setup-view"]
+        }
+        XCTAssertTrue(scheduleView.waitForExistence(timeout: 10), "Schedule setup view should appear")
+
+        // WHEN: User views pattern options
         // THEN: Split-dose pattern option is visible
+        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        XCTAssertTrue(
+            splitDoseCard.waitForExistence(timeout: 5),
+            "Split-dose pattern card should be visible for Semaglutide (weekly medication)")
+
+        // THEN: Weekly pattern option is also visible
+        let weeklyCard = app.buttons["pattern-card-weekly"]
+        XCTAssertTrue(
+            weeklyCard.exists,
+            "Weekly pattern card should be visible for Semaglutide")
+
         // THEN: Custom pattern option is NOT visible
+        let customCard = app.buttons["pattern-card-custom"]
+        XCTAssertFalse(
+            customCard.exists,
+            "Custom pattern card should NOT be visible (removed from UI)")
     }
 
     // MARK: - ACCEPTANCE CRITERION 5: Liraglutide (daily) does NOT show split-dose option
