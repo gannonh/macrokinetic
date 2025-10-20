@@ -81,8 +81,8 @@ struct DoseScheduleEditView: View {
             _dayOfWeek = State(initialValue: 1)  // Default: Monday
             _timeOfDay = State(initialValue: TimeComponents(hour: 8, minute: 0))  // Default: 8 AM
             _interval = State(initialValue: 7)  // Default: weekly
-            _windowMinutesBefore = State(initialValue: 120)  // Default: 2 hours
-            _windowMinutesAfter = State(initialValue: 120)  // Default: 2 hours
+            _windowMinutesBefore = State(initialValue: TimeConstants.defaultWindowMinutes)
+            _windowMinutesAfter = State(initialValue: TimeConstants.defaultWindowMinutes)
         }
     }
 
@@ -368,8 +368,8 @@ struct DoseScheduleEditView: View {
         timeOfDay: TimeComponents(hour: 8, minute: 0),
         interval: 7,
         doseAmount: 0.25,
-        windowMinutesBefore: 120,
-        windowMinutesAfter: 120,
+        windowMinutesBefore: TimeConstants.defaultWindowMinutes,
+        windowMinutesAfter: TimeConstants.defaultWindowMinutes,
         splitDoseCount: nil,
         splitIntervalMinutes: nil,
         customRecurrence: nil
