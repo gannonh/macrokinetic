@@ -371,7 +371,9 @@ class OnboardingViewModel: ObservableObject {
             windowMinutesBefore: 120,  // 2 hours before
             windowMinutesAfter: 120,  // 2 hours after
             splitDoseCount: schedulePattern == .splitDose ? 2 : nil,
-            splitIntervalMinutes: schedulePattern == .splitDose ? 720 : nil,  // 12 hours
+            // Medical accuracy: Weekly medications split into twice-weekly dosing
+            // 5040 minutes = 3.5 days = 84 hours (e.g., Wed 8pm + Sun 8am)
+            splitIntervalMinutes: schedulePattern == .splitDose ? 5040 : nil,
             customRecurrence: nil  // Custom patterns not yet supported in onboarding
         )
 

@@ -53,6 +53,37 @@ struct ScheduleConfiguration: Codable {
     let customRecurrence: CustomRecurrence?
 }
 
+extension ScheduleConfiguration {
+    /// Creates a split-dose configuration for weekly medications
+    /// - Parameters:
+    ///   - medication: The medication (must have weekly frequency)
+    ///   - totalWeeklyDose: The total weekly dose to split
+    /// - Returns: Configuration with twice-weekly dosing (3.5 day interval)
+    /// - Throws: splitDoseNotSupported if medication is not weekly
+    static func splitDoseConfiguration(
+        for medication: Medication,
+        totalWeeklyDose: Double
+    ) throws -> ScheduleConfiguration {
+        guard medication.frequency == .weekly else {
+            throw ScheduleServiceError.splitDoseNotSupported(
+                "Split-dose is only supported for weekly medications"
+            )
+        }
+
+        return ScheduleConfiguration(
+            dayOfWeek: nil,  // Not used for split-dose
+            timeOfDay: TimeComponents(hour: 8, minute: 0),
+            interval: 7,  // Weekly cycle
+            doseAmount: totalWeeklyDose / 2.0,
+            windowMinutesBefore: TimeConstants.defaultWindowMinutes,
+            windowMinutesAfter: TimeConstants.defaultWindowMinutes,
+            splitDoseCount: 2,
+            splitIntervalMinutes: 5040,  // 3.5 days = 84 hours
+            customRecurrence: nil
+        )
+    }
+}
+
 // MARK: - Service Errors
 
 /// Errors that can occur during schedule service operations
@@ -64,6 +95,7 @@ enum ScheduleServiceError: LocalizedError, Equatable {
     case scheduleNotFound
     case scheduleConflict
     case doseNotModifiable
+    case splitDoseNotSupported(String)
     case contextSaveFailed(Error)
 
     static func == (lhs: ScheduleServiceError, rhs: ScheduleServiceError) -> Bool {
@@ -76,6 +108,8 @@ enum ScheduleServiceError: LocalizedError, Equatable {
             (.scheduleConflict, .scheduleConflict),
             (.doseNotModifiable, .doseNotModifiable):
             return true
+        case (.splitDoseNotSupported(let lhs), .splitDoseNotSupported(let rhs)):
+            return lhs == rhs
         case (.contextSaveFailed(let lhsError), .contextSaveFailed(let rhsError)):
             return lhsError.localizedDescription == rhsError.localizedDescription
         default:
@@ -99,6 +133,8 @@ enum ScheduleServiceError: LocalizedError, Equatable {
             return "Schedule conflict detected"
         case .doseNotModifiable:
             return "Dose cannot be modified"
+        case .splitDoseNotSupported(let message):
+            return message
         case .contextSaveFailed(let error):
             return "Failed to save changes: \(error.localizedDescription)"
         }
