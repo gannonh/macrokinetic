@@ -172,7 +172,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ui-testing"

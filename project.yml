@@ -85,11 +85,11 @@ schemes:
     run:
       commandLineArguments:
         "--bypass-onboarding": false
-        "--force-onboarding": false
+        "--force-onboarding": false 
         "--reset-app-data": true
-        "--ui-testing": true
+        "--ui-testing": true # Enable to bypass auth
         "--seed-test-7d": false
         "--seed-test-30d": false
-        "--seed-test-90d": true
+        "--seed-test-90d": false
         "--seed-test-1y": false
       storeKitConfiguration: JabTrackerStoreKit.storekit

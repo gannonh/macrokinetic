@@ -1,12 +1,11 @@
 ---
-description: Begin or resume work on a GitHub issue.
+description: Begin or resume work on a Task Issue.
 argument-hint: [Issue number] [additional context (optional)]
-allowed-tools: Bash, Edit, MultiEdit, SlashCommand, WebFetch, WebSearch, Write
 ---
 
-# Issue Start/Resume
+# Task Issue Start/Resume
 
-Begin or resume work on one or more GitHub issues: $1
+Begin or resume work on a Task issue: $1
 
 Additional context (if any): $2
 
@@ -17,33 +16,17 @@ Additional context (if any): $2
    gh issue view $1 --json state,title,labels,body,assignees
    ```
 
-2. **Identify issue type:**
-   There are two fundamental types of issues of relevance to this command/process:
+2. **Confirm Task Type**
 
-   1. **PR Issues** - New issues resulting from the PR Review process
-      - These issues are identified by their titles, which are **prefixed by "PR #"**
-      - These issues are typically small, focused tasks that can be completed quickly
-      - They often relate to code changes, bug fixes, or minor enhancements
-      - They do not have a corresponding local markdown file.
-   2. **Task Issues** - Larger issues that are part of an epic.
-      - These issues are **identified by the label "task"**
-      - They often involve multiple steps, dependencies, and require more time to complete
-      - They may include design considerations, architectural changes, or significant new functionality
+**Task Issues Defined** 
+- Larger issues that are part of an epic.
+- These issues are **identified by the label "task"**
+- They often involve multiple steps, dependencies, and require more time to complete
+- They may include design considerations, architectural changes, or significant new functionality
 
-**THE FOLLOWING INSTRUCTION SETS ARE MUTUALLY EXCLUSIVE BASED ON ISSUE TYPE.**
+If for any reason the issue does not appear to be a Task iossue as defined above, **STOP AND REPORT**:
 
-## Instructions for PR Issues
-
-1. Read the issue description and recommended solution (if any) from GitHub.
-2. Label the issue as `in-progress` in GitHub
-3. Assess the implementation requirements and acceptance criteria.
-4. Determine if any additional context or clarification is needed - if so, as the human for clarification.
-5. Present to the user your recommended solution and implementation plan for approval: Iterate until approved.
-6. Implement the solution.
-7. Ensure all checks pass: `./scripts/check-all.sh`
-8. Commit your work, referencing the issue number: `git commit -m "Fix for #$1: [description of work]"`
-9. Push to GitHub: `git push`
-10. Remove the `in-progress` label and close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
+- "❌ Issue #$1 does not appear to be a Task issue. Did you mean to start a PR issue instead? If so, run `/pm:pr-issue $1`"
 
 ## Instructions for Task Issues
 
