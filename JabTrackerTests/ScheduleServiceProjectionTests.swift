@@ -618,4 +618,118 @@ struct ScheduleServiceProjectionTests {
             #expect(abs(windowAfter - 3600) < 60, "Window after should be ~1 hour (3600s)")
         }
     }
+
+    // MARK: - Split-Dose Projection Tests
+
+    @Test("Generate split-dose schedule with 3.5-day interval")
+    func testGenerateSplitDoseScheduleCorrectInterval() throws {
+        // GIVEN: A medication profile and split-dose schedule
+        let context = try createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        let service = ScheduleService(context: context)
+
+        let config = ScheduleConfiguration(
+            dayOfWeek: nil,
+            timeOfDay: TimeComponents(hour: 8, minute: 0),
+            interval: 7,
+            doseAmount: 0.25,  // Half of 0.5mg weekly dose
+            windowMinutesBefore: 120,
+            windowMinutesAfter: 120,
+            splitDoseCount: 2,
+            splitIntervalMinutes: 5040,  // 3.5 days = 84 hours
+            customRecurrence: nil
+        )
+
+        let startDate = Date()
+        let schedule = try service.createSchedule(
+            for: profile,
+            pattern: .splitDose,
+            startDate: startDate,
+            baseSchedule: config
+        )
+
+        // WHEN: Generating doses for 2 weeks
+        let endDate = Calendar.current.date(byAdding: .day, value: 14, to: startDate)!
+        let doses = service.generateScheduledDoses(for: schedule, from: startDate, to: endDate)
+
+        // THEN: Should have 4 doses (2 per week for 2 weeks)
+        #expect(doses.count == 4, "Should generate 4 doses for 2 weeks with split-dose pattern")
+
+        // THEN: Doses should be ~3.5 days apart
+        for index in 0..<(doses.count - 1) {
+            let interval = doses[index + 1].scheduledTime.timeIntervalSince(doses[index].scheduledTime)
+            let expectedInterval: TimeInterval = 5040 * 60  // 5040 minutes in seconds
+            let tolerance: TimeInterval = 300  // 5 minute tolerance
+
+            #expect(
+                abs(interval - expectedInterval) < tolerance,
+                "Doses should be ~3.5 days (5040 minutes) apart, got \(interval / 3600) hours")
+        }
+
+        // THEN: Each dose should be 0.25mg (half of 0.5mg weekly)
+        for dose in doses {
+            #expect(dose.doseAmount == 0.25, "Each split dose should be half of weekly dose")
+        }
+    }
+
+    @Test("Split-dose pattern creates twice-weekly schedule")
+    func testSplitDoseTwiceWeeklyPattern() throws {
+        // GIVEN: A split-dose schedule starting Wednesday
+        let context = try createTestContext()
+        let profile = createTestMedicationProfile(context: context)
+        let service = ScheduleService(context: context)
+
+        // Start on a Wednesday at 8 PM
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 1
+        components.day = 3  // Wednesday, January 3, 2024
+        components.hour = 20  // 8 PM
+        components.minute = 0
+        let wednesday = Calendar.current.date(from: components)!
+
+        let config = ScheduleConfiguration(
+            dayOfWeek: nil,
+            timeOfDay: TimeComponents(hour: 20, minute: 0),
+            interval: 7,
+            doseAmount: 0.25,
+            windowMinutesBefore: 120,
+            windowMinutesAfter: 120,
+            splitDoseCount: 2,
+            splitIntervalMinutes: 5040,  // 3.5 days
+            customRecurrence: nil
+        )
+
+        let schedule = try service.createSchedule(
+            for: profile,
+            pattern: .splitDose,
+            startDate: wednesday,
+            baseSchedule: config
+        )
+
+        // WHEN: Generating doses for 1 week
+        let endDate = Calendar.current.date(byAdding: .day, value: 7, to: wednesday)!
+        let doses = service.generateScheduledDoses(for: schedule, from: wednesday, to: endDate)
+
+        // THEN: Should have 2 doses
+        #expect(doses.count == 2, "Should have 2 doses per week for split-dose pattern")
+
+        // THEN: First dose on Wednesday, second dose 3.5 days later (Sunday morning)
+        let firstDose = doses[0]
+        let secondDose = doses[1]
+
+        let interval = secondDose.scheduledTime.timeIntervalSince(firstDose.scheduledTime)
+        let expectedInterval: TimeInterval = 3.5 * 24 * 3600  // 3.5 days in seconds
+
+        #expect(
+            abs(interval - expectedInterval) < 300,
+            "Second dose should be 3.5 days after first dose")
+
+        // Verify days of week
+        let firstWeekday = Calendar.current.component(.weekday, from: firstDose.scheduledTime)
+        let secondWeekday = Calendar.current.component(.weekday, from: secondDose.scheduledTime)
+
+        #expect(firstWeekday == 4, "First dose should be Wednesday (weekday 4)")
+        #expect(secondWeekday == 1, "Second dose should be Sunday (weekday 1)")
+    }
 }

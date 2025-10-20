@@ -471,4 +471,67 @@ struct ScheduleServiceTests {
 
         #expect(didThrow == true)
     }
+
+    // MARK: - Split-Dose Configuration Tests
+
+    @Test("Split-dose configuration for weekly medication returns correct interval")
+    func testSplitDoseConfigurationWeeklyMedication() throws {
+        // GIVEN: A weekly medication (semaglutide)
+        let medication = Medication.semaglutide
+        let totalWeeklyDose = 0.5
+
+        // WHEN: Creating split-dose configuration
+        let config = try ScheduleConfiguration.splitDoseConfiguration(
+            for: medication,
+            totalWeeklyDose: totalWeeklyDose
+        )
+
+        // THEN: Configuration has correct 3.5-day interval (5040 minutes)
+        #expect(config.splitIntervalMinutes == 5040, "Split interval should be 3.5 days (5040 minutes)")
+        #expect(config.splitDoseCount == 2, "Should split into 2 doses")
+        #expect(config.interval == 7, "Should maintain weekly interval")
+        #expect(config.doseAmount == totalWeeklyDose / 2.0, "Each dose should be half of total weekly dose")
+    }
+
+    @Test("Split-dose configuration for daily medication throws error")
+    func testSplitDoseConfigurationDailyMedicationThrows() throws {
+        // GIVEN: A daily medication (liraglutide)
+        let medication = Medication.liraglutide
+        let totalDailyDose = 1.8
+
+        // WHEN/THEN: Attempting split-dose configuration throws error
+        var didThrow = false
+        var errorMessage = ""
+        do {
+            _ = try ScheduleConfiguration.splitDoseConfiguration(
+                for: medication,
+                totalWeeklyDose: totalDailyDose
+            )
+        } catch let error as ScheduleServiceError {
+            didThrow = true
+            errorMessage = error.localizedDescription
+        }
+
+        #expect(didThrow == true, "Should throw error for daily medication")
+        #expect(
+            errorMessage.contains("Split-dose only supported for weekly medications"),
+            "Error message should explain split-dose limitation")
+    }
+
+    @Test("Split-dose configuration validation - tirzepatide")
+    func testSplitDoseConfigurationTirzepatide() throws {
+        // GIVEN: Tirzepatide (weekly medication)
+        let medication = Medication.tirzepatide
+        let totalWeeklyDose = 5.0
+
+        // WHEN: Creating split-dose configuration
+        let config = try ScheduleConfiguration.splitDoseConfiguration(
+            for: medication,
+            totalWeeklyDose: totalWeeklyDose
+        )
+
+        // THEN: Configuration is correct
+        #expect(config.splitIntervalMinutes == 5040, "Split interval should be 3.5 days")
+        #expect(config.doseAmount == 2.5, "Each dose should be 2.5mg (half of 5.0mg)")
+    }
 }
