@@ -189,7 +189,7 @@ struct MedicationProfileViewModelScheduleTests {
         let context = try createTestContext()
         let user = createTestUser(context: context)
         let profile = createTestMedicationProfile(context: context, user: user)
-        let schedule = try createTestSchedule(context: context, profile: profile)
+        _ = try createTestSchedule(context: context, profile: profile)
 
         let viewModel = MedicationProfileViewModel(
             medicationProfile: profile,

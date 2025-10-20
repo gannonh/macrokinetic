@@ -254,6 +254,7 @@
 		C37C33130408C521AE68DCBF /* CalendarAccessibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7C3B0C007CFE71B5FE56C1 /* CalendarAccessibilityUITests.swift */; };
 		C3A347C9C7CBA45680B8CCF2 /* ScheduleServiceModificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB13A43CB0C2E01BC2AA642B /* ScheduleServiceModificationTests.swift */; };
 		C4DA17510899776E9CA1CA99 /* ScheduleSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F93E327E8A9148A16246588 /* ScheduleSetupView.swift */; };
+		C4E16659592C94BA10C17384 /* TestUtilities+Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23133480CAEB59ED1B12CA8 /* TestUtilities+Schedule.swift */; };
 		C4ED1DFE1CB042935C7E34DE /* RescheduleDoseSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B31DE0C0D0ED5E7B59F06DE /* RescheduleDoseSheetTests.swift */; };
 		C58F9C3E622882A3CAB09EC5 /* SubscriptionUINetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */; };
 		C5B289EC33F6AA3464E07D3C /* DoseHistoryViewModelErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1B06AAB60967FA3C0B9B69 /* DoseHistoryViewModelErrorTests.swift */; };
@@ -579,6 +580,7 @@
 		AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUINetworkTests.swift; sourceTree = "<group>"; };
 		AFDCB9FC9DB6B52F2BAD963D /* DesignSystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemTests.swift; sourceTree = "<group>"; };
 		B12AE5BFDB7B73AE434ED4A5 /* DoseHistorySwipeActionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistorySwipeActionsUITests.swift; sourceTree = "<group>"; };
+		B23133480CAEB59ED1B12CA8 /* TestUtilities+Schedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TestUtilities+Schedule.swift"; sourceTree = "<group>"; };
 		B235104E7844F74CD62FC895 /* SubscriptionManagerCoreLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerCoreLogicTests.swift; sourceTree = "<group>"; };
 		B2CCD45469CD615C737CB6C8 /* SubscriptionUIStoreKitErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIStoreKitErrorTests.swift; sourceTree = "<group>"; };
 		B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationEdgeCaseTests.swift; sourceTree = "<group>"; };
@@ -788,6 +790,7 @@
 				5951BDD41F83832C99DE40C4 /* TestUtilities.swift */,
 				3BFF4A6E541C0C70EE49FC83 /* TestUtilities+Dose.swift */,
 				818E5E60E88A431506ACA977 /* TestUtilities+ElementTypes.swift */,
+				B23133480CAEB59ED1B12CA8 /* TestUtilities+Schedule.swift */,
 				A5A6EE958F538B94B7A58B78 /* UITestTemplateTest.swift */,
 			);
 			path = Utils;
@@ -1525,6 +1528,7 @@
 				C24A8A61EAB23384FC48562D /* SubscriptionUITests.swift in Sources */,
 				968CB6D898D2C99EEE015B72 /* TestUtilities+Dose.swift in Sources */,
 				0FF1064F45A5574ED58DB04C /* TestUtilities+ElementTypes.swift in Sources */,
+				C4E16659592C94BA10C17384 /* TestUtilities+Schedule.swift in Sources */,
 				E71B0CB8B11DF0EBB2EABD41 /* TestUtilities.swift in Sources */,
 				AEDFDA5E3DD9FAE8287EA2A1 /* UITestTemplateTest.swift in Sources */,
 			);
