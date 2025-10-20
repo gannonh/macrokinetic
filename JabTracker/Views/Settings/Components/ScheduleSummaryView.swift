@@ -193,13 +193,13 @@ struct ScheduleSummaryView: View {
     private func formatTimeUntil(_ date: Date) -> String {
         let interval = date.timeIntervalSinceNow
 
-        if interval < 3600 {  // Less than 1 hour
+        if interval < TimeConstants.secondsPerHour {
             return "Less than 1 hour"
-        } else if interval < 86400 {  // Less than 1 day
-            let hours = Int(interval / 3600)
+        } else if interval < TimeConstants.secondsPerDay {
+            let hours = Int(interval / TimeConstants.secondsPerHour)
             return "\(hours) hour\(hours == 1 ? "" : "s")"
-        } else {  // 1 day or more
-            let days = Int(interval / 86400)
+        } else {
+            let days = Int(interval / TimeConstants.secondsPerDay)
             return "\(days) day\(days == 1 ? "" : "s")"
         }
     }
