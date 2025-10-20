@@ -59,27 +59,6 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         profile.tap()
     }
 
-    /// Create a default schedule using the Create Schedule button
-    /// - Throws: XCTestError if schedule creation fails
-    private func createDefaultSchedule() throws {
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        guard createScheduleButton.waitForExistence(timeout: 3) else {
-            XCTFail("Schedule already exists or view not ready")
-            return
-        }
-        createScheduleButton.tap()
-
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist in schedule edit sheet")
-        saveButton.tap()
-
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after saving schedule")
-    }
-
     // MARK: - Test 1: Create Schedule Flow
 
     func testCreateWeeklySchedule() throws {
@@ -126,7 +105,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testEditExistingSchedule() throws {
         // GIVEN: User on medication profile settings with active weekly schedule
         try navigateToMedicationProfileSettings()
-        try createDefaultSchedule()
+        try TestUtilities.createDefaultSchedule(app)
 
         // WHEN: User taps "Edit Schedule" button
         let editScheduleButton = app.buttons["edit-schedule-button"]
@@ -167,7 +146,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testPauseScheduleOneWeek() throws {
         // GIVEN: User on medication profile settings with active schedule
         try navigateToMedicationProfileSettings()
-        try createDefaultSchedule()
+        try TestUtilities.createDefaultSchedule(app)
 
         // WHEN: User taps "Pause Schedule" button
         let pauseScheduleButton = app.buttons["pause-schedule-button"]
@@ -202,7 +181,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testResumeSchedule() throws {
         // GIVEN: User on medication profile settings with paused schedule
         try navigateToMedicationProfileSettings()
-        try createDefaultSchedule()
+        try TestUtilities.createDefaultSchedule(app)
 
         // Pause the schedule
         let pauseScheduleButton = app.buttons["pause-schedule-button"]
@@ -244,7 +223,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testDeactivateScheduleWithConfirmation() throws {
         // GIVEN: User on medication profile settings with active schedule
         try navigateToMedicationProfileSettings()
-        try createDefaultSchedule()
+        try TestUtilities.createDefaultSchedule(app)
 
         // WHEN: User taps "Deactivate Schedule" button
         let deactivateScheduleButton = app.buttons["deactivate-schedule-button"]
@@ -288,7 +267,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testCancelDeactivateSchedule() throws {
         // GIVEN: User on medication profile settings with active schedule
         try navigateToMedicationProfileSettings()
-        try createDefaultSchedule()
+        try TestUtilities.createDefaultSchedule(app)
 
         // WHEN: User taps "Deactivate Schedule", confirmation appears
         let deactivateScheduleButton = app.buttons["deactivate-schedule-button"]
@@ -332,7 +311,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testMultipleScheduleModifications() throws {
         // GIVEN: User on medication profile settings
         try navigateToMedicationProfileSettings()
-        try createDefaultSchedule()
+        try TestUtilities.createDefaultSchedule(app)
 
         // WHEN: User edits the schedule
         let editScheduleButton = app.buttons["edit-schedule-button"]
@@ -377,7 +356,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             "Create button should have correct accessibility identifier")
 
         // Create schedule to test all button states
-        try createDefaultSchedule()
+        try TestUtilities.createDefaultSchedule(app)
 
         // VERIFY: All buttons have proper accessibility identifiers
         let editScheduleButton = app.buttons["edit-schedule-button"]

@@ -639,7 +639,7 @@ struct AnalyticsViewModelTests {
         // First refresh - exercises cache save path
         await viewModel.refreshChartDataset(config: config)
 
-        let firstDataset = viewModel.fullChartDataset
+        _ = viewModel.fullChartDataset
 
         // Refresh again - exercises update and persist paths
         await viewModel.refreshChartDataset(config: config)

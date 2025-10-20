@@ -228,7 +228,7 @@ struct DoseActionSheetTests {
 
         // Attempting to skip should not change status
         // (UI should prevent this, but model should be safe)
-        let initialStatus = scheduledDose.status
+        _ = scheduledDose.status
         scheduledDose.markAsSkipped(reason: "Should not work")
 
         // For safety, we expect the skip to be ignored for taken doses
