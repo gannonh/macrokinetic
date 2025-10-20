@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-19T17:46:21Z
-version: 4.6
+last_updated: 2025-10-20T14:22:56Z
+version: 4.7
 author: Claude Code PM System
 ---
 
@@ -9,22 +9,30 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: issue/178-calendar-integration
-- **Last Commit**: 7a5c8b0 - Issue #178: update progress tracking
-- **Status**: Issue #178 E2E TESTING COMPLETE - All 27 E2E tests passing, ready for final review and merge
+- **Branch**: main
+- **Last Commit**: 0180d45 - docs: Close issue #179 and update epic progress to 60%
+- **Status**: Issue #179 CLOSED - Medication Profile CRUD complete, PR #261 merged to main
 
 ## Recent Work (Last 5 Commits)
-1. **7a5c8b0** - Issue #178: update progress tracking
-2. **bb55baf** - fix: Remove hanging permission tests and fix generateTrendData crash
-3. **7669472** - chore: file rename
-4. **56a12f0** - test: Complete CalendarAccessibilityUITests - 5/5 tests passing ✅
-5. **621ea3e** - test: Complete CalendarQuickDoseIntegrationUITests - 4/4 tests passing ✅
+1. **0180d45** - docs: Close issue #179 and update epic progress to 60%
+2. **c624073** - refactor: Address code quality issues from PR #261 review
+3. **121d8dc** - Fix #265: Extract test helper for schedule creation
+4. **8e5c192** - Fix #268: Add input validation to DoseScheduleEditView.saveSchedule()
+5. **a7b7a10** - Fix #267: Replace magic numbers with TimeConstants
 
 ## Current Working Directory Status
 - **Modified Files**: Context documentation updates in progress
-- **Branch Status**: issue/178-calendar-integration (E2E tests complete)
-- **Current Phase**: Issue #178 E2E TESTING COMPLETE - All acceptance criteria validated, ready for final review
-- **Recent Session Work** (2025-10-15 to 2025-10-17 - Issue #178 E2E Testing):
+- **Branch Status**: main (issue #179 merged and closed)
+- **Current Phase**: Issue #179 CLOSED - Processing learnings and updating context documentation
+- **Recent Session Work** (2025-10-19 to 2025-10-20 - Issue #179 Completion):
+  - 🎉 **Issue #179 CLOSED**: Medication Profile CRUD - Schedule management integrated into medication settings
+  - ✅ **PR #261 Merged**: Successfully merged to main with code quality fixes
+  - ✅ **Epic Progress**: Dose-scheduling epic updated to 60% (6/10 tasks complete)
+  - 📦 **Implementation**: 10 new UI components, 5 test files, 43 files changed (5,315+ additions)
+  - 🧪 **Testing**: 8 E2E tests (100% pass), 295 unit/integration tests for ViewModel
+  - 🎯 **Features**: Schedule editing, pause/resume, deactivation, history timeline, titration warnings
+  - 📝 **Context Update**: Processing learnings from issues #175, #176, #177, #179
+- **Previous Session Work** (2025-10-15 to 2025-10-17 - Issue #178 E2E Testing):
   - 🎉 **Issue #178 E2E TESTS COMPLETE**: Calendar Integration - All 27 E2E tests passing
   - ✅ **CalendarScheduledDosesUITests**: 8/8 tests passing - scheduled dose display, indicators, performance, lazy loading
   - ✅ **CalendarDoseActionsUITests**: 10/10 tests passing - long-press, action sheet, log/reschedule/skip actions
@@ -34,7 +42,7 @@ author: Claude Code PM System
   - 📊 **Acceptance Criteria**: 9/9 complete (100%), all NFRs validated through E2E tests
   - 🎯 **Stream Status**: All 3 streams complete with E2E validation
   - 📦 **Test Count**: 27 new E2E tests + unit/integration tests from streams
-  - 📝 **Next Steps**: Final review, merge to main, close issue
+  - 📝 **Outcome**: PR merged, issue closed, epic progress updated
 - **Previous Session Work** (2025-10-13 - Issue #177 Closure):
   - ✅ **PR #227 Merged**: Issue #177 merged to main with rebase strategy
   - ✅ **Issue #177 Closed**: GitHub issue closed with completion summary
@@ -168,6 +176,16 @@ author: Claude Code PM System
 - Full VoiceOver accessibility support
 - Integration with ScheduleService and NotificationService
 
+✅ **Medication Profile CRUD** (Issue #179)
+- Complete schedule management integrated into medication profile settings
+- Schedule editing with DoseScheduleEditView (pattern, frequency, reminders)
+- Pause/resume functionality with flexible duration options
+- Schedule deactivation with confirmation dialogs
+- Schedule modification history timeline
+- Titration warning integration for upcoming dose changes
+- 8 E2E tests (100% pass rate) + 295 unit/integration tests
+- Professional UI components: ScheduleSummaryView, PauseScheduleSheet, ScheduleHistoryRow
+
 ✅ **Foundation Infrastructure**
 - SwiftData + CloudKit integration with graceful fallback
 - Design system with accessibility support
@@ -176,9 +194,18 @@ author: Claude Code PM System
 - Claude Code PM system with issue/branch/PR workflow
 
 ## Current Priorities
-1. **Dose Scheduling System** - New epic in backlog (weekly/split-dose/custom patterns, smart notifications)
-2. **Notifications System** - Smart dose reminders and milestone notifications (part of dose-scheduling epic)
-3. **Future Enhancements** - Additional features and refinements based on user feedback
+1. **Dose Scheduling System (60% COMPLETE)** - Epic #173 in progress (6/10 tasks complete)
+   - ✅ #174 - SwiftData Models (CLOSED)
+   - ✅ #175 - ScheduleService Core (CLOSED)
+   - ✅ #176 - NotificationService (CLOSED)
+   - ✅ #177 - Onboarding Integration (CLOSED)
+   - ✅ #178 - Calendar Integration (CLOSED)
+   - ✅ #179 - Medication Profile CRUD (CLOSED)
+   - 🔄 #180 - Split-Dose Support (OPEN)
+   - 🔄 #181 - Analytics Integration (OPEN)
+   - 🔄 #183 - Performance & Polish (OPEN)
+   - 🔄 #260 - Notification UI & Configuration (OPEN)
+2. **Future Enhancements** - Additional features and refinements based on user feedback
 
 ## Deferred Issues
 - **#58 - ExportableReportView** (deferred 2025-09-28) - Professional PDF reports not needed for MVP

@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-15T18:06:05Z
-version: 2.8
+last_updated: 2025-10-20T14:22:56Z
+version: 2.9
 author: Claude Code PM System
 ---
 
@@ -293,6 +293,30 @@ struct UserAnalyticsSummary {
 
 > **For parallel testing patterns, test-driven parallel development, simulator isolation, and quality gate validation**, see `.claude/context/testing.md`
 
+### E2E Testing Excellence Patterns (Issue #177)
+
+#### Iterative E2E Development Process
+- **One-Test-at-a-Time Implementation**: Implementing each test individually (vs batch implementation) prevents debugging chaos and achieved 100% pass rate on first full suite run
+- **Debug-First Methodology**: Always use `TestUtilities.debugElements()` before writing selectors - saves significant time and reveals actual element types
+- **Commit After Each Test**: Individual commits for passing tests provides clear progress tracking and easy rollback points
+- **Full Suite Verification**: Running all tests together ensures no interdependencies or conflicts
+
+#### XCUITest Element Targeting
+- **Back Button Access Pattern**: Use explicit accessibility identifier (`app.buttons["onboarding-back-button"]`) rather than navigation bar queries
+- **Multiple Element Handling**: Use `.element(boundBy: 0)` for accessing specific elements when multiple share same identifier
+- **Debug Output Analysis**: Raw logs reveal actual element types and identifiers more reliably than assumptions
+- **Strategic Sleep Placement**: Use `sleep(3)` for navigation/rendering, `usleep(50_000)` for UI updates
+
+#### Performance Testing for E2E
+- **E2E Timeout Expectations**: E2E tests require < 1 second timeouts (not < 200ms unit test expectations)
+- **Chart Preview Performance**: Concentration curve preview renders < 1 second meeting NFR requirements
+- **Pattern Update Responsiveness**: Chart updates complete within E2E-appropriate timeouts
+
+#### Accessibility Testing Without Simulation
+- **VoiceOver Property Validation**: Comprehensive testing validates properties (labels, values, hints) without simulating actual VoiceOver
+- **State Announcement Verification**: Toggle and button values correctly indicate current state for assistive technologies
+- **Accessibility Label Coverage**: All interactive elements have descriptive labels enabling full VoiceOver navigation
+
 ## Security & Defensive Programming Patterns (Issue #55)
 
 ### Medical App Crash Prevention
@@ -380,9 +404,10 @@ struct UserAnalyticsSummary {
 - **General Guideline**: Aim for <1,000 chart points for <10s generation, <10,000 points for <60s generation on typical iOS devices
 
 ## Update History
+- 2025-10-20T14:22:56Z: Added E2E Testing Excellence Patterns from Issue #177 - iterative E2E development process, XCUITest element targeting, performance testing for E2E, and accessibility testing without simulation
 - 2025-10-15T18:06:05Z: Added Calendar Integration Patterns from Issue #178 - SwiftUI DatePicker range validation, placeholder method anti-pattern, and chart performance tuning for medical apps
 - 2025-10-14T17:00:00Z: Added Version Control Patterns section with commit verification discipline - emphasizes verifying work before committing to avoid false git history with multiple failed fix attempts
-- 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing Patterns from Issue #177 - back button access patterns, iterative test development success, strategic sleep timing, state preservation validation, accessibility testing without VoiceOver simulation, and performance testing timeouts
+- 2025-10-09T20:27:54Z: Updated for Issues #175, #176, #177 - Hybrid parallel development strategy, NotificationService parallel patterns, and onboarding integration E2E testing patterns
 - 2025-10-08T20:37:55Z: Added NotificationService Parallel Development Patterns from Issue #176 - 3-stream parallel coordination, extension architecture, protocol-based testability, and UNUserNotificationCenter testing limitations
 - 2025-10-06T20:59:29Z: Added Hybrid Parallel Development Strategy from Issue #175 - phase-based parallelization, extension architecture, @Observable service pattern, error enum coordination, and commit strategies for parallel streams
 - 2025-10-05T23:08:25Z: Added SwiftData CloudKit relationship patterns from Issue #174 (dose scheduling models) - CloudKit requirements, circular reference prevention, timing precision, and ModelConfiguration completeness
