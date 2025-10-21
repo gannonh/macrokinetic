@@ -9,11 +9,14 @@ import XCTest
 
 final class SplitDoseIntegrationUITests: XCTestCase {
     var app: XCUIApplication!
+    var screenshotCapture: ScreenshotCapture!
 
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
+        screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "split-dose-integration")
+
         // Pre-seed with medication profile (no schedule yet)
         app.launchEnvironment["TEST_DATA_SEED"] = "true"
         app.launchEnvironment["TEST_DATA_DAYS"] = "0"
@@ -95,7 +98,8 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         try TestUtilities.createSplitDoseSchedule(app)
 
         // THEN: Schedule summary shows split-dose pattern information
-        let scheduleSummary = app.otherElements["schedule-summary-view"]
+        // Note: ScheduleSummaryView renders as StaticText in accessibility hierarchy
+        let scheduleSummary = app.staticTexts["schedule-summary-view"]
         XCTAssertTrue(
             scheduleSummary.waitForExistence(timeout: 5),
             "Schedule summary should appear in medication profile settings")
@@ -123,7 +127,16 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         try TestUtilities.createSplitDoseSchedule(app)
 
         // WHEN: User views dashboard (directly via tab bar)
-        let dashboardTab = app.tabBars.buttons["Dashboard"]
+        // Note: Need to navigate back from medication profile details first to make tab bar accessible
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        if backButton.exists {
+            backButton.tap()
+            usleep(500_000)  // Wait for navigation
+        }
+
+        // Note: Tab bar buttons use labels, not identifiers ("Home" not "Dashboard")
+        let dashboardTab = app.tabBars.buttons["Home"]
+
         XCTAssertTrue(dashboardTab.waitForExistence(timeout: 3))
         dashboardTab.tap()
 
@@ -131,7 +144,8 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         usleep(500_000)  // 0.5 seconds for calculations
 
         // THEN: Dashboard shows concentration information WITHOUT dangerous twice-daily timing language
-        let concentrationCard = app.otherElements["concentration-card"]
+        // Note: ConcentrationCard uses dynamic identifier: "concentration-card-{medicationType}"
+        let concentrationCard = app.otherElements["concentration-card-semaglutide"]
         XCTAssertTrue(
             concentrationCard.waitForExistence(timeout: 5),
             "Concentration card should appear on dashboard")
