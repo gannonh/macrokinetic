@@ -99,7 +99,7 @@ These tests prevent dangerous medical errors where split-dose scheduling would c
 
 ## Progress Updates
 
-### 2025-10-21 Session Update
+### 2025-10-21 Session Update (Morning)
 - **Work Completed**: Removed Test 4 (testDashboardShowsCorrectSplitDoseConcentration) - identified fundamental test logic flaw
 - **Files Modified**: JabTrackerUITests/SplitDoseIntegrationUITests.swift (deleted 58 lines)
 - **Issues Resolved**: Test 4 was testing wrong scenario - creating future schedule doesn't affect current concentration calculations
@@ -107,6 +107,26 @@ These tests prevent dangerous medical errors where split-dose scheduling would c
 - **Testing Status**: 3 E2E tests remain (Tests 1-3), all passing. Test 4 removed as invalid.
 - **Integration Status**: No impact on other streams - test deletion only
 - **Next Steps**: Stream remains complete with 3 valid E2E tests covering critical acceptance criteria
+
+### 2025-10-21 Session Update (Afternoon/Evening)
+- **Work Completed**: Daily medication E2E tests + Critical split-dose bug fix in QuickDoseViewModel
+- **Files Created**:
+  1. `JabTrackerUITests/DailyMedicationProfileScheduleUITests.swift` (NEW - 214 lines, 4 E2E tests)
+  2. `JabTrackerUITests/OnboardingMedicationPatternsUITests.swift` (NEW - 337 lines, 4 E2E tests from file split)
+- **Files Modified**:
+  1. `JabTrackerUITests/OnboardingScheduleSetupUITests.swift` (reduced from 915 to 555 lines)
+  2. `JabTracker/Views/Dashboard/QuickDoseViewModel.swift` (CRITICAL BUG FIX)
+  3. `JabTrackerUITests/SplitDoseIntegrationUITests.swift` (added 1 new E2E test)
+- **Commits**:
+  1. `b3a4278` - "test: Add comprehensive E2E tests for daily medications (Issue #180)"
+  2. `2994ed1` - "fix: Split-dose amount calculation in Quick Add Dose (Issue #180 Critical Bug)"
+- **Critical Bug Fixed**: QuickDoseViewModel showing 1.0mg instead of 0.5mg for split-dose schedules (potential 2x overdose)
+- **Implementation**: Added split-dose pattern check: `self.doseAmount = profile.currentDose / 2` for split-dose schedules
+- **New E2E Test**: `testQuickAddDoseShowsCorrectSplitDoseAmount()` validates 0.5mg shown for 1.0mg split-dose (PASSING - 25.0s)
+- **Daily Med Tests**: 4/4 passing (78.6s total) - schedule creation, next dose calculation, edit restrictions, pause/resume
+- **File Organization**: Split large test file for maintainability (915 lines → 555 + 337 lines)
+- **Testing Status**: All E2E tests passing (15 total across all files)
+- **Medical Safety**: Critical safety bug prevented - users can no longer see wrong dose amount in Quick Add for split-dose schedules
 
 ## Next Steps
 ✅ Stream C marked complete
