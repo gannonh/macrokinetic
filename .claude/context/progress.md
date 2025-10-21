@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-21T15:12:00Z
-version: 4.8
+last_updated: 2025-10-21T22:25:26Z
+version: 4.9
 author: Claude Code PM System
 ---
 
@@ -9,22 +9,31 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: main
-- **Last Commit**: 0180d45 - docs: Close issue #179 and update epic progress to 60%
-- **Status**: Issue #179 CLOSED - Medication Profile CRUD complete, PR #261 merged to main
+- **Branch**: issue/180-fix-split-dose-medical-accuracy-add-medication-specific-patterns
+- **Last Commit**: acf0d6c - docs: Capture Issue #180 session learnings (2025-10-21 afternoon)
+- **Status**: Issue #180 IN PROGRESS - Daily medication E2E tests complete, critical split-dose bug fixed
 
 ## Recent Work (Last 5 Commits)
-1. **0180d45** - docs: Close issue #179 and update epic progress to 60%
-2. **c624073** - refactor: Address code quality issues from PR #261 review
-3. **121d8dc** - Fix #265: Extract test helper for schedule creation
-4. **8e5c192** - Fix #268: Add input validation to DoseScheduleEditView.saveSchedule()
+1. **acf0d6c** - docs: Capture Issue #180 session learnings (2025-10-21 afternoon)
+2. **bbfb3bc** - docs: Update Issue #180 progress tracking with afternoon session work
+3. **2994ed1** - fix: Split-dose amount calculation in Quick Add Dose (Issue #180 Critical Bug)
+4. **b3a4278** - test: Add comprehensive E2E tests for daily medications (Issue #180)
+5. **7d92f3f** - Fix #180: Add daily medication schedule pattern support
 5. **a7b7a10** - Fix #267: Replace magic numbers with TimeConstants
 
 ## Current Working Directory Status
-- **Modified Files**: Context documentation updates in progress
-- **Branch Status**: main (issue #179 merged and closed)
-- **Current Phase**: Issue #179 CLOSED - Processing learnings and updating context documentation
-- **Recent Session Work** (2025-10-19 to 2025-10-20 - Issue #179 Completion):
+- **Modified Files**: Context documentation updates (product-context.md, system-patterns.md, progress.md)
+- **Branch Status**: issue/180-fix-split-dose-medical-accuracy-add-medication-specific-patterns
+- **Current Phase**: Issue #180 IN PROGRESS - Daily med tests complete, critical split-dose bug fixed, processing learnings
+- **Recent Session Work** (2025-10-21 Afternoon - Issue #180 E2E Tests & Critical Bug Fix):
+  - 🧪 **Daily Medication E2E Tests**: Created DailyMedicationProfileScheduleUITests.swift (4 tests, 100% passing)
+  - 🐛 **Critical Bug Fix**: QuickDoseViewModel split-dose amount calculation (prevented 2x overdose)
+  - 📝 **File Organization**: Split OnboardingScheduleSetupUITests.swift (915 lines → 555 + 337 lines)
+  - ✅ **New E2E Test**: testQuickAddDoseShowsCorrectSplitDoseAmount() validates 0.5mg for 1.0mg split-dose
+  - 📦 **Files Created**: 2 new test files (DailyMedicationProfileScheduleUITests, OnboardingMedicationPatternsUITests)
+  - 📊 **Test Results**: All E2E tests passing (15 total across Issue #180)
+  - 🎯 **Medical Safety**: User-discovered bug fixed, preventing incorrect dose display in Quick Add
+- **Previous Session Work** (2025-10-19 to 2025-10-20 - Issue #179 Completion):
   - 🎉 **Issue #179 CLOSED**: Medication Profile CRUD - Schedule management integrated into medication settings
   - ✅ **PR #261 Merged**: Successfully merged to main with code quality fixes
   - ✅ **Epic Progress**: Dose-scheduling epic updated to 60% (6/10 tasks complete)
