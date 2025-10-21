@@ -21,7 +21,7 @@ struct SchedulePatternPicker: View {
     var availablePatterns: [SchedulePatternType] {
         switch medication.frequency {
         case .daily:
-            return [.weekly]  // Daily meds can't split further
+            return [.daily]  // Daily meds use daily pattern
         case .weekly:
             return [.weekly, .splitDose]  // Weekly meds can split
         }

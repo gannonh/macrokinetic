@@ -59,6 +59,15 @@ extension ScheduleService {
 
         // Generate doses based on pattern type
         switch schedule.patternType {
+        case .daily:
+            // Daily doses use same logic as weekly but with interval of 1 day
+            return generateWeeklyDoses(
+                schedule: schedule,
+                config: config,
+                from: effectiveStartDate,
+                to: endDate
+            )
+
         case .weekly:
             return generateWeeklyDoses(
                 schedule: schedule,

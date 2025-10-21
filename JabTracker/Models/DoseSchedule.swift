@@ -11,10 +11,12 @@ import SwiftData
 
 /// Defines the type of dose scheduling pattern
 ///
+/// - daily: Daily dosing schedule (e.g., liraglutide once daily)
 /// - weekly: Standard weekly dosing schedule (e.g., semaglutide once weekly)
 /// - splitDose: Single dose amount split across multiple injections
 /// - custom: Custom recurring pattern defined by customScheduleData
 enum SchedulePatternType: String, Codable {
+    case daily
     case weekly
     case splitDose
     case custom
@@ -24,7 +26,8 @@ enum SchedulePatternType: String, Codable {
 ///
 /// DoseSchedule manages the pattern and timing for medication administration.
 /// It supports various scheduling patterns including:
-/// - Weekly dosing (most GLP-1 medications)
+/// - Daily dosing (liraglutide and other daily GLP-1 medications)
+/// - Weekly dosing (semaglutide, tirzepatide, dulaglutide)
 /// - Split-dose protocols (dividing single dose across multiple injections)
 /// - Custom recurring patterns (alternating doses, specific day sequences)
 ///

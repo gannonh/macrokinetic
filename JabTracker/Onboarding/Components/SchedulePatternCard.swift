@@ -63,6 +63,8 @@ extension SchedulePatternType {
     /// Human-readable display name
     var displayName: String {
         switch self {
+        case .daily:
+            return "Standard Daily"
         case .weekly:
             return "Standard Weekly"
         case .splitDose:
@@ -75,6 +77,8 @@ extension SchedulePatternType {
     /// Pattern description for user understanding
     var description: String {
         switch self {
+        case .daily:
+            return "One dose per day, same time each day"
         case .weekly:
             return "One dose per week, same day and time"
         case .splitDose:
