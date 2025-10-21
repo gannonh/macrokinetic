@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-21T15:14:00Z
-version: 2.7
+last_updated: 2025-10-21T22:25:26Z
+version: 2.8
 author: Claude Code PM System
 ---
 
@@ -371,7 +371,20 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Example Flaw**: Test 4 attempted to validate concentration calculations by creating a schedule then checking concentration, but these systems are architecturally independent
 - **Better Approach**: Test schedule generation directly (intervals, timing, dose counts) rather than testing side effects that don't exist
 
+### User Smoke Testing Value (Critical Bug Discovery)
+- **Automated Testing Gaps**: User manually discovered QuickDoseViewModel showing 1.0mg instead of 0.5mg for split-dose schedules - E2E tests didn't catch this integration bug
+- **Medical Safety Impact**: Split-dose amount bug could cause 2x overdose (2.0mg/week instead of 1.0mg/week) - HIGH SEVERITY patient safety issue
+- **Real-World Testing Essential**: Real-world usage by actual users catches integration bugs that automated tests miss
+- **User Quote**: "its very concerning that I had to catch this issue manually (dont have coverage)" - highlights importance of human testing for medical apps
+
+### Quick Add Dose Integration Patterns
+- **Smart Defaults Must Check Schedule Pattern**: QuickDoseViewModel's `updateDoseAmount()` must check active schedule's `patternType` before setting dose amount
+- **Split-Dose Calculation**: For split-dose schedules, show `currentDose / 2` instead of `currentDose` to prevent showing wrong dose amount
+- **Medical UI Accuracy**: ALL user-facing dose amounts require E2E test coverage, not just backend schedule generation logic
+- **Test Coverage Gap**: No E2E test validated Quick Add Dose sheet amount for split-dose schedules until user discovered bug
+
 ## Update History
+- 2025-10-21T22:25:26Z: Added Product Insights from Issue #180 afternoon session - user smoke testing value (critical bug discovery), Quick Add Dose integration patterns, split-dose amount calculation bug (2x overdose risk)
 - 2025-10-21T15:14:00Z: Added Product Insights from Issue #180 Split-Dose Medical Accuracy & Test Validation - architectural separation between scheduling and concentration calculations, medical safety implications, E2E test design for medical apps
 - 2025-10-15T18:06:05Z: Added Product Insights from Issue #178 Calendar Integration Bug Fixes - user expectations for calendar actions, analytics accuracy and user trust, performance perception standards, and calendar interaction patterns
 - 2025-10-09T21:00:00Z: Consolidated context files - merged project-brief.md content (scope, constraints, risks), established testing.md as single source of truth for testing patterns, reduced duplication across tech-context, system-patterns, and project-style-guide

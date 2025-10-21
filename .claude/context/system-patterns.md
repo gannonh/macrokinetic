@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-21T15:09:10Z
-version: 3.0
+last_updated: 2025-10-21T22:25:26Z
+version: 3.1
 author: Claude Code PM System
 ---
 
@@ -324,6 +324,26 @@ struct UserAnalyticsSummary {
 - **Remove Invalid Tests**: Better to have 3 valid tests than 4 tests where 1 is fundamentally flawed - invalid tests provide false confidence
 - **Test Design Principle**: Future schedule configuration doesn't affect current concentration calculations - test the right relationship
 
+#### Debug-First Accessibility Discovery (Issue #180 Afternoon)
+- **Accessibility Hierarchy Unknown**: When implementing E2E tests for new UI components, accessibility identifiers are often unknown
+- **Debug Utilities Essential**: Use `TestUtilities.debugElements()` to inspect actual accessibility hierarchy before writing selectors
+- **Example Discovery**: Quick Dose sheet identifier was `"quick-dose-sheet"` (not assumed `"quick-dose-entry"`), amount was `"quick-dose-amount"`
+- **Time Savings**: Debug-first approach prevents trial-and-error selector debugging, saves significant development time
+- **Pattern**: Print hierarchy → analyze output → write correct selectors on first attempt
+
+#### Test File Organization for Maintainability (Issue #180 Afternoon)
+- **SwiftLint File Length Limits**: OnboardingScheduleSetupUITests.swift exceeded 800-line limit at 915 lines
+- **User Preference for Logic Over Limits**: "There isnt a logical way to break them into smaller files?" - users prefer logical organization over simply increasing linter limits
+- **Solution Pattern**: Split into logical files based on functionality (core tests vs medication pattern tests)
+- **Result**: Two focused files (555 + 337 lines) with better organization and all tests passing
+- **Learning**: File splitting improves maintainability more than limit increases
+
+#### User Smoke Testing Workflow (Issue #180 Afternoon)
+- **Incremental Commits**: User request: "first commit your work and then work on the fixes" - commit completed work before starting new bug fixes
+- **Workflow**: Commit daily med tests → fix split-dose bug → commit bug fix separately
+- **Clear Separation**: User prefers incremental commits with clear separation between different work items
+- **Pattern**: Complete work → commit → start new task → complete → commit (not batch commits)
+
 ## Security & Defensive Programming Patterns (Issue #55)
 
 ### Medical App Crash Prevention
@@ -411,6 +431,7 @@ struct UserAnalyticsSummary {
 - **General Guideline**: Aim for <1,000 chart points for <10s generation, <10,000 points for <60s generation on typical iOS devices
 
 ## Update History
+- 2025-10-21T22:25:26Z: Added Issue #180 afternoon session patterns - debug-first accessibility discovery, test file organization for maintainability, user smoke testing workflow with incremental commits
 - 2025-10-20T14:22:56Z: Added E2E Testing Excellence Patterns from Issue #177 - iterative E2E development process, XCUITest element targeting, performance testing for E2E, and accessibility testing without simulation
 - 2025-10-15T18:06:05Z: Added Calendar Integration Patterns from Issue #178 - SwiftUI DatePicker range validation, placeholder method anti-pattern, and chart performance tuning for medical apps
 - 2025-10-14T17:00:00Z: Added Version Control Patterns section with commit verification discipline - emphasizes verifying work before committing to avoid false git history with multiple failed fix attempts
