@@ -31,6 +31,69 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         super.tearDown()
     }
 
+    // MARK: - Test 1: Quick Add Dose Shows Correct Split-Dose Amount (Issue #180 Critical Bug Fix)
+
+    func testQuickAddDoseShowsCorrectSplitDoseAmount() throws {
+        // GIVEN: User with Semaglutide 1.0mg weekly split-dose schedule
+        // Launch with 1.0mg dose so we can verify split shows 0.5mg
+        app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"  // Override setUp default
+        app.launch()
+
+        // Wait for app to load
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
+
+        // Navigate to medication profile settings and create split-dose schedule
+        // Note: Dose is formatted with 2 decimal places (1.00 not 1.0)
+        TestUtilities.navigateToMedicationProfileSettings(
+            app,
+            profileIdentifier: "medication-profile-semaglutide-ozempic-1.00mg")
+        try TestUtilities.createSplitDoseSchedule(app)
+
+        // Navigate back to Home screen before using Quick Add
+        let homeTab = app.tabBars.buttons["Home"]
+        XCTAssertTrue(homeTab.waitForExistence(timeout: 3), "Home tab should exist")
+        homeTab.tap()
+
+        // Wait for Home screen to load
+        usleep(500_000)  // 0.5 seconds
+
+        // WHEN: User taps Quick Add Dose button ("+" tab)
+        let quickAddButton = app.tabBars.buttons["Add"]
+        XCTAssertTrue(quickAddButton.waitForExistence(timeout: 3), "Quick Add button should exist")
+        quickAddButton.tap()
+
+        // Wait for sheet to appear
+        usleep(1_000_000)  // 1 second for sheet animation
+
+        // Wait for Quick Dose sheet to appear
+        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 3),
+            "Quick Dose sheet should appear after tapping + button")
+
+        // THEN: Dose amount shows 0.5mg (half of 1.0mg weekly dose)
+        // QuickDoseEntry displays dose amount with accessibility identifier "quick-dose-amount"
+        let doseAmountText = app.staticTexts["quick-dose-amount"]
+        XCTAssertTrue(
+            doseAmountText.waitForExistence(timeout: 3),
+            "Dose amount should be displayed in Quick Dose sheet")
+
+        let doseAmountValue = doseAmountText.label
+        print("📊 Quick Dose shows: \(doseAmountValue)")
+
+        // Verify it shows 0.50 mg (split-dose: 1.0mg / 2 = 0.5mg)
+        XCTAssertTrue(
+            doseAmountValue.contains("0.50") || doseAmountValue.contains("0.5"),
+            "Split-dose should show 0.5mg (half of 1.0mg weekly dose), but showed: \(doseAmountValue)")
+
+        XCTAssertFalse(
+            doseAmountValue.contains("1.0") || doseAmountValue.contains("1.00"),
+            "Split-dose should NOT show full 1.0mg dose (would cause overdose), but showed: \(doseAmountValue)")
+
+        print("✅ Test 1 passed: Quick Add Dose correctly shows 0.5mg for split-dose (1.0mg weekly split)")
+    }
+
     // MARK: - Test 2: Calendar Shows Twice-Weekly Pattern (NOT 14 doses/week)
 
     func testCalendarShowsTwiceWeeklyDosePattern() throws {

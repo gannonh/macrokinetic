@@ -158,13 +158,23 @@ class QuickDoseViewModel: ObservableObject {
     // MARK: - Smart Default Updates
 
     /// Updates dose amount based on selected medication profile's current dose
+    /// For split-dose schedules, shows half the weekly dose per administration
     private func updateDoseAmount() {
         guard let profile = selectedMedicationProfile else {
             self.doseAmount = 0.0
             return
         }
 
-        self.doseAmount = profile.currentDose
+        // Check if active schedule uses split-dose pattern
+        if let schedule = profile.schedules?.first(where: { $0.isActive }),
+            schedule.patternType == .splitDose
+        {
+            // Split-dose: Show half the weekly dose per administration
+            // Example: 1.0mg weekly split → 0.5mg per dose (2x per week)
+            self.doseAmount = profile.currentDose / 2
+        } else {
+            self.doseAmount = profile.currentDose
+        }
     }
 
     /// Updates recommended injection sites and selects smart default based on dose history
