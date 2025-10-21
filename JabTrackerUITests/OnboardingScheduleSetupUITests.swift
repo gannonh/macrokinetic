@@ -663,11 +663,17 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(scheduleView.waitForExistence(timeout: 10), "Schedule setup view should appear")
 
         // WHEN: User views pattern options
-        // THEN: Only weekly pattern option is visible
-        let weeklyCard = app.buttons["pattern-card-weekly"]
+        // THEN: Only daily pattern option is visible (Liraglutide is a daily medication)
+        let dailyCard = app.buttons["pattern-card-daily"]
         XCTAssertTrue(
-            weeklyCard.waitForExistence(timeout: 5),
-            "Weekly pattern card should be visible for all medications")
+            dailyCard.waitForExistence(timeout: 5),
+            "Daily pattern card should be visible for Liraglutide (daily medication)")
+
+        // THEN: Weekly pattern option is NOT visible (daily meds don't use weekly pattern)
+        let weeklyCard = app.buttons["pattern-card-weekly"]
+        XCTAssertFalse(
+            weeklyCard.exists,
+            "Weekly pattern card should NOT be visible for Liraglutide (daily medication)")
 
         // THEN: Split-dose pattern option is NOT visible
         let splitDoseCard = app.buttons["pattern-card-splitDose"]

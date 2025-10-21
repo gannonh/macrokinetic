@@ -170,10 +170,12 @@ struct DoseScheduleEditView: View {
     private var patternSelectionSection: some View {
         Section {
             Picker("Pattern", selection: $selectedPattern) {
-                Text("Weekly").tag(SchedulePatternType.weekly)
-
-                // Only show split-dose for weekly medications
-                if medicationProfile.medication?.frequency == .weekly {
+                // Show patterns based on medication frequency
+                if medicationProfile.medication?.frequency == .daily {
+                    Text("Daily").tag(SchedulePatternType.daily)
+                } else {
+                    // Weekly medications
+                    Text("Weekly").tag(SchedulePatternType.weekly)
                     Text("Split Dose").tag(SchedulePatternType.splitDose)
                 }
                 // Custom pattern removed from UI
@@ -261,6 +263,8 @@ struct DoseScheduleEditView: View {
     /// Footer text for pattern selection
     private var patternFooterText: String {
         switch selectedPattern {
+        case .daily:
+            return "Doses scheduled at the same time each day"
         case .weekly:
             return "Doses scheduled on the same day and time each week"
         case .splitDose:
@@ -320,6 +324,19 @@ struct DoseScheduleEditView: View {
         let config: ScheduleConfiguration
 
         switch selectedPattern {
+        case .daily:
+            config = ScheduleConfiguration(
+                dayOfWeek: nil,  // No specific day - daily dosing
+                timeOfDay: timeOfDay,
+                interval: 1,  // 1 day interval
+                doseAmount: medicationProfile.currentDose,
+                windowMinutesBefore: windowMinutesBefore,
+                windowMinutesAfter: windowMinutesAfter,
+                splitDoseCount: nil,
+                splitIntervalMinutes: nil,
+                customRecurrence: nil
+            )
+
         case .weekly:
             config = ScheduleConfiguration(
                 dayOfWeek: dayOfWeek,

@@ -85,7 +85,7 @@ schemes:
     run:
       commandLineArguments:
         "--bypass-onboarding": false
-        "--force-onboarding": false 
+        "--force-onboarding": true 
         "--reset-app-data": true
         "--ui-testing": true # Enable to bypass auth
         "--seed-test-7d": false

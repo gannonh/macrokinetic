@@ -2,5 +2,9 @@
 # Allows longer files for complex SwiftUI views in medical apps
 
 file_length:
-  warning: 450  # Increased for complex SwiftUI views
-  error: 500
+  warning: 500  # Increased for complex SwiftUI views
+  error: 600
+
+function_body_length:
+  warning: 70  # Increased for pattern-specific config building
+  error: 80

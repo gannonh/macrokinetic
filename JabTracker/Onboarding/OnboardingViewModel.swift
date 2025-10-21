@@ -101,6 +101,13 @@ class OnboardingViewModel: ObservableObject {
         if let firstDose = medication.availableDoses.first {
             self.selectedDose = firstDose
         }
+        // Set appropriate schedule pattern based on medication frequency
+        switch medication.frequency {
+        case .daily:
+            self.schedulePattern = .daily
+        case .weekly:
+            self.schedulePattern = .weekly
+        }
     }
 
     func toggleInjectionSite(_ site: String) {
@@ -194,7 +201,7 @@ class OnboardingViewModel: ObservableObject {
     /// - Returns: true if configuration is valid, false otherwise
     func validateScheduleConfiguration() -> Bool {
         switch schedulePattern {
-        case .weekly, .splitDose:
+        case .daily, .weekly, .splitDose:
             return true
         case .custom:
             return customScheduleValid
@@ -359,14 +366,32 @@ class OnboardingViewModel: ObservableObject {
         // Create schedule service
         let scheduleService = ScheduleService(context: context)
 
-        // Build schedule configuration
+        // Build schedule configuration based on pattern
+        let interval: Int
+        let dayOfWeek: Int?
+
+        switch schedulePattern {
+        case .daily:
+            interval = 1  // Daily dosing
+            dayOfWeek = nil  // No specific day - every day
+        case .weekly:
+            interval = 7  // Weekly dosing
+            dayOfWeek = Calendar.current.component(.weekday, from: selectedStartDate)
+        case .splitDose:
+            interval = 7  // Base interval for split-dose (actual split handled by splitIntervalMinutes)
+            dayOfWeek = nil  // Split-dose doesn't use specific day
+        case .custom:
+            interval = 7  // Default for custom patterns
+            dayOfWeek = Calendar.current.component(.weekday, from: selectedStartDate)
+        }
+
         let scheduleConfig = ScheduleConfiguration(
-            dayOfWeek: Calendar.current.component(.weekday, from: selectedStartDate),
+            dayOfWeek: dayOfWeek,
             timeOfDay: TimeComponents(
                 hour: Calendar.current.component(.hour, from: selectedStartDate),
                 minute: Calendar.current.component(.minute, from: selectedStartDate)
             ),
-            interval: 7,  // Weekly by default
+            interval: interval,
             doseAmount: selectedDose,
             windowMinutesBefore: 120,  // 2 hours before
             windowMinutesAfter: 120,  // 2 hours after

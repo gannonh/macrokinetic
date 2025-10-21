@@ -347,6 +347,8 @@ struct ConcentrationCurvePreviewTests {
 
         let intervalSeconds: TimeInterval
         switch pattern {
+        case .daily:
+            intervalSeconds = 1 * 24 * 3600  // 1 day (daily dosing)
         case .weekly:
             intervalSeconds = 7 * 24 * 3600  // 7 days
         case .splitDose:
