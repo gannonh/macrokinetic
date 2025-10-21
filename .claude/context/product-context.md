@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-15T18:06:05Z
-version: 2.6
+last_updated: 2025-10-21T15:14:00Z
+version: 2.7
 author: Claude Code PM System
 ---
 
@@ -353,7 +353,26 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Scheduled Date Persistence**: Scheduled dose date must persist through all UI interactions (action sheet → QuickDoseSheet → DatePicker) - losing context anywhere breaks the workflow
 - **Multi-Step Form Context**: When forms are triggered from contextual actions (calendar date), that context must flow through entire form submission process
 
+## Product Insights from Issue #180 Split-Dose Medical Accuracy & Test Validation (2025-10-21)
+
+### Architectural Separation of Concerns
+- **Scheduling vs Concentration Calculations**: The split-dose bug (Issue #180) is a **scheduling** issue (wrong interval generation), NOT a pharmacokinetic calculation issue
+- **Schedule Generation Independence**: Split-dose was generating doses at 12-hour intervals (twice-DAILY) instead of 3.5-day intervals (twice-WEEKLY) for weekly medications like semaglutide
+- **PK Engine Correctness**: Concentration calculations work correctly - they calculate from historical doses already taken, not from future scheduled doses
+- **Critical Distinction**: Future scheduled doses do NOT affect current concentration calculations - PK engine looks at dose history, not schedule configuration
+
+### Medical Safety Implications
+- **Patient Overdose Risk**: Twice-daily scheduling for weekly medication is a critical medical safety issue - patients could overdose if they followed incorrect schedule
+- **Medication-Specific Patterns**: Weekly GLP-1 medications require fundamentally different scheduling logic than daily medications
+- **Test Validation Importance**: Invalid tests that don't actually validate the bug being fixed provide false confidence and waste maintenance effort
+
+### E2E Test Design for Medical Apps
+- **Test the Right Behavior**: E2E tests must validate the actual behavior being tested, not tangential or unrelated effects
+- **Example Flaw**: Test 4 attempted to validate concentration calculations by creating a schedule then checking concentration, but these systems are architecturally independent
+- **Better Approach**: Test schedule generation directly (intervals, timing, dose counts) rather than testing side effects that don't exist
+
 ## Update History
+- 2025-10-21T15:14:00Z: Added Product Insights from Issue #180 Split-Dose Medical Accuracy & Test Validation - architectural separation between scheduling and concentration calculations, medical safety implications, E2E test design for medical apps
 - 2025-10-15T18:06:05Z: Added Product Insights from Issue #178 Calendar Integration Bug Fixes - user expectations for calendar actions, analytics accuracy and user trust, performance perception standards, and calendar interaction patterns
 - 2025-10-09T21:00:00Z: Consolidated context files - merged project-brief.md content (scope, constraints, risks), established testing.md as single source of truth for testing patterns, reduced duplication across tech-context, system-patterns, and project-style-guide
 - 2025-10-08T20:37:55Z: Added Product Insights from Issue #176 NotificationService - smart notification value proposition (actionable notifications, missed dose detection), and background refresh user experience patterns

@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-20T14:22:56Z
-version: 2.9
+last_updated: 2025-10-21T15:09:10Z
+version: 3.0
 author: Claude Code PM System
 ---
 
@@ -316,6 +316,13 @@ struct UserAnalyticsSummary {
 - **VoiceOver Property Validation**: Comprehensive testing validates properties (labels, values, hints) without simulating actual VoiceOver
 - **State Announcement Verification**: Toggle and button values correctly indicate current state for assistive technologies
 - **Accessibility Label Coverage**: All interactive elements have descriptive labels enabling full VoiceOver navigation
+
+#### Test Logic Validation (Issue #180)
+- **Question Test Assumptions**: When tests fail or seem flawed, question the fundamental test logic before debugging implementation
+- **Validate Test Scenarios**: Ensure tests actually validate the behavior being tested, not tangential or unrelated effects
+- **Example**: Split-dose scheduling bug is about **schedule generation intervals** (3.5 days vs 12 hours), NOT about concentration calculations (which are based on historical doses, not future schedules)
+- **Remove Invalid Tests**: Better to have 3 valid tests than 4 tests where 1 is fundamentally flawed - invalid tests provide false confidence
+- **Test Design Principle**: Future schedule configuration doesn't affect current concentration calculations - test the right relationship
 
 ## Security & Defensive Programming Patterns (Issue #55)
 

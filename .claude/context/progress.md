@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-20T14:22:56Z
-version: 4.7
+last_updated: 2025-10-21T15:12:00Z
+version: 4.8
 author: Claude Code PM System
 ---
 
@@ -375,7 +375,16 @@ author: Claude Code PM System
 - **Proper Wait Conditions**: Replace arbitrary delays with element-specific wait conditions tied to actual UI state changes
 - **SwiftUI Element Discovery**: Two-step picker interactions and StaticText vs Button differences require debug-first approach to discover
 
+## Lessons Learned (Recent - Issue #180 Session 2025-10-21)
+
+### Test Logic Validation Process
+- **Question Test Assumptions Before Debugging**: When tests fail or seem flawed, question the fundamental test logic before diving into implementation debugging
+- **User Insight as Critical Validation**: User's question "How does configuring split doses for the future effect current concentration levels?" revealed the test was testing wrong behavior entirely
+- **Remove Invalid Tests**: Better to have 3 valid, reliable tests than 4 tests where 1 is fundamentally flawed - invalid tests provide false confidence and waste maintenance effort
+- **Architectural Understanding First**: Understanding the split-dose bug (scheduling intervals, not concentration calculations) was key to identifying the flawed test
+
 ## Update History
+- 2025-10-21T15:12:00Z: Added Lessons Learned from Issue #180 Session (Oct 21) - test logic validation process, questioning assumptions before debugging, removing invalid tests
 - 2025-10-19T17:46:21Z: Added Lessons Learned from Issue #179 Session (Oct 19) - E2E test quality and performance (sleep() anti-pattern elimination, TestDataSeeding performance impact), iterative E2E development success, and negative assertion patterns
 - 2025-10-17T19:12:25Z: Updated current state to reflect Issue #178 E2E testing completion - all 27 E2E tests passing across 4 test suites, all acceptance criteria and NFRs validated
 - 2025-10-15T18:06:05Z: Added Lessons Learned from Issue #178 Session (Oct 14-15) - smoke testing value, iterative bug fixing approach, and placeholder code cleanup process from calendar integration bug fixes
