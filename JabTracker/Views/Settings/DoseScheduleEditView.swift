@@ -68,7 +68,16 @@ struct DoseScheduleEditView: View {
         self.onSave = onSave
 
         // Initialize from existing or defaults
-        _selectedPattern = State(initialValue: existingSchedule?.patternType ?? .weekly)
+        // For new schedules, set pattern based on medication frequency
+        let defaultPattern: SchedulePatternType
+        if let existingPattern = existingSchedule?.patternType {
+            defaultPattern = existingPattern
+        } else if medicationProfile.medication?.frequency == .daily {
+            defaultPattern = .daily
+        } else {
+            defaultPattern = .weekly
+        }
+        _selectedPattern = State(initialValue: defaultPattern)
 
         // Parse existing schedule baseSchedule configuration if editing
         if let schedule = existingSchedule,
