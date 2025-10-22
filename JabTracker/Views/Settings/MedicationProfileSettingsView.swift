@@ -89,6 +89,16 @@ struct MedicationProfileSettingsView: View {
     private func deleteProfiles(at offsets: IndexSet) {
         for index in offsets {
             let profile = self.medicationProfiles[index]
+
+            // Manually delete associated schedules (cascade delete may not work reliably with SwiftData)
+            // Each schedule has cascade delete configured for ScheduledDose, so deleting the schedule
+            // will delete the scheduled doses as well
+            if let schedules = profile.schedules {
+                for schedule in schedules {
+                    self.modelContext.delete(schedule)
+                }
+            }
+
             self.modelContext.delete(profile)
         }
 

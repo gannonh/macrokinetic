@@ -256,8 +256,17 @@ class MedicationManager: ObservableObject {
 
     // swiftlint:enable cyclomatic_complexity function_body_length
 
-    /// Delete a medication profile
+    /// Delete a medication profile and all associated schedules
     func deleteProfile(_ profile: MedicationProfile) throws {
+        // Manually delete associated schedules (cascade delete may not work reliably with SwiftData)
+        // Each schedule has cascade delete configured for ScheduledDose, so deleting the schedule
+        // will delete the scheduled doses as well
+        if let schedules = profile.schedules {
+            for schedule in schedules {
+                self.modelContext.delete(schedule)
+            }
+        }
+
         self.modelContext.delete(profile)
 
         do {
