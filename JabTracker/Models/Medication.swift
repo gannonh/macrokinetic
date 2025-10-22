@@ -262,4 +262,22 @@ extension Medication {
         case .dulaglutide: return 168.0  // 7 days
         }
     }
+
+    /// Returns available schedule patterns for this medication based on frequency
+    ///
+    /// Schedule pattern availability is determined by the medication's dosing frequency:
+    /// - Daily medications (e.g., Liraglutide): Only support `.daily` pattern
+    /// - Weekly medications (e.g., Semaglutide, Tirzepatide): Support `.weekly` and `.splitDose` patterns
+    ///
+    /// - Returns: Array of available `SchedulePatternType` values for this medication
+    ///
+    /// - Note: Custom patterns are intentionally excluded as they are not supported in the current implementation
+    func availableSchedulePatterns() -> [SchedulePatternType] {
+        switch frequency {
+        case .daily:
+            return [.daily]  // Daily medications use daily dosing pattern
+        case .weekly:
+            return [.weekly, .splitDose]  // Weekly medications support twice-weekly split dosing
+        }
+    }
 }
