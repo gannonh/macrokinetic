@@ -127,7 +127,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         deleteButton.tap()
 
         // Confirm permanent deletion
-        let confirmDialog = app.alerts["Delete Medication Profile?"]
+        let confirmDialog = app.sheets["Delete Medication Profile?"]
         XCTAssertTrue(confirmDialog.waitForExistence(timeout: 3.0))
         let deletePermanentlyButton = confirmDialog.buttons["Delete Permanently"]
         deletePermanentlyButton.tap()
@@ -184,7 +184,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         deleteButton.tap()
 
         // Verify confirmation dialog appears with all 3 buttons
-        let confirmDialog = app.alerts["Delete Medication Profile?"]
+        let confirmDialog = app.sheets["Delete Medication Profile?"]
         XCTAssertTrue(confirmDialog.waitForExistence(timeout: 3.0))
 
         let disableInsteadButton = confirmDialog.buttons["Disable Instead (Recommended)"]
