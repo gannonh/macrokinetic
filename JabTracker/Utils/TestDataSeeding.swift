@@ -6,7 +6,6 @@
 //  Supports large dataset generation for performance testing
 //
 //  IMPORTANT: Only compiled when building for testing (DEBUG or testing environments)
-// swiftlint:disable file_length
 
 #if DEBUG || TEST
     import Foundation
