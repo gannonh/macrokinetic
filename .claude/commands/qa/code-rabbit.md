@@ -7,7 +7,7 @@ argument-hint: "One or more CodeRabbit review comments."
 
 Process the following CodeRabbit review comments with context-aware discretion: $ARGUMENTS
 
-Then paste one or more CodeRabbit comments.
+If no review comments provided, ask the user for them before continuing.
 
 ## Instructions
 
@@ -30,7 +30,8 @@ For each comment, I'll:
 If all comments relate to one file:
 - Read the file for context
 - Evaluate each suggestion
-- Apply accepted changes in batch using MultiEdit
+- Apply accepted changes
+- Validate changes by running the relevant ui and unit tests, and/or creating new tests
 - Report which suggestions were accepted/ignored and why
 
 #### Multiple File Comments
@@ -53,8 +54,9 @@ Task:
        - Evaluate validity given codebase patterns
        - Accept if it improves quality/correctness
        - Ignore if not applicable
-    3. Apply accepted changes using Edit/MultiEdit
-    4. Return summary:
+    3. Apply accepted changes
+    4. Validate changes by running the relevant ui and unit tests, and/or creating new tests
+    5. Return summary:
        - Accepted: {list with reasons}
        - Ignored: {list with reasons}
        - Changes made: {brief description}
@@ -62,7 +64,12 @@ Task:
     Use discretion - CodeRabbit lacks full context.
 ```
 
-### 3. Consolidate Results
+### 3. Commit Changes
+
+After applying changes commit your work using appropriate commit messages summarizing the changes made. Address any re-commit hook violations as needed.
+
+
+### 4. Consolidate Results
 
 After all sub-agents complete:
 ```
@@ -79,7 +86,7 @@ Ignored Suggestions:
 Overall: {X}/{Y} suggestions applied
 ```
 
-### 4. Common Patterns to Ignore
+## Common Patterns to Ignore
 
 - **Style preferences** that conflict with project conventions
 - **Generic best practices** that don't apply to our specific use case
@@ -88,7 +95,7 @@ Overall: {X}/{Y} suggestions applied
 - **Security warnings** for already-validated patterns
 - **Import reorganization** that would break our structure
 
-### 5. Common Patterns to Accept
+## Common Patterns to Accept
 
 - **Actual bugs** (null checks, error handling)
 - **Security vulnerabilities** (unless false positive)
@@ -114,3 +121,4 @@ Only apply if all answers are "yes" or the benefit clearly outweighs risks.
 - Explain decisions briefly to maintain audit trail
 - Batch related changes for efficiency
 - Use parallel agents for multi-file reviews to save time
+- Always run the relevant ui and unit tests, and/or create new tests to verify correctness after applying changes
