@@ -87,27 +87,28 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(reminderPicker.exists, "Reminder picker should be visible")
     }
 
-    // MARK: - ACCEPTANCE CRITERION 2: User can select from 3 schedule patterns
+    // MARK: - ACCEPTANCE CRITERION 2: User can select from available schedule patterns
 
     func testUserCanSelectSchedulePatterns() throws {
         // GIVEN: User is on schedule setup step
         try navigateToScheduleSetup()
 
         // WHEN: User views available patterns
-        // THEN: Three pattern cards are displayed with correct titles
+        // THEN: Two pattern cards are displayed with correct titles (custom pattern removed from onboarding)
         let weeklyCard = app.buttons["pattern-card-weekly"]
         let splitDoseCard = app.buttons["pattern-card-split-dose"]
-        let customCard = app.buttons["pattern-card-custom"]
 
         XCTAssertTrue(weeklyCard.exists, "Weekly pattern card should be visible")
         XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should be visible")
-        XCTAssertTrue(customCard.exists, "Custom pattern card should be visible")
+
+        // THEN: Custom pattern card is NOT visible in onboarding
+        let customCard = app.buttons["pattern-card-custom"]
+        XCTAssertFalse(customCard.exists, "Custom pattern card should NOT be visible in onboarding")
 
         // THEN: Each pattern card shows correct title in label
         XCTAssertEqual(weeklyCard.label, "Standard Weekly", "Weekly card should show title")
         XCTAssertEqual(
             splitDoseCard.label, "Split Dose (Twice Weekly)", "Split dose card should show title")
-        XCTAssertEqual(customCard.label, "Custom Pattern", "Custom card should show title")
 
         // THEN: User can tap each pattern card to select
         // Weekly pattern should be selected by default
@@ -118,15 +119,10 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(splitDoseCard.isSelected, "Split dose pattern should be selected after tap")
         XCTAssertFalse(weeklyCard.isSelected, "Weekly pattern should not be selected")
 
-        // Tap custom pattern
-        customCard.tap()
-        XCTAssertTrue(customCard.isSelected, "Custom pattern should be selected after tap")
-        XCTAssertFalse(splitDoseCard.isSelected, "Split dose pattern should not be selected")
-
         // Tap weekly pattern again
         weeklyCard.tap()
         XCTAssertTrue(weeklyCard.isSelected, "Weekly pattern should be selected after tap")
-        XCTAssertFalse(customCard.isSelected, "Custom pattern should not be selected")
+        XCTAssertFalse(splitDoseCard.isSelected, "Split dose pattern should not be selected")
     }
 
     // MARK: - ACCEPTANCE CRITERION 3: Concentration curve preview updates when pattern changes
@@ -395,21 +391,22 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // GIVEN: User is on schedule setup step
         try navigateToScheduleSetup()
 
-        // THEN: All pattern cards are accessible with descriptive labels
+        // THEN: Available pattern cards are accessible with descriptive labels
         let weeklyCard = app.buttons["pattern-card-weekly"]
         let splitDoseCard = app.buttons["pattern-card-split-dose"]
-        let customCard = app.buttons["pattern-card-custom"]
 
         XCTAssertTrue(weeklyCard.exists, "Weekly pattern card should exist")
         XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should exist")
-        XCTAssertTrue(customCard.exists, "Custom pattern card should exist")
+
+        // THEN: Custom pattern card is NOT visible in onboarding
+        let customCard = app.buttons["pattern-card-custom"]
+        XCTAssertFalse(customCard.exists, "Custom pattern card should NOT be visible in onboarding")
 
         // Verify pattern cards have descriptive labels for VoiceOver
         XCTAssertEqual(weeklyCard.label, "Standard Weekly", "Weekly card should have descriptive label")
         XCTAssertEqual(
             splitDoseCard.label, "Split Dose (Twice Weekly)",
             "Split dose card should have descriptive label")
-        XCTAssertEqual(customCard.label, "Custom Pattern", "Custom card should have descriptive label")
 
         // THEN: Concentration preview has accessibility label describing trend
         let peakLabel = app.staticTexts.matching(identifier: "concentration-label-peak").element(boundBy: 0)
