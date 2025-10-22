@@ -8,9 +8,6 @@
 // swiftlint:disable force_unwrapping
 // Rationale: All force unwraps are Calendar date operations with valid components
 // These operations are guaranteed to succeed and cannot return nil
-//
-// swiftlint:disable function_parameter_count
-// Rationale: Split-dose generation requires all schedule configuration parameters
 
 import Foundation
 import SwiftData
@@ -338,53 +335,6 @@ extension ScheduleService {
     // swiftlint:enable function_body_length
 
     /**
-     * Helper to generate split doses for a single day.
-     */
-    private func generateSplitDosesForDay(
-        baseTime: Date,
-        splitCount: Int,
-        splitInterval: Int,
-        config: ScheduleConfiguration,
-        schedule: DoseSchedule,
-        endDate: Date
-    ) -> [ScheduledDose] {
-        var doses: [ScheduledDose] = []
-        let calendar = Calendar.current
-
-        for splitIndex in 0..<splitCount {
-            let doseTime = calendar.date(
-                byAdding: .minute,
-                value: splitInterval * splitIndex,
-                to: baseTime
-            )!
-
-            let windowStart = calendar.date(
-                byAdding: .minute,
-                value: -config.windowMinutesBefore,
-                to: doseTime
-            )!
-
-            let windowEnd = calendar.date(
-                byAdding: .minute,
-                value: config.windowMinutesAfter,
-                to: doseTime
-            )!
-
-            let scheduledDose = ScheduledDose(
-                scheduledTime: doseTime,
-                doseAmount: config.doseAmount,
-                windowStart: windowStart,
-                windowEnd: windowEnd
-            )
-            scheduledDose.schedule = schedule
-
-            doses.append(scheduledDose)
-        }
-
-        return doses
-    }
-
-    /**
      * Generates custom recurrence pattern scheduled doses.
      *
      * - Parameters:
@@ -456,4 +406,4 @@ extension ScheduleService {
     }
 }
 
-// swiftlint:enable force_unwrapping function_parameter_count
+// swiftlint:enable force_unwrapping
