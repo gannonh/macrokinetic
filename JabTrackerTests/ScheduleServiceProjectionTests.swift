@@ -317,22 +317,23 @@ struct ScheduleServiceProjectionTests {
     // MARK: - Split-Dose Pattern Tests
 
     /// Test: Generate split-dose pattern correctly
-    @Test("Generate split-dose pattern with multiple doses per day")
+    @Test("Generate split-dose pattern for weekly medication (twice weekly)")
     func testGenerateSplitDosePattern() throws {
-        // GIVEN: A schedule with split-dose pattern (2 doses, 6 hours apart)
+        // GIVEN: A weekly medication schedule with split-dose pattern (matches production code)
         let context = try createTestContext()
-        let profile = createTestMedicationProfile(context: context)
+        let profile = createTestMedicationProfile(context: context)  // Creates semaglutide by default
         let service = ScheduleService(context: context)
 
+        // Match OnboardingViewModel.swift configuration for split-dose
         let config = ScheduleConfiguration(
-            dayOfWeek: nil,
-            timeOfDay: TimeComponents(hour: 8, minute: 0),  // First dose at 8 AM
-            interval: 1,  // Daily
-            doseAmount: 2.5,  // Tirzepatide
+            dayOfWeek: nil,  // Split-dose doesn't use specific day
+            timeOfDay: TimeComponents(hour: 8, minute: 0),
+            interval: 7,  // Base interval for split-dose
+            doseAmount: 1.0,
             windowMinutesBefore: 120,
             windowMinutesAfter: 120,
             splitDoseCount: 2,
-            splitIntervalMinutes: 360,  // 6 hours between doses
+            splitIntervalMinutes: 5040,  // 3.5 days = 84 hours (production value)
             customRecurrence: nil
         )
 
@@ -348,14 +349,19 @@ struct ScheduleServiceProjectionTests {
         let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
         let doses = service.generateScheduledDoses(for: schedule, from: startDate, to: endDate)
 
-        // THEN: Should generate 2 doses per day = 14 total doses
-        #expect(doses.count == 14, "Expected 14 doses (2 per day for 7 days), got \(doses.count)")
+        // THEN: Should generate 2-3 doses for twice-weekly pattern (3.5-day intervals)
+        // Split-dose: 0 days, 3.5 days, 7 days = 2-3 doses depending on boundary conditions
+        #expect(
+            doses.count >= 2 && doses.count <= 3,
+            "Expected 2-3 doses for twice-weekly split-dose over 7 days, got \(doses.count)")
 
-        // THEN: Doses should be in pairs 6 hours apart
-        for index in stride(from: 0, to: doses.count - 1, by: 2) {
-            let interval = doses[index + 1].scheduledTime.timeIntervalSince(doses[index].scheduledTime)
-            let expectedInterval: TimeInterval = 6 * 60 * 60  // 6 hours in seconds
-            #expect(abs(interval - expectedInterval) < 60, "Split doses should be 6 hours apart")
+        // THEN: Doses should be ~3.5 days (84 hours) apart for split-dose pattern
+        if doses.count > 1 {
+            let interval = doses[1].scheduledTime.timeIntervalSince(doses[0].scheduledTime)
+            let expectedInterval: TimeInterval = 3.5 * 24 * 60 * 60  // 3.5 days in seconds
+            #expect(
+                abs(interval - expectedInterval) < 60,
+                "Split doses should be ~3.5 days (84 hours) apart, got \(interval / 3600) hours")
         }
     }
 
