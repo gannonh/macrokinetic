@@ -329,6 +329,9 @@ class MedicationManager: ObservableObject {
         let interval: Int
         let dayOfWeek: Int?
 
+        // Start schedule 1 day in the future to ensure first dose shows as "scheduled" not "missed"
+        let startDate = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+
         switch medication.frequency {
         case .daily:
             pattern = .daily
@@ -337,10 +340,10 @@ class MedicationManager: ObservableObject {
         case .weekly:
             pattern = .weekly
             interval = 7
-            dayOfWeek = calendar.component(.weekday, from: now)
+            dayOfWeek = calendar.component(.weekday, from: startDate)
         }
 
-        // Create default configuration
+        // Create default configuration using the same time as now
         let scheduleConfig = ScheduleConfiguration(
             dayOfWeek: dayOfWeek,
             timeOfDay: TimeComponents(
@@ -356,11 +359,11 @@ class MedicationManager: ObservableObject {
             customRecurrence: nil
         )
 
-        // Create the schedule
+        // Create the schedule starting from tomorrow
         _ = try scheduleService.createSchedule(
             for: profile,
             pattern: pattern,
-            startDate: now,
+            startDate: startDate,
             baseSchedule: scheduleConfig
         )
     }
