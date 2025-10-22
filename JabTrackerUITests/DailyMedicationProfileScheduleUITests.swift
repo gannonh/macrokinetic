@@ -89,10 +89,6 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
             splitDoseOption.exists,
             "Split Dose option should NOT exist for daily medication")
 
-        // NOTE: Daily pattern should be auto-selected since it's the only option
-        // TODO (Issue #180): BUG - Daily medications currently default to Weekly pattern
-        // This needs to be fixed in DoseScheduleEditView.swift initialization
-
         // Save schedule
         let saveButton = app.buttons["save-schedule-edit"]
         XCTAssertTrue(saveButton.waitForExistence(timeout: 3), "Save button should exist")
@@ -181,7 +177,6 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
         resumeButton.tap()
 
         // THEN: Verify pause button returns (schedule is active again)
-        // NOTE: Due to Issue #180, pattern will show "Standard Weekly" not "Standard Daily"
         let pauseButtonAfterResume = app.buttons["pause-schedule-button"]
         XCTAssertTrue(
             pauseButtonAfterResume.waitForExistence(timeout: 5),
