@@ -127,13 +127,18 @@ struct MedicationProfileSettingsView: View {
                     self.disableProfile(profile)
                     self.profileToDelete = nil
                 }
+                .accessibilityIdentifier("disable-instead-button")
+
                 Button("Delete Permanently", role: .destructive) {
                     self.permanentlyDeleteProfile(profile)
                     self.profileToDelete = nil
                 }
+                .accessibilityIdentifier("delete-permanently-button")
+
                 Button("Cancel", role: .cancel) {
                     self.profileToDelete = nil
                 }
+                .accessibilityIdentifier("cancel-delete-button")
             } message: { profile in
                 Text(
                     """
