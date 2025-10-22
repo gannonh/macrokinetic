@@ -126,10 +126,9 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 3.0))
         deleteButton.tap()
 
-        // Confirm permanent deletion
-        let confirmDialog = app.sheets["Delete Medication Profile?"]
-        XCTAssertTrue(confirmDialog.waitForExistence(timeout: 3.0))
-        let deletePermanentlyButton = confirmDialog.buttons["Delete Permanently"]
+        // Confirm permanent deletion using accessibility identifier
+        let deletePermanentlyButton = app.buttons["delete-permanently-button"]
+        XCTAssertTrue(deletePermanentlyButton.waitForExistence(timeout: 3.0))
         deletePermanentlyButton.tap()
 
         // Verify profile is removed from list
@@ -183,17 +182,16 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 3.0))
         deleteButton.tap()
 
-        // Verify confirmation dialog appears with all 3 buttons
-        let confirmDialog = app.sheets["Delete Medication Profile?"]
-        XCTAssertTrue(confirmDialog.waitForExistence(timeout: 3.0))
+        // Wait for confirmation dialog buttons to appear (use specific identifiers)
+        let disableInsteadButton = app.buttons["disable-instead-button"]
+        XCTAssertTrue(
+            disableInsteadButton.waitForExistence(timeout: 3.0),
+            "Should have 'Disable Instead' button")
 
-        let disableInsteadButton = confirmDialog.buttons["Disable Instead (Recommended)"]
-        XCTAssertTrue(disableInsteadButton.exists, "Should have 'Disable Instead' button")
-
-        let deletePermanentlyButton = confirmDialog.buttons["Delete Permanently"]
+        let deletePermanentlyButton = app.buttons["delete-permanently-button"]
         XCTAssertTrue(deletePermanentlyButton.exists, "Should have 'Delete Permanently' button")
 
-        let cancelButton = confirmDialog.buttons["Cancel"]
+        let cancelButton = app.buttons["cancel-delete-button"]
         XCTAssertTrue(cancelButton.exists, "Should have 'Cancel' button")
 
         // Click Cancel
