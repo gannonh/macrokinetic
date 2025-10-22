@@ -32,16 +32,19 @@ If for any reason the issue is not a PR Issue, **STOP AND REPORT**:
 
 ## Instructions for PR Issues
 
+**IMPORTANT**: If more than 1 issue, run the following workflow sequentiually for each individual issue.
+
 1. Read the issue description and recommended solution (if any) from GitHub.
 2. Label the issue as `in-progress` in GitHub
 3. Assess the implementation requirements and acceptance criteria.
 4. Determine if any additional context or clarification is needed - if so, as the human for clarification.
 5. Present to the user your recommended solution and implementation plan for approval: Iterate until approved.
 6. Implement the solution.
-7. Ensure all checks pass: `./scripts/check-all.sh`
-8. Commit your work, referencing the issue number: `git commit -m "Fix for #$1: [description of work]"`
-9. Push to GitHub: `git push`
-10. Remove the `in-progress` label and close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
+7. Validate changes by running the relevant ui and unit tests, and/or creating new tests.
+8. Ensure all checks pass: `./scripts/check-all.sh`
+9. Commit your work, referencing the issue number: `git commit -m "Fix for #$1: [description of work]"`
+10. Push to GitHub: `git push`
+11. Remove the `in-progress` label and close the issue on GitHub: `gh issue close $1 --comment "Fix implemented in PR #[pr-number]"`
 
 ## Error Handling
 
