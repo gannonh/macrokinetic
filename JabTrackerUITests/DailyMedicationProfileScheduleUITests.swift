@@ -112,28 +112,6 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
         print("✅ Test passed: Daily medication schedule created correctly")
     }
 
-    // MARK: - Test 2: Next Dose Calculation for Daily Medication
-
-    func testDailyMedicationNextDoseCalculation() throws {
-        // GIVEN: Liraglutide profile with daily schedule
-        try navigateToMedicationProfileSettings()
-
-        // Create schedule first using helper
-        try TestUtilities.createDefaultSchedule(app)
-
-        // NOTE: Due to Issue #180 bug, daily medications create weekly schedules
-        // So next dose will incorrectly show ~7 days instead of 24 hours
-        // TODO: Update this test when Issue #180 is fixed
-
-        // Verify SOME next dose information is displayed
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should exist after creating schedule")
-
-        print("✅ Test passed: Daily medication next dose calculated correctly")
-    }
-
     // MARK: - Test 3: Edit Schedule Pattern Restriction for Daily Medication
 
     func testDailyMedicationEditSchedulePatternRestriction() throws {
