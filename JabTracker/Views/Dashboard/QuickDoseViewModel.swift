@@ -95,8 +95,12 @@ class QuickDoseViewModel: ObservableObject {
                 self.isLoading = true
                 self.errorMessage = nil
 
-                // Fetch all medication profiles for the current user
-                let profileDescriptor = FetchDescriptor<MedicationProfile>()
+                // Fetch only ACTIVE medication profiles for the current user
+                let profileDescriptor = FetchDescriptor<MedicationProfile>(
+                    predicate: #Predicate<MedicationProfile> { profile in
+                        profile.isActive == true
+                    }
+                )
                 self.medicationProfiles = try context.fetch(profileDescriptor)
 
                 guard !self.medicationProfiles.isEmpty else {
@@ -131,8 +135,12 @@ class QuickDoseViewModel: ObservableObject {
                 self.isLoading = true
                 self.errorMessage = nil
 
-                // Fetch all medication profiles for the current user
-                let profileDescriptor = FetchDescriptor<MedicationProfile>()
+                // Fetch only ACTIVE medication profiles for the current user
+                let profileDescriptor = FetchDescriptor<MedicationProfile>(
+                    predicate: #Predicate<MedicationProfile> { profile in
+                        profile.isActive == true
+                    }
+                )
                 self.medicationProfiles = try context.fetch(profileDescriptor)
 
                 // Set values from edit data

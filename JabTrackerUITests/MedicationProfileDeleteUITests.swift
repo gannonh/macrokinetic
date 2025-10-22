@@ -45,10 +45,24 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(disableButton.waitForExistence(timeout: 3.0))
         disableButton.tap()
 
-        // Verify profile is hidden from active list
-        XCTAssertFalse(profileCell.waitForExistence(timeout: 3.0))
-        let emptyStateLabel = app.staticTexts["No medication profiles yet"]
-        XCTAssertTrue(emptyStateLabel.waitForExistence(timeout: 3.0))
+        // Verify profile still appears in list (grayed out with Disabled badge)
+        XCTAssertTrue(
+            profileCell.waitForExistence(timeout: 3.0),
+            "Disabled profile should still appear in list")
+        let disabledBadge = app.staticTexts["Disabled"]
+        XCTAssertTrue(
+            disabledBadge.waitForExistence(timeout: 3.0),
+            "Profile should show 'Disabled' badge")
+
+        // Verify disabled profile has Enable and Delete swipe actions (not Disable and Delete)
+        profileCell.swipeLeft()
+        let enableButton = app.buttons["enable-medication-profile"]
+        XCTAssertTrue(
+            enableButton.waitForExistence(timeout: 3.0),
+            "Disabled profile should have 'Enable' swipe action")
+
+        // Swipe right to close swipe actions
+        profileCell.swipeRight()
 
         // Verify historical doses are PRESERVED
         app.tabBars.buttons["History"].tap()
@@ -133,9 +147,275 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         // Verify analytics data is also gone
         app.tabBars.buttons["Analytics"].tap()
         // Chart should not exist or show empty state
-        let emptyAnalyticsMessage = app.staticTexts["No data available"]
+        let emptyAnalyticsMessage = app.staticTexts["No Analytics Data"]
         XCTAssertTrue(
             emptyAnalyticsMessage.waitForExistence(timeout: 5.0) || !chart.exists,
             "Analytics should be empty after permanent delete removes all doses")
+    }
+
+    func testCancelDeleteConfirmation() throws {
+        // Setup: Launch app with 90 days of seeded test data
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launchEnvironment["TEST_DATA_SEED"] = "true"
+        app.launchEnvironment["TEST_DATA_DAYS"] = "90"
+        app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
+        app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
+        app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"
+        app.launch()
+
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+
+        // Navigate to medication profiles
+        app.tabBars.buttons["Settings"].tap()
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
+        medicationProfilesButton.tap()
+
+        // Start delete action
+        let profileCell = app.buttons.matching(
+            identifier: "medication-profile-semaglutide-ozempic-1.00mg"
+        ).firstMatch
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+
+        profileCell.swipeLeft()
+        let deleteButton = app.buttons["delete-medication-profile"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 3.0))
+        deleteButton.tap()
+
+        // Verify confirmation dialog appears with all 3 buttons
+        let confirmDialog = app.alerts["Delete Medication Profile?"]
+        XCTAssertTrue(confirmDialog.waitForExistence(timeout: 3.0))
+
+        let disableInsteadButton = confirmDialog.buttons["Disable Instead (Recommended)"]
+        XCTAssertTrue(disableInsteadButton.exists, "Should have 'Disable Instead' button")
+
+        let deletePermanentlyButton = confirmDialog.buttons["Delete Permanently"]
+        XCTAssertTrue(deletePermanentlyButton.exists, "Should have 'Delete Permanently' button")
+
+        let cancelButton = confirmDialog.buttons["Cancel"]
+        XCTAssertTrue(cancelButton.exists, "Should have 'Cancel' button")
+
+        // Click Cancel
+        cancelButton.tap()
+
+        // Verify profile still exists and is still active (no Disabled badge)
+        XCTAssertTrue(
+            profileCell.waitForExistence(timeout: 3.0),
+            "Profile should still exist after cancel")
+
+        let disabledBadge = app.staticTexts["Disabled"]
+        XCTAssertFalse(
+            disabledBadge.waitForExistence(timeout: 1.0),
+            "Profile should NOT show 'Disabled' badge after cancel")
+
+        // Verify profile has Disable and Delete swipe actions (not Enable)
+        profileCell.swipeLeft()
+        let disableButton = app.buttons["disable-medication-profile"]
+        XCTAssertTrue(
+            disableButton.waitForExistence(timeout: 3.0),
+            "Active profile should have 'Disable' swipe action")
+    }
+
+    func testDisabledProfileCannotBeUsedForDoseLogging() throws {
+        // Setup: Launch app with test data
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launchEnvironment["TEST_DATA_SEED"] = "true"
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
+        app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
+        app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"
+        app.launch()
+
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+
+        // Disable the medication profile
+        app.tabBars.buttons["Settings"].tap()
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
+        medicationProfilesButton.tap()
+
+        let profileCell = app.buttons.matching(
+            identifier: "medication-profile-semaglutide-ozempic-1.00mg"
+        ).firstMatch
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+
+        profileCell.swipeLeft()
+        let disableButton = app.buttons["disable-medication-profile"]
+        XCTAssertTrue(disableButton.waitForExistence(timeout: 3.0))
+        disableButton.tap()
+
+        // Verify profile is disabled
+        let disabledBadge = app.staticTexts["Disabled"]
+        XCTAssertTrue(disabledBadge.waitForExistence(timeout: 3.0))
+
+        // Try to log a dose via Quick Add
+        app.tabBars.buttons["Add"].tap()
+
+        // Use debug utilities to find the medication picker
+        TestUtilities.debugElements(in: app, containing: "medication")
+
+        // Quick dose sheet should show "No medication profiles found" error
+        // because disabled profiles are filtered out
+        let errorMessage = app.staticTexts["No medication profiles found. Please create a medication profile first."]
+        XCTAssertTrue(
+            errorMessage.waitForExistence(timeout: 5.0),
+            "Should show error when no active profiles available for dose logging")
+    }
+
+    func testReEnablingProfileCreatesSchedule() throws {
+        // Setup: Launch app with test data
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launchEnvironment["TEST_DATA_SEED"] = "true"
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
+        app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
+        app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"
+        app.launch()
+
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+
+        // Disable the profile
+        app.tabBars.buttons["Settings"].tap()
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
+        medicationProfilesButton.tap()
+
+        let profileCell = app.buttons.matching(
+            identifier: "medication-profile-semaglutide-ozempic-1.00mg"
+        ).firstMatch
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+
+        profileCell.swipeLeft()
+        app.buttons["disable-medication-profile"].tap()
+
+        // Verify disabled
+        XCTAssertTrue(app.staticTexts["Disabled"].waitForExistence(timeout: 3.0))
+
+        // Re-enable the profile
+        profileCell.swipeLeft()
+        let enableButton = app.buttons["enable-medication-profile"]
+        XCTAssertTrue(enableButton.waitForExistence(timeout: 3.0))
+        enableButton.tap()
+
+        // Verify no longer disabled
+        XCTAssertFalse(app.staticTexts["Disabled"].waitForExistence(timeout: 2.0))
+
+        // Go to calendar and verify scheduled doses exist
+        app.tabBars.buttons["History"].tap()
+        let calendarButton = app.buttons["Calendar"]
+        XCTAssertTrue(calendarButton.waitForExistence(timeout: 3.0))
+        calendarButton.tap()
+
+        // Use debug utilities to find scheduled dose indicators
+        TestUtilities.debugElements(in: app, containing: "scheduled")
+
+        // Verify at least one scheduled dose indicator exists (weekly schedule should show upcoming doses)
+        let scheduledDoseIndicators = app.images.matching(NSPredicate(format: "identifier CONTAINS 'scheduled'"))
+        XCTAssertTrue(
+            scheduledDoseIndicators.count > 0,
+            "Should have scheduled dose indicators after re-enabling profile")
+    }
+
+    func testNewProfileCreatesSchedule() throws {
+        // Setup: Launch app with NO test data
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launch()
+
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+
+        // Create a new medication profile
+        app.tabBars.buttons["Settings"].tap()
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
+        medicationProfilesButton.tap()
+
+        let addButton = app.buttons["Add Medication Profile"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 3.0))
+        addButton.tap()
+
+        // Select medication
+        let medicationPicker = app.buttons["medication-picker"]
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3.0))
+        medicationPicker.tap()
+
+        let semaglutideOption = app.buttons["medication-semaglutide"]
+        XCTAssertTrue(semaglutideOption.waitForExistence(timeout: 3.0))
+        semaglutideOption.tap()
+
+        // Save profile
+        let saveButton = app.buttons["save-medication-profile"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
+        saveButton.tap()
+
+        // Verify profile created
+        let profileCell = app.buttons.matching(
+            identifier: "medication-profile-semaglutide-ozempic-0.25mg"
+        ).firstMatch
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+
+        // Go to calendar and verify scheduled doses exist
+        app.tabBars.buttons["History"].tap()
+        let calendarButton = app.buttons["Calendar"]
+        XCTAssertTrue(calendarButton.waitForExistence(timeout: 3.0))
+        calendarButton.tap()
+
+        // Use debug utilities to find scheduled dose indicators
+        TestUtilities.debugElements(in: app, containing: "scheduled")
+
+        // Verify at least one scheduled dose indicator exists
+        let scheduledDoseIndicators = app.images.matching(NSPredicate(format: "identifier CONTAINS 'scheduled'"))
+        XCTAssertTrue(
+            scheduledDoseIndicators.count > 0,
+            "Should have scheduled dose indicators after creating new profile")
+    }
+
+    func testAnalyticsEmptyStateForNewProfile() throws {
+        // Setup: Launch app with NO test data
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launch()
+
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+
+        // Create a new medication profile (no doses logged yet)
+        app.tabBars.buttons["Settings"].tap()
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
+        medicationProfilesButton.tap()
+
+        let addButton = app.buttons["Add Medication Profile"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 3.0))
+        addButton.tap()
+
+        let medicationPicker = app.buttons["medication-picker"]
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3.0))
+        medicationPicker.tap()
+
+        let semaglutideOption = app.buttons["medication-semaglutide"]
+        XCTAssertTrue(semaglutideOption.waitForExistence(timeout: 3.0))
+        semaglutideOption.tap()
+
+        let saveButton = app.buttons["save-medication-profile"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
+        saveButton.tap()
+
+        // Go to Analytics tab
+        app.tabBars.buttons["Analytics"].tap()
+
+        // Should show "No Analytics Data" message (not infinite loading spinner)
+        let emptyStateMessage = app.staticTexts["No Analytics Data"]
+        XCTAssertTrue(
+            emptyStateMessage.waitForExistence(timeout: 10.0),
+            "Should show empty state message for new profile with no doses")
+
+        // Should NOT show loading spinner indefinitely
+        let loadingSpinner = app.staticTexts["Generating Concentration Chart..."]
+        XCTAssertFalse(
+            loadingSpinner.exists,
+            "Should NOT show loading spinner for profile with no doses")
     }
 }

@@ -6,7 +6,6 @@ struct MedicationProfileSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var authManager: AuthenticationManager
     @Query(
-        filter: #Predicate<MedicationProfile> { $0.isActive == true },
         sort: \MedicationProfile.startDate,
         order: .reverse
     ) private var allMedicationProfiles: [MedicationProfile]
@@ -14,6 +13,7 @@ struct MedicationProfileSettingsView: View {
 
     private var medicationProfiles: [MedicationProfile] {
         guard let currentUser = authManager.currentUser else { return [] }
+        // Include both active and disabled profiles for the current user
         return self.allMedicationProfiles.filter { $0.user?.id == currentUser.id }
     }
 
@@ -64,17 +64,33 @@ struct MedicationProfileSettingsView: View {
                                         + "\(String(format: "%.2f", profile.currentDose))mg"
                                 )
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button("Disable") {
-                                        self.disableProfile(profile)
-                                    }
-                                    .tint(.orange)
-                                    .accessibilityIdentifier("disable-medication-profile")
+                                    if profile.isActive {
+                                        // Active profile: Disable and Delete actions
+                                        Button("Disable") {
+                                            self.disableProfile(profile)
+                                        }
+                                        .tint(.orange)
+                                        .accessibilityIdentifier("disable-medication-profile")
 
-                                    Button("Delete", role: .destructive) {
-                                        self.profileToDelete = profile
-                                        self.showingDeleteConfirmation = true
+                                        Button("Delete", role: .destructive) {
+                                            self.profileToDelete = profile
+                                            self.showingDeleteConfirmation = true
+                                        }
+                                        .accessibilityIdentifier("delete-medication-profile")
+                                    } else {
+                                        // Disabled profile: Enable and Delete actions
+                                        Button("Enable") {
+                                            self.enableProfile(profile)
+                                        }
+                                        .tint(.green)
+                                        .accessibilityIdentifier("enable-medication-profile")
+
+                                        Button("Delete", role: .destructive) {
+                                            self.profileToDelete = profile
+                                            self.showingDeleteConfirmation = true
+                                        }
+                                        .accessibilityIdentifier("delete-medication-profile")
                                     }
-                                    .accessibilityIdentifier("delete-medication-profile")
                                 }
                         }
                     }
@@ -107,12 +123,15 @@ struct MedicationProfileSettingsView: View {
                 titleVisibility: .visible,
                 presenting: self.profileToDelete
             ) { profile in
-                Button("Disable Instead (Recommended)", role: .cancel) {
+                Button("Disable Instead (Recommended)") {
                     self.disableProfile(profile)
                     self.profileToDelete = nil
                 }
                 Button("Delete Permanently", role: .destructive) {
                     self.permanentlyDeleteProfile(profile)
+                    self.profileToDelete = nil
+                }
+                Button("Cancel", role: .cancel) {
                     self.profileToDelete = nil
                 }
             } message: { profile in
@@ -132,6 +151,16 @@ struct MedicationProfileSettingsView: View {
             try self.medicationManager.disableProfile(profile)
         } catch {
             self.errorMessage = "Failed to disable medication profile: \(error.localizedDescription)"
+            self.showingError = true
+        }
+    }
+
+    /// Enable a previously disabled medication profile
+    private func enableProfile(_ profile: MedicationProfile) {
+        do {
+            try self.medicationManager.enableProfile(profile)
+        } catch {
+            self.errorMessage = "Failed to enable medication profile: \(error.localizedDescription)"
             self.showingError = true
         }
     }
@@ -161,7 +190,7 @@ struct MedicationProfileRow: View {
                     HStack {
                         Text("\(self.profile.medicationType.capitalized) (\(self.profile.brandName))")
                             .font(DesignTokens.Typography.headline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(self.profile.isActive ? .primary : .secondary)
 
                         if self.profile.isCompounded {
                             Text("Compounded")
@@ -170,6 +199,16 @@ struct MedicationProfileRow: View {
                                 .padding(.vertical, 2)
                                 .background(DesignTokens.Colors.info.opacity(0.1))
                                 .foregroundColor(DesignTokens.Colors.info)
+                                .cornerRadius(4)
+                        }
+
+                        if !self.profile.isActive {
+                            Text("Disabled")
+                                .font(DesignTokens.Typography.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(Color.gray.opacity(0.1))
+                                .foregroundColor(.gray)
                                 .cornerRadius(4)
                         }
                     }
@@ -192,6 +231,7 @@ struct MedicationProfileRow: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .opacity(self.profile.isActive ? 1.0 : 0.5)
     }
 
     private var frequencyDisplay: String {
