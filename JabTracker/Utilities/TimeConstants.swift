@@ -41,6 +41,17 @@ enum TimeConstants {
     /// Maximum time shift for rescheduling (seconds)
     static let maxRescheduleSeconds: TimeInterval = TimeInterval(maxRescheduleDays * 24 * 60 * 60)
 
+    // MARK: - Schedule Pattern Intervals
+
+    /// Split-dose interval for twice-weekly dosing (3.5 days in minutes)
+    ///
+    /// Used for split-dose schedule patterns where a weekly medication
+    /// is divided into two doses separated by 3.5 days (e.g., Monday + Thursday).
+    /// This ensures even distribution across the week.
+    ///
+    /// - Note: Value is in minutes for compatibility with ScheduleConfiguration.splitIntervalMinutes
+    static let splitDoseInterval: Int = 5040  // 3.5 days * 24 hours * 60 minutes
+
     // MARK: - Time Unit Conversions
 
     /// Seconds in one minute

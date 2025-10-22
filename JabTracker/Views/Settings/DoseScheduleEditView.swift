@@ -368,7 +368,7 @@ struct DoseScheduleEditView: View {
                 windowMinutesBefore: windowMinutesBefore,
                 windowMinutesAfter: windowMinutesAfter,
                 splitDoseCount: nil,  // Not used for twice-weekly pattern
-                splitIntervalMinutes: 5040,  // 3.5 days (twice weekly, not twice daily)
+                splitIntervalMinutes: TimeConstants.splitDoseInterval,
                 customRecurrence: nil
             )
 

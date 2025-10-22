@@ -78,7 +78,7 @@ extension ScheduleConfiguration {
             windowMinutesBefore: TimeConstants.defaultWindowMinutes,
             windowMinutesAfter: TimeConstants.defaultWindowMinutes,
             splitDoseCount: 2,
-            splitIntervalMinutes: 5040,  // 3.5 days = 84 hours
+            splitIntervalMinutes: TimeConstants.splitDoseInterval,
             customRecurrence: nil
         )
     }

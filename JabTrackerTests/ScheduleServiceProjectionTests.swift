@@ -333,7 +333,7 @@ struct ScheduleServiceProjectionTests {
             windowMinutesBefore: 120,
             windowMinutesAfter: 120,
             splitDoseCount: 2,
-            splitIntervalMinutes: 5040,  // 3.5 days = 84 hours (production value)
+            splitIntervalMinutes: TimeConstants.splitDoseInterval,
             customRecurrence: nil
         )
 
@@ -642,7 +642,7 @@ struct ScheduleServiceProjectionTests {
             windowMinutesBefore: 120,
             windowMinutesAfter: 120,
             splitDoseCount: 2,
-            splitIntervalMinutes: 5040,  // 3.5 days = 84 hours
+            splitIntervalMinutes: TimeConstants.splitDoseInterval,
             customRecurrence: nil
         )
 
@@ -664,12 +664,12 @@ struct ScheduleServiceProjectionTests {
         // THEN: Doses should be ~3.5 days apart
         for index in 0..<(doses.count - 1) {
             let interval = doses[index + 1].scheduledTime.timeIntervalSince(doses[index].scheduledTime)
-            let expectedInterval: TimeInterval = 5040 * 60  // 5040 minutes in seconds
+            let expectedInterval: TimeInterval = TimeInterval(TimeConstants.splitDoseInterval * 60)  // Convert minutes to seconds
             let tolerance: TimeInterval = 300  // 5 minute tolerance
 
             #expect(
                 abs(interval - expectedInterval) < tolerance,
-                "Doses should be ~3.5 days (5040 minutes) apart, got \(interval / 3600) hours")
+                "Doses should be ~3.5 days apart, got \(interval / 3600) hours")
         }
 
         // THEN: Each dose should be 0.25mg (half of 0.5mg weekly)
@@ -702,7 +702,7 @@ struct ScheduleServiceProjectionTests {
             windowMinutesBefore: 120,
             windowMinutesAfter: 120,
             splitDoseCount: 2,
-            splitIntervalMinutes: 5040,  // 3.5 days
+            splitIntervalMinutes: TimeConstants.splitDoseInterval,
             customRecurrence: nil
         )
 

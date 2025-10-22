@@ -486,8 +486,8 @@ struct ScheduleServiceTests {
             totalWeeklyDose: totalWeeklyDose
         )
 
-        // THEN: Configuration has correct 3.5-day interval (5040 minutes)
-        #expect(config.splitIntervalMinutes == 5040, "Split interval should be 3.5 days (5040 minutes)")
+        // THEN: Configuration has correct 3.5-day interval
+        #expect(config.splitIntervalMinutes == TimeConstants.splitDoseInterval, "Split interval should be 3.5 days")
         #expect(config.splitDoseCount == 2, "Should split into 2 doses")
         #expect(config.interval == 7, "Should maintain weekly interval")
         #expect(config.doseAmount == totalWeeklyDose / 2.0, "Each dose should be half of total weekly dose")
@@ -531,7 +531,7 @@ struct ScheduleServiceTests {
         )
 
         // THEN: Configuration is correct
-        #expect(config.splitIntervalMinutes == 5040, "Split interval should be 3.5 days")
+        #expect(config.splitIntervalMinutes == TimeConstants.splitDoseInterval, "Split interval should be 3.5 days")
         #expect(config.doseAmount == 2.5, "Each dose should be 2.5mg (half of 5.0mg)")
     }
 }
