@@ -49,6 +49,25 @@ struct SchedulePatternPicker: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Schedule pattern picker")
+        .onChange(of: medication.frequency) { _, _ in
+            // Validate selectedPattern is still valid for new frequency
+            validateAndResetPattern()
+        }
+        .onAppear {
+            // Validate on initial appearance
+            validateAndResetPattern()
+        }
+    }
+
+    /// Validates that selectedPattern is in availablePatterns, resets if not
+    private func validateAndResetPattern() {
+        guard !availablePatterns.contains(selectedPattern) else { return }
+
+        // Reset to first available pattern (safe default)
+        if let firstPattern = availablePatterns.first {
+            selectedPattern = firstPattern
+            onPatternChange(firstPattern)
+        }
     }
 }
 

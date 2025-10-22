@@ -425,8 +425,20 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         // Tap picker to see available options (if menu appears)
         patternPicker.tap()
 
-        // Wait for potential menu
-        usleep(500_000)  // 0.5 seconds
+        // Wait for picker menu to expand by checking for expected options
+        // Note: "Weekly" appears as StaticText, "Split Dose" appears as Button
+        let weeklyOption = app.staticTexts["Weekly"]
+        let splitDoseOption = app.buttons["Split Dose"]
+
+        // Assert that the picker expanded and shows expected options
+        XCTAssertTrue(
+            weeklyOption.waitForExistence(timeout: 2),
+            "Picker should expand and show 'Weekly' option"
+        )
+        XCTAssertTrue(
+            splitDoseOption.waitForExistence(timeout: 2),
+            "Picker should show 'Split Dose' option for weekly medications"
+        )
 
         // The key verification: "Custom" text should NOT exist anywhere in the UI
         // Check for "Custom" in various element types
@@ -437,10 +449,6 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         XCTAssertFalse(customText1.exists, "Custom pattern should NOT appear as static text")
         XCTAssertFalse(customText2.exists, "Custom pattern should NOT appear as button")
         XCTAssertFalse(customText3.exists, "Custom pattern should NOT appear in any text element")
-
-        // Verify Weekly IS available (should be default/visible)
-        // Note: The picker might not show all options as separate elements in Settings
-        // The key test is that "Custom" is NOT visible
 
         print("✅ Test passed: Custom pattern not visible in schedule edit view")
     }
