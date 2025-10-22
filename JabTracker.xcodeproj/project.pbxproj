@@ -298,7 +298,6 @@
 		DDE09BFBD5C283B9D7E220FD /* MedicationSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDAA0E6A2199F895649643B /* MedicationSelectionView.swift */; };
 		DE3A390860BC5E820720939E /* SubscriptionUIPlanSwitchingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C9AD909F79531B7470B5BD /* SubscriptionUIPlanSwitchingTests.swift */; };
 		DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */; };
-		DEF8E0FF9EC77F92B7835447 /* TestDataSeedingExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A338211690FAB2A0B655AD /* TestDataSeedingExamples.swift */; };
 		DF59CA22B1515D5F4988AE8A /* CalendarIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9636B2D1B47D1281AE836554 /* CalendarIntegrationUITests.swift */; };
 		E0B2C20CA8D563D7FAB74F5A /* DoseHistoryViewModelUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4973FBCC6CDF5FB31FCF549 /* DoseHistoryViewModelUnitTests.swift */; };
 		E0B8A4E2309A4EC632D8B030 /* UserModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */; };
@@ -679,7 +678,6 @@
 		F78094472F5DE7764EA9C5CA /* CalendarDisplayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDisplayUITests.swift; sourceTree = "<group>"; };
 		F7B5C1C6B254C39E621F78F3 /* DoseMarkerOverlayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseMarkerOverlayTests.swift; sourceTree = "<group>"; };
 		F873BD389DC87FD7D6CEBACF /* MedicationProfileHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileHeader.swift; sourceTree = "<group>"; };
-		F8A338211690FAB2A0B655AD /* TestDataSeedingExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDataSeedingExamples.swift; sourceTree = "<group>"; };
 		F8EBF7C29C3F5819C09A0195 /* AdherenceMetricsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceMetricsCard.swift; sourceTree = "<group>"; };
 		F92E8D8F3495EB9012EB9515 /* OnboardingMedicationPatternsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingMedicationPatternsUITests.swift; sourceTree = "<group>"; };
 		F982741B9F86B6638532AD44 /* MonthlyStatsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyStatsViewTests.swift; sourceTree = "<group>"; };
@@ -1022,7 +1020,6 @@
 				4405BED1AC09DED9184CE132 /* SubscriptionManagerSecurityTests.swift */,
 				366DAD35498255B7F8392DE4 /* SubscriptionManagerStoreKitIntegrationTests.swift */,
 				D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */,
-				F8A338211690FAB2A0B655AD /* TestDataSeedingExamples.swift */,
 				777443E8D9A33680C4ECAB15 /* UserAnalyticsTests.swift */,
 				5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */,
 				F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */,
@@ -1685,7 +1682,6 @@
 				1AC6C09C2605C2A2717A9416 /* SubscriptionManagerSecurityTests.swift in Sources */,
 				DB0476FF50124EF3F5CDBD67 /* SubscriptionManagerStoreKitIntegrationTests.swift in Sources */,
 				14AEF2C8BC0EED167F0DFFB9 /* SubscriptionManagerTests.swift in Sources */,
-				DEF8E0FF9EC77F92B7835447 /* TestDataSeedingExamples.swift in Sources */,
 				4E5034BCD12D9189FD7D3310 /* TestError.swift in Sources */,
 				45D353BDB2999FFB9D40E7A7 /* TimeConstantsTests.swift in Sources */,
 				9F4CF2202CE772C0CC88D09A /* TimePeriodSelectorTests.swift in Sources */,
