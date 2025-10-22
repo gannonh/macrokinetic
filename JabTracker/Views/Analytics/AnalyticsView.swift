@@ -97,11 +97,9 @@ struct AnalyticsView: View {
             }
             .navigationTitle("Analytics")
             .onAppear {
-                // Load data only on first appearance
-                if currentUser == nil {
-                    loadData()
-                    refreshChartDataset()
-                }
+                // Always refresh data when view appears (in case profiles/doses changed)
+                loadData()
+                refreshChartDataset()
             }
         }
     }
@@ -176,8 +174,12 @@ struct AnalyticsView: View {
         // Use cached chart dataset (generated once, chart updates itself via onChange)
         if let dataset = viewModel.chartDataset {
             ConcentrationTimelineChart(dataset: dataset)
-        } else {
+        } else if isLoadingData {
+            // Still loading initial data
             chartLoadingView()
+        } else {
+            // No data available (no doses logged yet)
+            noDataSection
         }
     }
 

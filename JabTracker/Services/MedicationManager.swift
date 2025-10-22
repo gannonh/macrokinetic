@@ -51,41 +51,38 @@ class MedicationManager: ObservableObject {
 
     // MARK: - CRUD Operations
 
-    /// Fetch all medication profiles for the current user
+    /// Fetch all medication profiles for the current user (including disabled)
     func fetchProfiles(for user: User? = nil) {
         if let user {
-            // Filter profiles by user relationship and isActive status
+            // Filter profiles by user relationship (includes both active and disabled)
             let userId = user.id
             let descriptor = FetchDescriptor<MedicationProfile>(
                 predicate: #Predicate<MedicationProfile> { profile in
-                    profile.user?.id == userId && profile.isActive == true
+                    profile.user?.id == userId
                 },
                 sortBy: [SortDescriptor(\.startDate, order: .reverse)])
 
             do {
                 self.profiles = try self.modelContext.fetch(descriptor)
                 self.activeProfile = self.profiles.first { profile in
-                    // Most recent profile is considered active
-                    profile.startDate <= Date()
+                    // Most recent ACTIVE profile is considered active
+                    profile.isActive && profile.startDate <= Date()
                 }
             } catch {
                 print("Failed to fetch medication profiles for user: \(error)")
                 self.profiles = []
             }
         } else {
-            // Fetch all active profiles (for backward compatibility)
+            // Fetch all profiles (for backward compatibility - includes both active and disabled)
             let descriptor = FetchDescriptor<MedicationProfile>(
-                predicate: #Predicate<MedicationProfile> { profile in
-                    profile.isActive == true
-                },
                 sortBy: [SortDescriptor(\.startDate, order: .reverse)]
             )
 
             do {
                 self.profiles = try self.modelContext.fetch(descriptor)
                 self.activeProfile = self.profiles.first { profile in
-                    // Most recent profile is considered active
-                    profile.startDate <= Date()
+                    // Most recent ACTIVE profile is considered active
+                    profile.isActive && profile.startDate <= Date()
                 }
             } catch {
                 print("Failed to fetch medication profiles: \(error)")
@@ -145,6 +142,9 @@ class MedicationManager: ObservableObject {
         profile.user = user
 
         self.modelContext.insert(profile)
+
+        // Create initial dose schedule for the new profile
+        try createScheduleForProfile(profile)
 
         do {
             try self.modelContext.save()
@@ -291,6 +291,7 @@ class MedicationManager: ObservableObject {
     /// Enable a previously disabled medication profile
     ///
     /// Re-activates a disabled profile, making it visible in active medication lists again.
+    /// Creates a new dose schedule starting from the re-enable date.
     ///
     /// - Parameter profile: The medication profile to enable
     /// - Throws: MedicationError.saveFailed if the save operation fails
@@ -298,12 +299,70 @@ class MedicationManager: ObservableObject {
         profile.isActive = true
         profile.updatedAt = Date()
 
+        // Create a new dose schedule when re-enabling
+        try createScheduleForProfile(profile)
+
         do {
             try self.modelContext.save()
             self.fetchProfiles()
         } catch {
             throw MedicationError.saveFailed
         }
+    }
+
+    /// Creates a default dose schedule for a medication profile
+    /// - Parameter profile: The medication profile to create a schedule for
+    /// - Throws: MedicationError.saveFailed if schedule creation fails
+    private func createScheduleForProfile(_ profile: MedicationProfile) throws {
+        // Get medication frequency
+        guard let medication = profile.medication else {
+            throw MedicationError.saveFailed
+        }
+
+        // Create schedule service
+        let scheduleService = ScheduleService(context: self.modelContext)
+
+        // Determine pattern and configuration based on medication frequency
+        let now = Date()
+        let calendar = Calendar.current
+        let pattern: SchedulePatternType
+        let interval: Int
+        let dayOfWeek: Int?
+
+        switch medication.frequency {
+        case .daily:
+            pattern = .daily
+            interval = 1
+            dayOfWeek = nil
+        case .weekly:
+            pattern = .weekly
+            interval = 7
+            dayOfWeek = calendar.component(.weekday, from: now)
+        }
+
+        // Create default configuration
+        let scheduleConfig = ScheduleConfiguration(
+            dayOfWeek: dayOfWeek,
+            timeOfDay: TimeComponents(
+                hour: calendar.component(.hour, from: now),
+                minute: calendar.component(.minute, from: now)
+            ),
+            interval: interval,
+            doseAmount: profile.currentDose,
+            windowMinutesBefore: 120,  // 2 hours before
+            windowMinutesAfter: 120,  // 2 hours after
+            splitDoseCount: nil,
+            splitIntervalMinutes: nil,
+            customRecurrence: nil
+        )
+
+        // Create the schedule
+        _ = try scheduleService.createSchedule(
+            for: profile,
+            pattern: pattern,
+            startDate: now,
+            baseSchedule: scheduleConfig
+        )
     }
 
     /// Permanently delete a medication profile and all associated data
