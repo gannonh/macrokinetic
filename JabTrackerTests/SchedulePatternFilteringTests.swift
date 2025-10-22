@@ -6,19 +6,6 @@ import Testing
 @Suite("Schedule Pattern Filtering")
 struct SchedulePatternFilteringTests {
 
-    // MARK: - Helper Function for Pattern Filtering
-
-    /// Returns available schedule patterns for a given medication
-    /// This will be implemented in SchedulePatternPicker
-    func availablePatterns(for medication: Medication) -> [SchedulePatternType] {
-        switch medication.frequency {
-        case .daily:
-            return [.weekly]  // Daily meds can't split further
-        case .weekly:
-            return [.weekly, .splitDose]  // Weekly meds can split, no custom
-        }
-    }
-
     // MARK: - Weekly Medication Pattern Tests
 
     @Test("Semaglutide (weekly) returns weekly and split-dose patterns")
@@ -26,8 +13,8 @@ struct SchedulePatternFilteringTests {
         // GIVEN: Semaglutide medication (weekly frequency)
         let medication = Medication.semaglutide
 
-        // WHEN: Get available patterns
-        let patterns = availablePatterns(for: medication)
+        // WHEN: Get available patterns from production code
+        let patterns = medication.availableSchedulePatterns()
 
         // THEN: Should return weekly and split-dose, but NOT custom
         #expect(patterns.contains(.weekly), "Weekly medication should support weekly pattern")
@@ -41,8 +28,8 @@ struct SchedulePatternFilteringTests {
         // GIVEN: Tirzepatide medication (weekly frequency)
         let medication = Medication.tirzepatide
 
-        // WHEN: Get available patterns
-        let patterns = availablePatterns(for: medication)
+        // WHEN: Get available patterns from production code
+        let patterns = medication.availableSchedulePatterns()
 
         // THEN: Should return weekly and split-dose, but NOT custom
         #expect(patterns.contains(.weekly), "Weekly medication should support weekly pattern")
@@ -56,8 +43,8 @@ struct SchedulePatternFilteringTests {
         // GIVEN: Dulaglutide medication (weekly frequency)
         let medication = Medication.dulaglutide
 
-        // WHEN: Get available patterns
-        let patterns = availablePatterns(for: medication)
+        // WHEN: Get available patterns from production code
+        let patterns = medication.availableSchedulePatterns()
 
         // THEN: Should return weekly and split-dose, but NOT custom
         #expect(patterns.contains(.weekly), "Weekly medication should support weekly pattern")
@@ -68,19 +55,19 @@ struct SchedulePatternFilteringTests {
 
     // MARK: - Daily Medication Pattern Tests
 
-    @Test("Liraglutide (daily) returns ONLY weekly pattern")
+    @Test("Liraglutide (daily) returns ONLY daily pattern")
     func liraglutidePatterns() throws {
         // GIVEN: Liraglutide medication (daily frequency)
         let medication = Medication.liraglutide
 
-        // WHEN: Get available patterns
-        let patterns = availablePatterns(for: medication)
+        // WHEN: Get available patterns from production code
+        let patterns = medication.availableSchedulePatterns()
 
-        // THEN: Should return ONLY weekly pattern (no split-dose, no custom)
-        #expect(patterns.contains(.weekly), "Daily medication should support weekly pattern")
+        // THEN: Should return ONLY daily pattern (no split-dose, no custom)
+        #expect(patterns.contains(.daily), "Daily medication should support daily pattern")
         #expect(!patterns.contains(.splitDose), "Daily medication should NOT support split-dose (already daily)")
         #expect(!patterns.contains(.custom), "Custom pattern should be removed from all medications")
-        #expect(patterns.count == 1, "Should only have 1 pattern (weekly)")
+        #expect(patterns.count == 1, "Should only have 1 pattern (daily)")
     }
 
     // MARK: - Custom Pattern Removal Tests
@@ -90,9 +77,9 @@ struct SchedulePatternFilteringTests {
         // GIVEN: All available medications
         let allMedications = Medication.allCases
 
-        // WHEN: Get available patterns for each medication
+        // WHEN: Get available patterns from production code for each medication
         for medication in allMedications {
-            let patterns = availablePatterns(for: medication)
+            let patterns = medication.availableSchedulePatterns()
 
             // THEN: Custom pattern should NOT be in the list
             #expect(
