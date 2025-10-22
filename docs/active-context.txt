@@ -1,62 +1,37 @@
- You're absolutely right. That test name is backwards - it's testing what we DON'T want instead of what we DO want. Let me analyze what we
-  actually need.
+ The Problem
 
-  Current State Analysis
+  When we delete a MedicationProfile, the cascade delete on line 30-31 of MedicationProfile.swift:
 
-  Existing Tests (What We Have)
+  @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
+  var doses: [Dose]?  // CloudKit requires optional relationships
 
-  OnboardingScheduleSetupUITests.swift:
-  1. ✅ testCompleteOnboardingWithSplitDoseSchedule() - User selects split-dose in onboarding
-  2. ✅ testSemaglutideShowsSplitDoseOption() - Weekly meds show split-dose option
-  3. ✅ testLiraglutideHidesSplitDoseOption() - Daily meds hide split-dose option
-  4. ✅ testCustomPatternNotVisibleInOnboarding() - Custom pattern removed
+  This deletes all historical doses (the actual taken doses), which destroys all analytics data and medication history. That's not what users
+  want!
 
-  Integration Tests:
-  1. ✅ testSplitDoseIntegrationCreatesCorrectSchedule() - Service layer creates correct schedule
-  2. ✅ testSplitDoseFilteringIntegration() - UI filtering matches service logic
-  3. ✅ testSplitDosePreventsOverdosingRisk() - Validates 5040 minute interval
+  Your Proposed Solution is Perfect ✅
 
-  What's Missing (The Gap)
+  Two-action approach:
+  1. "Disable" (soft delete) - Default/recommended action
+    - Sets isActive = false on the medication profile
+    - Preserves all historical data and analytics
+    - Hides from active medication lists
+    - Can be re-enabled later
+  2. "Delete" (hard delete) - Destructive action with warning
+    - Shows confirmation dialog: "This will permanently delete all dose history and analytics for this medication. Consider disabling instead
+  to preserve your data."
+    - Only for users who truly want to remove everything
 
-  No E2E tests that verify the split-dose feature actually works end-to-end:
+  Implementation Plan
 
-  1. ❌ After onboarding with split-dose, verify schedule is created correctly
-    - Navigate through full onboarding with split-dose selection
-    - Check that resulting schedule has correct interval (not just that option was selected)
-  2. ❌ Verify calendar displays split-dose schedule correctly
-    - Create split-dose schedule
-    - Navigate to calendar
-    - Verify it shows ~2 doses per week (or 4 doses over 2 weeks)
-  3. ❌ Verify dashboard shows split-dose information
-    - Create split-dose schedule
-    - Check dashboard displays schedule info
-    - Verify timing information is reasonable
-  4. ❌ Verify settings displays split-dose schedule details
-    - Navigate to medication profile settings
-    - Verify split-dose schedule is displayed with correct interval
+  1. Add isActive field to MedicationProfile (if not already present)
+  2. Change cascade delete rule for doses from .cascade to .nullify
+  3. Update deletion UI:
+    - Change swipe action to "Disable" by default
+    - Add "Delete Permanently..." option with warning dialog
+  4. Filter queries to exclude disabled profiles from active lists
+  5. Add E2E test to verify:
+    - Deleting profile removes scheduled doses ✓
+    - Deleting profile does NOT remove historical doses ✓
+    - Disabling profile preserves everything ✓
 
-  Proposed Plan
-
-  Test 1: Verify Split-Dose Schedule Creation
-
-  File: OnboardingScheduleSetupUITests.swift (extend existing test)
-  Name: testSplitDoseScheduleCreatedWithCorrectInterval
-  Purpose: After completing onboarding with split-dose, verify the schedule was actually created
-
-  Test 2: Verify Calendar Shows Split-Dose Pattern
-
-  File: CalendarScheduledDosesUITests.swift
-  Name: testCalendarDisplaysSplitDoseSchedule
-  Purpose: With split-dose schedule, verify calendar shows ~2 doses per week
-
-  Test 3: Verify Dashboard Shows Split-Dose Timing
-
-  File: Create new DashboardUITests.swift or add to existing dashboard tests
-  Name: testDashboardDisplaysSplitDoseSchedule
-  Purpose: Verify dashboard shows split-dose schedule information
-
-  Test 4: Verify Settings Shows Split-Dose Schedule
-
-  File: MedicationProfileScheduleUITests.swift
-  Name: testSettingsDisplaysSplitDoseSchedule
-  Purpose: Verify medication profile settings show split-dose schedule details
+  Should I proceed with this implementation? This is a much better UX and prevents accidental data loss!
