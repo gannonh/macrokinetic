@@ -87,6 +87,16 @@ gh pr ready $ARGUMENTS
 
 ### 4. Request Reviews
 
+#### 4.0 CodeRabbit Review
+
+Ask the user to...
+
+1. Run CodeRabbit
+2. Process CodeRabbit comments with `/qa:code-rabbit [paste comments]`
+3. Return here when done to give the go-ahead for continuing to Step 4.1
+
+**IMPORTANT:** Do NOT proceed to Step 4.1 until you receive explicit permission from the user.
+
 #### 4.1 Deploy Review Agents
 
 Deploy code-quality-analyzer and test-quality-analyzer agents in parallel to the PR: $ARGUMENTS
