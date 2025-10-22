@@ -462,7 +462,6 @@ private struct ScheduleSheetsPresentationModifier: ViewModifier {
     let viewModel: MedicationProfileViewModel?
     let profile: MedicationProfile
 
-    // swiftlint:disable:next function_body_length
     func body(content: Content) -> some View {
         content
             .sheet(
