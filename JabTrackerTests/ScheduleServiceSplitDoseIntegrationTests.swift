@@ -85,7 +85,7 @@ struct ScheduleServiceSplitDoseIntegrationTests {
 
         // THEN: Verify configuration has correct medical parameters
         #expect(config.splitDoseCount == 2, "Split-dose should create 2 doses per week")
-        #expect(config.splitIntervalMinutes == 5040, "Split interval should be 5040 minutes (3.5 days)")
+        #expect(config.splitIntervalMinutes == TimeConstants.splitDoseInterval, "Split interval should be 3.5 days")
         #expect(config.interval == 7, "Weekly cycle should be 7 days")
 
         // WHEN: Generate schedule for 2 weeks using ScheduleService
@@ -148,7 +148,7 @@ struct ScheduleServiceSplitDoseIntegrationTests {
             totalWeeklyDose: 0.25
         )
         #expect(config != nil, "Service layer should support split-dose for weekly medication")
-        #expect(config?.splitIntervalMinutes == 5040, "Should use correct 3.5-day interval")
+        #expect(config?.splitIntervalMinutes == TimeConstants.splitDoseInterval, "Should use correct 3.5-day interval")
 
         // GIVEN: Daily medication (Liraglutide)
         let liraglutide = Medication.liraglutide
@@ -185,7 +185,7 @@ struct ScheduleServiceSplitDoseIntegrationTests {
     func testSplitDosePreventsOverdosingRisk() throws {
         // This test validates the critical medical safety fix:
         // OLD BUG: 720 minutes = 12 hours = TWICE DAILY dosing (DANGEROUS!)
-        // FIX: 5040 minutes = 84 hours = 3.5 days = TWICE WEEKLY (SAFE)
+        // FIX: TimeConstants.splitDoseInterval = 84 hours = 3.5 days = TWICE WEEKLY (SAFE)
 
         // GIVEN: Weekly medication with split-dose configuration
         let medication = Medication.semaglutide

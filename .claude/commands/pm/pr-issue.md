@@ -32,7 +32,7 @@ If for any reason the issue is not a PR Issue, **STOP AND REPORT**:
 
 ## Instructions for PR Issues
 
-**IMPORTANT**: If more than 1 issue, run the following workflow sequentiually for each individual issue.
+**IMPORTANT**: If more than 1 issue, run the following workflow sequentially for each individual issue.
 
 1. Read the issue description and recommended solution (if any) from GitHub.
 2. Label the issue as `in-progress` in GitHub
