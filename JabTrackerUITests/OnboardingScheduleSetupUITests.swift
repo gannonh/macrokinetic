@@ -96,7 +96,7 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         // WHEN: User views available patterns
         // THEN: Three pattern cards are displayed with correct titles
         let weeklyCard = app.buttons["pattern-card-weekly"]
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         let customCard = app.buttons["pattern-card-custom"]
 
         XCTAssertTrue(weeklyCard.exists, "Weekly pattern card should be visible")
@@ -147,7 +147,7 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         XCTAssertTrue(troughLabel.exists, "Trough concentration label should exist")
 
         // WHEN: User selects "Split Dose" pattern
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should exist")
 
         // Measure time from tap to when labels are readable (preview update time)
@@ -349,7 +349,7 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         try navigateToScheduleSetup()
 
         // WHEN: User selects "Split Dose" pattern
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should exist")
 
         // Verify weekly is selected by default
@@ -397,7 +397,7 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         // THEN: All pattern cards are accessible with descriptive labels
         let weeklyCard = app.buttons["pattern-card-weekly"]
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         let customCard = app.buttons["pattern-card-custom"]
 
         XCTAssertTrue(weeklyCard.exists, "Weekly pattern card should exist")
@@ -467,7 +467,7 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         // WHEN: User changes pattern
         let weeklyCard = app.buttons["pattern-card-weekly"]
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
 
         XCTAssertTrue(weeklyCard.isSelected, "Weekly pattern should be selected by default")
 
@@ -501,7 +501,7 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
         try navigateToScheduleSetup()
 
         // WHEN: User selects "Split Dose" pattern
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         XCTAssertTrue(splitDoseCard.exists, "Split dose pattern card should exist")
         splitDoseCard.tap()
         XCTAssertTrue(splitDoseCard.isSelected, "Split dose pattern should be selected")
@@ -537,7 +537,7 @@ final class OnboardingScheduleSetupUITests: XCTestCase {
 
         // THEN: Previously selected pattern is still selected
         let weeklyCard = app.buttons["pattern-card-weekly"]
-        let restoredSplitDoseCard = app.buttons["pattern-card-splitDose"]
+        let restoredSplitDoseCard = app.buttons["pattern-card-split-dose"]
 
         XCTAssertTrue(
             restoredSplitDoseCard.waitForExistence(timeout: 5),
