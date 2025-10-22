@@ -54,11 +54,11 @@ class MedicationManager: ObservableObject {
     /// Fetch all medication profiles for the current user
     func fetchProfiles(for user: User? = nil) {
         if let user {
-            // Filter profiles by user relationship using the user's ID
+            // Filter profiles by user relationship and isActive status
             let userId = user.id
             let descriptor = FetchDescriptor<MedicationProfile>(
                 predicate: #Predicate<MedicationProfile> { profile in
-                    profile.user?.id == userId
+                    profile.user?.id == userId && profile.isActive == true
                 },
                 sortBy: [SortDescriptor(\.startDate, order: .reverse)])
 
@@ -73,8 +73,11 @@ class MedicationManager: ObservableObject {
                 self.profiles = []
             }
         } else {
-            // Fetch all profiles (for backward compatibility)
+            // Fetch all active profiles (for backward compatibility)
             let descriptor = FetchDescriptor<MedicationProfile>(
+                predicate: #Predicate<MedicationProfile> { profile in
+                    profile.isActive == true
+                },
                 sortBy: [SortDescriptor(\.startDate, order: .reverse)]
             )
 
@@ -256,8 +259,55 @@ class MedicationManager: ObservableObject {
 
     // swiftlint:enable cyclomatic_complexity function_body_length
 
-    /// Delete a medication profile and all associated schedules
-    func deleteProfile(_ profile: MedicationProfile) throws {
+    /// Disable a medication profile (soft delete - preserves historical data)
+    ///
+    /// This is the recommended way to "delete" a medication profile as it preserves
+    /// all historical dose data and analytics. The profile will be hidden from active
+    /// medication lists but can be re-enabled later.
+    ///
+    /// - Parameter profile: The medication profile to disable
+    /// - Throws: MedicationError.saveFailed if the save operation fails
+    func disableProfile(_ profile: MedicationProfile) throws {
+        profile.isActive = false
+        profile.updatedAt = Date()
+
+        do {
+            try self.modelContext.save()
+            self.fetchProfiles()
+        } catch {
+            throw MedicationError.saveFailed
+        }
+    }
+
+    /// Enable a previously disabled medication profile
+    ///
+    /// Re-activates a disabled profile, making it visible in active medication lists again.
+    ///
+    /// - Parameter profile: The medication profile to enable
+    /// - Throws: MedicationError.saveFailed if the save operation fails
+    func enableProfile(_ profile: MedicationProfile) throws {
+        profile.isActive = true
+        profile.updatedAt = Date()
+
+        do {
+            try self.modelContext.save()
+            self.fetchProfiles()
+        } catch {
+            throw MedicationError.saveFailed
+        }
+    }
+
+    /// Permanently delete a medication profile and all associated schedules
+    ///
+    /// ⚠️ **WARNING**: This is a destructive operation that cannot be undone.
+    /// Historical doses will be preserved (nullified relationship), but schedules
+    /// and titrations will be permanently deleted.
+    ///
+    /// **Recommended**: Use `disableProfile()` instead to preserve all data.
+    ///
+    /// - Parameter profile: The medication profile to permanently delete
+    /// - Throws: MedicationError.saveFailed if the save operation fails
+    func permanentlyDeleteProfile(_ profile: MedicationProfile) throws {
         // Manually delete associated schedules (cascade delete may not work reliably with SwiftData)
         // Each schedule has cascade delete configured for ScheduledDose, so deleting the schedule
         // will delete the scheduled doses as well
@@ -267,6 +317,8 @@ class MedicationManager: ObservableObject {
             }
         }
 
+        // Delete the profile itself
+        // Note: Historical doses (profile.doses) are preserved due to .nullify delete rule
         self.modelContext.delete(profile)
 
         do {
@@ -275,6 +327,16 @@ class MedicationManager: ObservableObject {
         } catch {
             throw MedicationError.saveFailed
         }
+    }
+
+    /// Legacy method - now calls disableProfile() for backward compatibility
+    /// - Deprecated: Use disableProfile() or permanentlyDeleteProfile() explicitly
+    @available(
+        *, deprecated, renamed: "disableProfile",
+        message: "Use disableProfile() for soft delete or permanentlyDeleteProfile() for hard delete"
+    )
+    func deleteProfile(_ profile: MedicationProfile) throws {
+        try disableProfile(profile)
     }
 
     // MARK: - Validation Helpers

@@ -5,7 +5,11 @@ import SwiftUI
 struct MedicationProfileSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var authManager: AuthenticationManager
-    @Query(sort: \MedicationProfile.startDate, order: .reverse) private var allMedicationProfiles: [MedicationProfile]
+    @Query(
+        filter: #Predicate<MedicationProfile> { $0.isActive == true },
+        sort: \MedicationProfile.startDate,
+        order: .reverse
+    ) private var allMedicationProfiles: [MedicationProfile]
     @ObservedObject var medicationManager: MedicationManager
 
     private var medicationProfiles: [MedicationProfile] {
@@ -16,6 +20,8 @@ struct MedicationProfileSettingsView: View {
     @State private var showingAddProfile = false
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var profileToDelete: MedicationProfile?
+    @State private var showingDeleteConfirmation = false
 
     init(medicationManager: MedicationManager) {
         self.medicationManager = medicationManager
@@ -57,8 +63,20 @@ struct MedicationProfileSettingsView: View {
                                         + "\(profile.brandName.lowercased())-"
                                         + "\(String(format: "%.2f", profile.currentDose))mg"
                                 )
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button("Disable") {
+                                        self.disableProfile(profile)
+                                    }
+                                    .tint(.orange)
+                                    .accessibilityIdentifier("disable-medication-profile")
+
+                                    Button("Delete", role: .destructive) {
+                                        self.profileToDelete = profile
+                                        self.showingDeleteConfirmation = true
+                                    }
+                                    .accessibilityIdentifier("delete-medication-profile")
+                                }
                         }
-                        .onDelete(perform: self.deleteProfiles)
                     }
                 }
             }
@@ -83,27 +101,45 @@ struct MedicationProfileSettingsView: View {
             } message: {
                 Text(self.errorMessage)
             }
+            .confirmationDialog(
+                "Delete Medication Profile?",
+                isPresented: self.$showingDeleteConfirmation,
+                titleVisibility: .visible,
+                presenting: self.profileToDelete
+            ) { profile in
+                Button("Disable Instead (Recommended)", role: .cancel) {
+                    self.disableProfile(profile)
+                    self.profileToDelete = nil
+                }
+                Button("Delete Permanently", role: .destructive) {
+                    self.permanentlyDeleteProfile(profile)
+                    self.profileToDelete = nil
+                }
+            } message: { profile in
+                Text(
+                    """
+                    Permanently deleting '\(profile.brandName)' will remove all scheduled doses but \
+                    preserve your historical dose data and analytics. Consider disabling instead to keep everything.
+                    """
+                )
+            }
         }
     }
 
-    private func deleteProfiles(at offsets: IndexSet) {
-        for index in offsets {
-            let profile = self.medicationProfiles[index]
-
-            // Manually delete associated schedules (cascade delete may not work reliably with SwiftData)
-            // Each schedule has cascade delete configured for ScheduledDose, so deleting the schedule
-            // will delete the scheduled doses as well
-            if let schedules = profile.schedules {
-                for schedule in schedules {
-                    self.modelContext.delete(schedule)
-                }
-            }
-
-            self.modelContext.delete(profile)
-        }
-
+    /// Disable a medication profile (soft delete - preserves all data)
+    private func disableProfile(_ profile: MedicationProfile) {
         do {
-            try self.modelContext.save()
+            try self.medicationManager.disableProfile(profile)
+        } catch {
+            self.errorMessage = "Failed to disable medication profile: \(error.localizedDescription)"
+            self.showingError = true
+        }
+    }
+
+    /// Permanently delete a medication profile (hard delete with confirmation)
+    private func permanentlyDeleteProfile(_ profile: MedicationProfile) {
+        do {
+            try self.medicationManager.permanentlyDeleteProfile(profile)
         } catch {
             self.errorMessage = "Failed to delete medication profile: \(error.localizedDescription)"
             self.showingError = true

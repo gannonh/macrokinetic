@@ -152,7 +152,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--force-onboarding"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
@@ -172,7 +172,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ui-testing"

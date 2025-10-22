@@ -24,11 +24,12 @@ final class MedicationProfile {
     var unitsPerDose: Double?  // For compounded: units to draw (calculated from dose/concentration)
     var preferredInjectionSites: [String] = ["Thigh"]  // Preferred injection sites from onboarding
     var notes: String = ""  // User notes about medication
+    var isActive: Bool = true  // Whether this medication profile is active (soft delete support)
     var updatedAt: Date = Date()  // Track modifications
     var createdAt: Date = Date()  // Track creation
 
-    @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
-    var doses: [Dose]?  // CloudKit requires optional relationships
+    @Relationship(deleteRule: .nullify, inverse: \Dose.medication)
+    var doses: [Dose]?  // Changed to nullify - preserve historical doses when profile deleted
 
     @Relationship(deleteRule: .cascade, inverse: \DoseTitration.medicationProfile)
     var doseTitrations: [DoseTitration]?  // Titration plans for this medication
@@ -51,7 +52,8 @@ final class MedicationProfile {
         concentration: Double? = nil,
         unitsPerDose: Double? = nil,
         preferredInjectionSites: [String] = ["Thigh"],
-        notes: String = ""
+        notes: String = "",
+        isActive: Bool = true
     ) {
         self.genericName = genericName
         self.brandName = brandName
@@ -71,6 +73,7 @@ final class MedicationProfile {
         self.unitsPerDose = unitsPerDose
         self.preferredInjectionSites = preferredInjectionSites
         self.notes = notes
+        self.isActive = isActive
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
