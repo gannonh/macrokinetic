@@ -71,7 +71,7 @@ final class OnboardingMedicationPatternsUITests: XCTestCase {
 
         // WHEN: User views pattern options
         // THEN: Split-dose pattern option is visible
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         XCTAssertTrue(
             splitDoseCard.waitForExistence(timeout: 5),
             "Split-dose pattern card should be visible for Semaglutide (weekly medication)")
@@ -147,7 +147,7 @@ final class OnboardingMedicationPatternsUITests: XCTestCase {
             "Weekly pattern card should NOT be visible for Liraglutide (daily medication)")
 
         // THEN: Split-dose pattern option is NOT visible
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         XCTAssertFalse(
             splitDoseCard.exists,
             "Split-dose pattern card should NOT be visible for Liraglutide (daily medication)")
@@ -217,7 +217,7 @@ final class OnboardingMedicationPatternsUITests: XCTestCase {
 
         // THEN: Weekly and split-dose do NOT exist
         let weeklyCard = app.buttons["pattern-card-weekly"]
-        let splitDoseCard = app.buttons["pattern-card-splitdose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
         XCTAssertFalse(weeklyCard.exists, "Weekly card should NOT exist for daily medication")
         XCTAssertFalse(splitDoseCard.exists, "Split-dose card should NOT exist for daily medication")
 
@@ -311,7 +311,7 @@ final class OnboardingMedicationPatternsUITests: XCTestCase {
 
         // THEN: Only weekly and split-dose patterns are visible
         let weeklyCard = app.buttons["pattern-card-weekly"]
-        let splitDoseCard = app.buttons["pattern-card-splitDose"]
+        let splitDoseCard = app.buttons["pattern-card-split-dose"]
 
         XCTAssertTrue(
             weeklyCard.exists,

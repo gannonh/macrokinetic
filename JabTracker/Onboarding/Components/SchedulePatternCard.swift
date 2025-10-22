@@ -49,7 +49,7 @@ struct SchedulePatternCard: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("pattern-card-\(pattern.rawValue)")
+        .accessibilityIdentifier("pattern-card-\(pattern.kebabCaseIdentifier)")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(pattern.displayName)
         .accessibilityHint(pattern.description)
@@ -60,6 +60,20 @@ struct SchedulePatternCard: View {
 // MARK: - SchedulePatternType Extensions
 
 extension SchedulePatternType {
+    /// Kebab-case identifier for accessibility (follows codebase convention)
+    var kebabCaseIdentifier: String {
+        switch self {
+        case .daily:
+            return "daily"
+        case .weekly:
+            return "weekly"
+        case .splitDose:
+            return "split-dose"
+        case .custom:
+            return "custom"
+        }
+    }
+
     /// Human-readable display name
     var displayName: String {
         switch self {
