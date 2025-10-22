@@ -259,15 +259,24 @@ class MedicationManager: ObservableObject {
 
     // swiftlint:enable cyclomatic_complexity function_body_length
 
-    /// Disable a medication profile (soft delete - preserves historical data)
+    /// Disable a medication profile (soft delete - preserves historical dose data)
     ///
     /// This is the recommended way to "delete" a medication profile as it preserves
-    /// all historical dose data and analytics. The profile will be hidden from active
-    /// medication lists but can be re-enabled later.
+    /// all historical dose data and analytics while removing the profile from active
+    /// medication lists. Schedules are deleted but historical doses are preserved.
+    /// The profile can be re-enabled later if needed.
     ///
     /// - Parameter profile: The medication profile to disable
     /// - Throws: MedicationError.saveFailed if the save operation fails
     func disableProfile(_ profile: MedicationProfile) throws {
+        // Delete schedules (user no longer using this medication)
+        if let schedules = profile.schedules {
+            for schedule in schedules {
+                self.modelContext.delete(schedule)
+            }
+        }
+
+        // Mark profile as inactive (preserves historical doses)
         profile.isActive = false
         profile.updatedAt = Date()
 
@@ -297,13 +306,12 @@ class MedicationManager: ObservableObject {
         }
     }
 
-    /// Permanently delete a medication profile and all associated schedules
+    /// Permanently delete a medication profile and all associated data
     ///
     /// ⚠️ **WARNING**: This is a destructive operation that cannot be undone.
-    /// Historical doses will be preserved (nullified relationship), but schedules
-    /// and titrations will be permanently deleted.
+    /// All historical doses, schedules, and titrations will be permanently deleted.
     ///
-    /// **Recommended**: Use `disableProfile()` instead to preserve all data.
+    /// **Recommended**: Use `disableProfile()` instead to preserve historical dose data.
     ///
     /// - Parameter profile: The medication profile to permanently delete
     /// - Throws: MedicationError.saveFailed if the save operation fails
@@ -317,8 +325,14 @@ class MedicationManager: ObservableObject {
             }
         }
 
+        // Manually delete associated doses (cascade delete may not work reliably with SwiftData)
+        if let doses = profile.doses {
+            for dose in doses {
+                self.modelContext.delete(dose)
+            }
+        }
+
         // Delete the profile itself
-        // Note: Historical doses (profile.doses) are preserved due to .nullify delete rule
         self.modelContext.delete(profile)
 
         do {

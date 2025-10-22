@@ -118,8 +118,8 @@ struct MedicationProfileSettingsView: View {
             } message: { profile in
                 Text(
                     """
-                    Permanently deleting '\(profile.brandName)' will remove all scheduled doses but \
-                    preserve your historical dose data and analytics. Consider disabling instead to keep everything.
+                    Permanently deleting '\(profile.brandName)' will remove ALL data including historical doses \
+                    and analytics. Disable instead to preserve your historical dose data.
                     """
                 )
             }

@@ -28,8 +28,8 @@ final class MedicationProfile {
     var updatedAt: Date = Date()  // Track modifications
     var createdAt: Date = Date()  // Track creation
 
-    @Relationship(deleteRule: .nullify, inverse: \Dose.medication)
-    var doses: [Dose]?  // Changed to nullify - preserve historical doses when profile deleted
+    @Relationship(deleteRule: .cascade, inverse: \Dose.medication)
+    var doses: [Dose]?  // Cascade delete - hard delete removes all doses
 
     @Relationship(deleteRule: .cascade, inverse: \DoseTitration.medicationProfile)
     var doseTitrations: [DoseTitration]?  // Titration plans for this medication
