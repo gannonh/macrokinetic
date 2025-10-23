@@ -168,6 +168,10 @@ final class ScheduleService {
     /// Processing state indicator for UI feedback
     var isProcessing: Bool = false
 
+    /// Error state for schedule loading failures (Issue #289)
+    /// UI can observe this property to display error feedback
+    var loadError: Error?
+
     // MARK: - Initialization
 
     /**
@@ -335,6 +339,8 @@ final class ScheduleService {
      *
      * Called during initialization and after CRUD operations to keep
      * activeSchedules property synchronized with persistent storage.
+     *
+     * Sets loadError property on failure for UI feedback.
      */
     private func loadActiveSchedules() {
         let descriptor = FetchDescriptor<DoseSchedule>(
@@ -346,10 +352,11 @@ final class ScheduleService {
 
         do {
             activeSchedules = try context.fetch(descriptor)
+            loadError = nil  // Clear error on success
         } catch {
             logger.error("Failed to load active schedules: \(error.localizedDescription)")
-            // Issue #289: Add error state property for UI feedback
-            activeSchedules = []
+            loadError = error  // Set error state for UI feedback
+            activeSchedules = []  // Maintain safe fallback behavior
         }
     }
 
