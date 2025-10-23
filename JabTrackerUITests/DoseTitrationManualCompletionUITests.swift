@@ -109,8 +109,9 @@ final class DoseTitrationManualCompletionUITests: XCTestCase {
         // Note: This test would require test data with past titration
         // Marking as TODO for proper test data seeding implementation
         // For now, we verify the basic navigation works
-        XCTAssertTrue(app.staticTexts["No Escalation Plans"].waitForExistence(timeout: 3),
-                     "Should see empty state or past titration without Complete button")
+        XCTAssertTrue(
+            app.staticTexts["No Escalation Plans"].waitForExistence(timeout: 3),
+            "Should see empty state or past titration without Complete button")
     }
 
     // MARK: - AC13: Screen shows "Use dose entry to complete" message
@@ -142,8 +143,9 @@ final class DoseTitrationManualCompletionUITests: XCTestCase {
         // XCTAssertTrue(useDoseEntryMessage.exists, "Message should guide user to dose entry")
 
         // Verify we can at least navigate to the screen
-        XCTAssertTrue(app.navigationBars["Dose Escalation Plan"].exists,
-                     "Should be on Dose Escalation Plan screen")
+        XCTAssertTrue(
+            app.navigationBars["Dose Escalation Plan"].exists,
+            "Should be on Dose Escalation Plan screen")
     }
 
     // MARK: - Helper test: Verify UI structure
@@ -161,9 +163,11 @@ final class DoseTitrationManualCompletionUITests: XCTestCase {
         app.buttons["Escalation Plan"].tap()
         sleep(1)
 
-        XCTAssertTrue(app.navigationBars["Dose Escalation Plan"].exists,
-                     "Should navigate to Dose Escalation Plan screen")
-        XCTAssertTrue(app.buttons["create-escalation-plan"].exists,
-                     "Create escalation plan button should exist")
+        XCTAssertTrue(
+            app.navigationBars["Dose Escalation Plan"].exists,
+            "Should navigate to Dose Escalation Plan screen")
+        XCTAssertTrue(
+            app.buttons["create-escalation-plan"].exists,
+            "Create escalation plan button should exist")
     }
 }

@@ -271,10 +271,11 @@ private struct RescheduleTitrationSheet: View {
                     "New Date",
                     selection: $selectedDate,
                     in: Date()...,  // Only allow future dates
-                    displayedComponents: .date)
-                    .datePickerStyle(.graphical)
-                    .padding()
-                    .accessibilityIdentifier("titration-reschedule-date-picker")
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .padding()
+                .accessibilityIdentifier("titration-reschedule-date-picker")
 
                 Spacer()
             }

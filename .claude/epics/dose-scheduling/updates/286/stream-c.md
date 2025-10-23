@@ -59,3 +59,38 @@ issue/286-implement-comprehensive-titration-completion-workflow-with-user-confir
 4. Phase 4: Write E2E tests for button behavior
 
 **Starting with Unit Tests (RED):**
+
+### Phase 1 Complete: Unit Tests ✅
+- ✅ Added `canCompleteManually` computed property to DoseTitration model
+- ✅ Property returns true for future/current titrations, false for past ones
+- ✅ Added 4 unit tests (all passing):
+  - canCompleteManuallyBeforeDate
+  - canCompleteManuallyAfterDate
+  - canCompleteManuallyForCompleted
+  - canCompleteManuallyOnScheduledDate
+- ✅ Committed: a8c9906
+
+### Phase 2 Complete: UI Implementation ✅
+- ✅ Updated TitrationRowView to use `canCompleteManually` property
+- ✅ Complete button only shows when `canCompleteManually == true`
+- ✅ Added "Use dose entry to complete" message with info icon
+- ✅ Message shows when date has passed and titration not completed
+- ✅ App builds successfully
+- ✅ Committed: a8c9906
+
+### Phase 3: E2E Tests (IN PROGRESS)
+- ✅ Created DoseTitrationManualCompletionUITests.swift
+- ✅ Added test structure for AC11-AC13
+- ⚠️  Tests require test data seeding for past titrations
+- 🔧 Need to implement test data seeding integration
+
+**Current Issue:**
+Tests fail because clean test environment has no medication profiles. Need to either:
+1. Create medication profile in test setup
+2. Use test data seeding with pre-created titrations
+3. Both approaches for comprehensive coverage
+
+**Next Steps:**
+1. Update tests to create medication profile via UI
+2. Add test data seeding for past titration scenario
+3. Run all E2E tests to validate AC11-AC13

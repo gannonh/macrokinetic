@@ -135,6 +135,8 @@ private struct QuickDoseEntrySheet: View {
     // View model and UI state
     @StateObject private var viewModel = QuickDoseViewModel()
     @State private var isSubmitting = false
+    @State private var showingTitrationDialog = false
+    @State private var pendingTitration: DoseTitration?
 
     var body: some View {
         NavigationStack {
@@ -240,11 +242,27 @@ private struct QuickDoseEntrySheet: View {
             }
             .onAppear {
                 self.viewModel.loadSmartDefaults(context: self.modelContext)
+                self.checkForPendingTitration()
             }
         }
         .accessibilityIdentifier("quick-dose-entry-sheet")
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .overlay {
+            if showingTitrationDialog, let titration = pendingTitration {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .onTapGesture {}  // Prevent dismissing dialog by tapping outside
+
+                TitrationConfirmationDialog(
+                    titration: titration,
+                    onComplete: handleTitrationComplete,
+                    onReschedule: handleTitrationReschedule,
+                    onRemindLater: handleTitrationRemindLater
+                )
+                .padding()
+            }
+        }
     }
 
     // MARK: - PK Integration Info
@@ -277,6 +295,51 @@ private struct QuickDoseEntrySheet: View {
         self.viewModel.canSaveDose && !self.doseService.isProcessingDose
     }
 
+    // MARK: - Titration Check (Issue #286)
+
+    private func checkForPendingTitration() {
+        // Check if we should show titration dialog
+        if viewModel.shouldShowTitrationDialog() {
+            pendingTitration = viewModel.getPendingTitration()
+            showingTitrationDialog = true
+        }
+    }
+
+    private func handleTitrationComplete() {
+        // Update dose amount to new titration dose if needed
+        if let titration = pendingTitration {
+            // The titration.markCompleted() was already called in dialog
+            // Update the view model's dose amount to reflect new dose
+            viewModel.doseAmount = titration.toDose
+        }
+
+        // Hide dialog
+        showingTitrationDialog = false
+        pendingTitration = nil
+
+        // Reset remind later flag
+        viewModel.resetRemindLaterFlag()
+    }
+
+    private func handleTitrationReschedule(_ newDate: Date) {
+        // Dialog already updated the titration date
+        // Hide dialog
+        showingTitrationDialog = false
+        pendingTitration = nil
+
+        // Reset remind later flag
+        viewModel.resetRemindLaterFlag()
+    }
+
+    private func handleTitrationRemindLater() {
+        // Set remind later flag in view model
+        viewModel.setTitrationRemindLater(true)
+
+        // Hide dialog
+        showingTitrationDialog = false
+        pendingTitration = nil
+    }
+
     // MARK: - Dose Saving with PK Integration
 
     @MainActor
@@ -301,6 +364,9 @@ private struct QuickDoseEntrySheet: View {
 
             // Reset form for next use
             self.viewModel.resetForm()
+
+            // Reset remind later flag so dialog shows again next time (Issue #286 - AC10)
+            self.viewModel.resetRemindLaterFlag()
 
             // Notify success
             self.onDoseSaved()
