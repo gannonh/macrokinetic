@@ -83,3 +83,37 @@ issue/286-implement-comprehensive-titration-completion-workflow-with-user-confir
 - Implement action handlers in NotificationService+Actions.swift
 - Integrate with ScheduleService+Titration
 - Create E2E tests
+
+### Session 2: Titration Notification Actions (2025-10-23 13:35-13:40)
+
+**✅ Completed:**
+- Added 3 unit tests for titration action handlers:
+  - COMPLETE_TITRATION action test
+  - RESCHEDULE_TITRATION action test
+  - REMIND_LATER_TITRATION action test
+- Implemented `handleTitrationAction()` in NotificationService+Actions.swift
+  - Routes to appropriate handler based on action identifier
+  - Validates required parameters for each action type
+- Implemented 3 private action handlers:
+  - `handleCompleteTitrationAction()` - marks titration complete and updates schedule
+  - `handleRescheduleTitrationAction()` - updates scheduled date and reschedules notification
+  - `handleRemindLaterTitrationAction()` - schedules reminder for 1 hour later
+- All handlers integrate with existing ScheduleService+Titration methods
+- Fixed test issue with baseSchedule JSON initialization
+
+**Files Modified:**
+- JabTracker/Services/NotificationService+Actions.swift (+127 lines)
+- JabTrackerTests/NotificationServiceActionTests.swift (+103 lines)
+
+**Test Status:**
+- 7 new unit tests passing (4 scheduling + 3 actions)
+- All 18 NotificationServiceActionTests passing ✅
+- Ready for E2E test implementation
+
+**Acceptance Criteria Status:**
+- ✅ AC14: Notification scheduling implemented and tested
+- ✅ AC15: Notification actions (Complete, Reschedule, Remind) implemented and tested
+
+**Next Steps:**
+- Create TitrationNotificationUITests.swift for E2E validation
+- Document implementation patterns for future reference

@@ -444,14 +444,21 @@ struct NotificationServiceActionTests {
 
     @Test("Handle COMPLETE_TITRATION action")
     func testHandleCompleteTitrationAction() async throws {
-        let (service, scheduleService, context) = try await createTestEnvironment()
+        let (service, _, context) = try await createTestEnvironment()
 
         // Create medication profile with titration
         let profile = TestDataSeeding.createTestMedicationProfile()
         profile.currentDose = 0.5
         context.insert(profile)
 
+        // Create schedule with proper baseSchedule data
         let schedule = DoseSchedule(medicationProfile: profile)
+        let scheduleConfig: [String: Any] = [
+            "doseAmount": 0.5,
+            "pattern": "weekly",
+            "frequency": 1,
+        ]
+        schedule.baseSchedule = try JSONSerialization.data(withJSONObject: scheduleConfig, options: [])
         context.insert(schedule)
 
         let titration = DoseTitration(
