@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-21T22:25:26Z
-version: 4.9
+last_updated: 2025-10-23T19:36:45Z
+version: 5.0
 author: Claude Code PM System
 ---
 
@@ -9,23 +9,30 @@ author: Claude Code PM System
 
 ## Current State
 - **Repository**: https://github.com/gannonh/jab-tracker-ios.git
-- **Branch**: issue/180-fix-split-dose-medical-accuracy-add-medication-specific-patterns
-- **Last Commit**: acf0d6c - docs: Capture Issue #180 session learnings (2025-10-21 afternoon)
-- **Status**: Issue #180 IN PROGRESS - Daily medication E2E tests complete, critical split-dose bug fixed
+- **Branch**: main
+- **Last Commit**: 4f97036 - docs: Close Issue #180 - Split-Dose Medical Accuracy & Add Medication-Specific Patterns
+- **Status**: Issue #180 CLOSED - Dose-scheduling epic at 64% (7/11 tasks complete)
 
 ## Recent Work (Last 5 Commits)
-1. **acf0d6c** - docs: Capture Issue #180 session learnings (2025-10-21 afternoon)
-2. **bbfb3bc** - docs: Update Issue #180 progress tracking with afternoon session work
-3. **2994ed1** - fix: Split-dose amount calculation in Quick Add Dose (Issue #180 Critical Bug)
-4. **b3a4278** - test: Add comprehensive E2E tests for daily medications (Issue #180)
-5. **7d92f3f** - Fix #180: Add daily medication schedule pattern support
-5. **a7b7a10** - Fix #267: Replace magic numbers with TimeConstants
+1. **4f97036** - docs: Close Issue #180 - Split-Dose Medical Accuracy & Add Medication-Specific Patterns
+2. **312ff7a** - Fix #289: Add error state property to ScheduleService for UI feedback
+3. **3918673** - Fix #287: Add error alerts for dose save failures
+4. **01cea6e** - feat: Add comprehensive titration completion workflow with user confirmation dialog
+5. **1efc105** - refactor: Remove unnecessary allowed-tools and comments from issue edit documentation
 
 ## Current Working Directory Status
-- **Modified Files**: Context documentation updates (product-context.md, system-patterns.md, progress.md)
-- **Branch Status**: issue/180-fix-split-dose-medical-accuracy-add-medication-specific-patterns
-- **Current Phase**: Issue #180 IN PROGRESS - Daily med tests complete, critical split-dose bug fixed, processing learnings
-- **Recent Session Work** (2025-10-21 Afternoon - Issue #180 E2E Tests & Critical Bug Fix):
+- **Modified Files**: Clean working directory - all changes committed
+- **Branch Status**: main
+- **Current Phase**: Issue #180 CLOSED - PR merged, epic progress updated to 64%
+- **Recent Session Work** (2025-10-23 - Issue #180 Closure):
+  - 🎉 **Issue #180 CLOSED**: Split-Dose Medical Accuracy & Add Medication-Specific Patterns
+  - ✅ **PR #274 Merged**: Successfully merged to main at 2025-10-23T19:33:51Z
+  - ✅ **Epic Progress Updated**: Dose-scheduling epic now at 64% (7/11 tasks complete)
+  - 📊 **Final Deliverables**: 15 E2E tests, daily medication pattern support, split-dose bug fix
+  - 🐛 **Critical Bug Fixed**: QuickDoseViewModel split-dose amount calculation (prevented 2x overdose)
+  - 📝 **Test Organization**: Split test files for maintainability (DailyMedicationProfileScheduleUITests, OnboardingMedicationPatternsUITests)
+  - 🎯 **User Smoke Testing**: Real-world testing discovered integration bug automated tests missed
+- **Previous Session Work** (2025-10-21 Afternoon - Issue #180 E2E Tests & Critical Bug Fix):
   - 🧪 **Daily Medication E2E Tests**: Created DailyMedicationProfileScheduleUITests.swift (4 tests, 100% passing)
   - 🐛 **Critical Bug Fix**: QuickDoseViewModel split-dose amount calculation (prevented 2x overdose)
   - 📝 **File Organization**: Split OnboardingScheduleSetupUITests.swift (915 lines → 555 + 337 lines)
@@ -203,17 +210,18 @@ author: Claude Code PM System
 - Claude Code PM system with issue/branch/PR workflow
 
 ## Current Priorities
-1. **Dose Scheduling System (60% COMPLETE)** - Epic #173 in progress (6/10 tasks complete)
+1. **Dose Scheduling System (64% COMPLETE)** - Epic #173 in progress (7/11 tasks complete)
    - ✅ #174 - SwiftData Models (CLOSED)
    - ✅ #175 - ScheduleService Core (CLOSED)
    - ✅ #176 - NotificationService (CLOSED)
    - ✅ #177 - Onboarding Integration (CLOSED)
    - ✅ #178 - Calendar Integration (CLOSED)
    - ✅ #179 - Medication Profile CRUD (CLOSED)
-   - 🔄 #180 - Split-Dose Support (OPEN)
+   - ✅ #180 - Split-Dose Support (CLOSED)
    - 🔄 #181 - Analytics Integration (OPEN)
    - 🔄 #183 - Performance & Polish (OPEN)
    - 🔄 #260 - Notification UI & Configuration (OPEN)
+   - 🔄 #286 - Titration Completion Workflow (OPEN)
 2. **Future Enhancements** - Additional features and refinements based on user feedback
 
 ## Deferred Issues
@@ -393,6 +401,7 @@ author: Claude Code PM System
 - **Architectural Understanding First**: Understanding the split-dose bug (scheduling intervals, not concentration calculations) was key to identifying the flawed test
 
 ## Update History
+- 2025-10-23T19:36:45Z: Issue #180 CLOSED - PR #274 merged to main, epic progress updated to 64% (7/11 tasks), captured closure status and recent bug fixes (#289, #287)
 - 2025-10-21T15:12:00Z: Added Lessons Learned from Issue #180 Session (Oct 21) - test logic validation process, questioning assumptions before debugging, removing invalid tests
 - 2025-10-19T17:46:21Z: Added Lessons Learned from Issue #179 Session (Oct 19) - E2E test quality and performance (sleep() anti-pattern elimination, TestDataSeeding performance impact), iterative E2E development success, and negative assertion patterns
 - 2025-10-17T19:12:25Z: Updated current state to reflect Issue #178 E2E testing completion - all 27 E2E tests passing across 4 test suites, all acceptance criteria and NFRs validated
