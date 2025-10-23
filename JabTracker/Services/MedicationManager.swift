@@ -368,16 +368,16 @@ class MedicationManager: ObservableObject {
         )
     }
 
-    /// Permanently delete a medication profile and all associated data
+    /// Delete a medication profile and all associated data
     ///
     /// ⚠️ **WARNING**: This is a destructive operation that cannot be undone.
     /// All historical doses, schedules, and titrations will be permanently deleted.
     ///
     /// **Recommended**: Use `disableProfile()` instead to preserve historical dose data.
     ///
-    /// - Parameter profile: The medication profile to permanently delete
+    /// - Parameter profile: The medication profile to delete
     /// - Throws: MedicationError.saveFailed if the save operation fails
-    func permanentlyDeleteProfile(_ profile: MedicationProfile) throws {
+    func deleteProfile(_ profile: MedicationProfile) throws {
         // Manually delete associated schedules (cascade delete may not work reliably with SwiftData)
         // Each schedule has cascade delete configured for ScheduledDose, so deleting the schedule
         // will delete the scheduled doses as well
@@ -403,16 +403,6 @@ class MedicationManager: ObservableObject {
         } catch {
             throw MedicationError.saveFailed
         }
-    }
-
-    /// Legacy method - now calls disableProfile() for backward compatibility
-    /// - Deprecated: Use disableProfile() or permanentlyDeleteProfile() explicitly
-    @available(
-        *, deprecated, renamed: "disableProfile",
-        message: "Use disableProfile() for soft delete or permanentlyDeleteProfile() for hard delete"
-    )
-    func deleteProfile(_ profile: MedicationProfile) throws {
-        try disableProfile(profile)
     }
 
     // MARK: - Validation Helpers
