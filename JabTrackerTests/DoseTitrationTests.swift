@@ -297,4 +297,43 @@ struct DoseTitrationTests {
         #expect(titration.updatedAt >= beforeCreation)
         #expect(titration.updatedAt <= afterCreation)
     }
+
+    // MARK: - Manual Completion Button State Tests (Issue #286 - Stream C)
+
+    @Test("canCompleteManually returns true for future titration before scheduled date")
+    @MainActor
+    func canCompleteManuallyBeforeDate() throws {
+        let futureDate = Date().addingTimeInterval(86400 * 7)  // 1 week from now
+        let titration = self.createTestTitration(scheduledDate: futureDate, isCompleted: false)
+
+        #expect(titration.canCompleteManually == true)
+    }
+
+    @Test("canCompleteManually returns false after scheduled date passes")
+    @MainActor
+    func canCompleteManuallyAfterDate() throws {
+        let pastDate = Date().addingTimeInterval(-86400)  // 1 day ago
+        let titration = self.createTestTitration(scheduledDate: pastDate, isCompleted: false)
+
+        #expect(titration.canCompleteManually == false)
+    }
+
+    @Test("canCompleteManually returns false for completed titration")
+    @MainActor
+    func canCompleteManuallyForCompleted() throws {
+        let futureDate = Date().addingTimeInterval(86400 * 7)
+        let titration = self.createTestTitration(scheduledDate: futureDate, isCompleted: true)
+
+        #expect(titration.canCompleteManually == false)
+    }
+
+    @Test("canCompleteManually returns true on exact scheduled date")
+    @MainActor
+    func canCompleteManuallyOnScheduledDate() throws {
+        let now = Date()
+        let titration = self.createTestTitration(scheduledDate: now, isCompleted: false)
+
+        // Should be true on the exact date (before it passes)
+        #expect(titration.canCompleteManually == true)
+    }
 }

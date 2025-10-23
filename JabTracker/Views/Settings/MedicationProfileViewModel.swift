@@ -264,6 +264,23 @@ final class MedicationProfileViewModel {
         showDoseTitration = true
     }
 
+    // MARK: - Titration Warning (Issue #286 - Stream A)
+
+    /// Get titration warning message for the active schedule
+    ///
+    /// Returns a user-friendly warning message if there is an upcoming titration
+    /// within the next 30 days. Used to display warning banner in the schedule section.
+    ///
+    /// - Returns: Formatted warning message, or nil if no upcoming titration
+    func getTitrationWarning() -> String? {
+        guard let schedule = activeSchedule else {
+            logger.debug("No active schedule - returning nil for titration warning")
+            return nil
+        }
+
+        return scheduleService.getTitrationWarning(for: schedule)
+    }
+
     // MARK: - Helper Methods
 
     /// Generate description for a schedule

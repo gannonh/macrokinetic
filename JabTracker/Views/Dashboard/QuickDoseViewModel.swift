@@ -30,6 +30,12 @@ class QuickDoseViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
 
+    // MARK: - Titration State (Issue #286)
+
+    /// Flag to track if user selected "Remind Me Later" for titration dialog
+    /// Reset after each dose entry to prompt again next time
+    @Published var titrationRemindLater: Bool = false
+
     // MARK: - Computed Properties
 
     /// Combined date and time for dose timestamp
@@ -244,6 +250,58 @@ class QuickDoseViewModel: ObservableObject {
             currentDate: Date(),
             gracePeriodHours: 2,
             doses: profile.doses)
+    }
+
+    // MARK: - Titration Detection Methods (Issue #286)
+
+    /// Determines if the titration confirmation dialog should be shown
+    /// Dialog shows when:
+    /// - Medication profile has an incomplete titration
+    /// - Titration scheduled date is today or in the past
+    /// - User hasn't selected "Remind Me Later" for this session
+    func shouldShowTitrationDialog() -> Bool {
+        guard let pendingTitration = getPendingTitration() else {
+            return false
+        }
+
+        // Don't show if user clicked "Remind Me Later"
+        if titrationRemindLater {
+            return false
+        }
+
+        // Show if titration date is today or in the past
+        let now = Date()
+        return pendingTitration.scheduledDate <= now
+    }
+
+    /// Gets the pending titration for the selected medication profile
+    /// Returns nil if no medication profile selected or no pending titration exists
+    func getPendingTitration() -> DoseTitration? {
+        guard let profile = selectedMedicationProfile else {
+            return nil
+        }
+
+        guard let titrations = profile.doseTitrations, !titrations.isEmpty else {
+            return nil
+        }
+
+        // Find the most recent incomplete titration
+        return
+            titrations
+            .filter { !$0.isCompleted }
+            .max(by: { $0.scheduledDate < $1.scheduledDate })
+    }
+
+    /// Sets the "Remind Me Later" flag for titration dialog
+    /// This flag prevents the dialog from showing again until reset
+    func setTitrationRemindLater(_ value: Bool) {
+        self.titrationRemindLater = value
+    }
+
+    /// Resets the "Remind Me Later" flag after dose entry
+    /// This allows the dialog to show again on next dose entry
+    func resetRemindLaterFlag() {
+        self.titrationRemindLater = false
     }
 }
 

@@ -68,6 +68,12 @@ final class DoseTitration {
         self.scheduledDate < Date() && !self.isCompleted
     }
 
+    /// Whether this titration can be manually completed (before scheduled date passes)
+    /// Returns false after scheduled date passes - user should use dose entry flow instead
+    var canCompleteManually: Bool {
+        !self.isCompleted && self.scheduledDate >= Date()
+    }
+
     // MARK: - Business Logic
 
     /// Mark titration as completed and update medication profile dose

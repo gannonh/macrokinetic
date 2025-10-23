@@ -27,6 +27,7 @@ struct MedicationProfileViewModelScheduleTests {
             DoseSchedule.self,
             ScheduledDose.self,
             Dose.self,
+            DoseTitration.self,
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -291,5 +292,135 @@ struct MedicationProfileViewModelScheduleTests {
         await viewModel.loadScheduleHistory()
 
         #expect(viewModel.scheduleHistory.isEmpty)
+    }
+
+    // MARK: - Titration Warning Tests (Issue #286 - Stream A)
+
+    @Test("Get titration warning returns nil when no active schedule")
+    func testGetTitrationWarning_NoActiveSchedule_ReturnsNil() async throws {
+        let context = try createTestContext()
+        let user = createTestUser(context: context)
+        let profile = createTestMedicationProfile(context: context, user: user)
+
+        let viewModel = MedicationProfileViewModel(
+            medicationProfile: profile,
+            context: context
+        )
+
+        // No active schedule loaded
+        let warning = viewModel.getTitrationWarning()
+
+        #expect(warning == nil, "Should return nil when no active schedule exists")
+    }
+
+    @Test("Get titration warning returns nil when no upcoming titration")
+    func testGetTitrationWarning_NoUpcomingTitration_ReturnsNil() async throws {
+        let context = try createTestContext()
+        let user = createTestUser(context: context)
+        let profile = createTestMedicationProfile(context: context, user: user)
+        _ = try createTestSchedule(context: context, profile: profile)
+
+        let viewModel = MedicationProfileViewModel(
+            medicationProfile: profile,
+            context: context
+        )
+
+        await viewModel.loadActiveSchedule()
+        let warning = viewModel.getTitrationWarning()
+
+        #expect(warning == nil, "Should return nil when no upcoming titration exists")
+    }
+
+    @Test("Get titration warning returns formatted message for upcoming titration")
+    func testGetTitrationWarning_UpcomingTitration_ReturnsFormattedMessage() async throws {
+        let context = try createTestContext()
+        let user = createTestUser(context: context)
+        let profile = createTestMedicationProfile(context: context, user: user)
+        let schedule = try createTestSchedule(context: context, profile: profile)
+
+        // Create titration scheduled 15 days from now (within 30-day window)
+        let futureDate = Calendar.current.date(byAdding: .day, value: 15, to: Date())!
+        let titration = createTestTitration(
+            context: context,
+            profile: profile,
+            fromDose: 0.5,
+            toDose: 1.0,
+            scheduledDate: futureDate
+        )
+
+        try context.save()
+
+        let viewModel = MedicationProfileViewModel(
+            medicationProfile: profile,
+            context: context
+        )
+
+        await viewModel.loadActiveSchedule()
+        let warning = viewModel.getTitrationWarning()
+
+        #expect(warning != nil, "Should return warning for upcoming titration")
+
+        guard let warningMessage = warning else {
+            #expect(Bool(false), "Warning message was nil")
+            return
+        }
+
+        // Verify message contains key elements
+        #expect(warningMessage.contains("1.0mg"), "Message should mention new dose amount")
+        #expect(
+            warningMessage.contains("increase") || warningMessage.contains("change"),
+            "Message should indicate dose change"
+        )
+        #expect(warningMessage.contains("titration plan"), "Message should reference titration plan")
+    }
+
+    @Test("Get titration warning returns nil when titration beyond 30 days")
+    func testGetTitrationWarning_TitrationBeyond30Days_ReturnsNil() async throws {
+        let context = try createTestContext()
+        let user = createTestUser(context: context)
+        let profile = createTestMedicationProfile(context: context, user: user)
+        _ = try createTestSchedule(context: context, profile: profile)
+
+        // Create titration scheduled 45 days from now (beyond 30-day window)
+        let futureDate = Calendar.current.date(byAdding: .day, value: 45, to: Date())!
+        _ = createTestTitration(
+            context: context,
+            profile: profile,
+            fromDose: 0.5,
+            toDose: 1.0,
+            scheduledDate: futureDate
+        )
+
+        try context.save()
+
+        let viewModel = MedicationProfileViewModel(
+            medicationProfile: profile,
+            context: context
+        )
+
+        await viewModel.loadActiveSchedule()
+        let warning = viewModel.getTitrationWarning()
+
+        #expect(warning == nil, "Should return nil when titration is beyond 30-day window")
+    }
+
+    // MARK: - Test Helper Extensions
+
+    /// Creates a test titration for testing
+    private func createTestTitration(
+        context: ModelContext,
+        profile: MedicationProfile,
+        fromDose: Double,
+        toDose: Double,
+        scheduledDate: Date
+    ) -> DoseTitration {
+        let titration = DoseTitration(
+            fromDose: fromDose,
+            toDose: toDose,
+            scheduledDate: scheduledDate
+        )
+        titration.medicationProfile = profile
+        context.insert(titration)
+        return titration
     }
 }
