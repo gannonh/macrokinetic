@@ -344,7 +344,7 @@ private struct QuickDoseEntrySheet: View {
             dismiss()
         } catch {
             logger.error("Failed to save dose: \(error.localizedDescription)")
-            // TODO: Show error alert to user
+            // Issue #287: Show error alert to user
         }
     }
 }

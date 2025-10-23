@@ -348,7 +348,7 @@ final class ScheduleService {
             activeSchedules = try context.fetch(descriptor)
         } catch {
             logger.error("Failed to load active schedules: \(error.localizedDescription)")
-            // TODO: Consider bubbling this error up or setting an error state property for UI feedback
+            // Issue #289: Add error state property for UI feedback
             activeSchedules = []
         }
     }

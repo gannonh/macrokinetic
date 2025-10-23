@@ -170,7 +170,7 @@ struct DoseHistoryView: View {
                 Section(header: self.sectionHeader(dateString: dateString)) {
                     ForEach(doses, id: \.id) { dose in
                         Button {
-                            // TODO: Handle row tap if needed
+                            // Issue #288: Decide if row tap navigation is needed
                         } label: {
                             DoseHistoryRow(dose: dose)
                         }
