@@ -233,6 +233,130 @@ extension NotificationService {
         actionLogger.info("Processed \(missedDoses.count) missed doses")
     }
 
+    // MARK: - Titration Action Handlers (Stream D)
+
+    /// Handle a titration notification action
+    ///
+    /// - Parameters:
+    ///   - actionIdentifier: The action identifier (COMPLETE_TITRATION, RESCHEDULE_TITRATION, REMIND_LATER_TITRATION)
+    ///   - titration: The dose titration to act upon
+    ///   - schedule: The dose schedule to update (required for COMPLETE_TITRATION)
+    ///   - newDate: The new scheduled date (required for RESCHEDULE_TITRATION)
+    /// - Throws: NotificationServiceError if action fails
+    func handleTitrationAction(
+        _ actionIdentifier: String,
+        for titration: DoseTitration,
+        schedule: DoseSchedule? = nil,
+        newDate: Date? = nil
+    ) async throws {
+        actionLogger.info("Handling titration action: \(actionIdentifier) for titration: \(titration.id)")
+
+        switch actionIdentifier {
+        case "COMPLETE_TITRATION":
+            guard let schedule = schedule else {
+                actionLogger.error("COMPLETE_TITRATION requires schedule parameter")
+                throw NotificationServiceError.invalidScheduledDose
+            }
+            try await handleCompleteTitrationAction(for: titration, schedule: schedule)
+        case "RESCHEDULE_TITRATION":
+            guard let newDate = newDate else {
+                actionLogger.error("RESCHEDULE_TITRATION requires newDate parameter")
+                throw NotificationServiceError.invalidAction
+            }
+            try await handleRescheduleTitrationAction(for: titration, newDate: newDate)
+        case "REMIND_LATER_TITRATION":
+            try await handleRemindLaterTitrationAction(for: titration)
+        default:
+            actionLogger.error("Invalid titration action identifier: \(actionIdentifier)")
+            throw NotificationServiceError.invalidAction
+        }
+    }
+
+    /// Handle "Complete Titration" action by marking titration complete and updating schedule
+    private func handleCompleteTitrationAction(
+        for titration: DoseTitration,
+        schedule: DoseSchedule
+    ) async throws {
+        actionLogger.info("Completing titration: \(titration.id)")
+
+        let context = scheduleService.context
+
+        // Mark titration complete
+        titration.isCompleted = true
+        titration.completedDate = Date()
+
+        // Update schedule using ScheduleService+Titration
+        try scheduleService.handleCompletedTitration(titration, schedule: schedule)
+
+        // Save context
+        try context.save()
+
+        actionLogger.info("Successfully completed titration: \(titration.id)")
+    }
+
+    /// Handle "Reschedule Titration" action by updating scheduled date and rescheduling notification
+    private func handleRescheduleTitrationAction(
+        for titration: DoseTitration,
+        newDate: Date
+    ) async throws {
+        actionLogger.info("Rescheduling titration: \(titration.id) to \(newDate)")
+
+        let context = scheduleService.context
+
+        // Update titration scheduled date
+        titration.scheduledDate = newDate
+        titration.updatedAt = Date()
+
+        // Save context
+        try context.save()
+
+        // Cancel old notification
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ["titration-\(titration.id.uuidString)"])
+
+        // Schedule new notification
+        try await scheduleTitrationNotification(for: titration)
+
+        actionLogger.info("Successfully rescheduled titration notification")
+    }
+
+    /// Handle "Remind Later" action by rescheduling notification for 1 hour later
+    private func handleRemindLaterTitrationAction(for titration: DoseTitration) async throws {
+        actionLogger.info("Reminding later for titration: \(titration.id)")
+
+        // Cancel existing notification
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ["titration-\(titration.id.uuidString)"])
+
+        // Create temporary titration with new date (1 hour from now)
+        let tempDate = Date().addingTimeInterval(3600)  // 1 hour
+
+        // Schedule notification for 1 hour later
+        // Note: We'll create a new notification with same titration but trigger 1 hour from now
+        let content = UNMutableNotificationContent()
+        let changeDirection = titration.toDose > titration.fromDose ? "Increase" : "Decrease"
+        content.title = NSLocalizedString("Dose \(changeDirection) Reminder", comment: "Titration reminder title")
+        content.body = NSLocalizedString(
+            "Time to increase your dose from \(titration.fromDose)mg to \(titration.toDose)mg",
+            comment: "Titration reminder body"
+        )
+        content.sound = .default
+        content.categoryIdentifier = "TITRATION"
+        content.userInfo = [NotificationService.UserInfoKeys.titrationId: titration.id.uuidString]
+
+        // Create trigger for 1 hour from now
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: tempDate)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+
+        let request = UNNotificationRequest(
+            identifier: "titration-remind-\(titration.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+
+        try await notificationCenter.add(request)
+        actionLogger.info("Titration reminder scheduled for 1 hour later")
+    }
+
     // MARK: - Helper Methods
 
     /// Validate and extract medication profile from scheduled dose

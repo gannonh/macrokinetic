@@ -166,6 +166,7 @@
       "Views/DoseEntry/DoseEntryPhotoSection.swift",
       "Views/DoseEntry/DoseEntrySheet.swift",
       "Views/DoseEntry/QuickDoseEntry.swift",
+      "Views/DoseEntry/TitrationConfirmationDialog.swift",
       "Views/History/CalendarDayView.swift",
       "Views/History/Components/DoseActionSheet.swift",
       "Views/History/Components/RescheduleDoseSheet.swift",
