@@ -22,6 +22,8 @@ struct DoseActionSheet: View {
     @State private var showQuickDoseSheet = false
     @State private var showRescheduleSheet = false
     @State private var isSkipping = false
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String?
 
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DoseActionSheet")
 
@@ -111,6 +113,11 @@ struct DoseActionSheet: View {
         }
         .presentationDetents([.medium])
         .accessibilityIdentifier("dose-action-sheet")
+        .alert("Operation Failed", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "An unexpected error occurred.")
+        }
         .sheet(isPresented: $showQuickDoseSheet) {
             // Query for the medication profile using stored medication names
             if let brandName = event.medicationBrandName {
@@ -177,18 +184,21 @@ struct DoseActionSheet: View {
 
                 do {
                     try modelContext.save()
+                    // Small delay for UI feedback using structured concurrency
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(300))
+                        await MainActor.run {
+                            isSkipping = false
+                            dismiss()
+                        }
+                    }
                 } catch {
                     logger.error("Failed to save skipped dose: \(error)")
+                    errorMessage =
+                        "Unable to skip this dose. Please try again. If the problem persists, try restarting the app."
+                    showErrorAlert = true
+                    isSkipping = false
                 }
-            }
-        }
-
-        // Small delay for UI feedback using structured concurrency
-        Task {
-            try? await Task.sleep(for: .milliseconds(300))
-            await MainActor.run {
-                isSkipping = false
-                dismiss()
             }
         }
     }
@@ -206,6 +216,9 @@ private struct QuickDoseEntrySheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @StateObject private var viewModel = QuickDoseViewModel()
+
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String?
 
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseEntrySheet")
 
@@ -318,6 +331,11 @@ private struct QuickDoseEntrySheet: View {
                     prePopulatedTimestamp: prePopulatedTimestamp
                 )
             }
+            .alert("Save Failed", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage ?? "An unexpected error occurred while saving your dose.")
+            }
         }
         .presentationDetents([.medium, .large])
     }
@@ -344,7 +362,9 @@ private struct QuickDoseEntrySheet: View {
             dismiss()
         } catch {
             logger.error("Failed to save dose: \(error.localizedDescription)")
-            // Issue #287: Show error alert to user
+            errorMessage =
+                "Unable to save your dose. Please try again. If the problem persists, try restarting the app."
+            showErrorAlert = true
         }
     }
 }
