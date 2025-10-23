@@ -49,4 +49,37 @@ issue/286-implement-comprehensive-titration-completion-workflow-with-user-confir
 - No dependency on Issue #260 - that's settings UI, this is notification content
 
 ## Progress
-- Starting implementation with TDD approach
+
+### Session 1: Titration Notification Scheduling (2025-10-23 13:25-13:35)
+
+**✅ Completed:**
+- Added 4 unit tests for `scheduleTitrationNotification()` method
+  - Basic scheduling test
+  - Past date handling test
+  - Notification content verification test
+  - Trigger date accuracy test
+- Implemented `scheduleTitrationNotification()` in NotificationService.swift
+  - Schedules notification on titration date
+  - Validates past dates (skips scheduling)
+  - Creates notification with proper title/body containing dose amounts
+  - Uses TITRATION category for actions
+  - Stores titrationId in userInfo for action handling
+- Registered TITRATION notification category with 3 actions:
+  - COMPLETE_TITRATION (foreground)
+  - RESCHEDULE_TITRATION (foreground)
+  - REMIND_LATER_TITRATION (background)
+- Added UserInfoKeys.titrationId constant
+
+**Files Modified:**
+- JabTracker/Services/NotificationService.swift (+67 lines)
+- JabTrackerTests/NotificationServiceTests.swift (+200 lines)
+
+**Test Status:**
+- 4 unit tests written and passing (Phase 1 of AC14 validation)
+- Ready for action handler implementation
+
+**Next Steps:**
+- Write unit tests for notification actions
+- Implement action handlers in NotificationService+Actions.swift
+- Integrate with ScheduleService+Titration
+- Create E2E tests
