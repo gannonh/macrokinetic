@@ -261,8 +261,112 @@ final class MedicationProfileDeleteUITests: XCTestCase {
             errorMessage.waitForExistence(timeout: 5.0),
             "Should show error when no active profiles available for dose logging")
     }
-    // Note: Schedule creation when creating/re-enabling profiles is tested by unit tests.
-    // E2E tests for schedule indicators in calendar are flaky due to timing/visibility issues.
+    func testReEnablingProfileCreatesSchedule() throws {
+        // Setup: Launch app with test data
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launchEnvironment["TEST_DATA_SEED"] = "true"
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
+        app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
+        app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"
+        app.launch()
+
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+
+        // Disable the profile
+        app.tabBars.buttons["Settings"].tap()
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
+        medicationProfilesButton.tap()
+
+        let profileCell = app.buttons.matching(
+            identifier: "medication-profile-semaglutide-ozempic-1.00mg"
+        ).firstMatch
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+
+        profileCell.swipeLeft()
+        app.buttons["disable-medication-profile"].tap()
+
+        // Verify disabled
+        XCTAssertTrue(app.staticTexts["Disabled"].waitForExistence(timeout: 3.0))
+
+        // Re-enable the profile
+        profileCell.swipeLeft()
+        let enableButton = app.buttons["enable-medication-profile"]
+        XCTAssertTrue(enableButton.waitForExistence(timeout: 3.0))
+        enableButton.tap()
+
+        // Verify no longer disabled
+        XCTAssertFalse(app.staticTexts["Disabled"].waitForExistence(timeout: 2.0))
+
+        // Verify schedule was created by checking for schedule UI elements
+        profileCell.tap()
+
+        // Wait for profile detail view to load
+        usleep(500_000)  // 500ms
+
+        // Verify edit schedule button exists (schedule is active and editable)
+        // Note: Using edit-schedule-button as the primary indicator of schedule existence
+        // (consistent with other schedule UI tests)
+        let editScheduleButton = app.buttons["edit-schedule-button"]
+        XCTAssertTrue(
+            editScheduleButton.waitForExistence(timeout: 5.0),
+            "Edit schedule button should appear after re-enabling profile")
+    }
+
+    func testNewProfileCreatesSchedule() throws {
+        // Setup: Launch app with NO test data
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        app.launch()
+
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+
+        // Create a new medication profile
+        app.tabBars.buttons["Settings"].tap()
+        let medicationProfilesButton = app.buttons["Medication Profiles"]
+        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
+        medicationProfilesButton.tap()
+
+        let addButton = app.buttons["Add Medication Profile"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 3.0))
+        addButton.tap()
+
+        // Select medication
+        let medicationPicker = app.buttons["medication-picker"]
+        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3.0))
+        medicationPicker.tap()
+
+        let semaglutideOption = app.buttons["medication-semaglutide"]
+        XCTAssertTrue(semaglutideOption.waitForExistence(timeout: 3.0))
+        semaglutideOption.tap()
+
+        // Save profile
+        let saveButton = app.buttons["save-medication-profile"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
+        saveButton.tap()
+
+        // Verify profile created
+        let profileCell = app.buttons.matching(
+            identifier: "medication-profile-semaglutide-ozempic-0.25mg"
+        ).firstMatch
+        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
+
+        // Tap profile to view details
+        profileCell.tap()
+
+        // Wait for profile detail view to load
+        usleep(500_000)  // 500ms
+
+        // Verify edit schedule button exists (schedule is active and editable)
+        // Note: Using edit-schedule-button as the primary indicator of schedule existence
+        // (consistent with other schedule UI tests)
+        let editScheduleButton = app.buttons["edit-schedule-button"]
+        XCTAssertTrue(
+            editScheduleButton.waitForExistence(timeout: 5.0),
+            "Edit schedule button should appear after creating new profile")
+    }
 
     func testAnalyticsEmptyStateForNewProfile() throws {
         // Setup: Launch app with NO test data
