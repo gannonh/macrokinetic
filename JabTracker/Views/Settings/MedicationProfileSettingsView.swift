@@ -130,7 +130,7 @@ struct MedicationProfileSettingsView: View {
                 .accessibilityIdentifier("disable-instead-button")
 
                 Button("Delete Permanently", role: .destructive) {
-                    self.permanentlyDeleteProfile(profile)
+                    self.deleteProfile(profile)
                     self.profileToDelete = nil
                 }
                 .accessibilityIdentifier("delete-permanently-button")
@@ -170,10 +170,10 @@ struct MedicationProfileSettingsView: View {
         }
     }
 
-    /// Permanently delete a medication profile (hard delete with confirmation)
-    private func permanentlyDeleteProfile(_ profile: MedicationProfile) {
+    /// Delete a medication profile (hard delete with confirmation)
+    private func deleteProfile(_ profile: MedicationProfile) {
         do {
-            try self.medicationManager.permanentlyDeleteProfile(profile)
+            try self.medicationManager.deleteProfile(profile)
         } catch {
             self.errorMessage = "Failed to delete medication profile: \(error.localizedDescription)"
             self.showingError = true
