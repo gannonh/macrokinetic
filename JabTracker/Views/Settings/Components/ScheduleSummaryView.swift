@@ -184,6 +184,7 @@ struct ScheduleSummaryView: View {
             }
         )
         .buttonStyle(.plain)
+        .accessibilityIdentifier("titration-warning-banner")
         .accessibilityLabel("Upcoming dose change: \(warning)")
         .accessibilityHint("Tap to view dose titration plan")
     }
