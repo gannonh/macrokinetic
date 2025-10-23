@@ -183,44 +183,72 @@ struct TitrationRowView: View {
     let onDelete: () -> Void
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(self.titration.statusText)
-                    .font(DesignTokens.Typography.body)
-                    .foregroundColor(self.titration.isCompleted ? .secondary : .primary)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(self.titration.statusText)
+                        .font(DesignTokens.Typography.body)
+                        .foregroundColor(self.titration.isCompleted ? .secondary : .primary)
 
-                HStack {
-                    Text("Escalation Date")
-                        .font(DesignTokens.Typography.caption)
-                        .foregroundColor(.secondary)
+                    HStack {
+                        Text("Escalation Date")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundColor(.secondary)
 
-                    Text(self.titration.scheduledDate.formatted(date: .abbreviated, time: .omitted))
-                        .font(DesignTokens.Typography.caption)
-                        .foregroundColor(.secondary)
+                        Text(self.titration.scheduledDate.formatted(date: .abbreviated, time: .omitted))
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if !self.titration.isCompleted {
+                    if self.titration.canCompleteManually {
+                        HStack(spacing: 8) {
+                            Button("Complete") {
+                                self.onMarkComplete()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .accessibilityIdentifier("mark-escalation-complete")
+
+                            Button {
+                                self.onDelete()
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                            .accessibilityIdentifier(
+                                "delete-escalation-\(String(format: "%.2f", self.titration.toDose))mg")
+                        }
+                    } else {
+                        Button {
+                            self.onDelete()
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                        .accessibilityIdentifier(
+                            "delete-escalation-\(String(format: "%.2f", self.titration.toDose))mg")
+                    }
                 }
             }
 
-            Spacer()
-
-            if !self.titration.isCompleted {
-                HStack(spacing: 8) {
-                    Button("Complete") {
-                        self.onMarkComplete()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .accessibilityIdentifier("mark-escalation-complete")
-
-                    Button {
-                        self.onDelete()
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    }
-                    .accessibilityIdentifier(
-                        "delete-escalation-\(String(format: "%.2f", self.titration.toDose))mg")
+            // Show message when scheduled date has passed
+            if !self.titration.isCompleted && !self.titration.canCompleteManually {
+                HStack(spacing: 4) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                    Text("Use dose entry to complete this titration")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundColor(.secondary)
+                        .italic()
                 }
+                .accessibilityIdentifier("use-dose-entry-message")
             }
         }
     }

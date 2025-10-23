@@ -18,8 +18,8 @@ struct MedicationScheduleSection: View {
                         nextDose: schedule.nextScheduledDose,
                         reminderMinutes: 30,  // Issue #285: Add reminderMinutes to model
                         isPaused: schedule.pausedAt != nil,
-                        titrationWarning: nil,  // Issue #286: Integrate titration service
-                        onTitrationWarningTap: nil
+                        titrationWarning: viewModel.getTitrationWarning(),
+                        onTitrationWarningTap: { viewModel.navigateToTitrationPlan() }
                     )
 
                     Divider()

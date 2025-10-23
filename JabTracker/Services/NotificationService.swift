@@ -52,6 +52,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Keys for notification userInfo dictionary
     enum UserInfoKeys {
         static let scheduledDoseId = "scheduledDoseId"
+        static let titrationId = "titrationId"
     }
 
     // MARK: - Initialization
@@ -128,9 +129,10 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /**
      * Register notification categories with actionable buttons.
      *
-     * Registers two categories:
+     * Registers three categories:
      * - DOSE_REMINDER: Take, Skip, Snooze actions for upcoming doses
      * - MISSED_DOSE: Take Now, Skip actions for missed doses
+     * - TITRATION: Complete, Reschedule, Remind Later actions for titration
      *
      * Called automatically during initialization.
      */
@@ -178,7 +180,34 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             options: []
         )
 
-        notificationCenter.setNotificationCategories([doseReminderCategory, missedDoseCategory])
+        // Titration Category
+        let completeTitrationAction = UNNotificationAction(
+            identifier: "COMPLETE_TITRATION",
+            title: NSLocalizedString("Complete", comment: "Notification action"),
+            options: [.foreground]
+        )
+        let rescheduleTitrationAction = UNNotificationAction(
+            identifier: "RESCHEDULE_TITRATION",
+            title: NSLocalizedString("Reschedule", comment: "Notification action"),
+            options: [.foreground]
+        )
+        let remindLaterTitrationAction = UNNotificationAction(
+            identifier: "REMIND_LATER_TITRATION",
+            title: NSLocalizedString("Remind Later", comment: "Notification action"),
+            options: []
+        )
+        let titrationCategory = UNNotificationCategory(
+            identifier: "TITRATION",
+            actions: [completeTitrationAction, rescheduleTitrationAction, remindLaterTitrationAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        notificationCenter.setNotificationCategories([
+            doseReminderCategory,
+            missedDoseCategory,
+            titrationCategory,
+        ])
 
         logger.info("Notification categories registered successfully")
     }
@@ -301,6 +330,69 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             logger.info("Notification scheduled for \(triggerDate)")
         } catch {
             logger.error("Failed to schedule notification: \(error.localizedDescription)")
+        }
+    }
+
+    /**
+     * Schedule a titration notification for dose change reminder.
+     *
+     * Creates and schedules a notification for the specified titration on the scheduled date.
+     * The notification includes Complete, Reschedule, and Remind Later actions.
+     *
+     * - Parameter titration: The dose titration to remind about
+     * - Throws: NotificationServiceError.schedulingFailed if notification cannot be scheduled
+     */
+    func scheduleTitrationNotification(for titration: DoseTitration) async throws {
+        logger.info("Scheduling titration notification for titration: \(titration.id)")
+
+        // Don't schedule notifications in the past
+        guard titration.scheduledDate > Date() else {
+            logger.debug("Skipping notification for titration in the past: \(titration.id)")
+            return
+        }
+
+        // Get medication profile for notification content
+        guard let medicationProfile = titration.medicationProfile else {
+            logger.error("Titration missing medication profile")
+            throw NotificationServiceError.invalidScheduledDose
+        }
+
+        // Create notification content
+        let content = UNMutableNotificationContent()
+        let changeDirection = titration.toDose > titration.fromDose ? "Increase" : "Decrease"
+        content.title = NSLocalizedString("Dose \(changeDirection) Scheduled", comment: "Titration notification title")
+        content.body = NSLocalizedString(
+            "Time to increase your dose from \(titration.fromDose)mg to \(titration.toDose)mg",
+            comment: "Titration notification body"
+        )
+        content.sound = .default
+        content.categoryIdentifier = "TITRATION"
+
+        // Include titrationId in userInfo for action handling
+        content.userInfo = [UserInfoKeys.titrationId: titration.id.uuidString]
+
+        // Create calendar trigger for titration date
+        let calendar = Calendar.current
+        let components = calendar.dateComponents(
+            [.year, .month, .day, .hour, .minute],
+            from: titration.scheduledDate
+        )
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+
+        // Create request
+        let request = UNNotificationRequest(
+            identifier: "titration-\(titration.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+
+        // Schedule notification
+        do {
+            try await notificationCenter.add(request)
+            logger.info("Titration notification scheduled for \(titration.scheduledDate)")
+        } catch {
+            logger.error("Failed to schedule titration notification: \(error.localizedDescription)")
+            throw NotificationServiceError.schedulingFailed
         }
     }
 
