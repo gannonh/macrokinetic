@@ -439,6 +439,110 @@ struct NotificationServiceActionTests {
             #expect(request.content.body.contains("Mounjaro"))
         }
     }
+
+    // MARK: - Titration Action Tests (3 tests - Stream D)
+
+    @Test("Handle COMPLETE_TITRATION action")
+    func testHandleCompleteTitrationAction() async throws {
+        let (service, scheduleService, context) = try await createTestEnvironment()
+
+        // Create medication profile with titration
+        let profile = TestDataSeeding.createTestMedicationProfile()
+        profile.currentDose = 0.5
+        context.insert(profile)
+
+        let schedule = DoseSchedule(medicationProfile: profile)
+        context.insert(schedule)
+
+        let titration = DoseTitration(
+            fromDose: 0.5,
+            toDose: 1.0,
+            scheduledDate: Date()
+        )
+        titration.medicationProfile = profile
+        context.insert(titration)
+        try context.save()
+
+        // WHEN: Handle COMPLETE_TITRATION action
+        try await service.handleTitrationAction("COMPLETE_TITRATION", for: titration, schedule: schedule)
+
+        // THEN: Titration should be marked complete
+        #expect(titration.isCompleted == true)
+        #expect(titration.completedDate != nil)
+
+        // Verify schedule was updated with new dose
+        let scheduleDict =
+            try JSONSerialization.jsonObject(
+                with: schedule.baseSchedule,
+                options: []
+            ) as? [String: Any]
+        #expect(scheduleDict?["doseAmount"] as? Double == 1.0)
+    }
+
+    @Test("Handle RESCHEDULE_TITRATION action")
+    func testHandleRescheduleTitrationAction() async throws {
+        let (service, _, context) = try await createTestEnvironment()
+
+        // Create medication profile with titration
+        let profile = TestDataSeeding.createTestMedicationProfile()
+        context.insert(profile)
+
+        let originalDate = Date()
+        let titration = DoseTitration(
+            fromDose: 0.5,
+            toDose: 1.0,
+            scheduledDate: originalDate
+        )
+        titration.medicationProfile = profile
+        context.insert(titration)
+        try context.save()
+
+        // New date 7 days from now
+        let newDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+
+        // WHEN: Handle RESCHEDULE_TITRATION action
+        try await service.handleTitrationAction(
+            "RESCHEDULE_TITRATION",
+            for: titration,
+            newDate: newDate
+        )
+
+        // THEN: Titration date should be updated
+        let timeDifference = abs(titration.scheduledDate.timeIntervalSince(newDate))
+        #expect(timeDifference < 60, "Scheduled date should be updated to new date")
+
+        // Titration should still be incomplete
+        #expect(titration.isCompleted == false)
+    }
+
+    @Test("Handle REMIND_LATER_TITRATION action")
+    func testHandleRemindLaterTitrationAction() async throws {
+        let (service, _, context) = try await createTestEnvironment()
+
+        // Create medication profile with titration
+        let profile = TestDataSeeding.createTestMedicationProfile()
+        context.insert(profile)
+
+        let titration = DoseTitration(
+            fromDose: 0.5,
+            toDose: 1.0,
+            scheduledDate: Date()
+        )
+        titration.medicationProfile = profile
+        context.insert(titration)
+        try context.save()
+
+        // WHEN: Handle REMIND_LATER_TITRATION action
+        try await service.handleTitrationAction("REMIND_LATER_TITRATION", for: titration)
+
+        // THEN: Notification should be rescheduled for 1 hour later
+        // Titration should remain incomplete
+        #expect(titration.isCompleted == false)
+        #expect(titration.completedDate == nil)
+
+        // Note: Full validation would check that new notification was scheduled
+        // This is covered by E2E tests
+    }
 }
 
 // MARK: - Mock UNNotificationResponse
