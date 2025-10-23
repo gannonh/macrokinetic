@@ -16,9 +16,9 @@ struct MedicationScheduleSection: View {
                         patternType: schedule.patternType,
                         frequency: schedule.patternType == .weekly ? "Once weekly" : "Custom",
                         nextDose: schedule.nextScheduledDose,
-                        reminderMinutes: 30,  // TODO: Add to model
+                        reminderMinutes: 30,  // Issue #285: Add reminderMinutes to model
                         isPaused: schedule.pausedAt != nil,
-                        titrationWarning: nil,  // TODO: Integrate with titration service
+                        titrationWarning: nil,  // Issue #286: Integrate titration service
                         onTitrationWarningTap: nil
                     )
 
