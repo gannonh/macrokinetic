@@ -1,14 +1,11 @@
 ---
 description: Edit issue details (title, description, labels) locally and on GitHub.
 argument-hint: Issue number (e.g., 42)
-allowed-tools: Read, Write, Edit, Bash, LS
 ---
 
 # Issue Edit
 
 Edit issue details locally and on GitHub.
-
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
 
 ## Instructions
 
