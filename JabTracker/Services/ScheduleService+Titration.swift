@@ -52,14 +52,15 @@ extension ScheduleService {
             return nil
         }
 
-        // Find the most recent titration
-        guard let titration = titrations.max(by: { $0.scheduledDate < $1.scheduledDate }) else {
-            logger.debug("No current titration for medication profile")
+        // Find the NEAREST upcoming incomplete titration (earliest date)
+        let upcomingTitrations = titrations.filter { !$0.isCompleted && $0.scheduledDate >= now }
+        guard let titration = upcomingTitrations.min(by: { $0.scheduledDate < $1.scheduledDate }) else {
+            logger.debug("No upcoming incomplete titrations for medication profile")
             return nil
         }
 
-        // Check if titration is within 30-day window
-        if titration.scheduledDate >= now && titration.scheduledDate <= thirtyDaysFromNow {
+        // Check if nearest titration is within 30-day window
+        if titration.scheduledDate <= thirtyDaysFromNow {
             logger.info("Found active titration scheduled for \(titration.scheduledDate)")
             return titration
         }
