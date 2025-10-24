@@ -474,6 +474,13 @@ struct MedicationProfileDetailView: View {
             .sheet(isPresented: self.$showingDoseTitration) {
                 DoseTitrationView(profile: self.profile)
             }
+            .onChange(of: viewModel?.showDoseTitration) { _, newValue in
+                if let newValue = newValue, newValue {
+                    self.showingDoseTitration = true
+                    // Reset ViewModel property after triggering navigation
+                    viewModel?.showDoseTitration = false
+                }
+            }
             .modifier(ScheduleSheetsPresentationModifier(viewModel: viewModel, profile: profile))
             .modifier(
                 ReconstitutionSheetPresentationModifier(
