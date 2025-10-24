@@ -224,7 +224,8 @@ class DataController: ObservableObject {
         print("🌱 Seeding titration test data for user: \(testUser.email ?? "unknown")")
 
         let medication = createTestMedicationProfile(context: context, user: testUser)
-        createTestDose(context: context, user: testUser, medication: medication)
+        let yesterdayDose = createTestDose(context: context, user: testUser, medication: medication)
+        createTestSchedule(context: context, medication: medication, firstDose: yesterdayDose)
         createTestTitrations(context: context, medication: medication)
 
         saveTestData(context: context)
@@ -246,7 +247,7 @@ class DataController: ObservableObject {
         return medication
     }
 
-    private func createTestDose(context: ModelContext, user: User, medication: MedicationProfile) {
+    private func createTestDose(context: ModelContext, user: User, medication: MedicationProfile) -> Dose {
         guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) else {
             fatalError("Failed to calculate yesterday's date")
         }
@@ -260,19 +261,53 @@ class DataController: ObservableObject {
         yesterdayDose.user = user
         yesterdayDose.medication = medication
         context.insert(yesterdayDose)
+        return yesterdayDose
+    }
+
+    private func createTestSchedule(context: ModelContext, medication: MedicationProfile, firstDose: Dose) {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.hour, .minute], from: firstDose.timestamp)
+
+        // Create weekly schedule configuration
+        let scheduleConfig = ScheduleConfiguration(
+            dayOfWeek: calendar.component(.weekday, from: firstDose.timestamp),
+            timeOfDay: TimeComponents(hour: components.hour ?? 9, minute: components.minute ?? 0),
+            interval: 7,  // Weekly
+            doseAmount: 1.0,
+            windowMinutesBefore: 120,  // 2 hours before
+            windowMinutesAfter: 120,  // 2 hours after
+            splitDoseCount: nil,
+            splitIntervalMinutes: nil,
+            customRecurrence: nil
+        )
+
+        // Encode configuration
+        let encoder = JSONEncoder()
+        guard let scheduleData = try? encoder.encode(scheduleConfig) else {
+            print("⚠️ Failed to encode schedule configuration")
+            return
+        }
+
+        // Create DoseSchedule
+        let schedule = DoseSchedule(
+            medicationProfile: medication,
+            patternType: .weekly,
+            baseSchedule: scheduleData,
+            isActive: true
+        )
+        schedule.createdAt = firstDose.timestamp  // Start date = yesterday
+        context.insert(schedule)
     }
 
     private func createTestTitrations(context: ModelContext, medication: MedicationProfile) {
-        // Create TODAY titration 2 hours in the future so it remains valid for manual testing
-        // throughout the day (canCompleteManually requires scheduledDate >= Date())
-        guard let todayFuture = Calendar.current.date(byAdding: .hour, value: 2, to: Date()) else {
-            fatalError("Failed to calculate today's titration date")
-        }
+        // Create TODAY titration at start of day (midnight) to trigger confirmation dialog
+        // Dialog requires scheduledDate <= Date(), so must be in past/present
+        let today = Calendar.current.startOfDay(for: Date())
 
         let titrationToday = DoseTitration(
             fromDose: 1.0,
             toDose: 2.0,
-            scheduledDate: todayFuture,
+            scheduledDate: today,
             isCompleted: false
         )
         titrationToday.medicationProfile = medication
