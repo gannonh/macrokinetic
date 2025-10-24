@@ -42,6 +42,7 @@ struct TitrationConfirmationDialog: View {
                     .font(.system(size: 50))
                     .foregroundStyle(.blue)
                     .accessibilityIdentifier("titration-dialog-icon")
+                    .padding(.top, 16)
 
                 Text("Dose Increase Scheduled")
                     .font(.title2)
@@ -131,18 +132,21 @@ struct TitrationConfirmationDialog: View {
                 .accessibilityLabel("Complete dose increase now and use new dose amount")
 
                 // Reschedule Button
-                Button(action: { showingReschedulePicker = true }) {
-                    HStack {
-                        Image(systemName: "calendar")
-                        Text("Reschedule")
-                            .fontWeight(.medium)
+                Button(
+                    action: { showingReschedulePicker = true },
+                    label: {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text("Reschedule")
+                                .fontWeight(.medium)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.secondary.opacity(0.1))
+                        .foregroundStyle(.primary)
+                        .cornerRadius(10)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.secondary.opacity(0.1))
-                    .foregroundStyle(.primary)
-                    .cornerRadius(10)
-                }
+                )
                 .disabled(isProcessing)
                 .accessibilityIdentifier("titration-reschedule-button")
                 .accessibilityLabel("Reschedule dose increase to a different date")
@@ -166,9 +170,6 @@ struct TitrationConfirmationDialog: View {
             }
         }
         .padding(24)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(radius: 20)
         .accessibilityIdentifier("titration-confirmation-dialog")
         .sheet(isPresented: $showingReschedulePicker) {
             RescheduleTitrationSheet(
