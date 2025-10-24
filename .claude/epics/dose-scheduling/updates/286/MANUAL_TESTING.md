@@ -26,13 +26,12 @@ xcodegen generate
 Check the Xcode console for confirmation:
 
 ```
-🌱 Seeding titration test data...
+🌱 Seeding titration test data for user: test@uitesting.com
 ✅ Titration test data seeded successfully!
-   - User: test-titration@example.com
    - Medication: Ozempic 1.0mg
    - Completed dose: Yesterday
-   - Titration TODAY: 1.0mg → 2.0mg (will trigger dialog)
-   - Titration TOMORROW: 2.0mg → 3.0mg (warning banner)
+   - Titration TODAY (+2 hours): 1.0mg → 2.0mg (will trigger dialog)
+   - Titration TOMORROW: 2.0mg → 3.0mg (warning banner - NEAREST)
    - Titration +7 days: 3.0mg → 4.0mg (warning banner)
 ```
 
