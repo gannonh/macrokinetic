@@ -205,10 +205,14 @@ class DataController: ObservableObject {
     func seedTitrationTestData() {
         let context = container.mainContext
 
-        // Check if test data already exists
-        let descriptor = FetchDescriptor<User>()
+        // Check if test titration data already exists
+        let descriptor = FetchDescriptor<User>(
+            predicate: #Predicate { user in
+                user.email == "test-titration@example.com"
+            }
+        )
         if let existingUsers = try? context.fetch(descriptor), !existingUsers.isEmpty {
-            print("⚠️ Test data already exists, skipping seed")
+            print("⚠️ Test titration data already exists, skipping seed")
             return
         }
 
