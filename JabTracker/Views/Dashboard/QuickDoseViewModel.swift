@@ -4,12 +4,19 @@
 //
 
 import Foundation
+import OSLog
 import SwiftData
 
 /// View model for quick dose entry with smart defaults and business logic
 /// Handles medication profile loading, smart default computation, and dose saving
 @MainActor
 class QuickDoseViewModel: ObservableObject {
+    // MARK: - Logger
+
+    private var logger: Logger {
+        Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseViewModel")
+    }
+
     // MARK: - Published Properties
 
     @Published var medicationProfiles: [MedicationProfile] = []
@@ -260,36 +267,80 @@ class QuickDoseViewModel: ObservableObject {
     /// - Titration scheduled date is today or in the past
     /// - User hasn't selected "Remind Me Later" for this session
     func shouldShowTitrationDialog() -> Bool {
+        logger.debug("QuickDoseViewModel.shouldShowTitrationDialog called")
+
         guard let pendingTitration = getPendingTitration() else {
+            logger.debug("No pending titration found")
             return false
         }
 
+        logger.debug("Found pending titration: \(pendingTitration.fromDose)mg → \(pendingTitration.toDose)mg")
+
         // Don't show if user clicked "Remind Me Later"
         if titrationRemindLater {
+            logger.debug("titrationRemindLater flag is set, not showing dialog")
             return false
         }
 
         // Show if titration date is today or in the past
         let now = Date()
-        return pendingTitration.scheduledDate <= now
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        logger.debug("Now: \(formatter.string(from: now))")
+        logger.debug("Titration scheduled: \(formatter.string(from: pendingTitration.scheduledDate))")
+
+        let shouldShow = pendingTitration.scheduledDate <= now
+        logger.debug("scheduledDate <= now? \(shouldShow)")
+
+        return shouldShow
     }
 
     /// Gets the pending titration for the selected medication profile
     /// Returns nil if no medication profile selected or no pending titration exists
     func getPendingTitration() -> DoseTitration? {
+        logger.debug("QuickDoseViewModel.getPendingTitration called")
+
         guard let profile = selectedMedicationProfile else {
+            logger.debug("No selected medication profile")
             return nil
         }
+
+        logger.debug("Selected profile: \(profile.brandName) (\(profile.currentDose)mg)")
 
         guard let titrations = profile.doseTitrations, !titrations.isEmpty else {
+            logger.debug("No titrations found for profile")
             return nil
         }
 
-        // Find the most recent incomplete titration
-        return
-            titrations
-            .filter { !$0.isCompleted }
-            .max(by: { $0.scheduledDate < $1.scheduledDate })
+        logger.debug("Found \(titrations.count) total titrations")
+
+        let incompleteTitrations = titrations.filter { !$0.isCompleted }
+        logger.debug("Found \(incompleteTitrations.count) incomplete titrations:")
+
+        for titration in incompleteTitrations {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .short
+            let dateStr = formatter.string(from: titration.scheduledDate)
+            logger.debug("  - \(titration.fromDose)mg → \(titration.toDose)mg scheduled for \(dateStr)")
+        }
+
+        // Find the EARLIEST (nearest) incomplete titration
+        let pending = incompleteTitrations.min(by: { $0.scheduledDate < $1.scheduledDate })
+
+        if let pending = pending {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .short
+            let dateStr = formatter.string(from: pending.scheduledDate)
+            logger.debug(
+                "Returning EARLIEST titration: \(pending.fromDose)mg → \(pending.toDose)mg scheduled for \(dateStr)")
+        } else {
+            logger.debug("No incomplete titrations found")
+        }
+
+        return pending
     }
 
     /// Sets the "Remind Me Later" flag for titration dialog
@@ -302,6 +353,58 @@ class QuickDoseViewModel: ObservableObject {
     /// This allows the dialog to show again on next dose entry
     func resetRemindLaterFlag() {
         self.titrationRemindLater = false
+    }
+
+    // MARK: - Titration Actions (Business Logic)
+
+    /// Completes a titration and updates medication profile with new dose
+    /// - Parameters:
+    ///   - titration: The titration to complete
+    ///   - context: ModelContext for saving changes
+    /// - Throws: Error if save fails
+    func completeTitration(_ titration: DoseTitration, context: ModelContext) throws {
+        logger.debug("QuickDoseViewModel.completeTitration called")
+
+        // Mark titration as completed
+        titration.markCompleted()
+
+        // Update medication profile with new dose
+        if let profile = selectedMedicationProfile {
+            logger.debug(
+                "Updating \(profile.brandName) currentDose from \(profile.currentDose)mg to \(titration.toDose)mg")
+            profile.currentDose = titration.toDose
+        }
+
+        // Save changes
+        try context.save()
+        logger.debug("Titration completed and saved")
+
+        // Reload smart defaults with new dose amount
+        loadSmartDefaults(context: context)
+    }
+
+    /// Reschedules a titration to a new date
+    /// - Parameters:
+    ///   - titration: The titration to reschedule
+    ///   - newDate: The new scheduled date
+    ///   - context: ModelContext for saving changes
+    /// - Throws: Error if save fails
+    func rescheduleTitration(_ titration: DoseTitration, to newDate: Date, context: ModelContext) throws {
+        logger.debug("QuickDoseViewModel.rescheduleTitration called")
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        let fromDate = formatter.string(from: titration.scheduledDate)
+        let toDate = formatter.string(from: newDate)
+        logger.debug("Rescheduling from \(fromDate) to \(toDate)")
+
+        // Update titration date
+        titration.scheduledDate = newDate
+        titration.updatedAt = Date()
+
+        // Save changes
+        try context.save()
+        logger.debug("Titration rescheduled and saved")
     }
 }
 

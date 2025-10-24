@@ -50,6 +50,10 @@ struct QuickDoseButton: View {
         .accessibilityIdentifier("quick-add-dose-button")
         .sheet(
             isPresented: self.$showingQuickDoseSheet,
+            onDismiss: {
+                // Clear pending titration state to avoid stale references
+                self.pendingTitration = nil
+            },
             content: {
                 QuickDoseSheet(
                     viewModel: self.viewModel,
@@ -69,7 +73,7 @@ struct QuickDoseButton: View {
                         onReschedule: handleTitrationReschedule,
                         onRemindLater: handleTitrationRemindLater
                     )
-                    .presentationDetents([.medium])
+                    .presentationDetents([.fraction(0.75)])
                     .presentationDragIndicator(.visible)
                 }
             }
@@ -105,36 +109,53 @@ struct QuickDoseButton: View {
 
     private func handleButtonTap() {
         // Check if there's a pending titration that should trigger dialog
-        if viewModel.shouldShowTitrationDialog() {
+        print("🔍 QuickDoseButton.handleButtonTap called")
+        print("🔍 Checking shouldShowTitrationDialog()...")
+
+        let shouldShow = viewModel.shouldShowTitrationDialog()
+        print("🔍 shouldShowTitrationDialog() returned: \(shouldShow)")
+
+        if shouldShow {
             pendingTitration = viewModel.getPendingTitration()
+            print("🔍 Got pending titration: \(pendingTitration?.id.uuidString ?? "nil")")
+            print("🔍 Setting showingTitrationDialog = true")
             showingTitrationDialog = true
         } else {
+            print("🔍 No pending titration, showing QuickDoseSheet")
             showingQuickDoseSheet = true
         }
     }
 
     private func handleTitrationComplete() {
-        // Update medication profile with new dose
-        if let titration = pendingTitration,
-            let profile = viewModel.selectedMedicationProfile
-        {
-            profile.currentDose = titration.toDose
-            try? modelContext.save()
-        }
+        guard let titration = pendingTitration else { return }
 
-        // Show quick dose sheet with new dose amount
-        viewModel.loadSmartDefaults(context: modelContext)
+        // Business logic in ViewModel
+        try? viewModel.completeTitration(titration, context: modelContext)
+
+        // UI state: show quick dose sheet with new dose amount
         showingQuickDoseSheet = true
     }
 
     private func handleTitrationReschedule(_ newDate: Date) {
-        // Dialog already updated the titration date, just dismiss
+        guard let titration = pendingTitration else { return }
+
+        // Business logic in ViewModel
+        try? viewModel.rescheduleTitration(titration, to: newDate, context: modelContext)
+
+        // UI state: dismiss dialog
         showingTitrationDialog = false
     }
 
     private func handleTitrationRemindLater() {
-        // Set remind later flag and show quick dose sheet
-        viewModel.titrationRemindLater = true
+        // Set flag temporarily to allow correct flow
+        viewModel.setTitrationRemindLater(true)
+
+        // Immediately schedule reset so next tap will show dialog
+        DispatchQueue.main.async {
+            self.viewModel.resetRemindLaterFlag()
+        }
+
+        // UI state: show quick dose sheet
         showingQuickDoseSheet = true
     }
 }
@@ -367,6 +388,9 @@ struct QuickDoseSheet: View {
             // Trigger callbacks for dashboard updates
             self.onDoseSaved?()
             self.onCalculationsUpdated?()
+
+            // Reset "Remind Me Later" flag so dialog shows next time if needed
+            self.viewModel.resetRemindLaterFlag()
 
             // Dismiss sheet
             self.dismiss()

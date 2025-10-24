@@ -7,6 +7,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var quickDoseViewModel = QuickDoseViewModel()
     @State private var showingQuickDoseSheet = false
+    @State private var showingTitrationDialog = false
+    @State private var pendingTitration: DoseTitration?
     @State private var showingSuccessMessage = false
     @State private var selectedTab = "home"
     @State private var pkEngine = PharmacokineticsEngine()
@@ -54,6 +56,10 @@ struct ContentView: View {
         .accessibilityIdentifier("main-tab-view")
         .sheet(
             isPresented: self.$showingQuickDoseSheet,
+            onDismiss: {
+                // Clear pending titration state to avoid stale references
+                self.pendingTitration = nil
+            },
             content: {
                 QuickDoseSheet(
                     viewModel: self.quickDoseViewModel,
@@ -61,11 +67,34 @@ struct ContentView: View {
                     showingSuccessMessage: self.$showingSuccessMessage)
             }
         )
+        .sheet(
+            isPresented: self.$showingTitrationDialog,
+            content: {
+                if let titration = pendingTitration {
+                    TitrationConfirmationDialog(
+                        titration: titration,
+                        onComplete: handleTitrationComplete,
+                        onReschedule: handleTitrationReschedule,
+                        onRemindLater: handleTitrationRemindLater
+                    )
+                    .presentationDetents([.fraction(0.75)])
+                    .presentationDragIndicator(.visible)
+                }
+            }
+        )
         .onChange(of: self.selectedTab) { oldValue, newValue in
             print("🔍 ContentView: Tab changed from \(oldValue) to \(newValue)")
             if newValue == "add" {
-                print("🔍 ContentView: Add tab selected, showing QuickDoseSheet")
-                self.showingQuickDoseSheet = true
+                print("🔍 ContentView: Add tab selected")
+
+                // Check for pending titration using ViewModel business logic
+                if quickDoseViewModel.shouldShowTitrationDialog() {
+                    pendingTitration = quickDoseViewModel.getPendingTitration()
+                    showingTitrationDialog = true
+                } else {
+                    showingQuickDoseSheet = true
+                }
+
                 // Reset tab selection to previous tab so + doesn't stay selected
                 self.selectedTab = oldValue
                 print("🔍 ContentView: Reset tab selection back to \(oldValue)")
@@ -96,6 +125,41 @@ struct ContentView: View {
                     }
             }
         }
+    }
+
+    // MARK: - Titration Handlers (UI State Only - Business Logic in ViewModel)
+
+    private func handleTitrationComplete() {
+        guard let titration = pendingTitration else { return }
+
+        // Business logic in ViewModel
+        try? quickDoseViewModel.completeTitration(titration, context: modelContext)
+
+        // UI state: show quick dose sheet with new dose amount
+        showingQuickDoseSheet = true
+    }
+
+    private func handleTitrationReschedule(_ newDate: Date) {
+        guard let titration = pendingTitration else { return }
+
+        // Business logic in ViewModel
+        try? quickDoseViewModel.rescheduleTitration(titration, to: newDate, context: modelContext)
+
+        // UI state: dismiss dialog
+        showingTitrationDialog = false
+    }
+
+    private func handleTitrationRemindLater() {
+        // Set flag temporarily to allow correct flow
+        quickDoseViewModel.setTitrationRemindLater(true)
+
+        // Immediately schedule reset so next tap will show dialog
+        DispatchQueue.main.async {
+            self.quickDoseViewModel.resetRemindLaterFlag()
+        }
+
+        // UI state: show quick dose sheet
+        showingQuickDoseSheet = true
     }
 }
 
