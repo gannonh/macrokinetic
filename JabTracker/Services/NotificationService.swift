@@ -136,7 +136,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      *
      * Called automatically during initialization.
      */
-    func registerNotificationCategories() {
+    func registerNotificationCategories() {  // swiftlint:disable:this function_body_length
         logger.info("Registering notification categories")
 
         // Dose Reminder Category
@@ -351,8 +351,8 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             return
         }
 
-        // Get medication profile for notification content
-        guard let medicationProfile = titration.medicationProfile else {
+        // Verify medication profile exists for notification content
+        guard titration.medicationProfile != nil else {
             logger.error("Titration missing medication profile")
             throw NotificationServiceError.invalidScheduledDose
         }
