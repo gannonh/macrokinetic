@@ -174,7 +174,7 @@
             )
 
             var createdDoses: [Dose] = []
-            var skippedDoses: [Dose] = []
+            let skippedDoses: [Dose] = []
 
             for (index, scheduledDate) in doseSchedule.enumerated() {
                 // Determine if this dose should be skipped based on adherence rate

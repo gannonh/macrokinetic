@@ -221,7 +221,7 @@ class DataController: ObservableObject {
             return
         }
 
-        print("🌱 Seeding titration test data for user: \(testUser.email)")
+        print("🌱 Seeding titration test data for user: \(testUser.email ?? "unknown")")
 
         let medication = createTestMedicationProfile(context: context, user: testUser)
         createTestDose(context: context, user: testUser, medication: medication)
@@ -279,11 +279,10 @@ class DataController: ObservableObject {
         context.insert(titrationToday)
 
         // Create tomorrow titration at midnight (start of day)
-        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()),
-            let tomorrowMidnight = Calendar.current.startOfDay(for: tomorrow)
-        else {
+        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else {
             fatalError("Failed to calculate tomorrow's date")
         }
+        let tomorrowMidnight = Calendar.current.startOfDay(for: tomorrow)
 
         let titrationTomorrow = DoseTitration(
             fromDose: 2.0,
@@ -295,11 +294,10 @@ class DataController: ObservableObject {
         context.insert(titrationTomorrow)
 
         // Create next week titration at midnight (start of day)
-        guard let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date()),
-            let nextWeekMidnight = Calendar.current.startOfDay(for: nextWeek)
-        else {
+        guard let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date()) else {
             fatalError("Failed to calculate next week's date")
         }
+        let nextWeekMidnight = Calendar.current.startOfDay(for: nextWeek)
 
         let titrationNextWeek = DoseTitration(
             fromDose: 3.0,
