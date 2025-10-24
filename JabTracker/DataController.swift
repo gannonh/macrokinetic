@@ -198,4 +198,122 @@ class DataController: ObservableObject {
     var willSyncAcrossDevices: Bool {
         self.syncStatus == .available
     }
+
+    /// Seed test data for titration workflow testing
+    /// Creates medication profile with titrations at various stages for manual testing
+    @MainActor
+    func seedTitrationTestData() {
+        let context = container.mainContext
+
+        // Check if test data already exists
+        let descriptor = FetchDescriptor<User>()
+        if let existingUsers = try? context.fetch(descriptor), !existingUsers.isEmpty {
+            print("⚠️ Test data already exists, skipping seed")
+            return
+        }
+
+        print("🌱 Seeding titration test data...")
+
+        let testUser = createTestUser(context: context)
+        let medication = createTestMedicationProfile(context: context, user: testUser)
+        createTestDose(context: context, user: testUser, medication: medication)
+        createTestTitrations(context: context, medication: medication)
+
+        saveTestData(context: context)
+    }
+
+    private func createTestUser(context: ModelContext) -> User {
+        let testUser = User(
+            email: "test-titration@example.com",
+            name: "Titration Test User",
+            weight: 75.0,
+            weightUnit: "kg",
+            timezone: TimeZone.current.identifier
+        )
+        context.insert(testUser)
+        return testUser
+    }
+
+    private func createTestMedicationProfile(context: ModelContext, user: User) -> MedicationProfile {
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) else {
+            fatalError("Failed to calculate medication start date")
+        }
+
+        let medication = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            currentDose: 1.0,
+            startDate: startDate
+        )
+        medication.user = user
+        context.insert(medication)
+        return medication
+    }
+
+    private func createTestDose(context: ModelContext, user: User, medication: MedicationProfile) {
+        guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) else {
+            fatalError("Failed to calculate yesterday's date")
+        }
+
+        let yesterdayDose = Dose(
+            amount: 1.0,
+            timestamp: yesterday,
+            site: "Abdomen",
+            skipped: false
+        )
+        yesterdayDose.user = user
+        yesterdayDose.medication = medication
+        context.insert(yesterdayDose)
+    }
+
+    private func createTestTitrations(context: ModelContext, medication: MedicationProfile) {
+        let today = Calendar.current.startOfDay(for: Date())
+        let titrationToday = DoseTitration(
+            fromDose: 1.0,
+            toDose: 2.0,
+            scheduledDate: today,
+            isCompleted: false
+        )
+        titrationToday.medicationProfile = medication
+        context.insert(titrationToday)
+
+        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()),
+            let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+        else {
+            fatalError("Failed to calculate future dates")
+        }
+
+        let titrationTomorrow = DoseTitration(
+            fromDose: 2.0,
+            toDose: 3.0,
+            scheduledDate: tomorrow,
+            isCompleted: false
+        )
+        titrationTomorrow.medicationProfile = medication
+        context.insert(titrationTomorrow)
+
+        let titrationNextWeek = DoseTitration(
+            fromDose: 3.0,
+            toDose: 4.0,
+            scheduledDate: nextWeek,
+            isCompleted: false
+        )
+        titrationNextWeek.medicationProfile = medication
+        context.insert(titrationNextWeek)
+    }
+
+    private func saveTestData(context: ModelContext) {
+        do {
+            try context.save()
+            print("✅ Titration test data seeded successfully!")
+            print("   - User: test-titration@example.com")
+            print("   - Medication: Ozempic 1.0mg")
+            print("   - Completed dose: Yesterday")
+            print("   - Titration TODAY: 1.0mg → 2.0mg (will trigger dialog)")
+            print("   - Titration TOMORROW: 2.0mg → 3.0mg (warning banner)")
+            print("   - Titration +7 days: 3.0mg → 4.0mg (warning banner)")
+        } catch {
+            print("❌ Failed to seed titration test data: \(error)")
+        }
+    }
 }
