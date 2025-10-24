@@ -172,6 +172,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--test-titration-data"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
