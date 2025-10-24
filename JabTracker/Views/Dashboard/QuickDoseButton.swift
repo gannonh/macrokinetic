@@ -17,6 +17,8 @@ struct QuickDoseButton: View {
     @State private var pkEngine: PharmacokineticsEngine
     @State private var doseService: DoseService
     @State private var showingQuickDoseSheet = false
+    @State private var showingTitrationDialog = false
+    @State private var pendingTitration: DoseTitration?
     @State private var showingSuccessMessage = false
 
     // Dashboard update callbacks
@@ -39,9 +41,7 @@ struct QuickDoseButton: View {
 
     var body: some View {
         Button(
-            action: {
-                self.showingQuickDoseSheet = true
-            },
+            action: handleButtonTap,
             label: {
                 Label("Quick Add Dose", systemImage: "plus.circle.fill")
             }
@@ -57,6 +57,21 @@ struct QuickDoseButton: View {
                     showingSuccessMessage: self.$showingSuccessMessage,
                     onDoseSaved: self.onDoseSaved,
                     onCalculationsUpdated: self.onCalculationsUpdated)
+            }
+        )
+        .sheet(
+            isPresented: self.$showingTitrationDialog,
+            content: {
+                if let titration = pendingTitration {
+                    TitrationConfirmationDialog(
+                        titration: titration,
+                        onComplete: handleTitrationComplete,
+                        onReschedule: handleTitrationReschedule,
+                        onRemindLater: handleTitrationRemindLater
+                    )
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
+                }
             }
         )
         .onAppear {
@@ -84,6 +99,43 @@ struct QuickDoseButton: View {
                     }
             }
         }
+    }
+
+    // MARK: - Actions
+
+    private func handleButtonTap() {
+        // Check if there's a pending titration that should trigger dialog
+        if viewModel.shouldShowTitrationDialog() {
+            pendingTitration = viewModel.getPendingTitration()
+            showingTitrationDialog = true
+        } else {
+            showingQuickDoseSheet = true
+        }
+    }
+
+    private func handleTitrationComplete() {
+        // Update medication profile with new dose
+        if let titration = pendingTitration,
+            let profile = viewModel.selectedMedicationProfile
+        {
+            profile.currentDose = titration.toDose
+            try? modelContext.save()
+        }
+
+        // Show quick dose sheet with new dose amount
+        viewModel.loadSmartDefaults(context: modelContext)
+        showingQuickDoseSheet = true
+    }
+
+    private func handleTitrationReschedule(_ newDate: Date) {
+        // Dialog already updated the titration date, just dismiss
+        showingTitrationDialog = false
+    }
+
+    private func handleTitrationRemindLater() {
+        // Set remind later flag and show quick dose sheet
+        viewModel.titrationRemindLater = true
+        showingQuickDoseSheet = true
     }
 }
 
