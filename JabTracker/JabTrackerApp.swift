@@ -73,6 +73,11 @@ struct JabTrackerApp: App {
                     if self.authManager.authenticationState == .authenticated {
                         self.onboardingCoordinator.checkOnboardingStatus()
                         self.showingOnboarding = self.onboardingCoordinator.shouldShowOnboarding
+
+                        // Seed test data if launch argument is present
+                        if ProcessInfo.processInfo.arguments.contains("--test-titration-data") {
+                            self.dataController.seedTitrationTestData()
+                        }
                     }
                 }
             }
