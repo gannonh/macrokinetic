@@ -205,37 +205,29 @@ class DataController: ObservableObject {
     func seedTitrationTestData() {
         let context = container.mainContext
 
-        // Check if test titration data already exists
-        let descriptor = FetchDescriptor<User>(
-            predicate: #Predicate { user in
-                user.email == "test-titration@example.com"
-            }
-        )
-        if let existingUsers = try? context.fetch(descriptor), !existingUsers.isEmpty {
-            print("⚠️ Test titration data already exists, skipping seed")
+        // Check if titration test data already exists
+        let titrationDescriptor = FetchDescriptor<DoseTitration>()
+        if let existingTitrations = try? context.fetch(titrationDescriptor), !existingTitrations.isEmpty {
+            print("⚠️ Titration test data already exists, skipping seed")
             return
         }
 
-        print("🌱 Seeding titration test data...")
+        // Get existing user (created by --ui-testing or other means)
+        let userDescriptor = FetchDescriptor<User>()
+        guard let existingUsers = try? context.fetch(userDescriptor),
+            let testUser = existingUsers.first
+        else {
+            print("❌ No user found - cannot seed titration data")
+            return
+        }
 
-        let testUser = createTestUser(context: context)
+        print("🌱 Seeding titration test data for user: \(testUser.email)")
+
         let medication = createTestMedicationProfile(context: context, user: testUser)
         createTestDose(context: context, user: testUser, medication: medication)
         createTestTitrations(context: context, medication: medication)
 
         saveTestData(context: context)
-    }
-
-    private func createTestUser(context: ModelContext) -> User {
-        let testUser = User(
-            email: "test-titration@example.com",
-            name: "Titration Test User",
-            weight: 75.0,
-            weightUnit: "kg",
-            timezone: TimeZone.current.identifier
-        )
-        context.insert(testUser)
-        return testUser
     }
 
     private func createTestMedicationProfile(context: ModelContext, user: User) -> MedicationProfile {
@@ -310,7 +302,6 @@ class DataController: ObservableObject {
         do {
             try context.save()
             print("✅ Titration test data seeded successfully!")
-            print("   - User: test-titration@example.com")
             print("   - Medication: Ozempic 1.0mg")
             print("   - Completed dose: Yesterday")
             print("   - Titration TODAY: 1.0mg → 2.0mg (will trigger dialog)")
