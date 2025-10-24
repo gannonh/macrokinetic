@@ -263,35 +263,48 @@ class DataController: ObservableObject {
     }
 
     private func createTestTitrations(context: ModelContext, medication: MedicationProfile) {
-        let today = Calendar.current.startOfDay(for: Date())
+        // Create TODAY titration 2 hours in the future so it remains valid for manual testing
+        // throughout the day (canCompleteManually requires scheduledDate >= Date())
+        guard let todayFuture = Calendar.current.date(byAdding: .hour, value: 2, to: Date()) else {
+            fatalError("Failed to calculate today's titration date")
+        }
+
         let titrationToday = DoseTitration(
             fromDose: 1.0,
             toDose: 2.0,
-            scheduledDate: today,
+            scheduledDate: todayFuture,
             isCompleted: false
         )
         titrationToday.medicationProfile = medication
         context.insert(titrationToday)
 
+        // Create tomorrow titration at midnight (start of day)
         guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()),
-            let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+            let tomorrowMidnight = Calendar.current.startOfDay(for: tomorrow)
         else {
-            fatalError("Failed to calculate future dates")
+            fatalError("Failed to calculate tomorrow's date")
         }
 
         let titrationTomorrow = DoseTitration(
             fromDose: 2.0,
             toDose: 3.0,
-            scheduledDate: tomorrow,
+            scheduledDate: tomorrowMidnight,
             isCompleted: false
         )
         titrationTomorrow.medicationProfile = medication
         context.insert(titrationTomorrow)
 
+        // Create next week titration at midnight (start of day)
+        guard let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date()),
+            let nextWeekMidnight = Calendar.current.startOfDay(for: nextWeek)
+        else {
+            fatalError("Failed to calculate next week's date")
+        }
+
         let titrationNextWeek = DoseTitration(
             fromDose: 3.0,
             toDose: 4.0,
-            scheduledDate: nextWeek,
+            scheduledDate: nextWeekMidnight,
             isCompleted: false
         )
         titrationNextWeek.medicationProfile = medication
