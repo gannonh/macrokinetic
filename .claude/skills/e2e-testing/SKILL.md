@@ -49,6 +49,8 @@ func testSpecificFeature() throws {
 - **Form toggles** → require coordinate-based tapping, not direct `.tap()`
 - **XCUIElementQuery** → has `.count` property, not `.isEmpty`
 
+**⚠️IMPORTANT**⚠️:  Every single time you attempt to write a test you encounter element targeting challenges. ALWAYS USE the debug utilities before writing element selectors.
+
 ### 2. Iterative E2E Test Implementation
 
 **⚠️ NEVER write all E2E tests at once before running them.**
@@ -533,5 +535,7 @@ This skill provides a comprehensive framework for E2E testing with XCUITest. The
 3. **Launch argument data seeding** - Fast, reliable test data setup
 4. **Proper wait conditions** - Never use sleep(), always use waitForExistence()
 5. **Screenshot capture** - Document test execution and aid debugging
+
+**⚠️IMPORTANT**⚠️:  Every single time you attempt to write a test you encounter element targeting challenges. ALWAYS USE the debug utilities before writing element selectors.
 
 Follow these patterns to write reliable, maintainable, and fast E2E tests that truly validate user-facing functionality.
