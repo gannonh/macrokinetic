@@ -63,13 +63,13 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         let fromDoseLabel = app.staticTexts["Current"]
         XCTAssertTrue(fromDoseLabel.exists, "Current dose label should be displayed")
 
-        let fromDoseAmount = app.staticTexts["2.0 mg"]
+        let fromDoseAmount = app.staticTexts["1.0 mg"]
         XCTAssertTrue(fromDoseAmount.exists, "Current dose amount should be displayed")
 
         let toDoseLabel = app.staticTexts["New"]
         XCTAssertTrue(toDoseLabel.exists, "New dose label should be displayed")
 
-        let toDoseAmount = app.staticTexts["3.0 mg"]
+        let toDoseAmount = app.staticTexts["2.0 mg"]
         XCTAssertTrue(toDoseAmount.exists, "New dose amount should be displayed")
 
         let scheduledDate = app.staticTexts["Scheduled for Oct 25, 2025"]
@@ -93,8 +93,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Complete Now updates profile and shows quick dose sheet
 
     func testCompleteNowUpdatesProfileAndShowsQuickDose() throws {
-        // TEST DATA: TODAY titration (2.0mg → 3.0mg)
-        // EXPECTATION: Tapping Complete Now should update profile to 3.0mg and show quick dose sheet
+        // TEST DATA: TODAY titration (1.0mg → 2.0mg)
+        // EXPECTATION: Tapping Complete Now should update profile to 2.0mg and show quick dose sheet
 
         // Wait for test data seeding
         let concentrationCard = app.otherElements.matching(identifier: "concentration-card-semaglutide").firstMatch
@@ -157,7 +157,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Reschedule updates titration date
 
     func testRescheduleTitrationUpdatesDate() throws {
-        // TEST DATA: TODAY titration (2.0mg → 3.0mg, scheduled for Oct 25, 2025)
+        // TEST DATA: TODAY titration (1.0mg → 2.0mg, scheduled for Oct 25, 2025)
         // EXPECTATION: Rescheduling should update the titration date and dialog shouldn't appear until new date
 
         // Wait for test data seeding
@@ -234,7 +234,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Remind Me Later allows dialog to reappear
 
     func testRemindMeLaterThenShowsDialogAgain() throws {
-        // TEST DATA: TODAY titration (2.0mg → 3.0mg)
+        // TEST DATA: TODAY titration (1.0mg → 2.0mg)
         // EXPECTATION: Remind Me Later should dismiss dialog, but it appears again on next Add tap
 
         // Wait for test data seeding
@@ -303,7 +303,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: No dialog for future titrations
 
     func testNoDialogForFutureTitrations() throws {
-        // TEST DATA: TODAY titration (2.0mg → 3.0mg) + tomorrow + +7 days
+        // TEST DATA: TODAY titration (1.0mg → 2.0mg) + tomorrow + +7 days
         // EXPECTATION: After completing TODAY titration, no dialog should appear (next is future)
 
         // Wait for test data seeding
@@ -360,6 +360,87 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         XCTAssertFalse(
             completeNowButton.exists,
             "Complete Now button should NOT appear when only future titrations exist"
+        )
+    }
+
+    // MARK: - ACCEPTANCE CRITERION: Dialog shows earliest pending titration
+
+    func testDialogShowsEarliestPendingTitration() throws {
+        // TEST DATA: Multiple titrations (TODAY: 1.0mg → 2.0mg, tomorrow, +7 days)
+        // EXPECTATION: Dialog should show earliest (TODAY) titration first
+
+        // Wait for test data seeding
+        let concentrationCard = app.otherElements.matching(identifier: "concentration-card-semaglutide").firstMatch
+        XCTAssertTrue(
+            concentrationCard.waitForExistence(timeout: 10),
+            "Dashboard should load with seeded data"
+        )
+
+        // Navigate to home and tap Add to show dialog
+        let tabBar = app.tabBars.firstMatch
+        let addTab = tabBar.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
+        addTab.tap()
+
+        // VERIFY: Dialog appears showing the EARLIEST (TODAY) titration
+        let dialogTitle = app.staticTexts["Dose Increase Scheduled"]
+        XCTAssertTrue(
+            dialogTitle.waitForExistence(timeout: 3),
+            "Dialog should appear for earliest titration"
+        )
+
+        // VERIFY: Shows TODAY titration (1.0mg → 2.0mg)
+        let fromDoseAmount = app.staticTexts["1.0 mg"]
+        XCTAssertTrue(
+            fromDoseAmount.exists,
+            "Dialog should show current dose 1.0mg from TODAY titration"
+        )
+
+        let toDoseAmount = app.staticTexts["2.0 mg"]
+        XCTAssertTrue(
+            toDoseAmount.exists,
+            "Dialog should show new dose 2.0mg from TODAY titration"
+        )
+
+        let scheduledDate = app.staticTexts["Scheduled for Oct 25, 2025"]
+        XCTAssertTrue(
+            scheduledDate.exists,
+            "Dialog should show TODAY's date (Oct 25) as the earliest titration"
+        )
+
+        // Complete the TODAY titration
+        let completeNowButton = app.buttons["Complete dose increase now and use new dose amount"]
+        XCTAssertTrue(completeNowButton.exists, "Complete Now button should exist")
+        completeNowButton.tap()
+
+        // Close QuickDoseSheet
+        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 3),
+            "Quick dose sheet should appear"
+        )
+
+        let cancelButton = app.buttons["quick-dose-cancel-button"]
+        XCTAssertTrue(cancelButton.exists, "Cancel button should exist")
+        cancelButton.tap()
+
+        // Wait for sheet to dismiss
+        XCTAssertFalse(
+            quickDoseSheet.waitForExistence(timeout: 2),
+            "Quick dose sheet should dismiss"
+        )
+
+        // VERIFY: After completing earliest, no dialog shows (next pending is tomorrow, which is future)
+        addTab.tap()
+
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 3),
+            "After completing earliest titration, Add should show quick dose sheet"
+        )
+
+        XCTAssertFalse(
+            dialogTitle.exists,
+            "Dialog should NOT appear after completing earliest titration (remaining are future)"
         )
     }
 }
