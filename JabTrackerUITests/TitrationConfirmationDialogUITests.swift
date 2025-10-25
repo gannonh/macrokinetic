@@ -443,4 +443,109 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dialog should NOT appear after completing earliest titration (remaining are future)"
         )
     }
+
+    // MARK: - ACCEPTANCE CRITERION: Dialog height shows full content
+
+    func testDialogHeightShowsFullContent() throws {
+        // TEST DATA: TODAY titration (1.0mg → 2.0mg)
+        // EXPECTATION: Dialog should display all content without truncation or scrolling
+
+        // Wait for test data seeding
+        let concentrationCard = app.otherElements.matching(identifier: "concentration-card-semaglutide").firstMatch
+        XCTAssertTrue(
+            concentrationCard.waitForExistence(timeout: 10),
+            "Dashboard should load with seeded data"
+        )
+
+        // Navigate to home and tap Add to show dialog
+        let tabBar = app.tabBars.firstMatch
+        let addTab = tabBar.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
+        addTab.tap()
+
+        // VERIFY: All dialog elements are visible (not truncated)
+        let dialogTitle = app.staticTexts["Dose Increase Scheduled"]
+        XCTAssertTrue(
+            dialogTitle.waitForExistence(timeout: 3),
+            "Dialog title should be visible"
+        )
+
+        let subtitle = app.staticTexts["Your scheduled dose change:"]
+        XCTAssertTrue(
+            subtitle.exists,
+            "Dialog subtitle should be visible"
+        )
+
+        let currentLabel = app.staticTexts["Current"]
+        XCTAssertTrue(
+            currentLabel.exists,
+            "Current dose label should be visible"
+        )
+
+        let currentAmount = app.staticTexts["1.0 mg"]
+        XCTAssertTrue(
+            currentAmount.exists,
+            "Current dose amount should be visible"
+        )
+
+        let newLabel = app.staticTexts["New"]
+        XCTAssertTrue(
+            newLabel.exists,
+            "New dose label should be visible"
+        )
+
+        let newAmount = app.staticTexts["2.0 mg"]
+        XCTAssertTrue(
+            newAmount.exists,
+            "New dose amount should be visible"
+        )
+
+        let scheduledDate = app.staticTexts["Scheduled for Oct 25, 2025"]
+        XCTAssertTrue(
+            scheduledDate.exists,
+            "Scheduled date should be visible"
+        )
+
+        // VERIFY: All three action buttons are visible and tappable
+        let completeNowButton = app.buttons["Complete dose increase now and use new dose amount"]
+        XCTAssertTrue(
+            completeNowButton.exists,
+            "Complete Now button should be visible"
+        )
+        XCTAssertTrue(
+            completeNowButton.isHittable,
+            "Complete Now button should be tappable (not hidden or off-screen)"
+        )
+
+        let rescheduleButton = app.buttons["Reschedule dose increase to a different date"]
+        XCTAssertTrue(
+            rescheduleButton.exists,
+            "Reschedule button should be visible"
+        )
+        XCTAssertTrue(
+            rescheduleButton.isHittable,
+            "Reschedule button should be tappable (not hidden or off-screen)"
+        )
+
+        let remindLaterButton = app.buttons["Dismiss dialog and remind me again on next dose entry"]
+        XCTAssertTrue(
+            remindLaterButton.exists,
+            "Remind Me Later button should be visible"
+        )
+        XCTAssertTrue(
+            remindLaterButton.isHittable,
+            "Remind Me Later button should be tappable (not hidden or off-screen)"
+        )
+
+        // VERIFY: Dialog height is sufficient - check button vertical positions
+        // If buttons are stacked properly with spacing, the last button should be lower than the first
+        let completeFrame = completeNowButton.frame
+        let remindFrame = remindLaterButton.frame
+
+        XCTAssertGreaterThan(
+            remindFrame.minY,
+            completeFrame.maxY,
+            "Remind Me Later button should be positioned below Complete Now button (proper vertical spacing)"
+        )
+    }
 }
