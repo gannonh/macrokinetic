@@ -153,4 +153,81 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Complete Now button should NOT appear after titration is completed"
         )
     }
+
+    // MARK: - ACCEPTANCE CRITERION: Reschedule updates titration date
+
+    func testRescheduleTitrationUpdatesDate() throws {
+        // TEST DATA: TODAY titration (2.0mg → 3.0mg, scheduled for Oct 25, 2025)
+        // EXPECTATION: Rescheduling should update the titration date and dialog shouldn't appear until new date
+
+        // Wait for test data seeding
+        let concentrationCard = app.otherElements.matching(identifier: "concentration-card-semaglutide").firstMatch
+        XCTAssertTrue(
+            concentrationCard.waitForExistence(timeout: 10),
+            "Dashboard should load with seeded data"
+        )
+
+        // Navigate to home and tap Add to show dialog
+        let tabBar = app.tabBars.firstMatch
+        let addTab = tabBar.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
+        addTab.tap()
+
+        // Verify dialog appeared
+        let rescheduleButton = app.buttons["Reschedule dose increase to a different date"]
+        XCTAssertTrue(
+            rescheduleButton.waitForExistence(timeout: 3),
+            "Reschedule button should appear"
+        )
+
+        // TAP: Reschedule button to show date picker sheet
+        rescheduleButton.tap()
+
+        // VERIFY: Reschedule sheet appears with date picker
+        let datePicker = app.datePickers["titration-reschedule-date-picker"]
+        XCTAssertTrue(
+            datePicker.waitForExistence(timeout: 2),
+            "Date picker should appear in reschedule sheet"
+        )
+
+        // SELECT: Tomorrow's date (Oct 26, 2025)
+        // iOS date picker uses format: "Day of week, Month Day"
+        let tomorrowButton = app.buttons["Sunday, October 26"]
+        XCTAssertTrue(
+            tomorrowButton.waitForExistence(timeout: 2),
+            "Tomorrow date button should exist in picker"
+        )
+        tomorrowButton.tap()
+
+        // TAP: Save button to confirm reschedule
+        let saveButton = app.buttons["titration-reschedule-save-button"]
+        XCTAssertTrue(saveButton.exists, "Save button should exist")
+        saveButton.tap()
+
+        // VERIFY: Sheet dismisses (date picker gone)
+        XCTAssertFalse(
+            datePicker.waitForExistence(timeout: 2),
+            "Date picker sheet should dismiss after save"
+        )
+
+        // VERIFY: Dialog dismisses (back to dashboard)
+        XCTAssertFalse(
+            rescheduleButton.waitForExistence(timeout: 2),
+            "Titration dialog should dismiss after rescheduling"
+        )
+
+        // VERIFY: Tapping Add again should NOT show dialog (titration rescheduled to future)
+        addTab.tap()
+
+        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 3),
+            "After rescheduling to future date, Add button should show quick dose sheet directly"
+        )
+
+        XCTAssertFalse(
+            rescheduleButton.exists,
+            "Reschedule button should NOT appear after titration is rescheduled to future"
+        )
+    }
 }
