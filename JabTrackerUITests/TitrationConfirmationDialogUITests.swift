@@ -230,4 +230,73 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Reschedule button should NOT appear after titration is rescheduled to future"
         )
     }
+
+    // MARK: - ACCEPTANCE CRITERION: Remind Me Later allows dialog to reappear
+
+    func testRemindMeLaterThenShowsDialogAgain() throws {
+        // TEST DATA: TODAY titration (2.0mg → 3.0mg)
+        // EXPECTATION: Remind Me Later should dismiss dialog, but it appears again on next Add tap
+
+        // Wait for test data seeding
+        let concentrationCard = app.otherElements.matching(identifier: "concentration-card-semaglutide").firstMatch
+        XCTAssertTrue(
+            concentrationCard.waitForExistence(timeout: 10),
+            "Dashboard should load with seeded data"
+        )
+
+        // Navigate to home and tap Add to show dialog
+        let tabBar = app.tabBars.firstMatch
+        let addTab = tabBar.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
+        addTab.tap()
+
+        // Verify dialog appeared
+        let remindLaterButton = app.buttons["Dismiss dialog and remind me again on next dose entry"]
+        XCTAssertTrue(
+            remindLaterButton.waitForExistence(timeout: 3),
+            "Remind Me Later button should appear"
+        )
+
+        // TAP: Remind Me Later button
+        remindLaterButton.tap()
+
+        // VERIFY: Dialog dismisses and QuickDoseSheet appears
+        XCTAssertFalse(
+            remindLaterButton.waitForExistence(timeout: 2),
+            "Dialog should dismiss after tapping Remind Me Later"
+        )
+
+        // After dismissing titration dialog, dose entry flow continues with QuickDoseSheet
+        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 3),
+            "Quick dose sheet should appear after dismissing titration dialog"
+        )
+
+        // Close the QuickDoseSheet
+        let cancelButton = app.buttons["quick-dose-cancel-button"]
+        XCTAssertTrue(cancelButton.exists, "Cancel button should exist")
+        cancelButton.tap()
+
+        // Wait for sheet to dismiss
+        XCTAssertFalse(
+            quickDoseSheet.waitForExistence(timeout: 2),
+            "Quick dose sheet should dismiss"
+        )
+
+        // VERIFY: Tapping Add again should show dialog again (titration still pending)
+        addTab.tap()
+
+        XCTAssertTrue(
+            remindLaterButton.waitForExistence(timeout: 3),
+            "After Remind Me Later, dialog should appear again on next Add tap"
+        )
+
+        // VERIFY: Dialog title is present (content already validated in Test 1)
+        let dialogTitle = app.staticTexts["Dose Increase Scheduled"]
+        XCTAssertTrue(
+            dialogTitle.waitForExistence(timeout: 2),
+            "Dialog title should exist, confirming same titration dialog appeared"
+        )
+    }
 }
