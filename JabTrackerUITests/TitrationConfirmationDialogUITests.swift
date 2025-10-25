@@ -299,4 +299,67 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dialog title should exist, confirming same titration dialog appeared"
         )
     }
+
+    // MARK: - ACCEPTANCE CRITERION: No dialog for future titrations
+
+    func testNoDialogForFutureTitrations() throws {
+        // TEST DATA: TODAY titration (2.0mg → 3.0mg) + tomorrow + +7 days
+        // EXPECTATION: After completing TODAY titration, no dialog should appear (next is future)
+
+        // Wait for test data seeding
+        let concentrationCard = app.otherElements.matching(identifier: "concentration-card-semaglutide").firstMatch
+        XCTAssertTrue(
+            concentrationCard.waitForExistence(timeout: 10),
+            "Dashboard should load with seeded data"
+        )
+
+        // Navigate to home and tap Add to show dialog
+        let tabBar = app.tabBars.firstMatch
+        let homeTab = tabBar.buttons["Home"]
+        if homeTab.exists {
+            homeTab.tap()
+        }
+
+        let addTab = tabBar.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
+        addTab.tap()
+
+        // Complete the TODAY titration
+        let completeNowButton = app.buttons["Complete dose increase now and use new dose amount"]
+        XCTAssertTrue(
+            completeNowButton.waitForExistence(timeout: 3),
+            "Complete Now button should appear for TODAY titration"
+        )
+        completeNowButton.tap()
+
+        // QuickDoseSheet should appear - close it
+        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 3),
+            "Quick dose sheet should appear"
+        )
+
+        let cancelButton = app.buttons["quick-dose-cancel-button"]
+        XCTAssertTrue(cancelButton.exists, "Cancel button should exist")
+        cancelButton.tap()
+
+        // Wait for sheet to dismiss
+        XCTAssertFalse(
+            quickDoseSheet.waitForExistence(timeout: 2),
+            "Quick dose sheet should dismiss"
+        )
+
+        // VERIFY: Tapping Add again should show QuickDoseSheet directly (no dialog for future titrations)
+        addTab.tap()
+
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: 3),
+            "After completing today's titration, Add should show quick dose sheet (no dialog for future titrations)"
+        )
+
+        XCTAssertFalse(
+            completeNowButton.exists,
+            "Complete Now button should NOT appear when only future titrations exist"
+        )
+    }
 }
