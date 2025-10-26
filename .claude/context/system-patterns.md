@@ -344,6 +344,24 @@ struct UserAnalyticsSummary {
 - **Clear Separation**: User prefers incremental commits with clear separation between different work items
 - **Pattern**: Complete work → commit → start new task → complete → commit (not batch commits)
 
+#### Dynamic Date Calculations in Tests (Issue #286)
+- **CRITICAL ANTI-PATTERN**: NEVER hardcode dates in E2E tests - "Are you joking? You cant hardcode the date. The test will fail tomorrow if you do"
+- **Root Problem**: Hardcoded dates like "Oct 25, 2025" make tests time-dependent and fail when run on different dates
+- **Correct Solution**: Use `Date()`, `Calendar`, and `DateFormatter` to calculate dates dynamically at runtime
+- **Display Format**: Use `dateFormatter.dateFormat = "MMM d, yyyy"` for display dates (e.g., "Oct 26, 2025")
+- **Picker Format**: Use `dateFormatter.dateFormat = "EEEE, MMMM d"` for iOS date picker buttons (e.g., "Sunday, October 26")
+- **Relative Date Calculations**: Use `Calendar.current.date(byAdding: .day, value: 1, to: Date())` for tomorrow, yesterday, etc.
+- **Example Pattern**:
+```swift
+let dateFormatter = DateFormatter()
+dateFormatter.dateFormat = "MMM d, yyyy"
+let todayString = dateFormatter.string(from: Date())
+let expectedText = "Scheduled for \(todayString)"
+XCTAssertTrue(app.staticTexts[expectedText].exists)
+```
+- **Impact**: Tests remain reliable regardless of when they're executed - critical for CI/CD pipelines
+- **Medical App Context**: Date-dependent medical features (scheduled titrations, dose timing) require dynamic date testing
+
 ## Security & Defensive Programming Patterns (Issue #55)
 
 ### Medical App Crash Prevention
@@ -431,6 +449,7 @@ struct UserAnalyticsSummary {
 - **General Guideline**: Aim for <1,000 chart points for <10s generation, <10,000 points for <60s generation on typical iOS devices
 
 ## Update History
+- 2025-10-26T09:00:00Z: Added Dynamic Date Calculations in Tests pattern from Issue #286 - critical anti-pattern for hardcoded dates, proper use of Date() and DateFormatter for reliable CI/CD testing
 - 2025-10-21T22:25:26Z: Added Issue #180 afternoon session patterns - debug-first accessibility discovery, test file organization for maintainability, user smoke testing workflow with incremental commits
 - 2025-10-20T14:22:56Z: Added E2E Testing Excellence Patterns from Issue #177 - iterative E2E development process, XCUITest element targeting, performance testing for E2E, and accessibility testing without simulation
 - 2025-10-15T18:06:05Z: Added Calendar Integration Patterns from Issue #178 - SwiftUI DatePicker range validation, placeholder method anti-pattern, and chart performance tuning for medical apps
