@@ -28,7 +28,6 @@ struct TitrationConfirmationDialog: View {
     // MARK: - State
 
     @State private var showingReschedulePicker = false
-    @State private var rescheduleDate: Date = Date()
     @State private var isProcessing = false
     @State private var errorMessage: String?
 
@@ -213,6 +212,9 @@ struct TitrationConfirmationDialog: View {
     }
 
     private func handleReschedule(_ newDate: Date) {
+        // Dismiss sheet before processing to ensure error visibility
+        showingReschedulePicker = false
+
         isProcessing = true
         errorMessage = nil
 
