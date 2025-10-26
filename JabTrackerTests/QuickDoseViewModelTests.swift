@@ -542,8 +542,8 @@ struct QuickDoseViewModelTests {
 
         #expect(viewModel.selectedMedicationProfile?.id == profile.id)
         #expect(viewModel.doseAmount == 1.5)
-        #expect(viewModel.doseDate.timeIntervalSince(editTimestamp) < 60)  // Within 1 minute
-        #expect(viewModel.doseTime.timeIntervalSince(editTimestamp) < 60)
+        #expect(abs(viewModel.doseDate.timeIntervalSince(editTimestamp)) < 60)  // Within 1 minute
+        #expect(abs(viewModel.doseTime.timeIntervalSince(editTimestamp)) < 60)
         #expect(viewModel.selectedInjectionSite == "Abdomen")
         #expect(viewModel.notes == "Edit test notes")
         #expect(!viewModel.isLoading)
