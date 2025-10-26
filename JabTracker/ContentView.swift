@@ -10,9 +10,13 @@ struct ContentView: View {
     @State private var showingTitrationDialog = false
     @State private var pendingTitration: DoseTitration?
     @State private var showingSuccessMessage = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
     @State private var selectedTab = "home"
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ContentView")
 
     init() {
         let pkEngine = PharmacokineticsEngine()
@@ -59,6 +63,11 @@ struct ContentView: View {
             onDismiss: {
                 // Clear pending titration state to avoid stale references
                 self.pendingTitration = nil
+
+                // Reset remind-later flag when quick dose sheet is dismissed
+                if self.quickDoseViewModel.titrationRemindLater {
+                    self.quickDoseViewModel.resetRemindLaterFlag()
+                }
             },
             content: {
                 QuickDoseSheet(
@@ -103,6 +112,11 @@ struct ContentView: View {
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)
         }
+        .alert("Error", isPresented: self.$showingErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(self.errorMessage)
+        }
         .overlay(alignment: .top) {
             if self.showingSuccessMessage {
                 Text("Dose logged successfully!")
@@ -132,34 +146,54 @@ struct ContentView: View {
     private func handleTitrationComplete() {
         guard let titration = pendingTitration else { return }
 
-        // Business logic in ViewModel
-        try? quickDoseViewModel.completeTitration(titration, context: modelContext)
+        // Business logic in ViewModel with explicit error handling
+        do {
+            try quickDoseViewModel.completeTitration(titration, context: modelContext)
 
-        // UI state: show quick dose sheet with new dose amount
-        showingQuickDoseSheet = true
+            // Clear state and dismiss titration dialog first
+            pendingTitration = nil
+            showingTitrationDialog = false
+
+            // Show quick dose sheet after dialog dismissal to avoid presentation conflict
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.showingQuickDoseSheet = true
+            }
+        } catch {
+            logger.error("Failed to complete titration: \(error.localizedDescription)")
+            errorMessage = "Failed to complete titration: \(error.localizedDescription)"
+            showingErrorAlert = true
+        }
     }
 
     private func handleTitrationReschedule(_ newDate: Date) {
         guard let titration = pendingTitration else { return }
 
-        // Business logic in ViewModel
-        try? quickDoseViewModel.rescheduleTitration(titration, to: newDate, context: modelContext)
+        // Business logic in ViewModel with explicit error handling
+        do {
+            try quickDoseViewModel.rescheduleTitration(titration, to: newDate, context: modelContext)
 
-        // UI state: dismiss dialog
-        showingTitrationDialog = false
+            // Clear state and dismiss dialog on success
+            pendingTitration = nil
+            showingTitrationDialog = false
+        } catch {
+            logger.error("Failed to reschedule titration: \(error.localizedDescription)")
+            errorMessage = "Failed to reschedule titration: \(error.localizedDescription)"
+            showingErrorAlert = true
+        }
     }
 
     private func handleTitrationRemindLater() {
         // Set flag temporarily to allow correct flow
         quickDoseViewModel.setTitrationRemindLater(true)
 
-        // Immediately schedule reset so next tap will show dialog
-        DispatchQueue.main.async {
-            self.quickDoseViewModel.resetRemindLaterFlag()
-        }
+        // Dismiss titration dialog first to avoid presentation conflict
+        showingTitrationDialog = false
 
-        // UI state: show quick dose sheet
-        showingQuickDoseSheet = true
+        // Show quick dose sheet after dialog dismissal
+        // Note: remind-later flag will be reset in sheet's onDismiss callback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.showingQuickDoseSheet = true
+        }
     }
 }
 
