@@ -3,6 +3,7 @@
 //  JabTracker
 //
 
+import OSLog
 import SwiftData
 import SwiftUI
 
@@ -20,10 +21,16 @@ struct QuickDoseButton: View {
     @State private var showingTitrationDialog = false
     @State private var pendingTitration: DoseTitration?
     @State private var showingSuccessMessage = false
+    @State private var titrationError: String?
+    @State private var showingTitrationError = false
 
     // Dashboard update callbacks
     let onDoseSaved: (() -> Void)?
     let onCalculationsUpdated: (() -> Void)?
+
+    // MARK: - Logger
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseButton")
 
     // MARK: - Initialization
 
@@ -81,6 +88,13 @@ struct QuickDoseButton: View {
         .onAppear {
             self.viewModel.loadSmartDefaults(context: self.modelContext)
         }
+        .alert("Titration Error", isPresented: self.$showingTitrationError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let error = titrationError {
+                Text(error)
+            }
+        }
         .overlay(alignment: .top) {
             if self.showingSuccessMessage {
                 Text("Dose logged successfully!")
@@ -109,19 +123,19 @@ struct QuickDoseButton: View {
 
     private func handleButtonTap() {
         // Check if there's a pending titration that should trigger dialog
-        print("🔍 QuickDoseButton.handleButtonTap called")
-        print("🔍 Checking shouldShowTitrationDialog()...")
+        logger.debug("QuickDoseButton.handleButtonTap called")
+        logger.debug("Checking shouldShowTitrationDialog()...")
 
         let shouldShow = viewModel.shouldShowTitrationDialog()
-        print("🔍 shouldShowTitrationDialog() returned: \(shouldShow)")
+        logger.debug("shouldShowTitrationDialog() returned: \(shouldShow)")
 
         if shouldShow {
             pendingTitration = viewModel.getPendingTitration()
-            print("🔍 Got pending titration: \(pendingTitration?.id.uuidString ?? "nil")")
-            print("🔍 Setting showingTitrationDialog = true")
+            logger.debug("Got pending titration: \(pendingTitration?.id.uuidString ?? "nil")")
+            logger.debug("Setting showingTitrationDialog = true")
             showingTitrationDialog = true
         } else {
-            print("🔍 No pending titration, showing QuickDoseSheet")
+            logger.debug("No pending titration, showing QuickDoseSheet")
             showingQuickDoseSheet = true
         }
     }
@@ -129,31 +143,45 @@ struct QuickDoseButton: View {
     private func handleTitrationComplete() {
         guard let titration = pendingTitration else { return }
 
-        // Business logic in ViewModel
-        try? viewModel.completeTitration(titration, context: modelContext)
+        do {
+            // Business logic in ViewModel
+            try viewModel.completeTitration(titration, context: modelContext)
+            logger.info("Titration completed successfully")
 
-        // UI state: show quick dose sheet with new dose amount
-        showingQuickDoseSheet = true
+            // UI state: show quick dose sheet with new dose amount on success
+            showingQuickDoseSheet = true
+        } catch {
+            // Surface error to user and log failure
+            logger.error("Failed to complete titration: \(error.localizedDescription)")
+            titrationError = "Failed to complete titration: \(error.localizedDescription)"
+            showingTitrationError = true
+        }
     }
 
     private func handleTitrationReschedule(_ newDate: Date) {
         guard let titration = pendingTitration else { return }
 
-        // Business logic in ViewModel
-        try? viewModel.rescheduleTitration(titration, to: newDate, context: modelContext)
+        do {
+            // Business logic in ViewModel
+            try viewModel.rescheduleTitration(titration, to: newDate, context: modelContext)
+            logger.info("Titration rescheduled successfully to \(newDate)")
 
-        // UI state: dismiss dialog
-        showingTitrationDialog = false
+            // UI state: dismiss dialog only on success
+            showingTitrationDialog = false
+        } catch {
+            // Surface error to user and keep dialog open
+            logger.error("Failed to reschedule titration: \(error.localizedDescription)")
+            titrationError = "Failed to reschedule titration: \(error.localizedDescription)"
+            showingTitrationError = true
+        }
     }
 
     private func handleTitrationRemindLater() {
-        // Set flag temporarily to allow correct flow
+        // Set flag to skip titration dialog for this dose entry
+        // Note: Flag will be reset in saveDose() after successful dose entry (line 393)
+        // This ensures single source of truth and avoids race conditions
         viewModel.setTitrationRemindLater(true)
-
-        // Immediately schedule reset so next tap will show dialog
-        DispatchQueue.main.async {
-            self.viewModel.resetRemindLaterFlag()
-        }
+        logger.debug("Titration reminder deferred - flag will reset after dose save")
 
         // UI state: show quick dose sheet
         showingQuickDoseSheet = true

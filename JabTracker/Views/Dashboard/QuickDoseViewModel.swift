@@ -161,11 +161,14 @@ class QuickDoseViewModel: ObservableObject {
                 self.doseAmount = editData.amount
                 self.doseDate = editData.timestamp
                 self.doseTime = editData.timestamp
-                self.selectedInjectionSite = editData.site ?? ""
+                let editSite = editData.site ?? ""
                 self.notes = editData.notes ?? ""
 
-                // Update recommended injection sites
+                // Update recommended injection sites (but preserve edit data site)
                 self.updateRecommendedInjectionSites()
+
+                // Restore the site from edit data (don't use rotation default)
+                self.selectedInjectionSite = editSite
 
                 self.isLoading = false
 
