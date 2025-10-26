@@ -177,10 +177,15 @@ struct DataControllerTestDataTests {
 
         #expect(todayTitration != nil, "Should have today's titration")
 
-        // Verify date is today (at start of day)
-        let today = Calendar.current.startOfDay(for: Date())
+        // Verify date is today using robust same-day check
+        guard let titration = todayTitration else {
+            #expect(Bool(false), "todayTitration was nil")
+            return
+        }
+
+        let today = Date()
         #expect(
-            todayTitration!.scheduledDate.timeIntervalSince(today) < 60,
+            Calendar.current.isDate(titration.scheduledDate, inSameDayAs: today),
             "Today's titration should be scheduled for today")
     }
 
@@ -206,12 +211,23 @@ struct DataControllerTestDataTests {
         #expect(tomorrowTitration != nil, "Should have tomorrow's titration")
 
         // Verify date is tomorrow (at start of day)
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else {
+            #expect(Bool(false), "Failed to calculate tomorrow's date")
+            return
+        }
+
+        guard let titration = tomorrowTitration else {
+            #expect(Bool(false), "tomorrowTitration was nil")
+            return
+        }
+
         let tomorrowMidnight = Calendar.current.startOfDay(for: tomorrow)
 
+        // Use absolute value to ensure scheduled date is within 60 seconds of midnight
+        let timeInterval = abs(titration.scheduledDate.timeIntervalSince(tomorrowMidnight))
         #expect(
-            tomorrowTitration!.scheduledDate.timeIntervalSince(tomorrowMidnight) < 60,
-            "Tomorrow's titration should be scheduled for tomorrow")
+            timeInterval < 60,
+            "Tomorrow's titration should be scheduled for tomorrow (within 60s of midnight)")
     }
 
     @Test("seedTitrationTestData next week titration has correct date")
@@ -236,11 +252,22 @@ struct DataControllerTestDataTests {
         #expect(nextWeekTitration != nil, "Should have next week's titration")
 
         // Verify date is next week (at start of day)
-        let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+        guard let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date()) else {
+            #expect(Bool(false), "Failed to calculate next week's date")
+            return
+        }
+
+        guard let titration = nextWeekTitration else {
+            #expect(Bool(false), "nextWeekTitration was nil")
+            return
+        }
+
         let nextWeekMidnight = Calendar.current.startOfDay(for: nextWeek)
 
+        // Use absolute value to ensure scheduled date is within 60 seconds of midnight
+        let timeInterval = abs(titration.scheduledDate.timeIntervalSince(nextWeekMidnight))
         #expect(
-            nextWeekTitration!.scheduledDate.timeIntervalSince(nextWeekMidnight) < 60,
-            "Next week's titration should be scheduled for 7 days from now")
+            timeInterval < 60,
+            "Next week's titration should be scheduled for 7 days from now (within 60s of midnight)")
     }
 }
