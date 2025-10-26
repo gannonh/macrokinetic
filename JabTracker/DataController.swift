@@ -5,6 +5,7 @@
 
 import CloudKit
 import Foundation
+import OSLog
 import SwiftData
 
 enum SyncStatus {
@@ -19,6 +20,8 @@ enum SyncStatus {
 @MainActor
 class DataController: ObservableObject {
     static let shared = DataController()
+
+    private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DataController")
 
     @Published var syncStatus: SyncStatus = .unknown
     @Published var isCloudKitEnabled: Bool = false
@@ -224,7 +227,9 @@ class DataController: ObservableObject {
         print("🌱 Seeding titration test data for user: \(testUser.email ?? "unknown")")
 
         let medication = createTestMedicationProfile(context: context, user: testUser)
-        let yesterdayDose = createTestDose(context: context, user: testUser, medication: medication)
+        guard let yesterdayDose = createTestDose(context: context, user: testUser, medication: medication) else {
+            return
+        }
         createTestSchedule(context: context, medication: medication, firstDose: yesterdayDose)
         createTestTitrations(context: context, medication: medication)
 
@@ -232,9 +237,8 @@ class DataController: ObservableObject {
     }
 
     private func createTestMedicationProfile(context: ModelContext, user: User) -> MedicationProfile {
-        guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) else {
-            fatalError("Failed to calculate medication start date")
-        }
+        // Gracefully handle date calculation failure by using current date as fallback
+        let startDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
 
         let medication = MedicationProfile(
             genericName: "semaglutide",
@@ -247,9 +251,9 @@ class DataController: ObservableObject {
         return medication
     }
 
-    private func createTestDose(context: ModelContext, user: User, medication: MedicationProfile) -> Dose {
+    private func createTestDose(context: ModelContext, user: User, medication: MedicationProfile) -> Dose? {
         guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) else {
-            fatalError("Failed to calculate yesterday's date")
+            return nil
         }
 
         let yesterdayDose = Dose(
@@ -315,7 +319,8 @@ class DataController: ObservableObject {
 
         // Create tomorrow titration at midnight (start of day)
         guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else {
-            fatalError("Failed to calculate tomorrow's date")
+            Self.logger.warning("Failed to calculate tomorrow's date, skipping remaining titrations")
+            return
         }
         let tomorrowMidnight = Calendar.current.startOfDay(for: tomorrow)
 
@@ -330,7 +335,8 @@ class DataController: ObservableObject {
 
         // Create next week titration at midnight (start of day)
         guard let nextWeek = Calendar.current.date(byAdding: .day, value: 7, to: Date()) else {
-            fatalError("Failed to calculate next week's date")
+            Self.logger.warning("Failed to calculate next week's date, skipping remaining titrations")
+            return
         }
         let nextWeekMidnight = Calendar.current.startOfDay(for: nextWeek)
 
