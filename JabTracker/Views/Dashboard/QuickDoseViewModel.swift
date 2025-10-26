@@ -382,8 +382,10 @@ class QuickDoseViewModel: ObservableObject {
         try context.save()
         logger.debug("Titration completed and saved")
 
-        // Reload smart defaults with new dose amount
-        loadSmartDefaults(context: context)
+        // Update dose amount synchronously to reflect new titration dose
+        // This ensures UI shows the correct dose immediately when QuickDoseSheet appears
+        updateDoseAmount()
+        logger.debug("Updated dose amount to \(self.doseAmount)mg")
     }
 
     /// Reschedules a titration to a new date
