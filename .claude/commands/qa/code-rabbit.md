@@ -1,6 +1,6 @@
 ---
 description: "Handle CodeRabbit review comments with context-aware discretion."
-argument-hint: "One or more CodeRabbit review comments."
+argument-hint: "One or more CodeRabbit review comments (paste or file path)"
 ---
 
 # CodeRabbit Review Handler
