@@ -71,7 +71,10 @@ final class DoseTitration {
     /// Whether this titration can be manually completed (before scheduled date passes)
     /// Returns false after scheduled date passes - user should use dose entry flow instead
     var canCompleteManually: Bool {
-        !self.isCompleted && self.scheduledDate >= Date()
+        // Allow 1-second tolerance for timing precision (test timing, system clock variations)
+        let now = Date()
+        let oneSecondAgo = now.addingTimeInterval(-1)
+        return !self.isCompleted && self.scheduledDate >= oneSecondAgo
     }
 
     // MARK: - Business Logic

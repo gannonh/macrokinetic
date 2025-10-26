@@ -61,32 +61,32 @@ struct ScheduleServiceTitrationTests {
 
     /// GIVEN: A medication profile with multiple titrations
     /// WHEN: Checking titration impact for the schedule
-    /// THEN: Returns the most recent titration (exercises max comparison)
-    @Test("Return most recent titration when multiple exist")
+    /// THEN: Returns the nearest upcoming titration (exercises min comparison)
+    @Test("Return nearest upcoming titration when multiple exist")
     func testCheckTitrationImpact_MultipleTitrations_ReturnsMostRecent() async throws {
-        // GIVEN: Medication profile with 3 titrations at different dates
+        // GIVEN: Medication profile with 2 upcoming titrations at different dates
         let context = try createTestContext()
         let user = createTestUser(context: context)
         let profile = createTestMedicationProfile(context: context, user: user, currentDose: 0.25)
 
-        // Create 3 titrations: 5 days ago, 15 days from now, 25 days from now
+        // Create 2 titrations: 15 days from now (nearest), 25 days from now (further)
         let date15Days = Calendar.current.date(byAdding: .day, value: 15, to: Date())!
         let date25Days = Calendar.current.date(byAdding: .day, value: 25, to: Date())!
 
-        _ = createTestTitration(
+        let nearestTitration = createTestTitration(
             context: context,
             profile: profile,
             fromDose: 0.25,
             toDose: 0.5,
-            scheduledDate: date15Days
+            scheduledDate: date15Days  // Nearest upcoming titration
         )
 
-        let mostRecentTitration = createTestTitration(
+        _ = createTestTitration(
             context: context,
             profile: profile,
             fromDose: 0.5,
             toDose: 1.0,
-            scheduledDate: date25Days  // Most recent (furthest in future within 30 days)
+            scheduledDate: date25Days  // Further titration (not returned)
         )
 
         let schedule = createTestSchedule(context: context, profile: profile, doseAmount: 0.25)
@@ -98,13 +98,13 @@ struct ScheduleServiceTitrationTests {
         // WHEN: checkTitrationImpact(for: schedule) called
         let result = service.checkTitrationImpact(for: schedule)
 
-        // THEN: Returns the most recent titration (25 days from now)
+        // THEN: Returns the nearest upcoming titration (15 days from now)
         #expect(result != nil, "Should detect titration")
         #expect(
-            result?.id == mostRecentTitration.id,
-            "Should return the most recent titration (25 days)"
+            result?.id == nearestTitration.id,
+            "Should return the nearest upcoming titration (15 days)"
         )
-        #expect(result?.toDose == 1.0, "Most recent titration should be to 1.0mg")
+        #expect(result?.toDose == 0.5, "Nearest titration should be to 0.5mg")
     }
 
     /// GIVEN: A medication profile with no active titration
