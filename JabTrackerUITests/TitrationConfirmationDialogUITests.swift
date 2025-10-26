@@ -72,8 +72,15 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         let toDoseAmount = app.staticTexts["2.0 mg"]
         XCTAssertTrue(toDoseAmount.exists, "New dose amount should be displayed")
 
-        let scheduledDate = app.staticTexts["Scheduled for Oct 25, 2025"]
-        XCTAssertTrue(scheduledDate.exists, "Scheduled date should be displayed")
+        // VERIFY: Scheduled date is TODAY's date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        let todayString = dateFormatter.string(from: Date())
+        let expectedScheduledDate = "Scheduled for \(todayString)"
+
+        let scheduledDate = app.staticTexts[expectedScheduledDate]
+        XCTAssertTrue(
+            scheduledDate.exists, "Scheduled date should be displayed as today's date: \(expectedScheduledDate)")
 
         // VERIFY: All three action buttons exist
         XCTAssertTrue(
@@ -157,7 +164,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
     // MARK: - ACCEPTANCE CRITERION: Reschedule updates titration date
 
     func testRescheduleTitrationUpdatesDate() throws {
-        // TEST DATA: TODAY titration (1.0mg → 2.0mg, scheduled for Oct 25, 2025)
+        // TEST DATA: TODAY titration (1.0mg → 2.0mg, scheduled for Oct 26, 2025)
         // EXPECTATION: Rescheduling should update the titration date and dialog shouldn't appear until new date
 
         // Wait for test data seeding
@@ -190,12 +197,17 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Date picker should appear in reschedule sheet"
         )
 
-        // SELECT: Tomorrow's date (Oct 26, 2025)
+        // SELECT: Tomorrow's date
         // iOS date picker uses format: "Day of week, Month Day"
-        let tomorrowButton = app.buttons["Sunday, October 26"]
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        let datePickerFormatter = DateFormatter()
+        datePickerFormatter.dateFormat = "EEEE, MMMM d"
+        let tomorrowPickerString = datePickerFormatter.string(from: tomorrow)
+
+        let tomorrowButton = app.buttons[tomorrowPickerString]
         XCTAssertTrue(
             tomorrowButton.waitForExistence(timeout: 2),
-            "Tomorrow date button should exist in picker"
+            "Tomorrow date button should exist in picker: \(tomorrowPickerString)"
         )
         tomorrowButton.tap()
 
@@ -402,10 +414,16 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dialog should show new dose 2.0mg from TODAY titration"
         )
 
-        let scheduledDate = app.staticTexts["Scheduled for Oct 25, 2025"]
+        // VERIFY: Scheduled date is TODAY's date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        let todayString = dateFormatter.string(from: Date())
+        let expectedScheduledDate = "Scheduled for \(todayString)"
+
+        let scheduledDate = app.staticTexts[expectedScheduledDate]
         XCTAssertTrue(
             scheduledDate.exists,
-            "Dialog should show TODAY's date (Oct 25) as the earliest titration"
+            "Dialog should show TODAY's date as the earliest titration: \(expectedScheduledDate)"
         )
 
         // Complete the TODAY titration
@@ -500,10 +518,16 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "New dose amount should be visible"
         )
 
-        let scheduledDate = app.staticTexts["Scheduled for Oct 25, 2025"]
+        // VERIFY: Scheduled date is TODAY's date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        let todayString = dateFormatter.string(from: Date())
+        let expectedScheduledDate = "Scheduled for \(todayString)"
+
+        let scheduledDate = app.staticTexts[expectedScheduledDate]
         XCTAssertTrue(
             scheduledDate.exists,
-            "Scheduled date should be visible"
+            "Scheduled date should be visible: \(expectedScheduledDate)"
         )
 
         // VERIFY: All three action buttons are visible and tappable
