@@ -74,6 +74,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
 
         // VERIFY: Scheduled date is TODAY's date
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "MMM d, yyyy"
         let todayString = dateFormatter.string(from: Date())
         let expectedScheduledDate = "Scheduled for \(todayString)"
@@ -133,8 +134,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Quick dose sheet should appear after completing titration"
         )
 
-        // NOTE: Profile update to 3.0mg happens but may not reflect in quick dose sheet immediately
-        // This is acceptable - the key behavior is that the titration dialog doesn't appear again
+        // NOTE: Profile update to 2.0mg happens but may not reflect in quick dose sheet immediately
+        // (1.0mg → 2.0mg titration) - This is acceptable - the key behavior is that the titration dialog doesn't appear again
 
         // Close the sheet to verify titration was marked complete
         let cancelButton = app.buttons["quick-dose-cancel-button"]
@@ -199,8 +200,12 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
 
         // SELECT: Tomorrow's date
         // iOS date picker uses format: "Day of week, Month Day"
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else {
+            XCTFail("Failed to calculate tomorrow's date")
+            return
+        }
         let datePickerFormatter = DateFormatter()
+        datePickerFormatter.locale = Locale(identifier: "en_US_POSIX")
         datePickerFormatter.dateFormat = "EEEE, MMMM d"
         let tomorrowPickerString = datePickerFormatter.string(from: tomorrow)
 
@@ -416,6 +421,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
 
         // VERIFY: Scheduled date is TODAY's date
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "MMM d, yyyy"
         let todayString = dateFormatter.string(from: Date())
         let expectedScheduledDate = "Scheduled for \(todayString)"
@@ -520,6 +526,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
 
         // VERIFY: Scheduled date is TODAY's date
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "MMM d, yyyy"
         let todayString = dateFormatter.string(from: Date())
         let expectedScheduledDate = "Scheduled for \(todayString)"
