@@ -97,6 +97,7 @@
           "Utilities/DoseValidation.swift",
           "Utilities/DoseDefaults.swift",
           "Utilities/TimeConstants.swift",
+          "Utilities/TitrationErrorMessages.swift",
           "Views/Analytics/ConcentrationChartAccessibility.swift"
         ]
       },

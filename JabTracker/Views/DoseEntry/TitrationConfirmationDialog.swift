@@ -206,7 +206,7 @@ struct TitrationConfirmationDialog: View {
             dismiss()
 
         } catch {
-            errorMessage = "Failed to complete titration: \(error.localizedDescription)"
+            errorMessage = TitrationErrorMessages.completionFailed(error)
             isProcessing = false
         }
     }
@@ -233,7 +233,7 @@ struct TitrationConfirmationDialog: View {
             dismiss()
 
         } catch {
-            errorMessage = "Failed to reschedule: \(error.localizedDescription)"
+            errorMessage = TitrationErrorMessages.rescheduleFailed(error)
             isProcessing = false
         }
     }

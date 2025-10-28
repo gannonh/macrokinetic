@@ -160,7 +160,7 @@ struct QuickDoseButton: View {
         } catch {
             // Surface error to user and log failure
             logger.error("Failed to complete titration: \(error.localizedDescription)")
-            titrationError = "Failed to complete titration: \(error.localizedDescription)"
+            titrationError = TitrationErrorMessages.completionFailed(error)
             showingTitrationError = true
         }
     }
@@ -178,7 +178,7 @@ struct QuickDoseButton: View {
         } catch {
             // Surface error to user and keep dialog open
             logger.error("Failed to reschedule titration: \(error.localizedDescription)")
-            titrationError = "Failed to reschedule titration: \(error.localizedDescription)"
+            titrationError = TitrationErrorMessages.rescheduleFailed(error)
             showingTitrationError = true
         }
     }

@@ -19,7 +19,9 @@ extension NotificationService {
     // MARK: - Private Properties
 
     /// Logger for action handling operations
-    private let actionLogger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService.Actions")
+    private var actionLogger: Logger {
+        Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService.Actions")
+    }
 
     // MARK: - Action Handling
 
