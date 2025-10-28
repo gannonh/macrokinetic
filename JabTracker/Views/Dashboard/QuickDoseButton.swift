@@ -28,6 +28,13 @@ struct QuickDoseButton: View {
     let onDoseSaved: (() -> Void)?
     let onCalculationsUpdated: (() -> Void)?
 
+    // MARK: - Constants
+
+    private enum UITiming {
+        /// Duration to display success message after dose save
+        static let successMessageDuration: TimeInterval = 2.0
+    }
+
     // MARK: - Logger
 
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseButton")
@@ -108,8 +115,8 @@ struct QuickDoseButton: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .zIndex(1)
                     .onAppear {
-                        // Auto-dismiss success message after 2 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        // Auto-dismiss success message after configured duration
+                        DispatchQueue.main.asyncAfter(deadline: .now() + UITiming.successMessageDuration) {
                             withAnimation {
                                 self.showingSuccessMessage = false
                             }
