@@ -92,9 +92,9 @@ struct ContentView: View {
             }
         )
         .onChange(of: self.selectedTab) { oldValue, newValue in
-            print("🔍 ContentView: Tab changed from \(oldValue) to \(newValue)")
+            logger.debug("Tab changed from \(oldValue) to \(newValue)")
             if newValue == "add" {
-                print("🔍 ContentView: Add tab selected")
+                logger.debug("Add tab selected")
 
                 // Check for pending titration using ViewModel business logic
                 if quickDoseViewModel.shouldShowTitrationDialog() {
@@ -106,7 +106,7 @@ struct ContentView: View {
 
                 // Reset tab selection to previous tab so + doesn't stay selected
                 self.selectedTab = oldValue
-                print("🔍 ContentView: Reset tab selection back to \(oldValue)")
+                logger.debug("Reset tab selection back to \(oldValue)")
             }
         }
         .onAppear {
