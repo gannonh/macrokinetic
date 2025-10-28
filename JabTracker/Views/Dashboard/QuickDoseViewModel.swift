@@ -13,9 +13,7 @@ import SwiftData
 class QuickDoseViewModel: ObservableObject {
     // MARK: - Logger
 
-    private var logger: Logger {
-        Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseViewModel")
-    }
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseViewModel")
 
     // MARK: - Published Properties
 
