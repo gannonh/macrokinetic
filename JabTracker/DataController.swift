@@ -113,7 +113,7 @@ class DataController: ObservableObject {
             }
         } catch {
             // If CloudKit setup fails, try without CloudKit as fallback
-            print("CloudKit setup failed, falling back to local storage: \(error)")
+            Self.logger.warning("CloudKit setup failed, falling back to local storage: \(error.localizedDescription)")
             let fallbackConfiguration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: inMemory,
@@ -168,7 +168,7 @@ class DataController: ObservableObject {
                 self.syncStatus = .unknown
             }
         } catch {
-            print("Error checking CloudKit status: \(error)")
+            Self.logger.error("Error checking CloudKit status: \(error.localizedDescription)")
             self.syncStatus = .unavailable
         }
     }
@@ -211,7 +211,7 @@ class DataController: ObservableObject {
         // Check if titration test data already exists
         let titrationDescriptor = FetchDescriptor<DoseTitration>()
         if let existingTitrations = try? context.fetch(titrationDescriptor), !existingTitrations.isEmpty {
-            print("⚠️ Titration test data already exists, skipping seed")
+            Self.logger.info("Titration test data already exists, skipping seed")
             return
         }
 
@@ -220,11 +220,11 @@ class DataController: ObservableObject {
         guard let existingUsers = try? context.fetch(userDescriptor),
             let testUser = existingUsers.first
         else {
-            print("❌ No user found - cannot seed titration data")
+            Self.logger.warning("No user found - cannot seed titration data")
             return
         }
 
-        print("🌱 Seeding titration test data for user: \(testUser.email ?? "unknown")")
+        Self.logger.info("Seeding titration test data for user: \(testUser.email ?? "unknown")")
 
         let medication = createTestMedicationProfile(context: context, user: testUser)
         guard let yesterdayDose = createTestDose(context: context, user: testUser, medication: medication) else {
@@ -288,7 +288,7 @@ class DataController: ObservableObject {
         // Encode configuration
         let encoder = JSONEncoder()
         guard let scheduleData = try? encoder.encode(scheduleConfig) else {
-            print("⚠️ Failed to encode schedule configuration")
+            Self.logger.warning("Failed to encode schedule configuration")
             return
         }
 
@@ -353,14 +353,12 @@ class DataController: ObservableObject {
     private func saveTestData(context: ModelContext) {
         do {
             try context.save()
-            print("✅ Titration test data seeded successfully!")
-            print("   - Medication: Ozempic 1.0mg")
-            print("   - Completed dose: Yesterday")
-            print("   - Titration TODAY: 1.0mg → 2.0mg (will trigger dialog)")
-            print("   - Titration TOMORROW: 2.0mg → 3.0mg (warning banner)")
-            print("   - Titration +7 days: 3.0mg → 4.0mg (warning banner)")
+            Self.logger.info("Titration test data seeded successfully")
+            Self.logger.debug(
+                "Seeded: Ozempic 1.0mg, yesterday dose, TODAY (1.0→2.0mg), TOMORROW (2.0→3.0mg), +7d (3.0→4.0mg)"
+            )
         } catch {
-            print("❌ Failed to seed titration test data: \(error)")
+            Self.logger.error("Failed to seed titration test data: \(error.localizedDescription)")
         }
     }
 }
