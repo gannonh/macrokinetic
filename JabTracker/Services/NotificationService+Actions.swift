@@ -16,12 +16,10 @@ extension NotificationService {
         static let missedAlertDelay: TimeInterval = 1.0
     }
 
-    // MARK: - Private Computed Properties
+    // MARK: - Private Properties
 
     /// Logger for action handling operations
-    private var actionLogger: Logger {
-        Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService.Actions")
-    }
+    private let actionLogger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService.Actions")
 
     // MARK: - Action Handling
 
