@@ -8,6 +8,14 @@ import SwiftData
 
 @Model
 final class DoseTitration {
+    // MARK: - Timing Constants
+
+    private enum DateComparisonTiming {
+        /// Tolerance for date comparisons to account for system timing precision
+        /// Handles test timing variations and system clock differences
+        static let toleranceSeconds: TimeInterval = 1.0
+    }
+
     var id: UUID = UUID()
     var fromDose: Double = 0.0  // Starting dose amount (CloudKit requires default)
     var toDose: Double = 0.0  // Target dose amount (CloudKit requires default)
@@ -71,10 +79,9 @@ final class DoseTitration {
     /// Whether this titration can be manually completed (before scheduled date passes)
     /// Returns false after scheduled date passes - user should use dose entry flow instead
     var canCompleteManually: Bool {
-        // Allow 1-second tolerance for timing precision (test timing, system clock variations)
         let now = Date()
-        let oneSecondAgo = now.addingTimeInterval(-1)
-        return !self.isCompleted && self.scheduledDate >= oneSecondAgo
+        let toleranceAdjusted = now.addingTimeInterval(-DateComparisonTiming.toleranceSeconds)
+        return !self.isCompleted && self.scheduledDate >= toleranceAdjusted
     }
 
     // MARK: - Business Logic

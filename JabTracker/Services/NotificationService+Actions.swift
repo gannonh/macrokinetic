@@ -6,6 +6,16 @@ import UserNotifications
 // MARK: - NotificationService+Actions
 
 extension NotificationService {
+    // MARK: - Timing Constants
+
+    private enum NotificationTiming {
+        /// Snooze interval for delayed dose reminders (1 hour)
+        static let snoozeInterval: TimeInterval = 3600
+
+        /// Delay for missed dose alerts to ensure delivery (1 second)
+        static let missedAlertDelay: TimeInterval = 1.0
+    }
+
     // MARK: - Private Computed Properties
 
     /// Logger for action handling operations
@@ -131,9 +141,9 @@ extension NotificationService {
         // Cancel existing notification
         cancelNotification(for: scheduledDose)
 
-        // Create new scheduled dose for 1 hour from now
+        // Create new scheduled dose for configured snooze interval
         let context = scheduleService.context
-        let snoozeTime = Date().addingTimeInterval(3600)  // 1 hour
+        let snoozeTime = Date().addingTimeInterval(NotificationTiming.snoozeInterval)
 
         // Get medication profile
         guard let schedule = scheduledDose.schedule else {
@@ -202,8 +212,8 @@ extension NotificationService {
         content.categoryIdentifier = "MISSED_DOSE"
         content.userInfo = [NotificationService.UserInfoKeys.scheduledDoseId: scheduledDose.id.uuidString]
 
-        // Schedule for immediate delivery (1 second from now to ensure delivery)
-        let triggerDate = Date().addingTimeInterval(1)
+        // Schedule for immediate delivery with configured delay to ensure delivery
+        let triggerDate = Date().addingTimeInterval(NotificationTiming.missedAlertDelay)
         let calendar = Calendar.current
         let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: triggerDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)

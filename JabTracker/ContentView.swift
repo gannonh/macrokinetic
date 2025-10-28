@@ -16,6 +16,14 @@ struct ContentView: View {
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
 
+    // MARK: - Constants
+
+    private enum SheetTransitionTiming {
+        /// Delay required for SwiftUI sheet dismissal before presenting new sheet
+        /// Prevents "already presenting" conflicts between titration dialog and quick dose sheet
+        static let transitionDelay: TimeInterval = 0.3
+    }
+
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ContentView")
 
     init() {
@@ -155,7 +163,7 @@ struct ContentView: View {
             showingTitrationDialog = false
 
             // Show quick dose sheet after dialog dismissal to avoid presentation conflict
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + SheetTransitionTiming.transitionDelay) {
                 self.showingQuickDoseSheet = true
             }
         } catch {
@@ -191,7 +199,7 @@ struct ContentView: View {
 
         // Show quick dose sheet after dialog dismissal
         // Note: remind-later flag will be reset in sheet's onDismiss callback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + SheetTransitionTiming.transitionDelay) {
             self.showingQuickDoseSheet = true
         }
     }
