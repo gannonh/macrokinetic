@@ -268,31 +268,25 @@ class QuickDoseViewModel: ObservableObject {
     /// - Titration scheduled date is today or in the past
     /// - User hasn't selected "Remind Me Later" for this session
     func shouldShowTitrationDialog() -> Bool {
-        logger.debug("QuickDoseViewModel.shouldShowTitrationDialog called")
+        logger.trace("Checking if titration dialog should be shown")
 
         guard let pendingTitration = getPendingTitration() else {
-            logger.debug("No pending titration found")
+            logger.trace("No pending titration found")
             return false
         }
 
-        logger.debug("Found pending titration: \(pendingTitration.fromDose)mg → \(pendingTitration.toDose)mg")
-
         // Don't show if user clicked "Remind Me Later"
         if titrationRemindLater {
-            logger.debug("titrationRemindLater flag is set, not showing dialog")
+            logger.trace("Titration reminder deferred by user")
             return false
         }
 
         // Show if titration date is today or in the past
-        let now = Date()
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        logger.debug("Now: \(formatter.string(from: now))")
-        logger.debug("Titration scheduled: \(formatter.string(from: pendingTitration.scheduledDate))")
+        let shouldShow = pendingTitration.scheduledDate <= Date()
 
-        let shouldShow = pendingTitration.scheduledDate <= now
-        logger.debug("scheduledDate <= now? \(shouldShow)")
+        if shouldShow {
+            logger.debug("Showing titration dialog: \(pendingTitration.fromDose)mg → \(pendingTitration.toDose)mg")
+        }
 
         return shouldShow
     }
@@ -300,45 +294,28 @@ class QuickDoseViewModel: ObservableObject {
     /// Gets the pending titration for the selected medication profile
     /// Returns nil if no medication profile selected or no pending titration exists
     func getPendingTitration() -> DoseTitration? {
-        logger.debug("QuickDoseViewModel.getPendingTitration called")
+        logger.trace("Getting pending titration")
 
         guard let profile = selectedMedicationProfile else {
-            logger.debug("No selected medication profile")
+            logger.trace("No medication profile selected")
             return nil
         }
 
-        logger.debug("Selected profile: \(profile.brandName) (\(profile.currentDose)mg)")
-
-        guard let titrations = profile.doseTitrations, !titrations.isEmpty else {
-            logger.debug("No titrations found for profile")
+        guard let incompleteTitrations = profile.doseTitrations?.filter({ !$0.isCompleted }),
+            !incompleteTitrations.isEmpty
+        else {
+            logger.trace("No incomplete titrations for \(profile.brandName)")
             return nil
-        }
-
-        logger.debug("Found \(titrations.count) total titrations")
-
-        let incompleteTitrations = titrations.filter { !$0.isCompleted }
-        logger.debug("Found \(incompleteTitrations.count) incomplete titrations:")
-
-        for titration in incompleteTitrations {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            formatter.timeStyle = .short
-            let dateStr = formatter.string(from: titration.scheduledDate)
-            logger.debug("  - \(titration.fromDose)mg → \(titration.toDose)mg scheduled for \(dateStr)")
         }
 
         // Find the EARLIEST (nearest) incomplete titration
         let pending = incompleteTitrations.min(by: { $0.scheduledDate < $1.scheduledDate })
 
-        if let pending = pending {
+        if let pending {
             let formatter = DateFormatter()
             formatter.dateStyle = .short
-            formatter.timeStyle = .short
             let dateStr = formatter.string(from: pending.scheduledDate)
-            logger.debug(
-                "Returning EARLIEST titration: \(pending.fromDose)mg → \(pending.toDose)mg scheduled for \(dateStr)")
-        } else {
-            logger.debug("No incomplete titrations found")
+            logger.debug("Found pending titration: \(pending.fromDose)mg → \(pending.toDose)mg on \(dateStr)")
         }
 
         return pending
