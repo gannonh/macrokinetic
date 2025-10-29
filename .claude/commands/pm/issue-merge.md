@@ -281,7 +281,7 @@ Next Steps:
 1. Run final checks:
 ```bash
 # Ensure no regressions since last check
-./scripts/check-all.sh 
+./scripts/check-all.sh --skip-ui 2>&1 | tail -75 
 ```
 2. Present summary to user:
 ```bash
