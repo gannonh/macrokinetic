@@ -1,3 +1,4 @@
+import OSLog
 import StoreKit
 import SwiftData
 import SwiftUI
@@ -7,9 +8,13 @@ struct SettingsView: View {
     // Use real environment for Settings so status reflects actual entitlements during UI tests
     @StateObject private var subscriptionManager = SubscriptionManager(isTestEnvironment: false)
     @StateObject private var medicationManager: MedicationManager
+    @ObservedObject private var appServices = AppServices.shared
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "SettingsView")
 
     init() {
-        let manager = MedicationManager(modelContext: DataController.shared.container.mainContext)
+        let context = DataController.shared.container.mainContext
+        let manager = MedicationManager(modelContext: context)
         self._medicationManager = StateObject(wrappedValue: manager)
     }
 
@@ -148,21 +153,66 @@ struct SettingsView: View {
                     // Sync Status Section
                     SyncStatusCard(dataController: self.dataController)
 
-                    // Settings Options
+                    // Notification Settings Section
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Preferences")
+                            Text("Notifications")
                                 .font(DesignTokens.Typography.headline)
+                                .accessibilityIdentifier("notifications-section-header")
 
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Text("Notifications")
+                            // Enable/Disable Toggle
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Dose Reminders")
                                         .font(DesignTokens.Typography.body)
-                                    Spacer()
-                                    Toggle("", isOn: .constant(true))
+                                    Text("Get notified when it's time for your dose")
+                                        .font(DesignTokens.Typography.caption)
+                                        .foregroundColor(.secondary)
                                 }
 
-                                // Face ID toggle is handled in UserProfileView when user is authenticated
+                                Spacer()
+
+                                if let notificationService = appServices.notificationService {
+                                    Toggle(
+                                        "",
+                                        isOn: Binding(
+                                            get: { notificationService.notificationsEnabled },
+                                            set: { newValue in
+                                                notificationService.notificationsEnabled = newValue
+                                                Task {
+                                                    if newValue {
+                                                        await activateNotifications()
+                                                    } else {
+                                                        await deactivateNotifications()
+                                                    }
+                                                }
+                                            }
+                                        )
+                                    )
+                                    .accessibilityIdentifier("notifications-toggle")
+                                }
+                            }
+
+                            if let notificationService = appServices.notificationService,
+                                notificationService.notificationsEnabled
+                            {
+                                // Reminder Timing Picker
+                                ReminderTimingPicker(
+                                    selectedMinutes: Binding(
+                                        get: { notificationService.reminderMinutesBefore },
+                                        set: { newValue in
+                                            notificationService.reminderMinutesBefore = newValue
+                                            Task {
+                                                try? await notificationService.updateReminderTiming(newValue)
+                                            }
+                                        }
+                                    )
+                                )
+
+                                // Authorization Status Display
+                                NotificationAuthorizationStatus(
+                                    status: notificationService.authorizationStatus
+                                )
                             }
                         }
                     }
@@ -182,6 +232,46 @@ extension SettingsView {
         case .premiumActive: return "Premium Active"
         case .notSubscribed, .expired: return "Not Subscribed"
         }
+    }
+
+    // MARK: - Notification Activation
+
+    /**
+     * Activate notifications by calling NotificationService.enable().
+     *
+     * Handles authorization requests and error states.
+     */
+    private func activateNotifications() async {
+        guard let notificationService = appServices.notificationService else {
+            logger.error("NotificationService not initialized")
+            return
+        }
+
+        do {
+            try await notificationService.enable()
+            logger.info("Notifications enabled successfully")
+        } catch {
+            logger.error("Failed to enable notifications: \(error.localizedDescription)")
+            // Revert toggle state on failure
+            await MainActor.run {
+                notificationService.notificationsEnabled = false
+            }
+        }
+    }
+
+    /**
+     * Deactivate notifications by calling NotificationService.disable().
+     *
+     * Cancels all pending notifications and clears the queue.
+     */
+    private func deactivateNotifications() async {
+        guard let notificationService = appServices.notificationService else {
+            logger.error("NotificationService not initialized")
+            return
+        }
+
+        await notificationService.disable()
+        logger.info("Notifications disabled successfully")
     }
 }
 

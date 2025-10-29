@@ -50,7 +50,8 @@
           "Services/ScheduleService+Adherence.swift",
           "Services/ScheduleService+Modifications.swift",
           "Services/ScheduleService+Projection.swift",
-          "Services/ScheduleService.swift"
+          "Services/ScheduleService.swift",
+          "Services/NotificationService+Persistence.swift"
         ]
       },
       "framework_integration": {
@@ -98,7 +99,9 @@
           "Utilities/DoseDefaults.swift",
           "Utilities/TimeConstants.swift",
           "Utilities/TitrationErrorMessages.swift",
-          "Views/Analytics/ConcentrationChartAccessibility.swift"
+          "Views/Analytics/ConcentrationChartAccessibility.swift",
+          "App/AppServices.swift",
+          "App/DeeplinkHandler.swift"
         ]
       },
       "swiftui_components": {

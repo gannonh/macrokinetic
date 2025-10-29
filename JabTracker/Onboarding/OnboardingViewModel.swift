@@ -410,8 +410,21 @@ class OnboardingViewModel: ObservableObject {
             baseSchedule: scheduleConfig
         )
 
-        // Note: Notification scheduling will be handled by NotificationService
-        // in a future update when the user grants notification permissions
+        // Configure NotificationService with reminder preferences
+        if let notificationService = AppServices.shared.notificationService {
+            notificationService.reminderMinutesBefore = reminderMinutes
+
+            // Enable notifications if user granted permission
+            if notificationsGranted {
+                do {
+                    try await notificationService.enable()
+                } catch {
+                    // Log the error but don't fail onboarding if notification setup fails
+                    print("⚠️ Failed to enable notifications during onboarding: \(error.localizedDescription)")
+                    // Continue with onboarding - user can enable notifications later in Settings
+                }
+            }
+        }
     }
 
     private func updateProgress() {

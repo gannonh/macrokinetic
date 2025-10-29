@@ -66,6 +66,9 @@ struct JabTrackerApp: App {
                     }
                 }
             }
+            .onOpenURL { url in
+                DeeplinkHandler.handle(url: url)
+            }
             .onAppear {
                 Task {
                     await self.authManager.checkAuthenticationStatus()

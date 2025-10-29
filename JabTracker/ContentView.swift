@@ -119,6 +119,9 @@ struct ContentView: View {
         }
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)
+
+            // Initialize app services with ModelContext
+            AppServices.shared.initialize(with: self.modelContext)
         }
         .alert("Error", isPresented: self.$showingErrorAlert) {
             Button("OK", role: .cancel) {}
