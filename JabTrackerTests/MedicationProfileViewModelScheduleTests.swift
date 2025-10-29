@@ -336,11 +336,11 @@ struct MedicationProfileViewModelScheduleTests {
         let context = try createTestContext()
         let user = createTestUser(context: context)
         let profile = createTestMedicationProfile(context: context, user: user)
-        let schedule = try createTestSchedule(context: context, profile: profile)
+        _ = try createTestSchedule(context: context, profile: profile)
 
         // Create titration scheduled 15 days from now (within 30-day window)
         let futureDate = Calendar.current.date(byAdding: .day, value: 15, to: Date())!
-        let titration = createTestTitration(
+        _ = createTestTitration(
             context: context,
             profile: profile,
             fromDose: 0.5,
