@@ -193,7 +193,9 @@ extension ScheduleService {
         }
 
         // Generate doses at interval until end date
-        while currentDate <= endDate {
+        // Use tolerance to prevent boundary date inclusion due to floating-point precision
+        let tolerance: TimeInterval = 60 * 60  // 1 hour tolerance
+        while currentDate < endDate && (endDate.timeIntervalSince(currentDate) > tolerance) {
             // Skip if schedule is paused during this time
             if let pausedUntil = schedule.pausedUntil,
                 let pausedAt = schedule.pausedAt,
@@ -291,7 +293,9 @@ extension ScheduleService {
         }
 
         // Generate doses at splitInterval apart
-        while currentDate <= endDate {
+        // Use tolerance to prevent boundary date inclusion due to floating-point precision
+        let tolerance: TimeInterval = 60 * 60  // 1 hour tolerance
+        while currentDate < endDate && (endDate.timeIntervalSince(currentDate) > tolerance) {
             // Skip if paused
             if let pausedUntil = schedule.pausedUntil,
                 let pausedAt = schedule.pausedAt,
@@ -366,7 +370,9 @@ extension ScheduleService {
         currentDate = calendar.date(from: components)!
 
         // Generate doses at configured interval
-        while currentDate <= endDate {
+        // Use tolerance to prevent boundary date inclusion due to floating-point precision
+        let tolerance: TimeInterval = 60 * 60  // 1 hour tolerance
+        while currentDate < endDate && (endDate.timeIntervalSince(currentDate) > tolerance) {
             // Skip if paused
             if let pausedUntil = schedule.pausedUntil,
                 let pausedAt = schedule.pausedAt,
