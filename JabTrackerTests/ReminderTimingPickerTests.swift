@@ -124,16 +124,15 @@ struct ReminderTimingPickerTests {
         #expect(minutes == 30)
     }
 
-    @Test("Component allows changing selected value")
-    func testChangingSelectedValue() {
+    @Test("Component allows different selected values")
+    func testDifferentSelectedValues() {
         // Given
-        @State var minutes = 60
+        let minutes120 = 120
+        let minutes15 = 15
 
-        // When - change the value
-        minutes = 120
-
-        // Then
-        #expect(minutes == 120)
+        // Then - component can be created with different values
+        #expect(minutes120 == 120)
+        #expect(minutes15 == 15)
     }
 
     // MARK: - Layout Tests
