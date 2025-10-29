@@ -143,3 +143,34 @@ issue/260-notification-ui-configuration-settings-integration-and-permission-mana
 - DeeplinkHandler.handle() ready for QuickDoseSheet navigation integration
 - Onboarding notification flow ready for Settings UI coordination
 - All code committed and ready for review
+
+## Debug Session: 2025-10-29T21:30-22:00
+**Problem Identified**:
+- Tests were waiting for `app.tabBars.buttons["Dashboard"]` which doesn't exist
+- Actual tab button label is "Home", not "Dashboard"
+- TestUtilities.debugElements() revealed tab buttons exist with labels: Home, Add, History, Analytics, Settings
+
+**Root Cause**:
+- Tests assumed Dashboard tab button would have "Dashboard" label
+- Actual accessibility hierarchy shows: `app.tabBars.buttons.element(boundBy: 0).label == "Home"`
+
+**Solution Applied**:
+- Changed all 3 failing tests to check for `app.scrollViews["dashboard-scroll-view"]` instead
+- This element exists and proves app is in valid state (main UI loaded)
+- No longer checking for non-existent tab button label
+
+**Fix Details**:
+1. `testDeeplinkOpensQuickDoseSheetFromTerminated`: Changed from `app.tabBars.buttons["Dashboard"]` to `app.scrollViews["dashboard-scroll-view"]`
+2. `testInvalidDeeplinkHandledGracefully`: Same fix applied
+3. `testDeeplinkWithNonExistentScheduledDoseHandledGracefully`: Same fix applied
+
+**Results**:
+- ✅ All 5 deeplink E2E tests passing (100%)
+- ✅ Tests run reliably across 3 consecutive passes
+- ✅ No more timing issues or timeouts
+- ✅ Test duration: ~25 seconds for all 5 tests
+
+**Key Lesson**:
+- **ALWAYS use debug utilities BEFORE writing element selectors**
+- Don't assume element labels - verify with TestUtilities.debugElements()
+- Dashboard scroll view is more reliable identifier than tab button labels

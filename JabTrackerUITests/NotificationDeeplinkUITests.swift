@@ -87,8 +87,8 @@ final class NotificationDeeplinkUITests: XCTestCase {
         XCTAssertTrue(app.exists, "App should launch successfully from terminated state with deeplink")
 
         // Verify we don't crash and the app is in a valid state
-        // Wait for dashboard to appear (or onboarding if first launch)
-        let dashboardAppeared = app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 10)
+        // Wait for dashboard scroll view (indicates main UI loaded) or onboarding
+        let dashboardAppeared = app.scrollViews["dashboard-scroll-view"].waitForExistence(timeout: 10)
         let onboardingAppeared = app.staticTexts["Track your GLP-1 medication"].exists
 
         XCTAssertTrue(
@@ -114,8 +114,8 @@ final class NotificationDeeplinkUITests: XCTestCase {
         // Assert
         XCTAssertTrue(app.exists, "App should handle invalid deeplink gracefully without crashing")
 
-        // Verify app is in valid state - increase timeout for initial launch
-        let dashboardAppeared = app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 10)
+        // Verify app is in valid state - check for dashboard scroll view or onboarding
+        let dashboardAppeared = app.scrollViews["dashboard-scroll-view"].waitForExistence(timeout: 10)
         let onboardingAppeared = app.staticTexts["Track your GLP-1 medication"].exists
 
         XCTAssertTrue(
@@ -145,8 +145,8 @@ final class NotificationDeeplinkUITests: XCTestCase {
         // Assert
         XCTAssertTrue(app.exists, "App should handle non-existent scheduled dose gracefully")
 
-        // Verify app is in valid state - increase timeout for initial launch
-        let dashboardAppeared = app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 10)
+        // Verify app is in valid state - check for dashboard scroll view or onboarding
+        let dashboardAppeared = app.scrollViews["dashboard-scroll-view"].waitForExistence(timeout: 10)
         let onboardingAppeared = app.staticTexts["Track your GLP-1 medication"].exists
 
         XCTAssertTrue(
@@ -156,6 +156,6 @@ final class NotificationDeeplinkUITests: XCTestCase {
         // TODO: Once navigation is implemented, verify behavior:
         // Either show QuickDoseSheet without pre-population, or gracefully show dashboard
         // XCTAssertTrue(app.sheets["quick-dose-sheet"].waitForExistence(timeout: 5) ||
-        //               app.tabBars.buttons["Dashboard"].exists)
+        //               app.scrollViews["dashboard-scroll-view"].exists)
     }
 }
