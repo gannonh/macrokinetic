@@ -344,15 +344,46 @@ if [ "$ENABLE_COVERAGE" = true ]; then
     fi
 fi
 
+# Determine actual test status from results
+TESTS_PASSED=true
+if [ "$ENABLE_LOGGING" = true ] && [ -f "$RAW_LOG_FILE" ]; then
+    # Check for test failures in the output
+    if grep -q "✘.*failed\|Test run with.*failed" "$RAW_LOG_FILE" 2>/dev/null; then
+        TESTS_PASSED=false
+        FINAL_EXIT_CODE=1
+    else
+        FINAL_EXIT_CODE=${TEST_EXIT_CODE}
+    fi
+else
+    # Fallback to build exit code if no logs
+    if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+        TESTS_PASSED=false
+        FINAL_EXIT_CODE=${TEST_EXIT_CODE}
+    else
+        FINAL_EXIT_CODE=0
+    fi
+fi
+
 # Show summary
 if [ "$ENABLE_LOGGING" = true ]; then
     echo ""
     echo "📁 Test Results Summary:"
     echo "========================"
-    if [ "$TEST_EXIT_CODE" -eq 0 ]; then
+    if [ "$TESTS_PASSED" = true ]; then
         echo "✅ Tests passed"
     else
-        echo "❌ Tests failed (exit code: $TEST_EXIT_CODE)"
+        echo "❌ Tests failed"
+        if grep -q "✘ Test \".*\" failed" "$RAW_LOG_FILE" 2>/dev/null; then
+            echo ""
+            echo "Failed tests:"
+            # Extract test names that failed
+            grep "✘ Test \".*\" failed after" "$RAW_LOG_FILE" | while read -r line; do
+                test_name=$(echo "$line" | sed -n 's/.*Test "\([^"]*\)".*/\1/p')
+                echo "   • $test_name"
+                # Show the assertion failures for this test
+                grep "✘ Test \"$test_name\" recorded an issue" "$RAW_LOG_FILE" | sed 's/✘ Test "[^"]*" recorded an issue at /     → /' | sed 's/: Expectation failed: /: /'
+            done
+        fi
     fi
     echo ""
     echo "📂 Log files saved to: $LOG_DIR/"
@@ -368,5 +399,5 @@ if [ "$ENABLE_LOGGING" = true ]; then
     echo "💡 Open result bundle: open $XCRESULT_PATH"
 fi
 
-# Exit with the test exit code
-exit ${TEST_EXIT_CODE:-0}
+# Exit with the actual test status
+exit ${FINAL_EXIT_CODE:-0}
