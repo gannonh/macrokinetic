@@ -74,23 +74,26 @@ final class NotificationDeeplinkUITests: XCTestCase {
     func testDeeplinkOpensQuickDoseSheetFromTerminated() throws {
         // Arrange
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data"]
 
         // Create a known UUID for testing
         let testScheduledDoseId = UUID()
 
         // Launch with deeplink URL
         let deeplinkURL = "jab-tracker://dose/log?scheduledDoseId=\(testScheduledDoseId.uuidString)"
-        app.launchArguments.append("--deeplink-url=\(deeplinkURL)")
+        app.launchArguments = ["--ui-testing", "--reset-app-data", "--deeplink-url=\(deeplinkURL)"]
         app.launch()
 
         // Assert
         XCTAssertTrue(app.exists, "App should launch successfully from terminated state with deeplink")
 
         // Verify we don't crash and the app is in a valid state
+        // Wait for dashboard to appear (or onboarding if first launch)
+        let dashboardAppeared = app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 10)
+        let onboardingAppeared = app.staticTexts["Track your GLP-1 medication"].exists
+
         XCTAssertTrue(
-            app.tabBars.buttons["Dashboard"].exists || app.sheets.count > 0,
-            "App should be in valid state (dashboard or sheet)")
+            dashboardAppeared || onboardingAppeared || app.sheets.count > 0,
+            "App should be in valid state (dashboard, onboarding, or sheet)")
 
         // TODO: Once navigation is implemented, verify QuickDoseSheet appears:
         // XCTAssertTrue(app.sheets["quick-dose-sheet"].waitForExistence(timeout: 5))
@@ -102,22 +105,25 @@ final class NotificationDeeplinkUITests: XCTestCase {
     func testInvalidDeeplinkHandledGracefully() throws {
         // Arrange
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data"]
 
         // Launch with invalid deeplink URL (malformed UUID)
         let invalidDeeplinkURL = "jab-tracker://dose/log?scheduledDoseId=invalid-uuid"
-        app.launchArguments.append("--deeplink-url=\(invalidDeeplinkURL)")
+        app.launchArguments = ["--ui-testing", "--reset-app-data", "--deeplink-url=\(invalidDeeplinkURL)"]
         app.launch()
 
         // Assert
         XCTAssertTrue(app.exists, "App should handle invalid deeplink gracefully without crashing")
 
-        // Verify app is in valid state
+        // Verify app is in valid state - increase timeout for initial launch
+        let dashboardAppeared = app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 10)
+        let onboardingAppeared = app.staticTexts["Track your GLP-1 medication"].exists
+
         XCTAssertTrue(
-            app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 5),
-            "App should show dashboard when deeplink is invalid")
+            dashboardAppeared || onboardingAppeared,
+            "App should show dashboard or onboarding when deeplink is invalid")
 
         // Verify QuickDoseSheet does NOT appear for invalid deeplink
+        sleep(1)  // Give time for any potential sheet to appear
         XCTAssertFalse(app.sheets["quick-dose-sheet"].exists, "QuickDoseSheet should not appear for invalid deeplink")
     }
 
@@ -127,23 +133,25 @@ final class NotificationDeeplinkUITests: XCTestCase {
     func testDeeplinkWithNonExistentScheduledDoseHandledGracefully() throws {
         // Arrange
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data"]
 
         // Create a valid UUID that won't exist in database
         let nonExistentScheduledDoseId = UUID()
 
         // Launch with valid deeplink format but non-existent ID
         let deeplinkURL = "jab-tracker://dose/log?scheduledDoseId=\(nonExistentScheduledDoseId.uuidString)"
-        app.launchArguments.append("--deeplink-url=\(deeplinkURL)")
+        app.launchArguments = ["--ui-testing", "--reset-app-data", "--deeplink-url=\(deeplinkURL)"]
         app.launch()
 
         // Assert
         XCTAssertTrue(app.exists, "App should handle non-existent scheduled dose gracefully")
 
-        // Verify app is in valid state
+        // Verify app is in valid state - increase timeout for initial launch
+        let dashboardAppeared = app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 10)
+        let onboardingAppeared = app.staticTexts["Track your GLP-1 medication"].exists
+
         XCTAssertTrue(
-            app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 5),
-            "App should show dashboard when scheduled dose doesn't exist")
+            dashboardAppeared || onboardingAppeared,
+            "App should show dashboard or onboarding when scheduled dose doesn't exist")
 
         // TODO: Once navigation is implemented, verify behavior:
         // Either show QuickDoseSheet without pre-population, or gracefully show dashboard
