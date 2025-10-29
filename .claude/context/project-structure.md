@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-07T22:25:40Z
-version: 2.0
+last_updated: 2025-10-29T18:20:27Z
+version: 2.1
 author: Claude Code PM System
 ---
 
@@ -192,7 +192,25 @@ JabTracker/
 - **Mock Utilities Location**: MockNotificationCenter.swift in JabTrackerTests/Mocks/ directory establishes pattern for framework protocol mocks - reusable across test suites
 - **PendingNotification Model Location**: Notification-specific data structures in JabTracker/Models/ alongside other domain models - maintains consistency with existing project organization
 
+## Titration Workflow Structure Insights (Issue #286)
+
+### Dialog Component Organization
+- **TitrationConfirmationDialog Location**: Complex SwiftUI dialogs belong in JabTracker/Views/DoseEntry/ - colocated with dose entry workflows
+- **Multi-Action Dialog Pattern**: 582-line confirmation dialog demonstrates proper organization for complex medical UI components with multiple user actions
+- **Reusable Dialog Components**: Dialog can be reused across QuickDoseEntry, DoseEntrySheet, and notification action handlers - central location enables consistency
+
+### Utilities Organization
+- **TitrationErrorMessages Pattern**: Centralizing user-facing error strings in JabTracker/Utilities/ prevents duplication and enables consistent messaging
+- **Error String Standardization**: TitrationErrorMessages.swift demonstrates pattern for managing medical app error messages with consistent tone and clarity
+- **Test File Structure**: TitrationErrorMessagesTests.swift (202 lines) validates all error message variations for comprehensive coverage
+
+### Test Organization Excellence
+- **ViewModel Test Separation**: QuickDoseViewModelTitrationTests.swift (406 tests) separated from core QuickDoseViewModelTests.swift improves maintainability
+- **E2E Dialog Testing**: TitrationConfirmationDialogUITests.swift (582 lines) demonstrates comprehensive E2E testing for complex multi-action dialogs
+- **Medical Feature Testing**: Titration-specific tests isolated in dedicated files enables focused maintenance and clear ownership
+
 ## Update History
+- 2025-10-29T18:20:27Z: Added Titration Workflow Structure Insights (Issue #286) - dialog component organization, utilities organization patterns, and test organization excellence for complex medical UI features
 - 2025-10-08T20:37:55Z: Added NotificationService Structure Insights (Issue #176) - extension-based organization, test file parallel structure, mock utilities location, and notification model organization patterns
 - 2025-10-07T22:25:40Z: Added NotificationService files (NotificationService.swift, +Actions.swift, +Background.swift) and PendingNotification.swift model (Issue #176), updated test suite structure with 4 new test files (70 tests total)
 - 2025-10-07T18:35:45Z: Added Utilities directory with TimeConstants.swift for centralized time constants (Issue #175)

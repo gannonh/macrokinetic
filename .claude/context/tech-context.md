@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-15T18:06:05Z
-version: 2.7
+last_updated: 2025-10-29T18:20:27Z
+version: 2.8
 author: Claude Code PM System
 ---
 
@@ -291,7 +291,34 @@ author: Claude Code PM System
 - **Service Instantiation**: Create service instances locally within methods rather than storing as properties
 - **MedicationProfile Relationship**: Access schedules via `profiles.compactMap { $0.schedules?.first }` for primary schedule
 
+## Titration Workflow Integration (Issue #286)
+
+### SwiftUI Confirmation Dialog Patterns
+- **Multi-Action Dialogs**: TitrationConfirmationDialog demonstrates `.confirmationDialog()` modifier with 3 actions (Complete, Reschedule, Remind Later)
+- **State Management**: Proper use of `@State` for dialog presentation - `showingTitrationDialog` boolean controls visibility
+- **Action Handler Patterns**: Each action has dedicated handler method in ViewModel for separation of concerns
+- **Medical Safety UI**: Confirmation dialogs critical for medication changes - prevent auto-apply of dose increases
+
+### DateFormatter Display Patterns
+- **Dual Format Requirements**: Two DateFormatter patterns needed for different UI contexts
+- **Display Format**: `"MMM d, yyyy"` for static text displays (e.g., "Oct 29, 2025")
+- **Picker Format**: `"EEEE, MMMM d"` for iOS date picker buttons (e.g., "Tuesday, October 29")
+- **Consistency Importance**: Using consistent formats across app improves user experience and reduces confusion
+
+### NotificationService Titration Integration
+- **Action Handler Architecture**: NotificationService+Actions extension successfully integrates titration notification handlers
+- **Three-Action Pattern**: Complete/Reschedule/Remind Later actions work identically in notifications and in-app dialogs
+- **Background Context Management**: Notification actions require proper ModelContext management for background thread execution
+- **User Experience Consistency**: Notification actions mirror in-app dialog actions for predictable user experience
+
+### TDD Coverage Excellence
+- **Comprehensive Test Suites**: QuickDoseViewModelTitrationTests (406 tests) demonstrates comprehensive test-driven approach
+- **ViewModel Testing Patterns**: Titration detection, dialog presentation, and action handling all covered by unit tests
+- **E2E Validation**: TitrationConfirmationDialogUITests (582 lines) validates complete user workflows
+- **Medical App Quality**: High test coverage essential for patient safety in medication management features
+
 ## Update History
+- 2025-10-29T18:20:27Z: Added Titration Workflow Integration section (Issue #286) - SwiftUI confirmation dialog patterns, DateFormatter display patterns, NotificationService titration integration, and TDD coverage excellence for medical app quality
 - 2025-10-15T18:06:05Z: Added Calendar Integration Technology Insights from Issue #178 - SwiftUI DatePicker range behavior, ScheduleService ModelContext integration requirements, ChartDataProcessor performance characteristics, and AnalyticsViewModel threading patterns
 - 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing section (Issue #177) - XCUITest back button access patterns, onboarding flow E2E testing patterns, and concentration chart preview performance validation for schedule setup integration
 - 2025-10-08T20:37:55Z: Added NotificationService Architecture section (Issue #176) - iOS User Notifications Framework integration, UNUserNotificationCenter testing patterns, protocol-based abstraction, and mock framework design for notification workflows
