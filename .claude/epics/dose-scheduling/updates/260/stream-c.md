@@ -109,8 +109,16 @@ issue/260-notification-ui-configuration-settings-integration-and-permission-mana
 - JabTrackerApp change is additive - no conflicts expected
 
 ## Next Steps
-1. Wait for build environment to stabilize
+1. ✅ RESOLVED: AppServices coordinator created - NotificationService.shared → AppServices.shared.notificationService
 2. Run unit tests to verify all 20 tests pass
 3. Implement E2E test bodies (currently stubs)
 4. Coordinate with Stream A for QuickDoseSheet navigation integration
 5. Verify end-to-end workflow with device testing
+
+## Architectural Fix: 2025-10-29T19:30-20:00
+**Problem**: OnboardingViewModel used NotificationService.shared which doesn't exist
+**Solution**:
+- ✅ Created AppServices.swift coordinator
+- ✅ Updated OnboardingViewModel to use AppServices.shared.notificationService
+- ✅ Build successful, committed (9cc8abc), pushed to remote
+- ✅ Ready to continue with remaining work
