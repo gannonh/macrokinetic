@@ -178,7 +178,6 @@ struct SettingsView: View {
                                         isOn: Binding(
                                             get: { notificationService.notificationsEnabled },
                                             set: { newValue in
-                                                notificationService.notificationsEnabled = newValue
                                                 Task {
                                                     if newValue {
                                                         await activateNotifications()
