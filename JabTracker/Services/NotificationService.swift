@@ -97,6 +97,14 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     func requestAuthorization() async throws -> Bool {
         logger.info("Requesting notification authorization")
 
+        // In UI testing mode, automatically grant authorization to avoid system alert interaction
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+        if isUITesting {
+            logger.info("UI testing mode detected - automatically granting authorization")
+            authorizationStatus = .authorized
+            return true
+        }
+
         let options: UNAuthorizationOptions = [.alert, .sound, .badge]
 
         do {
