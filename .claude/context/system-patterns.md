@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-21T22:25:26Z
-version: 3.1
+last_updated: 2025-10-30T14:59:15Z
+version: 3.2
 author: Claude Code PM System
 ---
 
@@ -116,6 +116,52 @@ var children: [Child] = []
 - **Derived State**: Medication dose calculations
 - **UI State**: Form validation status
 - **Business Logic**: Pharmacokinetic computations
+
+### Service Coordinator Pattern (AppServices - Issue #260)
+
+**Problem**: Services requiring dependency injection (ModelContext, ScheduleService) cannot use direct singleton patterns, but SwiftUI views need convenient access.
+
+**Solution**: AppServices coordinator provides centralized service access with lazy initialization:
+
+```swift
+@MainActor
+final class AppServices: ObservableObject {
+    static let shared = AppServices()
+
+    private(set) var scheduleService: ScheduleService?
+    private(set) var notificationService: NotificationService?
+
+    func initialize(with modelContext: ModelContext) {
+        guard scheduleService == nil else { return }
+        let scheduleService = ScheduleService(context: modelContext)
+        self.scheduleService = scheduleService
+        let notificationService = NotificationService(scheduleService: scheduleService)
+        self.notificationService = notificationService
+        notificationService.loadState()
+    }
+}
+```
+
+**Usage Pattern**:
+```swift
+// In ContentView.onAppear:
+AppServices.shared.initialize(with: modelContext)
+
+// In any SwiftUI view:
+@ObservedObject private var appServices = AppServices.shared
+let service = appServices.notificationService
+```
+
+**Benefits**:
+- Maintains singleton-like convenience for SwiftUI views
+- Enables proper dependency injection for services requiring ModelContext
+- Lazy initialization prevents premature service creation
+- Thread-safe with `@MainActor` annotation
+
+**When to Use**:
+- Services requiring ModelContext or other dependencies
+- App-wide services that need initialization timing control
+- Coordinating multiple related services (ScheduleService → NotificationService)
 
 ## Navigation Patterns
 
@@ -291,6 +337,29 @@ struct UserAnalyticsSummary {
 - **Extension Architecture for Parallel Services**: NotificationService+Actions.swift and NotificationService+Background.swift pattern prevents file conflicts
 - **Protocol-Based Testability**: NotificationCenterProtocol abstraction enables comprehensive unit testing without requiring actual UNUserNotificationCenter
 
+### Parallel Stream Coordination with Shared Dependencies (Issue #260)
+
+**Challenge**: Multiple parallel streams (A and C) both needed `NotificationService.shared` which doesn't exist due to dependency injection requirements.
+
+**Discovery**: Both streams blocked simultaneously on the same architectural assumption - cannot proceed with implementation until dependency issue resolved.
+
+**Resolution Strategy**:
+1. **Pause parallel execution** when architectural blocker affects multiple streams
+2. **Create coordinated solution** (AppServices coordinator) that unblocks all affected streams
+3. **Resume parallel execution** after architectural fix committed and pushed
+4. **Validate integration** once all streams complete
+
+**Key Lessons**:
+- **Architectural blockers require immediate coordination** rather than per-stream workarounds
+- **Pausing parallel work** for coordinated fixes is faster than each stream attempting workarounds
+- **Commit and push architectural fixes** before resuming dependent streams ensures clean integration
+- **Test status reporting accuracy** critical - distinguish "implemented" vs "verified" vs "stubs"
+
+**User Feedback Pattern**:
+- User corrected misleading status: "Most of the e2e tests are currently stubbed placeholders"
+- Always be explicit: "8 E2E tests implemented but not yet run" vs "8 E2E tests passing"
+- Distinguish between code written, tests run, and placeholder stubs
+
 > **For parallel testing patterns, test-driven parallel development, simulator isolation, and quality gate validation**, see `.claude/context/testing.md`
 
 ### E2E Testing Excellence Patterns (Issue #177)
@@ -330,6 +399,14 @@ struct UserAnalyticsSummary {
 - **Example Discovery**: Quick Dose sheet identifier was `"quick-dose-sheet"` (not assumed `"quick-dose-entry"`), amount was `"quick-dose-amount"`
 - **Time Savings**: Debug-first approach prevents trial-and-error selector debugging, saves significant development time
 - **Pattern**: Print hierarchy → analyze output → write correct selectors on first attempt
+
+#### Debug-First Fixes Timing Issues (Issue #260)
+- **Anti-Pattern**: Assuming element selectors without verification leads to timeout failures that appear to be timing issues
+- **Root Cause Example**: Tests looked for `app.tabBars.buttons["Dashboard"]` which doesn't exist - actual tab button is labeled "Home"
+- **Actual Element**: Using `TestUtilities.debugElements()` revealed correct element was `app.scrollViews["dashboard-scroll-view"]`
+- **Result**: All 3 "timing issue" tests fixed immediately with correct selectors - tests now pass reliably across multiple runs
+- **Lesson**: What appears to be a timeout/timing problem is often a selector problem - debug first before adjusting waits
+- **Impact**: Debug-first approach solved 3 failing E2E tests in single session without any timing adjustments needed
 
 #### Test File Organization for Maintainability (Issue #180 Afternoon)
 - **SwiftLint File Length Limits**: OnboardingScheduleSetupUITests.swift exceeded 800-line limit at 915 lines
@@ -449,6 +526,7 @@ XCTAssertTrue(app.staticTexts[expectedText].exists)
 - **General Guideline**: Aim for <1,000 chart points for <10s generation, <10,000 points for <60s generation on typical iOS devices
 
 ## Update History
+- 2025-10-30T14:59:15Z: Added Issue #260 patterns - AppServices coordinator pattern for dependency injection, debug-first E2E testing fixes timing issues, parallel stream coordination with shared dependencies
 - 2025-10-26T09:00:00Z: Added Dynamic Date Calculations in Tests pattern from Issue #286 - critical anti-pattern for hardcoded dates, proper use of Date() and DateFormatter for reliable CI/CD testing
 - 2025-10-21T22:25:26Z: Added Issue #180 afternoon session patterns - debug-first accessibility discovery, test file organization for maintainability, user smoke testing workflow with incremental commits
 - 2025-10-20T14:22:56Z: Added E2E Testing Excellence Patterns from Issue #177 - iterative E2E development process, XCUITest element targeting, performance testing for E2E, and accessibility testing without simulation
