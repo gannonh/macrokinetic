@@ -98,7 +98,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         logger.info("Requesting notification authorization")
 
         // In UI testing mode, automatically grant authorization to avoid system alert interaction
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
         if isUITesting {
             logger.info("UI testing mode detected - automatically granting authorization")
             authorizationStatus = .authorized
