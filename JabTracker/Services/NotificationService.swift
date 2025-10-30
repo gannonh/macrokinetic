@@ -295,6 +295,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      * 2. Refreshes the notification queue with upcoming doses
      * 3. Schedules background refresh to keep queue current
      * 4. Updates notificationsEnabled state
+     * 5. Persists state to UserDefaults
      *
      * - Throws: NotificationServiceError.authorizationDenied if user denies permission
      */
@@ -317,6 +318,9 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         // 4. Update enabled state
         notificationsEnabled = true
 
+        // 5. Persist state to UserDefaults
+        saveState()
+
         logger.info("Notifications enabled successfully")
     }
 
@@ -328,6 +332,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      * 2. Clears the notification queue
      * 3. Resets badge count to zero
      * 4. Updates notificationsEnabled state
+     * 5. Persists state to UserDefaults
      */
     public func disable() async {
         logger.info("Disabling notifications")
@@ -344,6 +349,9 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
         // 4. Update enabled state
         notificationsEnabled = false
+
+        // 5. Persist state to UserDefaults
+        saveState()
 
         logger.info("Notifications disabled successfully")
     }
