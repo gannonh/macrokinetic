@@ -177,6 +177,40 @@ class QuickDoseViewModel: ObservableObject {
         }
     }
 
+    /// Pre-populate form with data from a scheduled dose (for deeplink/notification handling)
+    /// - Parameters:
+    ///   - scheduledDoseId: UUID of the scheduled dose to load
+    ///   - context: ModelContext for database access
+    func prepareForScheduledDose(scheduledDoseId: UUID, context: ModelContext) {
+        Task { @MainActor in
+            do {
+                self.isLoading = true
+                self.errorMessage = nil
+
+                // Fetch the scheduled dose
+                let scheduleDescriptor = FetchDescriptor<ScheduledDose>(
+                    predicate: #Predicate<ScheduledDose> { dose in
+                        dose.id == scheduledDoseId
+                    }
+                )
+                guard let scheduledDose = try context.fetch(scheduleDescriptor).first else {
+                    self.errorMessage = "Scheduled dose not found"
+                    self.isLoading = false
+                    return
+                }
+
+                // Load smart defaults with the scheduled time
+                self.loadSmartDefaults(context: context, prePopulatedTimestamp: scheduledDose.scheduledTime)
+
+                self.isLoading = false
+
+            } catch {
+                self.errorMessage = "Failed to load scheduled dose: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
+    }
+
     // MARK: - Smart Default Updates
 
     /// Updates dose amount based on selected medication profile's current dose

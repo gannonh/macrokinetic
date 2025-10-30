@@ -123,6 +123,18 @@ struct ContentView: View {
             // Initialize app services with ModelContext
             AppServices.shared.initialize(with: self.modelContext)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showQuickDoseSheet)) { notification in
+            // Handle deeplink navigation to QuickDoseSheet
+            if let scheduledDoseId = notification.userInfo?["scheduledDoseId"] as? UUID {
+                logger.info("Received deeplink notification to show QuickDoseSheet for dose: \(scheduledDoseId)")
+
+                // Pre-populate QuickDoseViewModel with scheduled dose data
+                quickDoseViewModel.prepareForScheduledDose(scheduledDoseId: scheduledDoseId, context: modelContext)
+
+                // Show the QuickDoseSheet
+                showingQuickDoseSheet = true
+            }
+        }
         .alert("Error", isPresented: self.$showingErrorAlert) {
             Button("OK", role: .cancel) {}
         } message: {

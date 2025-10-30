@@ -3,6 +3,11 @@ import os
 
 private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DeeplinkHandler")
 
+/// Notification name for deeplink navigation requests
+extension Notification.Name {
+    static let showQuickDoseSheet = Notification.Name("showQuickDoseSheet")
+}
+
 /// Result of deeplink parsing
 enum DeeplinkResult {
     case doseLog(scheduledDoseId: UUID)
@@ -69,9 +74,16 @@ struct DeeplinkHandler {
         switch result {
         case .doseLog(let scheduledDoseId):
             logger.info("Handling dose log deeplink for scheduledDoseId: \(scheduledDoseId)")
-            // TODO: Navigate to QuickDoseSheet with pre-populated data
-            // This will be implemented as part of integration with ContentView navigation
-            logger.notice("Dose log deeplink navigation not yet implemented")
+
+            // Post notification to trigger QuickDoseSheet presentation
+            // ContentView will listen for this notification and present the sheet
+            NotificationCenter.default.post(
+                name: .showQuickDoseSheet,
+                object: nil,
+                userInfo: ["scheduledDoseId": scheduledDoseId]
+            )
+
+            logger.info("Posted notification to show QuickDoseSheet for scheduled dose: \(scheduledDoseId)")
 
         case .unsupported:
             logger.warning("Unsupported deeplink: \(url.absoluteString)")
