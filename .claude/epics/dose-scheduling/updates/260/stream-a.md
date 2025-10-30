@@ -109,3 +109,24 @@ issue/260-notification-ui-configuration-settings-integration-and-permission-mana
 - ✅ Total: 39 tests created for Stream A
 
 **Note**: OnboardingNotificationIntegrationTests.swift has build errors (uses old NotificationService.shared pattern) but this is OUTSIDE Stream A scope and should be addressed by whoever owns that file.
+
+### Session 4: 2025-10-30T14:00-14:53 (53 minutes)
+
+**Architectural Fix Session:**
+- ✅ Created AppServices.swift coordinator pattern to resolve NotificationService.shared dependency
+- ✅ Updated SettingsView to use `AppServices.shared.notificationService` instead of singleton
+- ✅ Fixed actor isolation warnings with @MainActor annotation
+- ✅ Added new files to coverage-config.json
+- ✅ Committed (9cc8abc) and pushed architectural fix
+
+**E2E Test Status Clarification:**
+- ⚠️ **IMPORTANT**: NotificationSettingsUITests.swift contains 8 E2E tests that are IMPLEMENTED but NOT YET RUN
+- Tests are complete with proper implementation (not stubs)
+- Need to run `./scripts/test.sh ui 1 NotificationSettingsUITests` to verify all 8 tests pass
+- Tests validate: navigation, toggle, picker, authorization status, accessibility
+
+**Current Status**: 100% IMPLEMENTED, 0% VERIFIED
+**Next Steps**:
+1. Run full E2E test suite: `./scripts/test.sh ui 1 NotificationSettingsUITests`
+2. Fix any test failures discovered during execution
+3. Manual device testing for actual notification delivery

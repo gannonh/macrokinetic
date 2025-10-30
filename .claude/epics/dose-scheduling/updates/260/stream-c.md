@@ -82,16 +82,20 @@ issue/260-notification-ui-configuration-settings-integration-and-permission-mana
 ## Status
 - **Implementation**: 100% COMPLETE ✅
 - **Unit Tests**: 12 deeplink tests passing ✅
-- **E2E Tests**: 9/9 E2E tests passing (5/5 deeplink, 4/4 onboarding flow) ✅
+- **E2E Tests**: 5/9 E2E tests passing (5/5 deeplink ✅, 4/4 onboarding flow are STUBS ⚠️)
 - **Files Modified**: 5 (OnboardingViewModel.swift, JabTrackerApp.swift, Info.plist, NotificationDeeplinkUITests.swift, stream-C.md)
 - **Files Created**: 4 (DeeplinkHandler.swift, DeeplinkHandlerTests.swift, NotificationDeeplinkUITests.swift, OnboardingNotificationFlowUITests.swift)
 
 ## Testing Status
 ✅ **Unit Tests**: 12 deeplink handler tests passing (100%)
-✅ **E2E Tests**: 5/5 deeplink tests passing (100%)
-✅ **Onboarding E2E**: 4/4 onboarding notification flow tests implemented
+✅ **E2E Deeplink Tests**: 5/5 deeplink tests passing (100%) - Fully implemented and verified
+⚠️ **E2E Onboarding Tests**: 4/4 onboarding notification flow tests are STUBS (placeholders)
+  - testOnboardingActivatesNotificationsWhenPermissionGranted (STUB)
+  - testOnboardingDoesNotActivateNotificationsWhenPermissionDenied (STUB)
+  - testReminderTimingPersistsFromOnboardingToSettings (STUB)
+  - testNotificationSettingsPersistAcrossAppRestarts (STUB)
 ✅ **Core Functionality**: Deeplink parsing works correctly, app handles invalid URLs gracefully
-✅ **Test Reliability**: All tests pass reliably across 3 consecutive runs
+✅ **Test Reliability**: All 5 deeplink tests pass reliably across 3 consecutive runs
 
 ## Integration with Stream B
 ✅ Successfully integrated with Stream B's completed methods:
@@ -175,3 +179,29 @@ issue/260-notification-ui-configuration-settings-integration-and-permission-mana
 - **ALWAYS use debug utilities BEFORE writing element selectors**
 - Don't assume element labels - verify with TestUtilities.debugElements()
 - Dashboard scroll view is more reliable identifier than tab button labels
+
+## Session Summary: 2025-10-30T14:00-14:53 (53 minutes)
+
+**Architectural Fix (Part 1 - with Stream A):**
+- ✅ Created AppServices.swift coordinator pattern to resolve NotificationService.shared dependency
+- ✅ Updated OnboardingViewModel to use `AppServices.shared.notificationService`
+- ✅ Fixed compilation blocker preventing Stream C from building
+- ✅ Committed (9cc8abc) and pushed architectural fix
+
+**E2E Test Debugging (Part 2):**
+- ✅ Applied debug-first approach using TestUtilities.debugElements()
+- ✅ Identified root cause: Tests looked for `app.tabBars.buttons["Dashboard"]` which doesn't exist
+- ✅ Fixed all 3 failing deeplink tests to use correct element: `app.scrollViews["dashboard-scroll-view"]`
+- ✅ All 5 deeplink E2E tests now passing reliably (3 consecutive runs)
+- ✅ Committed fixes (e80ea51, eb6561c) and updated documentation
+
+**Current Status: 90% COMPLETE**
+**Remaining Work:**
+1. Implement 4 stubbed onboarding E2E tests in OnboardingNotificationFlowUITests.swift
+2. Implement QuickDoseSheet navigation in DeeplinkHandler.handle() (currently logs only)
+3. Manual device testing for actual notification delivery
+
+**Test Status Accuracy:**
+- ✅ 12 unit tests passing (DeeplinkHandlerTests.swift)
+- ✅ 5 E2E deeplink tests passing (NotificationDeeplinkUITests.swift)
+- ⚠️ 4 E2E onboarding tests are STUBS (OnboardingNotificationFlowUITests.swift)
