@@ -1,12 +1,14 @@
 ---
-description: Add an arbitrary leaning to the context
+description: Add an arbitrary learning to the context
 argument-hint: file path or paste content
 allowed-tools: 
 ---
 
-**ultrathink** and use TodoWrite to keep track of your tasks.
+Update project context with an important new learning.
 
-## 1. Load Context:
+## Instructions
+
+### 1. Load Context:
 
 @.claude/context/testing.md
 @.claude/context/tech-context.md
@@ -15,10 +17,10 @@ allowed-tools:
 @.claude/context/development-commands.md
 @.claude/context/project-structure.md
 
-## 2. Read learning
+### 2. Read learning
 
 New learning: $ARGUMENTS
 
-## 4. Update context
+### 4. Update context
 
 Integrate this new learning into the appropriate context file(s). Practice DRY: do not repeat the same content in multiple files

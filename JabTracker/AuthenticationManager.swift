@@ -178,6 +178,17 @@ class AuthenticationManager: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
         UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
 
+        // Clear notification preferences from UserDefaults
+        UserDefaults.standard.removeObject(forKey: "notificationsEnabled")
+        UserDefaults.standard.removeObject(forKey: "reminderMinutesBefore")
+
+        // Clear all pending notifications from notification center
+        // Note: Cannot programmatically revoke iOS notification authorization,
+        // but we can clear the queue and delivered notifications
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        Self.logger.info("✅ AuthenticationManager: Cleared all pending and delivered notifications")
+
         // Clear chart dataset cache for test isolation
         clearChartDatasetCache()
 

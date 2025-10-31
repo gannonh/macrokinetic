@@ -120,6 +120,7 @@ struct SettingsViewNotificationIntegrationTests {
     @Test("Enabling notifications with authorization denied throws error")
     func testEnableWithAuthorizationDenied() async {
         // Setup: Deny authorization
+        mockNotificationCenter.shouldGrantAuthorization = false
         mockNotificationCenter.authorizationStatus = .denied
 
         // Attempt to enable notifications

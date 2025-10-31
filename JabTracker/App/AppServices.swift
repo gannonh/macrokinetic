@@ -13,10 +13,10 @@ final class AppServices: ObservableObject {
     static let shared = AppServices()
 
     /// Schedule service for dose schedule management
-    private(set) var scheduleService: ScheduleService?
+    @Published private(set) var scheduleService: ScheduleService?
 
     /// Notification service for dose reminder notifications
-    private(set) var notificationService: NotificationService?
+    @Published private(set) var notificationService: NotificationService?
 
     private init() {
         // Services will be initialized when ModelContext becomes available

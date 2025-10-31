@@ -59,25 +59,42 @@ final class NotificationSettingsUITests: XCTestCase {
         // Navigate to Settings
         self.app.tabBars.buttons["Settings"].tap()
 
-        // Find notification toggle
-        let notificationToggle = self.app.switches["notifications-toggle"]
+        // The notifications toggle is Switch #1 (element(boundBy: 1))
+        // It's below the fold, so scroll to make it hittable
+        let notificationToggle = self.app.switches.element(boundBy: 1)
+
         XCTAssertTrue(
             notificationToggle.waitForExistence(timeout: 3.0),
             "Notification toggle should exist"
         )
 
-        // Verify initially off (value "0")
+        // Scroll down to bring notifications section into view (need 2 swipes)
+        self.app.swipeUp()
+        usleep(300_000)
+        self.app.swipeUp()
+        usleep(500_000)  // Wait for scroll to settle
+
+        // Verify toggle is now hittable
+        XCTAssertTrue(notificationToggle.isHittable, "Toggle should be hittable after scrolling")
+
+        // Verify initially off (value "0") - --reset-app-data should clear UserDefaults
         XCTAssertEqual(
             notificationToggle.value as? String,
             "0",
-            "Notification toggle should initially be disabled"
+            "Notification toggle should initially be disabled after app data reset"
         )
 
-        // Toggle notifications on
-        notificationToggle.tap()
+        // Toggle notifications on - use coordinate tap for reliability
+        let toggleCoordinate = notificationToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        toggleCoordinate.tap()
 
-        // Wait for toggle state to update (give time for async operation)
-        sleep(1)
+        // Wait for toggle value to update (accessibility value changes)
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "1"),
+            object: notificationToggle
+        )
+        let result = XCTWaiter().wait(for: [expectation], timeout: 3.0)
+        XCTAssertEqual(result, .completed, "Toggle value should change to '1' within 3 seconds")
 
         // Verify toggle is now on (value "1")
         XCTAssertEqual(
@@ -89,7 +106,7 @@ final class NotificationSettingsUITests: XCTestCase {
         // Verify reminder picker appears
         let reminderPicker = self.app.buttons["reminder-timing-picker"]
         XCTAssertTrue(
-            reminderPicker.waitForExistence(timeout: 3.0),
+            reminderPicker.waitForExistence(timeout: 2.0),
             "Reminder timing picker should appear when notifications enabled"
         )
     }
@@ -105,16 +122,30 @@ final class NotificationSettingsUITests: XCTestCase {
         // Navigate to Settings
         self.app.tabBars.buttons["Settings"].tap()
 
-        let notificationToggle = self.app.switches["notifications-toggle"]
+        // Use element(boundBy: 1) and scroll
+        let notificationToggle = self.app.switches.element(boundBy: 1)
         XCTAssertTrue(
             notificationToggle.waitForExistence(timeout: 3.0),
             "Notification toggle should exist"
         )
 
-        // Enable notifications first
+        // Scroll to make toggle hittable
+        self.app.swipeUp()
+        usleep(300_000)
+        self.app.swipeUp()
+        usleep(500_000)
+
+        // Enable notifications first using coordinate tap
         if notificationToggle.value as? String == "0" {
-            notificationToggle.tap()
-            sleep(1)
+            let toggleCoordinate = notificationToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+            toggleCoordinate.tap()
+
+            // Wait for value to change
+            let enableExpectation = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "value == %@", "1"),
+                object: notificationToggle
+            )
+            _ = XCTWaiter().wait(for: [enableExpectation], timeout: 3.0)
         }
 
         // Verify toggle is on
@@ -131,9 +162,16 @@ final class NotificationSettingsUITests: XCTestCase {
             "Reminder picker should be visible when notifications enabled"
         )
 
-        // Toggle notifications off
-        notificationToggle.tap()
-        sleep(1)
+        // Toggle notifications off using coordinate tap
+        let toggleCoordinate = notificationToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        toggleCoordinate.tap()
+
+        // Wait for value to change
+        let disableExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "0"),
+            object: notificationToggle
+        )
+        _ = XCTWaiter().wait(for: [disableExpectation], timeout: 3.0)
 
         // Verify toggle is now off
         XCTAssertEqual(
@@ -160,16 +198,30 @@ final class NotificationSettingsUITests: XCTestCase {
         // Navigate to Settings
         self.app.tabBars.buttons["Settings"].tap()
 
-        let notificationToggle = self.app.switches["notifications-toggle"]
+        // Use element(boundBy: 1) and scroll
+        let notificationToggle = self.app.switches.element(boundBy: 1)
         XCTAssertTrue(
             notificationToggle.waitForExistence(timeout: 3.0),
             "Notification toggle should exist"
         )
 
-        // Enable notifications if not already enabled
+        // Scroll to make toggle hittable
+        self.app.swipeUp()
+        usleep(300_000)
+        self.app.swipeUp()
+        usleep(500_000)
+
+        // Enable notifications if not already enabled using coordinate tap
         if notificationToggle.value as? String == "0" {
-            notificationToggle.tap()
-            sleep(1)
+            let toggleCoordinate = notificationToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+            toggleCoordinate.tap()
+
+            // Wait for value to change
+            let enableExpectation = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "value == %@", "1"),
+                object: notificationToggle
+            )
+            _ = XCTWaiter().wait(for: [enableExpectation], timeout: 3.0)
         }
 
         // Find reminder timing picker
@@ -328,16 +380,30 @@ final class NotificationSettingsUITests: XCTestCase {
         // Navigate to Settings
         self.app.tabBars.buttons["Settings"].tap()
 
-        let notificationToggle = self.app.switches["notifications-toggle"]
+        // Use element(boundBy: 1) and scroll
+        let notificationToggle = self.app.switches.element(boundBy: 1)
         XCTAssertTrue(
             notificationToggle.waitForExistence(timeout: 3.0),
             "Notification toggle should exist"
         )
 
-        // Enable notifications
+        // Scroll to make toggle hittable
+        self.app.swipeUp()
+        usleep(300_000)
+        self.app.swipeUp()
+        usleep(500_000)
+
+        // Enable notifications using coordinate tap
         if notificationToggle.value as? String == "0" {
-            notificationToggle.tap()
-            sleep(1)
+            let toggleCoordinate = notificationToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+            toggleCoordinate.tap()
+
+            // Wait for value to change
+            let enableExpectation = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "value == %@", "1"),
+                object: notificationToggle
+            )
+            _ = XCTWaiter().wait(for: [enableExpectation], timeout: 3.0)
         }
 
         // Verify reminder picker exists and is accessible
@@ -346,6 +412,12 @@ final class NotificationSettingsUITests: XCTestCase {
             reminderPicker.waitForExistence(timeout: 3.0),
             "Reminder timing picker should exist"
         )
+
+        // Scroll one more time to ensure picker is fully visible
+        if !reminderPicker.isHittable {
+            self.app.swipeUp()
+            usleep(500_000)
+        }
 
         // Verify accessibility properties
         XCTAssertTrue(
@@ -390,11 +462,18 @@ final class NotificationSettingsUITests: XCTestCase {
         // Navigate to Settings
         self.app.tabBars.buttons["Settings"].tap()
 
-        let notificationToggle = self.app.switches["notifications-toggle"]
+        // Use element(boundBy: 1) and scroll
+        let notificationToggle = self.app.switches.element(boundBy: 1)
         XCTAssertTrue(
             notificationToggle.waitForExistence(timeout: 3.0),
             "Notification toggle should exist"
         )
+
+        // Scroll to make toggle hittable
+        self.app.swipeUp()
+        usleep(300_000)
+        self.app.swipeUp()
+        usleep(500_000)
 
         // Verify accessibility properties
         XCTAssertTrue(
@@ -413,9 +492,17 @@ final class NotificationSettingsUITests: XCTestCase {
             "Toggle value should be 0 or 1, got: \(initialValue ?? "nil")"
         )
 
-        // Toggle and verify state changes
-        notificationToggle.tap()
-        sleep(1)
+        // Toggle using coordinate tap and verify state changes
+        let toggleCoordinate = notificationToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        toggleCoordinate.tap()
+
+        // Wait for value to change
+        let expectedNewValue = initialValue == "0" ? "1" : "0"
+        let changeExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", expectedNewValue),
+            object: notificationToggle
+        )
+        _ = XCTWaiter().wait(for: [changeExpectation], timeout: 3.0)
 
         let updatedValue = notificationToggle.value as? String
         XCTAssertNotEqual(

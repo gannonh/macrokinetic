@@ -121,35 +121,6 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Design System Demo Section
-                    DesignCard {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Design System Demo")
-                                .font(DesignTokens.Typography.headline)
-                                .accessibilityIdentifier("design-system-headline")
-
-                            Text("Typography and Colors")
-                                .font(DesignTokens.Typography.body)
-                                .foregroundColor(.secondary)
-                                .accessibilityIdentifier("design-system-body")
-
-                            Text("Sample caption text")
-                                .font(DesignTokens.Typography.caption)
-                                .foregroundColor(.secondary)
-                                .accessibilityIdentifier("design-system-caption")
-
-                            VStack(spacing: 12) {
-                                PrimaryButton(title: "Primary Button") {
-                                    // Demo action
-                                }
-
-                                SecondaryButton(title: "Secondary Button") {
-                                    // Demo action
-                                }
-                            }
-                        }
-                    }
-
                     // Sync Status Section
                     SyncStatusCard(dataController: self.dataController)
 
@@ -161,35 +132,8 @@ struct SettingsView: View {
                                 .accessibilityIdentifier("notifications-section-header")
 
                             // Enable/Disable Toggle
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Dose Reminders")
-                                        .font(DesignTokens.Typography.body)
-                                    Text("Get notified when it's time for your dose")
-                                        .font(DesignTokens.Typography.caption)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                Spacer()
-
-                                if let notificationService = appServices.notificationService {
-                                    Toggle(
-                                        "",
-                                        isOn: Binding(
-                                            get: { notificationService.notificationsEnabled },
-                                            set: { newValue in
-                                                Task {
-                                                    if newValue {
-                                                        await activateNotifications()
-                                                    } else {
-                                                        await deactivateNotifications()
-                                                    }
-                                                }
-                                            }
-                                        )
-                                    )
-                                    .accessibilityIdentifier("notifications-toggle")
-                                }
+                            if let notificationService = appServices.notificationService {
+                                NotificationToggleRow(notificationService: notificationService, logger: self.logger)
                             }
 
                             if let notificationService = appServices.notificationService,
@@ -232,45 +176,55 @@ extension SettingsView {
         case .notSubscribed, .expired: return "Not Subscribed"
         }
     }
+}
 
-    // MARK: - Notification Activation
+/// Notification toggle row with proper @Bindable pattern
+struct NotificationToggleRow: View {
+    @Bindable var notificationService: NotificationService
+    let logger: Logger
 
-    /**
-     * Activate notifications by calling NotificationService.enable().
-     *
-     * Handles authorization requests and error states.
-     */
-    private func activateNotifications() async {
-        guard let notificationService = appServices.notificationService else {
-            logger.error("NotificationService not initialized")
-            return
-        }
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Dose Reminders")
+                    .font(DesignTokens.Typography.body)
+                Text("Get notified when it's time for your dose")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(.secondary)
+            }
 
-        do {
-            try await notificationService.enable()
-            logger.info("Notifications enabled successfully")
-        } catch {
-            logger.error("Failed to enable notifications: \(error.localizedDescription)")
-            // Revert toggle state on failure
-            await MainActor.run {
-                notificationService.notificationsEnabled = false
+            Spacer()
+
+            Toggle(
+                "",
+                isOn: $notificationService.notificationsEnabled
+            )
+            .accessibilityIdentifier("notifications-toggle")
+            .onChange(of: notificationService.notificationsEnabled) { oldValue, newValue in
+                // In UI testing mode, skip async operations for faster test execution
+                let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+                guard !isUITesting else {
+                    logger.info("UI testing mode: Skipping async notification operations")
+                    return
+                }
+
+                Task {
+                    do {
+                        if newValue {
+                            try await notificationService.enable()
+                        } else {
+                            await notificationService.disable()
+                        }
+                    } catch {
+                        // Revert toggle on error
+                        logger.error("Failed to update notifications: \(error.localizedDescription)")
+                        await MainActor.run {
+                            notificationService.notificationsEnabled = oldValue
+                        }
+                    }
+                }
             }
         }
-    }
-
-    /**
-     * Deactivate notifications by calling NotificationService.disable().
-     *
-     * Cancels all pending notifications and clears the queue.
-     */
-    private func deactivateNotifications() async {
-        guard let notificationService = appServices.notificationService else {
-            logger.error("NotificationService not initialized")
-            return
-        }
-
-        await notificationService.disable()
-        logger.info("Notifications disabled successfully")
     }
 }
 

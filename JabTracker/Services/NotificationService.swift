@@ -81,6 +81,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         super.init()
         self.notificationCenter.delegate = self
         registerNotificationCategories()
+        logger.info("NotificationService initialized")
     }
 
     // MARK: - Authorization
@@ -132,8 +133,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      * - Returns: Current UNAuthorizationStatus
      */
     func checkAuthorizationStatus() async -> UNAuthorizationStatus {
-        let settings = await notificationCenter.notificationSettings()
-        authorizationStatus = settings.authorizationStatus
+        authorizationStatus = await notificationCenter.authorizationStatus()
 
         logger.debug("Authorization status checked: \(String(describing: self.authorizationStatus))")
 
@@ -308,10 +308,11 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      * - Throws: NotificationServiceError.authorizationDenied if user denies permission
      */
     public func enable() async throws {
-        logger.info("Enabling notifications")
+        logger.info("[NOTIF_SERVICE] enable() called - current state: \(self.notificationsEnabled)")
 
         // 1. Check/request authorization
         let granted = try await requestAuthorization()
+        logger.info("[NOTIF_SERVICE] requestAuthorization() returned: \(granted)")
         guard granted else {
             logger.warning("Authorization denied")
             throw NotificationServiceError.authorizationDenied
@@ -319,17 +320,20 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
         // 2. Refresh notification queue for all active schedules
         try await refreshNotificationQueue()
+        logger.info("[NOTIF_SERVICE] refreshNotificationQueue() completed")
 
         // 3. Schedule background refresh
         scheduleBackgroundRefresh()
 
         // 4. Update enabled state
         notificationsEnabled = true
+        logger.info("[NOTIF_SERVICE] Set notificationsEnabled = true")
 
         // 5. Persist state to UserDefaults
         saveState()
+        logger.info("[NOTIF_SERVICE] saveState() called")
 
-        logger.info("Notifications enabled successfully")
+        logger.info("[NOTIF_SERVICE] Notifications enabled successfully - final state: \(self.notificationsEnabled)")
     }
 
     /**

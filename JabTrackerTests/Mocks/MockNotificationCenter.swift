@@ -58,14 +58,27 @@ final class MockNotificationCenter: NotificationCenterProtocol {
     // MARK: - Protocol Implementation
 
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool {
-        shouldGrantAuthorization
+        // Update authorization status when authorization is granted
+        if shouldGrantAuthorization {
+            authorizationStatus = .authorized
+        } else {
+            authorizationStatus = .denied
+        }
+        return shouldGrantAuthorization
     }
 
     func notificationSettings() async -> UNNotificationSettings {
         // UNNotificationSettings cannot be initialized directly in tests
-        // Return the real notification center's settings as a workaround
-        // Tests should verify behavior through authorization status checks and other means
+        // The authorization status is managed through the authorizationStatus property
+        // which gets set when requestAuthorization() is called.
+        // For tests that don't call requestAuthorization(), manually set authorizationStatus before testing.
         await UNUserNotificationCenter.current().notificationSettings()
+    }
+
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        // Return the mock's authorization status directly
+        // This allows tests to verify status without needing to create UNNotificationSettings
+        authorizationStatus
     }
 
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {
