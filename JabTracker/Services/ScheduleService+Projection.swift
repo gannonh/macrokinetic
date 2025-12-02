@@ -102,15 +102,25 @@ extension ScheduleService {
      * - Note: Updates observable property for SwiftUI binding
      */
     func refreshUpcomingDoses(daysAhead: Int = 30) {
+        print("🔍 [ScheduleService] refreshUpcomingDoses() called")
+        print("🔍 [ScheduleService] activeSchedules.count = \(activeSchedules.count)")
+
         let now = Date()
         let cutoffDate = Calendar.current.date(byAdding: .day, value: daysAhead, to: now)!
+        print("🔍 [ScheduleService] Looking for doses from \(now) to \(cutoffDate)")
 
         var allUpcomingDoses: [ScheduledDose] = []
 
         for schedule in activeSchedules {
+            print("🔍 [ScheduleService] Generating doses for schedule \(schedule.id)")
+            print("🔍 [ScheduleService] Schedule pattern: \(schedule.patternType)")
+            print("🔍 [ScheduleService] Schedule createdAt: \(schedule.createdAt)")
             let doses = generateScheduledDoses(for: schedule, from: now, to: cutoffDate)
+            print("🔍 [ScheduleService] Generated \(doses.count) doses for this schedule")
             allUpcomingDoses.append(contentsOf: doses)
         }
+
+        print("🔍 [ScheduleService] Total upcoming doses generated: \(allUpcomingDoses.count)")
 
         // Sort chronologically
         upcomingDoses = allUpcomingDoses.sorted { $0.scheduledTime < $1.scheduledTime }

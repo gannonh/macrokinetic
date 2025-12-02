@@ -54,5 +54,16 @@
 	<string>JabTracker would like to read your weight data from Health to provide personalized medication tracking and insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>JabTracker would like to update your weight data in Health to keep your health records synchronized.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>jab-tracker</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.gannonhall.JabTracker</string>
+		</dict>
+	</array>
 </dict>
 </plist>

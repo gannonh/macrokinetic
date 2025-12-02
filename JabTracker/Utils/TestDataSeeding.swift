@@ -231,6 +231,7 @@
                     dayOfWeek: config.medication.frequency == .weekly
                         ? calendar.component(.weekday, from: firstDose.timestamp) : nil,
                     timeOfDay: TimeComponents(hour: components.hour ?? 9, minute: components.minute ?? 0),
+                    secondTimeOfDay: nil,  // Not used in test data
                     interval: config.medication.frequency == .weekly ? 7 : 1,
                     doseAmount: config.doseAmount,
                     windowMinutesBefore: 120,  // 2 hours before

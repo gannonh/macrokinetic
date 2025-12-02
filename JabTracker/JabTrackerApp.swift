@@ -66,6 +66,9 @@ struct JabTrackerApp: App {
                     }
                 }
             }
+            .onOpenURL { url in
+                DeeplinkHandler.handle(url: url)
+            }
             .onAppear {
                 Task {
                     await self.authManager.checkAuthenticationStatus()
@@ -77,6 +80,16 @@ struct JabTrackerApp: App {
                         // Seed test data if launch argument is present
                         if ProcessInfo.processInfo.arguments.contains("--test-titration-data") {
                             self.dataController.seedTitrationTestData()
+                        }
+
+                        // Handle deeplink from launch arguments (for UI testing)
+                        if let deeplinkURLString = ProcessInfo.processInfo.arguments.first(where: {
+                            $0.hasPrefix("--deeplink-url=")
+                        }) {
+                            let urlString = String(deeplinkURLString.dropFirst("--deeplink-url=".count))
+                            if let url = URL(string: urlString) {
+                                DeeplinkHandler.handle(url: url)
+                            }
                         }
                     }
                 }

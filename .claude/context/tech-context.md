@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-29T18:20:27Z
-version: 2.8
+last_updated: 2025-10-30T14:59:15Z
+version: 2.9
 author: Claude Code PM System
 ---
 
@@ -54,6 +54,42 @@ author: Claude Code PM System
 - **Relationship Management**: Proper inverse relationships and cascade rules
 - **Sync Strategy**: Real-time CloudKit sync with status monitoring
 - **Data Validation**: Form validation with user-friendly error handling
+
+### UserDefaults for Device-Specific Settings (Issue #260)
+
+**Use Case**: Notification preferences and device-specific app settings
+
+**Decision**: Use UserDefaults instead of SwiftData for notification settings persistence
+
+**Rationale**:
+- **Device-Specific**: Settings should not sync across devices (notification preferences are per-device)
+- **Simple Storage**: Boolean and integer values don't require SwiftData complexity
+- **Performance**: Faster access than SwiftData queries for frequently accessed settings
+- **Platform Conventions**: iOS apps traditionally use UserDefaults for app-specific preferences
+- **Separation of Concerns**: App settings vs user data stored separately
+
+**Implementation Pattern**:
+```swift
+// NotificationService+Persistence.swift
+extension NotificationService {
+    func saveState() {
+        UserDefaults.standard.set(notificationsEnabled, forKey: "notificationsEnabled")
+        UserDefaults.standard.set(reminderMinutesBefore, forKey: "reminderMinutesBefore")
+    }
+
+    func loadState() {
+        notificationsEnabled = UserDefaults.standard.bool(forKey: "notificationsEnabled")
+        reminderMinutesBefore = UserDefaults.standard.integer(forKey: "reminderMinutesBefore")
+        if reminderMinutesBefore == 0 {
+            reminderMinutesBefore = 60 // Default 1 hour
+        }
+    }
+}
+```
+
+**When to Use UserDefaults vs SwiftData**:
+- ✅ **UserDefaults**: App preferences, UI state, device-specific settings, feature flags
+- ✅ **SwiftData**: User-generated content, data requiring sync, complex relationships, searchable data
 
 ## Security Implementation
 - **Authentication**: Sign in with Apple (sole method)
@@ -184,6 +220,42 @@ author: Claude Code PM System
 - **SwiftUI Gesture Integration**: Successful separation of chart content from gesture handling enables complex interactions while maintaining performance
 - **Public API Design**: Chart control public API pattern (setZoomLevel, setPanOffset, resetZoomAndPan) provides programmatic control with proper encapsulation
 - **Accessibility Architecture**: Comprehensive VoiceOver support with dynamic descriptions and trend analysis requires thoughtful component design patterns
+
+### SwiftUI Property Wrapper Patterns (Issue #260)
+
+**@ObservedObject with AppServices Coordinator**:
+```swift
+// In SwiftUI View:
+@ObservedObject private var appServices = AppServices.shared
+
+// Access nested service properties:
+if let notificationService = appServices.notificationService {
+    Toggle("Notifications", isOn: $notificationService.notificationsEnabled)
+}
+```
+
+**Binding to Nested Service Properties**:
+```swift
+// When service property is not directly bindable:
+Toggle("", isOn: Binding(
+    get: { notificationService.notificationsEnabled },
+    set: { newValue in
+        notificationService.notificationsEnabled = newValue
+        Task {
+            if newValue { await activateNotifications() }
+            else { await deactivateNotifications() }
+        }
+    }
+))
+```
+
+**Property Wrapper Decision Matrix**:
+- **@State**: Value types AND @Observable classes (iOS 17+)
+- **@StateObject**: ObservableObject classes (view owns the object)
+- **@ObservedObject**: ObservableObject classes (object passed in or accessed from coordinator)
+- **@Bindable**: Two-way binding with @Observable classes
+
+**Key Insight**: AppServices uses ObservableObject (not @Observable) to remain compatible with SwiftUI's observation system while providing coordinator functionality.
 
 ## Medical App Quality & Testing
 > **For testing patterns, coverage management, Swift Testing framework usage, and medical app testing standards**, see `.claude/context/testing.md`
@@ -318,6 +390,7 @@ author: Claude Code PM System
 - **Medical App Quality**: High test coverage essential for patient safety in medication management features
 
 ## Update History
+- 2025-10-30T14:59:15Z: Added Issue #260 technology insights - UserDefaults for device-specific settings, SwiftUI property wrapper patterns (@ObservedObject with AppServices), binding to nested service properties
 - 2025-10-29T18:20:27Z: Added Titration Workflow Integration section (Issue #286) - SwiftUI confirmation dialog patterns, DateFormatter display patterns, NotificationService titration integration, and TDD coverage excellence for medical app quality
 - 2025-10-15T18:06:05Z: Added Calendar Integration Technology Insights from Issue #178 - SwiftUI DatePicker range behavior, ScheduleService ModelContext integration requirements, ChartDataProcessor performance characteristics, and AnalyticsViewModel threading patterns
 - 2025-10-09T20:27:54Z: Added Onboarding Integration E2E Testing section (Issue #177) - XCUITest back button access patterns, onboarding flow E2E testing patterns, and concentration chart preview performance validation for schedule setup integration

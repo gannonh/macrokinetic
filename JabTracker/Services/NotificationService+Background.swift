@@ -5,6 +5,24 @@ import UserNotifications
 // MARK: - NotificationService+Background
 
 extension NotificationService {
+    // MARK: - Background Task Scheduling
+
+    /**
+     * Schedule a background refresh task to keep notification queue current.
+     *
+     * Registers a background task with iOS to periodically refresh the notification queue.
+     * This ensures notifications stay up-to-date even when the app is not actively running.
+     *
+     * - Note: Actual BGTaskScheduler registration should be done in AppDelegate/App lifecycle
+     * - Note: This is a placeholder for the full background task scheduling implementation
+     */
+    func scheduleBackgroundRefresh() {
+        logger.info("Background refresh scheduling requested")
+        // TODO: Implement BGTaskScheduler registration
+        // This will be done when full background refresh is implemented
+        // For now, this is a no-op but prevents crashes in enable()
+    }
+
     // MARK: - Background Refresh
 
     /**

@@ -1,1 +1,1 @@
-Issue #286: Initialize branch for issue tracking
+Issue #260: Initialize branch for issue tracking

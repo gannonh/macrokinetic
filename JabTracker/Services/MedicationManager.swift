@@ -350,6 +350,7 @@ class MedicationManager: ObservableObject {
                 hour: calendar.component(.hour, from: now),
                 minute: calendar.component(.minute, from: now)
             ),
+            secondTimeOfDay: nil,  // Not used in default schedule creation
             interval: interval,
             doseAmount: profile.currentDose,
             windowMinutesBefore: 120,  // 2 hours before

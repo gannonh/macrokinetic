@@ -18,6 +18,9 @@ protocol NotificationCenterProtocol {
     /// Get current notification settings
     func notificationSettings() async -> UNNotificationSettings
 
+    /// Get current authorization status (optional - defaults to reading from notificationSettings)
+    func authorizationStatus() async -> UNAuthorizationStatus
+
     /// Set notification categories
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>)
 
@@ -44,4 +47,9 @@ protocol NotificationCenterProtocol {
 
 /// Extend UNUserNotificationCenter to conform to the protocol
 /// This allows the real notification center to be used in production without any code changes
-extension UNUserNotificationCenter: NotificationCenterProtocol {}
+extension UNUserNotificationCenter: NotificationCenterProtocol {
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        let settings = await notificationSettings()
+        return settings.authorizationStatus
+    }
+}

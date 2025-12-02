@@ -337,6 +337,7 @@ struct DoseScheduleEditView: View {
             config = ScheduleConfiguration(
                 dayOfWeek: nil,  // No specific day - daily dosing
                 timeOfDay: timeOfDay,
+                secondTimeOfDay: nil,  // Not used for daily pattern
                 interval: 1,  // 1 day interval
                 doseAmount: medicationProfile.currentDose,
                 windowMinutesBefore: windowMinutesBefore,
@@ -350,6 +351,7 @@ struct DoseScheduleEditView: View {
             config = ScheduleConfiguration(
                 dayOfWeek: dayOfWeek,
                 timeOfDay: timeOfDay,
+                secondTimeOfDay: nil,  // Not used for weekly pattern
                 interval: interval,
                 doseAmount: medicationProfile.currentDose,
                 windowMinutesBefore: windowMinutesBefore,
@@ -363,6 +365,7 @@ struct DoseScheduleEditView: View {
             config = ScheduleConfiguration(
                 dayOfWeek: nil,
                 timeOfDay: timeOfDay,
+                secondTimeOfDay: nil,  // TODO: Add second time picker in Settings UI (Phase 3)
                 interval: 7,  // Weekly base interval
                 doseAmount: medicationProfile.currentDose,
                 windowMinutesBefore: windowMinutesBefore,
@@ -377,6 +380,7 @@ struct DoseScheduleEditView: View {
             config = ScheduleConfiguration(
                 dayOfWeek: nil,
                 timeOfDay: timeOfDay,
+                secondTimeOfDay: nil,  // Not used for custom pattern
                 interval: interval,
                 doseAmount: medicationProfile.currentDose,
                 windowMinutesBefore: windowMinutesBefore,
@@ -442,6 +446,7 @@ struct DoseScheduleEditView: View {
     let config = ScheduleConfiguration(
         dayOfWeek: 1,
         timeOfDay: TimeComponents(hour: 8, minute: 0),
+        secondTimeOfDay: nil,  // Not used in preview
         interval: 7,
         doseAmount: 0.25,
         windowMinutesBefore: TimeConstants.defaultWindowMinutes,

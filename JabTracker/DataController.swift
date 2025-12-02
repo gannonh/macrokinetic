@@ -276,6 +276,7 @@ class DataController: ObservableObject {
         let scheduleConfig = ScheduleConfiguration(
             dayOfWeek: calendar.component(.weekday, from: firstDose.timestamp),
             timeOfDay: TimeComponents(hour: components.hour ?? 9, minute: components.minute ?? 0),
+            secondTimeOfDay: nil,  // Not used in sample data
             interval: 7,  // Weekly
             doseAmount: 1.0,
             windowMinutesBefore: 120,  // 2 hours before

@@ -1,3 +1,4 @@
+import OSLog
 import StoreKit
 import SwiftData
 import SwiftUI
@@ -7,9 +8,13 @@ struct SettingsView: View {
     // Use real environment for Settings so status reflects actual entitlements during UI tests
     @StateObject private var subscriptionManager = SubscriptionManager(isTestEnvironment: false)
     @StateObject private var medicationManager: MedicationManager
+    @ObservedObject private var appServices = AppServices.shared
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "SettingsView")
 
     init() {
-        let manager = MedicationManager(modelContext: DataController.shared.container.mainContext)
+        let context = DataController.shared.container.mainContext
+        let manager = MedicationManager(modelContext: context)
         self._medicationManager = StateObject(wrappedValue: manager)
     }
 
@@ -116,53 +121,41 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Design System Demo Section
-                    DesignCard {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Design System Demo")
-                                .font(DesignTokens.Typography.headline)
-                                .accessibilityIdentifier("design-system-headline")
-
-                            Text("Typography and Colors")
-                                .font(DesignTokens.Typography.body)
-                                .foregroundColor(.secondary)
-                                .accessibilityIdentifier("design-system-body")
-
-                            Text("Sample caption text")
-                                .font(DesignTokens.Typography.caption)
-                                .foregroundColor(.secondary)
-                                .accessibilityIdentifier("design-system-caption")
-
-                            VStack(spacing: 12) {
-                                PrimaryButton(title: "Primary Button") {
-                                    // Demo action
-                                }
-
-                                SecondaryButton(title: "Secondary Button") {
-                                    // Demo action
-                                }
-                            }
-                        }
-                    }
-
                     // Sync Status Section
                     SyncStatusCard(dataController: self.dataController)
 
-                    // Settings Options
+                    // Notification Settings Section
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Preferences")
+                            Text("Notifications")
                                 .font(DesignTokens.Typography.headline)
+                                .accessibilityIdentifier("notifications-section-header")
 
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Text("Notifications")
-                                        .font(DesignTokens.Typography.body)
-                                    Spacer()
-                                    Toggle("", isOn: .constant(true))
-                                }
+                            // Enable/Disable Toggle
+                            if let notificationService = appServices.notificationService {
+                                NotificationToggleRow(notificationService: notificationService, logger: self.logger)
+                            }
 
-                                // Face ID toggle is handled in UserProfileView when user is authenticated
+                            if let notificationService = appServices.notificationService,
+                                notificationService.notificationsEnabled
+                            {
+                                // Reminder Timing Picker
+                                ReminderTimingPicker(
+                                    selectedMinutes: Binding(
+                                        get: { notificationService.reminderMinutesBefore },
+                                        set: { newValue in
+                                            notificationService.reminderMinutesBefore = newValue
+                                            Task {
+                                                try? await notificationService.updateReminderTiming(newValue)
+                                            }
+                                        }
+                                    )
+                                )
+
+                                // Authorization Status Display
+                                NotificationAuthorizationStatus(
+                                    status: notificationService.authorizationStatus
+                                )
                             }
                         }
                     }
@@ -181,6 +174,56 @@ extension SettingsView {
         case .trialActive: return "Trial Active"
         case .premiumActive: return "Premium Active"
         case .notSubscribed, .expired: return "Not Subscribed"
+        }
+    }
+}
+
+/// Notification toggle row with proper @Bindable pattern
+struct NotificationToggleRow: View {
+    @Bindable var notificationService: NotificationService
+    let logger: Logger
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Dose Reminders")
+                    .font(DesignTokens.Typography.body)
+                Text("Get notified when it's time for your dose")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Toggle(
+                "",
+                isOn: $notificationService.notificationsEnabled
+            )
+            .accessibilityIdentifier("notifications-toggle")
+            .onChange(of: notificationService.notificationsEnabled) { oldValue, newValue in
+                // In UI testing mode, skip async operations for faster test execution
+                let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+                guard !isUITesting else {
+                    logger.info("UI testing mode: Skipping async notification operations")
+                    return
+                }
+
+                Task {
+                    do {
+                        if newValue {
+                            try await notificationService.enable()
+                        } else {
+                            await notificationService.disable()
+                        }
+                    } catch {
+                        // Revert toggle on error
+                        logger.error("Failed to update notifications: \(error.localizedDescription)")
+                        await MainActor.run {
+                            notificationService.notificationsEnabled = oldValue
+                        }
+                    }
+                }
+            }
         }
     }
 }

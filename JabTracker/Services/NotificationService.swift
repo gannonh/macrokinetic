@@ -44,6 +44,12 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Indicates if notification queue is currently being refreshed
     var isRefreshing: Bool = false
 
+    /// Indicates if notifications are currently enabled by the user
+    public var notificationsEnabled: Bool = false
+
+    /// Minutes before scheduled dose time to send reminder notification
+    public var reminderMinutesBefore: Int = 60
+
     /// Logger for notification service operations
     internal let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
 
@@ -75,6 +81,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         super.init()
         self.notificationCenter.delegate = self
         registerNotificationCategories()
+        logger.info("NotificationService initialized")
     }
 
     // MARK: - Authorization
@@ -90,6 +97,14 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      */
     func requestAuthorization() async throws -> Bool {
         logger.info("Requesting notification authorization")
+
+        // In UI testing mode, automatically grant authorization to avoid system alert interaction
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        if isUITesting {
+            logger.info("UI testing mode detected - automatically granting authorization")
+            authorizationStatus = .authorized
+            return true
+        }
 
         let options: UNAuthorizationOptions = [.alert, .sound, .badge]
 
@@ -118,8 +133,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      * - Returns: Current UNAuthorizationStatus
      */
     func checkAuthorizationStatus() async -> UNAuthorizationStatus {
-        let settings = await notificationCenter.notificationSettings()
-        authorizationStatus = settings.authorizationStatus
+        authorizationStatus = await notificationCenter.authorizationStatus()
 
         logger.debug("Authorization status checked: \(String(describing: self.authorizationStatus))")
 
@@ -277,6 +291,108 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         }
 
         logger.info("Notification queue refreshed with \(self.notificationQueue.count) notifications")
+    }
+
+    // MARK: - Activation Methods
+
+    /**
+     * Enable notifications and schedule reminders for all active schedules.
+     *
+     * This method:
+     * 1. Requests notification authorization (if not already granted)
+     * 2. Refreshes the notification queue with upcoming doses
+     * 3. Schedules background refresh to keep queue current
+     * 4. Updates notificationsEnabled state
+     * 5. Persists state to UserDefaults
+     *
+     * - Throws: NotificationServiceError.authorizationDenied if user denies permission
+     */
+    public func enable() async throws {
+        logger.info("[NOTIF_SERVICE] enable() called - current state: \(self.notificationsEnabled)")
+
+        // 1. Check/request authorization
+        let granted = try await requestAuthorization()
+        logger.info("[NOTIF_SERVICE] requestAuthorization() returned: \(granted)")
+        guard granted else {
+            logger.warning("Authorization denied")
+            throw NotificationServiceError.authorizationDenied
+        }
+
+        // 2. Refresh notification queue for all active schedules
+        try await refreshNotificationQueue()
+        logger.info("[NOTIF_SERVICE] refreshNotificationQueue() completed")
+
+        // 3. Schedule background refresh
+        scheduleBackgroundRefresh()
+
+        // 4. Update enabled state
+        notificationsEnabled = true
+        logger.info("[NOTIF_SERVICE] Set notificationsEnabled = true")
+
+        // 5. Persist state to UserDefaults
+        saveState()
+        logger.info("[NOTIF_SERVICE] saveState() called")
+
+        logger.info("[NOTIF_SERVICE] Notifications enabled successfully - final state: \(self.notificationsEnabled)")
+    }
+
+    /**
+     * Disable notifications and cancel all pending reminders.
+     *
+     * This method:
+     * 1. Cancels all pending notifications
+     * 2. Clears the notification queue
+     * 3. Resets badge count to zero
+     * 4. Updates notificationsEnabled state
+     * 5. Persists state to UserDefaults
+     */
+    public func disable() async {
+        logger.info("Disabling notifications")
+
+        // 1. Cancel all pending notifications
+        await notificationCenter.removeAllPendingNotificationRequests()
+        logger.debug("Cancelled all pending notifications")
+
+        // 2. Clear notification queue
+        notificationQueue.removeAll()
+
+        // 3. Update badge count
+        await updateBadgeCount()
+
+        // 4. Update enabled state
+        notificationsEnabled = false
+
+        // 5. Persist state to UserDefaults
+        saveState()
+
+        logger.info("Notifications disabled successfully")
+    }
+
+    /**
+     * Update reminder timing preference and reschedule notifications.
+     *
+     * Valid timing values are: 15, 30, 60, or 120 minutes before scheduled dose time.
+     *
+     * - Parameter minutes: Minutes before dose to send reminder (must be 15, 30, 60, or 120)
+     * - Throws: NotificationServiceError.invalidReminderTiming if value is not valid
+     */
+    public func updateReminderTiming(_ minutes: Int) async throws {
+        logger.info("Updating reminder timing to \(minutes) minutes")
+
+        // Validate input
+        guard [15, 30, 60, 120].contains(minutes) else {
+            logger.error("Invalid reminder timing: \(minutes)")
+            throw NotificationServiceError.invalidReminderTiming
+        }
+
+        // Update property
+        reminderMinutesBefore = minutes
+
+        // Reschedule all notifications with new timing if enabled
+        if notificationsEnabled {
+            try await refreshNotificationQueue()
+            logger.info("Rescheduled notifications with new timing: \(minutes) minutes")
+        }
     }
 
     /**
@@ -447,6 +563,7 @@ enum NotificationServiceError: LocalizedError {
     case schedulingFailed
     case notificationLimitExceeded
     case invalidScheduledDose
+    case invalidReminderTiming
 
     var errorDescription: String? {
         switch self {
@@ -469,6 +586,11 @@ enum NotificationServiceError: LocalizedError {
             return NSLocalizedString(
                 "Invalid scheduled dose. Cannot create notification.",
                 comment: "Invalid dose error"
+            )
+        case .invalidReminderTiming:
+            return NSLocalizedString(
+                "Invalid reminder timing. Please choose 15, 30, 60, or 120 minutes.",
+                comment: "Invalid reminder timing error"
             )
         }
     }

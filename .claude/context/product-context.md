@@ -1,7 +1,7 @@
 ---
 created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-29T18:20:27Z
-version: 2.9
+last_updated: 2025-10-30T14:57:08Z
+version: 3.0
 author: Claude Code PM System
 ---
 
@@ -330,6 +330,20 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 ### Background Refresh User Experience
 - **Weekly Background Refresh Maintains Queue Accuracy**: Background refresh maintains notification queue accuracy without user intervention - ensures reliable dose reminders even when app not actively used
 - **Notification Action UX Patterns**: Inline notification actions enable dose logging without opening app - reduces friction in daily medication adherence workflow
+
+## Product Insights from Issue #260 Notification UI & Configuration (2025-10-30)
+
+### Notification Configuration User Workflow
+- **User Need**: Enable/disable dose reminder notifications with configurable timing preferences (15/30/60/120 minutes before scheduled doses)
+- **Critical Gap Addressed**: NotificationService backend existed (Issue #176) but no UI for users to activate or configure notifications - users couldn't actually receive dose reminders
+- **Implementation**: Settings section with toggle, reminder timing picker, authorization status display, and "Settings" button when permission denied
+- **Value Delivered**: Users can now control notification preferences, troubleshoot permission issues, and configure reminder timing to match their schedule
+
+### Bridging Backend and User Interface
+- **Backend-UI Integration Challenge**: Backend services must be activated through user interface controls, not just implemented in code
+- **Settings Integration Pattern**: Non-functional `.constant(true)` toggle replaced with real NotificationService state management
+- **User Control Requirements**: Medical apps must give users explicit control over notification preferences rather than auto-enabling features
+- **Troubleshooting Support**: Clear authorization status display helps users understand why notifications aren't working and how to fix permission issues
 
 ## Product Insights from Issue #178 Calendar Integration Bug Fixes (2025-10-14/15)
 
