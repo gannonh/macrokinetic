@@ -2,7 +2,6 @@ import SwiftUI
 
 struct InitialDoseSetupView: View {
     @ObservedObject var viewModel: OnboardingViewModel
-    @State private var showingDatePicker = false
 
     var body: some View {
         ScrollView {
@@ -43,38 +42,6 @@ struct InitialDoseSetupView: View {
                     }
                     .accessibilityIdentifier("dose-amount-card")
 
-                    // Starting date
-                    DesignCard {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Starting Date")
-                                .font(DesignTokens.Typography.headline)
-
-                            Button(
-                                action: { self.showingDatePicker = true },
-                                label: {
-                                    HStack {
-                                        Text(self.viewModel.selectedStartDate, style: .date)
-                                            .font(DesignTokens.Typography.body)
-                                            .foregroundColor(.primary)
-
-                                        Spacer()
-
-                                        Image(systemName: "calendar")
-                                            .foregroundColor(DesignTokens.Colors.primary)
-                                    }
-                                    .padding()
-                                    .background(Color(.systemGray6))
-                                    .cornerRadius(8)
-                                }
-                            )
-                            .accessibilityIdentifier("starting-date-button")
-                            .accessibilityLabel("Set starting date")
-                            .accessibilityValue(
-                                self.viewModel.selectedStartDate.formatted(date: .complete, time: .omitted)
-                            )
-                        }
-                    }
-
                     // Injection sites (plural)
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
@@ -94,10 +61,6 @@ struct InitialDoseSetupView: View {
             }
         }
         .background(DesignTokens.Colors.background)
-        .sheet(isPresented: self.$showingDatePicker) {
-            DatePickerView(
-                selectedDate: self.$viewModel.selectedStartDate, isPresented: self.$showingDatePicker)
-        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("initial-dose-setup-view")
     }

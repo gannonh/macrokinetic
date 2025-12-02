@@ -43,14 +43,34 @@ struct CustomRecurrence: Codable, Equatable {
 /// Complete schedule configuration
 struct ScheduleConfiguration: Codable {
     let dayOfWeek: Int?  // For weekly patterns (1-7)
-    let timeOfDay: TimeComponents  // Hour and minute
+    let timeOfDay: TimeComponents  // Hour and minute (first dose for split-dose)
+    let secondTimeOfDay: TimeComponents?  // Second dose time for split-dose patterns
     let interval: Int  // Days between doses (default: 7)
     let doseAmount: Double
     let windowMinutesBefore: Int  // Default: 120 (2 hours)
     let windowMinutesAfter: Int  // Default: 120 (2 hours)
     let splitDoseCount: Int?  // For split-dose patterns
-    let splitIntervalMinutes: Int?  // Time between splits
+    let splitIntervalMinutes: Int?  // Time between splits (DEPRECATED - use secondTimeOfDay)
     let customRecurrence: CustomRecurrence?
+
+    /// Validates that split-dose times are properly spaced (6-18 hours apart)
+    /// - Returns: true if times are valid for split-dose pattern
+    func validateSplitDoseTimes() -> Bool {
+        guard let secondTime = secondTimeOfDay else {
+            return true  // No second time, validation not applicable
+        }
+
+        // Convert both times to minutes since midnight
+        let firstMinutes = timeOfDay.hour * 60 + timeOfDay.minute
+        let secondMinutes = secondTime.hour * 60 + secondTime.minute
+
+        // Calculate difference (handle midnight crossing)
+        let diff = abs(secondMinutes - firstMinutes)
+        let actualDiff = min(diff, 1440 - diff)  // 1440 = 24 hours in minutes
+
+        // Enforce 6-18 hour spacing (360-1080 minutes)
+        return actualDiff >= 360 && actualDiff <= 1080
+    }
 }
 
 extension ScheduleConfiguration {
@@ -72,7 +92,8 @@ extension ScheduleConfiguration {
 
         return ScheduleConfiguration(
             dayOfWeek: nil,  // Not used for split-dose
-            timeOfDay: TimeComponents(hour: 8, minute: 0),
+            timeOfDay: TimeComponents(hour: 8, minute: 0),  // First dose: 8 AM
+            secondTimeOfDay: TimeComponents(hour: 20, minute: 0),  // Second dose: 8 PM
             interval: 7,  // Weekly cycle
             doseAmount: totalWeeklyDose / 2.0,
             windowMinutesBefore: TimeConstants.defaultWindowMinutes,
@@ -226,12 +247,16 @@ final class ScheduleService {
 
         // Insert into context
         context.insert(schedule)
+        print("🔍 [ScheduleService.createSchedule] Inserted schedule into context")
 
         // Save changes
         try context.save()
+        print("🔍 [ScheduleService.createSchedule] Saved context successfully")
 
         // Reload active schedules
         loadActiveSchedules()
+        print("🔍 [ScheduleService.createSchedule] loadActiveSchedules() called")
+        print("🔍 [ScheduleService.createSchedule] activeSchedules.count after load: \(activeSchedules.count)")
 
         return schedule
     }

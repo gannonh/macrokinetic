@@ -41,6 +41,94 @@ struct ScheduleSetupView: View {
                     }
                 )
 
+                // Start Date Selection
+                DesignCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Start Date")
+                            .font(DesignTokens.Typography.headline)
+
+                        DatePicker(
+                            "Start Date",
+                            selection: $viewModel.selectedStartDate,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.compact)
+                        .accessibilityIdentifier("start-date-picker")
+                    }
+                }
+
+                // Time of Day Selection
+                if viewModel.schedulePattern == .splitDose {
+                    // Split-dose: Two time pickers
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Dose Times")
+                                .font(DesignTokens.Typography.headline)
+
+                            VStack(alignment: .leading, spacing: 12) {
+                                // First dose time
+                                HStack {
+                                    Text("1st Dose")
+                                        .font(DesignTokens.Typography.body)
+                                    Spacer()
+                                    DatePicker(
+                                        "1st Dose Time",
+                                        selection: $viewModel.selectedFirstDoseTime,
+                                        displayedComponents: .hourAndMinute
+                                    )
+                                    .labelsHidden()
+                                    .accessibilityIdentifier("first-dose-time-picker")
+                                }
+
+                                Divider()
+
+                                // Second dose time
+                                HStack {
+                                    Text("2nd Dose")
+                                        .font(DesignTokens.Typography.body)
+                                    Spacer()
+                                    DatePicker(
+                                        "2nd Dose Time",
+                                        selection: $viewModel.selectedSecondDoseTime,
+                                        displayedComponents: .hourAndMinute
+                                    )
+                                    .labelsHidden()
+                                    .accessibilityIdentifier("second-dose-time-picker")
+                                }
+                            }
+
+                            // Validation message for split-dose times
+                            if !viewModel.areSplitDoseTimesValid {
+                                Text("Dose times must be 6-18 hours apart")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .accessibilityIdentifier("split-dose-validation-error")
+                            }
+                        }
+                    }
+                } else {
+                    // Weekly/Daily: Single time picker (compact pill style)
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Time of Day")
+                                .font(DesignTokens.Typography.headline)
+
+                            HStack {
+                                Text("Dose Time")
+                                    .font(DesignTokens.Typography.body)
+                                Spacer()
+                                DatePicker(
+                                    "Dose Time",
+                                    selection: $viewModel.selectedDoseTime,
+                                    displayedComponents: .hourAndMinute
+                                )
+                                .labelsHidden()
+                                .accessibilityIdentifier("dose-time-picker")
+                            }
+                        }
+                    }
+                }
+
                 // Concentration Curve Preview
                 if showConcentrationPreview, let medication = viewModel.selectedMedication {
                     ConcentrationCurvePreview(
@@ -54,7 +142,11 @@ struct ScheduleSetupView: View {
                 // Reminder Configuration
                 ReminderPreferencesView(
                     reminderMinutes: $viewModel.reminderMinutes,
-                    enableMultiple: $viewModel.enableMultipleReminders
+                    enableMultiple: $viewModel.enableMultipleReminders,
+                    schedulePattern: viewModel.schedulePattern,
+                    doseTime: viewModel.selectedDoseTime,
+                    firstDoseTime: viewModel.selectedFirstDoseTime,
+                    secondDoseTime: viewModel.selectedSecondDoseTime
                 )
 
                 Spacer(minLength: 32)

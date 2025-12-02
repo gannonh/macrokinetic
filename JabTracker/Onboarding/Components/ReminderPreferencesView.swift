@@ -15,6 +15,12 @@ struct ReminderPreferencesView: View {
     @Binding var reminderMinutes: Int
     @Binding var enableMultiple: Bool
 
+    // Optional parameters for showing calculated notification time
+    var schedulePattern: SchedulePatternType?
+    var doseTime: Date?
+    var firstDoseTime: Date?
+    var secondDoseTime: Date?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Reminders")
@@ -58,6 +64,22 @@ struct ReminderPreferencesView: View {
                 }
                 .accessibilityLabel("Enable multiple reminders")
                 .accessibilityHint("Sends additional reminders if dose is not logged")
+
+                // Calculated notification time display
+                if let notificationTimeText = calculatedNotificationTimeText {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Notification Time")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text(notificationTimeText)
+                            .font(.subheadline)
+                            .foregroundColor(.primary)
+                            .accessibilityIdentifier("calculated-notification-time")
+                    }
+                }
             }
         }
         .padding()
@@ -81,6 +103,48 @@ struct ReminderPreferencesView: View {
         default:
             return "\(reminderMinutes) minutes before"
         }
+    }
+
+    /// Calculated notification time text showing when reminders will be sent
+    private var calculatedNotificationTimeText: String? {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+
+        if schedulePattern == .splitDose, let first = firstDoseTime, let second = secondDoseTime {
+            // Split-dose: Show both notification times
+            guard
+                let firstNotification = Calendar.current.date(
+                    byAdding: .minute,
+                    value: -reminderMinutes,
+                    to: first
+                ),
+                let secondNotification = Calendar.current.date(
+                    byAdding: .minute,
+                    value: -reminderMinutes,
+                    to: second
+                )
+            else {
+                return nil
+            }
+
+            return
+                "You'll be notified at \(formatter.string(from: firstNotification)) and \(formatter.string(from: secondNotification))"
+        } else if let dose = doseTime {
+            // Weekly/Daily: Show single notification time
+            guard
+                let notificationTime = Calendar.current.date(
+                    byAdding: .minute,
+                    value: -reminderMinutes,
+                    to: dose
+                )
+            else {
+                return nil
+            }
+
+            return "You'll be notified at \(formatter.string(from: notificationTime)) (\(reminderTimeDescription))"
+        }
+
+        return nil
     }
 }
 

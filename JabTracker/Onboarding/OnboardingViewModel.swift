@@ -34,6 +34,11 @@ class OnboardingViewModel: ObservableObject {
     @Published var enableMultipleReminders: Bool = false
     @Published var customScheduleValid: Bool = false
 
+    // Time selection properties
+    @Published var selectedDoseTime: Date  // For weekly/daily patterns
+    @Published var selectedFirstDoseTime: Date  // For split-dose 1st time
+    @Published var selectedSecondDoseTime: Date  // For split-dose 2nd time
+
     private let dataController: DataController
     private let authManager: AuthenticationManager
     let pkEngine = PharmacokineticsEngine()  // Internal for ScheduleSetupView access
@@ -47,6 +52,18 @@ class OnboardingViewModel: ObservableObject {
     init(dataController: DataController, authManager: AuthenticationManager) {
         self.dataController = dataController
         self.authManager = authManager
+
+        // Initialize time properties with defaults (8:00 AM and 8:00 PM)
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Default to 8:00 AM for dose time and first dose time
+        self.selectedDoseTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: now) ?? now
+        self.selectedFirstDoseTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: now) ?? now
+
+        // Default to 8:00 PM for second dose time
+        self.selectedSecondDoseTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: now) ?? now
+
         self.updateProgress()
     }
 
@@ -60,6 +77,25 @@ class OnboardingViewModel: ObservableObject {
 
     var isLastStep: Bool {
         self.currentStep == OnboardingStep.allCases.last
+    }
+
+    /// Validates that split-dose times are 6-18 hours apart
+    var areSplitDoseTimesValid: Bool {
+        guard schedulePattern == .splitDose else {
+            return true  // Not split-dose, so no validation needed
+        }
+
+        let calendar = Calendar.current
+        let firstTime = calendar.dateComponents([.hour, .minute], from: selectedFirstDoseTime)
+        let secondTime = calendar.dateComponents([.hour, .minute], from: selectedSecondDoseTime)
+
+        let firstMinutes = (firstTime.hour ?? 0) * 60 + (firstTime.minute ?? 0)
+        let secondMinutes = (secondTime.hour ?? 0) * 60 + (secondTime.minute ?? 0)
+
+        let diff = abs(secondMinutes - firstMinutes)
+        let actualDiff = min(diff, 1440 - diff)  // Handle midnight crossing
+
+        return actualDiff >= 360 && actualDiff <= 1080  // 6-18 hours (360-1080 minutes)
     }
 
     var canProceedToNext: Bool {
@@ -201,8 +237,10 @@ class OnboardingViewModel: ObservableObject {
     /// - Returns: true if configuration is valid, false otherwise
     func validateScheduleConfiguration() -> Bool {
         switch schedulePattern {
-        case .daily, .weekly, .splitDose:
+        case .daily, .weekly:
             return true
+        case .splitDose:
+            return areSplitDoseTimesValid
         case .custom:
             return customScheduleValid
         }
@@ -363,8 +401,19 @@ class OnboardingViewModel: ObservableObject {
         for medicationProfile: MedicationProfile,
         in context: ModelContext
     ) async throws {
-        // Create schedule service
-        let scheduleService = ScheduleService(context: context)
+        print("🔍 createInitialSchedule() called")
+        print("🔍 Schedule pattern: \(schedulePattern)")
+        print("🔍 Selected start date: \(selectedStartDate)")
+        print("🔍 Selected dose time: \(selectedDoseTime)")
+        print("🔍 Reminder minutes: \(reminderMinutes)")
+
+        // Use shared schedule service (same instance used by NotificationService)
+        guard let scheduleService = AppServices.shared.scheduleService else {
+            print("❌ ERROR: AppServices.scheduleService not initialized!")
+            print("❌ This should never happen - AppServices should be initialized in ContentView before onboarding")
+            return
+        }
+        print("✅ Using AppServices.shared.scheduleService")
 
         // Build schedule configuration based on pattern
         let interval: Int
@@ -385,12 +434,34 @@ class OnboardingViewModel: ObservableObject {
             dayOfWeek = Calendar.current.component(.weekday, from: selectedStartDate)
         }
 
+        // Determine time components based on pattern
+        let calendar = Calendar.current
+        let timeOfDay: TimeComponents
+        let secondTimeOfDay: TimeComponents?
+
+        if schedulePattern == .splitDose {
+            // Split-dose: Use both time pickers
+            timeOfDay = TimeComponents(
+                hour: calendar.component(.hour, from: selectedFirstDoseTime),
+                minute: calendar.component(.minute, from: selectedFirstDoseTime)
+            )
+            secondTimeOfDay = TimeComponents(
+                hour: calendar.component(.hour, from: selectedSecondDoseTime),
+                minute: calendar.component(.minute, from: selectedSecondDoseTime)
+            )
+        } else {
+            // Weekly/Daily: Use single time picker
+            timeOfDay = TimeComponents(
+                hour: calendar.component(.hour, from: selectedDoseTime),
+                minute: calendar.component(.minute, from: selectedDoseTime)
+            )
+            secondTimeOfDay = nil
+        }
+
         let scheduleConfig = ScheduleConfiguration(
             dayOfWeek: dayOfWeek,
-            timeOfDay: TimeComponents(
-                hour: Calendar.current.component(.hour, from: selectedStartDate),
-                minute: Calendar.current.component(.minute, from: selectedStartDate)
-            ),
+            timeOfDay: timeOfDay,
+            secondTimeOfDay: secondTimeOfDay,
             interval: interval,
             doseAmount: selectedDose,
             windowMinutesBefore: 120,  // 2 hours before
@@ -402,28 +473,66 @@ class OnboardingViewModel: ObservableObject {
             customRecurrence: nil  // Custom patterns not yet supported in onboarding
         )
 
+        // Combine selectedStartDate (date component) with selected time (time component)
+        let actualStartDate: Date
+        if schedulePattern == .splitDose {
+            // For split-dose, use the first dose time
+            actualStartDate =
+                calendar.date(
+                    bySettingHour: timeOfDay.hour,
+                    minute: timeOfDay.minute,
+                    second: 0,
+                    of: selectedStartDate
+                ) ?? selectedStartDate
+        } else {
+            // For weekly/daily, use the selected dose time
+            actualStartDate =
+                calendar.date(
+                    bySettingHour: timeOfDay.hour,
+                    minute: timeOfDay.minute,
+                    second: 0,
+                    of: selectedStartDate
+                ) ?? selectedStartDate
+        }
+
+        print("🔍 Actual start date (combined): \(actualStartDate)")
+        print("🔍 Current date/time: \(Date())")
+
         // Create the schedule
-        _ = try scheduleService.createSchedule(
+        let schedule = try scheduleService.createSchedule(
             for: medicationProfile,
             pattern: schedulePattern,
-            startDate: selectedStartDate,
+            startDate: actualStartDate,
             baseSchedule: scheduleConfig
         )
 
+        print("🔍 Schedule created with ID: \(schedule.id)")
+        print("🔍 Schedule active: \(schedule.isActive)")
+
         // Configure NotificationService with reminder preferences
+        print("🔍 Configuring notifications...")
+        print("🔍 Notifications granted: \(notificationsGranted)")
+
         if let notificationService = AppServices.shared.notificationService {
+            print("🔍 Setting reminderMinutesBefore to: \(reminderMinutes)")
             notificationService.reminderMinutesBefore = reminderMinutes
 
             // Enable notifications if user granted permission
             if notificationsGranted {
+                print("🔍 Attempting to enable notifications...")
                 do {
                     try await notificationService.enable()
+                    print("✅ Notifications enabled successfully")
                 } catch {
                     // Log the error but don't fail onboarding if notification setup fails
                     print("⚠️ Failed to enable notifications during onboarding: \(error.localizedDescription)")
                     // Continue with onboarding - user can enable notifications later in Settings
                 }
+            } else {
+                print("⚠️ Notifications not granted, skipping enablement")
             }
+        } else {
+            print("⚠️ NotificationService not available")
         }
     }
 
