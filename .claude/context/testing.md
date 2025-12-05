@@ -115,6 +115,8 @@ cat logs/latest/raw_output.txt | grep "DEBUG"
 
 ## Available Simulators
 
-1. **PRIMARY**: iPhone 15,OS=17.5 (UUID: 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB)
-2. **SECONDARY**: iPhone 15 Pro Max,OS=17.5 (UUID: BFE552DA-1CB4-4736-821D-270EC6307512)
-3. **TERTIARY**: iPhone SE (3rd generation),OS=17.5 (UUID: FF190E2B-E6A1-461F-BEAF-E9A827038FA1)
+> **Note**: Xcode 26 requires iOS 26.1 simulators to avoid SwiftData/CloudKit crashes with older runtimes.
+
+1. **PRIMARY**: iPhone 17 Pro,OS=26.1 (UUID: BA8D09E4-EE1F-49BB-A7D2-5705EC4C513D)
+2. **SECONDARY**: iPhone 17,OS=26.1 (UUID: 4E249318-06A8-442B-9E84-BBD450936DE5)
+3. **TERTIARY**: iPhone 17 Pro Max,OS=26.1 (UUID: 7E5A0A90-D04A-4013-996A-585296E0FFC8)

@@ -23,7 +23,7 @@ The coverage configuration validation shows that 83 Swift files are missing from
   included in coverage analysis.
 
   The script found:
-  - 86 total Swift files in the JabTracker target
+  - 86 total Swift files in the TenderApp target
   - 37 files currently configured (30 in policy tiers + 7 in exclusions)
   - 83 missing files that need to be categorized
 

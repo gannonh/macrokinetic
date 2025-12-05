@@ -4,279 +4,291 @@ description: Update project context documentation to reflect current state of th
 
 # Update Context
 
-This command updates the project context documentation in `.claude/context/` to reflect the current state of the project. Run this at the end of each development session to keep context accurate.
-
-**ULTRATHINK**
+This command updates the project context documentation in `.claude/context/` to reflect the current state of the project. Run this at the end of a PR or development session to keep context accurate for future sessions.
 
 ## Required Rules
 
 **IMPORTANT:** Before executing this command, read and follow:
 - `.claude/rules/datetime.md` - For getting real current date/time
 
-## Preflight Checklist
+## Phase 1: Information Gathering
 
-Before proceeding, complete these validation steps.
-Do not bother the user with preflight checks progress ("I'm not going to ..."). Just do them and move on.
+### 1.1 Read Current Context State
 
-### 1. Context Validation
-- Run: `ls -la .claude/context/ 2>/dev/null`
-- If directory doesn't exist or is empty:
-  - Tell user: "❌ No context to update. Please run /context:create first."
-  - Exit gracefully
-- Count existing files: `ls -1 .claude/context/*.md 2>/dev/null | wc -l`
-- Report: "📁 Found {count} context files to check for updates"
+**First, read the existing context files** to understand what's already documented:
 
-### 2. Change Detection
+1. Product Requirements Document: @.claude/context/tender-prd.md
+2. High-level understanding of the project: @.claude/context/product-context.md
+3. Technical stack and dependencies: @.claude/context/tech-context.md
+4. Testing framework and setup: @.claude/context/testing.md
+5. Current status and recent work: @.claude/context/progress.md
+6. Project structure: @.claude/context/project-structure.md
+7. Architecture and design patterns: @.claude/context/system-patterns.md
+8. Coding conventions: @.claude/context/project-style-guide.md
+9. Common workflows and commands: @.claude/context/development-commands.md
 
-Gather information about what has changed:
+Read each context file to understand current state before making updates. This prevents duplicate entries and ensures updates are additive.
 
-**Git Changes:**
-- Run: `git status --short` to see uncommitted changes
-- Run: `git log --oneline -10` to see recent commits
-- Run: `git diff --stat HEAD~5..HEAD 2>/dev/null` to see files changed recently
+### 1.2 Change Detection
 
-**File Modifications:**
-- Check context file ages: `find .claude/context -name "*.md" -type f -exec ls -lt {} + | head -5`
-- Note which context files are oldest and may need updates
+Gather comprehensive information about PR changes - enough detail to write release notes.
 
-**Dependency Changes:**
-- Node.js: `git diff HEAD~5..HEAD package.json 2>/dev/null`
-- Python: `git diff HEAD~5..HEAD requirements.txt 2>/dev/null`
-- Check if new dependencies were added or versions changed
+#### Step 1: Identify the Scope
 
-### 3. Get Current DateTime
-- Run: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
-- Store for updating `last_updated` field in modified files
-
-## Instructions
-
-### 1. Systematic Change Analysis
-
-For each context file, determine if updates are needed:
-
-**Check each file systematically:**
-#### `progress.md` - **Always Update**
-  - Check: Recent commits, current branch, uncommitted changes
-  - Update: Latest completed work, current blockers, next steps
-  - Run: `git log --oneline -5` to get recent commit messages
-  - Include completion percentages if applicable
-
-#### `project-structure.md` - **Update if Changed**
-  - Check: `git diff --name-status HEAD~10..HEAD | grep -E '^A'` for new files
-  - Update: New directories, moved files, structural reorganization
-  - Only update if significant structural changes occurred
-
-#### `tech-context.md` - **Update if Dependencies Changed**
-  - Check: Package files for new dependencies or version changes
-  - Update: New libraries, upgraded versions, new dev tools
-  - Include security updates or breaking changes
-
-#### `system-patterns.md` - **Update if Architecture Changed**
-  - Check: New design patterns, architectural decisions
-  - Update: New patterns adopted, refactoring done
-  - Only update for significant architectural changes
-
-#### `product-context.md` - **Update if Requirements Changed**
-  - Check: New features implemented, user feedback incorporated
-  - Update: New user stories, changed requirements
-  - Include any pivot in product direction
-
-#### `project-overview.md` - **Update for Major Milestones**
-  - Check: Major features completed, significant progress
-  - Update: Feature status, capability changes
-  - Update when reaching project milestones
-
-#### `project-vision.md` - **Rarely Update**
-  - Check: Strategic direction changes
-  - Update: Only for major vision shifts
-  - Usually remains stable
-
-#### `project-style-guide.md` - **Update if Conventions Changed**
-  - Check: New linting rules, style decisions
-  - Update: Convention changes, new patterns adopted
-  - Include examples of new patterns
-
-#### `testing.md` - **Update if Testing Practices Changed**
-  - Check: New testing frameworks, coverage changes
-  - Update: Testing strategies, new tools
-  - Include coverage policies
-
-#### `development-commands.md` - **Update if Commands Changed**
-  - Check: New scripts, changed workflows
-  - Update: Command usage, new scripts added
-  - Include examples of new commands
-
-### 2. Smart Update Strategy
-
-**For each file that needs updating:**
-
-1. **Read existing file** to understand current content
-2. **Identify specific sections** that need updates
-3. **Preserve frontmatter** but update `last_updated` field:
-   ```yaml
-   ---
-   created: [preserve original]
-   last_updated: [Use REAL datetime from date command]
-   version: [increment if major update, e.g., 1.0 → 1.1]
-   author: Claude Code PM System
-   ---
-   ```
-4. **Make targeted updates** - don't rewrite entire file
-5. **Add update notes** at the bottom if significant:
-   ```markdown
-   ## Update History
-   - {date}: {summary of what changed}
-   ```
-
-### 3. Update Validation
-
-After updating each file:
-- Verify file still has valid frontmatter
-- Check file size is reasonable (not corrupted)
-- Ensure markdown formatting is preserved
-- Confirm updates accurately reflect changes
-
-### 4. Skip Optimization
-
-**Skip files that don't need updates:**
-- If no relevant changes detected, skip the file
-- Report skipped files in summary
-- Don't update timestamp if content unchanged
-- This preserves accurate "last modified" information
-
-### 5. Error Handling
-
-**Common Issues:**
-- **File locked:** "❌ Cannot update {file} - may be open in editor"
-- **Permission denied:** "❌ Cannot write to {file} - check permissions"
-- **Corrupted file:** "⚠️ {file} appears corrupted - skipping update"
-- **Disk space:** "❌ Insufficient disk space for updates"
-
-If update fails:
-- Report which files were successfully updated
-- Note which files failed and why
-- Preserve original files (don't leave corrupted state)
-
-### 6. Process Captured Learnings
-
-**Scan for uncaptured learnings:**
 ```bash
-# Find issues with uncaptured learnings
-find .claude/epics -name "*.md" -exec grep -l "learnings_captured: false" {} \; 2>/dev/null
+# Current branch (often contains issue number)
+git branch --show-current
+
+# All PR commits with full messages
+git log main..HEAD --format="### %s%n%n%b%n---"
+
+# Files changed with line counts (overview)
+git diff main...HEAD --stat
+
+# Just filenames for categorization
+git diff main...HEAD --name-only
 ```
 
-**For each issue with learnings:**
+#### Step 2: Read Source Code Changes
 
-1. **Read the learnings section** from the issue file
-2. **Process by category** to appropriate context files:
+**Read the actual diffs for changed source files** to understand what was implemented:
 
-   - **Technical Patterns → system-patterns.md**
-     - Testing patterns, architecture decisions, implementation approaches
-     - Add to appropriate sections with examples
-     - Mark patterns as "discovered during Issue #X"
+```bash
+# Core source code changes (highest priority)
+git diff main...HEAD -- 'TenderApp/**/*.swift' ':!TenderApp/**/Preview Content/**'
 
-   - **Technology Insights → tech-context.md**
-     - Framework-specific knowledge, tool discoveries, integration insights  
-     - Add to relevant technology sections
-     - Include version numbers and compatibility notes
+# View changes (user-facing impact)
+git diff main...HEAD -- 'TenderApp/Views/**/*.swift'
 
-   - **Process Insights → progress.md**
-     - Debugging approaches, workflow improvements, coordination lessons
-     - Add to development process or troubleshooting sections
-     - Include "lessons learned" subsection
+# Model changes (data structure impact)
+git diff main...HEAD -- 'TenderApp/Models/**/*.swift'
 
-   - **Product Insights → product-context.md**
-     - User experience discoveries, feature insights, requirement clarifications
-     - Update user stories or feature definitions
-     - Include usability findings
+# Service/ViewModel changes (business logic)
+git diff main...HEAD -- 'TenderApp/Services/**/*.swift' 'TenderApp/ViewModels/**/*.swift'
+```
 
-   - **Project Structure → project-structure.md**
-     - File organization learnings, structure improvements
-     - Update organization guidelines
-     - Note any structural pattern discoveries
+**For large PRs (50+ files changed):** Focus on:
+1. New files (`git diff main...HEAD --diff-filter=A --name-only`)
+2. Modified models and services
+3. Skim view changes unless they introduce new patterns
 
-3. **Update issue frontmatter** after processing:
-   ```yaml
-   learnings_captured: true
-   learnings_processed_date: {current_datetime}
-   ```
+#### Step 3: Check Supporting Changes
 
-4. **Commit learning updates:**
-   ```bash
-   git add .claude/context/*.md .claude/epics/**/*.md
-   git commit -m "Context update: process learnings from recent issues"
-   ```
+```bash
+# Configuration and dependencies
+git diff main...HEAD -- 'project.yml' 'Package.swift' '*.plist'
 
-### 7. Update Summary
+# Context files already updated during PR
+git diff main...HEAD -- '.claude/context/'
 
-Provide detailed summary of updates:
+# New or modified scripts
+git diff main...HEAD -- 'scripts/'
+
+# Test changes (understand what was validated)
+git diff main...HEAD --stat -- '*Tests*/**/*.swift'
+```
+
+#### Step 4: GitHub Context
+
+```bash
+# Check for issue references in commits
+git log main..HEAD --grep="#" --oneline
+
+# Check PR description if available
+gh pr view --json title,body,labels 2>/dev/null || echo "No PR found"
+
+# Check related GitHub issues
+gh issue view <issue-number> --json title,body,comments 2>/dev/null || true
+```
+
+#### Step 5: Uncommitted Work
+
+```bash
+git status --short
+```
+
+### 1.3 Synthesize Findings
+
+**Analyze the output like a Product Manager writing release notes:**
+
+| Question                                 | Where to Find Answer            |
+| ---------------------------------------- | ------------------------------- |
+| What will users see differently?         | View diffs, commit messages     |
+| What technical patterns were introduced? | Service/Model diffs             |
+| Any breaking changes?                    | Model diffs, API changes        |
+| New dependencies?                        | project.yml, Package.swift      |
+| What was tested?                         | Test file stats, test names     |
+| What issues were addressed?              | Commit messages, PR description |
+
+### 1.4 Get Current DateTime
+
+```bash
+date -u +"%Y-%m-%dT%H:%M:%SZ"
+```
+
+Store this for updating `last_updated` fields.
+
+---
+
+## Phase 2: Context File Updates
+
+### 2.1 Determine Which Files Need Updates
+
+**Map your findings to context files:**
+
+| Change Type                   | Context File(s) to Update |
+| ----------------------------- | ------------------------- |
+| Feature completed/in-progress | `progress.md` (always)    |
+| New user-facing feature       | `product-context.md`      |
+| New pattern/architecture      | `system-patterns.md`      |
+| New technical insight/gotcha  | `tech-context.md`         |
+| New files/directories         | `project-structure.md`    |
+| New dependencies              | `tech-context.md`         |
+| New commands/scripts          | `development-commands.md` |
+| Testing improvements          | `testing.md`              |
+| Style/convention changes      | `project-style-guide.md`  |
+| Feature status change         | `tender-prd.md`           |
+
+### 2.2 Update Each File
+
+For each file that needs updating:
+
+1. **Read the existing file** completely
+2. **Identify the specific section** that needs the update
+3. **Make surgical edits** - don't rewrite entire sections
+4. **Update the frontmatter** `last_updated` field
+5. **Add to Update History** at the bottom of the file
+
+#### File-Specific Guidance
+
+**`progress.md`** - Always Update
+- Update "Current Development Status" section
+- Move completed work from "In Progress" to "Completed"
+- Update completion percentages
+- Add any new blockers or next steps
+- **Write like a standup update**: What was done, what's next, any blockers
+
+**`tech-context.md`** - Technical Learnings
+- Add new patterns discovered in `## [Feature Area] Patterns` sections
+- Document gotchas that future developers should know
+- Include code examples when helpful
+- **Write like teaching a colleague**: "When doing X, you need to Y because Z"
+
+**`system-patterns.md`** - Architecture Decisions
+- Document new architectural patterns with rationale
+- Include code examples showing the pattern
+- Link to the issue/PR where pattern was introduced
+- **Write like an ADR**: Context, decision, consequences
+
+**`product-context.md`** - Feature Changes
+- Update feature descriptions if behavior changed
+- Add new features to appropriate sections
+- Update navigation structure if changed
+- **Write like a product spec**: What it does, why it matters
+
+**`project-structure.md`** - Directory Changes
+- Add new directories with descriptions
+- Update file counts if significantly changed
+- Document new organizational patterns
+- **Write like a codebase tour**: Where things are, why they're there
+
+**`testing.md`** - Testing Changes
+- Document new testing patterns or utilities
+- Update coverage information if changed
+- Add new test categories or approaches
+- **Write like a testing guide**: How to test X, patterns to follow
+
+**`development-commands.md`** - New Commands
+- Add new scripts with usage examples
+- Update existing command documentation if changed
+- Include common workflows
+- **Write like a CLI reference**: Command, options, examples
+
+**`tender-prd.md`** - PRD Status Updates
+- Feature completion: Add ✅ after completed features
+- Version status: Update `v0 (current)` → `v1 (current)` when implemented
+- Implementation notes: Update `(Planned)` → `(Implemented)` where applicable
+- **Write like release notes**: What's done, what's next
+
+### 2.3 Update History Format
+
+Add entries to the `## Update History` section at the bottom of each updated file:
+
+```markdown
+## Update History
+- 2025-11-26: Added More tab navigation (Issue #54) - MoreView, MoreTab enum, navigation structure
+- 2025-11-25: Added Activity Feed feature (Issue #51) - historical view of completed interactions
+```
+
+**Format**: `- {date}: {brief description} (Issue #{number}) - {key changes}`
+
+---
+
+## Phase 3: Validation & Summary
+
+### 3.1 Validate Updates
+
+After updating each file:
+- Verify frontmatter is valid YAML
+- Ensure markdown formatting is correct
+- Confirm no duplicate entries were added
+- Check that code examples are properly formatted
+
+### 3.2 Skip Unchanged Files
+
+**Do NOT update files if:**
+- No relevant changes detected from the PR
+- Content would be redundant with existing documentation
+- Changes are too minor to document (typo fixes, formatting)
+
+Report skipped files in summary - this preserves accurate timestamps.
+
+### 3.3 Provide Summary
 
 ```
 🔄 Context Update Complete
 
-📊 Update Statistics:
-  - Files Scanned: {total_count}
-  - Files Updated: {updated_count}
-  - Files Skipped: {skipped_count} (no changes needed)
-  - Learnings Processed: {learnings_count}
-  - Errors: {error_count}
+📋 PR Summary:
+  Branch: {branch_name}
+  Commits: {commit_count}
+  Files Changed: {files_changed}
+  Issues: {issue_references}
 
-📝 Updated Files:
-  ✅ progress.md - Updated recent commits, current status
-  ✅ tech-context.md - Added 3 new dependencies
-  ✅ project-structure.md - Noted new /utils directory
+📝 Updated Context Files:
+  ✅ progress.md - {what was updated}
+  ✅ tech-context.md - {what was updated}
+  ⏭️ project-structure.md - skipped (no structural changes)
+  ⏭️ testing.md - skipped (no testing changes)
 
-🧠 Learnings Processed:
-  ✅ Issue #41 - SwiftData testing patterns → system-patterns.md
-  ✅ Issue #41 - CloudKit relationship debugging → tech-context.md
-  ✅ Issue #41 - Test crash debugging process → progress.md
+📌 Key Documentation Added:
+  - {Most important thing documented}
+  - {Second most important thing}
 
-⏭️ Skipped Files (no changes):
-  - project-vision.md (last updated: 2 weeks ago)
-
-⚠️ Issues:
-  {any warnings or errors}
-
-⏰ Last Update: {timestamp}
-🔄 Next: Run this command regularly to keep context current
-💡 Tip: Major changes? Consider running /context:create for full refresh
+⏰ Updated: {timestamp}
 ```
 
-### 7. Incremental Update Tracking
+---
 
-**Track what was updated:**
-- Note which sections of each file were modified
-- Keep changes focused and surgical
-- Don't regenerate unchanged content
-- Preserve formatting and structure
+## Error Handling
 
-### 8. Performance Optimization
+**If updates fail:**
+- Report which files were successfully updated
+- Note which files failed and why
+- Never leave files in a corrupted state
+- Suggest manual review if needed
 
-For large projects:
-- Process files in parallel when possible
-- Show progress: "Updating context files... {current}/{total}"
-- Skip very large files with warning
-- Use git diff to quickly identify changed areas
+**Common issues:**
+- File locked by editor → Close file and retry
+- Permission denied → Check file permissions
+- Merge conflict in context file → Resolve manually
 
-## Context Gathering Commands
+---
 
-Use these commands to detect changes:
-- Context directory: `.claude/context/`
-- Current git status: `git status --short`
-- Recent commits: `git log --oneline -10`
-- Changed files: `git diff --name-only HEAD~5..HEAD 2>/dev/null`
-- Branch info: `git branch --show-current`
-- Uncommitted changes: `git diff --stat`
-- New untracked files: `git ls-files --others --exclude-standard | head -10`
-- Dependency changes: Check package.json, requirements.txt, etc.
+## Important Principles
 
-## Important Notes
-
-- **Only update files with actual changes** - preserve accurate timestamps
-- **Always use real datetime** from system clock for `last_updated`
-- **Make surgical updates** - don't regenerate entire files
-- **Validate each update** - ensure files remain valid
-- **Provide detailed summary** - show what changed and what didn't
-- **Handle errors gracefully** - don't corrupt existing context
-
-$ARGUMENTS
+1. **Additive updates** - Add to existing content, don't replace
+2. **Surgical precision** - Update only relevant sections
+3. **Future-reader focus** - Write for someone who wasn't here
+4. **Link to sources** - Reference issue numbers and PRs
+5. **Concrete examples** - Include code snippets when helpful
+6. **Skip when appropriate** - No update is better than noise

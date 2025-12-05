@@ -1,13 +1,11 @@
 ---
 description: "Handle CodeRabbit review comments with context-aware discretion."
-argument-hint: "One or more CodeRabbit review comments (paste or file path)"
+argument-hint: "(optional) One or more CodeRabbit review comments (paste or file path)"
 ---
 
 # CodeRabbit Review Handler
 
 Process the following CodeRabbit review comments with context-aware discretion: $ARGUMENTS
-
-If no review comments provided, ask the user for them before continuing.
 
 ## Instructions
 
@@ -24,54 +22,48 @@ For each comment, I'll:
 - Explain my reasoning for accept/ignore decisions
 ```
 
-### 2. Process Comments
+### 2. Run Code Rabbit
 
-#### Single File Comments
-If all comments relate to one file:
-- Read the file for context
-- Evaluate each suggestion
-- Apply accepted changes
-- Validate changes by running the relevant ui and unit tests, and/or creating new tests
-- Report which suggestions were accepted/ignored and why
+If no comments are provided, run CodeRabbit in prompt-only mode to generate comments:
 
-#### Multiple File Comments
-If comments span multiple files:
-
-Launch parallel sub-agents using Task tool:
-```yaml
-Task:
-  description: "CodeRabbit fixes for {filename}"
-  subagent_type: "general-purpose"
-  prompt: |
-    Review and apply CodeRabbit suggestions for {filename}.
-    
-    Comments to evaluate:
-    {relevant_comments_for_this_file}
-    
-    Instructions:
-    1. Read the file to understand context
-    2. For each suggestion:
-       - Evaluate validity given codebase patterns
-       - Accept if it improves quality/correctness
-       - Ignore if not applicable
-    3. Apply accepted changes
-    4. Validate changes by running the relevant ui and unit tests, and/or creating new tests
-    5. Return summary:
-       - Accepted: {list with reasons}
-       - Ignored: {list with reasons}
-       - Changes made: {brief description}
-    
-    Use discretion - CodeRabbit lacks full context.
+```bash
+# Run CodeRabbit cli
+coderabbit --prompt-only 
 ```
 
-### 3. Commit Changes
+### 3. Evaluate Comments
+- Parse the comments
+- For each comment:
+  - Read the relevant file to understand context
+  - Determine if the suggestion is valid and beneficial
+  - Decide to accept or ignore the suggestion
+  - Document reasoning for each decision
+- Ignore *.md files
+
+### 4. Present Plan to User
+Before making changes, present a summary plan to the user:
+```
+Here's my plan for handling the CodeRabbit comments:
+{summary_of_comments_and_plans}
+Do you approve this plan? (yes/no)
+```
+
+### 5. Execute Plan
+
+Execute the approved plan.
+
+### 6. Validate Changes
+
+- Run all unit tests: `./scripts/test.sh unit 1 2>&1 | tail -100`
+- Run affected UI tests: `./scripts/test.sh ui [TestName] 2>&1 | tail -100`
+
+### 7. Commit Changes
 
 After applying changes commit your work using appropriate commit messages summarizing the changes made. Address any re-commit hook violations as needed.
 
+### 8. Consolidate Results
 
-### 4. Consolidate Results
-
-After all sub-agents complete:
+After completion, provide a summary report:
 ```
 📋 CodeRabbit Review Summary
 
@@ -120,5 +112,4 @@ Only apply if all answers are "yes" or the benefit clearly outweighs risks.
 - Trust your understanding of the codebase over generic suggestions
 - Explain decisions briefly to maintain audit trail
 - Batch related changes for efficiency
-- Use parallel agents for multi-file reviews to save time
 - Always run the relevant ui and unit tests, and/or create new tests to verify correctness after applying changes

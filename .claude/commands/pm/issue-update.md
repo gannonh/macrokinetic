@@ -1,207 +1,251 @@
 ---
-description: Update an issue with recent activity, progress, and learnings from the current session.
-argument-hint: [Issue number (e.g., 42)] [Additional context (optional)]
+description: Update GitHub issue with session progress, completed work, and remaining tasks.
+argument-hint: [issue#] [additional context]
 ---
 
 # Issue Update
 
-Update progress and capture session work & learnings for issue #$1.
+Update GitHub issue #$1 with work completed during this session.
 
-**ULTRATHINK** and use TodoWrite to keep track of your tasks.
+- **Issue Number**: $1 (required)
+- **Additional Context**: $2 (optional)
 
-Additional context (if any): $2
+## Phase 1: Gather Information
 
-## Instructions
-
-### 1. Find Local Task File
-
-First check if `.claude/epics/*/$1.md` exists (new naming).
-If not found, search for task file with `github:.*issues/$1` in frontmatter (old naming).
-If not found, stop and notify user: 
-```
-❌ No local task for issue #$1
-❔ To import existing issues, run /pm:issue-import [issue-number] [epic-name]
-```
-Extract epic name from path for subsequent operations.
-
-### 2. Gather Session Context
-
-Analyze current session work by examining:
-- Recent file modifications and commits
-- Current working directory and git status
-- Any test results or build outputs mentioned in conversation
-- Problems solved or components implemented
-- Bugs fixed or features added
-
-### 3. Update Main Task File
-
-Get current datetime: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
-
-Update task file frontmatter:
-```yaml
-updated: {current_datetime}
-```
-
-### 4. Update Stream Progress Files
-
-Check for existing stream files at `.claude/epics/{epic_name}/updates/$1/stream-*.md`.
-
-For each existing stream file, analyze session context to determine:
-- What work was completed in this stream's scope
-- Current implementation status
-- Any blockers or issues encountered  
-- Testing status and results
-- Integration points with other streams
-
-Update each relevant stream file with:
-
-**Add to Progress section:**
-```markdown
-### {Current Date} Session Update
-- **Work Completed**: {specific accomplishments from session}
-- **Files Modified**: {list of files changed}
-- **Issues Resolved**: {any bugs fixed or problems solved}
-- **Testing Status**: {test results, coverage, issues}
-- **Integration Status**: {coordination with other streams}
-- **Next Steps**: {remaining work for this stream}
-```
-
-**Update status if appropriate:**
-- If stream work is complete: `status: completed`
-- If new issues discovered: add to progress notes
-- If ready for testing: `ready_for_testing: true`
-- If blocked: `status: blocked` with reason
-
-### 5. Update Epic Progress
-
-If major milestones were reached:
-- Check if issue acceptance criteria should be updated
-- Update overall epic progress in `epic.md` if appropriate
-- Note any new dependencies or blockers discovered
-
-### 6. Commit Changes
+### 1.1 Fetch Current Issue
 
 ```bash
-# Add all updated progress files
-git add .claude/epics/{epic_name}/updates/$1/
-git add .claude/epics/{epic_name}/$1.md
+# Get current issue body and metadata
+gh api repos/gannonh/tender-app-ios/issues/$1 > /tmp/issue-$1.json
 
-# Commit with descriptive message
-git commit -m "Issue #$1: update progress tracking
+# Extract body to temp file for editing
+gh api repos/gannonh/tender-app-ios/issues/$1 --jq '.body' > /tmp/issue-$1-body.md
 
-- {brief summary of session work}
-- Updated stream progress files
-- {any status changes}"
+# Save original for diff comparison
+cp /tmp/issue-$1-body.md /tmp/issue-$1-original.md
 ```
 
-### 7. Capture Session Learnings
+### 1.2 Read Update Log
 
-Add learnings section to issue file if significant discoveries were made:
+The issue body contains an **Update Log** section that tracks all agent updates:
 
 ```markdown
-## Learnings & Knowledge Capture
+## Update Log
 
-### Technical Patterns → system-patterns.md
-- {testing patterns, architecture decisions, implementation approaches}
-
-### Technology Insights → tech-context.md  
-- {framework-specific knowledge, tool discoveries, integration insights}
-
-### Process Insights → progress.md
-- {debugging approaches, workflow improvements, coordination lessons}
-
-### Product Insights → product-context.md
-- {user experience discoveries, feature insights, requirement clarifications}
-
-### Project Structure → project-structure.md
-- {file organization learnings, structure improvements}
-
-**Learnings Status**: `learnings_captured: false`
+- **2025-11-27 10:30** (`abc1234`): Completed data layer, started service layer
+- **2025-11-26 14:15** (`def5678`): Initial implementation plan added
 ```
 
-Update frontmatter:
-```yaml
-learnings_captured: false  # flag for context/update.md to process
+**Extract the last update:**
+```bash
+# Get the most recent log entry's commit hash (first match after "Update Log")
+last_commit=$(grep -A1 "## Update Log" /tmp/issue-$1-body.md | grep -o '`[a-f0-9]\{7\}`' | head -1 | tr -d '`')
+
+echo "Last commit tracked: ${last_commit:-none}"
 ```
 
-### 8. Sync Issue to GitHub 
+### 1.3 Get Git History Since Last Update
 
-Run Slash Command `/pm:issue-sync $1` to push progress updates to GitHub
-
-### 9. Update context docs
-
-Run Slash Command `/context:update` to integrate learnings into project documentation.
-
-### 10. Output
-
-```
-✅ Updated issue #$1 progress
-
-Epic: {epic_name}
-Session work: {summary}
-
-Stream updates:
-  Stream A: {status} - {recent work}
-  Stream B: {status} - {recent work}  
-  Stream C: {status} - {recent work}
-
-Learnings captured: {yes/no}
-- Technical patterns: {count}
-- Process insights: {count}
-- Technology insights: {count}
-
-Context documentation updated ✓
-- [files updated]
-
-Files updated:
-  .claude/epics/{epic_name}/$1.md
-  .claude/epics/{epic_name}/updates/$1/stream-*.md
-
-- Resume: To resume work on the issue run /pm:issue-resume $1
+```bash
+# If we have a last commit from the log, use it for accurate history
+if [ -n "$last_commit" ]; then
+  echo "Getting commits since $last_commit..."
+  git log --oneline $last_commit..HEAD
+  git diff --name-only $last_commit..HEAD
+else
+  # Fallback: get commits from current branch not in main
+  echo "No previous update found. Getting all branch commits..."
+  git log --oneline main..HEAD
+  git diff --name-only main..HEAD
+fi
 ```
 
-## Context Analysis Guidelines
+### 1.4 Analyze Session Work
 
-When analyzing session context, look for:
+Review and compile:
+1. **Conversation history**: What tasks were discussed and completed this session
+2. **Git commits**: What was committed (messages and file changes)
+3. **Additional context**: Any user-provided context from arguments
 
-**Implementation Work:**
-- New files created or modified
-- Code features implemented
-- Architecture decisions made
-- Dependencies added or changed
+## Phase 2: Update Issue Body
 
-**Testing & Quality:**
-- Tests written, fixed, or run
-- Bug fixes applied
-- Performance improvements
-- Code quality issues resolved
+### 2.1 Read Current Issue Structure
 
-**Integration & Coordination:**
-- Work affecting multiple streams
-- Dependency resolutions
-- Blockers removed
-- Communication with other components
+The issue body typically contains these sections (from feat-template.md):
+- Overview
+- Requirements
+- User Stories
+- Key Design Decisions
+- Implementation Plan (with `- [ ]` checkboxes)
+- Acceptance Criteria (with `- [ ]` checkboxes)
+- Technical Notes
 
-**Documentation & Progress:**
-- README updates
-- Code documentation added
-- Process improvements
-- Learning captured
+### 2.2 Determine Completed Items
 
-## Error Handling
+Based on session analysis, identify:
+1. **Implementation Plan tasks** that are now complete (change `- [ ]` to `- [x]`)
+2. **Acceptance Criteria** that are now verified (change `- [ ]` to `- [x]`)
+3. **Any blockers or issues** encountered
+4. **Remaining work** still to be done
 
-If any step fails, report clearly:
-- "❌ {What failed}: {How to fix}"
-- Continue with available updates
-- Never leave inconsistent state between files
+### 2.3 Edit the Issue Body
 
-## Important Notes
+Edit `/tmp/issue-$1-body.md` to:
 
-- Focus on factual progress, not speculation
-- Include specific file names and line numbers when relevant
-- Note both completed work and discovered issues
-- INCLUDE CLEAR NEXT STEPS FOR EACH STREAM
-- Keep stream-specific updates in appropriate files
-- Follow `/rules/datetime.md` for timestamps
-- Use present tense for current status, past tense for completed work
-- ⚠️ **IMPORTANT** The primary goal is to provide a clear, accurate record of progress, learnings and next steps for the issue and its streams so that the next session can pick up seamlessly and have exactly the context needed to continue effectively.
+1. **Check off completed Implementation Plan items**
+   - Only mark items as complete that were actually implemented this session
+   - Be conservative - if unsure, leave unchecked
+
+2. **Check off completed Acceptance Criteria**
+   - Only mark criteria that have been verified/tested
+   - Include brief verification notes if helpful
+
+3. **Add Session Summary** (append before Technical Notes if significant progress):
+   ```markdown
+   ## Session Log
+
+   ### [DATE] - [Brief Description]
+
+   **Commits:**
+   - `abc1234` feat: Description of commit
+   - `def5678` fix: Description of fix
+
+   **Files Changed:**
+   - `TenderApp/Models/NewModel.swift` (added)
+   - `TenderApp/Services/ExistingService.swift` (modified)
+
+   **Progress:**
+   - Completed X, Y, Z
+   - Remaining: A, B, C
+
+   **Blockers/Notes:**
+   - Any issues encountered or decisions made
+   ```
+
+4. **Add Update Log Entry**:
+
+   Add a new entry to the Update Log section (create section if it doesn't exist):
+
+   ```markdown
+   ## Update Log
+
+   - **YYYY-MM-DD HH:MM** (`commit`): Brief summary of what was done
+   ```
+
+   **Entry format:**
+   - Date/time in local timezone
+   - Short commit hash in backticks
+   - Brief summary (one line) of session work
+
+   **Example entries:**
+   ```markdown
+   - **2025-11-27 14:30** (`abc1234`): Completed Phase 1 data layer, all unit tests passing
+   - **2025-11-27 10:15** (`def5678`): Added AdviceService with suggestion engine
+   - **2025-11-26 16:45** (`ghi9012`): Initial implementation plan added
+   ```
+
+   **Placement:** Update Log section goes at the end of the issue body, before any HTML comments if present. Newest entries at top.
+
+### 2.4 Review Changes
+
+Before updating, present the diff to the user:
+```bash
+# Show what will be changed
+diff /tmp/issue-$1-original.md /tmp/issue-$1-body.md || echo "Changes ready for review"
+```
+
+Ask user to confirm the update.
+
+## Phase 3: Update GitHub Issue
+
+### 3.1 Apply Update
+
+```bash
+# Update the issue with new body
+gh api repos/gannonh/tender-app-ios/issues/$1 \
+  -X PATCH \
+  -F body=@/tmp/issue-$1-body.md
+
+echo "✅ Issue #$1 updated successfully"
+```
+
+### 3.2 Cleanup
+
+```bash
+# Remove temp files
+rm -f /tmp/issue-$1.json /tmp/issue-$1-body.md /tmp/issue-$1-original.md
+```
+
+## Phase 4: Summary
+
+Present update summary:
+```
+📝 Issue #$1 Updated
+
+Implementation Progress:
+  - [X] Completed tasks: N items
+  - [ ] Remaining tasks: M items
+
+Acceptance Criteria:
+  - [X] Verified: N criteria
+  - [ ] Pending: M criteria
+
+Session Commits: N commits (since last update)
+Files Changed: M files
+
+Update Log: Added entry for commit $current_commit
+
+View issue: https://github.com/gannonh/tender-app-ios/issues/$1
+```
+
+## Guidelines
+
+### What to Update
+- Check off items that were ACTUALLY completed this session
+- Add meaningful session logs for significant work
+- Include commit hashes for traceability
+- Note any blockers or decisions made
+
+### What NOT to Update
+- Don't check off items that are only partially complete
+- Don't add session logs for trivial changes
+- Don't modify the original structure of the issue
+- Don't remove or alter existing checked items
+
+### Checkbox Rules
+- `- [ ]` → `- [x]` only when task is fully complete
+- Leave partially complete items as `- [ ]` with a note
+- Never uncheck already checked items without explicit user request
+
+### Session Log Frequency
+- Add session log section for significant implementation sessions
+- Skip for minor fixes or documentation updates
+- Group related commits together in the log
+
+### Update Log System
+
+The issue body contains a visible **Update Log** section at the bottom:
+
+```markdown
+## Update Log
+
+- **2025-11-27 14:30** (`abc1234`): Completed Phase 1 data layer
+- **2025-11-26 16:45** (`def5678`): Initial implementation plan
+```
+
+**How it works:**
+- **Reading**: Parse the most recent entry to get the last commit hash for git history
+- **Writing**: Prepend new entry with current timestamp, HEAD commit, and summary
+- **First run**: If no Update Log exists, create the section and fall back to `main..HEAD`
+- **Human readable**: Full history visible to anyone viewing the issue
+
+**Entry format:**
+- `**YYYY-MM-DD HH:MM** (`commit`): Summary`
+- Newest entries at top
+- One line per update session
+
+**Benefits:**
+- Humans can see full update history at a glance
+- Agent can parse last commit for accurate git diff
+- Self-contained in the issue - no external state needed
+- Provides audit trail of all work sessions

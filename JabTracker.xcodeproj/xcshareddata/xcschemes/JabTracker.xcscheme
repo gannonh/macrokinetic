@@ -147,16 +147,12 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--bypass-onboarding"
+            argument = "--force-onboarding"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--force-onboarding"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
             argument = "--reset-app-data"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y"

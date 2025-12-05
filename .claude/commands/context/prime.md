@@ -42,9 +42,8 @@ Do not bother the user with preflight checks progress ("I'm not going to ..."). 
 Load context files in priority order for optimal understanding:
 
 **Priority 1 - Essential Context (load first):**
-1. `project-overview.md` - High-level understanding of the project
-2. `tech-context.md` - Technical stack and dependencies
-3. `testing.md` - Testing framework and setup
+1. `tech-context.md` - Technical stack and dependencies
+2. `testing.md` - Testing framework and setup
 
 **Priority 2 - Current State (load second):**
 5. `progress.md` - Current status and recent work
@@ -54,8 +53,7 @@ Load context files in priority order for optimal understanding:
 7. `system-patterns.md` - Architecture and design patterns
 8. `product-context.md` - User needs and requirements
 9. `project-style-guide.md` - Coding conventions
-10. `project-vision.md` - Long-term direction
-11. `development-commands.md` - Common workflows and commands
+10. `development-commands.md` - Common workflows and commands
 
 ### 2. Validation During Loading
 
@@ -76,7 +74,6 @@ After loading context files:
 ### 4. Error Recovery
 
 **If critical files are missing:**
-- `project-overview.md` missing: Try to understand from README.md
 - `tech-context.md` missing: Analyze package.json/requirements.txt directly
 - `progress.md` missing: Check recent git commits for status
 
