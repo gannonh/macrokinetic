@@ -33,7 +33,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Use the same configuration as test.sh - DEFAULT_DEVICE from working setup
-DEFAULT_DEVICE="iPhone 15,OS=17.5"
+DEFAULT_DEVICE="iPhone 17 Pro,OS=26.1"
 SIMULATOR="platform=iOS Simulator,name=${DEFAULT_DEVICE}"
 
 print_header() {
@@ -121,7 +121,8 @@ fi
 
 # 3. Unit tests with coverage
 print_header "3️⃣ Unit Tests with Coverage"
-RESULT_BUNDLE="/tmp/coverage.xcresult"
+RESULT_BUNDLE=".coverage/coverage.xcresult"
+mkdir -p .coverage
 rm -rf "$RESULT_BUNDLE"
 if ! run_check "Unit Tests with Coverage" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerTests -enableCodeCoverage YES -resultBundlePath '$RESULT_BUNDLE' | xcbeautify"; then
     ((FAILED_CHECKS++))

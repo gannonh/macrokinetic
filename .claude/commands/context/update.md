@@ -55,16 +55,16 @@ git diff main...HEAD --name-only
 
 ```bash
 # Core source code changes (highest priority)
-git diff main...HEAD -- 'TenderApp/**/*.swift' ':!TenderApp/**/Preview Content/**'
+git diff main...HEAD -- 'JabTracker/**/*.swift' ':!JabTracker/**/Preview Content/**'
 
 # View changes (user-facing impact)
-git diff main...HEAD -- 'TenderApp/Views/**/*.swift'
+git diff main...HEAD -- 'JabTracker/Views/**/*.swift'
 
 # Model changes (data structure impact)
-git diff main...HEAD -- 'TenderApp/Models/**/*.swift'
+git diff main...HEAD -- 'JabTracker/Models/**/*.swift'
 
 # Service/ViewModel changes (business logic)
-git diff main...HEAD -- 'TenderApp/Services/**/*.swift' 'TenderApp/ViewModels/**/*.swift'
+git diff main...HEAD -- 'JabTracker/Services/**/*.swift' 'JabTracker/ViewModels/**/*.swift'
 ```
 
 **For large PRs (50+ files changed):** Focus on:

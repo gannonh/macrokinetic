@@ -111,8 +111,8 @@ Edit `/tmp/issue-$1-body.md` to:
    - `def5678` fix: Description of fix
 
    **Files Changed:**
-   - `TenderApp/Models/NewModel.swift` (added)
-   - `TenderApp/Services/ExistingService.swift` (modified)
+   - `JabTracker/Models/NewModel.swift` (added)
+   - `JabTracker/Services/ExistingService.swift` (modified)
 
    **Progress:**
    - Completed X, Y, Z

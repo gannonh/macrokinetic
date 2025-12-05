@@ -12,18 +12,21 @@ USE_EXISTING=false
 if [[ "$1" == "--use-existing" ]]; then
     USE_EXISTING=true
 fi
-
-RESULT_BUNDLE="${RESULT_BUNDLE:-/tmp/coverage.xcresult}"
+# iPhone 17 Pro,OS=26.1
+RESULT_BUNDLE="${RESULT_BUNDLE:-.coverage/coverage.xcresult}"
 SCHEME="JabTracker"
-DESTINATION="platform=iOS Simulator,name=iPhone 15,OS=17.5"
+DESTINATION="platform=iOS Simulator,name=iPhone 17 Pro,OS=26.1"
 CONFIG_FILE="$(dirname "$0")/../coverage-config.json"
 
 if [ "$USE_EXISTING" = false ]; then
     echo "🔍 Running tests with coverage..."
-    
+
+    # Ensure coverage directory exists
+    mkdir -p .coverage
+
     # Clean up any existing result bundle
     rm -rf "$RESULT_BUNDLE"
-    
+
     # Run tests with coverage enabled
     xcodebuild test -scheme "$SCHEME" -destination "$DESTINATION" \
         -enableCodeCoverage YES \

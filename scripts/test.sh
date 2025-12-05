@@ -5,13 +5,15 @@ set -o pipefail  # Ensure pipeline failures are detected
 # Run tests with pretty output and device selection
 
 # Available simulators
+# NOTE: iOS 26.1 simulators recommended with Xcode 26 to avoid SwiftData/CloudKit crashes
+# iOS 17.5 simulators have compatibility issues with Xcode 26's NSPersistentStoreCoordinator
 DEVICES=(
-    "iPhone 15,OS=17.5"
-    "iPhone 15 Pro Max,OS=17.5" 
-    "iPhone SE (3rd generation),OS=17.5"
+    "iPhone 17 Pro,OS=26.1"
+    "iPhone 17,OS=26.1"
+    "iPhone 17 Pro Max,OS=26.1"
 )
 
-DEFAULT_DEVICE="iPhone 15,OS=17.5"
+DEFAULT_DEVICE="iPhone 17 Pro,OS=26.1"
 ENABLE_COVERAGE=false
 RESET_DEVICE=false
 ENABLE_LOGGING=true
@@ -50,7 +52,7 @@ show_usage() {
     echo ""
     echo "Examples:"
     echo "  $0 ui                                                    # Run all UI tests on default device"
-    echo "  $0 ui 1                                                  # Run all UI tests on iPhone 15"
+    echo "  $0 ui 1                                                  # Run all UI tests on iPhone 17 Pro"
     echo "  $0 ui 1 DesignSystemUITests                             # Run specific UI test class"
     echo "  $0 ui 1 DesignSystemUITests/testDesignSystemComponents  # Run specific UI test method"
     echo "  $0 ui 1 ManualAuthenticationUITests                     # Run manual Apple ID tests (requires manual interaction)"
@@ -235,10 +237,11 @@ if [ "$ENABLE_LOGGING" = true ]; then
         COVERAGE_OPTIONS="-enableCodeCoverage YES"
     fi
 elif [ "$ENABLE_COVERAGE" = true ]; then
-    # Coverage without logging uses temp path
-    rm -rf /tmp/jab-tracker-coverage.xcresult
+    # Coverage without logging uses .coverage directory
+    mkdir -p .coverage
+    rm -rf .coverage/coverage.xcresult
     COVERAGE_OPTIONS="-enableCodeCoverage YES"
-    RESULT_BUNDLE_PATH="-resultBundlePath /tmp/jab-tracker-coverage.xcresult"
+    RESULT_BUNDLE_PATH="-resultBundlePath .coverage/coverage.xcresult"
 fi
 
 if [ "$LOG_ONLY" = false ]; then
@@ -266,19 +269,23 @@ run_tests() {
         echo "$test_description"
     fi
 
+    # Disable concurrent destination testing to prevent simulator cloning overhead
+    # This speeds up test startup significantly in Xcode 26
+    PARALLEL_OPTIONS="-disable-concurrent-destination-testing"
+
     if [ "$ENABLE_LOGGING" = true ]; then
         # Create a raw log file for complete output
         RAW_LOG_FILE="$LOG_DIR/raw_output.txt"
 
         if [ "$LOG_ONLY" = true ]; then
             # Log only - capture raw output
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 > "$RAW_LOG_FILE"
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 > "$RAW_LOG_FILE"
             # Process with xcbeautify for the main log file
             cat "$RAW_LOG_FILE" | xcbeautify > "$LOG_FILE" 2>&1
         else
             # Log and display - tee raw output to file while piping to xcbeautify for display
             # This preserves real-time output while capturing everything
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | \
+            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 | \
                 tee "$RAW_LOG_FILE" | \
                 xcbeautify --renderer terminal
             # Also save beautified version for easier reading
@@ -287,7 +294,7 @@ run_tests() {
         TEST_EXIT_CODE=${PIPESTATUS[0]}
     else
         # No logging - use xcbeautify with terminal renderer for real-time output
-        xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH 2>&1 | \
+        xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 | \
             xcbeautify --renderer terminal
         TEST_EXIT_CODE=${PIPESTATUS[0]}
     fi
@@ -314,7 +321,7 @@ if [ "$ENABLE_COVERAGE" = true ]; then
     if [ "$ENABLE_LOGGING" = true ]; then
         COVERAGE_RESULT_PATH="$XCRESULT_PATH"
     else
-        COVERAGE_RESULT_PATH="/tmp/jab-tracker-coverage.xcresult"
+        COVERAGE_RESULT_PATH=".coverage/coverage.xcresult"
     fi
 
     if [ -d "$COVERAGE_RESULT_PATH" ]; then
