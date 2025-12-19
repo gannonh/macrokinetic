@@ -74,18 +74,18 @@ schemes:
           parallelizable: false
           randomExecutionOrder: false
       commandLineArguments:
-        "--bypass-onboarding": false
+        "--bypass-onboarding": true
         "--force-onboarding": false
         "--reset-app-data": false
-        "--ui-testing": false
+        "--ui-testing": true
         "--seed-test-7d": false
         "--seed-test-30d": false
         "--seed-test-90d": false
         "--seed-test-1y": false
     run:
       commandLineArguments:
-        "--force-onboarding": false 
-        "--reset-app-data": false
+        "--force-onboarding": true 
+        "--reset-app-data": true
         "--ui-testing": true # Enable to bypass auth
         "--seed-test-7d": false
         "--seed-test-30d": false

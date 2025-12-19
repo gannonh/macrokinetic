@@ -61,7 +61,7 @@ After upload completes (10-20 min), provide these instructions to the user:
 
 **Required Steps in App Store Connect:**
 1. Go to https://appstoreconnect.apple.com/teams/662bb7eb-4802-4b2e-b03e-8943dfa4849c/apps/6755363295/testflight/ios
-2. Navigate to: My Apps → Tender App Internal → TestFlight
+2. Navigate to: My Apps → JabTracker Internal → TestFlight
 3. Find the new build (will show as "Processing" until ready)
 4. Once ready, click on the build
 5. Add the release notes in "What to Test" field (paste generated notes)

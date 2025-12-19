@@ -94,10 +94,11 @@ For each context file, analyze for:
 - Update to reflect current state
 - Archive historical context if needed (don't keep in main context)
 
-#### 3. **Excessive Update History**
+#### 3. **Update History**
 - Update history sections that span 100+ lines
 - Detailed change logs that belong in git history
 - Minor updates that don't provide long-term value
+- Status updates that are no longer relevant
 
 **Example Issues:**
 ```markdown
@@ -216,7 +217,7 @@ Process each context file systematically:
 
 **Target:** 200-300 lines maximum
 
-#### `product-context.md`
+#### `project-context.md`
 **Focus:** Product vision, user needs, feature descriptions
 
 **Common Bloat:**
@@ -230,6 +231,11 @@ Process each context file systematically:
 - One clear feature description per feature
 - Brief competitive insights only
 - Remove outdated market data
+
+**Source of Truth:** 
+- `project-context.md` is a concise version of the project scope
+- Refer to GitHub Issues for full feature specs and as source of truth
+- If `project-context.md` diverges, update it to match GitHub Issues
 
 **Target:** 300-500 lines maximum
 
@@ -294,7 +300,7 @@ After individual file refinement, look for cross-file duplication:
    - Testing patterns → `testing.md`
    - Architecture patterns → `system-patterns.md`
    - Technology integration → `tech-context.md`
-   - Product features → `product-context.md`
+   - Product features → `project-context.md`
    - Development workflows → `development-commands.md`
 
 3. **Replace duplicates with references:**
@@ -429,7 +435,7 @@ Provide detailed refinement report:
 🔗 Cross-References Added:
   - tech-context.md → testing.md (test patterns)
   - system-patterns.md → tech-context.md (framework integration)
-  - progress.md → product-context.md (feature status)
+  - progress.md → project-context.md (feature status)
 
 🗑️ Content Removed:
   - 127 lines of duplicate content

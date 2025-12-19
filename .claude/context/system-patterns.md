@@ -1,128 +1,46 @@
 ---
-created: 2025-09-11T16:54:56Z
-last_updated: 2025-10-30T14:59:15Z
-version: 3.2
-author: Claude Code PM System
+created: 2025-12-19T14:55:18Z
+last_updated: 2025-12-19T14:55:18Z
 ---
 
 # System Patterns
 
-## Architectural Patterns
+## Architecture Overview
 
 ### MVVM with SwiftUI
-- **Views**: SwiftUI declarative UI components
-- **ViewModels**: @Observable classes managing business logic (migrating from ObservableObject - see Issue #51)
-- **Models**: SwiftData entities with CloudKit sync
-- **Services**: @Observable classes for cross-cutting concerns
-- **Analytics Service**: Centralized cross-model analytics coordination
 
-### Data Flow Architecture
 ```
-User Interaction → SwiftUI View → ViewModel → Service Layer → SwiftData Model → CloudKit Sync
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    View     │ ──▶ │  ViewModel  │ ──▶ │   Service   │ ──▶ │    Model    │
+│  (SwiftUI)  │     │ (@Observable)│     │ (@Observable)│     │ (SwiftData) │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-### Offline-First Design
-- **Local Storage Primary**: SwiftData as source of truth
-- **Sync Layer**: CloudKit sync with graceful degradation
-- **Status Monitoring**: Real-time sync status with user feedback
-- **Conflict Resolution**: CloudKit automatic conflict handling
+### Data Flow
+1. User interacts with SwiftUI View
+2. View calls ViewModel methods
+3. ViewModel coordinates with Services
+4. Services perform business logic and persist to SwiftData
+5. CloudKit syncs changes automatically
 
-## Design System Patterns
+## Observable Patterns
 
-### Component Hierarchy
-```
-DesignTokens (Colors, Typography) 
-    ↓
-Base Components (DesignCard, PrimaryButton)
-    ↓ 
-Feature Components (MedicationCard, DoseEntry)
-    ↓
-Screen Views (DashboardView, SettingsView)
-```
-
-### Accessibility Integration
-- **VoiceOver**: Semantic accessibility labels throughout
-- **Dynamic Type**: Responsive typography scaling
-- **Contrast**: High contrast mode support
-- **Navigation**: Logical focus order and keyboard navigation
-
-## Authentication Patterns
-
-### Sign in with Apple Flow
-1. **Credential Request** → AuthenticationManager
-2. **Apple ID Validation** → Keychain Storage
-3. **User Entity Creation** → SwiftData persistence
-4. **Biometric Setup** → BiometricAuthManager
-5. **Session Management** → Authentication state tracking
-
-### Security Layers
-- **Network**: Sign in with Apple (OAuth2)
-- **Device**: Face ID/Touch ID biometric authentication
-- **Storage**: Keychain Services for credential persistence
-- **Session**: Published authentication state management
-
-## Testing Patterns
-> **For comprehensive testing patterns, E2E processes, test data management, UI testing approaches, and test quality standards**, see `.claude/context/testing.md`
-
-### Key Testing Integration Points
-- **SwiftData + Testing**: Test environment requires special handling to avoid relationship crashes
-- **XcodeGen + Testing**: Run `xcodegen generate` after adding test files
-- **Medical Testing Standards**: Patient safety requires rigorous testing of business logic
-
-## Error Handling Patterns
-
-### Graceful Degradation
-- **Network Errors**: Continue with local-only functionality
-- **Authentication Failures**: Clear error messages with retry options
-- **Data Validation**: Inline validation with helpful guidance
-- **System Errors**: Fallback behaviors with user notification
-
-### Error Communication
-- **User-Facing**: Clear, actionable error messages
-- **Developer**: Detailed logging with context
-- **Recovery**: Automatic retry mechanisms where appropriate
-- **Escalation**: Clear escalation paths for unresolvable errors
-
-## State Management Patterns
-
-### Observable Pattern (iOS 17+ - Preferred for New Code)
+### Modern @Observable (Preferred)
 ```swift
 @Observable
-class ViewModel {
-    var isAuthenticated: Bool = false
-    var currentUser: User?
-    var syncStatus: CloudKitSyncStatus = .idle
+class QuickDoseViewModel {
+    var selectedMedication: MedicationProfile?
+    var doseAmount: Double = 0.0
+    var isLoading = false
+
+    func saveDose() async throws { ... }
 }
-// In View: @State private var viewModel = ViewModel()
+
+// In View:
+@State private var viewModel = QuickDoseViewModel()
 ```
 
-### Legacy ObservableObject Pattern (Being Migrated - Issue #51)
-```swift
-class ViewModel: ObservableObject {
-    @Published var isAuthenticated: Bool
-    @Published var currentUser: User?
-    @Published var syncStatus: CloudKitSyncStatus
-}
-// In View: @StateObject private var viewModel = ViewModel()
-```
-
-### SwiftData Relationships
-```swift
-@Relationship(deleteRule: .cascade, inverse: \Child.parent)
-var children: [Child] = []
-```
-
-### Computed Properties
-- **Derived State**: Medication dose calculations
-- **UI State**: Form validation status
-- **Business Logic**: Pharmacokinetic computations
-
-### Service Coordinator Pattern (AppServices - Issue #260)
-
-**Problem**: Services requiring dependency injection (ModelContext, ScheduleService) cannot use direct singleton patterns, but SwiftUI views need convenient access.
-
-**Solution**: AppServices coordinator provides centralized service access with lazy initialization:
-
+### Service Coordinator Pattern
 ```swift
 @MainActor
 final class AppServices: ObservableObject {
@@ -135,407 +53,261 @@ final class AppServices: ObservableObject {
         guard scheduleService == nil else { return }
         let scheduleService = ScheduleService(context: modelContext)
         self.scheduleService = scheduleService
-        let notificationService = NotificationService(scheduleService: scheduleService)
-        self.notificationService = notificationService
-        notificationService.loadState()
+        self.notificationService = NotificationService(scheduleService: scheduleService)
+    }
+}
+
+// Usage in View:
+@ObservedObject private var appServices = AppServices.shared
+```
+
+## SwiftData Patterns
+
+### Model Definition
+```swift
+@Model
+final class Dose {
+    var id: UUID = UUID()
+    var amount: Double = 0.0
+    var timestamp: Date = Date()
+    var user: User?  // Child - plain property, no @Relationship
+    var medication: MedicationProfile?
+
+    init(amount: Double, timestamp: Date = Date()) {
+        self.amount = amount
+        self.timestamp = timestamp
     }
 }
 ```
 
-**Usage Pattern**:
+### Parent-Child Relationships
 ```swift
-// In ContentView.onAppear:
-AppServices.shared.initialize(with: modelContext)
+// Parent side - uses @Relationship with inverse
+@Model
+final class User {
+    @Relationship(deleteRule: .cascade, inverse: \Dose.user)
+    var doses: [Dose]?
 
-// In any SwiftUI view:
-@ObservedObject private var appServices = AppServices.shared
-let service = appServices.notificationService
-```
+    @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
+    var medicationProfiles: [MedicationProfile]?
+}
 
-**Benefits**:
-- Maintains singleton-like convenience for SwiftUI views
-- Enables proper dependency injection for services requiring ModelContext
-- Lazy initialization prevents premature service creation
-- Thread-safe with `@MainActor` annotation
-
-**When to Use**:
-- Services requiring ModelContext or other dependencies
-- App-wide services that need initialization timing control
-- Coordinating multiple related services (ScheduleService → NotificationService)
-
-## Navigation Patterns
-
-### TabView Architecture
-- **Dashboard**: Home screen with key metrics
-- **Add**: Quick dose entry functionality
-- **History**: Historical dose tracking
-- **Analytics**: Charts and insights
-- **Settings**: User profile and preferences
-
-### Modal Presentation
-- **Onboarding**: Full-screen modal for first-time setup
-- **Forms**: Sheet presentation for data entry
-- **Alerts**: System alerts for critical actions
-- **Confirmations**: ActionSheet for destructive operations
-
-## Code Quality Patterns
-
-### SwiftLint Integration
-- **Automatic Formatting**: SwiftLint auto-fix on commit
-- **Quality Gates**: Build fails on lint violations
-- **Custom Rules**: Project-specific lint configurations
-- **Consistent Style**: Enforced across entire codebase
-
-### SwiftLint Management Patterns (Issue #57)
-- **Targeted Disable Strategy**: Use `// swiftlint:disable:next orphaned_doc_comment` instead of blanket disables to avoid blanket_disable_command violations
-- **Doc Comment Attachment**: SwiftLint requires doc comments directly attached to declarations without intervening disable comments
-- **Complex Function Handling**: Use `// swiftlint:disable:next cyclomatic_complexity` immediately before function declaration for complex test utilities
-- **Pre-commit Integration**: Pre-commit hooks enable catch-and-fix workflow for violations during implementation
-- **Iterative Fix Approach**: Systematic violation resolution (force unwrapping → for-where → cyclomatic complexity) while maintaining functionality
-
-### Test Coverage Strategy
-- **Tiered Coverage**: Different coverage targets by component type
-- **Critical Path**: 100% coverage for medical calculations
-- **Business Logic**: 85%+ coverage for core functionality
-- **UI Components**: Focus on business logic, not view rendering
-
-> **For SwiftData relationship testing anti-patterns, test container setup, and ModelConfiguration requirements**, see `.claude/context/testing.md`
-
-## Version Control Patterns
-
-### Commit Verification Discipline
-- **Verify Before Commit**: Never commit code changes until they are verified to work correctly
-- **Test-Driven Commits**: Run relevant tests and verify functionality before committing fixes
-- **Avoid False History**: Multiple commits claiming to "fix" the same issue creates misleading and confusing git history
-- **Atomic Commits**: Each commit should represent a complete, working change that builds and functions as intended
-- **Commit Message Accuracy**: Commit messages should accurately reflect what was accomplished, not what was attempted
-
-**Anti-pattern Example:**
-```bash
-# ❌ WRONG: Committing unverified fixes creates confusing history
-git commit -m "fix: Resolve authentication bug"              # Not verified, bug still exists
-git commit -m "fix: Actually fix authentication bug"          # Still broken
-git commit -m "fix: Fix authentication bug for real"          # Misleading git history
-```
-
-**Correct Pattern:**
-```bash
-# ✅ CORRECT: Verify before commit
-./scripts/test.sh unit 1 AuthenticationTests  # Run relevant tests first
-# Verify tests pass and functionality works
-git commit -m "fix: Resolve authentication state persistence issue"  # Single accurate commit
-```
-
-### Verification Checklist Before Commit
-1. **Run Relevant Tests**: Execute unit tests for changed code areas
-2. **Manual Verification**: Test the specific functionality that was modified
-3. **Build Verification**: Ensure the project builds without errors or warnings
-4. **Lint Checks**: Run SwiftLint to catch code quality violations (`swiftlint`)
-5. **Integration Check**: Verify changes don't break related functionality
-
-## Key Development Patterns
-
-### SwiftData Model Architecture
-- All models use CloudKit-compatible default values (avoids optionals where possible)
-- Include `createdAt` and `updatedAt` timestamps for audit trails
-- Use proper `@Relationship` attributes with `inverse` and `deleteRule` specifications
-- **One-Side Relationship Rule**: Only parent entities use `@Relationship(inverse:)` - child entities use plain properties to avoid circular references
-- Example: `MedicationProfile` with enhanced fields for compounding and dose escalation
-
-### Authentication Implementation Gotchas
-- Biometric authentication simulator limitations - test on real devices for accuracy
-- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
-- Authentication state must be checked on app launch for proper flow control
-- Face ID prompt timing can cause test flakiness - add appropriate waits and timeouts
-- Environment variables and launch arguments are key for test/production differentiation
-- Always provide authentication bypass for UI testing to avoid external dependencies
-- Keychain access can fail in test scenarios - implement proper error handling
-
-### Testing Framework Best Practices
-- Swift Testing provides cleaner, more modern test syntax than XCTest
-- xcbeautify offers better Swift Testing output support than xcpretty
-- Never use `CODE_SIGNING_ALLOWED=NO` for UI tests - prevents app launch
-- File-based test organization improves maintainability
-
-### XcodeGen Workflow
-- **CRITICAL**: Always run `xcodegen generate` after adding new Swift files
-- Project uses XcodeGen for automatic project file management
-- New test files won't appear in test runs until project is regenerated
-- Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
-
-### CloudKit + SwiftData Integration
-- Always implement graceful fallback when CloudKit is unavailable
-- Check for test environment before enabling CloudKit to avoid test conflicts
-- Use `@Published` properties for real-time sync status updates (or plain properties with @Observable)
-- Provide clear user feedback about sync status with actionable guidance
-
-### Observable Migration Strategy (Issue #51)
-- **NEW CODE**: Always use `@Observable` pattern for new ViewModels and Services
-- **EXISTING CODE**: Gradually migrate `ObservableObject` classes to `@Observable`
-- **VIEW PROPERTY WRAPPERS**:
-  - Use `@State` for `@Observable` classes
-  - Use `@StateObject`/`@ObservedObject` for `ObservableObject` classes
-- **BENEFITS**: Simpler syntax, better performance, automatic observation of all properties
-- **REQUIREMENTS**: iOS 17+ (already required by app)
-
-## Analytics Service Patterns
-
-### Cross-Model Analytics Architecture
-- **Centralized Service**: AnalyticsService coordinates calculations across User, Dose, and MedicationProfile models
-- **PharmacokineticsEngine Integration**: Concentration calculations for therapeutic range analysis
-- **@Observable Pattern**: Real-time analytics updates with iOS 17+ observer pattern
-- **Performance-First Design**: Optimized for large datasets (700+ dose records)
-- **SwiftData Relationship Testing**: Critical patterns for analytics calculations accessing relationships across multiple models
-- **Cross-Model Coordination**: AnalyticsService successfully coordinates User, Dose, and MedicationProfile models through centralized service architecture
-
-### Analytics Data Structures
-```swift
-struct UserAnalyticsSummary {
-    let overallAdherence: Double
-    let medicationEffectiveness: [MedicationEffectiveness]
-    let concentrationTrends: [ConcentrationTrend]
-    let adherenceInsights: [AdherenceInsight]
+// Child side - plain property only
+@Model
+final class Dose {
+    var user: User?  // NO @Relationship attribute
 }
 ```
 
-### Medical Accuracy Patterns
-- **Therapeutic Range Analysis**: Concentration optimality scoring based on medication windows
-- **Multi-Factor Effectiveness**: `baseEffectiveness * adherenceFactor * concentrationOptimality`
-- **Insight Generation**: Priority-based actionable recommendations
-- **Edge Case Handling**: Graceful degradation for incomplete data
+### CloudKit Compatibility Requirements
+- All properties must have default values
+- Only parent uses `@Relationship(inverse:)`
+- Test with `cloudKitDatabase: .none` to avoid sync issues
 
+## Service Extension Pattern
 
-## Parallel Development Patterns (Issue #55)
+Services are split into focused extensions:
 
-### Multi-Stream Development Architecture
-- **Stream Coordination**: Successfully coordinate 4+ parallel agents with 2.5x speedup over sequential development
-- **Dependency Management**: Sequential launch (A→C) and parallel (A+B) strategies for optimal workflow
-- **Simulator Isolation**: Dedicated simulator assignment prevents test conflicts during parallel development
-- **Integration Points**: Clear file ownership prevents conflicts, with coordination through extension patterns
-
-### TDD at Scale
-- **Embedded Testing**: Each stream follows rigorous TDD with embedded testing
-- **Stream Ownership**: Each agent owns both implementation and testing for their domain
-
-> **For TDD patterns, test-driven parallel streams, and testing workflows**, see `.claude/context/testing.md`
-
-### Service Integration Patterns
-- **Extension Architecture**: ChartDataProcessor+Filtering demonstrates clean extension organization
-- **Lazy Processing**: Memory-efficient processing through lazy sequence generation for large datasets
-- **Service Coordination**: Clean integration patterns between PharmacokineticsEngine and AnalyticsService
-- **Performance Optimization**: Batch operations and adaptive density control for handling 1+ year datasets efficiently
-
-### Hybrid Parallel Development Strategy (Issue #175)
-- **Phase-Based Parallelization**: Phase 1 (Sequential foundation) → Phase 2 (Parallel execution) enables 2.4x speedup while respecting Swift compilation dependencies
-- **Extension-Based Service Architecture**: Using Swift extensions (ScheduleService+Projection, +Modifications, +Adherence, +Titration) prevents file conflicts during parallel development
-- **@Observable Service Pattern**: ScheduleService successfully implements iOS 17+ @Observable pattern for real-time updates with ModelContext dependency injection
-- **Error Enum Coordination**: Centralized error enum in base class with stream-specific cases prevents duplication
-- **Commit Strategy for Dependencies**: Stream A committed base class early (Phase 1) to unblock dependent streams - critical when extensions depend on base class compilation
-
-### NotificationService Parallel Development Patterns (Issue #176)
-- **3-Stream Parallel Success**: Successfully coordinated 3 parallel agents with extension-based architecture (Stream A: Core Infrastructure, Stream B: Background Refresh, Stream C: Action Handling)
-- **Extension Architecture for Parallel Services**: NotificationService+Actions.swift and NotificationService+Background.swift pattern prevents file conflicts
-- **Protocol-Based Testability**: NotificationCenterProtocol abstraction enables comprehensive unit testing without requiring actual UNUserNotificationCenter
-
-### Parallel Stream Coordination with Shared Dependencies (Issue #260)
-
-**Challenge**: Multiple parallel streams (A and C) both needed `NotificationService.shared` which doesn't exist due to dependency injection requirements.
-
-**Discovery**: Both streams blocked simultaneously on the same architectural assumption - cannot proceed with implementation until dependency issue resolved.
-
-**Resolution Strategy**:
-1. **Pause parallel execution** when architectural blocker affects multiple streams
-2. **Create coordinated solution** (AppServices coordinator) that unblocks all affected streams
-3. **Resume parallel execution** after architectural fix committed and pushed
-4. **Validate integration** once all streams complete
-
-**Key Lessons**:
-- **Architectural blockers require immediate coordination** rather than per-stream workarounds
-- **Pausing parallel work** for coordinated fixes is faster than each stream attempting workarounds
-- **Commit and push architectural fixes** before resuming dependent streams ensures clean integration
-- **Test status reporting accuracy** critical - distinguish "implemented" vs "verified" vs "stubs"
-
-**User Feedback Pattern**:
-- User corrected misleading status: "Most of the e2e tests are currently stubbed placeholders"
-- Always be explicit: "8 E2E tests implemented but not yet run" vs "8 E2E tests passing"
-- Distinguish between code written, tests run, and placeholder stubs
-
-> **For parallel testing patterns, test-driven parallel development, simulator isolation, and quality gate validation**, see `.claude/context/testing.md`
-
-### E2E Testing Excellence Patterns (Issue #177)
-
-#### Iterative E2E Development Process
-- **One-Test-at-a-Time Implementation**: Implementing each test individually (vs batch implementation) prevents debugging chaos and achieved 100% pass rate on first full suite run
-- **Debug-First Methodology**: Always use `TestUtilities.debugElements()` before writing selectors - saves significant time and reveals actual element types
-- **Commit After Each Test**: Individual commits for passing tests provides clear progress tracking and easy rollback points
-- **Full Suite Verification**: Running all tests together ensures no interdependencies or conflicts
-
-#### XCUITest Element Targeting
-- **Back Button Access Pattern**: Use explicit accessibility identifier (`app.buttons["onboarding-back-button"]`) rather than navigation bar queries
-- **Multiple Element Handling**: Use `.element(boundBy: 0)` for accessing specific elements when multiple share same identifier
-- **Debug Output Analysis**: Raw logs reveal actual element types and identifiers more reliably than assumptions
-- **Strategic Sleep Placement**: Use `sleep(3)` for navigation/rendering, `usleep(50_000)` for UI updates
-
-#### Performance Testing for E2E
-- **E2E Timeout Expectations**: E2E tests require < 1 second timeouts (not < 200ms unit test expectations)
-- **Chart Preview Performance**: Concentration curve preview renders < 1 second meeting NFR requirements
-- **Pattern Update Responsiveness**: Chart updates complete within E2E-appropriate timeouts
-
-#### Accessibility Testing Without Simulation
-- **VoiceOver Property Validation**: Comprehensive testing validates properties (labels, values, hints) without simulating actual VoiceOver
-- **State Announcement Verification**: Toggle and button values correctly indicate current state for assistive technologies
-- **Accessibility Label Coverage**: All interactive elements have descriptive labels enabling full VoiceOver navigation
-
-#### Test Logic Validation (Issue #180)
-- **Question Test Assumptions**: When tests fail or seem flawed, question the fundamental test logic before debugging implementation
-- **Validate Test Scenarios**: Ensure tests actually validate the behavior being tested, not tangential or unrelated effects
-- **Example**: Split-dose scheduling bug is about **schedule generation intervals** (3.5 days vs 12 hours), NOT about concentration calculations (which are based on historical doses, not future schedules)
-- **Remove Invalid Tests**: Better to have 3 valid tests than 4 tests where 1 is fundamentally flawed - invalid tests provide false confidence
-- **Test Design Principle**: Future schedule configuration doesn't affect current concentration calculations - test the right relationship
-
-#### Debug-First Accessibility Discovery (Issue #180 Afternoon)
-- **Accessibility Hierarchy Unknown**: When implementing E2E tests for new UI components, accessibility identifiers are often unknown
-- **Debug Utilities Essential**: Use `TestUtilities.debugElements()` to inspect actual accessibility hierarchy before writing selectors
-- **Example Discovery**: Quick Dose sheet identifier was `"quick-dose-sheet"` (not assumed `"quick-dose-entry"`), amount was `"quick-dose-amount"`
-- **Time Savings**: Debug-first approach prevents trial-and-error selector debugging, saves significant development time
-- **Pattern**: Print hierarchy → analyze output → write correct selectors on first attempt
-
-#### Debug-First Fixes Timing Issues (Issue #260)
-- **Anti-Pattern**: Assuming element selectors without verification leads to timeout failures that appear to be timing issues
-- **Root Cause Example**: Tests looked for `app.tabBars.buttons["Dashboard"]` which doesn't exist - actual tab button is labeled "Home"
-- **Actual Element**: Using `TestUtilities.debugElements()` revealed correct element was `app.scrollViews["dashboard-scroll-view"]`
-- **Result**: All 3 "timing issue" tests fixed immediately with correct selectors - tests now pass reliably across multiple runs
-- **Lesson**: What appears to be a timeout/timing problem is often a selector problem - debug first before adjusting waits
-- **Impact**: Debug-first approach solved 3 failing E2E tests in single session without any timing adjustments needed
-
-#### Test File Organization for Maintainability (Issue #180 Afternoon)
-- **SwiftLint File Length Limits**: OnboardingScheduleSetupUITests.swift exceeded 800-line limit at 915 lines
-- **User Preference for Logic Over Limits**: "There isnt a logical way to break them into smaller files?" - users prefer logical organization over simply increasing linter limits
-- **Solution Pattern**: Split into logical files based on functionality (core tests vs medication pattern tests)
-- **Result**: Two focused files (555 + 337 lines) with better organization and all tests passing
-- **Learning**: File splitting improves maintainability more than limit increases
-
-#### User Smoke Testing Workflow (Issue #180 Afternoon)
-- **Incremental Commits**: User request: "first commit your work and then work on the fixes" - commit completed work before starting new bug fixes
-- **Workflow**: Commit daily med tests → fix split-dose bug → commit bug fix separately
-- **Clear Separation**: User prefers incremental commits with clear separation between different work items
-- **Pattern**: Complete work → commit → start new task → complete → commit (not batch commits)
-
-#### Dynamic Date Calculations in Tests (Issue #286)
-- **CRITICAL ANTI-PATTERN**: NEVER hardcode dates in E2E tests - "Are you joking? You cant hardcode the date. The test will fail tomorrow if you do"
-- **Root Problem**: Hardcoded dates like "Oct 25, 2025" make tests time-dependent and fail when run on different dates
-- **Correct Solution**: Use `Date()`, `Calendar`, and `DateFormatter` to calculate dates dynamically at runtime
-- **Display Format**: Use `dateFormatter.dateFormat = "MMM d, yyyy"` for display dates (e.g., "Oct 26, 2025")
-- **Picker Format**: Use `dateFormatter.dateFormat = "EEEE, MMMM d"` for iOS date picker buttons (e.g., "Sunday, October 26")
-- **Relative Date Calculations**: Use `Calendar.current.date(byAdding: .day, value: 1, to: Date())` for tomorrow, yesterday, etc.
-- **Example Pattern**:
 ```swift
-let dateFormatter = DateFormatter()
-dateFormatter.dateFormat = "MMM d, yyyy"
-let todayString = dateFormatter.string(from: Date())
-let expectedText = "Scheduled for \(todayString)"
-XCTAssertTrue(app.staticTexts[expectedText].exists)
+// Base service
+@Observable
+class ScheduleService {
+    let context: ModelContext
+
+    init(context: ModelContext) {
+        self.context = context
+    }
+}
+
+// Extensions for specific domains
+// ScheduleService+Projection.swift
+extension ScheduleService {
+    func getUpcomingDoses(for schedule: DoseSchedule) -> [ScheduledDose] { ... }
+}
+
+// ScheduleService+Adherence.swift
+extension ScheduleService {
+    func calculateAdherence(for schedule: DoseSchedule) -> Double { ... }
+}
 ```
-- **Impact**: Tests remain reliable regardless of when they're executed - critical for CI/CD pipelines
-- **Medical App Context**: Date-dependent medical features (scheduled titrations, dose timing) require dynamic date testing
 
-## Security & Defensive Programming Patterns (Issue #55)
+## Error Handling
 
-### Medical App Crash Prevention
-- **Input Validation Priority**: Critical importance of input validation in medical calculations to prevent patient safety risks
-- **Swift Range Safety**: Always validate range parameters before creating ranges (`1..<n` requires `n > 1`)
-- **Finite Number Validation**: Medical calculations must validate `isFinite` to prevent infinite/NaN crashes in chart rendering
-- **Data Sanitization Patterns**: Sanitize data at model constructor level to prevent corrupted data propagation
-- **Graceful Degradation**: Medical apps must continue functioning even with malicious/corrupted input data
+### Service Errors
+```swift
+enum ScheduleServiceError: LocalizedError {
+    case invalidSchedule
+    case scheduleNotFound
+    case contextError(Error)
 
-### Healthcare Application Security Standards
-- **Defensive Programming**: Every data entry point requires validation for medical-grade reliability
-- **Crash Vulnerability Prevention**: Proactive identification and elimination of potential crash scenarios
-- **Medical Data Integrity**: Ensure calculations remain valid and finite throughout data processing pipeline
-- **Production Safety**: Apps must handle corrupted or malicious data without compromising patient safety
+    var errorDescription: String? {
+        switch self {
+        case .invalidSchedule: return "Invalid schedule configuration"
+        case .scheduleNotFound: return "Schedule not found"
+        case .contextError(let error): return "Database error: \(error.localizedDescription)"
+        }
+    }
+}
+```
 
-> **For test-driven security and edge case validation testing**, see `.claude/context/testing.md`
+### Graceful Degradation
+- CloudKit unavailable → Continue with local-only
+- Network errors → Queue for retry
+- Authentication failures → Clear error with retry option
 
-## SwiftUI Component Architecture Patterns
+## Testing Patterns
 
-### SwiftUI Gesture Integration
-- **Complex Gesture Handling**: Successful implementation of pinch-zoom, drag-pan with state management in ConcentrationTimelineChart
-- **Medical App Accessibility**: Comprehensive VoiceOver implementation with dynamic descriptions and trend analysis
-- **Professional Export Architecture**: ChartExportView demonstrates proper sheet presentation patterns with async operations
-- **Chart State Management**: Public API pattern (setZoomLevel, setPanOffset, resetZoomAndPan) enables programmatic control
+### SwiftData Test Setup
+```swift
+func createTestContext() -> ModelContext {
+    let schema = Schema([User.self, Dose.self, MedicationProfile.self])
+    let config = ModelConfiguration(
+        schema: schema,
+        isStoredInMemoryOnly: true,
+        cloudKitDatabase: .none  // Critical for tests
+    )
+    let container = try! ModelContainer(for: schema, configurations: [config])
+    return ModelContext(container)
+}
+```
 
-### SwiftUI Accessibility Best Practices
-- **Accessibility Label Inheritance**: VStack accessibility modifiers override all child labels - remove parent `.accessibilityLabel()` to preserve individual button labels
-- **VoiceOver Excellence**: Comprehensive support with dynamic descriptions for medical data
+### Protocol-Based Mocking
+```swift
+protocol NotificationCenterProtocol {
+    func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
+    func add(_ request: UNNotificationRequest) async throws
+}
 
-> **For E2E testing patterns, accessibility testing, CodeGen integration, medical app testing excellence, and test-driven validation**, see `.claude/context/testing.md`
+// Production
+extension UNUserNotificationCenter: NotificationCenterProtocol {}
 
-## AdherenceInsights Business Logic Patterns (Issue #57)
+// Test
+class MockNotificationCenter: NotificationCenterProtocol {
+    var authorizationResult = true
+    func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool {
+        return authorizationResult
+    }
+}
+```
 
-### Medical Algorithm Design
-- **Weekly Medication Patterns**: Weekly medication patterns require different logic than daily medication assumptions
-- **Test-First Validation**: Tests revealed fundamental flaws in weekend gap detection and dose escalation algorithms
-- **Medical App Development Standards**: Test workarounds compromise patient safety - always fix root cause business logic
+## UI Patterns
 
-> **For SwiftData relationship testing patterns and test-driven debugging**, see `.claude/context/testing.md`
+### Tab Navigation
+```swift
+enum Tab: Hashable {
+    case dashboard
+    case history
+    case analytics
+    case settings
+}
 
-## Design Review & Polish Patterns (Issue #59)
+@State private var selectedTab: Tab = .dashboard
+@State private var showQuickDose = false
 
-### Phase-Based UX/UI Development Process
-- **Phase 1: E2E Screenshot Capture** - Comprehensive test suite captures all analytics views for baseline documentation
-- **Phase 2: Design Review & Analysis** - Systematic UI/UX review with structured feedback (ratings, priorities, recommendations)
-- **Phase 3: UI/UX Implementation** - Execute agreed-upon improvements based on design review findings
-- **Phase 4: State & Performance Optimization** - Profile and optimize for production performance standards
+TabView(selection: $selectedTab) {
+    DashboardView()
+        .tag(Tab.dashboard)
+        .tabItem { Label("Home", systemImage: "house") }
 
-### Priority-Based Implementation Framework
-- **Must Have (5 items)**: Critical fixes blocking clinical value (therapeutic range, axis labels, visual feedback, accessibility, terminology)
-- **Should Have (6 items)**: Important improvements for professional polish (loading states, streak icons, historical markers)
-- **Nice to Have (7 items)**: Future enhancements for advanced features (tooltips, haptics, pattern fills)
+    // "+" button triggers sheet, not a tab
+    Color.clear
+        .tag(Tab.history)
+        .tabItem { Label("Add", systemImage: "plus.circle.fill") }
+        .onTapGesture { showQuickDose = true }
 
-### Visual Baseline Documentation Patterns
-- **Screenshot-Driven Analysis**: E2E test screenshots enable thorough visual review without repeated simulator runs
-- **Structured Feedback Organization**: Organize by view section (above fold, below fold, controls) with ratings and specific improvements
-- **Before/After Comparison**: Visual baselines provide clear communication for design decisions and implementation validation
-- **Cross-Cutting Concerns**: Analyze accessibility, performance, and consistency across all views to reveal systemic vs component-specific issues
+    HistoryView()
+        .tag(Tab.history)
+        .tabItem { Label("History", systemImage: "calendar") }
+}
+.sheet(isPresented: $showQuickDose) {
+    QuickDoseSheet()
+}
+```
 
-### Design Review Output Structure
-- **Executive Summary**: Overall assessment with key strengths and critical gaps
-- **Section-by-Section Analysis**: Detailed review of each view with design questions and feedback
-- **Priority Issues & Opportunities**: Categorized by severity (high/medium/low priority)
-- **Recommendations Summary**: Actionable next steps with clear must-have/should-have/nice-to-have breakdown
-- **Review History**: Track feedback and implementation status over time
+### Form Validation
+```swift
+@Observable
+class FormViewModel {
+    var amount: String = ""
+    var isValid: Bool {
+        guard let value = Double(amount) else { return false }
+        return value > 0 && value <= maxDose
+    }
+    var validationError: String? {
+        guard !amount.isEmpty else { return nil }
+        guard let value = Double(amount) else { return "Enter a valid number" }
+        if value <= 0 { return "Amount must be positive" }
+        if value > maxDose { return "Amount exceeds maximum dose" }
+        return nil
+    }
+}
+```
 
-## Calendar Integration Patterns (Issue #178)
+## Notification Patterns
 
-### SwiftUI DatePicker Range Validation
-- **Silent Clamping Behavior**: DatePicker with `in: startDate...endDate` range silently clamps selected dates to range boundaries without error
-- **Business Requirements Alignment**: Always validate DatePicker range matches business requirements (e.g., future dose logging requires future date range)
-- **User Expectation Mismatch**: Range restrictions can cause subtle bugs when user expectations don't match range constraints - "Log Dose Now" for Oct 21 scheduled dose showed Oct 14 when range limited to past/present
-- **Solution Pattern**: Extend DatePicker range to accommodate all valid use cases: `(Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())...Calendar.current.date(byAdding: .day, value: 30, to: Date())!` for 30-day historical + 30-day future logging
+### Scheduling
+```swift
+func scheduleNotification(for dose: ScheduledDose) async throws {
+    let content = UNMutableNotificationContent()
+    content.title = "Time for your dose"
+    content.body = "\(dose.medication.brandName) - \(dose.amount)mg"
+    content.sound = .default
 
-### Placeholder Method Anti-Pattern
-- **Never Commit Placeholders**: Never commit placeholder methods with random/hardcoded data to production code
-- **Proper Alternatives**: Use TODO comments, feature flags, or commented-out implementation notes instead
-- **Detection Strategy**: Search codebase for "random", "sample", "placeholder" keywords before release
-- **Real-World Impact**: AnalyticsViewModel had `generateTrendData()` with `Double.random(in: 0.6...0.95)` and `generateMissedDosePatterns()` with hardcoded "Saturday: 2, Sunday: 3" - showed fake declining adherence even with 100% perfect adherence
+    let trigger = UNCalendarNotificationTrigger(
+        dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: dose.scheduledTime),
+        repeats: false
+    )
 
-### Chart Performance Tuning Patterns
-- **Sampling Density Trade-off**: Chart sampling intervals must balance visual smoothness with generation performance
-- **Weekly GLP-1 Optimization**: 6-hour intervals provide smooth concentration curves for weekly medications while maintaining <10s generation time
-- **Performance Impact**: 0.5h sampling created 6,860 points for 90 days (163s generation), 6h sampling created ~600 points (<15s generation) - 12x performance improvement
-- **General Guideline**: Aim for <1,000 chart points for <10s generation, <10,000 points for <60s generation on typical iOS devices
+    let request = UNNotificationRequest(identifier: dose.id.uuidString, content: content, trigger: trigger)
+    try await notificationCenter.add(request)
+}
+```
+
+### Deep Linking
+```swift
+// In notification action handler:
+let url = URL(string: "jabtracker://dose/quick?medicationId=\(id)")
+await UIApplication.shared.open(url)
+
+// In DeeplinkHandler:
+func handle(_ url: URL) {
+    guard url.scheme == "jabtracker" else { return }
+    switch url.host {
+    case "dose":
+        handleDoseDeeplink(url)
+    default:
+        break
+    }
+}
+```
+
+## Persistence Patterns
+
+### UserDefaults for Settings
+```swift
+extension NotificationService {
+    private enum Keys {
+        static let notificationsEnabled = "notificationsEnabled"
+        static let reminderMinutesBefore = "reminderMinutesBefore"
+    }
+
+    func saveState() {
+        UserDefaults.standard.set(notificationsEnabled, forKey: Keys.notificationsEnabled)
+        UserDefaults.standard.set(reminderMinutesBefore, forKey: Keys.reminderMinutesBefore)
+    }
+
+    func loadState() {
+        notificationsEnabled = UserDefaults.standard.bool(forKey: Keys.notificationsEnabled)
+        reminderMinutesBefore = UserDefaults.standard.integer(forKey: Keys.reminderMinutesBefore)
+        if reminderMinutesBefore == 0 { reminderMinutesBefore = 60 }
+    }
+}
+```
+
+### When to Use What
+- **SwiftData**: User-generated content, synced data, complex relationships
+- **UserDefaults**: App preferences, device-specific settings, simple values
 
 ## Update History
-- 2025-10-30T14:59:15Z: Added Issue #260 patterns - AppServices coordinator pattern for dependency injection, debug-first E2E testing fixes timing issues, parallel stream coordination with shared dependencies
-- 2025-10-26T09:00:00Z: Added Dynamic Date Calculations in Tests pattern from Issue #286 - critical anti-pattern for hardcoded dates, proper use of Date() and DateFormatter for reliable CI/CD testing
-- 2025-10-21T22:25:26Z: Added Issue #180 afternoon session patterns - debug-first accessibility discovery, test file organization for maintainability, user smoke testing workflow with incremental commits
-- 2025-10-20T14:22:56Z: Added E2E Testing Excellence Patterns from Issue #177 - iterative E2E development process, XCUITest element targeting, performance testing for E2E, and accessibility testing without simulation
-- 2025-10-15T18:06:05Z: Added Calendar Integration Patterns from Issue #178 - SwiftUI DatePicker range validation, placeholder method anti-pattern, and chart performance tuning for medical apps
-- 2025-10-14T17:00:00Z: Added Version Control Patterns section with commit verification discipline - emphasizes verifying work before committing to avoid false git history with multiple failed fix attempts
-- 2025-10-09T20:27:54Z: Updated for Issues #175, #176, #177 - Hybrid parallel development strategy, NotificationService parallel patterns, and onboarding integration E2E testing patterns
-- 2025-10-08T20:37:55Z: Added NotificationService Parallel Development Patterns from Issue #176 - 3-stream parallel coordination, extension architecture, protocol-based testability, and UNUserNotificationCenter testing limitations
-- 2025-10-06T20:59:29Z: Added Hybrid Parallel Development Strategy from Issue #175 - phase-based parallelization, extension architecture, @Observable service pattern, error enum coordination, and commit strategies for parallel streams
-- 2025-10-05T23:08:25Z: Added SwiftData CloudKit relationship patterns from Issue #174 (dose scheduling models) - CloudKit requirements, circular reference prevention, timing precision, and ModelConfiguration completeness
-- 2025-10-01T20:00:09Z: Added Design Review & Polish Patterns section (Issue #59) with phase-based UX development, priority framework, visual baseline documentation, and structured design review outputs
-- 2025-09-27T14:51:11Z: Added CodeGen-Enhanced E2E Testing Patterns and SwiftLint Management Patterns from Issue #57 completion
-- 2025-09-26T01:23:01Z: Added AdherenceInsights Business Logic Patterns from Issue #57 business logic validation
+
+- 2025-12-19T14:55:18Z: Initial context creation

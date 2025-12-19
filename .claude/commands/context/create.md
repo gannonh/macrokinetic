@@ -1,10 +1,13 @@
 ---
-allowed-tools: Read, Write, LS
+description: Create initial project context documentation in .claude/context/ by analyzing the current project state and establishing comprehensive baseline documentation.
+argument-hint: Additional context (optional)
 ---
 
 # Create Initial Context
 
 This command creates the initial project context documentation in `.claude/context/` by analyzing the current project state and establishing comprehensive baseline documentation.
+
+Additional context (optional) $ARGUMENTS
 
 ## Required Rules
 
@@ -30,6 +33,8 @@ Do not bother the user with preflight checks progress ("I'm not going to ..."). 
   - Python: `test -f requirements.txt || test -f pyproject.toml && echo "Python project detected"`
   - Rust: `test -f Cargo.toml && echo "Rust project detected"`
   - Go: `test -f go.mod && echo "Go project detected"`
+  - iOS: `find . -name '*.xcodeproj' 2>/dev/null | grep -q . && echo "iOS project detected"`
+  - React Native: `test -f package.json && grep -qE '"(react-native|expo)"' package.json && echo "React Native project detected"`
 - Run: `git status 2>/dev/null` to confirm this is a git repository
 - If not a git repo, ask: "⚠️ Not a git repository. Continue anyway? (yes/no)"
 
@@ -42,25 +47,26 @@ Do not bother the user with preflight checks progress ("I'm not going to ..."). 
 - Run: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 - Store this value for use in all context file frontmatter
 
+### 5. Awitch to Plan mode
+- Switch to `Plan` mode for systematic execution of context creation steps
+
+### 5. Read PRD
+
+- Read @.claude/context/project-prd.md
+
 ## Instructions
 
 ### 1. Pre-Analysis Validation
 - Confirm project root directory is correct (presence of .git, package.json, etc.)
-- Check for existing documentation that can inform context (README.md, docs/)
+- Check for existing documentation that can inform context (README.md, docs/, CLAUDE.md)
 - If README.md doesn't exist, ask user for project description
 
 ### 2. Systematic Project Analysis
 Gather information in this order:
 
-**Project Detection:**
-- Run: `find . -maxdepth 2 -name 'package.json' -o -name 'requirements.txt' -o -name 'Cargo.toml' -o -name 'go.mod' 2>/dev/null`
-- Run: `git remote -v 2>/dev/null` to get repository information
-- Run: `git branch --show-current 2>/dev/null` to get current branch
-
-**Codebase Analysis:**
-- Run: `find . -type f -name '*.js' -o -name '*.py' -o -name '*.rs' -o -name '*.go' 2>/dev/null | head -20`
-- Run: `ls -la` to see root directory structure
-- Read README.md if it exists
+1. Project detection
+2. Documentation analysis
+3. Codebase analysis
 
 ### 3. Context File Creation with Frontmatter
 
@@ -71,23 +77,28 @@ Each context file MUST include frontmatter with real datetime:
 created: [Use REAL datetime from date command]
 last_updated: [Use REAL datetime from date command]
 version: 1.0
-author: Claude Code PM System
+author: Claude Code Assistant
 ---
 ```
 
 Generate the following initial context files:
-  - `progress.md` - Document current project status, completed work, and immediate next steps
-    - Include: Current branch, recent commits, outstanding changes
-  - `project-structure.md` - Map out the directory structure and file organization
-    - Include: Key directories, file naming patterns, module organization
-  - `tech-context.md` - Catalog current dependencies, technologies, and development tools
-    - Include: Language version, framework versions, dev dependencies
-  - `system-patterns.md` - Identify existing architectural patterns and design decisions
-    - Include: Design patterns observed, architectural style, data flow
-  - `product-context.md` - Define product requirements, target users, and core functionality
-    - Include: User personas, core features, use cases
-  - `project-style-guide.md` - Document coding standards, conventions, and style preferences
-    - Include: Naming conventions, file structure patterns, comment style
+
+- Essential Context:
+
+1. High-level understanding of the project: `.claude/context/project-context.md`
+2. Technical stack and dependencies: `.claude/context/tech-context.md`
+3. Testing framework and setup: `.claude/context/testing.md`
+
+- Current State:
+
+4. Current status and recent work: `.claude/context/progress.md`
+5. Project structure: `.claude/context/project-structure.md`
+
+- Deep Context:
+
+6. Architecture and design patterns: `.claude/context/system-patterns.md`
+7. Coding conventions: `.claude/context/project-style-guide.md`
+8. Common workflows and commands: `.claude/context/development-commands.md`
 
 ### 4. Quality Validation
 
@@ -97,19 +108,7 @@ After creating each file:
 - Ensure frontmatter is present and valid
 - Validate markdown formatting is correct
 
-### 5. Error Handling
-
-**Common Issues:**
-- **No write permissions:** "❌ Cannot write to .claude/context/. Check permissions."
-- **Disk space:** "❌ Insufficient disk space for context files."
-- **File creation failed:** "❌ Failed to create {filename}. Error: {error}"
-
-If any file fails to create:
-- Report which files were successfully created
-- Provide option to continue with partial context
-- Never leave corrupted or incomplete files
-
-### 6. Post-Creation Summary
+### 5. Post-Creation Summary
 
 Provide comprehensive summary:
 ```
@@ -139,7 +138,7 @@ Provide comprehensive summary:
 Use these commands to gather project information:
 - Target directory: `.claude/context/` (create if needed)
 - Current git status: `git status --short`
-- Recent commits: `git log --oneline -10`
+- Recent commits: `git log --oneline -50`
 - Project README: Read `README.md` if exists
 - Package files: Check for `package.json`, `requirements.txt`, `Cargo.toml`, `go.mod`, etc.
 - Documentation scan: `find . -type f -name '*.md' -path '*/docs/*' 2>/dev/null | head -10`
@@ -153,4 +152,4 @@ Use these commands to gather project information:
 - **Provide detailed summary** of what was created
 - **Handle errors gracefully** with specific guidance
 
-$ARGUMENTS
+Additional context (if any): $ARGUMENTS

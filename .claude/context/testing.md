@@ -2,7 +2,7 @@
 framework: xcodebuild_swift_testing
 test_command: ./scripts/test.sh
 created: 2025-01-22T04:47:23Z
-last_updated: 2025-10-23T20:15:00Z
+last_updated: 2025-12-19T14:57:47Z
 ---
 
 # Testing Framework Overview
@@ -11,8 +11,8 @@ last_updated: 2025-10-23T20:15:00Z
 
 - **Framework**: Xcode with Swift Testing (unit) + XCUITest (E2E)
 - **Test Command**: `./scripts/test.sh`
-- **Unit Tests**: JabTrackerTests/ (42+ files, Swift Testing framework)
-- **E2E Tests**: JabTrackerUITests/ (25+ files, XCUITest framework)
+- **Unit Tests**: JabTrackerTests/ (144 files, Swift Testing framework)
+- **E2E Tests**: JabTrackerUITests/ (60 files, XCUITest framework)
 - **Output Formatter**: xcbeautify
 - **Coverage Policy**: 5-tier system (90% for business logic, 42-85% for other tiers)
 
@@ -120,3 +120,8 @@ cat logs/latest/raw_output.txt | grep "DEBUG"
 1. **PRIMARY**: iPhone 17 Pro,OS=26.1 (UUID: BA8D09E4-EE1F-49BB-A7D2-5705EC4C513D)
 2. **SECONDARY**: iPhone 17,OS=26.1 (UUID: 4E249318-06A8-442B-9E84-BBD450936DE5)
 3. **TERTIARY**: iPhone 17 Pro Max,OS=26.1 (UUID: 7E5A0A90-D04A-4013-996A-585296E0FFC8)
+
+## Update History
+
+- 2025-12-19T14:57:47Z: Updated test file counts (144 unit, 60 E2E)
+- 2025-10-23T20:15:00Z: Previous update

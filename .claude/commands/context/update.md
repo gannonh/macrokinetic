@@ -17,15 +17,22 @@ This command updates the project context documentation in `.claude/context/` to 
 
 **First, read the existing context files** to understand what's already documented:
 
-1. Product Requirements Document: @.claude/context/tender-prd.md
-2. High-level understanding of the project: @.claude/context/product-context.md
-3. Technical stack and dependencies: @.claude/context/tech-context.md
-4. Testing framework and setup: @.claude/context/testing.md
-5. Current status and recent work: @.claude/context/progress.md
-6. Project structure: @.claude/context/project-structure.md
-7. Architecture and design patterns: @.claude/context/system-patterns.md
-8. Coding conventions: @.claude/context/project-style-guide.md
-9. Common workflows and commands: @.claude/context/development-commands.md
+#### Essential Context
+
+1. High-level understanding of the project: @.claude/context/project-context.md
+2. Technical stack and dependencies: @.claude/context/tech-context.md
+3. Testing framework and setup: @.claude/context/testing.md
+
+#### Current State
+
+4. Current status and recent work: @.claude/context/progress.md
+5. Project structure: @.claude/context/project-structure.md
+
+#### Deep Context
+
+6. Architecture and design patterns: @.claude/context/system-patterns.md
+7. Coding conventions: @.claude/context/project-style-guide.md
+8. Common workflows and commands: @.claude/context/development-commands.md
 
 Read each context file to understand current state before making updates. This prevents duplicate entries and ensures updates are additive.
 
@@ -139,7 +146,7 @@ Store this for updating `last_updated` fields.
 | Change Type                   | Context File(s) to Update |
 | ----------------------------- | ------------------------- |
 | Feature completed/in-progress | `progress.md` (always)    |
-| New user-facing feature       | `product-context.md`      |
+| New user-facing feature       | `project-context.md`      |
 | New pattern/architecture      | `system-patterns.md`      |
 | New technical insight/gotcha  | `tech-context.md`         |
 | New files/directories         | `project-structure.md`    |
@@ -147,7 +154,6 @@ Store this for updating `last_updated` fields.
 | New commands/scripts          | `development-commands.md` |
 | Testing improvements          | `testing.md`              |
 | Style/convention changes      | `project-style-guide.md`  |
-| Feature status change         | `tender-prd.md`           |
 
 ### 2.2 Update Each File
 
@@ -180,7 +186,7 @@ For each file that needs updating:
 - Link to the issue/PR where pattern was introduced
 - **Write like an ADR**: Context, decision, consequences
 
-**`product-context.md`** - Feature Changes
+**`project-context.md`** - Feature Changes
 - Update feature descriptions if behavior changed
 - Add new features to appropriate sections
 - Update navigation structure if changed
@@ -203,12 +209,6 @@ For each file that needs updating:
 - Update existing command documentation if changed
 - Include common workflows
 - **Write like a CLI reference**: Command, options, examples
-
-**`tender-prd.md`** - PRD Status Updates
-- Feature completion: Add ✅ after completed features
-- Version status: Update `v0 (current)` → `v1 (current)` when implemented
-- Implementation notes: Update `(Planned)` → `(Implemented)` where applicable
-- **Write like release notes**: What's done, what's next
 
 ### 2.3 Update History Format
 

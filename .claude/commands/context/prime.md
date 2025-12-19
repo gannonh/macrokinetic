@@ -41,19 +41,22 @@ Do not bother the user with preflight checks progress ("I'm not going to ..."). 
 
 Load context files in priority order for optimal understanding:
 
-**Priority 1 - Essential Context (load first):**
-1. `tech-context.md` - Technical stack and dependencies
-2. `testing.md` - Testing framework and setup
+#### Essential Context
 
-**Priority 2 - Current State (load second):**
-5. `progress.md` - Current status and recent work
-6. `project-structure.md` - Directory and file organization
+1. High-level understanding of the project: @.claude/context/project-context.md
+2. Technical stack and dependencies: @.claude/context/tech-context.md
+3. Testing framework and setup: @.claude/context/testing.md
 
-**Priority 3 - Deep Context (load third):**
-7. `system-patterns.md` - Architecture and design patterns
-8. `product-context.md` - User needs and requirements
-9. `project-style-guide.md` - Coding conventions
-10. `development-commands.md` - Common workflows and commands
+#### Current State
+
+4. Current status and recent work: @.claude/context/progress.md
+5. Project structure: @.claude/context/project-structure.md
+
+#### Deep Context
+
+6. Architecture and design patterns: @.claude/context/system-patterns.md
+7. Coding conventions: @.claude/context/project-style-guide.md
+8. Common workflows and commands: @.claude/context/development-commands.md
 
 ### 2. Validation During Loading
 
