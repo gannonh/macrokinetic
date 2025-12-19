@@ -1,5 +1,7 @@
 # Combined GLP-1 + Nutrition Tracking App
 
+Researrch: `docs/research/combined-app.md`
+
 ## Strategic Decision
 
 **Build on JabTracker** - Add MacroSnap's nutrition features to the existing production-ready foundation.
