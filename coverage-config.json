@@ -55,7 +55,11 @@
           "Services/ScheduleService+Modifications.swift",
           "Services/ScheduleService+Projection.swift",
           "Services/ScheduleService.swift",
-          "Services/NotificationService+Persistence.swift"
+          "Services/NotificationService+Persistence.swift",
+          "Services/LocalFoodDatabase.swift",
+          "Services/OpenFoodFactsService.swift",
+          "Services/FoodService.swift",
+          "Services/MealLogService.swift"
         ]
       },
       "framework_integration": {
@@ -206,7 +210,11 @@
       "Views/Settings/MedicationProfileViewModel.swift",
       "Views/Settings/SettingsView.swift",
       "Views/SplashView.swift",
-      "Views/UserProfileView.swift"
+      "Views/UserProfileView.swift",
+      "Views/Nutrition/NutritionSummaryCard.swift",
+      "Views/Nutrition/FoodSearchView.swift",
+      "Views/Nutrition/AddFoodSheet.swift",
+      "Views/Nutrition/MealLogView.swift"
     ]
   },
   "special_testing_notes": {

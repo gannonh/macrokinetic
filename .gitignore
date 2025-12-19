@@ -34,3 +34,8 @@ logs/
 *.bak
 *.bak[0-9]
 *_Patch.txt
+
+# Food database build data (large files)
+scripts/usda_data/
+scripts/off_data/
+JabTracker/Resources/usda_foods.sqlite

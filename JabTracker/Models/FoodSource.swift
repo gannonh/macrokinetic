@@ -27,4 +27,16 @@ enum FoodSource: String, Codable, CaseIterable {
             return "Custom"
         }
     }
+
+    /// SF Symbol icon name for the source
+    var iconName: String {
+        switch self {
+        case .local:
+            return "leaf.fill"  // Whole foods / raw ingredients
+        case .openFoodFacts:
+            return "barcode"  // Packaged / branded foods
+        case .userCreated:
+            return "person.fill"  // User-created
+        }
+    }
 }

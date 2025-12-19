@@ -24,6 +24,7 @@ targets:
           - "**/.swiftlint.yml"
     resources:
       - path: JabTracker/Assets.xcassets
+      - path: JabTracker/Resources/usda_foods.sqlite
       - path: JabTrackerStoreKit.storekit
     settings:
       CURRENT_PROJECT_VERSION: "1"
@@ -84,8 +85,8 @@ schemes:
         "--seed-test-1y": false
     run:
       commandLineArguments:
-        "--force-onboarding": true 
-        "--reset-app-data": true
+        "--force-onboarding": false 
+        "--reset-app-data": false
         "--ui-testing": true # Enable to bypass auth
         "--seed-test-7d": false
         "--seed-test-30d": false

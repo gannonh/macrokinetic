@@ -41,8 +41,8 @@ final class User {
     @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
     var medicationProfiles: [MedicationProfile]?  // CloudKit requires optional relationships
 
-    @Relationship(deleteRule: .cascade, inverse: \FoodEntry.user)
-    var foodEntries: [FoodEntry]?  // CloudKit requires optional relationships
+    // Note: FoodEntry does not have a User relationship - entries are queried by date
+    // This avoids schema complexity while nutrition is user-scoped by app context
 
     init(
         email: String? = nil,

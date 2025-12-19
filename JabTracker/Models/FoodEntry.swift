@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 /// Logged meal item - denormalized snapshot at log time
-/// Follows parent-child relationship pattern from Dose.swift
+/// Note: No User relationship - entries are queried by date in a single-user app context
 @Model
 final class FoodEntry {
     // MARK: - Identity
@@ -43,11 +43,6 @@ final class FoodEntry {
     // MARK: - Notes
 
     var notes: String?
-
-    // MARK: - Relationships
-
-    /// Child side - plain property, no @Relationship (per CloudKit pattern)
-    var user: User?
 
     // MARK: - Computed Properties
 
@@ -86,8 +81,7 @@ final class FoodEntry {
         carbsPer100g: Double = 0.0,
         fatPer100g: Double = 0.0,
         fiberPer100g: Double = 0.0,
-        notes: String? = nil,
-        user: User? = nil
+        notes: String? = nil
     ) {
         self.foodId = foodId
         self.foodName = foodName
@@ -102,11 +96,10 @@ final class FoodEntry {
         self.fatPer100g = fatPer100g
         self.fiberPer100g = fiberPer100g
         self.notes = notes
-        self.user = user
     }
 
     /// Create from Food with serving size
-    convenience init(from food: Food, servingGrams: Double, mealSection: MealSection, user: User?) {
+    convenience init(from food: Food, servingGrams: Double, mealSection: MealSection) {
         self.init(
             foodId: food.id,
             foodName: food.name,
@@ -120,8 +113,7 @@ final class FoodEntry {
             carbsPer100g: food.carbsPer100g,
             fatPer100g: food.fatPer100g,
             fiberPer100g: food.fiberPer100g,
-            notes: nil,
-            user: user
+            notes: nil
         )
     }
 }

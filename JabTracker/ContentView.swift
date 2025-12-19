@@ -5,6 +5,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var users: [User]
     @StateObject private var quickDoseViewModel = QuickDoseViewModel()
     @State private var showingQuickDoseSheet = false
     @State private var showingTitrationDialog = false
@@ -15,6 +16,8 @@ struct ContentView: View {
     @State private var selectedTab = "home"
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
+    @State private var showingAddActionSheet = false
+    @State private var showingAddFoodSheet = false
 
     // MARK: - Constants
 
@@ -104,6 +107,16 @@ struct ContentView: View {
             if newValue == "add" {
                 logger.debug("Add tab selected")
 
+                // Show action sheet to choose between dose and food logging
+                showingAddActionSheet = true
+
+                // Reset tab selection to previous tab so + doesn't stay selected
+                self.selectedTab = oldValue
+                logger.debug("Reset tab selection back to \(oldValue)")
+            }
+        }
+        .confirmationDialog("What would you like to log?", isPresented: $showingAddActionSheet) {
+            Button("Log Dose") {
                 // Check for pending titration using ViewModel business logic
                 if quickDoseViewModel.shouldShowTitrationDialog() {
                     pendingTitration = quickDoseViewModel.getPendingTitration()
@@ -111,10 +124,23 @@ struct ContentView: View {
                 } else {
                     showingQuickDoseSheet = true
                 }
+            }
 
-                // Reset tab selection to previous tab so + doesn't stay selected
-                self.selectedTab = oldValue
-                logger.debug("Reset tab selection back to \(oldValue)")
+            Button("Log Food") {
+                showingAddFoodSheet = true
+            }
+
+            Button("Cancel", role: .cancel) {}
+        }
+        .sheet(isPresented: $showingAddFoodSheet) {
+            if let currentUser = users.first {
+                AddFoodSheet(
+                    user: currentUser,
+                    foodService: AppServices.shared.foodService,
+                    mealLogService: AppServices.shared.mealLogService
+                ) {
+                    // On complete - could show success message
+                }
             }
         }
         .onAppear {
@@ -232,6 +258,12 @@ struct DashboardView: View {
                 LazyVStack(spacing: 16) {
                     if let currentUser = users.first {
                         self.concentrationSection(for: currentUser)
+
+                        // Nutrition summary card
+                        NutritionSummaryCard(
+                            user: currentUser,
+                            mealLogService: AppServices.shared.mealLogService
+                        )
                     } else {
                         self.noUserSection
                     }

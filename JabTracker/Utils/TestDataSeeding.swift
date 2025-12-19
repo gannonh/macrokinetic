@@ -415,14 +415,23 @@
         /// Create a test ModelContainer for unit tests
         @MainActor
         static func createTestContainer() throws -> ModelContainer {
+            // Use the same schema pattern as DataController for consistency
+            let schema = Schema([
+                User.self,
+                Dose.self,
+                MedicationProfile.self,
+                DoseTitration.self,
+                DoseSchedule.self,
+                ScheduledDose.self,
+                Food.self,
+                FoodEntry.self,
+            ])
             let config = ModelConfiguration(
+                schema: schema,
                 isStoredInMemoryOnly: true,
                 cloudKitDatabase: .none
             )
-            return try ModelContainer(
-                for: User.self, MedicationProfile.self, Dose.self, DoseSchedule.self, ScheduledDose.self,
-                configurations: config
-            )
+            return try ModelContainer(for: schema, configurations: [config])
         }
     }
 

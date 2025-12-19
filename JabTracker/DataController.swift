@@ -79,6 +79,8 @@ class DataController: ObservableObject {
             Dose.self,
             MedicationProfile.self,
             DoseTitration.self,
+            DoseSchedule.self,
+            ScheduledDose.self,
             Food.self,
             FoodEntry.self,
         ])
