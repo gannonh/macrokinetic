@@ -24,7 +24,11 @@
           "Models/AdherencePattern.swift",
           "Models/AdherenceInsight.swift",
           "Utilities/PricingCalculator.swift",
-          "Services/ScheduleService+Titration.swift"
+          "Services/ScheduleService+Titration.swift",
+          "Models/Food.swift",
+          "Models/FoodEntry.swift",
+          "Models/FoodSource.swift",
+          "Models/MealSection.swift"
         ]
       },
       "infrastructure": {

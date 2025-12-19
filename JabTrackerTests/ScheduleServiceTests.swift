@@ -67,6 +67,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,  // Monday
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -107,6 +108,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 1.0,
             windowMinutesBefore: 120,
@@ -150,6 +152,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: nil,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -187,6 +190,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -209,6 +213,7 @@ struct ScheduleServiceTests {
         let newConfig = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 1.0,
             windowMinutesBefore: 120,
@@ -243,6 +248,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -263,6 +269,7 @@ struct ScheduleServiceTests {
         let newConfig = ScheduleConfiguration(
             dayOfWeek: 3,  // Wednesday instead of Monday
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 1.0,  // Increased dose
             windowMinutesBefore: 120,
@@ -296,6 +303,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -332,6 +340,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -369,6 +378,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -410,6 +420,7 @@ struct ScheduleServiceTests {
         let invalidConfig = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: -0.5,  // Invalid negative amount
             windowMinutesBefore: 120,
@@ -444,6 +455,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,
@@ -561,6 +573,7 @@ struct ScheduleServiceTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 120,

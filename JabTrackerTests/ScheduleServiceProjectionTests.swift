@@ -63,6 +63,7 @@ struct ScheduleServiceProjectionTests {
         ScheduleConfiguration(
             dayOfWeek: dayOfWeek,
             timeOfDay: TimeComponents(hour: hour, minute: minute),
+            secondTimeOfDay: nil,
             interval: interval,
             doseAmount: doseAmount,
             windowMinutesBefore: 120,  // 2 hours
@@ -328,6 +329,7 @@ struct ScheduleServiceProjectionTests {
         let config = ScheduleConfiguration(
             dayOfWeek: nil,  // Split-dose doesn't use specific day
             timeOfDay: TimeComponents(hour: 8, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,  // Base interval for split-dose
             doseAmount: 1.0,
             windowMinutesBefore: 120,
@@ -385,6 +387,7 @@ struct ScheduleServiceProjectionTests {
         let config = ScheduleConfiguration(
             dayOfWeek: nil,
             timeOfDay: TimeComponents(hour: 10, minute: 0),
+            secondTimeOfDay: nil,
             interval: 3,  // Every 3 days
             doseAmount: 1.0,
             windowMinutesBefore: 120,
@@ -444,6 +447,7 @@ struct ScheduleServiceProjectionTests {
         let updatedConfig = ScheduleConfiguration(
             dayOfWeek: config.dayOfWeek,
             timeOfDay: config.timeOfDay,
+            secondTimeOfDay: nil,
             interval: config.interval,
             doseAmount: 0.5,  // Escalated dose
             windowMinutesBefore: config.windowMinutesBefore,
@@ -594,6 +598,7 @@ struct ScheduleServiceProjectionTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.5,
             windowMinutesBefore: 60,  // 1 hour before
@@ -637,6 +642,7 @@ struct ScheduleServiceProjectionTests {
         let config = ScheduleConfiguration(
             dayOfWeek: nil,
             timeOfDay: TimeComponents(hour: 8, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.25,  // Half of 0.5mg weekly dose
             windowMinutesBefore: 120,
@@ -697,6 +703,7 @@ struct ScheduleServiceProjectionTests {
         let config = ScheduleConfiguration(
             dayOfWeek: nil,
             timeOfDay: TimeComponents(hour: 20, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: 0.25,
             windowMinutesBefore: 120,
