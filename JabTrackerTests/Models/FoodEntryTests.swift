@@ -17,7 +17,7 @@ struct FoodEntryTests {
     // MARK: - Test Helpers
 
     private func createTestContainer() throws -> ModelContainer {
-        let schema = Schema([User.self, Food.self, FoodEntry.self])
+        let schema = Schema([Food.self, FoodEntry.self])
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: true,
@@ -47,7 +47,6 @@ struct FoodEntryTests {
         #expect(entry.fatPer100g == 0.0)
         #expect(entry.fiberPer100g == 0.0)
         #expect(entry.notes == nil)
-        #expect(entry.user == nil)
     }
 
     @Test("FoodEntry initializes with custom values")
@@ -285,7 +284,7 @@ struct FoodEntryTests {
             servingDescription: "3 oz cooked"
         )
 
-        let entry = FoodEntry(from: food, servingGrams: 200, mealSection: .lunch, user: nil)
+        let entry = FoodEntry(from: food, servingGrams: 200, mealSection: .lunch)
 
         #expect(entry.foodId == food.id)
         #expect(entry.foodName == "Chicken Breast")
@@ -301,34 +300,18 @@ struct FoodEntryTests {
         #expect(entry.loggedAt <= Date())
     }
 
-    @Test("convenience init from Food with user sets relationship")
-    func testConvenienceInitFromFoodWithUser() throws {
-        let container = try createTestContainer()
-        let context = container.mainContext
-
-        let user = User(name: "Test User")
-        context.insert(user)
-
-        let food = Food(name: "Salmon", caloriesPer100g: 208)
-
-        let entry = FoodEntry(from: food, servingGrams: 150, mealSection: .dinner, user: user)
-
-        #expect(entry.user === user)
-        #expect(entry.foodName == "Salmon")
-        #expect(entry.meal == .dinner)
-    }
-
-    @Test("convenience init from Food with nil brand handles nil correctly")
-    func testConvenienceInitFromFoodWithNilBrand() throws {
+    @Test("convenience init from Food with empty brand handles correctly")
+    func testConvenienceInitFromFoodWithEmptyBrand() throws {
         let food = Food(
             name: "Homemade Soup",
-            brand: nil,
             caloriesPer100g: 45
         )
 
-        let entry = FoodEntry(from: food, servingGrams: 250, mealSection: .snacks, user: nil)
+        let entry = FoodEntry(from: food, servingGrams: 250, mealSection: .snacks)
 
-        #expect(entry.foodBrand == nil)
+        // Food.brand is non-optional String with "" default for CloudKit compatibility
+        // FoodEntry snapshots this as empty string
+        #expect(entry.foodBrand == "")
         #expect(entry.foodName == "Homemade Soup")
     }
 
@@ -510,65 +493,4 @@ struct FoodEntryTests {
         #expect(snackResult?.meal == .snacks)
     }
 
-    // MARK: - User Relationship Tests
-
-    @Test("FoodEntry can be associated with User")
-    func testUserRelationship() throws {
-        let container = try createTestContainer()
-        let context = container.mainContext
-
-        let user = User(name: "Test User")
-        context.insert(user)
-
-        let entry = FoodEntry(foodName: "Chicken Breast", user: user)
-        context.insert(entry)
-        try context.save()
-
-        let descriptor = FetchDescriptor<FoodEntry>()
-        let entries = try context.fetch(descriptor)
-
-        #expect(entries.count == 1)
-        #expect(entries.first?.user === user)
-        #expect(entries.first?.user?.name == "Test User")
-    }
-
-    @Test("FoodEntry can exist without User")
-    func testFoodEntryWithoutUser() throws {
-        let container = try createTestContainer()
-        let context = container.mainContext
-
-        let entry = FoodEntry(foodName: "Standalone Entry", user: nil)
-        context.insert(entry)
-        try context.save()
-
-        let descriptor = FetchDescriptor<FoodEntry>()
-        let entries = try context.fetch(descriptor)
-
-        #expect(entries.count == 1)
-        #expect(entries.first?.user == nil)
-    }
-
-    @Test("Multiple FoodEntries can be associated with same User")
-    func testMultipleEntriesForUser() throws {
-        let container = try createTestContainer()
-        let context = container.mainContext
-
-        let user = User(name: "Test User")
-        context.insert(user)
-
-        let entry1 = FoodEntry(foodName: "Breakfast", mealSection: .breakfast, user: user)
-        let entry2 = FoodEntry(foodName: "Lunch", mealSection: .lunch, user: user)
-        let entry3 = FoodEntry(foodName: "Dinner", mealSection: .dinner, user: user)
-
-        context.insert(entry1)
-        context.insert(entry2)
-        context.insert(entry3)
-        try context.save()
-
-        let descriptor = FetchDescriptor<FoodEntry>()
-        let entries = try context.fetch(descriptor)
-
-        #expect(entries.count == 3)
-        #expect(entries.allSatisfy { $0.user === user })
-    }
 }

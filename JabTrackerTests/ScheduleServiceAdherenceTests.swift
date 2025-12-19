@@ -17,9 +17,10 @@ struct ScheduleServiceAdherenceTests {
     // MARK: - Test Helpers
 
     /// Creates a test ModelContext with all models
-    private func createTestContext() -> ModelContext {
+    /// Returns both context and container - container MUST be kept alive for test duration
+    private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let container = DataController.testContainer().container
-        return container.mainContext
+        return (container.mainContext, container)
     }
 
     /// Creates a test medication profile
@@ -93,7 +94,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence percentage accurately")
     func testCalculateAdherencePercentageAccurately() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -139,7 +141,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence with all doses taken")
     func testCalculateAdherenceWithAllDosesTaken() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -180,7 +183,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence with all doses missed")
     func testCalculateAdherenceWithAllDosesMissed() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -216,7 +220,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate current streak correctly")
     func testCalculateCurrentStreakCorrectly() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -263,7 +268,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate longest streak in period")
     func testCalculateLongestStreakInPeriod() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -310,7 +316,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate on-time percentage")
     func testCalculateOnTimePercentage() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -354,7 +361,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate adherence with mixed pattern")
     func testCalculateAdherenceWithMixedPattern() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -417,7 +425,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Recent adherence pattern returns correct DoseEvent timeline")
     func testRecentAdherencePatternReturnsCorrectTimeline() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -471,7 +480,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Identify missed doses")
     func testIdentifyMissedDoses() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -507,7 +517,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Identify frequent rescheduling pattern")
     func testIdentifyFrequentRescheduling() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -554,7 +565,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate calendar schedule adherence with mixed dose states")
     func testCalculateCalendarScheduleAdherenceWithMixedDoseStates() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -615,7 +627,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate schedule adherence for specific month range")
     func testCalculateScheduleAdherenceForSpecificMonthRange() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -679,7 +692,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate schedule adherence with zero scheduled doses")
     func testCalculateScheduleAdherenceWithZeroScheduledDoses() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -703,7 +717,8 @@ struct ScheduleServiceAdherenceTests {
 
     @Test("Calculate schedule adherence stats for calendar display")
     func testCalculateScheduleAdherenceStatsForCalendarDisplay() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 

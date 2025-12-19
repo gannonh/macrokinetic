@@ -19,22 +19,30 @@ class OnboardingCoordinator: ObservableObject {
     }
 
     private func needsOnboarding() -> Bool {
-        // Check if we're forcing onboarding (for testing)
-        if ProcessInfo.processInfo.arguments.contains("--force-onboarding") {
+        // IMPORTANT: Only apply testing flags when running the actual app (not unit tests)
+        // Unit tests run in-process and have XCTestConfigurationFilePath set
+        let isUnitTestEnvironment =
+            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+
+        // Check if we're forcing onboarding (for testing) - only apply in non-unit-test context
+        if !isUnitTestEnvironment && ProcessInfo.processInfo.arguments.contains("--force-onboarding") {
             print("🔍 OnboardingCoordinator: Force onboarding enabled - showing onboarding")
             return true
         }
 
-        // Check if we're bypassing onboarding (for real auth testing)
-        if ProcessInfo.processInfo.arguments.contains("--bypass-onboarding") {
+        // Check if we're bypassing onboarding (for real auth testing) - only apply in non-unit-test context
+        if !isUnitTestEnvironment && ProcessInfo.processInfo.arguments.contains("--bypass-onboarding") {
             print("🔍 OnboardingCoordinator: Bypass onboarding enabled - skipping onboarding")
             return false
         }
 
         // Check if we're in UI testing mode - should bypass onboarding unless forcing
+        // Only apply in non-unit-test context
         let isUITesting =
-            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
-            || ProcessInfo.processInfo.arguments.contains("--ui-testing")
+            !isUnitTestEnvironment
+            && (ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+                || ProcessInfo.processInfo.arguments.contains("--ui-testing"))
         if isUITesting {
             print("🔍 OnboardingCoordinator: UI testing mode detected - bypassing onboarding")
             return false

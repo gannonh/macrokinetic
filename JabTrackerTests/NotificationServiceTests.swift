@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Testing
 import UserNotifications
 
@@ -17,10 +18,11 @@ struct NotificationServiceTests {
     // MARK: - Test Helpers
 
     /// Create test ScheduleService with in-memory container
-    private func createTestScheduleService() throws -> ScheduleService {
+    /// Returns both service and container - container MUST be kept alive for the duration of the test
+    private func createTestScheduleService() throws -> (service: ScheduleService, container: ModelContainer) {
         let container = try TestDataSeeding.createTestContainer()
         let context = container.mainContext
-        return ScheduleService(context: context)
+        return (ScheduleService(context: context), container)
     }
 
     /// Create mock notification center for testing
@@ -33,7 +35,8 @@ struct NotificationServiceTests {
     @Test("Request authorization - granted")
     func testRequestAuthorizationGranted() async throws {
         // GIVEN: NotificationService instance with mock
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -67,7 +70,8 @@ struct NotificationServiceTests {
     @Test("Request authorization - denied")
     func testRequestAuthorizationDenied() async throws {
         // GIVEN: NotificationService instance
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -96,7 +100,8 @@ struct NotificationServiceTests {
     @Test("Check authorization status - not determined")
     func testCheckAuthorizationStatusNotDetermined() async throws {
         // GIVEN: Fresh NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -121,7 +126,8 @@ struct NotificationServiceTests {
     @Test("Check authorization status - updates property")
     func testCheckAuthorizationStatusUpdatesProperty() async throws {
         // GIVEN: NotificationService instance with initial state
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -149,7 +155,8 @@ struct NotificationServiceTests {
     @Test("Notification categories registered on init")
     func testNotificationCategoriesRegistered() async throws {
         // GIVEN: Fresh NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationCenter = createMockNotificationCenter()
         _ = NotificationService(
             scheduleService: scheduleService,
@@ -193,7 +200,8 @@ struct NotificationServiceTests {
     @Test("Refresh notification queue - empty schedule")
     func testRefreshNotificationQueueEmptySchedule() async throws {
         // GIVEN: ScheduleService with no upcoming doses
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -216,7 +224,8 @@ struct NotificationServiceTests {
     @Test("Refresh notification queue with upcoming doses")
     func testRefreshNotificationQueueWithUpcomingDoses() async throws {
         // GIVEN: NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -234,7 +243,8 @@ struct NotificationServiceTests {
     @Test("Refresh notification queue cancels existing")
     func testRefreshNotificationQueueCancelsExisting() async throws {
         // GIVEN: NotificationService with existing pending notifications
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -256,7 +266,8 @@ struct NotificationServiceTests {
     @Test("Schedule dose reminder - default offset")
     func testScheduleDoseReminderDefaultOffset() async throws {
         // GIVEN: ScheduledDose in the future and NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -285,7 +296,8 @@ struct NotificationServiceTests {
     @Test("Schedule dose reminder - custom offset")
     func testScheduleDoseReminderCustomOffset() async throws {
         // GIVEN: ScheduledDose in the future and NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -315,7 +327,8 @@ struct NotificationServiceTests {
     @Test("Schedule dose reminder - past time skipped")
     func testScheduleDoseReminderPastTimeSkipped() async throws {
         // GIVEN: ScheduledDose in the past and NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -341,7 +354,8 @@ struct NotificationServiceTests {
     @Test("Cancel notification removes from queue")
     func testCancelNotificationRemovesFromQueue() async throws {
         // GIVEN: NotificationService with a scheduled notification
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -385,7 +399,8 @@ struct NotificationServiceTests {
     @Test("Cancel notification updates center")
     func testCancelNotificationUpdatesCenter() async throws {
         // GIVEN: NotificationService with scheduled notification
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -414,7 +429,8 @@ struct NotificationServiceTests {
     @Test("Refresh queue updates property")
     func testRefreshQueueUpdatesProperty() async throws {
         // GIVEN: NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -440,7 +456,8 @@ struct NotificationServiceTests {
     @Test("Schedule dose reminder creates request")
     func testScheduleDoseReminderCreatesRequest() async throws {
         // GIVEN: NotificationService and future dose
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -471,7 +488,8 @@ struct NotificationServiceTests {
     @Test("Schedule dose reminder includes userInfo")
     func testScheduleDoseReminderUserInfo() async throws {
         // GIVEN: NotificationService and scheduled dose
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -506,7 +524,8 @@ struct NotificationServiceTests {
     @Test("Queue update after dose taken")
     func testQueueUpdateAfterDoseTaken() async throws {
         // GIVEN: NotificationService with queued notification
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -543,7 +562,8 @@ struct NotificationServiceTests {
     @Test("Queue update after dose skipped")
     func testQueueUpdateAfterDoseSkipped() async throws {
         // GIVEN: NotificationService with queued notification
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -580,7 +600,8 @@ struct NotificationServiceTests {
     @Test("Refresh queue with no upcoming doses")
     func testRefreshQueueWithNoUpcomingDoses() async throws {
         // GIVEN: NotificationService with no upcoming doses
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -597,7 +618,8 @@ struct NotificationServiceTests {
     @Test("Schedule dose reminder - trigger timing")
     func testScheduleDoseReminderTriggerTiming() async throws {
         // GIVEN: NotificationService and scheduled dose
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -629,7 +651,8 @@ struct NotificationServiceTests {
     @Test("Refresh queue enforces limit")
     func testRefreshQueueEnforcesLimit() async throws {
         // GIVEN: NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -645,7 +668,8 @@ struct NotificationServiceTests {
     @Test("Refresh queue prioritizes nearest doses")
     func testRefreshQueuePrioritizesNearestDoses() async throws {
         // GIVEN: NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -674,7 +698,8 @@ struct NotificationServiceTests {
     @Test("Refresh queue handles exactly 64 doses")
     func testRefreshQueueHandlesExactly64Doses() async throws {
         // GIVEN: NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -691,7 +716,8 @@ struct NotificationServiceTests {
     @Test("Refresh queue handles fewer than 64 doses")
     func testRefreshQueueHandlesFewerThan64Doses() async throws {
         // GIVEN: NotificationService with fewer than 64 upcoming doses
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -709,7 +735,8 @@ struct NotificationServiceTests {
     @Test("Refresh queue logs limit warning")
     func testRefreshQueueLogsLimitWarning() async throws {
         // GIVEN: NotificationService
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -730,7 +757,8 @@ struct NotificationServiceTests {
     @Test("Schedule titration notification - basic scheduling")
     func testScheduleTitrationNotificationBasic() async throws {
         // GIVEN: NotificationService and titration
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -776,7 +804,8 @@ struct NotificationServiceTests {
     @Test("Schedule titration notification - past date")
     func testScheduleTitrationNotificationPastDate() async throws {
         // GIVEN: NotificationService and titration with past date
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let notificationService = NotificationService(
             scheduleService: scheduleService,
             notificationCenter: createMockNotificationCenter()
@@ -812,7 +841,8 @@ struct NotificationServiceTests {
     @Test("Schedule titration notification - notification content")
     func testScheduleTitrationNotificationContent() async throws {
         // GIVEN: NotificationService and titration
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,
@@ -868,7 +898,8 @@ struct NotificationServiceTests {
     @Test("Schedule titration notification - trigger date")
     func testScheduleTitrationNotificationTriggerDate() async throws {
         // GIVEN: NotificationService and titration scheduled for specific date
-        let scheduleService = try createTestScheduleService()
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container  // Keep container alive for duration of test
         let mockCenter = createMockNotificationCenter()
         let notificationService = NotificationService(
             scheduleService: scheduleService,

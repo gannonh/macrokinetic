@@ -19,9 +19,9 @@ final class Food {
     // MARK: - Basic Information
 
     var name: String = ""  // Required - food name
-    var brand: String?  // Optional - brand name
+    var brand: String = ""  // CloudKit requires non-optional with default
     var source: String = "local"  // FoodSource rawValue for CloudKit
-    var barcode: String?  // Optional - UPC/EAN barcode
+    var barcode: String = ""  // CloudKit requires non-optional with default
 
     // MARK: - Nutrition (per 100g)
 
@@ -37,7 +37,7 @@ final class Food {
 
     var servingSize: Double = 100.0
     var servingUnit: String = "g"
-    var servingDescription: String?  // e.g., "1 cup", "1 slice"
+    var servingDescription: String = ""  // CloudKit requires non-optional with default
 
     // MARK: - Timestamps
 
@@ -55,10 +55,10 @@ final class Food {
 
     init(
         name: String = "",
-        brand: String? = nil,
+        brand: String = "",
         fdcId: Int = 0,
         source: FoodSource = .local,
-        barcode: String? = nil,
+        barcode: String = "",
         caloriesPer100g: Double = 0.0,
         proteinPer100g: Double = 0.0,
         carbsPer100g: Double = 0.0,
@@ -68,7 +68,7 @@ final class Food {
         sodiumPer100g: Double = 0.0,
         servingSize: Double = 100.0,
         servingUnit: String = "g",
-        servingDescription: String? = nil
+        servingDescription: String = ""
     ) {
         self.name = name
         self.brand = brand

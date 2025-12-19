@@ -1,6 +1,6 @@
 ---
 created: 2025-12-19T14:55:18Z
-last_updated: 2025-12-19T14:55:18Z
+last_updated: 2025-12-19T20:28:49Z
 ---
 
 # System Patterns
@@ -158,8 +158,14 @@ enum ScheduleServiceError: LocalizedError {
 ## Testing Patterns
 
 ### SwiftData Test Setup
+
+**CRITICAL: ModelContainer Lifetime**
+
+When creating test helpers that return a ModelContext, you MUST also return and keep alive the ModelContainer. If a helper function creates a container but only returns the context, the container gets deallocated when the function returns, making the context invalid and causing `EXC_BREAKPOINT` crashes on `context.insert()`.
+
 ```swift
-func createTestContext() -> ModelContext {
+// ✅ CORRECT: Return both context and container
+func createTestContext() -> (context: ModelContext, container: ModelContainer) {
     let schema = Schema([User.self, Dose.self, MedicationProfile.self])
     let config = ModelConfiguration(
         schema: schema,
@@ -167,7 +173,23 @@ func createTestContext() -> ModelContext {
         cloudKitDatabase: .none  // Critical for tests
     )
     let container = try! ModelContainer(for: schema, configurations: [config])
-    return ModelContext(container)
+    return (container.mainContext, container)
+}
+
+// In test: capture container to keep it alive
+@Test("Example test")
+func testExample() {
+    let (context, container) = createTestContext()
+    _ = container  // Keep container alive for duration of test
+
+    // Now context.insert() will work
+    context.insert(model)
+}
+
+// ❌ WRONG: Returns only context - container gets deallocated!
+func createTestContext() -> ModelContext {
+    let container = try! ModelContainer(...)
+    return container.mainContext  // Container deallocated after return!
 }
 ```
 
@@ -310,4 +332,5 @@ extension NotificationService {
 
 ## Update History
 
+- 2025-12-19T20:28:49Z: Added critical ModelContainer lifetime warning for SwiftData tests
 - 2025-12-19T14:55:18Z: Initial context creation

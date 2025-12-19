@@ -14,11 +14,11 @@ struct ReminderTimingPickerTests {
         // Given
         let minutes = 60
 
-        // When
-        let picker = ReminderTimingPicker(selectedMinutes: .constant(minutes))
+        // When - verify component creates without crash
+        _ = ReminderTimingPicker(selectedMinutes: .constant(minutes))
 
-        // Then - no crash, component created successfully
-        #expect(picker != nil)
+        // Then - if we get here, component created successfully
+        #expect(true, "Component initialized successfully")
     }
 
     // MARK: - Selection Options Tests
@@ -114,13 +114,13 @@ struct ReminderTimingPickerTests {
     @Test("Component respects initial selected value")
     func testInitialSelectedValue() {
         // Given
-        @State var minutes = 30
+        let minutes = 30
 
-        // When
-        let picker = ReminderTimingPicker(selectedMinutes: $minutes)
+        // When - verify component creates with initial value without crash
+        _ = ReminderTimingPicker(selectedMinutes: .constant(minutes))
 
-        // Then - component created with initial value
-        #expect(picker != nil)
+        // Then - if we get here, component created successfully with initial value
+        #expect(true, "Component initialized with initial value")
         #expect(minutes == 30)
     }
 

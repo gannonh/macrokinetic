@@ -14,12 +14,12 @@ struct QuickDoseViewModelTests {
     // MARK: - Test Setup
 
     @MainActor
-    func createTestContext() -> ModelContext {
+    func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([User.self, MedicationProfile.self, Dose.self, DoseTitration.self])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         do {
             let container = try ModelContainer(for: schema, configurations: [config])
-            return container.mainContext
+            return (container.mainContext, container)
         } catch {
             fatalError("Failed to create test container: \(error)")
         }
@@ -83,7 +83,8 @@ struct QuickDoseViewModelTests {
     @Test("Loading smart defaults with medication profiles")
     @MainActor
     func loadSmartDefaultsWithProfiles() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -109,7 +110,8 @@ struct QuickDoseViewModelTests {
     @Test("Loading smart defaults with no medication profiles shows error")
     @MainActor
     func loadSmartDefaultsWithNoProfiles() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let viewModel = QuickDoseViewModel()
 
         viewModel.loadSmartDefaults(context: context)
@@ -127,7 +129,8 @@ struct QuickDoseViewModelTests {
     @Test("Smart defaults include injection site rotation")
     @MainActor
     func smartDefaultsInjectionSiteRotation() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         // Create dose history with specific injection sites
@@ -150,7 +153,8 @@ struct QuickDoseViewModelTests {
     @Test("Selecting medication updates dose amount")
     @MainActor
     func medicationSelectionUpdatesDoseAmount() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile1 = self.createTestMedicationProfile(context: context, currentDose: 1.0)
         let profile2 = self.createTestMedicationProfile(
             context: context, brandName: "Wegovy", currentDose: 2.0)
@@ -173,7 +177,8 @@ struct QuickDoseViewModelTests {
     @Test("Selecting medication updates recommended injection sites")
     @MainActor
     func medicationSelectionUpdatesInjectionSites() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let semaglutideProfile = self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide")
@@ -206,7 +211,8 @@ struct QuickDoseViewModelTests {
     @Test("Can save dose validation with valid data")
     @MainActor
     func canSaveDoseWithValidData() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         _ = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()
@@ -232,7 +238,8 @@ struct QuickDoseViewModelTests {
     @Test("Cannot save dose with zero amount")
     @MainActor
     func cannotSaveDoseWithZeroAmount() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()
@@ -246,7 +253,8 @@ struct QuickDoseViewModelTests {
     @Test("Cannot save dose without injection site")
     @MainActor
     func cannotSaveDoseWithoutInjectionSite() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()
@@ -262,7 +270,8 @@ struct QuickDoseViewModelTests {
     @Test("Saving dose creates new dose in context")
     @MainActor
     func savingDoseCreatesNewDose() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()
@@ -307,7 +316,8 @@ struct QuickDoseViewModelTests {
     @Test("Saving dose with empty notes saves nil")
     @MainActor
     func savingDoseWithEmptyNotes() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()
@@ -336,7 +346,8 @@ struct QuickDoseViewModelTests {
     @Test("Saving dose resets form fields")
     @MainActor
     func savingDoseResetsForm() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()
@@ -375,7 +386,8 @@ struct QuickDoseViewModelTests {
     @Test("Saving invalid dose throws error")
     @MainActor
     func savingInvalidDoseThrowsError() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let viewModel = QuickDoseViewModel()
 
         // Set invalid state (negative dose amount which DoseService should reject)
@@ -407,7 +419,8 @@ struct QuickDoseViewModelTests {
     @Test("Get next scheduled dose time for weekly medication")
     @MainActor
     func getNextScheduledDoseTimeWeekly() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide"  // weekly medication
@@ -439,7 +452,8 @@ struct QuickDoseViewModelTests {
     @Test("Is dose overdue detection")
     @MainActor
     func isDoseOverdueDetection() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         // Create a dose that's overdue (2 weeks ago for weekly medication)
@@ -467,7 +481,8 @@ struct QuickDoseViewModelTests {
     @Test("Error message clears when loading succeeds")
     @MainActor
     func errorMessageClearsOnSuccessfulLoading() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let viewModel = QuickDoseViewModel()
 
         // First load with no profiles (should set error)
@@ -520,7 +535,8 @@ struct QuickDoseViewModelTests {
     @Test("Load edit data with existing dose")
     @MainActor
     func loadEditDataWithExistingDose() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context, currentDose: 1.0)
 
         let editTimestamp = Date().addingTimeInterval(-24 * 60 * 60)  // Yesterday
@@ -552,7 +568,8 @@ struct QuickDoseViewModelTests {
     @Test("Load edit data with nil notes")
     @MainActor
     func loadEditDataWithNilNotes() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let editData = DoseEditData(
@@ -577,7 +594,8 @@ struct QuickDoseViewModelTests {
     @Test("Load edit data with nil site")
     @MainActor
     func loadEditDataWithNilSite() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let editData = DoseEditData(
