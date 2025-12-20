@@ -34,64 +34,77 @@ final class JabTrackerUITestsLaunchTests: XCTestCase {
         let tabBar = app.tabBars.element
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should exist")
 
-        // Test Home tab (should be selected by default)
-        let homeTab = tabBar.buttons["Home"]
-        XCTAssertTrue(homeTab.exists, "Home tab should exist")
-        XCTAssertTrue(homeTab.isSelected, "Home tab should be selected by default")
+        // Test Dashboard tab (should be selected by default)
+        let dashboardTab = tabBar.buttons["Dashboard"]
+        XCTAssertTrue(dashboardTab.exists, "Dashboard tab should exist")
+        XCTAssertTrue(dashboardTab.isSelected, "Dashboard tab should be selected by default")
+
+        // Verify Dashboard content (empty state shows "Add medication profiles")
         XCTAssertTrue(
-            app /*@START_MENU_TOKEN@*/.staticTexts[
-                "Add medication profiles"
-            ] /*[[".otherElements.staticTexts[\"Add medication profiles\"]",".staticTexts[\"Add medication profiles\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/
-                .exists, "Add Dose title should exist")
+            app.staticTexts["Add medication profiles"].waitForExistence(timeout: 3),
+            "Dashboard empty state should exist")
 
-        //
+        // Test Food Log tab navigation
+        let foodLogTab = tabBar.buttons["Food Log"]
+        XCTAssertTrue(foodLogTab.exists, "Food Log tab should exist")
+        foodLogTab.tap()
+        XCTAssertTrue(foodLogTab.isSelected, "Food Log tab should be selected after tap")
 
-        // Test Add Dose tab navigation
+        // Test Add tab navigation (opens ShortcutsSheet)
         let addTab = tabBar.buttons["Add"]
         XCTAssertTrue(addTab.exists, "Add tab should exist")
         addTab.tap()
 
+        // Verify ShortcutsSheet appears
+        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
         XCTAssertTrue(
-            app /*@START_MENU_TOKEN@*/.staticTexts[
-                "Quick Add Dose"
-            ] /*[[".navigationBars",".staticTexts.firstMatch",".staticTexts[\"Quick Add Dose\"]"],[[[-1,2],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
-                .exists, "Add Dose title should exist")
-        app.buttons["quick-dose-cancel-button"].tap()
+            shortcutsSheet.waitForExistence(timeout: 3),
+            "Shortcuts sheet should open when Add tab is tapped")
 
-        // Test History tab navigation
-        let historyTab = tabBar.buttons["History"]
-        XCTAssertTrue(historyTab.exists, "History tab should exist")
-        historyTab.tap()
+        // Dismiss the sheet
+        let closeButton = app.buttons["shortcuts-close-button"]
+        XCTAssertTrue(closeButton.exists, "Close button should exist")
+        closeButton.tap()
 
-        XCTAssertTrue(historyTab.isSelected, "History tab should be selected after tap")
+        // Test Shots tab navigation
+        let shotsTab = tabBar.buttons["Shots"]
+        XCTAssertTrue(shotsTab.exists, "Shots tab should exist")
+        shotsTab.tap()
+        XCTAssertTrue(shotsTab.isSelected, "Shots tab should be selected after tap")
+
+        // Verify Shots view content with segmented control
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
         XCTAssertTrue(
-            app /*@START_MENU_TOKEN@*/.staticTexts[
-                "No doses logged yet"
-            ] /*[[".otherElements.staticTexts[\"No doses logged yet\"]",".staticTexts[\"No doses logged yet\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/
-                .exists, "History title should exist")
+            segmentedControl.waitForExistence(timeout: 3),
+            "Shots segmented control should exist")
 
-        // Test Analytics tab navigation
-        let analyticsTab = tabBar.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.exists, "Analytics tab should exist")
-        analyticsTab.tap()
+        // Test switching between segments
+        let historySegment = segmentedControl.buttons["History"]
+        XCTAssertTrue(historySegment.exists, "History segment should exist")
+        historySegment.tap()
 
-        XCTAssertTrue(analyticsTab.isSelected, "Analytics tab should be selected after tap")
-        XCTAssertTrue(app.staticTexts["Analytics"].exists, "Analytics title should exist")
+        let concentrationSegment = segmentedControl.buttons["Concentration"]
+        XCTAssertTrue(concentrationSegment.exists, "Concentration segment should exist")
+        concentrationSegment.tap()
 
-        // Test Settings tab navigation
-        let settingsTab = tabBar.buttons["Settings"]
-        XCTAssertTrue(settingsTab.exists, "Settings tab should exist")
-        settingsTab.tap()
+        let adherenceSegment = segmentedControl.buttons["Adherence"]
+        XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
+        adherenceSegment.tap()
 
-        XCTAssertTrue(settingsTab.isSelected, "Settings tab should be selected after tap")
+        // Test More tab navigation
+        let moreTab = tabBar.buttons["More"]
+        XCTAssertTrue(moreTab.exists, "More tab should exist")
+        moreTab.tap()
+        XCTAssertTrue(moreTab.isSelected, "More tab should be selected after tap")
+
+        // Verify Settings button exists in More menu
+        let settingsButton = app.buttons["Settings"]
         XCTAssertTrue(
-            app /*@START_MENU_TOKEN@*/.staticTexts[
-                "medication-management-header"
-            ] /*[[".otherElements",".staticTexts[\"Medication Management\"]",".staticTexts[\"medication-management-header\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/
-                .exists, "Settings title should exist")
+            settingsButton.waitForExistence(timeout: 3),
+            "Settings button should exist in More menu")
 
-        // Navigate back to Home tab
-        homeTab.tap()
-        XCTAssertTrue(homeTab.isSelected, "Home tab should be selected after returning")
+        // Navigate back to Dashboard tab
+        dashboardTab.tap()
+        XCTAssertTrue(dashboardTab.isSelected, "Dashboard tab should be selected after returning")
     }
 }

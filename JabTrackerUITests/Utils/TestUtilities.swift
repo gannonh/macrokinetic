@@ -373,6 +373,47 @@ enum TestUtilities {
         adherenceSegment.tap()
     }
 
+    // MARK: - ShortcutsSheet Helpers
+
+    /// Open ShortcutsSheet by tapping Add tab
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for sheet (default: 3 seconds)
+    static func openShortcutsSheet(_ app: XCUIApplication, timeout: TimeInterval = 3) {
+        let addTab = app.tabBars.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
+        addTab.tap()
+
+        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
+        XCTAssertTrue(
+            shortcutsSheet.waitForExistence(timeout: timeout),
+            "Shortcuts sheet should appear")
+    }
+
+    /// Dismiss ShortcutsSheet if open
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for close button (default: 2 seconds)
+    static func dismissShortcutsSheet(_ app: XCUIApplication, timeout: TimeInterval = 2) {
+        let closeButton = app.buttons["shortcuts-close-button"]
+        if closeButton.waitForExistence(timeout: timeout) {
+            closeButton.tap()
+        }
+    }
+
+    /// Tap a shortcut button in the ShortcutsSheet
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - shortcutLabel: The label of the shortcut to tap (e.g., "Search", "Shots")
+    ///   - timeout: Maximum time to wait for button (default: 3 seconds)
+    static func tapShortcut(_ app: XCUIApplication, label shortcutLabel: String, timeout: TimeInterval = 3) {
+        let shortcutButton = app.buttons[shortcutLabel]
+        XCTAssertTrue(
+            shortcutButton.waitForExistence(timeout: timeout),
+            "\(shortcutLabel) shortcut button should exist")
+        shortcutButton.tap()
+    }
+
     /// Navigate to Settings (via More tab) and verify user is authenticated
     /// - Parameters:
     ///   - app: The XCUIApplication instance
@@ -975,7 +1016,7 @@ enum TestUtilities {
 
     // MARK: - Dose Creation Helpers
 
-    /// Create a test dose using the Quick Add Dose functionality
+    /// Create a test dose using the Quick Add Dose functionality via ShortcutsSheet
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - injectionSite: Optional injection site to select (default: nil, uses default)
@@ -989,14 +1030,29 @@ enum TestUtilities {
         notes: String? = nil,
         timeout: TimeInterval = 3
     ) -> Bool {
-        // Tap Add tab to open Quick Dose Sheet
+        // Tap Add tab to open Shortcuts Sheet
         let addTab = app.tabBars.buttons["Add"]
         XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
         addTab.tap()
 
-        // Wait for Quick Dose Sheet to appear
-        let quickDoseSheet = app.sheets["quick-dose-sheet"]
-        XCTAssertTrue(quickDoseSheet.waitForExistence(timeout: timeout), "Quick dose sheet should open")
+        // Wait for Shortcuts Sheet to appear
+        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
+        XCTAssertTrue(
+            shortcutsSheet.waitForExistence(timeout: timeout),
+            "Shortcuts sheet should open")
+
+        // Tap "Shots" button in shortcuts sheet to open Quick Dose Sheet
+        let shotsButton = app.buttons["Shots"]
+        XCTAssertTrue(
+            shotsButton.waitForExistence(timeout: timeout),
+            "Shots shortcut button should exist")
+        shotsButton.tap()
+
+        // Wait for Quick Dose Sheet to appear (after shortcuts dismissal)
+        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: timeout),
+            "Quick dose sheet should open")
 
         // Set injection site if provided
         if let injectionSite {
