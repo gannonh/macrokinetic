@@ -4,13 +4,6 @@ description: Update project context documentation to reflect current state of th
 
 # Update Context
 
-This command updates the project context documentation in `.claude/context/` to reflect the current state of the project. Run this at the end of a PR or development session to keep context accurate for future sessions.
-
-## Required Rules
-
-**IMPORTANT:** Before executing this command, read and follow:
-- `.claude/rules/datetime.md` - For getting real current date/time
-
 ## Phase 1: Information Gathering
 
 ### 1.1 Read Current Context State
@@ -19,26 +12,27 @@ This command updates the project context documentation in `.claude/context/` to 
 
 #### Essential Context
 
-1. High-level understanding of the project: @.claude/context/project-context.md
-2. Technical stack and dependencies: @.claude/context/tech-context.md
-3. Testing framework and setup: @.claude/context/testing.md
+1. Project PRD: @.claude/context/project-prd.md
+2. High-level understanding of the project: @.claude/context/project-context.md
+3. Technical stack and dependencies: @.claude/context/tech-context.md
+4. Testing framework and setup: @.claude/context/testing.md
 
 #### Current State
 
-4. Current status and recent work: @.claude/context/progress.md
-5. Project structure: @.claude/context/project-structure.md
+5. Current status and recent work: @.claude/context/progress.md
+6. Project structure: @.claude/context/project-structure.md
 
 #### Deep Context
 
-6. Architecture and design patterns: @.claude/context/system-patterns.md
-7. Coding conventions: @.claude/context/project-style-guide.md
-8. Common workflows and commands: @.claude/context/development-commands.md
+7. Architecture and design patterns: @.claude/context/system-patterns.md
+8. Coding conventions: @.claude/context/project-style-guide.md
+9. Common workflows and commands: @.claude/context/development-commands.md
 
 Read each context file to understand current state before making updates. This prevents duplicate entries and ensures updates are additive.
 
 ### 1.2 Change Detection
 
-Gather comprehensive information about PR changes - enough detail to write release notes.
+Gather comprehensive information about changes since last update timestamps in context files.
 
 #### Step 1: Identify the Scope
 
@@ -62,16 +56,16 @@ git diff main...HEAD --name-only
 
 ```bash
 # Core source code changes (highest priority)
-git diff main...HEAD -- 'JabTracker/**/*.swift' ':!JabTracker/**/Preview Content/**'
+git diff main...HEAD -- 'StarterApp/**/*.swift' ':!StarterApp/**/Preview Content/**'
 
 # View changes (user-facing impact)
-git diff main...HEAD -- 'JabTracker/Views/**/*.swift'
+git diff main...HEAD -- 'StarterApp/Views/**/*.swift'
 
 # Model changes (data structure impact)
-git diff main...HEAD -- 'JabTracker/Models/**/*.swift'
+git diff main...HEAD -- 'StarterApp/Models/**/*.swift'
 
 # Service/ViewModel changes (business logic)
-git diff main...HEAD -- 'JabTracker/Services/**/*.swift' 'JabTracker/ViewModels/**/*.swift'
+git diff main...HEAD -- 'StarterApp/Services/**/*.swift' 'StarterApp/ViewModels/**/*.swift'
 ```
 
 **For large PRs (50+ files changed):** Focus on:
@@ -154,6 +148,7 @@ Store this for updating `last_updated` fields.
 | New commands/scripts          | `development-commands.md` |
 | Testing improvements          | `testing.md`              |
 | Style/convention changes      | `project-style-guide.md`  |
+| Major scope changes           | `project-prd.md`          |
 
 ### 2.2 Update Each File
 
@@ -209,6 +204,11 @@ For each file that needs updating:
 - Update existing command documentation if changed
 - Include common workflows
 - **Write like a CLI reference**: Command, options, examples
+
+**`project-prd.md`** - Major Changes Only
+- Only update for significant scope changes
+- Reflect any changes in project goals or deliverables
+- **Write like a product requirements update**: What changed, why
 
 ### 2.3 Update History Format
 

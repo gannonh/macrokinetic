@@ -4,8 +4,6 @@ description: Review and refine all context files to remove bloat, duplication, a
 
 # Refine Context
 
-This command reviews and refines all context files in `.claude/context/` to keep them lean, relevant, and efficient for agent context loading. Run this periodically (every 2-4 weeks) or when context files feel bloated.
-
 ## Purpose
 
 Over time, context files accumulate:
@@ -16,11 +14,6 @@ Over time, context files accumulate:
 - **Verbose sections** that could be more concise
 
 This command identifies and removes bloat while preserving essential context.
-
-## Required Rules
-
-**IMPORTANT:** Before executing this command, read and follow:
-- `.claude/rules/datetime.md` - For getting real current date/time
 
 ## Preflight Checklist
 
