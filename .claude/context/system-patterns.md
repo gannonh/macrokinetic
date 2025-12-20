@@ -1,6 +1,6 @@
 ---
 created: 2025-12-19T14:55:18Z
-last_updated: 2025-12-19T20:28:49Z
+last_updated: 2025-12-20T17:50:53Z
 ---
 
 # System Patterns
@@ -330,7 +330,85 @@ extension NotificationService {
 - **SwiftData**: User-generated content, synced data, complex relationships
 - **UserDefaults**: App preferences, device-specific settings, simple values
 
+## Nutrition UI Patterns
+
+### Bidirectional Macro Calculation
+The FoodDetailSheet supports two input modes that preserve quantity when switching:
+
+```swift
+enum ServingInputMode {
+    case quantity  // Enter amount in unit (g, oz, item, lb)
+    case target    // Enter target macro (cal, P, F, C) → calculates quantity
+}
+
+// When toggling modes, capture values BEFORE changing mode
+func toggleInputMode() {
+    if inputMode == .quantity {
+        // Capture BEFORE switching - scaledCalories uses quantityInGrams
+        let currentCalories = scaledCalories
+        inputMode = .target
+        targetValue = currentCalories
+    } else {
+        let grams = calculateGramsFromTarget()
+        inputMode = .quantity
+        servingCount = quantityInSelectedUnit(from: grams)
+    }
+}
+
+// When switching macros, preserve gram weight
+func switchToMacro(_ macro: TargetMacro) {
+    let currentGrams = calculateGramsFromTarget()
+    targetMacro = macro
+    targetValue = macroValueForGrams(currentGrams, macro: macro)
+}
+```
+
+### Unit Conversion with Preservation
+```swift
+enum ServingUnit: String, CaseIterable {
+    case grams = "g"
+    case ounces = "oz"
+    case item = "item"
+    case pounds = "lb"
+
+    func toGrams(_ value: Double, itemGrams: Double) -> Double {
+        switch self {
+        case .grams: return value
+        case .ounces: return value * 28.3495
+        case .item: return value * itemGrams
+        case .pounds: return value * 453.592
+        }
+    }
+}
+
+// Preserve gram weight when switching units
+func switchToUnit(_ unit: ServingUnit) {
+    let currentGrams = quantityInGrams
+    selectedUnit = unit
+    servingCount = quantityInSelectedUnit(from: currentGrams)
+}
+```
+
+### Serving Options Parsing
+Parse database serving descriptions like `["100g", "1.0 item (291g)"]`:
+
+```swift
+struct ServingOption {
+    let label: String   // "1 item"
+    let grams: Double   // 291.0
+}
+
+// Regex pattern for "1.0 item (291g)" format
+let pattern = #"^([\d.]+)\s+([^(]+)\s*\((\d+(?:\.\d+)?)\s*g\)$"#
+if let match = try? NSRegularExpression(pattern: pattern)... {
+    let quantity = Double(String(option[quantityRange]))
+    let unit = String(option[unitRange]).trimmingCharacters(in: .whitespaces)
+    let grams = Double(String(option[gramsRange]))
+}
+```
+
 ## Update History
 
+- 2025-12-20T17:50:53Z: Added Nutrition UI Patterns (bidirectional macro calculation, unit conversion, serving options parsing)
 - 2025-12-19T20:28:49Z: Added critical ModelContainer lifetime warning for SwiftData tests
 - 2025-12-19T14:55:18Z: Initial context creation

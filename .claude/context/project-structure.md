@@ -1,6 +1,6 @@
 ---
 created: 2025-12-19T14:52:17Z
-last_updated: 2025-12-19T14:52:17Z
+last_updated: 2025-12-20T17:50:53Z
 ---
 
 # Project Structure
@@ -61,14 +61,40 @@ JabTracker/
 │   ├── AdherenceInsight.swift
 │   ├── AdherencePattern.swift
 │   ├── AdherenceTrendData.swift
-│   └── ConcentrationPoint.swift
+│   ├── ConcentrationPoint.swift
+│   ├── Food.swift              # Nutrition: Food entity
+│   ├── FoodEntry.swift         # Nutrition: Logged food entry
+│   ├── FoodSource.swift        # Nutrition: Data source enum
+│   ├── MealSection.swift       # Nutrition: Meal category enum
+│   └── Tab.swift               # Navigation: Type-safe tab enum
 ├── Views/
 │   ├── Analytics/              # Charts and insights views
 │   ├── Dashboard/              # Main dashboard components
 │   ├── DoseEntry/              # Dose logging UI
+│   ├── FoodLog/                # Today's meals view
+│   │   └── FoodLogView.swift
 │   ├── History/                # Calendar and list views
 │   ├── MedicationProfile/      # Profile management
+│   ├── More/                   # Overflow menu
+│   │   └── MoreView.swift
+│   ├── Nutrition/              # Food search and logging
+│   │   ├── AddFoodSheet.swift
+│   │   ├── FoodDetailSheet.swift
+│   │   ├── FoodDetailSheet+InputSection.swift
+│   │   ├── FoodSearchSheet.swift
+│   │   ├── FoodSearchSheet+Sections.swift
+│   │   ├── FoodSearchView.swift
+│   │   ├── MealLogView.swift
+│   │   ├── NutritionSummaryCard.swift
+│   │   ├── SearchMethodTabs.swift
+│   │   └── ServingInputView.swift
 │   ├── Settings/               # Settings and preferences
+│   ├── Shortcuts/              # Quick action buttons
+│   │   ├── ShortcutButton.swift
+│   │   ├── ShortcutRowButton.swift
+│   │   └── ShortcutsSheet.swift
+│   ├── Shots/                  # Combined analytics/history
+│   │   └── ShotsView.swift
 │   ├── Components/             # Reusable UI components
 │   ├── AuthenticationView.swift
 │   ├── SplashView.swift
@@ -76,7 +102,8 @@ JabTracker/
 ├── ViewModels/
 │   ├── AnalyticsViewModel.swift
 │   ├── DoseCalendarViewModel.swift
-│   └── DoseHistoryViewModel.swift
+│   ├── DoseHistoryViewModel.swift
+│   └── FoodSearchSheetViewModel.swift
 ├── Services/
 │   ├── AnalyticsService.swift
 │   ├── ChartDataProcessor.swift
@@ -101,7 +128,11 @@ JabTracker/
 │   ├── ScheduleService+Adherence.swift
 │   ├── ScheduleService+Titration.swift
 │   ├── SubscriptionManager.swift
-│   └── SubscriptionManager+Testing.swift
+│   ├── SubscriptionManager+Testing.swift
+│   ├── FoodService.swift           # Nutrition: Search orchestrator
+│   ├── LocalFoodDatabase.swift     # Nutrition: SQLite FTS5 database
+│   ├── MealLogService.swift        # Nutrition: CRUD operations
+│   └── OpenFoodFactsService.swift  # Nutrition: API fallback
 ├── Onboarding/
 │   ├── Views/                  # Onboarding step views
 │   └── OnboardingCoordinator.swift
@@ -110,7 +141,8 @@ JabTracker/
 │   ├── CardComponents.swift
 │   ├── ButtonComponents.swift
 │   ├── ButtonStyles.swift
-│   └── Colors+Extensions.swift
+│   ├── Colors+Extensions.swift
+│   └── CircularProgressRing.swift  # Macro visualization component
 ├── Utilities/
 │   ├── TimeConstants.swift
 │   ├── DoseValidation.swift
@@ -170,7 +202,10 @@ scripts/
 ├── coverage-detail.sh          # Coverage analysis
 ├── coverage-json.sh            # Coverage JSON output
 ├── check-coverage.sh           # Coverage policy validation
-└── check-coverage-config.sh    # Coverage config validation
+├── check-coverage-config.sh    # Coverage config validation
+├── process_usda_data.py        # USDA food data processor
+├── process-off-data.py         # Open Food Facts processor
+└── update-food-database.sh     # Rebuild food database
 ```
 
 ## Key Files
@@ -195,4 +230,5 @@ scripts/
 
 ## Update History
 
+- 2025-12-20T17:50:53Z: Added nutrition views (FoodLog, More, Nutrition, Shortcuts, Shots), models (Food, FoodEntry, Tab), services (FoodService, LocalFoodDatabase, MealLogService), and database scripts
 - 2025-12-19T14:52:17Z: Initial context creation
