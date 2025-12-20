@@ -1,306 +1,347 @@
 ---
 created: 2024-01-15T00:00:00Z
-last_updated: 2025-12-20T00:22:10Z
+updated: 2025-12-20T01:31:31Z
 ---
 
 # MacroKinetic Product Requirements Document
 
-## 1. Executive Summary
-
-### 1.1 Product Overview
-
-MacroKinetic is a comprehensive iOS weight management application combining precision nutrition tracking with optional GLP-1 medication management. It empowers users to achieve their health goals through:
-
-- **Macro Tracking**: 1.7M+ food database with barcode scanning for effortless logging
-- **Pharmacokinetics**: Unique drug concentration modeling for medication users
-- **Correlation Insights**: Understand how medication affects eating patterns
-
-The app serves both general nutrition users and GLP-1 medication patients, with medication features as an advanced layer for applicable users.
-
-### 1.2 Technology Stack
-
-| Component | Technology |
-|-----------|------------|
-| Platform | iOS 17.0+ |
-| Language | Swift 5.9+ |
-| UI Framework | SwiftUI |
-| Data Persistence | SwiftData |
-| Cloud Sync | CloudKit |
-| Authentication | Sign in with Apple |
-| Charts | Swift Charts |
-| Notifications | User Notifications |
-| Health | HealthKit |
-| Food Database | SQLite FTS5 (1.7M+ foods) |
-| Testing | Swift Testing + XCUITest |
-| Build Tools | XcodeGen, SwiftLint, xcbeautify |
-
-### 1.3 Key Features
-
-| Feature | Status |
-|---------|--------|
-| Authentication (Sign in with Apple, Biometrics) | Complete |
-| User Onboarding Flow | Complete |
-| Food Database (1.7M+ foods) | Complete |
-| Food Search (FTS5 + barcode) | Complete |
-| Meal Logging | In Progress |
-| Macro Goals & Daily Tracking | Planned |
-| Protein Preservation Alerts | Planned |
-| Medication Profile Management | Complete |
-| Dose Tracking & History | Complete |
-| Pharmacokinetics Engine | Complete |
-| Medication-Nutrition Correlation | Planned |
-| Analytics & Charts | Complete |
-| Dose Scheduling | Complete |
-| Notifications | Complete |
-| CloudKit Sync | Complete |
-| HealthKit Integration | Planned |
-| Subscription Management | In Progress |
-
-## 2. Functional Requirements
-
-### 2.1 User Authentication
-
-**Status**: Complete
-
-- **Sign in with Apple** - Sole authentication method
-- **Biometric Security** - Face ID/Touch ID for app access
-- **Keychain Storage** - Secure credential persistence
-- **Session Management** - Persistent authentication state
-
-### 2.2 User Onboarding
-
-**Status**: Complete (nutrition path planned)
-
-#### Current Flow (Medication Users)
-1. Welcome screens with app benefits and pharmacokinetics explanation
-2. Medication selection wizard (4 GLP-1 medications)
-3. Initial dose entry with injection site selection
-4. Schedule setup (weekly, split-dose, custom patterns)
-5. Notification and HealthKit permissions
-6. Subscription screen (placeholder)
-
-#### Planned Flow (Nutrition Users)
-1. Welcome screens with nutrition tracking benefits
-2. Goal selection (weight loss, maintenance, muscle gain)
-3. Macro target setup (calories, protein, carbs, fat)
-4. Notification preferences for meal reminders
-5. Optional: Add medication tracking
-
-### 2.3 Nutrition Tracking
-
-**Status**: In Progress (Epic #315)
-
-#### Food Database
-- 1.7M+ foods from USDA and Open Food Facts
-- SQLite FTS5 full-text search for fast queries
-- Offline-first: entire database bundled in app
-- Sources: USDA Foundation, SR Legacy, Open Food Facts
-
-#### Food Search
-- Real-time search with prefix matching
-- Barcode scanning for packaged foods
-- Recent foods for quick access
-- User-created custom foods
-
-#### Meal Logging
-- Four meal sections: Breakfast, Lunch, Dinner, Snacks
-- Serving size in grams with unit conversion
-- Quick log from recent/favorite foods
-- Edit and delete logged entries
-- Notes for each entry
+## Overview
 
-### 2.4 Macro Goals & Daily Tracking
+MacroKinetic is a comprehensive iOS weight management app combining precision nutrition tracking with optional GLP-1 medication management.
 
-**Status**: Planned (Epic #315 Phase 2)
+**Target Users:**
+- Primary: Anyone on a weight loss or nutrition journey
+- Secondary: GLP-1 medication users wanting medication + nutrition integration
 
-#### Goal Configuration
-- Daily calorie target
-- Macro breakdown (protein, carbs, fat percentages or grams)
-- Fiber target (optional)
-- Goal presets for common diets
+**Tech Stack:** iOS 17+, Swift/SwiftUI, SwiftData, CloudKit, SQLite FTS5
 
-#### Daily Tracking
-- Progress rings/bars for each macro
-- Remaining vs consumed display
-- Color coding for under/over targets
-- Daily summary notifications
+---
 
-### 2.5 Protein Preservation Alerts
-
-**Status**: Planned (Epic #315 Phase 3)
-
-#### Purpose
-Prevent muscle loss during weight loss by ensuring adequate protein intake, especially important for GLP-1 medication users who may experience reduced appetite.
+## Feature Status Legend
 
-#### Features
-- Minimum protein threshold based on body weight
-- Alerts when daily protein is tracking below target
-- Meal suggestions to increase protein
-- Weekly protein trend analysis
+| Status | Meaning |
+|--------|---------|
+| ✅ | Done |
+| 🔨 | In Progress |
+| 📋 | Planned |
 
-### 2.6 Medication Management
-
-**Status**: Complete
+---
 
-#### Supported Medications
-
-| Generic | Brands | Schedule |
-|---------|--------|----------|
-| Semaglutide | Ozempic, Wegovy, Rybelsus | Weekly |
-| Tirzepatide | Mounjaro, Zepbound | Weekly |
-| Liraglutide | Victoza, Saxenda | Daily |
-| Dulaglutide | Trulicity | Weekly |
+## Features (Sequenced)
 
-#### Medication Profile Features
-- Multiple medication profiles per user
-- Brand-aware dose validation
-- Dose escalation tracking (titration)
-- Reconstitution calculator for compounded meds
-- Injection site preferences
-- Start date and refill tracking
-
-### 2.7 Dose Tracking
-
-**Status**: Complete
-
-#### Dose Entry
-- **Quick Add**: One-tap via tab bar "+" button
-- **Manual Entry**: Date/time picker, dose amount, injection site, notes
-- **Missed Dose Handling**: Mark as skipped, reschedule, smart recommendations
-
-#### Dose History
-- Calendar view with dose indicators
-- List view with search and filtering
-- Edit past entries
-- Swipe actions (edit/delete)
-- Statistics (adherence rates, streaks)
-
-### 2.8 Pharmacokinetics Engine
-
-**Status**: Complete
-
-#### Calculations
-- Exponential decay concentration modeling
-- Medication-specific half-life values
-- Steady-state progress tracking
-- Peak, trough, and current level calculations
+### ✅ 1. Authentication
 
-#### Dashboard Display
-- ConcentrationCard with real-time levels
-- Therapeutic range indicators
-- Time to next dose
-- Steady-state percentage
-
-### 2.9 Medication-Nutrition Correlation
+| Requirement | Done |
+|-------------|------|
+| Sign in with Apple | ✅ |
+| Face ID/Touch ID for app access | ✅ |
+| Keychain credential storage | ✅ |
+| Persistent session state | ✅ |
 
-**Status**: Planned (Epic #315 Phase 4)
-
-#### Purpose
-Unique differentiator: correlate drug concentration levels with eating patterns to provide actionable insights.
+---
 
-#### Features
-- Appetite tracking (optional daily rating)
-- Calorie intake vs drug concentration chart
-- Insights: "You tend to eat less on days 2-4 after injection"
-- Recommendations for meal timing
-- Pattern detection across medication cycles
+### ✅ 2. User Onboarding (Medication Path)
 
-### 2.10 Analytics & Visualization
+| Requirement | Done |
+|-------------|------|
+| Welcome screens with app benefits | ✅ |
+| Medication selection wizard (4 GLP-1 meds) | ✅ |
+| Initial dose entry with injection site | ✅ |
+| Schedule setup (weekly, split-dose, custom) | ✅ |
+| Notification permissions | ✅ |
+| Subscription screen placeholder | ✅ |
 
-**Status**: Complete (nutrition analytics planned)
+---
 
-#### Charts (Swift Charts)
-- **ConcentrationTimelineChart**: Interactive line chart with zoom/pan
-- **MacroProgressChart**: Daily/weekly macro trends (planned)
-- Dose markers on timeline
-- Time period selection (7d, 30d, 90d, 1y)
-- Future projections
+### ✅ 3. Medication Profile Management
 
-#### Insights
-- Daily and weekly nutrition summaries
-- Adherence score and trends (medication users)
-- Streak tracking for consistent logging
-- Missed dose/meal pattern analysis
-- Personalized recommendations
+| Requirement | Done |
+|-------------|------|
+| CRUD for medication profiles | ✅ |
+| Support 4 GLP-1 medications with brand variants | ✅ |
+| Brand-aware dose validation | ✅ |
+| Dose escalation (titration) tracking | ✅ |
+| Reconstitution calculator for compounded meds | ✅ |
+| Injection site preferences | ✅ |
 
-#### Data Processing
-- ChartDataProcessor for data transformation
-- Filtering and aggregation extensions
-- Interpolation for smooth curves
-- Performance-optimized for 365+ entries
+---
 
-### 2.11 Dose Scheduling
+### ✅ 4. Dose Tracking
+
+| Requirement | Done |
+|-------------|------|
+| Quick dose entry via "+" tab button | ✅ |
+| Manual entry with date/time, amount, site, notes | ✅ |
+| Calendar view with dose indicators | ✅ |
+| List view with search and filtering | ✅ |
+| Edit/delete past entries | ✅ |
+| Statistics (adherence rates, streaks) | ✅ |
 
-**Status**: Complete
+---
+
+### ✅ 5. Pharmacokinetics Engine
 
-#### Schedule Management
-- DoseSchedule and ScheduledDose SwiftData models
-- Weekly, split-dose, and custom patterns
-- Schedule projection (upcoming doses)
-- Pause/resume schedules
-- Modification history
+| Requirement | Done |
+|-------------|------|
+| Exponential decay concentration modeling | ✅ |
+| Medication-specific half-life values | ✅ |
+| Peak, trough, and current level calculations | ✅ |
+| Steady-state progress tracking | ✅ |
+| ConcentrationCard dashboard display | ✅ |
 
-#### Titration (Dose Escalation)
-- DoseTitration model for tracking increases
-- Titration completion workflow
-- Confirmation dialogs for safety
-- Timeline visualization
+---
 
-### 2.12 Notifications
+### ✅ 6. Dose Scheduling
 
-**Status**: Complete
+| Requirement | Done |
+|-------------|------|
+| Schedule creation (weekly, split-dose, custom) | ✅ |
+| Upcoming dose projections | ✅ |
+| Pause/resume schedules | ✅ |
+| Modification history | ✅ |
+| Titration completion workflow | ✅ |
 
-#### Notification Types
-- Meal logging reminders (planned)
-- Scheduled dose reminders
-- Titration completion alerts
-- Protein preservation alerts (planned)
-- Missed dose notifications
+---
 
-#### Features
-- NotificationService with background refresh
-- Badge management for pending actions
-- Deep linking to entry screens
-- Action handling (log, snooze, skip)
-- UserDefaults persistence for settings
+### ✅ 7. Notifications (Medication)
 
-### 2.13 HealthKit Integration
-
-**Status**: Planned (Epic #315 Phase 5)
-
-#### Read Access
-- Body weight history
-- Active energy burned
-- Steps and distance
-
-#### Write Access (Future)
-- Dietary energy (calories logged)
-- Macronutrients
-
-#### Features
-- Automatic weight sync
-- TDEE estimation from activity
-- Goal adjustment suggestions
-
-### 2.14 Data Management
-
-**Status**: Complete
-
-#### CloudKit Sync
-- Automatic iCloud synchronization
-- Real-time sync status monitoring
-- Graceful offline-first fallback
-- Multi-device support
-
-#### Data Export (Planned)
-- PDF reports for healthcare providers
-- CSV export
-- HealthKit integration
-
-## 3. Non-Functional Requirements
-
-### 3.1 Performance
-
+| Requirement | Done |
+|-------------|------|
+| Scheduled dose reminders | ✅ |
+| Titration completion alerts | ✅ |
+| Missed dose notifications | ✅ |
+| Badge management | ✅ |
+| Deep linking to entry screens | ✅ |
+| Action handling (log, snooze, skip) | ✅ |
+
+---
+
+### ✅ 8. Analytics (Medication)
+
+| Requirement | Done |
+|-------------|------|
+| Concentration timeline chart (interactive) | ✅ |
+| Time period selection (7d, 30d, 90d, 1y) | ✅ |
+| Dose markers on timeline | ✅ |
+| Future projections | ✅ |
+| Adherence insights | ✅ |
+| Streak tracking | ✅ |
+
+---
+
+### ✅ 9. CloudKit Sync
+
+| Requirement | Done |
+|-------------|------|
+| Automatic iCloud synchronization | ✅ |
+| Real-time sync status monitoring | ✅ |
+| Graceful offline-first fallback | ✅ |
+| Multi-device support | ✅ |
+
+---
+
+### ✅ 10. Food Database Infrastructure
+
+| Requirement | Done |
+|-------------|------|
+| Food and FoodEntry SwiftData models | ✅ |
+| 1.7M+ foods from USDA + Open Food Facts | ✅ |
+| SQLite FTS5 full-text search | ✅ |
+| Barcode column with index | ✅ |
+| Offline-first (entire database bundled) | ✅ |
+| FoodService orchestrating search | ✅ |
+| LocalFoodDatabase service | ✅ |
+| OpenFoodFactsService API client | ✅ |
+| MealLogService for CRUD | ✅ |
+
+---
+
+### 🔨 11. Meal Logging UI
+
+| Requirement | Done |
+|-------------|------|
+| FoodSearchView - search with results list | |
+| FoodDetailView - nutrition facts, serving adjustment | |
+| MealLogView - today's meals by section | |
+| AddFoodSheet - quick add modal | |
+| Four meal sections (breakfast, lunch, dinner, snacks) | |
+| Serving size input with unit conversion | |
+| Edit and delete logged entries | |
+
+---
+
+### 📋 12. User Model Extension (Nutrition Goals)
+
+| Requirement | Done |
+|-------------|------|
+| Daily calorie goal field | |
+| Daily protein goal field | |
+| Daily carb goal field | |
+| Daily fat goal field | |
+| FoodEntry relationship on User | |
+
+---
+
+### 📋 13. Tab Navigation Update
+
+| Requirement | Done |
+|-------------|------|
+| Update tab structure for nutrition focus | |
+| "+" button opens food/dose picker | |
+| Combined history view (meals + doses) | |
+
+---
+
+### 📋 14. Macro Goals & Daily Tracking
+
+| Requirement | Done |
+|-------------|------|
+| Goal configuration UI (calories, protein, carbs, fat) | |
+| Progress rings/bars for each macro | |
+| Remaining vs consumed display | |
+| Color coding for under/over targets | |
+| Daily summary on dashboard | |
+
+---
+
+### 📋 15. Protein Preservation Alerts
+
+| Requirement | Done |
+|-------------|------|
+| Minimum protein threshold based on body weight (1.6g/kg) | |
+| ProteinMonitoringService | |
+| Evening notification if protein < 80% target | |
+| Protein progress ring on dashboard (prominent) | |
+| Color-coded severity (green/yellow/red) | |
+| High-protein food suggestions | |
+| Weekly protein trend analysis | |
+
+---
+
+### 📋 16. HealthKit Integration
+
+| Requirement | Done |
+|-------------|------|
+| HealthKitService | |
+| Request authorization | |
+| Sync weight from Apple Health | |
+| Sync body fat percentage | |
+| Sync steps and active calories | |
+| Display weight trend on dashboard | |
+| Calculate net calories (consumed - burned) | |
+
+---
+
+### 📋 17. Medication-Nutrition Correlation
+
+| Requirement | Done |
+|-------------|------|
+| AppetiteEntry model (hunger, cravings, food noise) | |
+| Daily appetite check-in UI | |
+| NutritionCorrelationEngine | |
+| Concentration vs. appetite chart overlay | |
+| Food noise reduction timeline | |
+| Eating patterns by medication cycle | |
+| Optimal eating window calculation | |
+| Correlation insights generation | |
+
+---
+
+### 📋 18. Barcode Scanning
+
+| Requirement | Done |
+|-------------|------|
+| AVFoundation camera integration | |
+| Open Food Facts API lookup | |
+| Quick-add flow after scan | |
+| Handle "not found" gracefully | |
+
+---
+
+### 📋 19. AI Photo to Macros
+
+| Requirement | Done |
+|-------------|------|
+| Camera capture for food photos | |
+| AI vision API integration (identify food items) | |
+| Portion size estimation from image | |
+| Macro estimation based on identified foods | |
+| User confirmation/adjustment before logging | |
+| Fallback to manual search if low confidence | |
+
+---
+
+### 📋 20. Unified Dashboard
+
+| Requirement | Done |
+|-------------|------|
+| Concentration card (medication users) | |
+| Today's nutrition summary | |
+| Prominent protein progress ring | |
+| Appetite/food noise indicator | |
+| Weight trend from HealthKit | |
+
+---
+
+### 📋 21. Combined Calendar View
+
+| Requirement | Done |
+|-------------|------|
+| Dose markers (existing) | |
+| Meal indicators (breakfast/lunch/dinner icons) | |
+| Protein status dots (green/yellow/red) | |
+| Weight data points | |
+
+---
+
+### 📋 22. Unified Analytics
+
+| Requirement | Done |
+|-------------|------|
+| Nutrition trends (calories, protein over time) | |
+| Concentration vs. daily calories chart | |
+| Food noise by day post-dose chart | |
+| Protein intake vs. weight change chart | |
+
+---
+
+### 📋 23. Export & Reporting
+
+| Requirement | Done |
+|-------------|------|
+| PDF report generation | |
+| CSV export | |
+| Combined medication + nutrition summary | |
+| Weight progress section | |
+
+---
+
+### 📋 24. User Onboarding (Nutrition Path)
+
+| Requirement | Done |
+|-------------|------|
+| Welcome screens with nutrition benefits | |
+| Goal selection (weight loss, maintenance, muscle gain) | |
+| Macro target setup | |
+| Meal reminder preferences | |
+| Optional: Add medication tracking | |
+
+---
+
+### 🔨 25. Subscription Management
+
+| Requirement | Done |
+|-------------|------|
+| StoreKit 2 integration | |
+| Subscription tiers | |
+| Paywall UI | |
+| Restore purchases | |
+
+---
+
+## Non-Functional Requirements
+
+### Performance
 | Metric | Target |
 |--------|--------|
 | App launch | < 2 seconds |
@@ -309,127 +350,43 @@ Unique differentiator: correlate drug concentration levels with eating patterns 
 | Chart rendering (365 entries) | < 500ms |
 | Memory usage | < 100MB |
 
-### 3.2 Security & Privacy
-
-- SwiftData encryption enabled
-- Keychain for credential storage
-- Face ID/Touch ID protection
+### Security & Privacy
+- SwiftData encryption
+- Keychain for credentials
+- Biometric protection
 - On-device processing preference
-- Privacy nutrition labels
 - No third-party analytics
 
-### 3.3 Accessibility
-
-- VoiceOver support with dynamic descriptions
+### Accessibility
+- VoiceOver support
 - Dynamic Type scaling
-- High Contrast mode support
+- High Contrast mode
 - Reduce Motion compatibility
 - 44x44pt minimum touch targets
 
-### 3.4 Testing
+### Testing Coverage
+- Business Logic: 90%
+- View Models: 85%
+- Infrastructure: 62%
+- Framework Integration: 42%
 
-| Type | Coverage |
-|------|----------|
-| Unit Tests | 144+ test files |
-| E2E Tests | 60+ test files |
-| Business Logic | 90% minimum |
-| View Models | 85% minimum |
-| Framework Integration | 42% minimum |
+---
 
-## 4. User Interface
+## Competitive Advantages
 
-### 4.1 Navigation Structure
+| Feature | Competitors | MacroKinetic |
+|---------|-------------|--------------|
+| Food database | 100K-1M | 1.7M+ with barcodes |
+| Pharmacokinetics | Basic estimates | True exponential decay |
+| Medication-nutrition insights | None | Correlation engine |
+| Protein preservation alerts | None | Yes |
+| Offline food search | Limited | Full database offline |
+| Reconstitution calculator | None | Yes |
+| Split-dose support | None | Yes |
 
-```
-TabView
-├── Dashboard (Home)
-│   ├── MacroProgressCard (nutrition users)
-│   ├── ConcentrationCard (medication users)
-│   ├── Today's Meals
-│   └── Quick Actions
-├── Add (+) → QuickEntrySheet
-│   ├── Log Food
-│   └── Log Dose (medication users)
-├── History
-│   ├── Calendar View (meals + doses)
-│   └── List View
-├── Analytics
-│   ├── Nutrition Charts
-│   ├── Concentration Chart (medication users)
-│   └── Insights
-└── Settings
-    ├── Profile & Goals
-    ├── Medications (if applicable)
-    ├── Notifications
-    └── Subscription
-```
-
-### 4.2 Design System
-
-- Custom color palette with primary gradients
-- SF Symbols for iconography
-- Rounded system fonts
-- Card-based component design
-- Consistent spacing tokens
-
-## 5. Future Roadmap
-
-### Phase 1: Nutrition Foundation (Epic #315)
-- Complete meal logging UI
-- Macro goals and daily tracking
-- Protein preservation alerts
-- Medication-nutrition correlation
-
-### Phase 2: Polish & Release
-- Complete subscription integration
-- App Store submission preparation
-- TestFlight beta testing
-
-### Phase 3: Platform Extensions
-- Apple Watch companion app
-- iOS Widgets (macro progress)
-- iPad optimizations
-
-### Phase 4: Advanced Features
-- PDF export for providers
-- Siri Shortcuts ("Log my lunch")
-- HealthKit write integration
-- Educational content
-- AI meal suggestions
-
-## 6. Success Metrics
-
-### User Engagement
-- Daily active users
-- Meals logged per day
-- Food search usage
-- Barcode scan adoption
-
-### Nutrition Goals
-- Users meeting daily protein targets
-- Macro goal adherence rate
-- Streak lengths for consistent logging
-
-### Medication Users
-- Dose logging compliance rate
-- Steady-state achievement rate
-- Correlation insight engagement
-
-### Technical Performance
-- Crash-free rate > 99.5%
-- App Store rating > 4.5
-- Search latency p95 < 100ms
-
-## 7. Compliance Considerations
-
-- FDA classification awareness (wellness vs medical device)
-- HIPAA compliance for health data
-- App Tracking Transparency
-- Privacy nutrition labels
-- Medical disclaimer for pharmacokinetics
+---
 
 ## Update History
 
-- 2025-12-20T00:22:10Z: Rebranded from JabTracker to MacroKinetic, added nutrition tracking requirements (2.3-2.5, 2.9, 2.13), updated navigation structure, expanded success metrics
-- 2025-12-19T15:10:06Z: Major revision - updated all sections to reflect current implementation status
-- 2024-01-15: Initial PRD creation
+- 2025-12-20: Consolidated from macro-integration.md and project-prd.md into single sequenced PRD
+- 2025-12-19: Initial nutrition infrastructure documentation
