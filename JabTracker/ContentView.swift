@@ -16,8 +16,8 @@ struct ContentView: View {
     @State private var selectedTab: Tab = .dashboard
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
-    @State private var showingAddActionSheet = false
-    @State private var showingAddFoodSheet = false
+    @State private var showingShortcuts = false
+    @State private var showingFoodSearchSheet = false
 
     // MARK: - Constants
 
@@ -107,34 +107,23 @@ struct ContentView: View {
             if newValue == .add {
                 logger.debug("Add tab selected")
 
-                // Show action sheet to choose between dose and food logging
-                showingAddActionSheet = true
+                // Show shortcuts sheet
+                showingShortcuts = true
 
                 // Reset tab selection to previous tab so + doesn't stay selected
                 self.selectedTab = oldValue
                 logger.debug("Reset tab selection back to \(oldValue.rawValue)")
             }
         }
-        .confirmationDialog("What would you like to log?", isPresented: $showingAddActionSheet) {
-            Button("Log Dose") {
-                // Check for pending titration using ViewModel business logic
-                if quickDoseViewModel.shouldShowTitrationDialog() {
-                    pendingTitration = quickDoseViewModel.getPendingTitration()
-                    showingTitrationDialog = true
-                } else {
-                    showingQuickDoseSheet = true
-                }
-            }
-
-            Button("Log Food") {
-                showingAddFoodSheet = true
-            }
-
-            Button("Cancel", role: .cancel) {}
+        .sheet(isPresented: $showingShortcuts) {
+            ShortcutsSheet(
+                showingFoodSearch: $showingFoodSearchSheet,
+                showingQuickDose: $showingQuickDoseSheet
+            )
         }
-        .sheet(isPresented: $showingAddFoodSheet) {
+        .sheet(isPresented: $showingFoodSearchSheet) {
             if let currentUser = users.first {
-                AddFoodSheet(
+                FoodSearchSheet(
                     user: currentUser,
                     foodService: AppServices.shared.foodService,
                     mealLogService: AppServices.shared.mealLogService

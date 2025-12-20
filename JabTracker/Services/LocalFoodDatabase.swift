@@ -18,6 +18,11 @@ struct LocalFoodResult {
     let fatPer100g: Double
     let fiberPer100g: Double
     let category: String?
+    let source: String?
+    let barcode: String?
+    let servingSize: Double
+    let servingUnit: String
+    let servingOptions: String  // JSON array string
 }
 
 /// Service for searching the bundled USDA food database using SQLite FTS5
@@ -116,7 +121,9 @@ final class LocalFoodDatabase {
         let sql = """
             SELECT f.fdc_id, f.name, f.brand,
                    f.calories_per_100g, f.protein_per_100g, f.carbs_per_100g,
-                   f.fat_per_100g, f.fiber_per_100g, f.category
+                   f.fat_per_100g, f.fiber_per_100g, f.category,
+                   f.source, f.barcode,
+                   f.serving_size, f.serving_unit, f.serving_options
             FROM foods_fts fts
             JOIN foods f ON fts.rowid = f.id
             WHERE foods_fts MATCH ?
@@ -138,7 +145,9 @@ final class LocalFoodDatabase {
         let sql = """
             SELECT fdc_id, name, brand,
                    calories_per_100g, protein_per_100g, carbs_per_100g,
-                   fat_per_100g, fiber_per_100g, category
+                   fat_per_100g, fiber_per_100g, category,
+                   source, barcode,
+                   serving_size, serving_unit, serving_options
             FROM foods
             WHERE fdc_id = ?
             LIMIT 1
@@ -161,7 +170,9 @@ final class LocalFoodDatabase {
         let sql = """
             SELECT fdc_id, name, brand,
                    calories_per_100g, protein_per_100g, carbs_per_100g,
-                   fat_per_100g, fiber_per_100g, category
+                   fat_per_100g, fiber_per_100g, category,
+                   source, barcode,
+                   serving_size, serving_unit, serving_options
             FROM foods
             WHERE category = ?
             ORDER BY name
@@ -218,6 +229,11 @@ final class LocalFoodDatabase {
         let fat = sqlite3_column_double(statement, 6)
         let fiber = sqlite3_column_double(statement, 7)
         let category = sqlite3_column_text(statement, 8).map { String(cString: $0) }
+        let source = sqlite3_column_text(statement, 9).map { String(cString: $0) }
+        let barcode = sqlite3_column_text(statement, 10).map { String(cString: $0) }
+        let servingSize = sqlite3_column_double(statement, 11)
+        let servingUnit = sqlite3_column_text(statement, 12).map { String(cString: $0) } ?? "g"
+        let servingOptions = sqlite3_column_text(statement, 13).map { String(cString: $0) } ?? "[]"
 
         return LocalFoodResult(
             fdcId: fdcId,
@@ -228,7 +244,12 @@ final class LocalFoodDatabase {
             carbsPer100g: carbs,
             fatPer100g: fat,
             fiberPer100g: fiber,
-            category: category
+            category: category,
+            source: source,
+            barcode: barcode,
+            servingSize: servingSize,
+            servingUnit: servingUnit,
+            servingOptions: servingOptions
         )
     }
 }

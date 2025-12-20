@@ -239,18 +239,18 @@ struct FoodSearchResultRow: View {
                         .lineLimit(2)
                 }
 
-                // Macros: Calories • P/C/F
+                // Macros: Calories • P/C/F (for default serving)
                 HStack(spacing: 8) {
-                    Text("\(Int(result.caloriesPer100g)) cal")
+                    Text("\(Int(result.caloriesPerServing)) cal")
                         .fontWeight(.medium)
 
                     Text("•")
                         .foregroundColor(.secondary)
 
                     HStack(spacing: 4) {
-                        Text("P:\(Int(result.proteinPer100g))")
-                        Text("C:\(Int(result.carbsPer100g))")
-                        Text("F:\(Int(result.fatPer100g))")
+                        Text("P:\(Int(result.proteinPerServing))")
+                        Text("C:\(Int(result.carbsPerServing))")
+                        Text("F:\(Int(result.fatPerServing))")
                     }
                     .foregroundColor(.secondary)
                 }

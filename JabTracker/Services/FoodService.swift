@@ -20,6 +20,136 @@ struct FoodSearchResult {
     let fatPer100g: Double
     let fiberPer100g: Double
     let category: String?
+    let servingSize: Double  // Default serving size in grams
+    let servingOptions: [ServingOption]  // Available serving options
+
+    /// Initialize with all parameters
+    init(
+        fdcId: Int?,
+        barcode: String?,
+        name: String,
+        brand: String?,
+        source: FoodSource,
+        caloriesPer100g: Double,
+        proteinPer100g: Double,
+        carbsPer100g: Double,
+        fatPer100g: Double,
+        fiberPer100g: Double,
+        category: String?,
+        servingSize: Double = 100.0,
+        servingOptions: [ServingOption] = []
+    ) {
+        self.fdcId = fdcId
+        self.barcode = barcode
+        self.name = name
+        self.brand = brand
+        self.source = source
+        self.caloriesPer100g = caloriesPer100g
+        self.proteinPer100g = proteinPer100g
+        self.carbsPer100g = carbsPer100g
+        self.fatPer100g = fatPer100g
+        self.fiberPer100g = fiberPer100g
+        self.category = category
+        self.servingSize = servingSize
+        self.servingOptions = servingOptions
+    }
+
+    // MARK: - Serving-Based Computed Properties
+
+    /// Default serving option (prefer item over grams)
+    var defaultServing: ServingOption {
+        // Prefer "item" or similar serving over raw grams
+        if let itemServing = servingOptions.first(where: { !$0.label.hasSuffix("g") }) {
+            return itemServing
+        }
+        // Use food's serving size if meaningful
+        if servingSize > 0 && servingSize != 100 {
+            return ServingOption(label: "\(Int(servingSize))g", grams: servingSize)
+        }
+        return servingOptions.first ?? ServingOption(label: "100g", grams: 100)
+    }
+
+    /// Whether this food has item-based serving (e.g., "1 item" vs just grams)
+    var hasItemServing: Bool {
+        servingOptions.contains { !$0.label.hasSuffix("g") }
+    }
+
+    /// Calories for the default serving
+    var caloriesPerServing: Double {
+        (caloriesPer100g * defaultServing.grams) / 100.0
+    }
+
+    /// Protein for the default serving
+    var proteinPerServing: Double {
+        (proteinPer100g * defaultServing.grams) / 100.0
+    }
+
+    /// Carbs for the default serving
+    var carbsPerServing: Double {
+        (carbsPer100g * defaultServing.grams) / 100.0
+    }
+
+    /// Fat for the default serving
+    var fatPerServing: Double {
+        (fatPer100g * defaultServing.grams) / 100.0
+    }
+
+    /// Display string for the serving (e.g., "1 item" or "per 100g")
+    var servingDisplayString: String {
+        if hasItemServing {
+            return defaultServing.label
+        }
+        return "per 100g"
+    }
+}
+
+/// Represents a serving option for a food item
+struct ServingOption: Identifiable, Equatable {
+    let id = UUID()
+    let label: String  // Display label (e.g., "1 item", "100g", "1 cup")
+    let grams: Double  // Equivalent weight in grams
+
+    /// Parse serving options from JSON string (e.g., '["100g", "1.0 item (291g)"]')
+    static func parse(from jsonString: String) -> [ServingOption] {
+        guard let data = jsonString.data(using: .utf8),
+            let options = try? JSONDecoder().decode([String].self, from: data)
+        else {
+            return [ServingOption(label: "100g", grams: 100)]
+        }
+
+        return options.compactMap { parseOption($0) }
+    }
+
+    /// Parse a single serving option string (e.g., "1.0 item (291g)")
+    private static func parseOption(_ option: String) -> ServingOption? {
+        // Handle simple gram format: "100g"
+        if option.hasSuffix("g"), let grams = Double(option.dropLast()) {
+            return ServingOption(label: option, grams: grams)
+        }
+
+        // Handle item format: "1.0 item (291g)"
+        let pattern = #"^([\d.]+)\s*(\w+)\s*\((\d+(?:\.\d+)?)g\)$"#
+        if let regex = try? NSRegularExpression(pattern: pattern),
+            let match = regex.firstMatch(in: option, range: NSRange(option.startIndex..., in: option)),
+            let quantityRange = Range(match.range(at: 1), in: option),
+            let unitRange = Range(match.range(at: 2), in: option),
+            let gramsRange = Range(match.range(at: 3), in: option)
+        {
+            let quantity = Double(option[quantityRange]) ?? 1.0
+            let unit = String(option[unitRange])
+            let grams = Double(option[gramsRange]) ?? 100.0
+
+            // Format label nicely
+            let label = quantity == 1.0 ? "1 \(unit)" : "\(Int(quantity)) \(unit)"
+            return ServingOption(label: label, grams: grams)
+        }
+
+        return nil
+    }
+
+    static func == (lhs: ServingOption, rhs: ServingOption) -> Bool {
+        lhs.label == rhs.label && lhs.grams == rhs.grams
+    }
 }
 
 /// Service that orchestrates food search across multiple sources
@@ -192,18 +322,31 @@ final class FoodService {
         let localResults = try await localDatabase.search(query: query, limit: limit)
 
         return localResults.map { local in
-            FoodSearchResult(
+            // Map database source string to FoodSource enum
+            let source: FoodSource =
+                switch local.source {
+                case "openFoodFacts": .openFoodFacts
+                case "foundation", "sr_legacy": .local
+                default: .local
+                }
+
+            // Parse serving options from JSON string
+            let servingOptions = ServingOption.parse(from: local.servingOptions)
+
+            return FoodSearchResult(
                 fdcId: local.fdcId,
-                barcode: nil,
+                barcode: local.barcode,
                 name: local.name,
                 brand: local.brand,
-                source: .local,
+                source: source,
                 caloriesPer100g: local.caloriesPer100g,
                 proteinPer100g: local.proteinPer100g,
                 carbsPer100g: local.carbsPer100g,
                 fatPer100g: local.fatPer100g,
                 fiberPer100g: local.fiberPer100g,
-                category: local.category
+                category: local.category,
+                servingSize: local.servingSize,
+                servingOptions: servingOptions
             )
         }
     }

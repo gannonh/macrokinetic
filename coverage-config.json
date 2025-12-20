@@ -91,6 +91,7 @@
           "ViewModels/DoseCalendarViewModel.swift",
           "ViewModels/DoseHistoryViewModel.swift",
           "ViewModels/AnalyticsViewModel.swift",
+          "ViewModels/FoodSearchSheetViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift"
         ]
@@ -218,7 +219,17 @@
       "Views/Nutrition/NutritionSummaryCard.swift",
       "Views/Nutrition/FoodSearchView.swift",
       "Views/Nutrition/AddFoodSheet.swift",
-      "Views/Nutrition/MealLogView.swift"
+      "Views/Nutrition/MealLogView.swift",
+      "Views/Nutrition/FoodDetailSheet.swift",
+      "Views/Nutrition/FoodDetailSheet+InputSection.swift",
+      "Views/Nutrition/FoodSearchSheet.swift",
+      "Views/Nutrition/FoodSearchSheet+Sections.swift",
+      "Views/Nutrition/SearchMethodTabs.swift",
+      "Views/Nutrition/ServingInputView.swift",
+      "Views/Shortcuts/ShortcutButton.swift",
+      "Views/Shortcuts/ShortcutRowButton.swift",
+      "Views/Shortcuts/ShortcutsSheet.swift",
+      "Design/CircularProgressRing.swift"
     ]
   },
   "special_testing_notes": {
