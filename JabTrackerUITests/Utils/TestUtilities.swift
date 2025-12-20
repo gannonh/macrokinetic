@@ -327,6 +327,52 @@ enum TestUtilities {
         historySegment.tap()
     }
 
+    /// Navigate to Concentration view (via Shots tab -> Concentration segment)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    static func navigateToConcentration(_ app: XCUIApplication, timeout: TimeInterval = 5) {
+        // Navigate to Shots tab
+        self.navigateToTab(app, tabName: "Shots")
+
+        // Wait for Shots view to load
+        let shotsView = app.scrollViews["shots-scroll-view"]
+        _ = shotsView.waitForExistence(timeout: timeout)
+
+        // Tap Concentration segment
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(
+            segmentedControl.waitForExistence(timeout: timeout),
+            "Shots segmented control should exist")
+
+        let concentrationSegment = segmentedControl.buttons["Concentration"]
+        XCTAssertTrue(concentrationSegment.exists, "Concentration segment should exist")
+        concentrationSegment.tap()
+    }
+
+    /// Navigate to Adherence view (via Shots tab -> Adherence segment)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    static func navigateToAdherence(_ app: XCUIApplication, timeout: TimeInterval = 5) {
+        // Navigate to Shots tab
+        self.navigateToTab(app, tabName: "Shots")
+
+        // Wait for Shots view to load
+        let shotsView = app.scrollViews["shots-scroll-view"]
+        _ = shotsView.waitForExistence(timeout: timeout)
+
+        // Tap Adherence segment
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(
+            segmentedControl.waitForExistence(timeout: timeout),
+            "Shots segmented control should exist")
+
+        let adherenceSegment = segmentedControl.buttons["Adherence"]
+        XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
+        adherenceSegment.tap()
+    }
+
     /// Navigate to Settings (via More tab) and verify user is authenticated
     /// - Parameters:
     ///   - app: The XCUIApplication instance
