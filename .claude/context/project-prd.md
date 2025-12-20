@@ -1,15 +1,21 @@
 ---
 created: 2024-01-15T00:00:00Z
-last_updated: 2025-12-19T15:10:06Z
+last_updated: 2025-12-20T00:22:10Z
 ---
 
-# JabTracker Product Requirements Document
+# MacroKinetic Product Requirements Document
 
 ## 1. Executive Summary
 
 ### 1.1 Product Overview
 
-JabTracker is a native iOS application for tracking injectable GLP-1 medication doses and monitoring drug concentration levels using pharmacokinetic modeling. It helps patients manage their medication schedules, track adherence, and understand their medication's effects over time.
+MacroKinetic is a comprehensive iOS weight management application combining precision nutrition tracking with optional GLP-1 medication management. It empowers users to achieve their health goals through:
+
+- **Macro Tracking**: 1.7M+ food database with barcode scanning for effortless logging
+- **Pharmacokinetics**: Unique drug concentration modeling for medication users
+- **Correlation Insights**: Understand how medication affects eating patterns
+
+The app serves both general nutrition users and GLP-1 medication patients, with medication features as an advanced layer for applicable users.
 
 ### 1.2 Technology Stack
 
@@ -24,6 +30,7 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 | Charts | Swift Charts |
 | Notifications | User Notifications |
 | Health | HealthKit |
+| Food Database | SQLite FTS5 (1.7M+ foods) |
 | Testing | Swift Testing + XCUITest |
 | Build Tools | XcodeGen, SwiftLint, xcbeautify |
 
@@ -31,22 +38,27 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 
 | Feature | Status |
 |---------|--------|
-| Authentication (Sign in with Apple, Biometrics) | ✅ Complete |
-| User Onboarding Flow | ✅ Complete |
-| Medication Profile Management | ✅ Complete |
-| Dose Tracking & History | ✅ Complete |
-| Pharmacokinetics Engine | ✅ Complete |
-| Analytics & Charts | ✅ Complete |
-| Dose Scheduling | ✅ Complete |
-| Notifications | ✅ Complete |
-| CloudKit Sync | ✅ Complete |
-| Subscription Management | 🔄 In Progress |
-| Apple Watch App | 📋 Planned |
-| PDF Reports | 📋 Planned |
+| Authentication (Sign in with Apple, Biometrics) | Complete |
+| User Onboarding Flow | Complete |
+| Food Database (1.7M+ foods) | Complete |
+| Food Search (FTS5 + barcode) | Complete |
+| Meal Logging | In Progress |
+| Macro Goals & Daily Tracking | Planned |
+| Protein Preservation Alerts | Planned |
+| Medication Profile Management | Complete |
+| Dose Tracking & History | Complete |
+| Pharmacokinetics Engine | Complete |
+| Medication-Nutrition Correlation | Planned |
+| Analytics & Charts | Complete |
+| Dose Scheduling | Complete |
+| Notifications | Complete |
+| CloudKit Sync | Complete |
+| HealthKit Integration | Planned |
+| Subscription Management | In Progress |
 
 ## 2. Functional Requirements
 
-### 2.1 User Authentication ✅
+### 2.1 User Authentication
 
 **Status**: Complete
 
@@ -55,10 +67,11 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - **Keychain Storage** - Secure credential persistence
 - **Session Management** - Persistent authentication state
 
-### 2.2 User Onboarding ✅
+### 2.2 User Onboarding
 
-**Status**: Complete
+**Status**: Complete (nutrition path planned)
 
+#### Current Flow (Medication Users)
 1. Welcome screens with app benefits and pharmacokinetics explanation
 2. Medication selection wizard (4 GLP-1 medications)
 3. Initial dose entry with injection site selection
@@ -66,7 +79,66 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 5. Notification and HealthKit permissions
 6. Subscription screen (placeholder)
 
-### 2.3 Medication Management ✅
+#### Planned Flow (Nutrition Users)
+1. Welcome screens with nutrition tracking benefits
+2. Goal selection (weight loss, maintenance, muscle gain)
+3. Macro target setup (calories, protein, carbs, fat)
+4. Notification preferences for meal reminders
+5. Optional: Add medication tracking
+
+### 2.3 Nutrition Tracking
+
+**Status**: In Progress (Epic #315)
+
+#### Food Database
+- 1.7M+ foods from USDA and Open Food Facts
+- SQLite FTS5 full-text search for fast queries
+- Offline-first: entire database bundled in app
+- Sources: USDA Foundation, SR Legacy, Open Food Facts
+
+#### Food Search
+- Real-time search with prefix matching
+- Barcode scanning for packaged foods
+- Recent foods for quick access
+- User-created custom foods
+
+#### Meal Logging
+- Four meal sections: Breakfast, Lunch, Dinner, Snacks
+- Serving size in grams with unit conversion
+- Quick log from recent/favorite foods
+- Edit and delete logged entries
+- Notes for each entry
+
+### 2.4 Macro Goals & Daily Tracking
+
+**Status**: Planned (Epic #315 Phase 2)
+
+#### Goal Configuration
+- Daily calorie target
+- Macro breakdown (protein, carbs, fat percentages or grams)
+- Fiber target (optional)
+- Goal presets for common diets
+
+#### Daily Tracking
+- Progress rings/bars for each macro
+- Remaining vs consumed display
+- Color coding for under/over targets
+- Daily summary notifications
+
+### 2.5 Protein Preservation Alerts
+
+**Status**: Planned (Epic #315 Phase 3)
+
+#### Purpose
+Prevent muscle loss during weight loss by ensuring adequate protein intake, especially important for GLP-1 medication users who may experience reduced appetite.
+
+#### Features
+- Minimum protein threshold based on body weight
+- Alerts when daily protein is tracking below target
+- Meal suggestions to increase protein
+- Weekly protein trend analysis
+
+### 2.6 Medication Management
 
 **Status**: Complete
 
@@ -87,7 +159,7 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - Injection site preferences
 - Start date and refill tracking
 
-### 2.4 Dose Tracking ✅
+### 2.7 Dose Tracking
 
 **Status**: Complete
 
@@ -103,7 +175,7 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - Swipe actions (edit/delete)
 - Statistics (adherence rates, streaks)
 
-### 2.5 Pharmacokinetics Engine ✅
+### 2.8 Pharmacokinetics Engine
 
 **Status**: Complete
 
@@ -119,29 +191,45 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - Time to next dose
 - Steady-state percentage
 
-### 2.6 Analytics & Visualization ✅
+### 2.9 Medication-Nutrition Correlation
 
-**Status**: Complete
+**Status**: Planned (Epic #315 Phase 4)
+
+#### Purpose
+Unique differentiator: correlate drug concentration levels with eating patterns to provide actionable insights.
+
+#### Features
+- Appetite tracking (optional daily rating)
+- Calorie intake vs drug concentration chart
+- Insights: "You tend to eat less on days 2-4 after injection"
+- Recommendations for meal timing
+- Pattern detection across medication cycles
+
+### 2.10 Analytics & Visualization
+
+**Status**: Complete (nutrition analytics planned)
 
 #### Charts (Swift Charts)
 - **ConcentrationTimelineChart**: Interactive line chart with zoom/pan
+- **MacroProgressChart**: Daily/weekly macro trends (planned)
 - Dose markers on timeline
 - Time period selection (7d, 30d, 90d, 1y)
 - Future projections
 
 #### Insights
-- Adherence score and trends
-- Streak tracking
-- Missed dose pattern analysis
+- Daily and weekly nutrition summaries
+- Adherence score and trends (medication users)
+- Streak tracking for consistent logging
+- Missed dose/meal pattern analysis
 - Personalized recommendations
 
 #### Data Processing
 - ChartDataProcessor for data transformation
 - Filtering and aggregation extensions
 - Interpolation for smooth curves
-- Performance-optimized for 365+ doses
+- Performance-optimized for 365+ entries
 
-### 2.7 Dose Scheduling ✅
+### 2.11 Dose Scheduling
 
 **Status**: Complete
 
@@ -158,23 +246,43 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - Confirmation dialogs for safety
 - Timeline visualization
 
-### 2.8 Notifications ✅
+### 2.12 Notifications
 
 **Status**: Complete
 
 #### Notification Types
+- Meal logging reminders (planned)
 - Scheduled dose reminders
 - Titration completion alerts
+- Protein preservation alerts (planned)
 - Missed dose notifications
 
 #### Features
 - NotificationService with background refresh
-- Badge management for pending doses
-- Deep linking to dose entry
+- Badge management for pending actions
+- Deep linking to entry screens
 - Action handling (log, snooze, skip)
 - UserDefaults persistence for settings
 
-### 2.9 Data Management ✅
+### 2.13 HealthKit Integration
+
+**Status**: Planned (Epic #315 Phase 5)
+
+#### Read Access
+- Body weight history
+- Active energy burned
+- Steps and distance
+
+#### Write Access (Future)
+- Dietary energy (calories logged)
+- Macronutrients
+
+#### Features
+- Automatic weight sync
+- TDEE estimation from activity
+- Goal adjustment suggestions
+
+### 2.14 Data Management
 
 **Status**: Complete
 
@@ -196,8 +304,9 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 | Metric | Target |
 |--------|--------|
 | App launch | < 2 seconds |
+| Food search | < 100ms |
 | Calculation updates | < 50ms |
-| Chart rendering (365 doses) | < 500ms |
+| Chart rendering (365 entries) | < 500ms |
 | Memory usage | < 100MB |
 
 ### 3.2 Security & Privacy
@@ -207,6 +316,7 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 - Face ID/Touch ID protection
 - On-device processing preference
 - Privacy nutrition labels
+- No third-party analytics
 
 ### 3.3 Accessibility
 
@@ -220,8 +330,8 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 
 | Type | Coverage |
 |------|----------|
-| Unit Tests | 144 test files |
-| E2E Tests | 60 test files |
+| Unit Tests | 144+ test files |
+| E2E Tests | 60+ test files |
 | Business Logic | 90% minimum |
 | View Models | 85% minimum |
 | Framework Integration | 42% minimum |
@@ -233,19 +343,23 @@ JabTracker is a native iOS application for tracking injectable GLP-1 medication 
 ```
 TabView
 ├── Dashboard (Home)
-│   ├── ConcentrationCard
-│   ├── Next Dose
+│   ├── MacroProgressCard (nutrition users)
+│   ├── ConcentrationCard (medication users)
+│   ├── Today's Meals
 │   └── Quick Actions
-├── Add (+) → QuickDoseSheet
+├── Add (+) → QuickEntrySheet
+│   ├── Log Food
+│   └── Log Dose (medication users)
 ├── History
-│   ├── Calendar View
+│   ├── Calendar View (meals + doses)
 │   └── List View
 ├── Analytics
-│   ├── Concentration Chart
-│   └── Adherence Insights
+│   ├── Nutrition Charts
+│   ├── Concentration Chart (medication users)
+│   └── Insights
 └── Settings
-    ├── Profile
-    ├── Medications
+    ├── Profile & Goals
+    ├── Medications (if applicable)
     ├── Notifications
     └── Subscription
 ```
@@ -260,37 +374,51 @@ TabView
 
 ## 5. Future Roadmap
 
-### Phase 1: Polish & Release
+### Phase 1: Nutrition Foundation (Epic #315)
+- Complete meal logging UI
+- Macro goals and daily tracking
+- Protein preservation alerts
+- Medication-nutrition correlation
+
+### Phase 2: Polish & Release
 - Complete subscription integration
 - App Store submission preparation
 - TestFlight beta testing
 
-### Phase 2: Platform Extensions
+### Phase 3: Platform Extensions
 - Apple Watch companion app
-- iOS Widgets
+- iOS Widgets (macro progress)
 - iPad optimizations
 
-### Phase 3: Advanced Features
+### Phase 4: Advanced Features
 - PDF export for providers
-- Siri Shortcuts
+- Siri Shortcuts ("Log my lunch")
 - HealthKit write integration
 - Educational content
+- AI meal suggestions
 
 ## 6. Success Metrics
 
 ### User Engagement
 - Daily active users
-- Dose logging compliance rate
-- Feature adoption rates
+- Meals logged per day
+- Food search usage
+- Barcode scan adoption
 
-### Clinical Value
-- Medication adherence improvement
+### Nutrition Goals
+- Users meeting daily protein targets
+- Macro goal adherence rate
+- Streak lengths for consistent logging
+
+### Medication Users
+- Dose logging compliance rate
 - Steady-state achievement rate
-- User-reported outcomes
+- Correlation insight engagement
 
 ### Technical Performance
 - Crash-free rate > 99.5%
 - App Store rating > 4.5
+- Search latency p95 < 100ms
 
 ## 7. Compliance Considerations
 
@@ -298,8 +426,10 @@ TabView
 - HIPAA compliance for health data
 - App Tracking Transparency
 - Privacy nutrition labels
+- Medical disclaimer for pharmacokinetics
 
 ## Update History
 
-- 2025-12-19T15:10:06Z: Major revision - updated all sections to reflect current implementation status, removed timeline estimates, modernized code references
+- 2025-12-20T00:22:10Z: Rebranded from JabTracker to MacroKinetic, added nutrition tracking requirements (2.3-2.5, 2.9, 2.13), updated navigation structure, expanded success metrics
+- 2025-12-19T15:10:06Z: Major revision - updated all sections to reflect current implementation status
 - 2024-01-15: Initial PRD creation
