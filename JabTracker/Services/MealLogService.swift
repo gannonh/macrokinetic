@@ -74,7 +74,7 @@ final class MealLogService {
             return []
         }
 
-        var descriptor = FetchDescriptor<FoodEntry>(
+        let descriptor = FetchDescriptor<FoodEntry>(
             predicate: #Predicate { entry in
                 entry.loggedAt >= startOfDay && entry.loggedAt < endOfDay
             },

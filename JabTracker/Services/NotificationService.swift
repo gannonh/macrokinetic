@@ -355,7 +355,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         logger.info("Disabling notifications")
 
         // 1. Cancel all pending notifications
-        await notificationCenter.removeAllPendingNotificationRequests()
+        notificationCenter.removeAllPendingNotificationRequests()
         logger.debug("Cancelled all pending notifications")
 
         // 2. Clear notification queue
