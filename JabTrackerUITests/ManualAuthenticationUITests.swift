@@ -114,10 +114,10 @@ final class ManualAuthenticationUITests: XCTestCase {
         let maxAttempts = 1200  // 20 minutes worth of 1-second checks
 
         while !completedOnboarding, attempts < maxAttempts {
-            // Check if Settings tab is accessible (indicates onboarding is complete)
-            let settingsTab = app.tabBars.buttons["Settings"]
-            if settingsTab.exists, settingsTab.isHittable {
-                settingsTab.tap()
+            // Check if More tab is accessible (indicates onboarding is complete)
+            let moreTab = app.tabBars.buttons["More"]
+            if moreTab.exists, moreTab.isHittable {
+                TestUtilities.navigateToSettings(app)
 
                 // Verify we're actually in Settings (not just that the tab exists)
                 let userProfileText = app.staticTexts["User Profile"]

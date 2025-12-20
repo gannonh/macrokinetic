@@ -285,17 +285,11 @@ final class OnboardingNotificationFlowUITests: XCTestCase {
 
         // Verify app launches successfully
         XCTAssertTrue(
-            restartedApp.tabBars.buttons["Home"].waitForExistence(timeout: 5),
-            "App should launch to home screen after restart")
+            restartedApp.tabBars.buttons["Dashboard"].waitForExistence(timeout: 5),
+            "App should launch to dashboard after restart")
 
-        // Wait for Settings tab to be accessible
-        let restartedSettingsTab = restartedApp.tabBars.buttons["Settings"]
-        XCTAssertTrue(
-            restartedSettingsTab.waitForExistence(timeout: 5),
-            "Settings tab should exist in tab bar after restart")
-
-        // Navigate to Settings to verify persistence
-        restartedSettingsTab.tap()
+        // Navigate to Settings (via More tab) to verify persistence
+        TestUtilities.navigateToSettings(restartedApp)
 
         // Wait for Settings to load then scroll down to notifications section
         _ = restartedApp.scrollViews["settings-scroll-view"].waitForExistence(timeout: 3)

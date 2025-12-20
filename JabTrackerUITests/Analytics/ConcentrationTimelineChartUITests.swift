@@ -29,8 +29,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to concentration timeline chart
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
 
         // 📸 PHASE 1: Capture baseline before navigation
         screenshotCapture.capture(
@@ -44,7 +44,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        let analyticsView = app.scrollViews["analytics-scroll-view"]
+        let analyticsView = app.scrollViews["shots-scroll-view"]
         _ = analyticsView.waitForExistence(timeout: 10)
         let navEnd = Date()
         let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
@@ -84,8 +84,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to Analytics tab
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
         analyticsTab.tap()
 
         // Wait for chart to load
@@ -125,8 +125,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to Analytics tab
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
         analyticsTab.tap()
 
         // Wait for chart to load
@@ -181,8 +181,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // Navigate to Analytics tab
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
         analyticsTab.tap()
 
         // Wait for chart to load
@@ -238,8 +238,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: ConcentrationTimelineChart loads with full dataset
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
 
         // Measure load time for large dataset
         let startTime = Date()

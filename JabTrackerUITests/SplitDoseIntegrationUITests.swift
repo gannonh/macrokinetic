@@ -50,10 +50,10 @@ final class SplitDoseIntegrationUITests: XCTestCase {
             profileIdentifier: "medication-profile-semaglutide-ozempic-1.00mg")
         try TestUtilities.createSplitDoseSchedule(app)
 
-        // Navigate back to Home screen before using Quick Add
-        let homeTab = app.tabBars.buttons["Home"]
-        XCTAssertTrue(homeTab.waitForExistence(timeout: 3), "Home tab should exist")
-        homeTab.tap()
+        // Navigate back to Dashboard screen before using Quick Add
+        let dashboardTab = app.tabBars.buttons["Dashboard"]
+        XCTAssertTrue(dashboardTab.waitForExistence(timeout: 3), "Dashboard tab should exist")
+        dashboardTab.tap()
 
         // Wait for Home screen to load
         usleep(500_000)  // 0.5 seconds
@@ -107,17 +107,19 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         TestUtilities.navigateToMedicationProfileSettings(app)
         try TestUtilities.createSplitDoseSchedule(app)
 
-        // WHEN: User navigates to History tab calendar view (directly via tab bar)
-        let historyTab = app.tabBars.buttons["History"]
-        XCTAssertTrue(historyTab.waitForExistence(timeout: 3))
-        historyTab.tap()
+        // WHEN: User navigates to History (via Shots tab) calendar view
+        TestUtilities.navigateToHistory(app)
 
-        let segmentedControl = app.segmentedControls["history-view-mode-picker"]
+        // Wait for History content to load within Shots view
+        usleep(500_000)
+
+        // Select Calendar mode within History section
+        let viewModePicker = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(
-            segmentedControl.waitForExistence(timeout: 3),
-            "View mode picker should be available")
+            viewModePicker.waitForExistence(timeout: 3),
+            "View mode picker should be available in History section")
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = viewModePicker.buttons["history-calendar-toggle"]
         XCTAssertTrue(calendarToggleButton.exists, "Calendar toggle should be available")
         calendarToggleButton.tap()
 

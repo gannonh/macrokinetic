@@ -17,7 +17,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
 
     /// Integration test: Settings navigation to medication profiles
     func testMedicationProfilesNavigation() throws {
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         let medicationProfilesButton = self.app.buttons["Medication Profiles"]
         XCTAssertTrue(
@@ -33,7 +33,7 @@ final class MedicationProfileSettingsUITests: XCTestCase {
 
     /// Integration test: Empty state display
     func testEmptyStateDisplay() throws {
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
         self.app.buttons["Medication Profiles"].tap()
 
         let emptyStateLabel = self.app.staticTexts["No medication profiles yet"]

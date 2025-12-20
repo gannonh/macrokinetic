@@ -13,7 +13,7 @@ struct ContentView: View {
     @State private var showingSuccessMessage = false
     @State private var showingErrorAlert = false
     @State private var errorMessage = ""
-    @State private var selectedTab = "home"
+    @State private var selectedTab: Tab = .dashboard
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
     @State private var showingAddActionSheet = false
@@ -39,34 +39,34 @@ struct ContentView: View {
         TabView(selection: self.$selectedTab) {
             DashboardView(doseService: self.doseService)
                 .tabItem {
-                    Label("Home", systemImage: "house.fill")
+                    Label(Tab.dashboard.title, systemImage: Tab.dashboard.icon)
                 }
-                .tag("home")
+                .tag(Tab.dashboard)
+
+            FoodLogView()
+                .tabItem {
+                    Label(Tab.foodLog.title, systemImage: Tab.foodLog.icon)
+                }
+                .tag(Tab.foodLog)
 
             // Empty view for Add tab - sheet presentation handled by onChange
             Color.clear
                 .tabItem {
-                    Label("Add", systemImage: "plus.circle.fill")
+                    Label(Tab.add.title, systemImage: Tab.add.icon)
                 }
-                .tag("add")
+                .tag(Tab.add)
 
-            HistoryView()
+            ShotsView()
                 .tabItem {
-                    Label("History", systemImage: "clock.fill")
+                    Label(Tab.shots.title, systemImage: Tab.shots.icon)
                 }
-                .tag("history")
+                .tag(Tab.shots)
 
-            AnalyticsView()
+            MoreView()
                 .tabItem {
-                    Label("Analytics", systemImage: "chart.line.uptrend.xyaxis")
+                    Label(Tab.more.title, systemImage: Tab.more.icon)
                 }
-                .tag("analytics")
-
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
-                .tag("settings")
+                .tag(Tab.more)
         }
         .accessibilityIdentifier("main-tab-view")
         .sheet(
@@ -103,8 +103,8 @@ struct ContentView: View {
             }
         )
         .onChange(of: self.selectedTab) { oldValue, newValue in
-            logger.debug("Tab changed from \(oldValue) to \(newValue)")
-            if newValue == "add" {
+            logger.debug("Tab changed from \(oldValue.rawValue) to \(newValue.rawValue)")
+            if newValue == .add {
                 logger.debug("Add tab selected")
 
                 // Show action sheet to choose between dose and food logging
@@ -112,7 +112,7 @@ struct ContentView: View {
 
                 // Reset tab selection to previous tab so + doesn't stay selected
                 self.selectedTab = oldValue
-                logger.debug("Reset tab selection back to \(oldValue)")
+                logger.debug("Reset tab selection back to \(oldValue.rawValue)")
             }
         }
         .confirmationDialog("What would you like to log?", isPresented: $showingAddActionSheet) {
@@ -271,7 +271,7 @@ struct DashboardView: View {
                 .padding()
             }
             .accessibilityIdentifier("dashboard-scroll-view")
-            .navigationTitle("Home")
+            .navigationTitle("Dashboard")
         }
         .accessibilityIdentifier("dashboard-view")
     }

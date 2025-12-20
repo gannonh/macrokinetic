@@ -14,7 +14,7 @@ final class SubscriptionUIPersistenceTests: SubscriptionUIBaseTests {
             additionalArguments: ["--ui-testing"])
 
         // Navigate to Settings to check initial state
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
 
         let initialStatus = app.staticTexts["subscription-status"]
         let initialStatusText = initialStatus.exists ? initialStatus.label : "Not Found"
@@ -29,7 +29,7 @@ final class SubscriptionUIPersistenceTests: SubscriptionUIBaseTests {
             additionalArguments: ["--ui-testing"])
 
         // Check status after relaunch
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
 
         let relaunchStatus = app.staticTexts["subscription-status"]
         if relaunchStatus.waitForExistence(timeout: 5) {

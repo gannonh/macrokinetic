@@ -41,13 +41,13 @@ final class AdherenceChartsUITests: XCTestCase {
             metadata: ["state": "ready", "dose_count": "5"]
         )
 
-        // WHEN: User navigates to Analytics tab
+        // WHEN: User navigates to Shots tab
         // Measure navigation performance
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
+        TestUtilities.navigateToTab(app, tabName: "Shots")
 
-        // Wait for Analytics view to load
-        let analyticsView = app.scrollViews["analytics-scroll-view"]
+        // Wait for Shots view to load
+        let analyticsView = app.scrollViews["shots-scroll-view"]
         _ = analyticsView.waitForExistence(timeout: 10)
         let navEnd = Date()
         let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
@@ -83,8 +83,8 @@ final class AdherenceChartsUITests: XCTestCase {
         print("🔍 DEBUG: Adherence text exists: \(adherenceText.exists)")
 
         // Navigate to Adherence segment
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Shots segmented control should exist")
 
         let adherenceSegment = segmentedControl.buttons["Adherence"]
         XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
@@ -191,11 +191,11 @@ final class AdherenceChartsUITests: XCTestCase {
         // WHEN: AdherenceTrendChart is displayed
         // Measure navigation performance
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
+        TestUtilities.navigateToTab(app, tabName: "Shots")
 
         // Navigate to Adherence segment
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Shots segmented control should exist")
 
         // Measure adherence section transition performance
         let transitionStart = Date()
@@ -267,11 +267,11 @@ final class AdherenceChartsUITests: XCTestCase {
         // WHEN: MissedDosePatternView is displayed
         // Measure navigation and pattern loading performance
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
+        TestUtilities.navigateToTab(app, tabName: "Shots")
 
         // Navigate to Adherence segment
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Shots segmented control should exist")
 
         // Measure adherence section transition with pattern loading
         let transitionStart = Date()
@@ -349,11 +349,11 @@ final class AdherenceChartsUITests: XCTestCase {
         // WHEN: AdherenceProgressIndicator is displayed
         // Measure navigation and progress indicator loading performance
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
+        TestUtilities.navigateToTab(app, tabName: "Shots")
 
         // Navigate to Adherence segment
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Shots segmented control should exist")
 
         // Measure adherence section transition with progress indicator loading
         let transitionStart = Date()
@@ -393,7 +393,7 @@ final class AdherenceChartsUITests: XCTestCase {
         XCTAssertTrue(progressPercentage.exists, "Progress percentage should be visually displayed")
 
         // Scroll down to access elements below the fold
-        let analyticsScrollView = app.scrollViews["analytics-scroll-view"]
+        let analyticsScrollView = app.scrollViews["shots-scroll-view"]
         if analyticsScrollView.exists {
             analyticsScrollView.swipeUp()
         }
@@ -438,7 +438,7 @@ final class AdherenceChartsUITests: XCTestCase {
         )
 
         // Scroll up to show "above the fold" content
-        let analyticsView = app.scrollViews["analytics-scroll-view"]
+        let analyticsView = app.scrollViews["shots-scroll-view"]
         analyticsView.swipeDown()
 
         // 📸 PHASE 1: Capture scrolled view showing above-the-fold content

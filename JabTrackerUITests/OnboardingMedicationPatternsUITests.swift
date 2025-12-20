@@ -252,7 +252,7 @@ final class OnboardingMedicationPatternsUITests: XCTestCase {
         }
 
         // THEN: Main app interface should appear
-        let homeTab = app.tabBars.buttons["Home"]
+        let homeTab = app.tabBars.buttons["Dashboard"]
         XCTAssertTrue(
             homeTab.waitForExistence(timeout: 10),
             "Should navigate to main app after completing onboarding")

@@ -118,16 +118,14 @@ extension SubscriptionUITests {
         if getStartedApp.waitForExistence(timeout: 2) { getStartedApp.tap() }
 
         app.activate()
-        let homeTab = app.tabBars.buttons["Home"]
+        let dashboardTab = app.tabBars.buttons["Dashboard"]
         XCTAssertTrue(
-            homeTab.waitForExistence(timeout: 10),
-            "Home tab should appear after completing purchase")
+            dashboardTab.waitForExistence(timeout: 10),
+            "Dashboard tab should appear after completing purchase")
     }
 
     func verifyTrialOrPremiumInSettings(app: XCUIApplication) {
-        let settingsTab = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(settingsTab.exists, "Settings tab should exist")
-        settingsTab.tap()
+        TestUtilities.navigateToSettings(app)
 
         let statusLabel = app.staticTexts["subscription-status"]
         XCTAssertTrue(

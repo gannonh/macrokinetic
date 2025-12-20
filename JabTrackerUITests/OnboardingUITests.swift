@@ -64,7 +64,7 @@ final class OnboardingUITests: XCTestCase {
 
         // ACCEPTANCE CRITERIA: Smooth transition to main app after completion
         XCTAssertTrue(
-            app.tabBars.buttons["Home"].waitForExistence(timeout: 5),
+            app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 5),
             "Should transition to main app with tab bar visible")
 
         // ACCEPTANCE CRITERIA: All screens follow accessibility standards
@@ -80,7 +80,7 @@ final class OnboardingUITests: XCTestCase {
 
         // Should go directly to main app without onboarding
         XCTAssertTrue(
-            app.tabBars.buttons["Home"].waitForExistence(timeout: 5),
+            app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 5),
             "Returning users should skip onboarding and see main app")
 
         // Verify no onboarding screens are shown
@@ -208,7 +208,7 @@ final class OnboardingUITests: XCTestCase {
         // Verify key elements have accessibility identifiers
         // This is a basic check - full accessibility testing should be done with Accessibility Inspector
         XCTAssertTrue(
-            app.tabBars.buttons["Home"].exists,
+            app.tabBars.buttons["Dashboard"].exists,
             "Home tab should be accessible")
     }
 }

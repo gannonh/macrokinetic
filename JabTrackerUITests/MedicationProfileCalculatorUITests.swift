@@ -15,7 +15,7 @@ final class MedicationProfileCalculatorUITests: XCTestCase {
     }
 
     private func createTestProfile() {
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
         let medicationProfilesButton = self.app.buttons["Medication Profiles"]
         medicationProfilesButton.tap()
 

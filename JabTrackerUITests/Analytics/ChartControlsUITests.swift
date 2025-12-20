@@ -57,15 +57,15 @@ final class ChartControlsUITests: XCTestCase {
         )
 
         // Navigate to Analytics tab
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
 
         // Measure chart controls load performance
         let loadStart = Date()
         analyticsTab.tap()
 
         // Wait for Analytics view to load
-        let analyticsView = app.scrollViews["analytics-scroll-view"]
+        let analyticsView = app.scrollViews["shots-scroll-view"]
         _ = analyticsView.waitForExistence(timeout: 10)
         let loadEnd = Date()
         let loadTime = loadEnd.timeIntervalSince(loadStart) * 1000  // ms
@@ -157,8 +157,8 @@ final class ChartControlsUITests: XCTestCase {
         // Navigate to Analytics tab
         // Measure navigation performance
         let navStart = Date()
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
         analyticsTab.tap()
 
         // Debug: Find what elements are actually available
@@ -249,8 +249,8 @@ final class ChartControlsUITests: XCTestCase {
 
         // Navigate to Analytics tab
         let navStart = Date()
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
         analyticsTab.tap()
 
         // Verify chart is present
@@ -338,8 +338,8 @@ final class ChartControlsUITests: XCTestCase {
 
         // Navigate to Analytics tab
         let navStart = Date()
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
         analyticsTab.tap()
 
         // Verify chart is present with data
@@ -428,8 +428,8 @@ final class ChartControlsUITests: XCTestCase {
 
         // Navigate to Analytics tab
         let navStart = Date()
-        let analyticsTab = app.tabBars.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
+        let analyticsTab = app.tabBars.buttons["Shots"]
+        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
         analyticsTab.tap()
 
         // WHEN: Chart loads with default configuration

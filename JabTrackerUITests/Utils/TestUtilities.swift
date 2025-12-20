@@ -272,7 +272,7 @@ enum TestUtilities {
     /// Navigate to a specific tab in the tab bar
     /// - Parameters:
     ///   - app: The XCUIApplication instance
-    ///   - tabName: Name of the tab to navigate to ("Home", "Add", "History", "Analytics", "Settings")
+    ///   - tabName: Name of the tab to navigate to ("Dashboard", "Food Log", "Add", "Shots", "More")
     ///   - timeout: Maximum time to wait for tab to exist (default: 5 seconds)
     /// - Returns: The tab button element
     @discardableResult
@@ -288,7 +288,46 @@ enum TestUtilities {
         return tab
     }
 
-    /// Navigate to Settings tab and verify user is authenticated
+    /// Navigate to Settings (via More tab)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 3 seconds)
+    static func navigateToSettings(_ app: XCUIApplication, timeout: TimeInterval = 3) {
+        // Navigate to More tab
+        self.navigateToTab(app, tabName: "More")
+
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(
+            settingsButton.waitForExistence(timeout: timeout),
+            "Settings button should exist in More menu")
+        settingsButton.tap()
+    }
+
+    /// Navigate to History view (via Shots tab -> History segment)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    static func navigateToHistory(_ app: XCUIApplication, timeout: TimeInterval = 5) {
+        // Navigate to Shots tab
+        self.navigateToTab(app, tabName: "Shots")
+
+        // Wait for Shots view to load
+        let shotsView = app.scrollViews["shots-scroll-view"]
+        _ = shotsView.waitForExistence(timeout: timeout)
+
+        // Tap History segment
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(
+            segmentedControl.waitForExistence(timeout: timeout),
+            "Shots segmented control should exist")
+
+        let historySegment = segmentedControl.buttons["History"]
+        XCTAssertTrue(historySegment.exists, "History segment should exist")
+        historySegment.tap()
+    }
+
+    /// Navigate to Settings (via More tab) and verify user is authenticated
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for profile to appear
@@ -296,7 +335,12 @@ enum TestUtilities {
     static func navigateToSettingsAndVerifyAuth(_ app: XCUIApplication, timeout: TimeInterval = 3)
         throws
     {
-        self.navigateToTab(app, tabName: "Settings")
+        self.navigateToTab(app, tabName: "More")
+
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: timeout), "Settings button should exist in More menu")
+        settingsButton.tap()
 
         guard app.staticTexts["User Profile"].waitForExistence(timeout: timeout) else {
             XCTFail("User Profile should be visible. Please ensure user is authenticated.")
@@ -707,7 +751,7 @@ enum TestUtilities {
 
     // MARK: - Medication Profile Helpers
 
-    /// Navigate to medication profiles settings
+    /// Navigate to medication profiles settings (via More -> Settings)
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for navigation (default: 3 seconds)
@@ -717,8 +761,17 @@ enum TestUtilities {
             return  // Already there, no need to navigate
         }
 
-        self.navigateToTab(app, tabName: "Settings", timeout: timeout)
+        // Navigate to More tab
+        self.navigateToTab(app, tabName: "More", timeout: timeout)
 
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(
+            settingsButton.waitForExistence(timeout: timeout),
+            "Settings button should exist in More menu")
+        settingsButton.tap()
+
+        // Tap Medication Profiles
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(
             medicationProfilesButton.waitForExistence(timeout: timeout),
@@ -847,10 +900,17 @@ enum TestUtilities {
         profileIdentifier: String = "medication-profile-semaglutide-ozempic-0.25mg",
         timeout: TimeInterval = 3
     ) {
-        // Navigate to Settings tab
-        let settingsTab = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(settingsTab.waitForExistence(timeout: timeout), "Settings tab should exist")
-        settingsTab.tap()
+        // Navigate to More tab
+        let moreTab = app.tabBars.buttons["More"]
+        XCTAssertTrue(moreTab.waitForExistence(timeout: timeout), "More tab should exist")
+        moreTab.tap()
+
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(
+            settingsButton.waitForExistence(timeout: timeout),
+            "Settings button should exist in More menu")
+        settingsButton.tap()
 
         // Tap Medication Profiles button
         let medicationProfilesButton = app.buttons["Medication Profiles"]

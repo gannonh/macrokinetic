@@ -46,7 +46,7 @@ final class ChartPerformanceUITests: XCTestCase {
         print("📊 Testing 30d dataset - \(preset.daysOfHistory) days of pre-seeded data")
 
         // WHEN: Navigate to Analytics and measure INITIAL render
-        let analyticsTab = app.tabBars.buttons["Analytics"]
+        let analyticsTab = app.tabBars.buttons["Shots"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5))
 
         let initialRenderStart = Date()
@@ -117,7 +117,7 @@ final class ChartPerformanceUITests: XCTestCase {
         print("📊 Testing 90d dataset - \(preset.daysOfHistory) days of pre-seeded data")
 
         // Navigate to Analytics
-        let analyticsTab = app.tabBars.buttons["Analytics"]
+        let analyticsTab = app.tabBars.buttons["Shots"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5))
         analyticsTab.tap()
 
@@ -191,7 +191,7 @@ final class ChartPerformanceUITests: XCTestCase {
         print("  ⚠️  EXPECTED: Initial render ~90s (generates full dataset ONCE)")
 
         // PHASE 1: Initial render - this generates the FULL dataset (all time)
-        let analyticsTab = app.tabBars.buttons["Analytics"]
+        let analyticsTab = app.tabBars.buttons["Shots"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5))
 
         let initialRenderStart = Date()
@@ -269,7 +269,7 @@ final class ChartPerformanceUITests: XCTestCase {
         restartApp.launch()
 
         // Navigate to Analytics again
-        let analyticsTabRestart = restartApp.tabBars.buttons["Analytics"]
+        let analyticsTabRestart = restartApp.tabBars.buttons["Shots"]
         XCTAssertTrue(analyticsTabRestart.waitForExistence(timeout: 5))
 
         let restartRenderStart = Date()
