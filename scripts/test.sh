@@ -274,7 +274,7 @@ run_tests() {
 
     # Disable concurrent destination testing to prevent simulator cloning overhead
     # This speeds up test startup significantly in Xcode 26
-    PARALLEL_OPTIONS="-disable-concurrent-destination-testing"
+    PARALLEL_OPTIONS="-disable-concurrent-destination-testing -parallel-testing-enabled NO"
 
     if [ "$ENABLE_LOGGING" = true ]; then
         # Create a raw log file for complete output
