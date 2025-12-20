@@ -42,7 +42,7 @@ final class CalendarIntegrationUITests: XCTestCase {
         XCTAssertTrue(
             segmentedControl.waitForExistence(timeout: 3), "View mode picker should be available")
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         XCTAssertTrue(
             calendarToggleButton.exists, "Calendar toggle should be available in segmented control")
         calendarToggleButton.tap()
@@ -117,7 +117,7 @@ final class CalendarIntegrationUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
 
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]

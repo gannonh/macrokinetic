@@ -184,7 +184,7 @@ enum TestUtilities {
         }
 
         // Set launch arguments
-        var launchArgs = ["--ui-testing"]
+        var launchArgs = ["--ui-testing", "--bypass-onboarding"]
         if resetData {
             launchArgs.append("--reset-app-data")
         }
@@ -194,8 +194,9 @@ enum TestUtilities {
 
         app.launch()
 
-        // Brief wait to ensure seeding completes
-        Thread.sleep(forTimeInterval: 0.5)
+        // Wait for seeding to complete and app to stabilize
+        // Seeding 30+ days of data can take a few seconds
+        Thread.sleep(forTimeInterval: 2.0)
 
         return app
     }

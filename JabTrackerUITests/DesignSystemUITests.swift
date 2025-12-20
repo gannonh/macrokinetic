@@ -10,7 +10,7 @@ final class DesignSystemUITests: XCTestCase {
         let app = TestUtilities.launchAppWithTestMode()
 
         // Navigate to Settings tab to test design system components
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings view to load
         let settingsTitle = app.navigationBars["Settings"]
@@ -51,10 +51,8 @@ final class DesignSystemUITests: XCTestCase {
     func testDesignSystemAccessibility() throws {
         let app = TestUtilities.launchAppWithTestMode()
 
-        // Navigate to Settings tab
-        let tabBar = app.tabBars.element
-        let settingsTab = tabBar.buttons["Settings"]
-        settingsTab.tap()
+        // Navigate to Settings via More tab
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings view to load
         let settingsTitle = app.navigationBars["Settings"]
@@ -85,10 +83,8 @@ final class DesignSystemUITests: XCTestCase {
     func testTypographyRendering() throws {
         let app = TestUtilities.launchAppWithTestMode()
 
-        // Navigate to Settings tab
-        let tabBar = app.tabBars.element
-        let settingsTab = tabBar.buttons["Settings"]
-        settingsTab.tap()
+        // Navigate to Settings via More tab
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings view to load
         let settingsTitle = app.navigationBars["Settings"]

@@ -59,7 +59,7 @@ final class DoseHistoryStatesUITests: XCTestCase {
         let app = TestUtilities.launchAppWithTestMode()
 
         // Create a medication profile but no doses - we want to test adding the first dose
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
         TestUtilities.navigateToMedicationProfiles(app)
         TestUtilities.createMedicationProfile(
             app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")

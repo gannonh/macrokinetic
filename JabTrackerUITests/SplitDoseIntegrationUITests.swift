@@ -119,7 +119,7 @@ final class SplitDoseIntegrationUITests: XCTestCase {
             viewModePicker.waitForExistence(timeout: 3),
             "View mode picker should be available in History section")
 
-        let calendarToggleButton = viewModePicker.buttons["history-calendar-toggle"]
+        let calendarToggleButton = viewModePicker.buttons["Calendar"]
         XCTAssertTrue(calendarToggleButton.exists, "Calendar toggle should be available")
         calendarToggleButton.tap()
 

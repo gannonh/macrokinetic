@@ -21,7 +21,7 @@ final class CalendarNavigationUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
 
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -130,7 +130,7 @@ final class CalendarNavigationUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
 
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -213,7 +213,7 @@ final class CalendarNavigationUITests: XCTestCase {
         XCTAssertTrue(
             segmentedControl.waitForExistence(timeout: 3), "View mode picker should be available")
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         XCTAssertTrue(
             calendarToggleButton.exists, "Calendar toggle should be available in segmented control")
         calendarToggleButton.tap()
@@ -227,7 +227,7 @@ final class CalendarNavigationUITests: XCTestCase {
         XCTAssertFalse(historyListView.exists, "List view should be hidden when calendar is shown")
 
         // WHEN: User toggles back to list view
-        let listToggleButton = segmentedControl.buttons["history-list-toggle"]
+        let listToggleButton = segmentedControl.buttons["List"]
         XCTAssertTrue(listToggleButton.exists, "List toggle should be available in segmented control")
         listToggleButton.tap()
 
@@ -250,7 +250,7 @@ final class CalendarNavigationUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
 
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]

@@ -68,18 +68,24 @@ struct ShotsView: View {
                 sectionControls
 
                 // Content based on selection
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        if isLoadingData && selectedSection != .history {
-                            ProgressView("Loading...")
-                                .padding()
-                        } else {
-                            sectionContent
+                // Note: History List mode needs direct rendering (no ScrollView wrapper)
+                // because SwiftUI List manages its own scrolling
+                if selectedSection == .history && selectedHistoryMode == .list {
+                    historyContent
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            if isLoadingData && selectedSection != .history {
+                                ProgressView("Loading...")
+                                    .padding()
+                            } else {
+                                sectionContent
+                            }
                         }
+                        .padding()
                     }
-                    .padding()
+                    .accessibilityIdentifier("shots-scroll-view")
                 }
-                .accessibilityIdentifier("shots-scroll-view")
             }
             .navigationTitle("Shots")
             .onAppear {
@@ -207,10 +213,10 @@ struct ShotsView: View {
         switch selectedHistoryMode {
         case .list:
             DoseHistoryView()
-                .accessibilityIdentifier("dose-history-list")
+                .accessibilityIdentifier("dose-history-container")
         case .calendar:
             DoseCalendarView()
-                .accessibilityIdentifier("dose-calendar-view")
+                .accessibilityIdentifier("dose-calendar-container")
         }
     }
 

@@ -5,8 +5,8 @@ final class SettingsUITests: XCTestCase {
     func testSettingsViewElementsExist() throws {
         let app = TestUtilities.launchAppWithTestMode()
 
-        // Navigate to Settings tab
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        // Navigate to Settings (via More tab)
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings view to load
         let settingsTitle = app.navigationBars["Settings"]
@@ -50,8 +50,8 @@ final class SettingsUITests: XCTestCase {
     func testSettingsViewAccessibility() throws {
         let app = TestUtilities.launchAppWithTestMode()
 
-        // Navigate to Settings tab
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        // Navigate to Settings (via More tab)
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings view to load
         let settingsTitle = app.navigationBars["Settings"]

@@ -7,6 +7,9 @@ set -o pipefail  # Ensure pipeline failures are detected
 # Available simulators
 # NOTE: iOS 26.1 simulators recommended with Xcode 26 to avoid SwiftData/CloudKit crashes
 # iOS 17.5 simulators have compatibility issues with Xcode 26's NSPersistentStoreCoordinator
+# iPhone 17 Pro - F10F879D-2403-4529-8850-91DE259C1312
+# iPhone 17- 63B35940-1E74-4D29-821B-4DB5CAB5FA9C
+# iPhone 17 Pro Max - 38218630-EBEC-4196-80A2-92AB0A855715
 DEVICES=(
     "iPhone 17 Pro,OS=26.1"
     "iPhone 17,OS=26.1"

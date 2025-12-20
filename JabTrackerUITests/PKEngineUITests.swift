@@ -36,7 +36,7 @@ final class PKEngineUITests: XCTestCase {
         )
 
         // WHEN: User views the dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Concentration card is visible with proper accessibility identifiers
         let concentrationCard = app.otherElements["concentration-card-semaglutide"]
@@ -91,7 +91,7 @@ final class PKEngineUITests: XCTestCase {
         )
 
         // WHEN: User views the dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Concentration card is visible
         let concentrationCard = app.otherElements["concentration-card-semaglutide"]
@@ -162,7 +162,7 @@ final class PKEngineUITests: XCTestCase {
         )
 
         // WHEN: User views the dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Concentration card is visible
         let concentrationCard = app.otherElements["concentration-card-semaglutide"]
@@ -267,7 +267,7 @@ final class PKEngineUITests: XCTestCase {
         )
 
         // WHEN: User views the dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Concentration card is visible
         let concentrationCard = app.otherElements["concentration-card-semaglutide"]
@@ -398,7 +398,7 @@ final class PKEngineUITests: XCTestCase {
         )
 
         // WHEN: User views the dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Dashboard layout includes concentration card
         let dashboardView = app.scrollViews["dashboard-scroll-view"]
@@ -484,7 +484,7 @@ final class PKEngineUITests: XCTestCase {
         )
 
         // WHEN: User views the dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Separate concentration displays exist for distinct medications
         let dashboardView = app.scrollViews["dashboard-scroll-view"]
@@ -610,7 +610,7 @@ final class PKEngineUITests: XCTestCase {
 
         // WHEN: User navigates to dashboard
         let startTime = Date()
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Dashboard loads without noticeable lag
         let dashboardView = app.scrollViews["dashboard-scroll-view"]
@@ -690,7 +690,7 @@ final class PKEngineUITests: XCTestCase {
         )
 
         // WHEN: User views the dashboard
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // THEN: Concentration card appears even with no doses
         let concentrationCard = app.otherElements["concentration-card-semaglutide"]
@@ -761,8 +761,8 @@ final class PKEngineUITests: XCTestCase {
             "Dashboard should remain interactive in all concentration states")
 
         // Verify tab navigation works correctly
-        TestUtilities.navigateToTab(app, tabName: "Settings")
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToSettings(app)
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
 
         // Final verification that concentration card is still functional
         XCTAssertTrue(

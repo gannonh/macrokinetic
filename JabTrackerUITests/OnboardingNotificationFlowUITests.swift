@@ -66,7 +66,7 @@ final class OnboardingNotificationFlowUITests: XCTestCase {
         TestUtilities.completeOnboardingFlow(app, grantNotifications: true, grantHealthKit: false)
 
         // Navigate to Settings to verify notification state
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings to load
         _ = app.scrollViews["settings-scroll-view"].waitForExistence(timeout: 3)
@@ -106,7 +106,7 @@ final class OnboardingNotificationFlowUITests: XCTestCase {
         TestUtilities.completeOnboardingFlow(app, grantNotifications: false, grantHealthKit: false)
 
         // Navigate to Settings
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings to load
         _ = app.scrollViews["settings-scroll-view"].waitForExistence(timeout: 3)
@@ -186,7 +186,7 @@ final class OnboardingNotificationFlowUITests: XCTestCase {
             "Main app should appear after onboarding completion")
 
         // Navigate to Settings
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings to load then scroll down to notifications section
         _ = app.scrollViews["settings-scroll-view"].waitForExistence(timeout: 3)
@@ -258,7 +258,7 @@ final class OnboardingNotificationFlowUITests: XCTestCase {
             "Main app should appear after onboarding completion")
 
         // Navigate to Settings and verify notification state before restart
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Wait for Settings to load then scroll down to notifications section
         _ = app.scrollViews["settings-scroll-view"].waitForExistence(timeout: 3)

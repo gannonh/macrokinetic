@@ -37,7 +37,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
             segmentedControl.waitForExistence(timeout: 3),
             "View mode picker should be available")
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         XCTAssertTrue(calendarToggleButton.exists, "Calendar toggle should be available")
         calendarToggleButton.tap()
 
@@ -77,7 +77,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -115,7 +115,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -146,7 +146,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -178,7 +178,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -212,7 +212,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -257,7 +257,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
 
         // Measure calendar rendering performance
         let startTime = Date()
@@ -302,7 +302,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
 
         // Measure initial calendar rendering (should be fast with lazy loading)
         let startTime = Date()

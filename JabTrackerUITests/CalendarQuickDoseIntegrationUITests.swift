@@ -36,7 +36,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -58,7 +58,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -80,7 +80,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
@@ -104,7 +104,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
         let calendarView = app.descendants(matching: .any)["dose-calendar-view"]

@@ -36,15 +36,7 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         // WHEN: User navigates to adherence insights view
         // Measure navigation and metrics display performance
         let displayStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
-
-        // Navigate to Adherence segment
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
-
-        let adherenceSegment = segmentedControl.buttons["Adherence"]
-        XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
-        adherenceSegment.tap()
+        TestUtilities.navigateToAdherence(app)
 
         // Wait for adherence metrics to display
         let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
@@ -118,12 +110,9 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
             metadata: ["state": "ready", "dose_count": "3", "test_type": "metric_updates"]
         )
 
-        // Navigate to Analytics → Adherence
+        // Navigate to Adherence view
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
-        segmentedControl.buttons["Adherence"].tap()
+        TestUtilities.navigateToAdherence(app)
 
         // Get initial metrics
         let adherenceMetricsCard = app.otherElements["adherence-metrics-card"]
@@ -148,9 +137,8 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         // WHEN: User logs new dose (simplified - just verify metrics can be updated)
         // Navigate away and back to test metric refresh capability
         let refreshStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Home")
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
-        segmentedControl.buttons["Adherence"].tap()
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
+        TestUtilities.navigateToAdherence(app)
         let refreshEnd = Date()
         let refreshTime = refreshEnd.timeIntervalSince(refreshStart) * 1000  // ms
 
@@ -191,10 +179,7 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
         // WHEN: User views adherence insights
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
-        segmentedControl.buttons["Adherence"].tap()
+        TestUtilities.navigateToAdherence(app)
         let navEnd = Date()
         let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
 
@@ -269,10 +254,7 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
         // WHEN: User views adherence metrics
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
-        segmentedControl.buttons["Adherence"].tap()
+        TestUtilities.navigateToAdherence(app)
         let navEnd = Date()
         let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
 
@@ -339,10 +321,7 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
 
         // WHEN: User navigates adherence insights
         let navStart = Date()
-        TestUtilities.navigateToTab(app, tabName: "Analytics")
-        let segmentedControl = app.segmentedControls["analytics-type-picker"]
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Analytics segmented control should exist")
-        segmentedControl.buttons["Adherence"].tap()
+        TestUtilities.navigateToAdherence(app)
         let navEnd = Date()
         let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
 
@@ -381,8 +360,10 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         let accessibleTextCount = allTexts.filter { $0.isHittable }.count
         XCTAssertTrue(accessibleTextCount >= 3, "Multiple text elements should be accessible to VoiceOver")
 
-        // Verify navigation accessibility
-        XCTAssertTrue(segmentedControl.isHittable, "Analytics segmented control should be VoiceOver accessible")
+        // Verify segmented control accessibility in Shots view
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(segmentedControl.exists, "Shots segmented control should be present")
+        XCTAssertTrue(segmentedControl.isHittable, "Shots segmented control should be VoiceOver accessible")
 
         // 📸 PHASE 1: Capture final VoiceOver verification state
         screenshotCapture.capture(

@@ -60,7 +60,7 @@ final class ManualAuthenticationUITests: XCTestCase {
         TestUtilities.verifyAuthenticatedState(app, timeout: 10)
 
         // Verify we can navigate to different tabs
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Verify user profile is accessible (sign in was successful)
         XCTAssertTrue(

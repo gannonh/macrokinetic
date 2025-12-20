@@ -150,7 +150,7 @@ extension TestUtilities {
             "Created profile should appear in list")
     }
 
-    /// Navigates to History tab and waits for history content to load
+    /// Navigates to History view (via Shots tab -> History segment) and waits for history content to load
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Timeout for history content to appear (default: 3 seconds)
@@ -159,32 +159,39 @@ extension TestUtilities {
     static func navigateToHistoryView(in app: XCUIApplication, timeout: TimeInterval = 3)
         -> XCUIElement
     {
-        // Navigate to History tab
-        let historyTab = app.tabBars.element.buttons["History"]
-        historyTab.tap()
+        // Navigate to Shots tab and select History segment
+        navigateToHistory(app, timeout: timeout)
 
-        // Wait for the segmented control to appear (this indicates HistoryView is loaded)
-        let segmentedControl = app.segmentedControls["history-view-mode-picker"]
-        XCTAssertTrue(
-            segmentedControl.waitForExistence(timeout: timeout),
-            "History view segmented control should appear within \(timeout) seconds")
-
-        // By default, HistoryView starts in list mode, so wait for list view
+        // Wait for the history container or list to load
+        let listContainer = app.descendants(matching: .any)["dose-history-container"]
         let listView = app.descendants(matching: .any)["dose-history-list"]
-        if listView.waitForExistence(timeout: 2) {
+
+        // Try container first (ShotsView wrapper), then internal list
+        if listContainer.waitForExistence(timeout: timeout) {
+            // Now wait for the internal list with dose rows
+            _ = listView.waitForExistence(timeout: 2)
+            return listContainer
+        }
+
+        if listView.waitForExistence(timeout: timeout) {
             return listView
         }
 
-        // If list view doesn't appear quickly, check if we're in calendar mode and switch
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
-        if calendarView.exists {
-            let listToggle = segmentedControl.buttons["history-list-toggle"]
-            if listToggle.exists {
-                listToggle.tap()
-                XCTAssertTrue(
-                    listView.waitForExistence(timeout: 2),
-                    "List view should appear after switching from calendar")
-                return listView
+        // Check for segmented control to switch to list mode if in calendar mode
+        let segmentedControl = app.segmentedControls["history-view-mode-picker"]
+        if segmentedControl.waitForExistence(timeout: 2) {
+            let calendarContainer = app.descendants(matching: .any)["dose-calendar-view"]
+            let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+            if calendarContainer.exists || calendarView.exists {
+                // Button is labeled "List" based on HistoryMode.list.rawValue
+                let listToggle = segmentedControl.buttons["List"]
+                if listToggle.exists {
+                    listToggle.tap()
+                    XCTAssertTrue(
+                        listContainer.waitForExistence(timeout: 2) || listView.waitForExistence(timeout: 2),
+                        "List view should appear after switching from calendar")
+                    return listContainer.exists ? listContainer : listView
+                }
             }
         }
 
@@ -196,9 +203,44 @@ extension TestUtilities {
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - minimumCount: Minimum expected number of dose rows (default: 1)
+    ///   - timeout: Time to wait for rows to appear (default: 10 seconds)
     /// - Returns: XCUIElementQuery for dose rows
-    static func getDoseRows(from app: XCUIApplication, minimumCount: Int = 1) -> XCUIElementQuery {
-        let doseRows = app.buttons.matching(identifier: "dose-history-row")
+    static func getDoseRows(
+        from app: XCUIApplication,
+        minimumCount: Int = 1,
+        timeout: TimeInterval = 10
+    ) -> XCUIElementQuery {
+        // First, wait for any loading indicator to disappear
+        let loadingIndicator = app.activityIndicators.firstMatch
+        if loadingIndicator.exists {
+            let loadingDisappeared = !loadingIndicator.waitForExistence(timeout: timeout / 2)
+            if !loadingDisappeared {
+                // Still loading - wait more
+                Thread.sleep(forTimeInterval: 1)
+            }
+        }
+
+        // Check for empty state - if present, data seeding may have failed
+        let emptyState = app.otherElements["dose-history-empty-state"]
+        if emptyState.exists {
+            XCTFail("History view shows empty state - data seeding may have failed")
+        }
+
+        // In SwiftUI Lists with .buttonStyle(.plain), buttons may be exposed as cells
+        // Try buttons first, then cells as fallback
+        var doseRows = app.buttons.matching(identifier: "dose-history-row")
+        var firstRow = doseRows.firstMatch
+
+        if !firstRow.waitForExistence(timeout: timeout / 2) {
+            // Try cells instead
+            doseRows = app.cells.matching(identifier: "dose-history-row")
+            firstRow = doseRows.firstMatch
+        }
+
+        let rowsAppeared = firstRow.waitForExistence(timeout: timeout / 2)
+        XCTAssertTrue(rowsAppeared, "Dose rows should appear within \(timeout) seconds")
+
+        // Verify minimum count after waiting
         XCTAssertGreaterThanOrEqual(
             doseRows.count, minimumCount,
             "Should have at least \(minimumCount) dose row(s)")
