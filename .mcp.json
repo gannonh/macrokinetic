@@ -1,12 +1,5 @@
 {
   "mcpServers": {
-    "context7": {
-      "command": "/Users/gannonhall/.local/bin/mcp-npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp@latest"
-      ]
-    },
     "perplexity-server": {
       "command": "/Users/gannonhall/.local/bin/mcp-node-exec",
       "args": [
