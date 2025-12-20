@@ -2,7 +2,7 @@
 framework: xcodebuild_swift_testing
 test_command: ./scripts/test.sh
 created: 2025-01-22T04:47:23Z
-last_updated: 2025-12-19T14:57:47Z
+last_updated: 2025-12-20T21:21:51Z
 ---
 
 # Testing Framework Overview
@@ -115,13 +115,14 @@ cat logs/latest/raw_output.txt | grep "DEBUG"
 
 ## Available Simulators
 
-> **Note**: Xcode 26 requires iOS 26.1 simulators to avoid SwiftData/CloudKit crashes with older runtimes.
+> **Note**: Xcode 26.2 requires iOS 26.2 simulators to avoid SwiftData/CloudKit crashes with older runtimes.
 
-1. **PRIMARY**: iPhone 17 Pro,OS=26.1 (UUID: BA8D09E4-EE1F-49BB-A7D2-5705EC4C513D)
-2. **SECONDARY**: iPhone 17,OS=26.1 (UUID: 4E249318-06A8-442B-9E84-BBD450936DE5)
-3. **TERTIARY**: iPhone 17 Pro Max,OS=26.1 (UUID: 7E5A0A90-D04A-4013-996A-585296E0FFC8)
+1. **PRIMARY**: iPhone 17 Pro,OS=26.2 (UUID: F10F879D-2403-4529-8850-91DE259C1312)
+2. **SECONDARY**: iPhone 17,OS=26.2 (UUID: 63B35940-1E74-4D29-821B-4DB5CAB5FA9C)
+3. **TERTIARY**: iPhone 17 Pro Max,OS=26.2 (UUID: 38218630-EBEC-4196-80A2-92AB0A855715)
 
 ## Update History
 
+- 2025-12-20T21:21:51Z: Updated to Xcode 26.2 / iOS 26.2 simulators with new UUIDs
 - 2025-12-19T14:57:47Z: Updated test file counts (144 unit, 60 E2E)
 - 2025-10-23T20:15:00Z: Previous update
