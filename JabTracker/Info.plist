@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>JabTracker</string>
+	<string>MacroKinetic</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -49,11 +49,11 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSFaceIDUsageDescription</key>
-	<string>JabTracker uses Face ID to securely protect your medical data and ensure only you can access your medication tracking information.</string>
+	<string>MacroKinetic uses Face ID to securely protect your health data and ensure only you can access your nutrition and medication tracking information.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>JabTracker would like to read your weight data from Health to provide personalized medication tracking and insights.</string>
+	<string>MacroKinetic would like to read your weight data from Health to provide personalized nutrition tracking and insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>JabTracker would like to update your weight data in Health to keep your health records synchronized.</string>
+	<string>MacroKinetic would like to update your weight data in Health to keep your health records synchronized.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
