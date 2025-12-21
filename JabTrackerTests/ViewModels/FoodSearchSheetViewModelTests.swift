@@ -203,6 +203,326 @@ struct FoodSearchSheetViewModelTests {
 
         #expect(viewModel.selectedMethod == .scan)
     }
+
+    // MARK: - Expansion State Tests
+
+    @Test("Expansion states initialize to false")
+    @MainActor
+    func expansionStatesInitializeToFalse() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        #expect(viewModel.historyExpanded == false)
+        #expect(viewModel.customExpanded == false)
+        #expect(viewModel.commonExpanded == false)
+        #expect(viewModel.brandedExpanded == false)
+    }
+
+    @Test("Toggle history expanded flips state")
+    @MainActor
+    func toggleHistoryExpandedFlipsState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        #expect(viewModel.historyExpanded == false)
+
+        viewModel.toggleHistoryExpanded()
+        #expect(viewModel.historyExpanded == true)
+
+        viewModel.toggleHistoryExpanded()
+        #expect(viewModel.historyExpanded == false)
+    }
+
+    @Test("Toggle custom expanded flips state")
+    @MainActor
+    func toggleCustomExpandedFlipsState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.toggleCustomExpanded()
+        #expect(viewModel.customExpanded == true)
+    }
+
+    @Test("Toggle common expanded flips state")
+    @MainActor
+    func toggleCommonExpandedFlipsState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.toggleCommonExpanded()
+        #expect(viewModel.commonExpanded == true)
+    }
+
+    @Test("Toggle branded expanded flips state")
+    @MainActor
+    func toggleBrandedExpandedFlipsState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.toggleBrandedExpanded()
+        #expect(viewModel.brandedExpanded == true)
+    }
+
+    // MARK: - Visible Results Tests
+
+    @Test("Visible common results shows 5 when collapsed")
+    @MainActor
+    func visibleCommonResultsShows5WhenCollapsed() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        // Populate with more than 5 results
+        viewModel.commonResults = createMockResults(count: 10)
+
+        #expect(viewModel.commonExpanded == false)
+        #expect(viewModel.visibleCommonResults.count == 5)
+    }
+
+    @Test("Visible common results shows all when expanded")
+    @MainActor
+    func visibleCommonResultsShowsAllWhenExpanded() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        // Populate with 10 results and expand
+        viewModel.commonResults = createMockResults(count: 10)
+        viewModel.toggleCommonExpanded()
+
+        #expect(viewModel.commonExpanded == true)
+        #expect(viewModel.visibleCommonResults.count == 10)
+    }
+
+    @Test("Visible results shows all if fewer than 5")
+    @MainActor
+    func visibleResultsShowsAllIfFewerThan5() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        // Populate with only 3 results
+        viewModel.commonResults = createMockResults(count: 3)
+
+        #expect(viewModel.commonExpanded == false)
+        #expect(viewModel.visibleCommonResults.count == 3)
+    }
+
+    @Test("Visible history results respects expansion state")
+    @MainActor
+    func visibleHistoryResultsRespectsExpansionState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.historyResults = createMockResults(count: 12)
+
+        #expect(viewModel.visibleHistoryResults.count == 5)
+
+        viewModel.toggleHistoryExpanded()
+        #expect(viewModel.visibleHistoryResults.count == 12)
+    }
+
+    @Test("Visible branded results respects expansion state")
+    @MainActor
+    func visibleBrandedResultsRespectsExpansionState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.brandedResults = createMockResults(count: 15)
+
+        #expect(viewModel.visibleBrandedResults.count == 5)
+
+        viewModel.toggleBrandedExpanded()
+        #expect(viewModel.visibleBrandedResults.count == 15)
+    }
+
+    // MARK: - Remaining Count Tests
+
+    @Test("Remaining count returns correct value")
+    @MainActor
+    func remainingCountReturnsCorrectValue() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.commonResults = createMockResults(count: 12)
+
+        // 12 total - 5 shown = 7 remaining
+        #expect(viewModel.remainingCommonCount() == 7)
+    }
+
+    @Test("Remaining count returns 0 when 5 or fewer")
+    @MainActor
+    func remainingCountReturns0WhenFiveOrFewer() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.commonResults = createMockResults(count: 5)
+        #expect(viewModel.remainingCommonCount() == 0)
+
+        viewModel.commonResults = createMockResults(count: 3)
+        #expect(viewModel.remainingCommonCount() == 0)
+    }
+
+    @Test("Remaining count works for all sections")
+    @MainActor
+    func remainingCountWorksForAllSections() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.historyResults = createMockResults(count: 8)
+        viewModel.customResults = createMockResults(count: 6)
+        viewModel.commonResults = createMockResults(count: 15)
+        viewModel.brandedResults = createMockResults(count: 3)
+
+        #expect(viewModel.remainingHistoryCount() == 3)
+        #expect(viewModel.remainingCustomCount() == 1)
+        #expect(viewModel.remainingCommonCount() == 10)
+        #expect(viewModel.remainingBrandedCount() == 0)
+    }
+
+    // MARK: - Clear Search Resets Expansion Tests
+
+    @Test("Clear search resets expansion state")
+    @MainActor
+    func clearSearchResetsExpansionState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        // Expand all sections
+        viewModel.toggleHistoryExpanded()
+        viewModel.toggleCustomExpanded()
+        viewModel.toggleCommonExpanded()
+        viewModel.toggleBrandedExpanded()
+
+        #expect(viewModel.historyExpanded == true)
+        #expect(viewModel.customExpanded == true)
+        #expect(viewModel.commonExpanded == true)
+        #expect(viewModel.brandedExpanded == true)
+
+        // Clear search
+        viewModel.clearSearch()
+
+        #expect(viewModel.historyExpanded == false)
+        #expect(viewModel.customExpanded == false)
+        #expect(viewModel.commonExpanded == false)
+        #expect(viewModel.brandedExpanded == false)
+    }
+
+    // MARK: - Helper Methods
+
+    @MainActor
+    private func createMockResults(count: Int) -> [FoodSearchResult] {
+        (0..<count).map { index in
+            FoodSearchResult(
+                fdcId: index,
+                barcode: nil,
+                name: "Food \(index)",
+                brand: nil,
+                source: .local,
+                caloriesPer100g: 100,
+                proteinPer100g: 10,
+                carbsPer100g: 20,
+                fatPer100g: 5,
+                fiberPer100g: 2,
+                category: nil
+            )
+        }
+    }
 }
 
 // MARK: - SearchMethod Tests

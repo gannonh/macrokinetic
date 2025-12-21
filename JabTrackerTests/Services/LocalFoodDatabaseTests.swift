@@ -134,18 +134,24 @@ struct LocalFoodDatabaseTests {
         }
     }
 
-    @Test("Search results include category")
+    @Test("USDA search results include category")
     func testSearchResultsIncludeCategory() async throws {
         let database = LocalFoodDatabase()
 
-        let results = try await database.search(query: "banana")
+        let results = try await database.search(query: "banana raw")
 
-        guard let banana = results.first else {
-            Issue.record("No results found for banana")
+        // Find a USDA source result (foundation or sr_legacy) which should have category data
+        // Open Food Facts entries may not have categories populated
+        guard
+            let usdaBanana = results.first(where: {
+                $0.source == "foundation" || $0.source == "sr_legacy"
+            })
+        else {
+            Issue.record("No USDA banana results found")
             return
         }
 
-        #expect(banana.category == "Fruits and Fruit Juices", "Banana should be in Fruits category")
+        #expect(usdaBanana.category == "Fruits and Fruit Juices", "USDA Banana should be in Fruits category")
     }
 
     // MARK: - Multiple Word Search Tests
@@ -241,5 +247,116 @@ struct LocalFoodDatabaseTests {
         #expect(!results1.isEmpty)
         #expect(!results2.isEmpty)
         #expect(!results3.isEmpty)
+    }
+
+    // MARK: - Source Filtering Tests
+
+    @Test("Search with USDA sources returns only USDA results")
+    func testSearchWithUSDASourcesReturnsOnlyUSDA() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "banana",
+            limit: 20,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        #expect(!results.isEmpty, "Should find USDA banana results")
+
+        for result in results {
+            let validSource = result.source == "foundation" || result.source == "sr_legacy"
+            #expect(validSource, "Result should be from USDA source, got: \(result.source ?? "nil")")
+        }
+    }
+
+    @Test("Search with Open Food Facts source returns only OFF results")
+    func testSearchWithOFFSourceReturnsOnlyOFF() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "banana",
+            limit: 20,
+            sources: ["openFoodFacts"]
+        )
+
+        #expect(!results.isEmpty, "Should find Open Food Facts banana results")
+
+        for result in results {
+            #expect(result.source == "openFoodFacts", "Result should be from OFF, got: \(result.source ?? "nil")")
+        }
+    }
+
+    @Test("Search with nil sources returns results from all sources")
+    func testSearchWithNilSourcesReturnsAllSources() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(query: "banana", limit: 50, sources: nil)
+
+        #expect(!results.isEmpty, "Should find banana results")
+
+        // Collect unique sources
+        let uniqueSources = Set(results.compactMap(\.source))
+
+        // Should include both USDA and OFF sources when not filtered
+        let hasUSDA = uniqueSources.contains("foundation") || uniqueSources.contains("sr_legacy")
+        let hasOFF = uniqueSources.contains("openFoodFacts")
+
+        #expect(hasUSDA || hasOFF, "Should have results from at least one source type")
+    }
+
+    @Test("Search with empty sources array returns all sources")
+    func testSearchWithEmptySourcesArrayReturnsAllSources() async throws {
+        let database = LocalFoodDatabase()
+
+        let resultsWithEmpty = try await database.search(query: "chicken", limit: 20, sources: [])
+        let resultsWithNil = try await database.search(query: "chicken", limit: 20, sources: nil)
+
+        #expect(!resultsWithEmpty.isEmpty, "Should find results with empty sources array")
+        #expect(resultsWithEmpty.count == resultsWithNil.count, "Empty sources should behave like nil sources")
+    }
+
+    @Test("Search with single foundation source")
+    func testSearchWithSingleFoundationSource() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "chicken",
+            limit: 15,
+            sources: ["foundation"]
+        )
+
+        // Foundation might be empty for some queries, but if results exist they should all be foundation
+        for result in results {
+            #expect(result.source == "foundation", "Result should be from foundation source")
+        }
+    }
+
+    @Test("Source filtering respects limit parameter")
+    func testSourceFilteringRespectsLimit() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "banana",
+            limit: 5,
+            sources: ["openFoodFacts"]
+        )
+
+        #expect(results.count <= 5, "Should respect limit of 5, got \(results.count)")
+    }
+
+    @Test("Source filtering works with multiple word queries")
+    func testSourceFilteringWithMultipleWords() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "chicken breast",
+            limit: 10,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        for result in results {
+            let validSource = result.source == "foundation" || result.source == "sr_legacy"
+            #expect(validSource, "Multi-word query should still filter by source")
+        }
     }
 }

@@ -39,17 +39,31 @@ final class FoodSearchSheetViewModel {
 
     // MARK: - Results (Grouped by Source)
 
-    /// Results from user's food history
+    /// Results from user's food history (up to 15)
     var historyResults: [FoodSearchResult] = []
 
-    /// Results from user-created custom foods
+    /// Results from user-created custom foods (up to 15)
     var customResults: [FoodSearchResult] = []
 
-    /// Results from USDA database (common foods)
+    /// Results from USDA database - common foods (up to 15)
     var commonResults: [FoodSearchResult] = []
 
-    /// Results from Open Food Facts (branded foods)
+    /// Results from Open Food Facts - branded foods (up to 15)
     var brandedResults: [FoodSearchResult] = []
+
+    // MARK: - Section Expansion State
+
+    /// Whether the history section is expanded (shows all vs first 5)
+    var historyExpanded = false
+
+    /// Whether the custom section is expanded
+    var customExpanded = false
+
+    /// Whether the common section is expanded
+    var commonExpanded = false
+
+    /// Whether the branded section is expanded
+    var brandedExpanded = false
 
     // MARK: - Recent Foods (Empty State)
 
@@ -69,6 +83,68 @@ final class FoodSearchSheetViewModel {
     /// Whether there are any search results
     var hasResults: Bool {
         !historyResults.isEmpty || !customResults.isEmpty || !commonResults.isEmpty || !brandedResults.isEmpty
+    }
+
+    // MARK: - Visible Results (respects expand/collapse state)
+
+    /// Visible history results (5 when collapsed, up to 15 when expanded)
+    var visibleHistoryResults: [FoodSearchResult] {
+        historyExpanded ? historyResults : Array(historyResults.prefix(5))
+    }
+
+    /// Visible custom results
+    var visibleCustomResults: [FoodSearchResult] {
+        customExpanded ? customResults : Array(customResults.prefix(5))
+    }
+
+    /// Visible common results
+    var visibleCommonResults: [FoodSearchResult] {
+        commonExpanded ? commonResults : Array(commonResults.prefix(5))
+    }
+
+    /// Visible branded results
+    var visibleBrandedResults: [FoodSearchResult] {
+        brandedExpanded ? brandedResults : Array(brandedResults.prefix(5))
+    }
+
+    // MARK: - Remaining Counts (for "See X More" button)
+
+    /// Number of additional history results that can be shown
+    func remainingHistoryCount() -> Int {
+        max(0, historyResults.count - 5)
+    }
+
+    /// Number of additional custom results that can be shown
+    func remainingCustomCount() -> Int {
+        max(0, customResults.count - 5)
+    }
+
+    /// Number of additional common results that can be shown
+    func remainingCommonCount() -> Int {
+        max(0, commonResults.count - 5)
+    }
+
+    /// Number of additional branded results that can be shown
+    func remainingBrandedCount() -> Int {
+        max(0, brandedResults.count - 5)
+    }
+
+    // MARK: - Toggle Expansion
+
+    func toggleHistoryExpanded() {
+        historyExpanded.toggle()
+    }
+
+    func toggleCustomExpanded() {
+        customExpanded.toggle()
+    }
+
+    func toggleCommonExpanded() {
+        commonExpanded.toggle()
+    }
+
+    func toggleBrandedExpanded() {
+        brandedExpanded.toggle()
     }
 
     // MARK: - Private State
@@ -130,15 +206,22 @@ final class FoodSearchSheetViewModel {
 
         searchTask = Task {
             do {
-                // Search local database only (1.7M+ foods available offline)
-                let results = try await foodService.searchLocal(query: query, limit: 30)
+                // Search with categorized results (each source gets its own limit)
+                // This ensures USDA common foods aren't drowned out by 1.7M OFF branded products
+                let results = try await foodService.searchCategorized(query: query, limit: 15)
 
                 guard !Task.isCancelled else { return }
 
-                // Group results by source
-                groupResults(results)
+                // Assign results directly (already categorized by source)
+                historyResults = results.historyResults
+                customResults = results.customResults
+                commonResults = results.commonResults
+                brandedResults = results.brandedResults
 
-                Self.logger.debug("Search complete: \(results.count) results")
+                Self.logger.debug(
+                    "Search complete: \(results.totalCount) results "
+                        + "(history=\(results.historyResults.count), common=\(results.commonResults.count))"
+                )
             } catch {
                 guard !Task.isCancelled else { return }
 
@@ -162,31 +245,17 @@ final class FoodSearchSheetViewModel {
 
     // MARK: - Private Methods
 
-    /// Clear all result arrays
+    /// Clear all result arrays and reset expansion state
     private func clearResults() {
         historyResults = []
         customResults = []
         commonResults = []
         brandedResults = []
-    }
 
-    /// Group search results by their source
-    private func groupResults(_ results: [FoodSearchResult]) {
-        clearResults()
-
-        for result in results {
-            switch result.source {
-            case .userCreated:
-                customResults.append(result)
-            case .local:
-                commonResults.append(result)
-            case .openFoodFacts:
-                brandedResults.append(result)
-            }
-        }
-
-        // Note: historyResults would require tracking food access history
-        // For now, this is populated from recent foods feature
-        // In a full implementation, we'd check if any results were recently logged
+        // Reset expansion state when clearing results
+        historyExpanded = false
+        customExpanded = false
+        commonExpanded = false
+        brandedExpanded = false
     }
 }

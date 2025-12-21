@@ -61,48 +61,22 @@ final class NutritionFlowUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("chicken")
 
-        // Wait for search results to load (debounce + search time)
-        sleep(3)
-
-        // Step 5: Select a food from results
-        let searchResults = app.buttons.matching(
+        // Step 5: Wait for and select first result
+        let firstResult = app.buttons.matching(
             NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
-        )
-
-        // Wait for results to populate
-        var resultExists = false
-        for _ in 0..<10 {
-            if searchResults.count > 0 {
-                resultExists = true
-                break
-            }
-            sleep(1)
-        }
-
-        XCTAssertTrue(resultExists, "Should have at least one search result for 'chicken'")
-
-        // Tap the first result
-        let firstResult = searchResults.element(boundBy: 0)
-        XCTAssertTrue(firstResult.exists, "First search result should exist")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10), "Should have search result for 'chicken'")
         firstResult.tap()
 
-        // Step 6: Should return to AddFoodSheet with food selected
-        // Wait for add-food-sheet to reappear with selected food
+        // Step 6: Wait for add-food-sheet to reappear with selected food
         XCTAssertTrue(addFoodSheet.waitForExistence(timeout: 5), "Add food sheet should reappear")
-
-        // Wait for the save button to become enabled (indicates food was selected)
-        // The save button is disabled until a food is selected
-        sleep(1)  // Allow UI to update
 
         // Step 7: Save the food entry
         let saveButton = app.buttons["save-food-button"]
         XCTAssertTrue(saveButton.waitForExistence(timeout: 3), "Save button should exist")
         saveButton.tap()
 
-        // Step 8: Verify food was logged - should return to Food Log view
-        sleep(2)  // Allow time for sheet dismissal and data refresh
-
-        // Navigate back to Food Log to see updated list
+        // Step 8: Navigate to Food Log to verify
         TestUtilities.navigateToTab(app, tabName: "Food Log")
 
         // Verify the food appears in the log
@@ -139,25 +113,11 @@ final class NutritionFlowUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("apple")
 
-        // Wait for results
-        sleep(2)
-
-        // Verify results appear
-        let searchResults = app.buttons.matching(
+        // Wait for results to appear
+        let firstResult = app.buttons.matching(
             NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
-        )
-
-        // Wait up to 10 seconds for results
-        var hasResults = false
-        for _ in 0..<10 {
-            if searchResults.count > 0 {
-                hasResults = true
-                break
-            }
-            sleep(1)
-        }
-
-        XCTAssertTrue(hasResults, "Should have search results for 'apple'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10), "Should have search results for 'apple'")
     }
 
     /// Test cancel button dismisses search sheet
@@ -258,6 +218,128 @@ final class NutritionFlowUITests: XCTestCase {
         XCTAssertTrue(fatLabel.exists, "Fat label should exist in summary")
     }
 
+    // MARK: - Search Results Section Tests
+
+    /// Test that food search shows categorized sections (Common and Branded)
+    func testFoodSearchShowsCategorizedSections() throws {
+        // Open shortcuts and navigate to food search
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let foodSearchSheet = app.otherElements["food-search-sheet"]
+        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 3), "Food search sheet should appear")
+
+        // Search for a common food that should have both USDA and OFF results
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
+        searchField.tap()
+        searchField.typeText("banana")
+
+        // Verify Common section appears (USDA results)
+        let commonSection = app.staticTexts["Common"]
+        XCTAssertTrue(
+            commonSection.waitForExistence(timeout: 5),
+            "Common section should appear with USDA results for 'banana'"
+        )
+
+        // Verify Branded section appears (OFF results)
+        let brandedSection = app.staticTexts["Branded"]
+        XCTAssertTrue(
+            brandedSection.waitForExistence(timeout: 3),
+            "Branded section should appear with Open Food Facts results for 'banana'"
+        )
+    }
+
+    /// Test that "See X More" button expands a section
+    func testExpandCollapseSection() throws {
+        // Open shortcuts and navigate to food search
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let foodSearchSheet = app.otherElements["food-search-sheet"]
+        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 3), "Food search sheet should appear")
+
+        // Search for a term that returns many results
+        let searchField = app.textFields["food-search-field"]
+        searchField.tap()
+        searchField.typeText("chicken")
+
+        // Look for expand button in Common section (most likely to have >5 results)
+        let commonExpandButton = app.buttons["common-expand-button"]
+
+        if commonExpandButton.waitForExistence(timeout: 10) {
+            // Count visible results before expanding
+            let resultsBefore = app.buttons.matching(
+                NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+            ).count
+
+            // Tap to expand
+            commonExpandButton.tap()
+
+            // Wait for button label to change to "See Less"
+            let seeLessButton = app.buttons.matching(
+                NSPredicate(format: "label CONTAINS 'See Less'")
+            ).element(boundBy: 0)
+            XCTAssertTrue(
+                seeLessButton.waitForExistence(timeout: 3),
+                "Should show 'See Less' button after expanding"
+            )
+
+            // Count results after expanding - should be more
+            let resultsAfter = app.buttons.matching(
+                NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+            ).count
+            XCTAssertGreaterThan(resultsAfter, resultsBefore, "Should show more results after expanding")
+
+            // Tap again to collapse
+            let collapseButton = app.buttons["common-expand-button"]
+            if collapseButton.exists {
+                collapseButton.tap()
+
+                // Wait for "See X More" button to reappear
+                let seeMoreButton = app.buttons.matching(
+                    NSPredicate(format: "label CONTAINS 'More'")
+                ).element(boundBy: 0)
+                XCTAssertTrue(seeMoreButton.waitForExistence(timeout: 3), "Should show 'See More' after collapsing")
+            }
+        } else {
+            // If no expand button exists, that's also valid - means section has ≤5 items
+            print("⚠️ No expand button found - section may have 5 or fewer items")
+        }
+    }
+
+    /// Test that sections with few results don't show expand button
+    func testNoExpandButtonForFewResults() throws {
+        // Open shortcuts and navigate to food search
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let foodSearchSheet = app.otherElements["food-search-sheet"]
+        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 3), "Food search sheet should appear")
+
+        // Search for a specific term that might return few History results
+        // (History section is empty for a fresh app, so no expand button should appear)
+        let searchField = app.textFields["food-search-field"]
+        searchField.tap()
+        searchField.typeText("xyz")
+
+        // History expand button should not exist (no history for fresh app)
+        let historyExpandButton = app.buttons["history-expand-button"]
+        XCTAssertFalse(
+            historyExpandButton.waitForExistence(timeout: 3),
+            "History section should not have expand button when empty or has ≤5 items"
+        )
+    }
+
     // MARK: - Performance Tests
 
     /// Test that food search responds within acceptable time for the 1.7M+ food database
@@ -283,27 +365,17 @@ final class NutritionFlowUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("egg")
 
-        // Wait for results
-        let searchResults = app.buttons.matching(
+        // Wait for first result to appear
+        let firstResult = app.buttons.matching(
             NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
-        )
+        ).element(boundBy: 0)
 
-        var hasResults = false
-        for _ in 0..<30 {  // Max 3 seconds
-            if searchResults.count > 0 {
-                hasResults = true
-                break
-            }
-            usleep(100_000)  // 100ms
-        }
-
-        let endTime = Date()
-        let searchDuration = endTime.timeIntervalSince(startTime)
+        let hasResults = firstResult.waitForExistence(timeout: 3)
+        let searchDuration = Date().timeIntervalSince(startTime)
 
         XCTAssertTrue(hasResults, "Should have search results for 'egg'")
 
         // Search should complete within 3 seconds for a responsive feel
-        // Accounting for typing time (~0.5s) and debounce (~0.5s), actual search should be < 2s
         XCTAssertLessThan(
             searchDuration,
             3.0,

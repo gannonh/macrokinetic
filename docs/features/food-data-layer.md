@@ -1,6 +1,6 @@
 ---
 created: 2025-12-19T21:32:45Z
-updated: 2025-12-19T22:21:07Z
+updated: 2025-12-21T20:50:20Z
 ---
 
 # Food Data Layer
@@ -96,7 +96,135 @@ The API is only used as a fallback when a barcode is scanned that isn't in the l
 
 ## Algorithms
 
+### Categorized Search Architecture
+
+The search results are organized into expandable sections, each queried separately to prevent large datasets (1.7M Open Food Facts) from dominating results over smaller high-quality datasets (8K USDA foods).
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CATEGORIZED SEARCH FLOW                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   User types "banana"                                            │
+│           │                                                      │
+│           ▼                                                      │
+│   ┌───────────────────────────────────────────────────────┐     │
+│   │        FoodService.searchCategorized()                 │     │
+│   │   (Runs 3 parallel queries, each with own limit)       │     │
+│   └───────────────────────────────────────────────────────┘     │
+│           │                                                      │
+│     ┌─────┼─────────────────┬──────────────────┐                │
+│     ▼     ▼                 ▼                  ▼                │
+│  ┌──────┐ ┌───────────┐ ┌──────────┐ ┌────────────────┐        │
+│  │History│ │  Custom   │ │  Common  │ │    Branded     │        │
+│  │       │ │  (stub)   │ │  (USDA)  │ │     (OFF)      │        │
+│  │ ≤15   │ │   ≤15     │ │   ≤15    │ │     ≤15        │        │
+│  └──────┘ └───────────┘ └──────────┘ └────────────────┘        │
+│                                                                  │
+│   UI shows 5 per section, "See X More" expands to 15            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Result Categories**:
+
+| Category | Source | Description |
+|----------|--------|-------------|
+| History | FoodEntry records | Foods the user has previously logged |
+| Custom | User-created | User-created foods (stub for now) |
+| Common | USDA (foundation, sr_legacy) | Whole foods, raw ingredients |
+| Branded | Open Food Facts | Packaged/branded products |
+
+**Why Per-Source Queries?**
+
+Without source filtering, a single FTS5 query for "banana" returns mostly Open Food Facts results (1.7M products) while USDA bananas (8K foods) get buried. Per-source queries ensure balanced results:
+
+```swift
+// OLD: Single query dominated by OFF volume
+results = database.search(query: "banana", limit: 30)
+// Returns: 28 OFF products, 2 USDA foods
+
+// NEW: Separate queries per source
+commonResults = database.search(query: "banana", limit: 15, sources: ["foundation", "sr_legacy"])
+// Returns: 15 USDA foods (guaranteed)
+
+brandedResults = database.search(query: "banana", limit: 15, sources: ["openFoodFacts"])
+// Returns: 15 OFF products
+```
+
+### Expandable Section UI
+
+Each section uses a collapse/expand pattern (like Cronometer, MyFitnessPal):
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Common                                      See 10 More ▶      │
+├─────────────────────────────────────────────────────────────────┤
+│  🍌 Bananas, ripe and slightly ripe, raw          89 cal        │
+│  🍌 Bananas, raw                                  89 cal        │
+│  🍌 Banana, dehydrated, or banana powder         346 cal        │
+│  🍌 Bananas, overripe, raw                        95 cal        │
+│  🍌 Plantains, yellow, raw                       122 cal        │
+└─────────────────────────────────────────────────────────────────┘
+                    │
+                    │ User taps "See 10 More"
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Common                                           See Less ◀    │
+├─────────────────────────────────────────────────────────────────┤
+│  🍌 Bananas, ripe and slightly ripe, raw          89 cal        │
+│  🍌 Bananas, raw                                  89 cal        │
+│  ... (shows up to 15 items)                                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Rules**:
+- Collapsed: Shows first 5 items
+- Expanded: Shows up to 15 items
+- "See X More" where X = min(remaining items, 10)
+- If section has ≤5 items, no expand button shown
+
 ### Search Algorithm
+
+```
+FUNCTION searchCategorized(query: String) -> CategorizedSearchResults
+
+    // Validation
+    IF query.trimmed.isEmpty THEN
+        RETURN empty results
+
+    // 1. Search food history (foods user has logged)
+    historyResults = searchFoodHistory(
+        query: query,
+        limit: 15
+    )
+
+    // 2. Custom foods (stub - empty until feature built)
+    customResults = []
+
+    // 3. Search USDA common foods
+    commonResults = LocalFoodDatabase.search(
+        query: query,
+        limit: 15,
+        sources: ["foundation", "sr_legacy"]
+    )
+
+    // 4. Search Open Food Facts branded foods
+    brandedResults = LocalFoodDatabase.search(
+        query: query,
+        limit: 15,
+        sources: ["openFoodFacts"]
+    )
+
+    RETURN CategorizedSearchResults(
+        historyResults,
+        customResults,
+        commonResults,
+        brandedResults
+    )
+```
+
+### Legacy Search Algorithm (for backwards compatibility)
 
 ```
 FUNCTION search(query: String) -> [Food]
@@ -381,12 +509,14 @@ FUNCTION loadRecentSearches() -> [Food]
 
 | File | Purpose |
 |------|---------|
-| `FoodService.swift` | Orchestrates search, caching, recent foods |
-| `LocalFoodDatabase.swift` | SQLite/FTS5 queries for local foods |
+| `FoodService.swift` | Orchestrates search, categorized queries, caching |
+| `LocalFoodDatabase.swift` | SQLite/FTS5 queries with source filtering |
 | `OpenFoodFactsService.swift` | REST API client for packaged foods |
-| `FoodSearchView.swift` | Search UI with debounce and results |
+| `FoodSearchSheetViewModel.swift` | Manages search state, expand/collapse |
+| `FoodSearchSheet+Sections.swift` | Expandable section UI components |
 | `FoodDetailView.swift` | Nutrition facts and serving adjustment |
 | `Food.swift` | SwiftData model for food items |
+| `FoodEntry.swift` | SwiftData model for logged food entries |
 | `FoodSource.swift` | Enum for food source types |
 | `usda_foods.sqlite` | Bundled local database |
 
@@ -403,9 +533,33 @@ FUNCTION loadRecentSearches() -> [Food]
 
 | Test Suite | Tests | Coverage |
 |------------|-------|----------|
-| LocalFoodDatabaseTests | 20 | 90% |
-| OpenFoodFactsServiceTests | TBD | TBD |
-| FoodServiceTests | TBD | TBD |
+| LocalFoodDatabaseTests | 27 | 90% |
+| FoodServiceTests | 24 | 85% |
+| FoodSearchSheetViewModelTests | 22 | 85% |
+| NutritionFlowUITests | 11 | E2E |
+
+### Key Test Scenarios
+
+**LocalFoodDatabase Source Filtering**:
+- Search with `sources: ["foundation", "sr_legacy"]` returns only USDA entries
+- Search with `sources: ["openFoodFacts"]` returns only OFF entries
+- Search with `sources: nil` returns all sources
+
+**FoodService Categorized Search**:
+- `searchCategorized()` returns all 4 categories
+- `searchFoodHistory()` returns foods user has logged
+- History search deduplicates by food name
+
+**ViewModel Expand/Collapse**:
+- Expansion states initialize to false
+- Toggle methods flip state correctly
+- `visibleXxxResults` returns 5 when collapsed, up to 15 when expanded
+- `remainingXxxCount()` returns correct remaining count
+
+**E2E Section Verification**:
+- Search shows "Common" and "Branded" sections
+- "See X More" expands section
+- "See Less" collapses section back
 
 ## Database Maintenance
 

@@ -152,6 +152,28 @@ struct ServingOption: Identifiable, Equatable {
     }
 }
 
+/// Categorized search results grouped by source type
+struct CategorizedSearchResults {
+    /// Foods the user has previously logged (from FoodEntry records)
+    let historyResults: [FoodSearchResult]
+    /// User-created custom foods (stub for now)
+    let customResults: [FoodSearchResult]
+    /// USDA common foods (foundation + sr_legacy)
+    let commonResults: [FoodSearchResult]
+    /// Open Food Facts branded products
+    let brandedResults: [FoodSearchResult]
+
+    /// Whether any results exist
+    var hasResults: Bool {
+        !historyResults.isEmpty || !customResults.isEmpty || !commonResults.isEmpty || !brandedResults.isEmpty
+    }
+
+    /// Total count of all results
+    var totalCount: Int {
+        historyResults.count + customResults.count + commonResults.count + brandedResults.count
+    }
+}
+
 /// Service that orchestrates food search across multiple sources
 /// Combines local USDA database, Open Food Facts API, and user-created foods
 @MainActor
@@ -246,6 +268,117 @@ final class FoodService {
         return try await searchOpenFoodFacts(query: trimmedQuery, limit: limit)
     }
 
+    /// Search foods with results categorized by source type
+    /// Each category is searched separately with its own limit to ensure balanced results
+    /// - Parameters:
+    ///   - query: Search term
+    ///   - limit: Maximum results per category (default 15)
+    /// - Returns: Categorized search results
+    func searchCategorized(query: String, limit: Int = 15) async throws -> CategorizedSearchResults {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else {
+            return CategorizedSearchResults(
+                historyResults: [],
+                customResults: [],
+                commonResults: [],
+                brandedResults: []
+            )
+        }
+
+        // Search each source separately with its own limit
+        // This ensures that large sources (like OFF with 1.7M items) don't dominate results
+
+        // 1. History: foods user has previously logged (from FoodEntry records)
+        let history = try await searchFoodHistory(query: trimmedQuery, limit: limit)
+
+        // 2. Custom: user-created foods (stub for now - empty until feature built)
+        let custom: [FoodSearchResult] = []
+
+        // 3. Common: USDA foods (foundation + sr_legacy)
+        let common = try await searchLocalDatabase(
+            query: trimmedQuery,
+            limit: limit,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        // 4. Branded: Open Food Facts products
+        let branded = try await searchLocalDatabase(
+            query: trimmedQuery,
+            limit: limit,
+            sources: ["openFoodFacts"]
+        )
+
+        Self.logger.debug(
+            "Categorized search for '\(trimmedQuery)': "
+                + "history=\(history.count), common=\(common.count), branded=\(branded.count)"
+        )
+
+        return CategorizedSearchResults(
+            historyResults: history,
+            customResults: custom,
+            commonResults: common,
+            brandedResults: branded
+        )
+    }
+
+    /// Search foods the user has previously logged (from FoodEntry records)
+    /// - Parameters:
+    ///   - query: Search term to match against food names
+    ///   - limit: Maximum number of results
+    /// - Returns: Array of foods matching the query that the user has logged
+    func searchFoodHistory(query: String, limit: Int = 15) async throws -> [FoodSearchResult] {
+        let lowercaseQuery = query.lowercased()
+
+        // Fetch FoodEntry records, ordered by most recently logged
+        var descriptor = FetchDescriptor<FoodEntry>(
+            sortBy: [SortDescriptor(\.loggedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 500  // Fetch more to filter and deduplicate
+
+        let entries = try context.fetch(descriptor)
+
+        // Filter by query, deduplicate by food name, and convert to FoodSearchResult
+        var seenNames = Set<String>()
+        var results: [FoodSearchResult] = []
+
+        for entry in entries {
+            // Check if food name matches query
+            guard entry.foodName.lowercased().contains(lowercaseQuery) else {
+                continue
+            }
+
+            // Skip duplicates (same food logged multiple times)
+            let normalizedName = entry.foodName.lowercased()
+            guard !seenNames.contains(normalizedName) else {
+                continue
+            }
+            seenNames.insert(normalizedName)
+
+            // Convert to FoodSearchResult
+            let result = FoodSearchResult(
+                fdcId: nil,
+                barcode: nil,
+                name: entry.foodName,
+                brand: entry.foodBrand,
+                source: .local,  // History items show as local source
+                caloriesPer100g: entry.caloriesPer100g,
+                proteinPer100g: entry.proteinPer100g,
+                carbsPer100g: entry.carbsPer100g,
+                fatPer100g: entry.fatPer100g,
+                fiberPer100g: entry.fiberPer100g,
+                category: nil
+            )
+            results.append(result)
+
+            // Stop if we have enough results
+            if results.count >= limit {
+                break
+            }
+        }
+
+        return results
+    }
+
     /// Look up food by barcode
     /// - Parameter barcode: Product barcode
     /// - Returns: Food if found
@@ -318,8 +451,12 @@ final class FoodService {
 
     // MARK: - Private Search Helpers
 
-    private func searchLocalDatabase(query: String, limit: Int) async throws -> [FoodSearchResult] {
-        let localResults = try await localDatabase.search(query: query, limit: limit)
+    private func searchLocalDatabase(
+        query: String,
+        limit: Int,
+        sources: [String]? = nil
+    ) async throws -> [FoodSearchResult] {
+        let localResults = try await localDatabase.search(query: query, limit: limit, sources: sources)
 
         return localResults.map { local in
             // Map database source string to FoodSource enum

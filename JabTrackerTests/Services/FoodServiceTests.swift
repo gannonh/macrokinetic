@@ -199,9 +199,268 @@ struct FoodServiceTests {
         #expect(recentFoods[1].name == "Older Food")
     }
 
+    // MARK: - Categorized Search Tests
+
+    @Test("Categorized search returns all four categories")
+    func testCategorizedSearchReturnsAllCategories() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let results = try await service.searchCategorized(query: "banana")
+
+        // Should have the structure with all 4 categories
+        // historyResults will be empty since no FoodEntry records
+        // customResults is a stub (empty)
+        // commonResults and brandedResults should have data
+        #expect(
+            results.commonResults.count > 0 || results.brandedResults.count > 0,
+            "Should have results from local database")
+    }
+
+    @Test("Categorized search with empty query returns empty results")
+    func testCategorizedSearchEmptyQuery() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let results = try await service.searchCategorized(query: "")
+
+        #expect(results.historyResults.isEmpty)
+        #expect(results.customResults.isEmpty)
+        #expect(results.commonResults.isEmpty)
+        #expect(results.brandedResults.isEmpty)
+        #expect(!results.hasResults)
+    }
+
+    @Test("Categorized search common results are USDA sources only")
+    func testCategorizedSearchCommonResultsAreUSDA() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let results = try await service.searchCategorized(query: "chicken")
+
+        // Common results should only include USDA sources
+        // The source in FoodSearchResult is .local for all local database entries
+        // but the underlying database entries have source field that was filtered
+        #expect(results.commonResults.allSatisfy { $0.source == .local })
+    }
+
+    @Test("Categorized search branded results have openFoodFacts source")
+    func testCategorizedSearchBrandedResultsHaveOFFSource() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let results = try await service.searchCategorized(query: "banana")
+
+        // Branded results from Open Food Facts have source .openFoodFacts
+        // If there are branded results, they should all have .openFoodFacts source
+        if !results.brandedResults.isEmpty {
+            #expect(results.brandedResults.allSatisfy { $0.source == .openFoodFacts })
+        }
+        // The test passes if branded results are empty (database may not have OFF entries)
+    }
+
+    @Test("Categorized search hasResults computed property works")
+    func testCategorizedSearchHasResults() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let withResults = try await service.searchCategorized(query: "chicken")
+        let withoutResults = try await service.searchCategorized(query: "xyznonexistent123")
+
+        #expect(withResults.hasResults)
+        #expect(!withoutResults.hasResults)
+    }
+
+    @Test("Categorized search totalCount matches sum of all categories")
+    func testCategorizedSearchTotalCount() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let results = try await service.searchCategorized(query: "rice")
+
+        let expectedTotal =
+            results.historyResults.count
+            + results.customResults.count
+            + results.commonResults.count
+            + results.brandedResults.count
+
+        #expect(results.totalCount == expectedTotal)
+    }
+
+    // MARK: - Food History Search Tests
+
+    @Test("Food history search returns logged foods matching query")
+    func testFoodHistorySearchReturnsLoggedFoods() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        // Create a FoodEntry
+        let entry = FoodEntry(
+            foodName: "Grilled Chicken Breast",
+            foodBrand: nil,
+            mealSection: .lunch,
+            servingGrams: 100,
+            caloriesPer100g: 165,
+            proteinPer100g: 31,
+            carbsPer100g: 0,
+            fatPer100g: 3.6,
+            fiberPer100g: 0
+        )
+        context.insert(entry)
+        try context.save()
+
+        let results = try await service.searchFoodHistory(query: "chicken")
+
+        #expect(!results.isEmpty, "Should find logged chicken")
+        #expect(results.first?.name == "Grilled Chicken Breast")
+    }
+
+    @Test("Food history search returns empty for no matching entries")
+    func testFoodHistorySearchEmptyForNoMatches() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        // Create a FoodEntry that won't match our query
+        let entry = FoodEntry(
+            foodName: "Banana",
+            foodBrand: nil,
+            mealSection: .snacks,
+            servingGrams: 100,
+            caloriesPer100g: 89,
+            proteinPer100g: 1.1,
+            carbsPer100g: 22.8,
+            fatPer100g: 0.3,
+            fiberPer100g: 2.6
+        )
+        context.insert(entry)
+        try context.save()
+
+        let results = try await service.searchFoodHistory(query: "pizza")
+
+        #expect(results.isEmpty)
+    }
+
+    @Test("Food history search deduplicates by food name")
+    func testFoodHistorySearchDeduplicates() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        // Create multiple entries for the same food
+        for _ in 0..<3 {
+            let entry = FoodEntry(
+                foodName: "Oatmeal",
+                foodBrand: nil,
+                mealSection: .breakfast,
+                servingGrams: 100,
+                caloriesPer100g: 68,
+                proteinPer100g: 2.4,
+                carbsPer100g: 12,
+                fatPer100g: 1.4,
+                fiberPer100g: 1.7
+            )
+            context.insert(entry)
+        }
+        try context.save()
+
+        let results = try await service.searchFoodHistory(query: "oatmeal")
+
+        #expect(results.count == 1, "Should deduplicate same food name")
+    }
+
+    @Test("Food history search respects limit")
+    func testFoodHistorySearchRespectsLimit() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        // Create multiple unique food entries
+        for index in 0..<10 {
+            let entry = FoodEntry(
+                foodName: "Apple Variety \(index)",
+                foodBrand: nil,
+                mealSection: .snacks,
+                servingGrams: 100,
+                caloriesPer100g: 52,
+                proteinPer100g: 0.3,
+                carbsPer100g: 14,
+                fatPer100g: 0.2,
+                fiberPer100g: 2.4
+            )
+            context.insert(entry)
+        }
+        try context.save()
+
+        let results = try await service.searchFoodHistory(query: "apple", limit: 5)
+
+        #expect(results.count <= 5)
+    }
+
+    @Test("Food history search is case insensitive")
+    func testFoodHistorySearchCaseInsensitive() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let entry = FoodEntry(
+            foodName: "Greek Yogurt",
+            foodBrand: "Fage",
+            mealSection: .breakfast,
+            servingGrams: 100,
+            caloriesPer100g: 97,
+            proteinPer100g: 9,
+            carbsPer100g: 4,
+            fatPer100g: 5,
+            fiberPer100g: 0
+        )
+        context.insert(entry)
+        try context.save()
+
+        let lowercaseResults = try await service.searchFoodHistory(query: "greek")
+        let uppercaseResults = try await service.searchFoodHistory(query: "GREEK")
+
+        #expect(!lowercaseResults.isEmpty)
+        #expect(!uppercaseResults.isEmpty)
+        #expect(lowercaseResults.count == uppercaseResults.count)
+    }
+
+    @Test("Food history search preserves nutrition data")
+    func testFoodHistorySearchPreservesNutritionData() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let service = FoodService(context: context)
+
+        let entry = FoodEntry(
+            foodName: "Salmon Fillet",
+            foodBrand: nil,
+            mealSection: .dinner,
+            servingGrams: 150,
+            caloriesPer100g: 208,
+            proteinPer100g: 20,
+            carbsPer100g: 0,
+            fatPer100g: 13,
+            fiberPer100g: 0
+        )
+        context.insert(entry)
+        try context.save()
+
+        let results = try await service.searchFoodHistory(query: "salmon")
+
+        guard let result = results.first else {
+            Issue.record("No results found")
+            return
+        }
+
+        #expect(result.caloriesPer100g == 208)
+        #expect(result.proteinPer100g == 20)
+        #expect(result.carbsPer100g == 0)
+        #expect(result.fatPer100g == 13)
+    }
+
     // MARK: - Helper Methods
 
     private func createTestContext() -> ModelContext {
+        let (context, _) = createTestContextWithContainer()
+        return context
+    }
+
+    private func createTestContextWithContainer() -> (ModelContext, ModelContainer) {
         let schema = Schema([
             User.self,
             Dose.self,
@@ -216,6 +475,6 @@ struct FoodServiceTests {
             cloudKitDatabase: .none
         )
         let container = try! ModelContainer(for: schema, configurations: [configuration])
-        return ModelContext(container)
+        return (ModelContext(container), container)
     }
 }

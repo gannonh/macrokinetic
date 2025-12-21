@@ -98,8 +98,10 @@ final class LocalFoodDatabase {
     /// - Parameters:
     ///   - query: Search term (supports prefix matching)
     ///   - limit: Maximum number of results to return
+    ///   - sources: Optional array of source values to filter by (e.g., ["foundation", "sr_legacy"] for USDA,
+    ///              or ["openFoodFacts"] for branded). If nil, searches all sources.
     /// - Returns: Array of matching foods
-    func search(query: String, limit: Int = 20) async throws -> [LocalFoodResult] {
+    func search(query: String, limit: Int = 20, sources: [String]? = nil) async throws -> [LocalFoodResult] {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             return []
@@ -118,20 +120,44 @@ final class LocalFoodDatabase {
             .map { "\($0)*" }  // Add prefix matching
             .joined(separator: " ")
 
-        let sql = """
-            SELECT f.fdc_id, f.name, f.brand,
-                   f.calories_per_100g, f.protein_per_100g, f.carbs_per_100g,
-                   f.fat_per_100g, f.fiber_per_100g, f.category,
-                   f.source, f.barcode,
-                   f.serving_size, f.serving_unit, f.serving_options
-            FROM foods_fts fts
-            JOIN foods f ON fts.rowid = f.id
-            WHERE foods_fts MATCH ?
-            ORDER BY rank
-            LIMIT ?
-            """
+        // Build SQL with optional source filtering
+        let sql: String
+        var parameters: [Any] = [ftsQuery]
 
-        return try executeSearch(sql: sql, parameters: [ftsQuery, limit])
+        if let sources = sources, !sources.isEmpty {
+            // Build placeholders for IN clause (?, ?, ...)
+            let placeholders = sources.map { _ in "?" }.joined(separator: ", ")
+            sql = """
+                SELECT f.fdc_id, f.name, f.brand,
+                       f.calories_per_100g, f.protein_per_100g, f.carbs_per_100g,
+                       f.fat_per_100g, f.fiber_per_100g, f.category,
+                       f.source, f.barcode,
+                       f.serving_size, f.serving_unit, f.serving_options
+                FROM foods_fts fts
+                JOIN foods f ON fts.rowid = f.id
+                WHERE foods_fts MATCH ? AND f.source IN (\(placeholders))
+                ORDER BY rank
+                LIMIT ?
+                """
+            parameters.append(contentsOf: sources)
+            parameters.append(limit)
+        } else {
+            sql = """
+                SELECT f.fdc_id, f.name, f.brand,
+                       f.calories_per_100g, f.protein_per_100g, f.carbs_per_100g,
+                       f.fat_per_100g, f.fiber_per_100g, f.category,
+                       f.source, f.barcode,
+                       f.serving_size, f.serving_unit, f.serving_options
+                FROM foods_fts fts
+                JOIN foods f ON fts.rowid = f.id
+                WHERE foods_fts MATCH ?
+                ORDER BY rank
+                LIMIT ?
+                """
+            parameters.append(limit)
+        }
+
+        return try executeSearch(sql: sql, parameters: parameters)
     }
 
     /// Look up a specific food by FDC ID
