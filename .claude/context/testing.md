@@ -121,6 +121,11 @@ cat logs/latest/raw_output.txt | grep "DEBUG"
 2. **SECONDARY**: iPhone 17,OS=26.2 (UUID: 63B35940-1E74-4D29-821B-4DB5CAB5FA9C)
 3. **TERTIARY**: iPhone 17 Pro Max,OS=26.2 (UUID: 38218630-EBEC-4196-80A2-92AB0A855715)
 
+## Testing Skills
+
+- For e2e tests, you **must** use the `/ios-e2e-testing` skill.
+- For unit and integration tests, you **must** use the `/ios-unit-testing` skill.
+
 ## Update History
 
 - 2025-12-20T21:21:51Z: Updated to Xcode 26.2 / iOS 26.2 simulators with new UUIDs
