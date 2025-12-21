@@ -318,6 +318,27 @@ case "$TEST_TYPE" in
     ;;
 esac
 
+# Extract screenshots from xcresult if available
+if [ "$ENABLE_LOGGING" = true ] && [ -d "$XCRESULT_PATH" ]; then
+    SCREENSHOTS_DIR="$LOG_DIR/screenshots"
+    mkdir -p "$SCREENSHOTS_DIR"
+
+    # Extract attachments (screenshots) from xcresult
+    if xcrun xcresulttool get --path "$XCRESULT_PATH" --format json 2>/dev/null | grep -q "attachments"; then
+        # Use xcresulttool to export attachments
+        xcrun xcresulttool export --path "$XCRESULT_PATH" --output-path "$SCREENSHOTS_DIR" --type attachments 2>/dev/null || true
+
+        # Count extracted screenshots
+        SCREENSHOT_COUNT=$(find "$SCREENSHOTS_DIR" -name "*.png" -o -name "*.jpg" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$SCREENSHOT_COUNT" -gt 0 ]; then
+            if [ "$LOG_ONLY" = false ]; then
+                echo ""
+                echo "📸 Extracted $SCREENSHOT_COUNT screenshot(s) to: $SCREENSHOTS_DIR/"
+            fi
+        fi
+    fi
+fi
+
 # Handle coverage report
 if [ "$ENABLE_COVERAGE" = true ]; then
     COVERAGE_RESULT_PATH=""
@@ -403,10 +424,18 @@ if [ "$ENABLE_LOGGING" = true ]; then
     if [ "$ENABLE_COVERAGE" = true ] && [ -f "$LOG_DIR/coverage.json" ]; then
         echo "   • Coverage data: $LOG_DIR/coverage.json"
     fi
+    # Check if screenshots were captured
+    if [ -d "$LOG_DIR/screenshots" ]; then
+        SCREENSHOT_COUNT=$(find "$LOG_DIR/screenshots" -name "*.png" -o -name "*.jpg" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$SCREENSHOT_COUNT" -gt 0 ]; then
+            echo "   • Screenshots ($SCREENSHOT_COUNT): $LOG_DIR/screenshots/"
+        fi
+    fi
     echo ""
     echo "💡 View latest logs: cat logs/latest/output.txt"
     echo "💡 View simulator-specific logs: cat logs/latest_${SIMULATOR_ID}/output.txt"
     echo "💡 Open result bundle: open $XCRESULT_PATH"
+    echo "💡 View screenshots: open logs/latest/screenshots/"
 fi
 
 # Exit with the actual test status

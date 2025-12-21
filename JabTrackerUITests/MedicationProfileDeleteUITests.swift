@@ -200,10 +200,13 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(deletePermanentlyButton.exists, "Should have 'Delete Permanently' button")
 
         // Note: SwiftUI confirmationDialog on iPhone doesn't render .cancel role buttons visibly
-        // Instead, tap outside the dialog to dismiss it
-        // Tap at the top of the screen (above the dialog) to cancel
-        let topCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
-        topCoordinate.tap()
+        // Instead, tap on the dimmed background area below the dialog to dismiss it
+        // The dialog appears in the upper portion, so tap in the middle-lower area (dy: 0.75)
+        let dismissCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
+        dismissCoordinate.tap()
+
+        // Wait for dialog to dismiss
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Verify profile still exists and is still active (no Disabled badge)
         XCTAssertTrue(

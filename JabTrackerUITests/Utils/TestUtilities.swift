@@ -1162,6 +1162,153 @@ extension XCUIElement {
     }
 }
 
+// MARK: - Debug Screenshot Utilities
+
+extension TestUtilities {
+    /// Directory where debug screenshots are saved
+    /// Uses __XPC_DYLD_FRAMEWORK_PATH to find project root, or falls back to tmp
+    private static var screenshotDirectory: URL {
+        // In Xcode test runner context, find the project root from the framework path
+        // __XPC_DYLD_FRAMEWORK_PATH looks like: /Users/xxx/Library/Developer/Xcode/DerivedData/ProjectName-.../Build/Products/Debug-iphonesimulator
+        if let frameworkPath = ProcessInfo.processInfo.environment["__XPC_DYLD_FRAMEWORK_PATH"],
+            let range = frameworkPath.range(of: "/Library/Developer/Xcode/DerivedData")
+        {
+            let homeDir = String(frameworkPath[..<range.lowerBound])
+            // Try common project locations
+            let possiblePaths = [
+                "\(homeDir)/dev/jab-tracker-ios",
+                "\(homeDir)/Developer/jab-tracker-ios",
+                "\(homeDir)/Projects/jab-tracker-ios",
+            ]
+            for path in possiblePaths where FileManager.default.fileExists(atPath: path) {
+                return URL(fileURLWithPath: path)
+                    .appendingPathComponent("logs")
+                    .appendingPathComponent("latest")
+                    .appendingPathComponent("screenshots")
+            }
+        }
+
+        // Fallback: use /tmp for test screenshots
+        return URL(fileURLWithPath: "/tmp/xctest-screenshots")
+    }
+
+    /// Capture a debug screenshot and save it to disk for easy viewing
+    ///
+    /// Screenshots are saved to `logs/latest/screenshots/` as PNG files.
+    /// Use this during test development to see exactly what the UI looks like at any point.
+    ///
+    /// **Usage:**
+    /// ```swift
+    /// TestUtilities.debugScreenshot(app, name: "after-login")
+    /// TestUtilities.debugScreenshot(app, name: "error-state", context: "validation failed")
+    /// ```
+    ///
+    /// **Viewing Screenshots:**
+    /// ```bash
+    /// open logs/latest/screenshots/
+    /// # Or view a specific screenshot:
+    /// open logs/latest/screenshots/after-login.png
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - name: A descriptive name for the screenshot (will be used as filename)
+    ///   - context: Optional context string to print with the screenshot path
+    /// - Returns: The file path where the screenshot was saved, or nil if save failed
+    @discardableResult
+    static func debugScreenshot(
+        _ app: XCUIApplication,
+        name: String,
+        context: String? = nil
+    ) -> String? {
+        let screenshot = app.screenshot()
+        let pngData = screenshot.pngRepresentation
+
+        // Create screenshots directory if needed
+        let directory = screenshotDirectory
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        } catch {
+            print("📸 ❌ Failed to create screenshot directory: \(error.localizedDescription)")
+            return nil
+        }
+
+        // Sanitize filename (remove special characters)
+        let sanitizedName =
+            name
+            .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+            .replacingOccurrences(of: ":", with: "-")
+        let filename = "\(sanitizedName)-\(timestamp).png"
+        let filePath = directory.appendingPathComponent(filename)
+
+        do {
+            try pngData.write(to: filePath)
+            let relativePath = "logs/latest/screenshots/\(filename)"
+            if let context {
+                print("📸 Screenshot saved: \(relativePath) (\(context))")
+            } else {
+                print("📸 Screenshot saved: \(relativePath)")
+            }
+            return filePath.path
+        } catch {
+            print("📸 ❌ Failed to save screenshot: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Capture a debug screenshot with automatic naming based on test function
+    ///
+    /// **Usage:**
+    /// ```swift
+    /// TestUtilities.debugScreenshot(app, step: 1, description: "initial-state")
+    /// TestUtilities.debugScreenshot(app, step: 2, description: "after-tap")
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - step: A step number for ordering screenshots
+    ///   - description: A brief description of the current state
+    /// - Returns: The file path where the screenshot was saved, or nil if save failed
+    @discardableResult
+    static func debugScreenshot(
+        _ app: XCUIApplication,
+        step: Int,
+        description: String
+    ) -> String? {
+        let name = String(format: "%02d-%@", step, description)
+        return debugScreenshot(app, name: name)
+    }
+
+    /// Capture a screenshot on test failure for debugging
+    /// Call this in test tearDown or catch blocks to capture failure state
+    ///
+    /// **Usage in XCTestCase:**
+    /// ```swift
+    /// override func tearDown() {
+    ///     if testRun?.hasSucceeded == false {
+    ///         TestUtilities.captureFailureScreenshot(app, testName: name)
+    ///     }
+    ///     super.tearDown()
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - testName: The name of the failing test
+    /// - Returns: The file path where the screenshot was saved, or nil if save failed
+    @discardableResult
+    static func captureFailureScreenshot(
+        _ app: XCUIApplication,
+        testName: String
+    ) -> String? {
+        debugScreenshot(app, name: "FAILURE-\(testName)", context: "test failed")
+    }
+}
+
 // MARK: - Test Cleanup Utilities
 
 extension TestUtilities {
