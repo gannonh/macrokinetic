@@ -24,7 +24,7 @@ final class CalendarNavigationUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
 
         // Get current month/year for comparison
@@ -35,8 +35,10 @@ final class CalendarNavigationUITests: XCTestCase {
 
         let monthYearHeader = app.staticTexts["calendar-month-year"]
         if !monthYearHeader.waitForExistence(timeout: 3) {
-            // Fallback: Find month header by content
-            let monthTexts = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "2025"))
+            // Fallback: Find month header by content using current year
+            let currentYear = Calendar.current.component(.year, from: Date())
+            let monthTexts = app.staticTexts.matching(
+                NSPredicate(format: "label CONTAINS %@", String(currentYear)))
             XCTAssertGreaterThan(monthTexts.count, 0, "Should find month header by content")
         } else {
             XCTAssertEqual(monthYearHeader.label, currentMonthYear, "Should start with current month")
@@ -49,7 +51,7 @@ final class CalendarNavigationUITests: XCTestCase {
             .firstMatch
         if !nextMonthButton.exists {
             // Fallback: Look for buttons with ">" or navigation symbols
-            let navButtons = app.buttons.matching(
+            let navButtons = app.otherElements.matching(
                 NSPredicate(format: "label CONTAINS '>' OR label CONTAINS 'next'"))
             XCTAssertGreaterThan(navButtons.count, 0, "Should find navigation buttons")
             navButtons.firstMatch.tap()
@@ -88,7 +90,7 @@ final class CalendarNavigationUITests: XCTestCase {
             .firstMatch
         if !prevMonthButton.exists {
             // Fallback: Look for buttons with "<" or previous navigation symbols
-            let prevNavButtons = app.buttons.matching(
+            let prevNavButtons = app.otherElements.matching(
                 NSPredicate(format: "label CONTAINS '<' OR label CONTAINS 'previous'")
             )
             XCTAssertGreaterThan(prevNavButtons.count, 0, "Should find previous navigation buttons")
@@ -117,7 +119,7 @@ final class CalendarNavigationUITests: XCTestCase {
         }
 
         // THEN: Calendar grid still functions properly
-        let calendarDays = app.buttons.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20, "Calendar should still show day buttons after navigation")
@@ -133,7 +135,7 @@ final class CalendarNavigationUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
 
         // Wait for calendar to load
@@ -145,7 +147,7 @@ final class CalendarNavigationUITests: XCTestCase {
 
         // WHEN: User taps on a date with doses (today should have doses from setup)
         let todayDay = Calendar.current.component(.day, from: Date())
-        let todayButton = app.buttons["calendar-day-\(todayDay)"]
+        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"]
         XCTAssertTrue(todayButton.exists, "Today's date button should exist")
         todayButton.tap()
 
@@ -175,7 +177,7 @@ final class CalendarNavigationUITests: XCTestCase {
             return
         }
         let futureDay = calendar.component(.day, from: futureDate)
-        let futureDateButton = app.buttons["calendar-day-\(futureDay)"]
+        let futureDateButton = app.descendants(matching: .any)["calendar-day-\(futureDay)"]
 
         if futureDateButton.exists {
             futureDateButton.tap()
@@ -204,9 +206,9 @@ final class CalendarNavigationUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
         TestUtilities.navigateToHistoryView(in: app)
 
-        // Verify we start in list view
-        let historyListView = app.descendants(matching: .any)["dose-history-list"]
-        XCTAssertTrue(historyListView.waitForExistence(timeout: 3), "Should start in list view")
+        // Verify we start in list view (ShotsView wraps with dose-history-container)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        XCTAssertTrue(historyContainer.waitForExistence(timeout: 3), "Should start in list view")
 
         // WHEN: User toggles from list view to calendar view
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
@@ -219,12 +221,12 @@ final class CalendarNavigationUITests: XCTestCase {
         calendarToggleButton.tap()
 
         // THEN: Calendar view appears with smooth transition
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(
             calendarView.waitForExistence(timeout: 3), "Calendar view should appear after toggle")
 
         // THEN: List view is no longer visible
-        XCTAssertFalse(historyListView.exists, "List view should be hidden when calendar is shown")
+        XCTAssertFalse(historyContainer.exists, "List view should be hidden when calendar is shown")
 
         // WHEN: User toggles back to list view
         let listToggleButton = segmentedControl.buttons["List"]
@@ -233,7 +235,7 @@ final class CalendarNavigationUITests: XCTestCase {
 
         // THEN: List view appears with smooth transition
         XCTAssertTrue(
-            historyListView.waitForExistence(timeout: 3), "List view should reappear after toggle")
+            historyContainer.waitForExistence(timeout: 3), "List view should reappear after toggle")
 
         // THEN: Calendar view is no longer visible
         XCTAssertFalse(calendarView.exists, "Calendar view should be hidden when list is shown")
@@ -253,7 +255,7 @@ final class CalendarNavigationUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
 
         // Navigate to a future month that won't have any doses
@@ -261,7 +263,7 @@ final class CalendarNavigationUITests: XCTestCase {
             .firstMatch
         if !nextMonthButton.exists {
             // Fallback: Look for buttons with ">" or navigation symbols
-            let navButtons = app.buttons.matching(
+            let navButtons = app.otherElements.matching(
                 NSPredicate(format: "label CONTAINS '>' OR label CONTAINS 'next'"))
             XCTAssertGreaterThan(
                 navButtons.count, 0, "Should find navigation buttons for empty month test")
@@ -281,7 +283,13 @@ final class CalendarNavigationUITests: XCTestCase {
         let monthYearHeader = app.staticTexts["calendar-month-year"]
         if !monthYearHeader.exists {
             // Fallback: verify some month header exists by content
-            let monthTexts = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "2025"))
+            // Search for current or next year (handles Dec→Jan transition)
+            let currentYear = Calendar.current.component(.year, from: Date())
+            let nextYear = currentYear + 1
+            let monthTexts = app.staticTexts.matching(
+                NSPredicate(
+                    format: "label CONTAINS %@ OR label CONTAINS %@",
+                    String(currentYear), String(nextYear)))
             XCTAssertGreaterThan(
                 monthTexts.count, 0, "Month header should still be visible (fallback check)")
         } else {
@@ -289,7 +297,7 @@ final class CalendarNavigationUITests: XCTestCase {
         }
 
         // THEN: Calendar shows proper date layout without doses indicators
-        let calendarDays = app.buttons.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20, "Calendar should still show day buttons for empty month")
@@ -309,7 +317,7 @@ final class CalendarNavigationUITests: XCTestCase {
             .firstMatch
         if !prevMonthButton.exists {
             // Fallback: Look for buttons with "<" or previous navigation symbols
-            let prevNavButtons = app.buttons.matching(
+            let prevNavButtons = app.otherElements.matching(
                 NSPredicate(format: "label CONTAINS '<' OR label CONTAINS 'previous'")
             )
             XCTAssertGreaterThan(
@@ -331,8 +339,9 @@ final class CalendarNavigationUITests: XCTestCase {
             XCTAssertTrue(monthYearHeader.exists, "Month header should still be visible after navigation")
         } else {
             // Fallback: verify some month header exists by content after navigation back
+            let currentYear = Calendar.current.component(.year, from: Date())
             let monthTextsBack = app.staticTexts.matching(
-                NSPredicate(format: "label CONTAINS %@", "2025"))
+                NSPredicate(format: "label CONTAINS %@", String(currentYear)))
             XCTAssertGreaterThan(
                 monthTextsBack.count, 0,
                 "Month header should still be visible after navigation (fallback check)")

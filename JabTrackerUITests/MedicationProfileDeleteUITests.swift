@@ -22,9 +22,13 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         // Verify historical doses exist
         TestUtilities.navigateToHistory(app)
 
-        let historyList = app.collectionViews["dose-history-list"]
-        XCTAssertTrue(historyList.waitForExistence(timeout: 5.0))
-        let initialDoseCount = historyList.cells.count
+        // Wait for history container (ShotsView wrapper)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        XCTAssertTrue(historyContainer.waitForExistence(timeout: 5.0))
+
+        // Count dose rows using the proper utility
+        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let initialDoseCount = initialDoseRows.count
         print("📊 Initial dose count: \(initialDoseCount)")
         XCTAssertTrue(initialDoseCount > 0, "Should have dose history (90 days)")
 
@@ -66,8 +70,10 @@ final class MedicationProfileDeleteUITests: XCTestCase {
 
         // Verify historical doses are PRESERVED
         TestUtilities.navigateToHistory(app)
-        XCTAssertTrue(historyList.waitForExistence(timeout: 3.0))
-        let finalDoseCount = historyList.cells.count
+        XCTAssertTrue(historyContainer.waitForExistence(timeout: 3.0))
+
+        let finalDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let finalDoseCount = finalDoseRows.count
         print("📊 Final dose count: \(finalDoseCount)")
         XCTAssertEqual(
             finalDoseCount,
@@ -75,7 +81,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
             "Historical doses should be preserved after disable")
 
         // Verify analytics data still exists (doses preserved)
-        TestUtilities.navigateToTab(app, tabName: "Shots")
+        TestUtilities.navigateToConcentration(app)
         let chart = app.otherElements["concentration-timeline-chart"].firstMatch
         XCTAssertTrue(
             chart.waitForExistence(timeout: 10.0),
@@ -98,14 +104,16 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         // Verify historical data exists in History tab
         TestUtilities.navigateToHistory(app)
 
-        let historyList = app.collectionViews["dose-history-list"]
-        XCTAssertTrue(historyList.waitForExistence(timeout: 5.0))
-        let initialDoseCount = historyList.cells.count
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        XCTAssertTrue(historyContainer.waitForExistence(timeout: 5.0))
+
+        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let initialDoseCount = initialDoseRows.count
         print("📊 Dose count in history: \(initialDoseCount)")
         XCTAssertTrue(initialDoseCount > 0, "Should have dose history (90 days)")
 
         // Verify analytics data exists
-        TestUtilities.navigateToTab(app, tabName: "Shots")
+        TestUtilities.navigateToConcentration(app)
         let chart = app.otherElements["concentration-timeline-chart"].firstMatch
         XCTAssertTrue(chart.waitForExistence(timeout: 10.0), "Chart should exist with historical data")
 
@@ -127,7 +135,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         deleteButton.tap()
 
         // Confirm permanent deletion using accessibility identifier
-        let deletePermanentlyButton = app.buttons["delete-permanently-button"]
+        let deletePermanentlyButton = app.buttons["delete-permanently-button"].firstMatch
         XCTAssertTrue(deletePermanentlyButton.waitForExistence(timeout: 3.0))
         deletePermanentlyButton.tap()
 
@@ -191,11 +199,11 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         let deletePermanentlyButton = app.buttons["delete-permanently-button"]
         XCTAssertTrue(deletePermanentlyButton.exists, "Should have 'Delete Permanently' button")
 
-        let cancelButton = app.buttons["cancel-delete-button"]
-        XCTAssertTrue(cancelButton.exists, "Should have 'Cancel' button")
-
-        // Click Cancel
-        cancelButton.tap()
+        // Note: SwiftUI confirmationDialog on iPhone doesn't render .cancel role buttons visibly
+        // Instead, tap outside the dialog to dismiss it
+        // Tap at the top of the screen (above the dialog) to cancel
+        let topCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        topCoordinate.tap()
 
         // Verify profile still exists and is still active (no Disabled badge)
         XCTAssertTrue(

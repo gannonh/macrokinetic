@@ -37,7 +37,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -59,7 +59,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -81,7 +81,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -103,7 +103,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -125,7 +125,7 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing

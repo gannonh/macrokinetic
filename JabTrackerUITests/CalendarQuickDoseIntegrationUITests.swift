@@ -39,7 +39,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for QuickDoseSheet pre-population testing
@@ -61,7 +61,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for indicator update testing
@@ -83,7 +83,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for modified dose logging testing
@@ -107,7 +107,7 @@ final class CalendarQuickDoseIntegrationUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for multi-medication testing

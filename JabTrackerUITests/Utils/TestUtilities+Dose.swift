@@ -180,8 +180,8 @@ extension TestUtilities {
         // Check for segmented control to switch to list mode if in calendar mode
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         if segmentedControl.waitForExistence(timeout: 2) {
-            let calendarContainer = app.descendants(matching: .any)["dose-calendar-view"]
-            let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+            let calendarContainer = app.descendants(matching: .any)["dose-calendar-container"]
+            let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
             if calendarContainer.exists || calendarView.exists {
                 // Button is labeled "List" based on HistoryMode.list.rawValue
                 let listToggle = segmentedControl.buttons["List"]

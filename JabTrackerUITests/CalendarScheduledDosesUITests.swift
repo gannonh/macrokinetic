@@ -41,7 +41,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         XCTAssertTrue(calendarToggleButton.exists, "Calendar toggle should be available")
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
 
         // THEN: Scheduled dose indicators appear on appropriate calendar days
@@ -80,7 +80,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render dose indicators
@@ -118,7 +118,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render
@@ -149,7 +149,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render
@@ -181,7 +181,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render
@@ -215,7 +215,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to render and load scheduled doses
@@ -263,7 +263,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let startTime = Date()
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render with dose indicators
@@ -308,7 +308,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let startTime = Date()
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render current month

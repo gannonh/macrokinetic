@@ -71,8 +71,8 @@ schemes:
         - name: JabTrackerTests
           parallelizable: false
         - name: JabTrackerUITests
-          parallelizable: false
-          randomExecutionOrder: false
+          parallelizable: true
+          randomExecutionOrder: true
       commandLineArguments:
         "--bypass-onboarding": true
         "--force-onboarding": false
@@ -85,11 +85,11 @@ schemes:
     run:
       commandLineArguments:
         "--force-onboarding": false 
-        "--reset-app-data": false
+        "--reset-app-data": true # seeding only works if true
         "--ui-testing": true # Enable to bypass auth
         "--seed-test-7d": false
         "--seed-test-30d": false
         "--seed-test-90d": false
-        "--seed-test-1y": false
+        "--seed-test-1y": true
         "--test-titration-data": false
       storeKitConfiguration: JabTrackerStoreKit.storekit
