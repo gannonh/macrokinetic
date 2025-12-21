@@ -19,6 +19,7 @@ final class CalendarDisplayUITests: XCTestCase {
         // GIVEN: App is open to History tab
         let app = TestUtilities.launchAppWithTestMode()
         TestUtilities.navigateToHistoryView(in: app)
+        TestUtilities.debugScreenshot(app, step: 1, description: "history-view-loaded")
 
         // WHEN: User taps calendar view toggle
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
@@ -30,8 +31,9 @@ final class CalendarDisplayUITests: XCTestCase {
         calendarToggleButton.tap()
 
         // THEN: Calendar view appears with current month layout
-        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"].firstMatch
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
+        TestUtilities.debugScreenshot(app, step: 2, description: "calendar-view-displayed")
 
         // THEN: Current month header is displayed
         let monthYearHeader = app.staticTexts["calendar-month-year"]
@@ -56,12 +58,13 @@ final class CalendarDisplayUITests: XCTestCase {
 
         // THEN: Today's date is clearly highlighted
         let todayDay = Calendar.current.component(.day, from: Date())
-        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"]
+        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"].firstMatch
         XCTAssertTrue(todayButton.exists, "Today's date button should exist in calendar")
 
         // THEN: Calendar displays proper date grid layout
-        let calendarDays = app.otherElements.matching(
+        let calendarDays = app.descendants(matching: .any).matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
+        TestUtilities.debugScreenshot(app, step: 3, description: "calendar-days-count-\(calendarDays.count)")
         XCTAssertGreaterThan(
             calendarDays.count, 20, "Calendar should show multiple day buttons for the month")
         XCTAssertLessThan(calendarDays.count, 50, "Calendar should not show excessive day buttons")
@@ -76,18 +79,20 @@ final class CalendarDisplayUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"].firstMatch
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
+        TestUtilities.debugScreenshot(app, step: 1, description: "calendar-for-today-highlight")
 
         // WHEN: Current month contains today's date
         let todayDay = Calendar.current.component(.day, from: Date())
-        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"]
+        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"].firstMatch
 
         // THEN: Today's date has distinct visual highlighting
         XCTAssertTrue(todayButton.exists, "Today's date button should exist and be visible")
 
         // Verify today's accessibility label includes "today" indication
         let accessibilityLabel = todayButton.label
+        TestUtilities.debugScreenshot(app, step: 2, description: "today-label-\(accessibilityLabel.prefix(20))")
         // The CalendarDayView adds ", today" to the accessibility label for today's date
         XCTAssertTrue(
             accessibilityLabel.lowercased().contains("today"),
@@ -96,7 +101,7 @@ final class CalendarDisplayUITests: XCTestCase {
         // THEN: Highlighting distinguishes from other date states
         // Test that other dates don't have "today" in their label
         let tomorrowDay = Calendar.current.component(.day, from: Date().addingTimeInterval(86400))
-        let tomorrowButton = app.descendants(matching: .any)["calendar-day-\(tomorrowDay)"]
+        let tomorrowButton = app.descendants(matching: .any)["calendar-day-\(tomorrowDay)"].firstMatch
 
         if tomorrowButton.exists {
             let tomorrowLabel = tomorrowButton.label
@@ -110,14 +115,16 @@ final class CalendarDisplayUITests: XCTestCase {
         // GIVEN: User has doses recorded
         let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 5)
         TestUtilities.navigateToHistoryView(in: app)
+        TestUtilities.debugScreenshot(app, step: 1, description: "history-with-doses")
 
         // WHEN: Calendar is displayed
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"].firstMatch
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
+        TestUtilities.debugScreenshot(app, step: 2, description: "calendar-with-dose-indicators")
 
         // THEN: Verify calendar can display dose indicators
         // Note: Full implementation would test different indicator styles for:
@@ -127,7 +134,7 @@ final class CalendarDisplayUITests: XCTestCase {
 
         // For now, just verify the calendar properly shows dates with doses
         let todayDay = Calendar.current.component(.day, from: Date())
-        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"]
+        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"].firstMatch
         XCTAssertTrue(todayButton.exists, "Today with doses should be accessible")
     }
 
@@ -137,14 +144,16 @@ final class CalendarDisplayUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         TestUtilities.navigateToHistoryView(in: app)
+        TestUtilities.debugScreenshot(app, step: 1, description: "history-seeded-30d")
 
         // WHEN: Calendar displays dose indicators
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"].firstMatch
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
+        TestUtilities.debugScreenshot(app, step: 2, description: "calendar-injection-site-colors")
 
         // THEN: Verify doses are properly displayed
         // Note: Full implementation would:
@@ -153,8 +162,9 @@ final class CalendarDisplayUITests: XCTestCase {
         // - Test accessibility labels include site information
 
         // For now, verify the calendar renders without issues
-        let calendarDays = app.otherElements.matching(
+        let calendarDays = app.descendants(matching: .any).matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
+        TestUtilities.debugScreenshot(app, step: 3, description: "calendar-days-count-\(calendarDays.count)")
         XCTAssertGreaterThan(calendarDays.count, 0, "Calendar should display dates")
     }
 
@@ -163,6 +173,7 @@ final class CalendarDisplayUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
         TestUtilities.navigateToHistoryView(in: app)
+        TestUtilities.debugScreenshot(app, step: 1, description: "history-seeded-data")
 
         // WHEN: User views calendar
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
@@ -172,8 +183,9 @@ final class CalendarDisplayUITests: XCTestCase {
         let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"].firstMatch
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
+        TestUtilities.debugScreenshot(app, step: 2, description: "calendar-with-dose-indicators")
 
         // THEN: Dates with doses show visual indicators
         // Wait for calendar to load dose indicators
@@ -189,7 +201,7 @@ final class CalendarDisplayUITests: XCTestCase {
         // If indicators aren't found by identifier, check that today's date has visual content
         // (since our test creates doses on today's date)
         let todayDay = Calendar.current.component(.day, from: Date())
-        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"]
+        let todayButton = app.descendants(matching: .any)["calendar-day-\(todayDay)"].firstMatch
         XCTAssertTrue(todayButton.exists, "Today's date should exist in calendar")
 
         // THEN: Dates without doses appear as normal calendar days
@@ -200,7 +212,7 @@ final class CalendarDisplayUITests: XCTestCase {
             return
         }
         let tomorrowDay = calendar.component(.day, from: tomorrow)
-        let tomorrowButton = app.descendants(matching: .any)["calendar-day-\(tomorrowDay)"]
+        let tomorrowButton = app.descendants(matching: .any)["calendar-day-\(tomorrowDay)"].firstMatch
 
         if tomorrowButton.exists {
             // Tomorrow should exist and not have dose indicators (since we only created today's doses)
@@ -208,12 +220,14 @@ final class CalendarDisplayUITests: XCTestCase {
         }
 
         // Verify we can distinguish between dates with and without doses by tapping
+        TestUtilities.debugScreenshot(app, step: 3, description: "before-tap-today")
         todayButton.tap()
-        let dateDetailView = app.descendants(matching: .any)["dose-day-detail-view"]
+        let dateDetailView = app.descendants(matching: .any)["dose-day-detail-view"].firstMatch
         XCTAssertTrue(
             dateDetailView.waitForExistence(timeout: 3), "Date detail should open for date with doses")
+        TestUtilities.debugScreenshot(app, step: 4, description: "dose-detail-view")
 
-        let doseList = app.descendants(matching: .any)["dose-list"]
+        let doseList = app.descendants(matching: .any)["dose-list"].firstMatch
         XCTAssertTrue(doseList.exists, "Should show dose list for date with doses")
 
         // Close detail view

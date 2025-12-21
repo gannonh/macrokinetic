@@ -53,7 +53,7 @@ struct CalendarDayView: View {
             // Stream B: Handle long-press for scheduled doses
             handleLongPress()
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
         .accessibilityIdentifier("calendar-day-\(self.dayNumber)")
         .accessibilityLabel(self.accessibilityLabel)
         .accessibilityHint(self.accessibilityHint)
