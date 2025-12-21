@@ -107,12 +107,20 @@ struct ContentView: View {
             if newValue == .add {
                 logger.debug("Add tab selected")
 
-                // Show shortcuts sheet
-                showingShortcuts = true
-
                 // Reset tab selection to previous tab so + doesn't stay selected
                 self.selectedTab = oldValue
                 logger.debug("Reset tab selection back to \(oldValue.rawValue)")
+
+                // Check for pending titration first
+                if quickDoseViewModel.shouldShowTitrationDialog() {
+                    logger.debug("Pending titration found - showing titration dialog")
+                    pendingTitration = quickDoseViewModel.getPendingTitration()
+                    showingTitrationDialog = true
+                } else {
+                    // No pending titration - show shortcuts sheet
+                    logger.debug("No pending titration - showing shortcuts sheet")
+                    showingShortcuts = true
+                }
             }
         }
         .sheet(isPresented: $showingShortcuts) {

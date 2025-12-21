@@ -7,6 +7,7 @@ extension SubscriptionUITests {
         self.advanceWelcome(app)
         self.selectMedication(app)
         self.selectDose(app)
+        self.handleScheduleSetup(app)  // NEW: Schedule setup step
         self.handleNotifications(app)
         self.handleHealthKit(app)
         self.assertSubscriptionScreen(app)
@@ -35,29 +36,118 @@ extension SubscriptionUITests {
         }
     }
 
-    func handleNotifications(_ app: XCUIApplication) {
-        if app.buttons["enable-notifications-button"].waitForExistence(timeout: 3) {
-            app.buttons["enable-notifications-button"].tap()
+    func handleScheduleSetup(_ app: XCUIApplication) {
+        // Schedule Setup screen - just tap Continue to accept defaults
+        TestUtilities.debugScreenshot(app, step: 7, description: "before-schedule-setup")
+        usleep(500_000)
+
+        let continueButton = app.buttons["onboarding-continue-button"]
+        if continueButton.waitForExistence(timeout: 3) && continueButton.isHittable {
+            print("DEBUG: Tapping Continue on Schedule Setup")
+            continueButton.tap()
+            usleep(500_000)
         }
-        let continueFromNotifications = app.buttons["onboarding-continue-button"]
-        if continueFromNotifications.waitForExistence(timeout: 3) {
-            continueFromNotifications.tap()
+    }
+
+    func handleNotifications(_ app: XCUIApplication) {
+        // Debug screenshot
+        TestUtilities.debugScreenshot(app, step: 8, description: "before-notifications")
+        usleep(500_000)
+
+        // PrimaryButton/SecondaryButton have hardcoded accessibilityIdentifier,
+        // so we must use NSPredicate to query by label
+        let enableButton = app.buttons.matching(
+            NSPredicate(format: "label == 'Enable Notifications'")
+        ).firstMatch
+        let skipButton = app.buttons.matching(
+            NSPredicate(format: "label == 'Not Now'")
+        ).firstMatch
+
+        print("DEBUG Notifications: Enable=\(enableButton.exists), Skip=\(skipButton.exists)")
+
+        // Skip to avoid system notification prompt
+        if skipButton.waitForExistence(timeout: 3) && skipButton.isHittable {
+            print("DEBUG: Tapping Not Now")
+            skipButton.tap()
+            usleep(500_000)
+            TestUtilities.debugScreenshot(app, step: 9, description: "after-skip-notifications")
+        } else if enableButton.waitForExistence(timeout: 2) && enableButton.isHittable {
+            print("DEBUG: Tapping Enable Notifications")
+            enableButton.tap()
+            usleep(800_000)
+        } else {
+            print("DEBUG: Neither Notifications button found")
+            TestUtilities.debugScreenshot(app, step: 9, description: "notifications-buttons-not-found")
+        }
+
+        // Tap Continue if needed
+        let continueButton = app.buttons["onboarding-continue-button"]
+        if continueButton.waitForExistence(timeout: 2) && continueButton.isHittable {
+            continueButton.tap()
+            usleep(500_000)
         }
     }
 
     func handleHealthKit(_ app: XCUIApplication) {
-        if app.buttons["enable-healthkit-button"].waitForExistence(timeout: 3) {
-            app.buttons["enable-healthkit-button"].tap()
+        // Debug screenshot
+        TestUtilities.debugScreenshot(app, step: 10, description: "before-healthkit")
+        usleep(500_000)
+
+        // PrimaryButton/SecondaryButton have hardcoded accessibilityIdentifier,
+        // so we must use NSPredicate to query by label
+        let enableButton = app.buttons.matching(
+            NSPredicate(format: "label == 'Connect Health Data'")
+        ).firstMatch
+        let skipButton = app.buttons.matching(
+            NSPredicate(format: "label == 'Skip for Now'")
+        ).firstMatch
+
+        print("DEBUG HealthKit: Enable=\(enableButton.exists), Skip=\(skipButton.exists)")
+
+        // Skip to avoid system HealthKit prompt
+        if skipButton.waitForExistence(timeout: 3) && skipButton.isHittable {
+            print("DEBUG: Tapping Skip for Now")
+            skipButton.tap()
+            usleep(500_000)
+            TestUtilities.debugScreenshot(app, step: 11, description: "after-skip-healthkit")
+        } else if enableButton.waitForExistence(timeout: 2) && enableButton.isHittable {
+            print("DEBUG: Tapping Connect Health Data")
+            enableButton.tap()
+            usleep(800_000)
+        } else {
+            print("DEBUG: Neither HealthKit button found")
+            TestUtilities.debugScreenshot(app, step: 12, description: "healthkit-buttons-not-found")
         }
-        let continueFromHealthKit = app.buttons["onboarding-continue-button"]
-        if continueFromHealthKit.waitForExistence(timeout: 3) {
-            continueFromHealthKit.tap()
+
+        // Tap Continue if needed
+        let continueButton = app.buttons["onboarding-continue-button"]
+        if continueButton.waitForExistence(timeout: 2) && continueButton.isHittable {
+            print("DEBUG: Tapping Continue after HealthKit")
+            continueButton.tap()
+            usleep(500_000)
         }
     }
 
     func assertSubscriptionScreen(_ app: XCUIApplication) {
+        // Debug screenshot to see current state
+        TestUtilities.debugScreenshot(app, step: 1, description: "asserting-subscription-screen")
+
+        // Look for subscription screen indicator
+        let subscriptionView = app.descendants(matching: .any)["subscription-view"]
+        let premiumTitle = app.staticTexts["JabTracker Premium"]
+
+        let foundSubscriptionScreen =
+            subscriptionView.waitForExistence(timeout: 5)
+            || premiumTitle.waitForExistence(timeout: 2)
+
+        if !foundSubscriptionScreen {
+            // Additional debug screenshot on failure
+            TestUtilities.debugScreenshot(app, step: 2, description: "subscription-screen-not-found")
+            print("DEBUG: View hierarchy: \(app.debugDescription)")
+        }
+
         XCTAssertTrue(
-            app.staticTexts["JabTracker Premium"].waitForExistence(timeout: 5),
+            foundSubscriptionScreen,
             "Should reach subscription screen after completing onboarding flow")
     }
 

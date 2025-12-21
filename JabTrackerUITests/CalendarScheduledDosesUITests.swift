@@ -47,8 +47,8 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         // THEN: Scheduled dose indicators appear on appropriate calendar days
         // Wait for calendar to load dose indicators
 
-        // Look for dose indicators on calendar days (rendered as StaticText elements)
-        let calendarDays = app.staticTexts.matching(
+        // Look for calendar day elements (SwiftUI views exposed as otherElements)
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,
@@ -58,7 +58,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         // With 30 days of test data, we should have some doses visible
         // The calendar should render without crashing
         let todayDay = Calendar.current.component(.day, from: Date())
-        let todayElement = app.staticTexts["calendar-day-\(todayDay)"]
+        let todayElement = app.descendants(matching: .any)["calendar-day-\(todayDay)"].firstMatch
         XCTAssertTrue(todayElement.exists, "Today's date element should exist in calendar")
 
         print("✅ Calendar view displays with dose indicators")
@@ -234,7 +234,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         XCTAssertTrue(calendarView.exists, "Calendar should render and auto-refresh with scheduled doses")
 
         // Verify calendar shows month with dose data
-        let calendarDays = app.staticTexts.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,
@@ -279,7 +279,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
 
         // THEN: Performance remains acceptable with large dataset
         // Verify calendar successfully rendered with dose data
-        let calendarDays = app.staticTexts.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,
@@ -322,7 +322,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
             "Calendar should render quickly with lazy loading (not calculating all future months)")
 
         // THEN: Current month displays scheduled doses correctly
-        let calendarDays = app.staticTexts.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,

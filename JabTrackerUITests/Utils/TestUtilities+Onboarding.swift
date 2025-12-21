@@ -71,7 +71,7 @@ extension TestUtilities {
 
             XCTAssertTrue(
                 allowButtonExists,
-                "System notification permission dialog MUST appear when granting notifications. Dialog not appearing indicates test setup issue - simulator permissions may need reset."
+                "System notification permission dialog MUST appear when granting notifications. Dialog not appearing indicates test setup issue - simulator permissions may need reset. Run: xcrun simctl privacy booted reset notifications com.gannonhall.JabTracker"
             )
 
             // Tap Allow button - automatically advances to HealthKit

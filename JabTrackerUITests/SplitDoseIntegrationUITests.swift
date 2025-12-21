@@ -66,11 +66,54 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         // Wait for sheet to appear
         usleep(1_000_000)  // 1 second for sheet animation
 
-        // Wait for Quick Dose sheet to appear
+        // Debug screenshot
+        TestUtilities.debugScreenshot(app, step: 1, description: "after-add-tap")
+
+        // Wait for Quick Dose sheet or ShortcutsSheet to appear
+        // Note: Recent UI changes changed the + button to show ShortcutsSheet
         let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+
+        // Check if ShortcutsSheet appeared (has "Shortcuts" title)
+        let shortcutsTitle = app.staticTexts["Shortcuts"]
+        if shortcutsTitle.waitForExistence(timeout: 2) {
+            // ShortcutsSheet appeared - tap "Shots" button in the shortcuts sheet (not tab bar)
+            // The sheet has buttons in a grid: Search, Barcode, Photo, Shots
+            // Use an identifier-based query to avoid tab bar conflict
+            let shotsButtonInSheet = app.buttons.matching(
+                NSPredicate(format: "label == 'Shots' AND identifier != 'Shots'")
+            ).firstMatch
+            if shotsButtonInSheet.waitForExistence(timeout: 2) && shotsButtonInSheet.isHittable {
+                shotsButtonInSheet.tap()
+                usleep(500_000)
+                TestUtilities.debugScreenshot(app, step: 2, description: "after-shots-button-tap")
+            } else {
+                // Try the direct quick dose action
+                let logDoseButton = app.buttons["shortcut-log-dose"]
+                if logDoseButton.waitForExistence(timeout: 2) {
+                    logDoseButton.tap()
+                    usleep(500_000)
+                } else {
+                    // Last resort - tap the first Shots button that isn't the tab bar
+                    let shotsButtonsQuery = app.buttons.matching(
+                        NSPredicate(format: "label == 'Shots'"))
+                    if shotsButtonsQuery.count > 1 {
+                        // Second button should be in the sheet (first is tab bar)
+                        let sheetShotsButton = shotsButtonsQuery.element(boundBy: 1)
+                        if sheetShotsButton.isHittable {
+                            sheetShotsButton.tap()
+                            usleep(500_000)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Verify we're now on a dose entry interface
+        let quickDoseExists = quickDoseSheet.waitForExistence(timeout: 3)
+
         XCTAssertTrue(
-            quickDoseSheet.waitForExistence(timeout: 3),
-            "Quick Dose sheet should appear after tapping + button")
+            quickDoseExists,
+            "Quick Dose sheet should appear after navigating through Shortcuts")
 
         // THEN: Dose amount shows 0.5mg (half of 1.0mg weekly dose)
         // QuickDoseEntry displays dose amount with accessibility identifier "quick-dose-amount"

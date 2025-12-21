@@ -46,12 +46,12 @@ final class DoseHistoryStatesUITests: XCTestCase {
         XCTAssertEqual(doseRows.count, 0, "No dose rows should exist in empty state")
 
         // Verify we're still on the History view
-        // In empty state, there may not be a collection view, but there should be elements with
-        // dose-history-list identifier
-        let historyElements = app.descendants(matching: .any).matching(identifier: "dose-history-list")
+        // The container is "dose-history-container" (from ShotsView) and the view is "dose-history-view"
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
         XCTAssertTrue(
-            historyElements.count > 0,
-            "Should have dose-history-list elements indicating we're on history view")
+            historyContainer.exists || historyView.exists,
+            "Should be on history view (dose-history-container or dose-history-view)")
     }
 
     func test_doseHistory_addFirstDose() throws {
@@ -114,18 +114,12 @@ final class DoseHistoryStatesUITests: XCTestCase {
         XCTAssertTrue(sheetDismissed, "Quick dose sheet should dismiss after saving")
 
         // THEN: Dose should be displayed in history
-        // Verify we're back on history view
-        let historyView = app.collectionViews["dose-history-list"]
-        let historyViewExists = historyView.waitForExistence(timeout: 3)
-
-        // If collection view doesn't exist, check for any dose-history-list elements
-        if !historyViewExists {
-            let historyElements = app.descendants(matching: .any).matching(
-                identifier: "dose-history-list")
-            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
-        } else {
-            XCTAssertTrue(historyViewExists, "Should return to history view after adding dose")
-        }
+        // Verify we're back on history view (dose-history-container or dose-history-view)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(
+            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
+            "Should return to history view after adding dose")
 
         // Verify the dose is now displayed (no more empty state)
         let doseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -271,18 +265,12 @@ final class DoseHistoryStatesUITests: XCTestCase {
         // Cancel the edit to close the sheet
         cancelButton.tap()
 
-        // Verify we're back on the History view
-        let historyView = app.collectionViews["dose-history-list"]
-        let historyViewExists = historyView.waitForExistence(timeout: 3)
-
-        // If collection view doesn't exist, check for any dose-history-list elements
-        if !historyViewExists {
-            let historyElements = app.descendants(matching: .any).matching(
-                identifier: "dose-history-list")
-            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
-        } else {
-            XCTAssertTrue(historyViewExists, "Should return to history view after canceling edit")
-        }
+        // Verify we're back on the History view (dose-history-container or dose-history-view)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(
+            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
+            "Should return to history view after canceling edit")
     }
 
     func test_doseHistory_visualIndicatorsForSkippedDoses() throws {

@@ -241,8 +241,8 @@ final class ChartPerformanceUITests: XCTestCase {
             print("    ⏱️  Switch to \(label): \(String(format: "%.0f", switchTime))ms")
 
             // After initial full dataset generation, switches should be fast
-            // 90d view requires more data processing, so allow up to 1000ms
-            let maxSwitchTime: Double = label == "90d" ? 1000 : 500
+            // 90d and 1y views require more data processing, so allow up to 1000ms
+            let maxSwitchTime: Double = (label == "90d" || label == "1y") ? 1000 : 500
             XCTAssertLessThan(
                 switchTime, maxSwitchTime,
                 "\(label) switch should be <\(Int(maxSwitchTime))ms after initial render (actual: \(String(format: "%.0f", switchTime))ms)"

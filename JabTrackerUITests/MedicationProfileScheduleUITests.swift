@@ -274,26 +274,20 @@ final class MedicationProfileScheduleUITests: XCTestCase {
             "Deactivate schedule button should exist")
         deactivateScheduleButton.tap()
 
-        // THEN: Confirmation dialog appears
-        // Wait for dialog to present
-        usleep(500_000)  // 0.5 seconds
+        // THEN: Confirmation dialog appears (SwiftUI confirmationDialog popover)
+        // Wait for the dialog to appear - the "Deactivate Schedule" button in the popover
+        let dialogDeactivateButton = app.buttons.matching(
+            NSPredicate(format: "label == 'Deactivate Schedule' AND identifier == ''")
+        ).firstMatch
+        XCTAssertTrue(
+            dialogDeactivateButton.waitForExistence(timeout: 3),
+            "Confirmation dialog should appear")
 
-        // WHEN: User taps "Cancel"
-        // Confirmation dialog buttons don't have identifiers, find by label
-        let allButtons = app.buttons
-        var cancelButton: XCUIElement?
-
-        // Find button with "Cancel" label that has no identifier (dialog button)
-        for index in 0..<allButtons.count {
-            let button = allButtons.element(boundBy: index)
-            if button.label == "Cancel" && button.identifier == "" {
-                cancelButton = button
-                break
-            }
-        }
-
-        XCTAssertNotNil(cancelButton, "Cancel button should exist in confirmation dialog")
-        cancelButton?.tap()
+        // WHEN: User taps outside the dialog to dismiss it (cancel action)
+        // The confirmation dialog doesn't have an explicit Cancel button - user dismisses by tapping outside
+        // Tap on the background area (the view behind the popover)
+        let backgroundCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9))
+        backgroundCoordinate.tap()
 
         // THEN: Dialog dismisses, schedule remains active
         let editScheduleButton = app.buttons["edit-schedule-button"]
