@@ -5,7 +5,10 @@ options:
     iOS: "17.0"
   defaultConfig: Debug
   createIntermediateGroups: true
-  xcodeVersion: "16.4"
+  xcodeVersion: "26.2"
+  fileTypes:
+    "icon":
+      file: true
 settings:
   base:
     ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: YES
@@ -22,10 +25,12 @@ targets:
     sources:
       - path: JabTracker
         excludes:
-          - "*.xcassets"
           - "**/.swiftlint.yml"
     resources:
       - path: JabTracker/Assets.xcassets
+        optional: true
+      - path: JabTracker/AppIcon.icon
+        optional: true
       - path: JabTracker/Resources/usda_foods.sqlite
       - path: JabTrackerStoreKit.storekit
     settings:
