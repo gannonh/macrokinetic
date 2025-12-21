@@ -152,9 +152,9 @@ final class MedicationProfileDeleteUITests: XCTestCase {
             "History should be empty after permanent delete (cascade delete removes all doses)")
 
         // Verify analytics data is also gone
-        TestUtilities.navigateToTab(app, tabName: "Shots")
+        TestUtilities.navigateToConcentration(app)
         // Chart should not exist or show empty state
-        let emptyAnalyticsMessage = app.staticTexts["No Analytics Data"]
+        let emptyAnalyticsMessage = app.staticTexts["No Data Yet"]
         XCTAssertTrue(
             emptyAnalyticsMessage.waitForExistence(timeout: 5.0) || !chart.exists,
             "Analytics should be empty after permanent delete removes all doses")
@@ -262,8 +262,14 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         // Try to log a dose via Quick Add
         app.tabBars.buttons["Add"].tap()
 
-        // Use debug utilities to find the medication picker
-        TestUtilities.debugElements(in: app, containing: "medication")
+        // Wait for ShortcutsSheet to appear
+        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
+        XCTAssertTrue(shortcutsSheet.waitForExistence(timeout: 3.0), "Shortcuts sheet should appear")
+
+        // Tap "Shots" shortcut to open Quick Dose Sheet
+        let shotsButton = app.buttons["shortcut-button-shots"]
+        XCTAssertTrue(shotsButton.waitForExistence(timeout: 3.0), "Shots shortcut button should exist")
+        shotsButton.tap()
 
         // Quick dose sheet should show "No medication profiles found" error
         // because disabled profiles are filtered out
@@ -409,14 +415,20 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
         saveButton.tap()
 
-        // Go to Analytics tab
-        TestUtilities.navigateToTab(app, tabName: "Shots")
+        // Go to Shots tab - Concentration segment (default)
+        TestUtilities.navigateToConcentration(app)
 
-        // Should show "No Analytics Data" message (not infinite loading spinner)
-        let emptyStateMessage = app.staticTexts["No Analytics Data"]
+        // Should show "No Data Yet" empty state (not infinite loading spinner)
+        let emptyStateMessage = app.staticTexts["No Data Yet"]
         XCTAssertTrue(
             emptyStateMessage.waitForExistence(timeout: 10.0),
             "Should show empty state message for new profile with no doses")
+
+        // Verify subtitle is also present
+        let emptyStateSubtitle = app.staticTexts["Start tracking doses to see your analytics"]
+        XCTAssertTrue(
+            emptyStateSubtitle.exists,
+            "Should show empty state subtitle")
 
         // Should NOT show loading spinner indefinitely
         let loadingSpinner = app.staticTexts["Generating Concentration Chart..."]
