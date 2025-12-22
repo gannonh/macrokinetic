@@ -2,7 +2,7 @@
 //  FoodLogView.swift
 //  JabTracker
 //
-//  Today's food log with meal sections.
+//  Today's food log with meal sections and swipe actions.
 //
 
 import SwiftData
@@ -16,12 +16,39 @@ private struct DailyTotals {
     let fat: Double
 }
 
+/// Meal section totals for headers
+private struct MealTotals {
+    let calories: Double
+    let protein: Double
+    let carbs: Double
+    let fat: Double
+
+    static let zero = MealTotals(calories: 0, protein: 0, carbs: 0, fat: 0)
+
+    init(from entries: [FoodEntry]) {
+        self.calories = entries.reduce(0) { $0 + $1.calories }
+        self.protein = entries.reduce(0) { $0 + $1.protein }
+        self.carbs = entries.reduce(0) { $0 + $1.carbs }
+        self.fat = entries.reduce(0) { $0 + $1.fat }
+    }
+
+    init(calories: Double, protein: Double, carbs: Double, fat: Double) {
+        self.calories = calories
+        self.protein = protein
+        self.carbs = carbs
+        self.fat = fat
+    }
+}
+
 struct FoodLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
     @Query private var todayEntries: [FoodEntry]
 
     @State private var showingAddFood = false
+    @State private var entryToDelete: FoodEntry?
+    @State private var showingDeleteConfirmation = false
+    @State private var editingEntry: FoodEntry?
 
     init() {
         // Query entries for today
@@ -39,18 +66,20 @@ struct FoodLogView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // Daily summary card
+            List {
+                // Daily summary section
+                Section {
                     dailySummaryCard
-
-                    // Meal sections
-                    ForEach(MealSection.allCases) { section in
-                        mealSectionView(for: section)
-                    }
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                 }
-                .padding()
+
+                // Meal sections
+                ForEach(MealSection.allCases) { section in
+                    mealSection(for: section)
+                }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Food Log")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -71,6 +100,30 @@ struct FoodLogView: View {
                     ) {
                         showingAddFood = false
                     }
+                }
+            }
+            .sheet(item: $editingEntry) { entry in
+                EditFoodEntrySheet(
+                    entry: entry,
+                    mealLogService: AppServices.shared.mealLogService
+                ) {
+                    editingEntry = nil
+                }
+            }
+            .alert("Delete Entry?", isPresented: $showingDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    entryToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let entry = entryToDelete {
+                        Task {
+                            await deleteEntry(entry)
+                        }
+                    }
+                }
+            } message: {
+                if let entry = entryToDelete {
+                    Text("This will remove \(entry.foodName) from your log.")
                 }
             }
         }
@@ -97,6 +150,8 @@ struct FoodLogView: View {
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
 
     private func macroColumn(value: Double, label: String, color: Color) -> some View {
@@ -114,60 +169,80 @@ struct FoodLogView: View {
 
     // MARK: - Meal Sections
 
-    private func mealSectionView(for section: MealSection) -> some View {
+    @ViewBuilder
+    private func mealSection(for section: MealSection) -> some View {
         let entries = todayEntries.filter { $0.meal == section }
+        let totals = entries.isEmpty ? .zero : MealTotals(from: entries)
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: section.icon)
-                    .foregroundColor(.secondary)
-                Text(section.displayName)
-                    .font(.headline)
-                Spacer()
-                Text("\(Int(entries.reduce(0) { $0 + $1.calories })) cal")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-
+        Section {
             if entries.isEmpty {
                 Text("No items logged")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 8)
             } else {
                 ForEach(entries, id: \.id) { entry in
-                    foodEntryRow(entry)
+                    FoodEntryCardView(entry: entry)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button("Delete", role: .destructive) {
+                                entryToDelete = entry
+                                showingDeleteConfirmation = true
+                            }
+                            .accessibilityIdentifier("delete-entry-button")
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            Button("Edit") {
+                                editingEntry = entry
+                            }
+                            .tint(.blue)
+                            .accessibilityIdentifier("edit-entry-button")
+
+                            Button("Duplicate") {
+                                Task {
+                                    await duplicateEntry(entry)
+                                }
+                            }
+                            .tint(.green)
+                            .accessibilityIdentifier("duplicate-entry-button")
+                        }
+                        .accessibilityIdentifier("food-entry-row-\(entry.id.uuidString)")
                 }
             }
+        } header: {
+            mealSectionHeader(section: section, totals: totals)
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
     }
 
-    private func foodEntryRow(_ entry: FoodEntry) -> some View {
+    private func mealSectionHeader(section: MealSection, totals: MealTotals) -> some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.foodName)
-                    .font(.subheadline)
-                if let brand = entry.foodBrand, !brand.isEmpty {
-                    Text(brand)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+            HStack(spacing: 6) {
+                Image(systemName: section.icon)
+                Text(section.displayName)
+                    .font(.headline)
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(Int(entry.calories)) cal")
-                    .font(.subheadline)
-                Text("\(Int(entry.servingGrams))g")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            if totals.calories > 0 {
+                HStack(spacing: 8) {
+                    Text("\(Int(totals.protein))P \(Int(totals.fat))F \(Int(totals.carbs))C")
+                        .font(.caption)
+                        .foregroundColor(.cyan)
+
+                    HStack(spacing: 2) {
+                        Text("\(Int(totals.calories))")
+                            .font(.subheadline.weight(.medium))
+                        Image(systemName: "flame.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
             }
         }
-        .padding(.vertical, 4)
+        .textCase(nil)
     }
 
     // MARK: - Helpers
@@ -179,6 +254,44 @@ struct FoodLogView: View {
             carbs: todayEntries.reduce(0) { $0 + $1.carbs },
             fat: todayEntries.reduce(0) { $0 + $1.fat }
         )
+    }
+
+    private func deleteEntry(_ entry: FoodEntry) async {
+        guard let mealLogService = AppServices.shared.mealLogService else { return }
+        do {
+            try await mealLogService.deleteEntry(entry)
+            entryToDelete = nil
+        } catch {
+            // Entry deletion failed - could show error alert if needed
+        }
+    }
+
+    private func duplicateEntry(_ entry: FoodEntry) async {
+        guard let mealLogService = AppServices.shared.mealLogService else { return }
+
+        // Create a Food object from the entry data
+        let food = Food(
+            name: entry.foodName,
+            brand: entry.foodBrand ?? "",
+            caloriesPer100g: entry.caloriesPer100g,
+            proteinPer100g: entry.proteinPer100g,
+            carbsPer100g: entry.carbsPer100g,
+            fatPer100g: entry.fatPer100g,
+            fiberPer100g: entry.fiberPer100g,
+            servingSize: entry.servingGrams,
+            servingDescription: entry.servingDescription ?? ""
+        )
+
+        do {
+            _ = try await mealLogService.logFood(
+                food: food,
+                servingGrams: entry.servingGrams,
+                mealSection: entry.meal,
+                notes: entry.notes ?? ""
+            )
+        } catch {
+            // Duplicate failed - could show error alert if needed
+        }
     }
 }
 

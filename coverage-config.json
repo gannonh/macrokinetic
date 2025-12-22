@@ -226,6 +226,8 @@
       "Views/Nutrition/FoodSearchSheet+Sections.swift",
       "Views/Nutrition/SearchMethodTabs.swift",
       "Views/Nutrition/ServingInputView.swift",
+      "Views/Nutrition/EditFoodEntrySheet.swift",
+      "Views/Nutrition/FoodEntryCardView.swift",
       "Views/Shortcuts/ShortcutButton.swift",
       "Views/Shortcuts/ShortcutRowButton.swift",
       "Views/Shortcuts/ShortcutsSheet.swift",

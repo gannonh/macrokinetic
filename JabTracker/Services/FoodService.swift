@@ -309,8 +309,10 @@ final class FoodService {
         )
 
         Self.logger.debug(
-            "Categorized search for '\(trimmedQuery)': "
-                + "history=\(history.count), common=\(common.count), branded=\(branded.count)"
+            """
+            Categorized search for '\(trimmedQuery)': \
+            history=\(history.count), common=\(common.count), branded=\(branded.count)
+            """
         )
 
         return CategorizedSearchResults(

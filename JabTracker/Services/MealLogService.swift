@@ -147,11 +147,13 @@ final class MealLogService {
     ///   - entry: Entry to update
     ///   - servingGrams: New serving size (optional)
     ///   - mealSection: New meal section (optional)
+    ///   - loggedAt: New logged date/time (optional)
     ///   - notes: New notes (optional)
     func updateEntry(
         _ entry: FoodEntry,
         servingGrams: Double? = nil,
         mealSection: MealSection? = nil,
+        loggedAt: Date? = nil,
         notes: String? = nil
     ) async throws {
         if let servingGrams = servingGrams {
@@ -160,6 +162,10 @@ final class MealLogService {
 
         if let mealSection = mealSection {
             entry.meal = mealSection
+        }
+
+        if let loggedAt = loggedAt {
+            entry.loggedAt = loggedAt
         }
 
         if let notes = notes {

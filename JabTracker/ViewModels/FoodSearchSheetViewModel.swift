@@ -219,8 +219,10 @@ final class FoodSearchSheetViewModel {
                 brandedResults = results.brandedResults
 
                 Self.logger.debug(
-                    "Search complete: \(results.totalCount) results "
-                        + "(history=\(results.historyResults.count), common=\(results.commonResults.count))"
+                    """
+                    Search complete: \(results.totalCount) results \
+                    (history=\(results.historyResults.count), common=\(results.commonResults.count))
+                    """
                 )
             } catch {
                 guard !Task.isCancelled else { return }

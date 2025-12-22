@@ -31,6 +31,7 @@ struct FoodDetailSheet: View {
     @State var targetMacro: TargetMacro = .calories
     @State var targetValue: Double = 0
     @State var selectedUnit: ServingUnit = .item
+    @State private var notes: String = ""
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Constants
@@ -375,6 +376,11 @@ struct FoodDetailSheet: View {
             // Mode toggle and unit/macro selector
             modeAndUnitSelector
 
+            // Notes field
+            TextField("Add a note...", text: $notes)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("notes-input")
+
             // Meal picker and Add button
             HStack(spacing: 12) {
                 Picker("Meal", selection: $meal) {
@@ -434,7 +440,7 @@ struct FoodDetailSheet: View {
                 food: foodModel,
                 servingGrams: quantityInGrams,
                 mealSection: meal,
-                notes: "",
+                notes: notes,
                 loggedAt: selectedTime
             )
 
