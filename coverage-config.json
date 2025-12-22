@@ -59,7 +59,8 @@
           "Services/LocalFoodDatabase.swift",
           "Services/OpenFoodFactsService.swift",
           "Services/FoodService.swift",
-          "Services/MealLogService.swift"
+          "Services/MealLogService.swift",
+          "Services/CustomFoodService.swift"
         ]
       },
       "framework_integration": {

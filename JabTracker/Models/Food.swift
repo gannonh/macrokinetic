@@ -157,4 +157,42 @@ final class Food {
             servingSize: servingSize
         )
     }
+
+    // MARK: - Custom Food Support
+
+    /// Creates a custom food with source set to .userCreated
+    static func createCustom(
+        name: String,
+        brand: String = "",
+        caloriesPer100g: Double,
+        proteinPer100g: Double,
+        carbsPer100g: Double,
+        fatPer100g: Double,
+        fiberPer100g: Double = 0,
+        servingSize: Double = 100.0,
+        servingUnit: String = "g",
+        servingDescription: String = "",
+        barcode: String = ""
+    ) throws -> Food {
+        let food = try create(
+            name: name,
+            brand: brand,
+            caloriesPer100g: caloriesPer100g,
+            proteinPer100g: proteinPer100g,
+            carbsPer100g: carbsPer100g,
+            fatPer100g: fatPer100g,
+            fiberPer100g: fiberPer100g,
+            servingSize: servingSize
+        )
+        food.foodSource = .userCreated
+        food.servingUnit = servingUnit
+        food.servingDescription = servingDescription
+        food.barcode = barcode
+        return food
+    }
+
+    /// Whether this food is a user-created custom food
+    var isCustomFood: Bool {
+        foodSource == .userCreated
+    }
 }
