@@ -6,9 +6,14 @@
 //
 
 import SwiftUI
+import os
 
 /// View showing today's meals grouped by section
 struct MealLogView: View {
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "MealLogView"
+    )
     let user: User
     let mealLogService: MealLogService?
     let foodService: FoodService?
@@ -186,7 +191,7 @@ struct MealLogView: View {
             groupedEntries = try await service.getEntriesGroupedByMeal(for: today)
             totals = try await service.getDailyTotals(for: today)
         } catch {
-            // Handle error - show empty state
+            Self.logger.error("Failed to load meals: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -202,7 +207,7 @@ struct MealLogView: View {
             do {
                 try await service.deleteEntry(entry)
             } catch {
-                // Log error
+                Self.logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
             }
         }
 

@@ -283,6 +283,26 @@ struct MealLogServiceTests {
         #expect(entry.notes == "Updated note")
     }
 
+    @Test("Update entry modifies logged time")
+    func testUpdateEntryModifiesLoggedAt() async throws {
+        let context = createTestContext()
+        let service = MealLogService(context: context)
+
+        let originalTime = Date()
+        let entry = FoodEntry(
+            foodName: "Food",
+            mealSection: .breakfast,
+            loggedAt: originalTime
+        )
+        context.insert(entry)
+        try context.save()
+
+        let newTime = Calendar.current.date(byAdding: .hour, value: -2, to: originalTime)!
+        try await service.updateEntry(entry, loggedAt: newTime)
+
+        #expect(entry.loggedAt == newTime)
+    }
+
     // MARK: - Delete Entry Tests
 
     @Test("Delete entry removes from context")

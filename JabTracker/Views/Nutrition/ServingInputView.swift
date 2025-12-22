@@ -24,14 +24,7 @@ enum TargetMacro: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var displayName: String {
-        switch self {
-        case .calories: return "cal"
-        case .protein: return "P"
-        case .fat: return "F"
-        case .carbs: return "C"
-        }
-    }
+    var displayName: String { rawValue }
 
     var icon: String {
         switch self {
@@ -272,7 +265,7 @@ struct ServingInputView: View {
                 keypadButton("4")
                 keypadButton("5")
                 keypadButton("6")
-                keypadButton("−", action: { /* placeholder for future */  })
+                keypadButton("−", action: {})
             }
             HStack(spacing: 8) {
                 keypadButton("7")
@@ -283,7 +276,7 @@ struct ServingInputView: View {
             HStack(spacing: 8) {
                 keypadButton(".")
                 keypadButton("0")
-                keypadButton("Log Foods", wide: true, action: { /* placeholder */  })
+                keypadButton("Log Foods", wide: true, action: {})
                     .disabled(true)
             }
         }

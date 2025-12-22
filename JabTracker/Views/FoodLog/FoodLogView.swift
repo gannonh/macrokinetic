@@ -7,6 +7,13 @@
 
 import SwiftData
 import SwiftUI
+import os
+
+/// Logger for FoodLogView
+private let logger = Logger(
+    subsystem: "com.gannonhall.JabTracker",
+    category: "FoodLogView"
+)
 
 /// Daily macro totals for the summary card
 private struct DailyTotals {
@@ -262,7 +269,7 @@ struct FoodLogView: View {
             try await mealLogService.deleteEntry(entry)
             entryToDelete = nil
         } catch {
-            // Entry deletion failed - could show error alert if needed
+            logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
         }
     }
 
@@ -290,7 +297,7 @@ struct FoodLogView: View {
                 notes: entry.notes ?? ""
             )
         } catch {
-            // Duplicate failed - could show error alert if needed
+            logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
         }
     }
 }

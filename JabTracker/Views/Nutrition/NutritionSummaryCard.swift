@@ -6,9 +6,14 @@
 //
 
 import SwiftUI
+import os
 
 /// Dashboard card displaying daily macro progress vs goals
 struct NutritionSummaryCard: View {
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "NutritionSummaryCard"
+    )
     let user: User
     let mealLogService: MealLogService?
 
@@ -128,7 +133,7 @@ struct NutritionSummaryCard: View {
         do {
             totals = try await service.getDailyTotals(for: Date())
         } catch {
-            // Log error but show empty state
+            Self.logger.error("Failed to load daily nutrition totals: \(error.localizedDescription)")
         }
         isLoading = false
     }

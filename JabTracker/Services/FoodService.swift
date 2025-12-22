@@ -156,7 +156,7 @@ struct ServingOption: Identifiable, Equatable {
 struct CategorizedSearchResults {
     /// Foods the user has previously logged (from FoodEntry records)
     let historyResults: [FoodSearchResult]
-    /// User-created custom foods (stub for now)
+    /// User-created custom foods (backend implemented, UI pending)
     let customResults: [FoodSearchResult]
     /// USDA common foods (foundation + sr_legacy)
     let commonResults: [FoodSearchResult]
@@ -381,7 +381,8 @@ final class FoodService {
         return results
     }
 
-    /// Look up food by barcode
+    /// Look up food by barcode via Open Food Facts API
+    /// Note: Does not search local database - API only
     /// - Parameter barcode: Product barcode
     /// - Returns: Food if found
     func lookupBarcode(_ barcode: String) async throws -> FoodSearchResult? {
@@ -436,7 +437,11 @@ final class FoodService {
     func saveRecentFood(_ food: Food) {
         food.lastAccessedAt = Date()
         context.insert(food)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            Self.logger.warning("Failed to save recent food '\(food.name)': \(error.localizedDescription)")
+        }
     }
 
     /// Get recently accessed foods
@@ -566,5 +571,26 @@ final class FoodService {
         }
 
         return false
+    }
+}
+
+// MARK: - Food Extension
+
+extension Food {
+    /// Convert Food model to FoodSearchResult for use in search UI
+    func toSearchResult() -> FoodSearchResult {
+        FoodSearchResult(
+            fdcId: fdcId,
+            barcode: barcode,
+            name: name,
+            brand: brand,
+            source: foodSource,
+            caloriesPer100g: caloriesPer100g,
+            proteinPer100g: proteinPer100g,
+            carbsPer100g: carbsPer100g,
+            fatPer100g: fatPer100g,
+            fiberPer100g: fiberPer100g,
+            category: nil
+        )
     }
 }

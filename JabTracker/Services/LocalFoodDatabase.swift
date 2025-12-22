@@ -25,7 +25,7 @@ struct LocalFoodResult {
     let servingOptions: String  // JSON array string
 }
 
-/// Service for searching the bundled USDA food database using SQLite FTS5
+/// Service for searching the bundled food database (USDA + Open Food Facts) using SQLite FTS5
 @MainActor
 final class LocalFoodDatabase {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "LocalFoodDatabase")

@@ -8,6 +8,21 @@
 import Foundation
 import SwiftData
 
+/// Validation errors for FoodEntry creation
+enum FoodEntryValidationError: LocalizedError {
+    case emptyFoodName
+    case invalidServingSize
+
+    var errorDescription: String? {
+        switch self {
+        case .emptyFoodName:
+            return "Food name cannot be empty"
+        case .invalidServingSize:
+            return "Serving size must be positive"
+        }
+    }
+}
+
 /// Logged meal item - denormalized snapshot at log time
 /// Note: No User relationship - entries are queried by date in a single-user app context
 @Model
@@ -115,5 +130,35 @@ final class FoodEntry {
             fiberPer100g: food.fiberPer100g,
             notes: nil
         )
+    }
+
+    // MARK: - Validation
+
+    /// Check if the entry has valid data
+    var isValid: Bool {
+        !foodName.trimmingCharacters(in: .whitespaces).isEmpty && servingGrams > 0
+    }
+
+    /// Create a validated FoodEntry from a Food
+    /// - Throws: FoodEntryValidationError if validation fails
+    static func create(
+        from food: Food,
+        servingGrams: Double,
+        mealSection: MealSection,
+        notes: String? = nil
+    ) throws -> FoodEntry {
+        // Validate food name
+        guard !food.name.trimmingCharacters(in: .whitespaces).isEmpty else {
+            throw FoodEntryValidationError.emptyFoodName
+        }
+
+        // Validate serving size
+        guard servingGrams > 0 else {
+            throw FoodEntryValidationError.invalidServingSize
+        }
+
+        let entry = FoodEntry(from: food, servingGrams: servingGrams, mealSection: mealSection)
+        entry.notes = notes
+        return entry
     }
 }

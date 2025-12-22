@@ -8,6 +8,24 @@
 import Foundation
 import SwiftData
 
+/// Validation errors for Food creation
+enum FoodValidationError: LocalizedError {
+    case emptyName
+    case negativeNutrition
+    case invalidServingSize
+
+    var errorDescription: String? {
+        switch self {
+        case .emptyName:
+            return "Food name cannot be empty"
+        case .negativeNutrition:
+            return "Nutrition values cannot be negative"
+        case .invalidServingSize:
+            return "Serving size must be positive"
+        }
+    }
+}
+
 /// Food database item - represents a food from USDA, Open Food Facts, or user-created
 @Model
 final class Food {
@@ -87,5 +105,56 @@ final class Food {
         self.servingDescription = servingDescription
         self.createdAt = Date()
         self.lastAccessedAt = Date()
+    }
+
+    // MARK: - Validation
+
+    /// Check if the food has valid data for display/use
+    var isValid: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && servingSize > 0
+    }
+
+    /// Create a validated Food instance
+    /// - Throws: FoodValidationError if validation fails
+    static func create(
+        name: String,
+        brand: String = "",
+        caloriesPer100g: Double,
+        proteinPer100g: Double,
+        carbsPer100g: Double,
+        fatPer100g: Double,
+        fiberPer100g: Double = 0,
+        servingSize: Double = 100.0
+    ) throws -> Food {
+        // Validate name
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else {
+            throw FoodValidationError.emptyName
+        }
+
+        // Validate nutrition values are non-negative
+        guard caloriesPer100g >= 0,
+            proteinPer100g >= 0,
+            carbsPer100g >= 0,
+            fatPer100g >= 0,
+            fiberPer100g >= 0
+        else {
+            throw FoodValidationError.negativeNutrition
+        }
+
+        // Validate serving size
+        guard servingSize > 0 else {
+            throw FoodValidationError.invalidServingSize
+        }
+
+        return Food(
+            name: name,
+            brand: brand,
+            caloriesPer100g: caloriesPer100g,
+            proteinPer100g: proteinPer100g,
+            carbsPer100g: carbsPer100g,
+            fatPer100g: fatPer100g,
+            fiberPer100g: fiberPer100g,
+            servingSize: servingSize
+        )
     }
 }

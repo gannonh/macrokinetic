@@ -323,38 +323,12 @@ struct FoodSearchSheet: View {
     }
 
     private func recentFoodRow(_ food: Food) -> some View {
-        Button {
-            // Convert Food to FoodSearchResult for detail sheet
-            let result = FoodSearchResult(
-                fdcId: food.fdcId,
-                barcode: food.barcode,
-                name: food.name,
-                brand: food.brand,
-                source: food.foodSource,
-                caloriesPer100g: food.caloriesPer100g,
-                proteinPer100g: food.proteinPer100g,
-                carbsPer100g: food.carbsPer100g,
-                fatPer100g: food.fatPer100g,
-                fiberPer100g: food.fiberPer100g,
-                category: nil
-            )
+        let result = food.toSearchResult()
+        return Button {
             selectedFood = result
             showingFoodDetail = true
         } label: {
-            FoodSearchResultRow(
-                result: FoodSearchResult(
-                    fdcId: food.fdcId,
-                    barcode: food.barcode,
-                    name: food.name,
-                    brand: food.brand,
-                    source: food.foodSource,
-                    caloriesPer100g: food.caloriesPer100g,
-                    proteinPer100g: food.proteinPer100g,
-                    carbsPer100g: food.carbsPer100g,
-                    fatPer100g: food.fatPer100g,
-                    fiberPer100g: food.fiberPer100g,
-                    category: nil
-                ))
+            FoodSearchResultRow(result: result)
         }
         .buttonStyle(.plain)
     }
