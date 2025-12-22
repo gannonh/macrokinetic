@@ -26,6 +26,12 @@ Last activity: 2025-12-22 - Project initialized
 
 Progress: ░░░░░░░░░░ 0%
 
+## GitHub Tracking
+
+Issue: #317
+PR: (pending first phase commit)
+Branch: feat/317-custom-foods
+
 ## Performance Metrics
 
 **Velocity:**
