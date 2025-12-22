@@ -24,7 +24,11 @@
           "Models/AdherencePattern.swift",
           "Models/AdherenceInsight.swift",
           "Utilities/PricingCalculator.swift",
-          "Services/ScheduleService+Titration.swift"
+          "Services/ScheduleService+Titration.swift",
+          "Models/Food.swift",
+          "Models/FoodEntry.swift",
+          "Models/FoodSource.swift",
+          "Models/MealSection.swift"
         ]
       },
       "infrastructure": {
@@ -51,7 +55,11 @@
           "Services/ScheduleService+Modifications.swift",
           "Services/ScheduleService+Projection.swift",
           "Services/ScheduleService.swift",
-          "Services/NotificationService+Persistence.swift"
+          "Services/NotificationService+Persistence.swift",
+          "Services/LocalFoodDatabase.swift",
+          "Services/OpenFoodFactsService.swift",
+          "Services/FoodService.swift",
+          "Services/MealLogService.swift"
         ]
       },
       "framework_integration": {
@@ -63,6 +71,7 @@
           "Services/SubscriptionManager.swift",
           "Services/SubscriptionManager+Testing.swift",
           "Onboarding/OnboardingCoordinator.swift",
+          "Onboarding/OnboardingViewModel.swift",
           "Views/Analytics/ConcentrationChartGestureHandler.swift",
           "Views/Analytics/DoseMarkerOverlay.swift"
         ]
@@ -79,10 +88,10 @@
         "threshold": 85,
         "description": "ObservableObject classes with testable business logic",
         "files": [
-          "Onboarding/OnboardingViewModel.swift",
           "ViewModels/DoseCalendarViewModel.swift",
           "ViewModels/DoseHistoryViewModel.swift",
           "ViewModels/AnalyticsViewModel.swift",
+          "ViewModels/FoodSearchSheetViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift"
         ]
@@ -162,6 +171,10 @@
       "Views/Analytics/StreakCounterView.swift",
       "Views/Analytics/TimePeriodSelector.swift",
       "Views/AuthenticationView.swift",
+      "Views/FoodLog/FoodLogView.swift",
+      "Views/More/MoreView.swift",
+      "Views/Shots/ShotsView.swift",
+      "Models/Tab.swift",
       "Views/Dashboard/ConcentrationCard.swift",
       "Views/Dashboard/ConcentrationDisplay.swift",
       "Views/Dashboard/QuickDoseButton.swift",
@@ -202,7 +215,23 @@
       "Views/Settings/MedicationProfileViewModel.swift",
       "Views/Settings/SettingsView.swift",
       "Views/SplashView.swift",
-      "Views/UserProfileView.swift"
+      "Views/UserProfileView.swift",
+      "Views/Nutrition/NutritionSummaryCard.swift",
+      "Views/Nutrition/FoodSearchView.swift",
+      "Views/Nutrition/AddFoodSheet.swift",
+      "Views/Nutrition/MealLogView.swift",
+      "Views/Nutrition/FoodDetailSheet.swift",
+      "Views/Nutrition/FoodDetailSheet+InputSection.swift",
+      "Views/Nutrition/FoodSearchSheet.swift",
+      "Views/Nutrition/FoodSearchSheet+Sections.swift",
+      "Views/Nutrition/SearchMethodTabs.swift",
+      "Views/Nutrition/ServingInputView.swift",
+      "Views/Nutrition/EditFoodEntrySheet.swift",
+      "Views/Nutrition/FoodEntryCardView.swift",
+      "Views/Shortcuts/ShortcutButton.swift",
+      "Views/Shortcuts/ShortcutRowButton.swift",
+      "Views/Shortcuts/ShortcutsSheet.swift",
+      "Design/CircularProgressRing.swift"
     ]
   },
   "special_testing_notes": {

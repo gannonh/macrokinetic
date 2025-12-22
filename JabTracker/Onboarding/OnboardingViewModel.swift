@@ -401,138 +401,95 @@ class OnboardingViewModel: ObservableObject {
         for medicationProfile: MedicationProfile,
         in context: ModelContext
     ) async throws {
-        print("🔍 createInitialSchedule() called")
-        print("🔍 Schedule pattern: \(schedulePattern)")
-        print("🔍 Selected start date: \(selectedStartDate)")
-        print("🔍 Selected dose time: \(selectedDoseTime)")
-        print("🔍 Reminder minutes: \(reminderMinutes)")
+        guard let scheduleService = AppServices.shared.scheduleService else { return }
 
-        // Use shared schedule service (same instance used by NotificationService)
-        guard let scheduleService = AppServices.shared.scheduleService else {
-            print("❌ ERROR: AppServices.scheduleService not initialized!")
-            print("❌ This should never happen - AppServices should be initialized in ContentView before onboarding")
-            return
-        }
-        print("✅ Using AppServices.shared.scheduleService")
+        let scheduleConfig = buildScheduleConfiguration()
+        let actualStartDate = calculateActualStartDate(with: scheduleConfig.timeOfDay)
 
-        // Build schedule configuration based on pattern
-        let interval: Int
-        let dayOfWeek: Int?
-
-        switch schedulePattern {
-        case .daily:
-            interval = 1  // Daily dosing
-            dayOfWeek = nil  // No specific day - every day
-        case .weekly:
-            interval = 7  // Weekly dosing
-            dayOfWeek = Calendar.current.component(.weekday, from: selectedStartDate)
-        case .splitDose:
-            interval = 7  // Base interval for split-dose (actual split handled by splitIntervalMinutes)
-            dayOfWeek = nil  // Split-dose doesn't use specific day
-        case .custom:
-            interval = 7  // Default for custom patterns
-            dayOfWeek = Calendar.current.component(.weekday, from: selectedStartDate)
-        }
-
-        // Determine time components based on pattern
-        let calendar = Calendar.current
-        let timeOfDay: TimeComponents
-        let secondTimeOfDay: TimeComponents?
-
-        if schedulePattern == .splitDose {
-            // Split-dose: Use both time pickers
-            timeOfDay = TimeComponents(
-                hour: calendar.component(.hour, from: selectedFirstDoseTime),
-                minute: calendar.component(.minute, from: selectedFirstDoseTime)
-            )
-            secondTimeOfDay = TimeComponents(
-                hour: calendar.component(.hour, from: selectedSecondDoseTime),
-                minute: calendar.component(.minute, from: selectedSecondDoseTime)
-            )
-        } else {
-            // Weekly/Daily: Use single time picker
-            timeOfDay = TimeComponents(
-                hour: calendar.component(.hour, from: selectedDoseTime),
-                minute: calendar.component(.minute, from: selectedDoseTime)
-            )
-            secondTimeOfDay = nil
-        }
-
-        let scheduleConfig = ScheduleConfiguration(
-            dayOfWeek: dayOfWeek,
-            timeOfDay: timeOfDay,
-            secondTimeOfDay: secondTimeOfDay,
-            interval: interval,
-            doseAmount: selectedDose,
-            windowMinutesBefore: 120,  // 2 hours before
-            windowMinutesAfter: 120,  // 2 hours after
-            splitDoseCount: schedulePattern == .splitDose ? 2 : nil,
-            // Medical accuracy: Weekly medications split into twice-weekly dosing
-            // TimeConstants.splitDoseInterval = 3.5 days = 84 hours (e.g., Wed 8pm + Sun 8am)
-            splitIntervalMinutes: schedulePattern == .splitDose ? TimeConstants.splitDoseInterval : nil,
-            customRecurrence: nil  // Custom patterns not yet supported in onboarding
-        )
-
-        // Combine selectedStartDate (date component) with selected time (time component)
-        let actualStartDate: Date
-        if schedulePattern == .splitDose {
-            // For split-dose, use the first dose time
-            actualStartDate =
-                calendar.date(
-                    bySettingHour: timeOfDay.hour,
-                    minute: timeOfDay.minute,
-                    second: 0,
-                    of: selectedStartDate
-                ) ?? selectedStartDate
-        } else {
-            // For weekly/daily, use the selected dose time
-            actualStartDate =
-                calendar.date(
-                    bySettingHour: timeOfDay.hour,
-                    minute: timeOfDay.minute,
-                    second: 0,
-                    of: selectedStartDate
-                ) ?? selectedStartDate
-        }
-
-        print("🔍 Actual start date (combined): \(actualStartDate)")
-        print("🔍 Current date/time: \(Date())")
-
-        // Create the schedule
-        let schedule = try scheduleService.createSchedule(
+        _ = try scheduleService.createSchedule(
             for: medicationProfile,
             pattern: schedulePattern,
             startDate: actualStartDate,
             baseSchedule: scheduleConfig
         )
 
-        print("🔍 Schedule created with ID: \(schedule.id)")
-        print("🔍 Schedule active: \(schedule.isActive)")
+        await configureNotifications()
+    }
 
-        // Configure NotificationService with reminder preferences
-        print("🔍 Configuring notifications...")
-        print("🔍 Notifications granted: \(notificationsGranted)")
+    /// Builds schedule configuration based on current pattern and settings
+    private func buildScheduleConfiguration() -> ScheduleConfiguration {
+        let (interval, dayOfWeek) = buildIntervalAndDayOfWeek()
+        let (timeOfDay, secondTimeOfDay) = buildTimeComponents()
 
-        if let notificationService = AppServices.shared.notificationService {
-            print("🔍 Setting reminderMinutesBefore to: \(reminderMinutes)")
-            notificationService.reminderMinutesBefore = reminderMinutes
+        return ScheduleConfiguration(
+            dayOfWeek: dayOfWeek,
+            timeOfDay: timeOfDay,
+            secondTimeOfDay: secondTimeOfDay,
+            interval: interval,
+            doseAmount: selectedDose,
+            windowMinutesBefore: 120,
+            windowMinutesAfter: 120,
+            splitDoseCount: schedulePattern == .splitDose ? 2 : nil,
+            splitIntervalMinutes: schedulePattern == .splitDose ? TimeConstants.splitDoseInterval : nil,
+            customRecurrence: nil
+        )
+    }
 
-            // Enable notifications if user granted permission
-            if notificationsGranted {
-                print("🔍 Attempting to enable notifications...")
-                do {
-                    try await notificationService.enable()
-                    print("✅ Notifications enabled successfully")
-                } catch {
-                    // Log the error but don't fail onboarding if notification setup fails
-                    print("⚠️ Failed to enable notifications during onboarding: \(error.localizedDescription)")
-                    // Continue with onboarding - user can enable notifications later in Settings
-                }
-            } else {
-                print("⚠️ Notifications not granted, skipping enablement")
-            }
+    /// Builds interval and day of week based on schedule pattern
+    private func buildIntervalAndDayOfWeek() -> (interval: Int, dayOfWeek: Int?) {
+        switch schedulePattern {
+        case .daily:
+            return (1, nil)
+        case .weekly:
+            return (7, Calendar.current.component(.weekday, from: selectedStartDate))
+        case .splitDose:
+            return (7, nil)
+        case .custom:
+            return (7, Calendar.current.component(.weekday, from: selectedStartDate))
+        }
+    }
+
+    /// Builds time components based on schedule pattern
+    private func buildTimeComponents() -> (primary: TimeComponents, secondary: TimeComponents?) {
+        let calendar = Calendar.current
+
+        if schedulePattern == .splitDose {
+            let primary = TimeComponents(
+                hour: calendar.component(.hour, from: selectedFirstDoseTime),
+                minute: calendar.component(.minute, from: selectedFirstDoseTime)
+            )
+            let secondary = TimeComponents(
+                hour: calendar.component(.hour, from: selectedSecondDoseTime),
+                minute: calendar.component(.minute, from: selectedSecondDoseTime)
+            )
+            return (primary, secondary)
         } else {
-            print("⚠️ NotificationService not available")
+            let primary = TimeComponents(
+                hour: calendar.component(.hour, from: selectedDoseTime),
+                minute: calendar.component(.minute, from: selectedDoseTime)
+            )
+            return (primary, nil)
+        }
+    }
+
+    /// Calculates the actual start date by combining date and time components
+    private func calculateActualStartDate(with timeOfDay: TimeComponents) -> Date {
+        Calendar.current.date(
+            bySettingHour: timeOfDay.hour,
+            minute: timeOfDay.minute,
+            second: 0,
+            of: selectedStartDate
+        ) ?? selectedStartDate
+    }
+
+    /// Configures notification service with reminder preferences
+    private func configureNotifications() async {
+        guard let notificationService = AppServices.shared.notificationService else { return }
+
+        notificationService.reminderMinutesBefore = reminderMinutes
+
+        if notificationsGranted {
+            try? await notificationService.enable()
         }
     }
 

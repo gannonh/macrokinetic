@@ -31,7 +31,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// THEN: Notification section header is visible
     func testNavigateToNotificationSettings() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         // Verify notification section exists
         let notificationHeader = self.app.staticTexts["notifications-section-header"]
@@ -57,7 +57,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// THEN: Toggle state changes to enabled AND reminder picker appears
     func testEnableNotificationsViaToggle() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         // The notifications toggle is Switch #1 (element(boundBy: 1))
         // It's below the fold, so scroll to make it hittable
@@ -120,7 +120,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// THEN: Toggle state changes to disabled AND reminder picker disappears
     func testDisableNotificationsViaToggle() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         // Use element(boundBy: 1) and scroll
         let notificationToggle = self.app.switches.element(boundBy: 1)
@@ -196,7 +196,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// THEN: Selection is updated and displayed
     func testChangeReminderTiming() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         // Use element(boundBy: 1) and scroll
         let notificationToggle = self.app.switches.element(boundBy: 1)
@@ -282,7 +282,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// In actual usage, denied state would require manual permission denial in iOS Settings.
     func testAuthorizationDeniedShowsSettingsButton() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         let notificationToggle = self.app.switches["notifications-toggle"]
         XCTAssertTrue(
@@ -332,7 +332,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// This test validates the button exists and is interactive.
     func testOpenIOSSettingsFromNotificationStatus() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         let notificationToggle = self.app.switches["notifications-toggle"]
         XCTAssertTrue(
@@ -378,7 +378,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// THEN: Reminder picker has proper accessibility labels and is navigable
     func testReminderTimingPickerAccessibility() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         // Use element(boundBy: 1) and scroll
         let notificationToggle = self.app.switches.element(boundBy: 1)
@@ -460,7 +460,7 @@ final class NotificationSettingsUITests: XCTestCase {
     /// THEN: Toggle has proper accessibility label and state is announced
     func testNotificationToggleAccessibility() throws {
         // Navigate to Settings
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
 
         // Use element(boundBy: 1) and scroll
         let notificationToggle = self.app.switches.element(boundBy: 1)

@@ -34,6 +34,12 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     private let dataController: DataController
 
+    /// Detects if code is running in a unit test context (not UI tests)
+    private var isUnitTestEnvironment: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+    }
+
     init(dataController: DataController? = nil) {
         self.dataController = dataController ?? DataController.shared
         super.init()
@@ -47,10 +53,11 @@ class AuthenticationManager: NSObject, ObservableObject {
             await self.resetAppData()
         }
 
-        // Check if we're in UI testing mode - environment is available after app launch
+        // UI testing mode bypasses auth - but not during unit tests
         let isUITesting =
-            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
-            || ProcessInfo.processInfo.arguments.contains("--ui-testing")
+            (ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
+                || ProcessInfo.processInfo.arguments.contains("--ui-testing"))
+            && !isUnitTestEnvironment
 
         // Check if we're in manual UI testing mode (shows auth UI but mocks Apple ID response)
         let isManualUITesting = ProcessInfo.processInfo.arguments.contains("--manual-ui-testing")

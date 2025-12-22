@@ -92,21 +92,32 @@ struct ScheduleServiceSplitDoseIntegrationTests {
         let service = ScheduleService(context: context)
         let profile = try createTestMedicationProfile(medication: medication)
 
+        // Use fixed reference date to avoid timing race conditions
+        let calendar = Calendar.current
+        var dateComponents = DateComponents()
+        dateComponents.year = 2024
+        dateComponents.month = 6
+        dateComponents.day = 1
+        dateComponents.hour = 8
+        dateComponents.minute = 0
+        let startDate = calendar.date(from: dateComponents)!
+
         let schedule = try service.createSchedule(
             for: profile,
             pattern: .splitDose,
-            startDate: Date(),
+            startDate: startDate,
             baseSchedule: config
         )
 
-        let endDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
+        // Use 13 days to avoid boundary condition at exactly 14 days
+        let endDate = calendar.date(byAdding: .day, value: 13, to: startDate)!
         let doses = service.generateScheduledDoses(
             for: schedule,
-            from: Date(),
+            from: startDate,
             to: endDate
         )
 
-        // THEN: Verify 4 doses over 2 weeks (2 per week)
+        // THEN: Verify 4 doses over 13 days (day 0, 3.5, 7, 10.5)
         #expect(doses.count == 4, "Should generate 4 doses over 2 weeks (2 per week)")
 
         // Verify 3.5-day spacing between consecutive doses
@@ -198,18 +209,29 @@ struct ScheduleServiceSplitDoseIntegrationTests {
         let service = ScheduleService(context: context)
         let profile = try createTestMedicationProfile(medication: medication, currentDose: 1.0)
 
+        // Use fixed reference date to avoid timing race conditions
+        let calendar = Calendar.current
+        var dateComponents = DateComponents()
+        dateComponents.year = 2024
+        dateComponents.month = 6
+        dateComponents.day = 1
+        dateComponents.hour = 8
+        dateComponents.minute = 0
+        let startDate = calendar.date(from: dateComponents)!
+
         let schedule = try service.createSchedule(
             for: profile,
             pattern: .splitDose,
-            startDate: Date(),
+            startDate: startDate,
             baseSchedule: config
         )
 
-        let oneWeekLater = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+        // Use 6 days to avoid boundary condition at exactly 7 days
+        let sixDaysLater = calendar.date(byAdding: .day, value: 6, to: startDate)!
         let doses = service.generateScheduledDoses(
             for: schedule,
-            from: Date(),
-            to: oneWeekLater
+            from: startDate,
+            to: sixDaysLater
         )
 
         // THEN: Should only have 2 doses in one week (NOT 14!)

@@ -9,8 +9,9 @@ import SwiftUI
 /// throughout the app without prop drilling.
 @MainActor
 final class AppServices: ObservableObject {
-    /// Shared instance for app-wide access
-    static let shared = AppServices()
+    /// Shared instance for app-wide access.
+    /// nonisolated allows access from any context while instance methods remain MainActor isolated.
+    nonisolated static let shared = AppServices()
 
     /// Schedule service for dose schedule management
     @Published private(set) var scheduleService: ScheduleService?
@@ -18,7 +19,13 @@ final class AppServices: ObservableObject {
     /// Notification service for dose reminder notifications
     @Published private(set) var notificationService: NotificationService?
 
-    private init() {
+    /// Food service for food search across local database and API
+    @Published private(set) var foodService: FoodService?
+
+    /// Meal log service for food entry CRUD operations
+    @Published private(set) var mealLogService: MealLogService?
+
+    private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
 
@@ -41,18 +48,27 @@ final class AppServices: ObservableObject {
 
         // Load persisted notification state
         notificationService.loadState()
+
+        // Create FoodService for food search
+        let foodService = FoodService(context: modelContext)
+        self.foodService = foodService
+
+        // Create MealLogService for meal logging
+        let mealLogService = MealLogService(context: modelContext)
+        self.mealLogService = mealLogService
     }
 
     /// Reset services (useful for testing or sign-out)
     func reset() {
         scheduleService = nil
         notificationService = nil
+        foodService = nil
+        mealLogService = nil
     }
 }
 
 /// SwiftUI Environment key for AppServices
 struct AppServicesKey: EnvironmentKey {
-    @MainActor
     static let defaultValue: AppServices = AppServices.shared
 }
 

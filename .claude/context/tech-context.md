@@ -1,6 +1,6 @@
 ---
 created: 2025-12-19T14:51:30Z
-last_updated: 2025-12-19T14:51:30Z
+last_updated: 2025-12-20T17:50:53Z
 ---
 
 # Technology Context
@@ -136,6 +136,26 @@ Transforms data for Swift Charts:
 - `+Filtering` - Data aggregation
 - `+Interpolation` - Curve smoothing
 
+### LocalFoodDatabase
+SQLite FTS5 database with 1.7M+ foods:
+- Bundled offline database (~382 MB)
+- Full-text search via FTS5
+- Barcode lookup support
+- USDA Foundation/SR Legacy + Open Food Facts data
+
+### FoodService
+Orchestrates food search across sources:
+- Local database first (instant, offline)
+- Open Food Facts API fallback
+- Categorizes results by source (history, custom, common, branded)
+- Recent foods tracking
+
+### MealLogService
+Manages food entry CRUD:
+- Log food with serving size and meal section
+- Daily totals calculation
+- Macro aggregation
+
 ## Testing Stack
 
 - **Unit Tests**: Swift Testing framework (`@Test`, `#expect`)
@@ -192,4 +212,5 @@ See `testing.md` for detailed testing patterns.
 
 ## Update History
 
+- 2025-12-20T17:50:53Z: Added nutrition services (LocalFoodDatabase, FoodService, MealLogService)
 - 2025-12-19T14:51:30Z: Initial context creation

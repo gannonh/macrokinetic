@@ -99,7 +99,12 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         logger.info("Requesting notification authorization")
 
         // In UI testing mode, automatically grant authorization to avoid system alert interaction
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        // IMPORTANT: Only apply in non-unit-test context (UI tests run the actual app)
+        let isUnitTestEnvironment =
+            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+        let isUITesting =
+            ProcessInfo.processInfo.arguments.contains("--ui-testing") && !isUnitTestEnvironment
         if isUITesting {
             logger.info("UI testing mode detected - automatically granting authorization")
             authorizationStatus = .authorized
@@ -350,7 +355,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         logger.info("Disabling notifications")
 
         // 1. Cancel all pending notifications
-        await notificationCenter.removeAllPendingNotificationRequests()
+        notificationCenter.removeAllPendingNotificationRequests()
         logger.debug("Cancelled all pending notifications")
 
         // 2. Clear notification queue

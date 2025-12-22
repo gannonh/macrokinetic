@@ -5,15 +5,18 @@ set -o pipefail  # Ensure pipeline failures are detected
 # Run tests with pretty output and device selection
 
 # Available simulators
-# NOTE: iOS 26.1 simulators recommended with Xcode 26 to avoid SwiftData/CloudKit crashes
+# NOTE: iOS 26.2 simulators recommended with Xcode 26.2 to avoid SwiftData/CloudKit crashes
 # iOS 17.5 simulators have compatibility issues with Xcode 26's NSPersistentStoreCoordinator
+# iPhone 17 Pro - F10F879D-2403-4529-8850-91DE259C1312
+# iPhone 17- 63B35940-1E74-4D29-821B-4DB5CAB5FA9C
+# iPhone 17 Pro Max - 38218630-EBEC-4196-80A2-92AB0A855715
 DEVICES=(
-    "iPhone 17 Pro,OS=26.1"
-    "iPhone 17,OS=26.1"
-    "iPhone 17 Pro Max,OS=26.1"
+    "iPhone 17 Pro,OS=26.2"
+    "iPhone 17,OS=26.2"
+    "iPhone 17 Pro Max,OS=26.2"
 )
 
-DEFAULT_DEVICE="iPhone 17 Pro,OS=26.1"
+DEFAULT_DEVICE="iPhone 17 Pro,OS=26.2"
 ENABLE_COVERAGE=false
 RESET_DEVICE=false
 ENABLE_LOGGING=true
@@ -271,7 +274,7 @@ run_tests() {
 
     # Disable concurrent destination testing to prevent simulator cloning overhead
     # This speeds up test startup significantly in Xcode 26
-    PARALLEL_OPTIONS="-disable-concurrent-destination-testing"
+    PARALLEL_OPTIONS="-disable-concurrent-destination-testing -parallel-testing-enabled NO"
 
     if [ "$ENABLE_LOGGING" = true ]; then
         # Create a raw log file for complete output
@@ -314,6 +317,27 @@ case "$TEST_TYPE" in
     show_usage
     ;;
 esac
+
+# Extract screenshots from xcresult if available
+if [ "$ENABLE_LOGGING" = true ] && [ -d "$XCRESULT_PATH" ]; then
+    SCREENSHOTS_DIR="$LOG_DIR/screenshots"
+    mkdir -p "$SCREENSHOTS_DIR"
+
+    # Extract attachments (screenshots) from xcresult
+    if xcrun xcresulttool get --path "$XCRESULT_PATH" --format json 2>/dev/null | grep -q "attachments"; then
+        # Use xcresulttool to export attachments
+        xcrun xcresulttool export --path "$XCRESULT_PATH" --output-path "$SCREENSHOTS_DIR" --type attachments 2>/dev/null || true
+
+        # Count extracted screenshots
+        SCREENSHOT_COUNT=$(find "$SCREENSHOTS_DIR" -name "*.png" -o -name "*.jpg" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$SCREENSHOT_COUNT" -gt 0 ]; then
+            if [ "$LOG_ONLY" = false ]; then
+                echo ""
+                echo "📸 Extracted $SCREENSHOT_COUNT screenshot(s) to: $SCREENSHOTS_DIR/"
+            fi
+        fi
+    fi
+fi
 
 # Handle coverage report
 if [ "$ENABLE_COVERAGE" = true ]; then
@@ -400,10 +424,18 @@ if [ "$ENABLE_LOGGING" = true ]; then
     if [ "$ENABLE_COVERAGE" = true ] && [ -f "$LOG_DIR/coverage.json" ]; then
         echo "   • Coverage data: $LOG_DIR/coverage.json"
     fi
+    # Check if screenshots were captured
+    if [ -d "$LOG_DIR/screenshots" ]; then
+        SCREENSHOT_COUNT=$(find "$LOG_DIR/screenshots" -name "*.png" -o -name "*.jpg" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$SCREENSHOT_COUNT" -gt 0 ]; then
+            echo "   • Screenshots ($SCREENSHOT_COUNT): $LOG_DIR/screenshots/"
+        fi
+    fi
     echo ""
     echo "💡 View latest logs: cat logs/latest/output.txt"
     echo "💡 View simulator-specific logs: cat logs/latest_${SIMULATOR_ID}/output.txt"
     echo "💡 Open result bundle: open $XCRESULT_PATH"
+    echo "💡 View screenshots: open logs/latest/screenshots/"
 fi
 
 # Exit with the actual test status

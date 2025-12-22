@@ -29,11 +29,20 @@ final class User {
     var analyticsReportingEnabled: Bool = true  // User preference for report generation
     var preferredReportingFrequency: String = "weekly"  // "daily", "weekly", "monthly", "quarterly"
 
+    // Nutrition goals
+    var dailyCalorieGoal: Double = 2000.0
+    var dailyProteinGoal: Double = 150.0
+    var dailyCarbGoal: Double = 200.0
+    var dailyFatGoal: Double = 65.0
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]?  // CloudKit requires optional relationships
 
     @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
     var medicationProfiles: [MedicationProfile]?  // CloudKit requires optional relationships
+
+    // Note: FoodEntry does not have a User relationship - entries are queried by date
+    // This avoids schema complexity while nutrition is user-scoped by app context
 
     init(
         email: String? = nil,
@@ -47,7 +56,11 @@ final class User {
         analyticsEnabled: Bool = true,
         adherenceGoalDays: Int = 7,
         analyticsReportingEnabled: Bool = true,
-        preferredReportingFrequency: String = "weekly"
+        preferredReportingFrequency: String = "weekly",
+        dailyCalorieGoal: Double = 2000.0,
+        dailyProteinGoal: Double = 150.0,
+        dailyCarbGoal: Double = 200.0,
+        dailyFatGoal: Double = 65.0
     ) {
         self.email = email
         self.name = name
@@ -61,6 +74,10 @@ final class User {
         self.adherenceGoalDays = adherenceGoalDays
         self.analyticsReportingEnabled = analyticsReportingEnabled
         self.preferredReportingFrequency = preferredReportingFrequency
+        self.dailyCalorieGoal = dailyCalorieGoal
+        self.dailyProteinGoal = dailyProteinGoal
+        self.dailyCarbGoal = dailyCarbGoal
+        self.dailyFatGoal = dailyFatGoal
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it

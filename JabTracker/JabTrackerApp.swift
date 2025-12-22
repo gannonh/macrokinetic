@@ -135,7 +135,7 @@ struct JabTrackerApp: App {
         print("🔐 JabTrackerApp: Starting biometric authentication")
         do {
             let success = try await biometricManager.authenticateWithBiometrics(
-                reason: "Unlock JabTracker")
+                reason: "Unlock MacroKinetic")
             print("🔐 JabTrackerApp: Biometric authentication result = \(success)")
             if success {
                 // Set flag to prevent immediate re-authentication

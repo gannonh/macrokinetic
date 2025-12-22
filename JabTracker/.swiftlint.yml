@@ -1,0 +1,6 @@
+# SwiftLint Configuration for JabTracker root
+# AuthenticationManager requires slightly longer type body for auth logic
+
+type_body_length:
+  warning: 400
+  error: 500

@@ -95,7 +95,7 @@ final class SubscriptionUITests: XCTestCase {
         let app = TestUtilities.launchAppWithTestMode()
 
         // Navigate to Settings tab
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
 
         // ACCEPTANCE CRITERIA: Subscription status section exists
         XCTAssertTrue(
@@ -221,7 +221,7 @@ final class SubscriptionUITests: XCTestCase {
         let app = TestUtilities.launchAppWithTestMode()
 
         // Navigate to Settings tab
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
 
         // ACCEPTANCE CRITERIA: Subscription management section exists
         let managementSection = app.staticTexts["Manage Subscription"]

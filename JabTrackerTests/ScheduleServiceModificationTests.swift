@@ -17,9 +17,10 @@ struct ScheduleServiceModificationTests {
     // MARK: - Test Helpers
 
     /// Creates a test ModelContext with all models
-    private func createTestContext() -> ModelContext {
+    /// Returns both context and container - container MUST be kept alive for test duration
+    private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let container = DataController.testContainer().container
-        return container.mainContext
+        return (container.mainContext, container)
     }
 
     /// Creates a test medication profile
@@ -42,6 +43,7 @@ struct ScheduleServiceModificationTests {
         let config = ScheduleConfiguration(
             dayOfWeek: 1,  // Monday
             timeOfDay: TimeComponents(hour: 9, minute: 0),
+            secondTimeOfDay: nil,
             interval: 7,
             doseAmount: doseAmount,
             windowMinutesBefore: 120,
@@ -92,7 +94,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose within valid range succeeds")
     func testRescheduleDoseWithinValidRange() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -130,7 +133,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose beyond 7 days throws error")
     func testRescheduleDoseBeyondValidRange() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -158,7 +162,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose that is already taken throws error")
     func testRescheduleAlreadyTakenDose() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -185,7 +190,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Reschedule dose that is already skipped throws error")
     func testRescheduleAlreadySkippedDose() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -204,7 +210,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Multiple reschedules preserve original time")
     func testMultipleReschedulesPreserveOriginalTime() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -238,7 +245,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose sets skipped timestamp and reason")
     func testSkipDoseSetsTimestampAndReason() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -264,7 +272,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose without reason succeeds")
     func testSkipDoseWithoutReason() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -284,7 +293,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose that is already taken throws error")
     func testSkipAlreadyTakenDose() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -312,7 +322,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark dose taken links actual dose")
     func testMarkDoseTakenLinksActualDose() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -341,7 +352,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark dose taken on already taken dose throws error")
     func testMarkDoseTakenOnAlreadyTakenDose() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -379,7 +391,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark dose taken on skipped dose throws error")
     func testMarkDoseTakenOnSkippedDose() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -406,7 +419,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Skip dose after reschedule succeeds")
     func testSkipDoseAfterReschedule() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 
@@ -436,7 +450,8 @@ struct ScheduleServiceModificationTests {
 
     @Test("Mark taken after reschedule succeeds")
     func testMarkTakenAfterReschedule() throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = createTestProfile(context: context)
         let schedule = try createTestSchedule(context: context, profile: profile)
 

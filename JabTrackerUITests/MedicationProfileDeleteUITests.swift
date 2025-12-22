@@ -20,16 +20,20 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
 
         // Verify historical doses exist
-        app.tabBars.buttons["History"].tap()
+        TestUtilities.navigateToHistory(app)
 
-        let historyList = app.collectionViews["dose-history-list"]
-        XCTAssertTrue(historyList.waitForExistence(timeout: 5.0))
-        let initialDoseCount = historyList.cells.count
+        // Wait for history container (ShotsView wrapper)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        XCTAssertTrue(historyContainer.waitForExistence(timeout: 5.0))
+
+        // Count dose rows using the proper utility
+        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let initialDoseCount = initialDoseRows.count
         print("📊 Initial dose count: \(initialDoseCount)")
         XCTAssertTrue(initialDoseCount > 0, "Should have dose history (90 days)")
 
         // Navigate to medication profiles
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()
@@ -65,9 +69,11 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         profileCell.swipeRight()
 
         // Verify historical doses are PRESERVED
-        app.tabBars.buttons["History"].tap()
-        XCTAssertTrue(historyList.waitForExistence(timeout: 3.0))
-        let finalDoseCount = historyList.cells.count
+        TestUtilities.navigateToHistory(app)
+        XCTAssertTrue(historyContainer.waitForExistence(timeout: 3.0))
+
+        let finalDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let finalDoseCount = finalDoseRows.count
         print("📊 Final dose count: \(finalDoseCount)")
         XCTAssertEqual(
             finalDoseCount,
@@ -75,7 +81,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
             "Historical doses should be preserved after disable")
 
         // Verify analytics data still exists (doses preserved)
-        app.tabBars.buttons["Analytics"].tap()
+        TestUtilities.navigateToConcentration(app)
         let chart = app.otherElements["concentration-timeline-chart"].firstMatch
         XCTAssertTrue(
             chart.waitForExistence(timeout: 10.0),
@@ -96,21 +102,23 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
 
         // Verify historical data exists in History tab
-        app.tabBars.buttons["History"].tap()
+        TestUtilities.navigateToHistory(app)
 
-        let historyList = app.collectionViews["dose-history-list"]
-        XCTAssertTrue(historyList.waitForExistence(timeout: 5.0))
-        let initialDoseCount = historyList.cells.count
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        XCTAssertTrue(historyContainer.waitForExistence(timeout: 5.0))
+
+        let initialDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let initialDoseCount = initialDoseRows.count
         print("📊 Dose count in history: \(initialDoseCount)")
         XCTAssertTrue(initialDoseCount > 0, "Should have dose history (90 days)")
 
         // Verify analytics data exists
-        app.tabBars.buttons["Analytics"].tap()
+        TestUtilities.navigateToConcentration(app)
         let chart = app.otherElements["concentration-timeline-chart"].firstMatch
         XCTAssertTrue(chart.waitForExistence(timeout: 10.0), "Chart should exist with historical data")
 
         // Navigate to medication profiles
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()
@@ -127,7 +135,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         deleteButton.tap()
 
         // Confirm permanent deletion using accessibility identifier
-        let deletePermanentlyButton = app.buttons["delete-permanently-button"]
+        let deletePermanentlyButton = app.buttons["delete-permanently-button"].firstMatch
         XCTAssertTrue(deletePermanentlyButton.waitForExistence(timeout: 3.0))
         deletePermanentlyButton.tap()
 
@@ -137,16 +145,16 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(emptyStateLabel.waitForExistence(timeout: 3.0))
 
         // Verify ALL historical doses are deleted (cascade delete)
-        app.tabBars.buttons["History"].tap()
+        TestUtilities.navigateToHistory(app)
         let emptyHistoryMessage = app.staticTexts["No doses logged yet"]
         XCTAssertTrue(
             emptyHistoryMessage.waitForExistence(timeout: 3.0),
             "History should be empty after permanent delete (cascade delete removes all doses)")
 
         // Verify analytics data is also gone
-        app.tabBars.buttons["Analytics"].tap()
+        TestUtilities.navigateToConcentration(app)
         // Chart should not exist or show empty state
-        let emptyAnalyticsMessage = app.staticTexts["No Analytics Data"]
+        let emptyAnalyticsMessage = app.staticTexts["No Data Yet"]
         XCTAssertTrue(
             emptyAnalyticsMessage.waitForExistence(timeout: 5.0) || !chart.exists,
             "Analytics should be empty after permanent delete removes all doses")
@@ -166,7 +174,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
 
         // Navigate to medication profiles
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()
@@ -191,11 +199,14 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         let deletePermanentlyButton = app.buttons["delete-permanently-button"]
         XCTAssertTrue(deletePermanentlyButton.exists, "Should have 'Delete Permanently' button")
 
-        let cancelButton = app.buttons["cancel-delete-button"]
-        XCTAssertTrue(cancelButton.exists, "Should have 'Cancel' button")
+        // Note: SwiftUI confirmationDialog on iPhone doesn't render .cancel role buttons visibly
+        // Instead, tap on the dimmed background area below the dialog to dismiss it
+        // The dialog appears in the upper portion, so tap in the middle-lower area (dy: 0.75)
+        let dismissCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
+        dismissCoordinate.tap()
 
-        // Click Cancel
-        cancelButton.tap()
+        // Wait for dialog to dismiss
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Verify profile still exists and is still active (no Disabled badge)
         XCTAssertTrue(
@@ -229,7 +240,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
 
         // Disable the medication profile
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()
@@ -251,8 +262,14 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         // Try to log a dose via Quick Add
         app.tabBars.buttons["Add"].tap()
 
-        // Use debug utilities to find the medication picker
-        TestUtilities.debugElements(in: app, containing: "medication")
+        // Wait for ShortcutsSheet to appear
+        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
+        XCTAssertTrue(shortcutsSheet.waitForExistence(timeout: 3.0), "Shortcuts sheet should appear")
+
+        // Tap "Shots" shortcut to open Quick Dose Sheet
+        let shotsButton = app.buttons["shortcut-button-shots"]
+        XCTAssertTrue(shotsButton.waitForExistence(timeout: 3.0), "Shots shortcut button should exist")
+        shotsButton.tap()
 
         // Quick dose sheet should show "No medication profiles found" error
         // because disabled profiles are filtered out
@@ -275,7 +292,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
 
         // Disable the profile
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()
@@ -324,7 +341,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
 
         // Create a new medication profile
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()
@@ -377,7 +394,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
 
         // Create a new medication profile (no doses logged yet)
-        app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(app)
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()
@@ -398,14 +415,20 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
         saveButton.tap()
 
-        // Go to Analytics tab
-        app.tabBars.buttons["Analytics"].tap()
+        // Go to Shots tab - Concentration segment (default)
+        TestUtilities.navigateToConcentration(app)
 
-        // Should show "No Analytics Data" message (not infinite loading spinner)
-        let emptyStateMessage = app.staticTexts["No Analytics Data"]
+        // Should show "No Data Yet" empty state (not infinite loading spinner)
+        let emptyStateMessage = app.staticTexts["No Data Yet"]
         XCTAssertTrue(
             emptyStateMessage.waitForExistence(timeout: 10.0),
             "Should show empty state message for new profile with no doses")
+
+        // Verify subtitle is also present
+        let emptyStateSubtitle = app.staticTexts["Start tracking doses to see your analytics"]
+        XCTAssertTrue(
+            emptyStateSubtitle.exists,
+            "Should show empty state subtitle")
 
         // Should NOT show loading spinner indefinitely
         let loadingSpinner = app.staticTexts["Generating Concentration Chart..."]

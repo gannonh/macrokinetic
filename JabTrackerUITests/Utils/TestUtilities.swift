@@ -184,7 +184,7 @@ enum TestUtilities {
         }
 
         // Set launch arguments
-        var launchArgs = ["--ui-testing"]
+        var launchArgs = ["--ui-testing", "--bypass-onboarding"]
         if resetData {
             launchArgs.append("--reset-app-data")
         }
@@ -194,8 +194,9 @@ enum TestUtilities {
 
         app.launch()
 
-        // Brief wait to ensure seeding completes
-        Thread.sleep(forTimeInterval: 0.5)
+        // Wait for seeding to complete and app to stabilize
+        // Seeding 30+ days of data can take a few seconds
+        Thread.sleep(forTimeInterval: 2.0)
 
         return app
     }
@@ -272,7 +273,7 @@ enum TestUtilities {
     /// Navigate to a specific tab in the tab bar
     /// - Parameters:
     ///   - app: The XCUIApplication instance
-    ///   - tabName: Name of the tab to navigate to ("Home", "Add", "History", "Analytics", "Settings")
+    ///   - tabName: Name of the tab to navigate to ("Dashboard", "Food Log", "Add", "Shots", "More")
     ///   - timeout: Maximum time to wait for tab to exist (default: 5 seconds)
     /// - Returns: The tab button element
     @discardableResult
@@ -288,7 +289,133 @@ enum TestUtilities {
         return tab
     }
 
-    /// Navigate to Settings tab and verify user is authenticated
+    /// Navigate to Settings (via More tab)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 3 seconds)
+    static func navigateToSettings(_ app: XCUIApplication, timeout: TimeInterval = 3) {
+        // Navigate to More tab
+        self.navigateToTab(app, tabName: "More")
+
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(
+            settingsButton.waitForExistence(timeout: timeout),
+            "Settings button should exist in More menu")
+        settingsButton.tap()
+    }
+
+    /// Navigate to History view (via Shots tab -> History segment)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    static func navigateToHistory(_ app: XCUIApplication, timeout: TimeInterval = 5) {
+        // Navigate to Shots tab
+        self.navigateToTab(app, tabName: "Shots")
+
+        // Wait for Shots view to load
+        let shotsView = app.scrollViews["shots-scroll-view"]
+        _ = shotsView.waitForExistence(timeout: timeout)
+
+        // Tap History segment
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(
+            segmentedControl.waitForExistence(timeout: timeout),
+            "Shots segmented control should exist")
+
+        let historySegment = segmentedControl.buttons["History"]
+        XCTAssertTrue(historySegment.exists, "History segment should exist")
+        historySegment.tap()
+    }
+
+    /// Navigate to Concentration view (via Shots tab -> Concentration segment)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    static func navigateToConcentration(_ app: XCUIApplication, timeout: TimeInterval = 5) {
+        // Navigate to Shots tab
+        self.navigateToTab(app, tabName: "Shots")
+
+        // Wait for Shots view to load
+        let shotsView = app.scrollViews["shots-scroll-view"]
+        _ = shotsView.waitForExistence(timeout: timeout)
+
+        // Tap Concentration segment
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(
+            segmentedControl.waitForExistence(timeout: timeout),
+            "Shots segmented control should exist")
+
+        let concentrationSegment = segmentedControl.buttons["Concentration"]
+        XCTAssertTrue(concentrationSegment.exists, "Concentration segment should exist")
+        concentrationSegment.tap()
+    }
+
+    /// Navigate to Adherence view (via Shots tab -> Adherence segment)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    static func navigateToAdherence(_ app: XCUIApplication, timeout: TimeInterval = 5) {
+        // Navigate to Shots tab
+        self.navigateToTab(app, tabName: "Shots")
+
+        // Wait for Shots view to load
+        let shotsView = app.scrollViews["shots-scroll-view"]
+        _ = shotsView.waitForExistence(timeout: timeout)
+
+        // Tap Adherence segment
+        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        XCTAssertTrue(
+            segmentedControl.waitForExistence(timeout: timeout),
+            "Shots segmented control should exist")
+
+        let adherenceSegment = segmentedControl.buttons["Adherence"]
+        XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
+        adherenceSegment.tap()
+    }
+
+    // MARK: - ShortcutsSheet Helpers
+
+    /// Open ShortcutsSheet by tapping Add tab
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for sheet (default: 3 seconds)
+    static func openShortcutsSheet(_ app: XCUIApplication, timeout: TimeInterval = 3) {
+        let addTab = app.tabBars.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
+        addTab.tap()
+
+        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
+        XCTAssertTrue(
+            shortcutsSheet.waitForExistence(timeout: timeout),
+            "Shortcuts sheet should appear")
+    }
+
+    /// Dismiss ShortcutsSheet if open
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for close button (default: 2 seconds)
+    static func dismissShortcutsSheet(_ app: XCUIApplication, timeout: TimeInterval = 2) {
+        let closeButton = app.buttons["shortcuts-close-button"]
+        if closeButton.waitForExistence(timeout: timeout) {
+            closeButton.tap()
+        }
+    }
+
+    /// Tap a shortcut button in the ShortcutsSheet
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - shortcutLabel: The label of the shortcut to tap (e.g., "Search", "Shots")
+    ///   - timeout: Maximum time to wait for button (default: 3 seconds)
+    static func tapShortcut(_ app: XCUIApplication, label shortcutLabel: String, timeout: TimeInterval = 3) {
+        let shortcutButton = app.buttons[shortcutLabel]
+        XCTAssertTrue(
+            shortcutButton.waitForExistence(timeout: timeout),
+            "\(shortcutLabel) shortcut button should exist")
+        shortcutButton.tap()
+    }
+
+    /// Navigate to Settings (via More tab) and verify user is authenticated
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for profile to appear
@@ -296,7 +423,12 @@ enum TestUtilities {
     static func navigateToSettingsAndVerifyAuth(_ app: XCUIApplication, timeout: TimeInterval = 3)
         throws
     {
-        self.navigateToTab(app, tabName: "Settings")
+        self.navigateToTab(app, tabName: "More")
+
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: timeout), "Settings button should exist in More menu")
+        settingsButton.tap()
 
         guard app.staticTexts["User Profile"].waitForExistence(timeout: timeout) else {
             XCTFail("User Profile should be visible. Please ensure user is authenticated.")
@@ -707,7 +839,7 @@ enum TestUtilities {
 
     // MARK: - Medication Profile Helpers
 
-    /// Navigate to medication profiles settings
+    /// Navigate to medication profiles settings (via More -> Settings)
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for navigation (default: 3 seconds)
@@ -717,8 +849,17 @@ enum TestUtilities {
             return  // Already there, no need to navigate
         }
 
-        self.navigateToTab(app, tabName: "Settings", timeout: timeout)
+        // Navigate to More tab
+        self.navigateToTab(app, tabName: "More", timeout: timeout)
 
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(
+            settingsButton.waitForExistence(timeout: timeout),
+            "Settings button should exist in More menu")
+        settingsButton.tap()
+
+        // Tap Medication Profiles
         let medicationProfilesButton = app.buttons["Medication Profiles"]
         XCTAssertTrue(
             medicationProfilesButton.waitForExistence(timeout: timeout),
@@ -847,10 +988,17 @@ enum TestUtilities {
         profileIdentifier: String = "medication-profile-semaglutide-ozempic-0.25mg",
         timeout: TimeInterval = 3
     ) {
-        // Navigate to Settings tab
-        let settingsTab = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(settingsTab.waitForExistence(timeout: timeout), "Settings tab should exist")
-        settingsTab.tap()
+        // Navigate to More tab
+        let moreTab = app.tabBars.buttons["More"]
+        XCTAssertTrue(moreTab.waitForExistence(timeout: timeout), "More tab should exist")
+        moreTab.tap()
+
+        // Tap Settings in the More menu
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(
+            settingsButton.waitForExistence(timeout: timeout),
+            "Settings button should exist in More menu")
+        settingsButton.tap()
 
         // Tap Medication Profiles button
         let medicationProfilesButton = app.buttons["Medication Profiles"]
@@ -869,7 +1017,7 @@ enum TestUtilities {
 
     // MARK: - Dose Creation Helpers
 
-    /// Create a test dose using the Quick Add Dose functionality
+    /// Create a test dose using the Quick Add Dose functionality via ShortcutsSheet
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - injectionSite: Optional injection site to select (default: nil, uses default)
@@ -883,14 +1031,29 @@ enum TestUtilities {
         notes: String? = nil,
         timeout: TimeInterval = 3
     ) -> Bool {
-        // Tap Add tab to open Quick Dose Sheet
+        // Tap Add tab to open Shortcuts Sheet
         let addTab = app.tabBars.buttons["Add"]
         XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
         addTab.tap()
 
-        // Wait for Quick Dose Sheet to appear
-        let quickDoseSheet = app.sheets["quick-dose-sheet"]
-        XCTAssertTrue(quickDoseSheet.waitForExistence(timeout: timeout), "Quick dose sheet should open")
+        // Wait for Shortcuts Sheet to appear
+        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
+        XCTAssertTrue(
+            shortcutsSheet.waitForExistence(timeout: timeout),
+            "Shortcuts sheet should open")
+
+        // Tap "Shots" button in shortcuts sheet to open Quick Dose Sheet
+        let shotsButton = app.buttons["Shots"]
+        XCTAssertTrue(
+            shotsButton.waitForExistence(timeout: timeout),
+            "Shots shortcut button should exist")
+        shotsButton.tap()
+
+        // Wait for Quick Dose Sheet to appear (after shortcuts dismissal)
+        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
+        XCTAssertTrue(
+            quickDoseSheet.waitForExistence(timeout: timeout),
+            "Quick dose sheet should open")
 
         // Set injection site if provided
         if let injectionSite {
@@ -996,6 +1159,153 @@ extension XCUIElement {
     /// - Returns: True if element exists and is hittable within timeout
     func waitForExistenceAndHittable(timeout: TimeInterval) -> Bool {
         waitForExistence(timeout: timeout) && isHittable
+    }
+}
+
+// MARK: - Debug Screenshot Utilities
+
+extension TestUtilities {
+    /// Directory where debug screenshots are saved
+    /// Uses __XPC_DYLD_FRAMEWORK_PATH to find project root, or falls back to tmp
+    private static var screenshotDirectory: URL {
+        // In Xcode test runner context, find the project root from the framework path
+        // __XPC_DYLD_FRAMEWORK_PATH looks like: /Users/xxx/Library/Developer/Xcode/DerivedData/ProjectName-.../Build/Products/Debug-iphonesimulator
+        if let frameworkPath = ProcessInfo.processInfo.environment["__XPC_DYLD_FRAMEWORK_PATH"],
+            let range = frameworkPath.range(of: "/Library/Developer/Xcode/DerivedData")
+        {
+            let homeDir = String(frameworkPath[..<range.lowerBound])
+            // Try common project locations
+            let possiblePaths = [
+                "\(homeDir)/dev/jab-tracker-ios",
+                "\(homeDir)/Developer/jab-tracker-ios",
+                "\(homeDir)/Projects/jab-tracker-ios",
+            ]
+            for path in possiblePaths where FileManager.default.fileExists(atPath: path) {
+                return URL(fileURLWithPath: path)
+                    .appendingPathComponent("logs")
+                    .appendingPathComponent("latest")
+                    .appendingPathComponent("screenshots")
+            }
+        }
+
+        // Fallback: use /tmp for test screenshots
+        return URL(fileURLWithPath: "/tmp/xctest-screenshots")
+    }
+
+    /// Capture a debug screenshot and save it to disk for easy viewing
+    ///
+    /// Screenshots are saved to `logs/latest/screenshots/` as PNG files.
+    /// Use this during test development to see exactly what the UI looks like at any point.
+    ///
+    /// **Usage:**
+    /// ```swift
+    /// TestUtilities.debugScreenshot(app, name: "after-login")
+    /// TestUtilities.debugScreenshot(app, name: "error-state", context: "validation failed")
+    /// ```
+    ///
+    /// **Viewing Screenshots:**
+    /// ```bash
+    /// open logs/latest/screenshots/
+    /// # Or view a specific screenshot:
+    /// open logs/latest/screenshots/after-login.png
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - name: A descriptive name for the screenshot (will be used as filename)
+    ///   - context: Optional context string to print with the screenshot path
+    /// - Returns: The file path where the screenshot was saved, or nil if save failed
+    @discardableResult
+    static func debugScreenshot(
+        _ app: XCUIApplication,
+        name: String,
+        context: String? = nil
+    ) -> String? {
+        let screenshot = app.screenshot()
+        let pngData = screenshot.pngRepresentation
+
+        // Create screenshots directory if needed
+        let directory = screenshotDirectory
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        } catch {
+            print("📸 ❌ Failed to create screenshot directory: \(error.localizedDescription)")
+            return nil
+        }
+
+        // Sanitize filename (remove special characters)
+        let sanitizedName =
+            name
+            .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+            .replacingOccurrences(of: ":", with: "-")
+        let filename = "\(sanitizedName)-\(timestamp).png"
+        let filePath = directory.appendingPathComponent(filename)
+
+        do {
+            try pngData.write(to: filePath)
+            let relativePath = "logs/latest/screenshots/\(filename)"
+            if let context {
+                print("📸 Screenshot saved: \(relativePath) (\(context))")
+            } else {
+                print("📸 Screenshot saved: \(relativePath)")
+            }
+            return filePath.path
+        } catch {
+            print("📸 ❌ Failed to save screenshot: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Capture a debug screenshot with automatic naming based on test function
+    ///
+    /// **Usage:**
+    /// ```swift
+    /// TestUtilities.debugScreenshot(app, step: 1, description: "initial-state")
+    /// TestUtilities.debugScreenshot(app, step: 2, description: "after-tap")
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - step: A step number for ordering screenshots
+    ///   - description: A brief description of the current state
+    /// - Returns: The file path where the screenshot was saved, or nil if save failed
+    @discardableResult
+    static func debugScreenshot(
+        _ app: XCUIApplication,
+        step: Int,
+        description: String
+    ) -> String? {
+        let name = String(format: "%02d-%@", step, description)
+        return debugScreenshot(app, name: name)
+    }
+
+    /// Capture a screenshot on test failure for debugging
+    /// Call this in test tearDown or catch blocks to capture failure state
+    ///
+    /// **Usage in XCTestCase:**
+    /// ```swift
+    /// override func tearDown() {
+    ///     if testRun?.hasSucceeded == false {
+    ///         TestUtilities.captureFailureScreenshot(app, testName: name)
+    ///     }
+    ///     super.tearDown()
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - testName: The name of the failing test
+    /// - Returns: The file path where the screenshot was saved, or nil if save failed
+    @discardableResult
+    static func captureFailureScreenshot(
+        _ app: XCUIApplication,
+        testName: String
+    ) -> String? {
+        debugScreenshot(app, name: "FAILURE-\(testName)", context: "test failed")
     }
 }
 

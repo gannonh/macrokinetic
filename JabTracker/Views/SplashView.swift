@@ -9,14 +9,16 @@ struct SplashView: View {
 
             // App Logo with Animation
             VStack(spacing: 16) {
-                Image(systemName: "syringe.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(DesignTokens.Colors.primaryGradient)
-                    .scaleEffect(self.isAnimating ? 1.1 : 1.0)
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .scaleEffect(self.isAnimating ? 1.05 : 1.0)
                     .animation(
                         .easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: self.isAnimating)
 
-                Text("JabTracker")
+                Text("MacroKinetic")
                     .font(DesignTokens.Typography.largeTitle)
                     .bold()
                     .opacity(self.isAnimating ? 1.0 : 0.7)

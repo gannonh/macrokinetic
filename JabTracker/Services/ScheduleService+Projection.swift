@@ -287,9 +287,12 @@ extension ScheduleService {
         components.second = 0
         let alignedDate = calendar.date(from: components)!
 
-        // If aligned time is before start, move forward by splitInterval
-        if alignedDate < startDate {
-            // Calculate how many intervals needed to get past startDate
+        // For schedule projection, start from the aligned date for the first day.
+        // This includes the scheduled dose even if the exact time has passed,
+        // which is correct for projecting what the schedule produces.
+        // Only skip forward if the aligned date is on a PREVIOUS calendar day.
+        if alignedDate < startDate && !calendar.isDate(alignedDate, inSameDayAs: startDate) {
+            // Aligned date is on a previous day, calculate intervals needed
             let intervalSeconds = TimeInterval(splitInterval * 60)
             let timeSinceAligned = startDate.timeIntervalSince(alignedDate)
             let intervalsNeeded = Int(ceil(timeSinceAligned / intervalSeconds))
@@ -299,6 +302,7 @@ extension ScheduleService {
                 to: alignedDate
             )!
         } else {
+            // Same day or aligned is in the future - use aligned date
             currentDate = alignedDate
         }
 

@@ -20,9 +20,11 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
         // Given: User has a medication profile and a dose for it
         let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
+        TestUtilities.debugScreenshot(app, step: 1, description: "after-setup")
 
         // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
+        TestUtilities.debugScreenshot(app, step: 2, description: "after-navigate-history")
 
         // Find the first dose row
         let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
@@ -61,18 +63,20 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         let alertDismissed = !deleteAlert.waitForExistence(timeout: 3)
         XCTAssertTrue(alertDismissed, "Delete alert should dismiss after confirmation")
 
-        // Verify we're back on the History view
-        let historyView = app.collectionViews["dose-history-list"]
-        let historyViewExists = historyView.waitForExistence(timeout: 3)
+        // Debug screenshot after deletion
+        TestUtilities.debugScreenshot(app, step: 3, description: "after-delete-confirmed")
 
-        // If collection view doesn't exist, check for any dose-history-list elements
-        if !historyViewExists {
-            let historyElements = app.descendants(matching: .any).matching(
-                identifier: "dose-history-list")
-            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
-        } else {
-            XCTAssertTrue(historyViewExists, "Should return to history view")
-        }
+        // Verify we're back on the History view (dose-history-container or dose-history-view)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+
+        // Debug: Print what we found
+        print("🔍 DEBUG: historyContainer exists: \(historyContainer.exists)")
+        print("🔍 DEBUG: historyView exists: \(historyView.exists)")
+
+        XCTAssertTrue(
+            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
+            "Should return to history view after deletion")
 
         // Verify the dose row no longer exists (empty state or reduced count)
         // Since we created 1 dose and deleted it, we should see empty state or no dose rows
@@ -110,15 +114,12 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
         // THEN: New dose is created with same data but current timestamp
 
-        // Verify we're still on the History view
-        let historyView = app.collectionViews["dose-history-list"]
-        if !historyView.exists {
-            let historyElements = app.descendants(matching: .any).matching(
-                identifier: "dose-history-list")
-            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
-        } else {
-            XCTAssertTrue(historyView.exists, "Should remain on history view")
-        }
+        // Verify we're still on the History view (dose-history-container or dose-history-view)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(
+            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
+            "Should remain on history view")
 
         // THEN: Dose count should increase to 2 (original + duplicate)
         let updatedDoseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -166,15 +167,12 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         // THEN: Dose row shows skipped styling/indicator
         // Wait a moment for the skip status to update
 
-        // Verify we're still on the History view
-        let historyView = app.collectionViews["dose-history-list"]
-        if !historyView.exists {
-            let historyElements = app.descendants(matching: .any).matching(
-                identifier: "dose-history-list")
-            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
-        } else {
-            XCTAssertTrue(historyView.exists, "Should remain on history view")
-        }
+        // Verify we're still on the History view (dose-history-container or dose-history-view)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(
+            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
+            "Should remain on history view")
 
         // Verify the dose is still there (count should remain 1)
         let updatedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
@@ -239,18 +237,12 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         let alertDismissed = !deleteAlert.waitForExistence(timeout: 3)
         XCTAssertTrue(alertDismissed, "Delete alert should dismiss after cancellation")
 
-        // Verify we're back on the History view
-        let historyView = app.collectionViews["dose-history-list"]
-        let historyViewExists = historyView.waitForExistence(timeout: 3)
-
-        // If collection view doesn't exist, check for any dose-history-list elements
-        if !historyViewExists {
-            let historyElements = app.descendants(matching: .any).matching(
-                identifier: "dose-history-list")
-            XCTAssertTrue(historyElements.count > 0, "Should have dose-history-list elements")
-        } else {
-            XCTAssertTrue(historyViewExists, "Should return to history view")
-        }
+        // Verify we're back on the History view (dose-history-container or dose-history-view)
+        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        XCTAssertTrue(
+            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
+            "Should return to history view after canceling deletion")
 
         // THEN: Dose remains in list (should still have the original dose)
         let remainingDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)

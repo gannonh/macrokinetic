@@ -5,12 +5,17 @@ options:
     iOS: "17.0"
   defaultConfig: Debug
   createIntermediateGroups: true
-  xcodeVersion: "16.4"
+  xcodeVersion: "26.2"
+  fileTypes:
+    "icon":
+      file: true
 settings:
   base:
     ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: YES
     ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEVELOPMENT_TEAM: ZBZKKWF95G
+    SWIFT_EMIT_LOC_STRINGS: YES
   
 targets:
   JabTracker:
@@ -20,10 +25,13 @@ targets:
     sources:
       - path: JabTracker
         excludes:
-          - "*.xcassets"
           - "**/.swiftlint.yml"
     resources:
       - path: JabTracker/Assets.xcassets
+        optional: true
+      - path: JabTracker/AppIcon.icon
+        optional: true
+      - path: JabTracker/Resources/usda_foods.sqlite
       - path: JabTrackerStoreKit.storekit
     settings:
       CURRENT_PROJECT_VERSION: "1"
@@ -32,7 +40,6 @@ targets:
       ENABLE_PREVIEWS: NO
       CODE_SIGN_ENTITLEMENTS: JabTracker/JabTracker.entitlements
       CODE_SIGN_STYLE: Automatic
-      DEVELOPMENT_TEAM: ZBZKKWF95G
       INFOPLIST_FILE: JabTracker/Info.plist
       
   JabTrackerTests:
@@ -42,10 +49,9 @@ targets:
     settings:
       GENERATE_INFOPLIST_FILE: YES
       CODE_SIGN_STYLE: Automatic
-      DEVELOPMENT_TEAM: ZBZKKWF95G
     dependencies:
       - target: JabTracker
-      
+
   JabTrackerUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -55,7 +61,6 @@ targets:
     settings:
       GENERATE_INFOPLIST_FILE: YES
       CODE_SIGN_STYLE: Automatic
-      DEVELOPMENT_TEAM: ZBZKKWF95G
     dependencies:
       - target: JabTracker
 
@@ -71,8 +76,8 @@ schemes:
         - name: JabTrackerTests
           parallelizable: false
         - name: JabTrackerUITests
-          parallelizable: false
-          randomExecutionOrder: false
+          parallelizable: true
+          randomExecutionOrder: true
       commandLineArguments:
         "--bypass-onboarding": true
         "--force-onboarding": false
@@ -84,12 +89,12 @@ schemes:
         "--seed-test-1y": false
     run:
       commandLineArguments:
-        "--force-onboarding": true 
-        "--reset-app-data": true
+        "--force-onboarding": false 
+        "--reset-app-data": true # seeding only works if true
         "--ui-testing": true # Enable to bypass auth
         "--seed-test-7d": false
         "--seed-test-30d": false
         "--seed-test-90d": false
-        "--seed-test-1y": false
+        "--seed-test-1y": true
         "--test-titration-data": false
       storeKitConfiguration: JabTrackerStoreKit.storekit

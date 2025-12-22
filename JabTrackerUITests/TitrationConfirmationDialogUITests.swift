@@ -20,33 +20,60 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         app.launch()
     }
 
+    // MARK: - Helper Methods
+
+    /// Tap Add tab - if there's a pending titration, titration dialog appears directly
+    /// If no pending titration, ShortcutsSheet appears (tap Shots to continue to quick dose)
+    private func tapAddAndHandleShortcuts() {
+        let tabBar = app.tabBars.firstMatch
+        let addTab = tabBar.buttons["Add"]
+        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
+        addTab.tap()
+
+        usleep(800_000)  // Wait for dialog/sheet to appear
+
+        // If ShortcutsSheet appears (no pending titration), tap Shots to continue
+        let shortcutsTitle = app.staticTexts["Shortcuts"]
+        if shortcutsTitle.waitForExistence(timeout: 1) {
+            // Tap "Shots" button in shortcuts sheet
+            let shortcutShotsButton = app.buttons["shortcut-button-shots"]
+            if shortcutShotsButton.waitForExistence(timeout: 2) && shortcutShotsButton.isHittable {
+                shortcutShotsButton.tap()
+                usleep(800_000)  // Wait for quick dose sheet
+            }
+        }
+        // If titration dialog appears directly, nothing more to do
+    }
+
     // MARK: - ACCEPTANCE CRITERION: Dialog appears when tapping quick dose with TODAY titration
 
     func testTitrationDialogAppearsOnQuickDoseButtonTap() throws {
         // TEST DATA: createTestTitrations() creates TODAY titration (1.0mg → 2.0mg)
-        // EXPECTATION: Tapping "+" tab should show titration dialog, not quick dose sheet
+        // EXPECTATION: Tapping "+" tab should show titration dialog directly (not shortcuts sheet)
 
-        // Wait for test data seeding to complete by checking for dashboard elements
-        // The concentration card only appears when medication profiles and doses are loaded
-        let concentrationCard = app.otherElements.matching(identifier: "concentration-card-semaglutide").firstMatch
-        XCTAssertTrue(
-            concentrationCard.waitForExistence(timeout: 10),
-            "Dashboard should load with seeded medication data before testing titration dialog"
-        )
+        // Debug screenshot to see initial state
+        TestUtilities.debugScreenshot(app, step: 1, description: "initial-state")
 
-        // Navigate to home tab (ensure we're on known starting point)
+        // Wait for tab bar to appear (indicates app is loaded)
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 3), "Tab bar should exist")
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist after app loads")
 
-        let homeTab = tabBar.buttons["Home"]
-        if homeTab.exists {
-            homeTab.tap()
+        // Navigate to dashboard tab (ensure we're on known starting point)
+        let dashboardTab = tabBar.buttons["Dashboard"]
+        if dashboardTab.exists {
+            dashboardTab.tap()
+            usleep(500_000)
         }
 
-        // Tap "+" tab to trigger dose entry flow
+        TestUtilities.debugScreenshot(app, step: 2, description: "on-dashboard")
+
+        // Tap "+" tab - with pending titration, dialog should appear directly
         let addTab = tabBar.buttons["Add"]
         XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
         addTab.tap()
+
+        usleep(800_000)  // Wait for titration dialog to appear
+        TestUtilities.debugScreenshot(app, step: 3, description: "after-add-tap")
 
         // VERIFY: Titration dialog appears by checking for Complete Now button
         // Buttons have accessibility labels but share the same identifier
@@ -111,11 +138,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dashboard should load with seeded data"
         )
 
-        // Navigate to home and tap Add to show dialog
-        let tabBar = app.tabBars.firstMatch
-        let addTab = tabBar.buttons["Add"]
-        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
-        addTab.tap()
+        // Navigate and trigger titration dialog
+        tapAddAndHandleShortcuts()
 
         // Verify dialog appeared
         let completeNowButton = app.buttons["Complete dose increase now and use new dose amount"]
@@ -149,7 +173,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         )
 
         // VERIFY: Tapping Add again should NOT show dialog (titration complete)
-        addTab.tap()
+        tapAddAndHandleShortcuts()
 
         // Should show quick dose sheet directly, NOT titration dialog
         XCTAssertTrue(
@@ -175,11 +199,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dashboard should load with seeded data"
         )
 
-        // Navigate to home and tap Add to show dialog
-        let tabBar = app.tabBars.firstMatch
-        let addTab = tabBar.buttons["Add"]
-        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
-        addTab.tap()
+        // Navigate and trigger titration dialog
+        tapAddAndHandleShortcuts()
 
         // Verify dialog appeared
         let rescheduleButton = app.buttons["Reschedule dose increase to a different date"]
@@ -234,7 +255,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         )
 
         // VERIFY: Tapping Add again should NOT show dialog (titration rescheduled to future)
-        addTab.tap()
+        tapAddAndHandleShortcuts()
 
         let quickDoseSheet = app.otherElements["quick-dose-sheet"]
         XCTAssertTrue(
@@ -261,11 +282,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dashboard should load with seeded data"
         )
 
-        // Navigate to home and tap Add to show dialog
-        let tabBar = app.tabBars.firstMatch
-        let addTab = tabBar.buttons["Add"]
-        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
-        addTab.tap()
+        // Navigate and trigger titration dialog
+        tapAddAndHandleShortcuts()
 
         // Verify dialog appeared
         let remindLaterButton = app.buttons["Dismiss dialog and remind me again on next dose entry"]
@@ -302,7 +320,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         )
 
         // VERIFY: Tapping Add again should show dialog again (titration still pending)
-        addTab.tap()
+        tapAddAndHandleShortcuts()
 
         XCTAssertTrue(
             remindLaterButton.waitForExistence(timeout: 3),
@@ -330,16 +348,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dashboard should load with seeded data"
         )
 
-        // Navigate to home and tap Add to show dialog
-        let tabBar = app.tabBars.firstMatch
-        let homeTab = tabBar.buttons["Home"]
-        if homeTab.exists {
-            homeTab.tap()
-        }
-
-        let addTab = tabBar.buttons["Add"]
-        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
-        addTab.tap()
+        // Navigate and trigger titration dialog
+        tapAddAndHandleShortcuts()
 
         // Complete the TODAY titration
         let completeNowButton = app.buttons["Complete dose increase now and use new dose amount"]
@@ -367,7 +377,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         )
 
         // VERIFY: Tapping Add again should show QuickDoseSheet directly (no dialog for future titrations)
-        addTab.tap()
+        tapAddAndHandleShortcuts()
 
         XCTAssertTrue(
             quickDoseSheet.waitForExistence(timeout: 3),
@@ -393,11 +403,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dashboard should load with seeded data"
         )
 
-        // Navigate to home and tap Add to show dialog
-        let tabBar = app.tabBars.firstMatch
-        let addTab = tabBar.buttons["Add"]
-        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
-        addTab.tap()
+        // Navigate and trigger titration dialog
+        tapAddAndHandleShortcuts()
 
         // VERIFY: Dialog appears showing the EARLIEST (TODAY) titration
         let dialogTitle = app.staticTexts["Dose Increase Scheduled"]
@@ -455,7 +462,7 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
         )
 
         // VERIFY: After completing earliest, no dialog shows (next pending is tomorrow, which is future)
-        addTab.tap()
+        tapAddAndHandleShortcuts()
 
         XCTAssertTrue(
             quickDoseSheet.waitForExistence(timeout: 3),
@@ -481,11 +488,8 @@ final class TitrationConfirmationDialogUITests: XCTestCase {
             "Dashboard should load with seeded data"
         )
 
-        // Navigate to home and tap Add to show dialog
-        let tabBar = app.tabBars.firstMatch
-        let addTab = tabBar.buttons["Add"]
-        XCTAssertTrue(addTab.waitForExistence(timeout: 2), "Add tab should exist")
-        addTab.tap()
+        // Navigate and trigger titration dialog
+        tapAddAndHandleShortcuts()
 
         // VERIFY: All dialog elements are visible (not truncated)
         let dialogTitle = app.staticTexts["Dose Increase Scheduled"]

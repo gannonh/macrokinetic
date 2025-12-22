@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import XCTest
 
 @testable import JabTracker
 
@@ -215,5 +216,100 @@ struct DeeplinkHandlerTests {
             #expect(Bool(false), "Expected .unsupported result for malformed UUID, got \(result)")
             return
         }
+    }
+
+    // MARK: - Handle Method Tests
+
+    @Test("Handle valid deeplink posts notification")
+    func testHandleValidDeeplinkPostsNotification() throws {
+        // Arrange
+        let scheduledDoseId = UUID()
+        let urlString = "jab-tracker://dose/log?scheduledDoseId=\(scheduledDoseId.uuidString)"
+        let url = try #require(URL(string: urlString))
+
+        var receivedNotification: Notification?
+        let expectation = XCTestExpectation(description: "Notification received")
+
+        let observer = NotificationCenter.default.addObserver(
+            forName: .showQuickDoseSheet,
+            object: nil,
+            queue: .main
+        ) { notification in
+            receivedNotification = notification
+            expectation.fulfill()
+        }
+
+        // Act
+        DeeplinkHandler.handle(url: url)
+
+        // Wait for notification
+        _ = XCTWaiter.wait(for: [expectation], timeout: 1.0)
+
+        // Cleanup
+        NotificationCenter.default.removeObserver(observer)
+
+        // Assert
+        #expect(receivedNotification != nil, "Should have received notification")
+        if let userInfo = receivedNotification?.userInfo,
+            let receivedId = userInfo["scheduledDoseId"] as? UUID
+        {
+            #expect(receivedId == scheduledDoseId, "Should have correct scheduledDoseId in userInfo")
+        } else {
+            #expect(Bool(false), "Should have valid userInfo with scheduledDoseId")
+        }
+    }
+
+    @Test("Handle unsupported deeplink does not post notification")
+    func testHandleUnsupportedDeeplinkDoesNotPostNotification() throws {
+        // Arrange
+        let url = try #require(URL(string: "https://example.com/invalid"))
+
+        var receivedNotification: Notification?
+        let observer = NotificationCenter.default.addObserver(
+            forName: .showQuickDoseSheet,
+            object: nil,
+            queue: .main
+        ) { notification in
+            receivedNotification = notification
+        }
+
+        // Act
+        DeeplinkHandler.handle(url: url)
+
+        // Small delay to ensure notification would have been received if posted
+        Thread.sleep(forTimeInterval: 0.1)
+
+        // Cleanup
+        NotificationCenter.default.removeObserver(observer)
+
+        // Assert
+        #expect(receivedNotification == nil, "Should not have received notification for unsupported URL")
+    }
+
+    @Test("Handle deeplink with wrong path does not post notification")
+    func testHandleWrongPathDoesNotPostNotification() throws {
+        // Arrange
+        let url = try #require(URL(string: "jab-tracker://dose/wrong"))
+
+        var receivedNotification: Notification?
+        let observer = NotificationCenter.default.addObserver(
+            forName: .showQuickDoseSheet,
+            object: nil,
+            queue: .main
+        ) { notification in
+            receivedNotification = notification
+        }
+
+        // Act
+        DeeplinkHandler.handle(url: url)
+
+        // Small delay
+        Thread.sleep(forTimeInterval: 0.1)
+
+        // Cleanup
+        NotificationCenter.default.removeObserver(observer)
+
+        // Assert
+        #expect(receivedNotification == nil, "Should not have received notification for wrong path")
     }
 }

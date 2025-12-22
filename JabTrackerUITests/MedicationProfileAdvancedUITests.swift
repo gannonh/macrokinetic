@@ -15,7 +15,7 @@ final class MedicationProfileAdvancedUITests: XCTestCase {
     }
 
     private func navigateToMedicationProfiles() {
-        self.app.tabBars.buttons["Settings"].tap()
+        TestUtilities.navigateToSettings(self.app)
         let medicationProfilesButton = self.app.buttons["Medication Profiles"]
         XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
         medicationProfilesButton.tap()

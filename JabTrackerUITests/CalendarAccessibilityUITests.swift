@@ -34,10 +34,10 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -56,10 +56,10 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -78,10 +78,10 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -100,10 +100,10 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing
@@ -122,10 +122,10 @@ final class CalendarAccessibilityUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // THEN: Verify calendar is ready for VoiceOver accessibility testing

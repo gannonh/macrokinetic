@@ -12,8 +12,8 @@ final class AuthenticationUITests: XCTestCase {
     func testBiometricAuthenticationUI() throws {
         let app = TestUtilities.launchAppWithTestMode()
 
-        // Navigate to Settings
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        // Navigate to Settings (via More tab)
+        TestUtilities.navigateToSettings(app)
 
         // Ensure user is authenticated first
         if app.buttons["sign-in-with-apple-button"].waitForExistence(timeout: 2) {
@@ -120,7 +120,7 @@ final class AuthenticationUITests: XCTestCase {
         // In test mode, should see TabView (may take a moment to initialize)
         TestUtilities.verifyAuthenticatedState(app)
 
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // In test mode, should see user profile
         let profileExists = app.staticTexts["User Profile"].waitForExistence(timeout: 3)
@@ -134,7 +134,7 @@ final class AuthenticationUITests: XCTestCase {
 
         TestUtilities.verifyAuthenticatedState(restartedApp, timeout: 3)
 
-        TestUtilities.navigateToTab(restartedApp, tabName: "Settings")
+        TestUtilities.navigateToSettings(restartedApp)
 
         // Profile should still be visible after relaunch in test mode
         XCTAssertTrue(

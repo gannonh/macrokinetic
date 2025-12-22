@@ -24,7 +24,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
         let app = TestUtilities.launchAppWithCloudKitTestMode(resetData: true)
 
         // Navigate to Settings where sync status is displayed
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Verify sync status section exists
         let syncStatusHeader = app.staticTexts["Sync Status"]
@@ -54,7 +54,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
         // Test that the app can detect and display iCloud account status
         let app = TestUtilities.launchAppWithCloudKitTestMode(resetData: true)
 
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Wait for CloudKit status to be determined
         let syncStatusHeader = app.staticTexts["Sync Status"]
@@ -82,7 +82,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
         // Test that users can retry CloudKit setup when there are issues
         let app = TestUtilities.launchAppWithCloudKitTestMode(resetData: true)
 
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         let syncStatusHeader = app.staticTexts["Sync Status"]
         XCTAssertTrue(
@@ -125,7 +125,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
         try self.completeOnboardingFlow(app)
 
         // Verify data was created
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
         XCTAssertTrue(
             app.staticTexts["User Profile"].waitForExistence(timeout: 5),
             "User profile should be created after onboarding")
@@ -140,7 +140,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
             restartedApp.tabBars.firstMatch.waitForExistence(timeout: 10),
             "Should show main app after restart (data persisted)")
 
-        TestUtilities.navigateToTab(restartedApp, tabName: "Settings")
+        TestUtilities.navigateToSettings(restartedApp)
         XCTAssertTrue(
             restartedApp.staticTexts["User Profile"].waitForExistence(timeout: 5),
             "User profile should persist after app restart with CloudKit")
@@ -151,7 +151,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
         // Test that app works correctly when CloudKit is unavailable
         let app = TestUtilities.launchAppWithCloudKitTestMode()
 
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         // Check sync status
         let syncStatusHeader = app.staticTexts["Sync Status"]
@@ -161,7 +161,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
 
         // App should work regardless of CloudKit status
         // Test basic navigation
-        TestUtilities.navigateToTab(app, tabName: "Home")
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
         XCTAssertTrue(
             app.navigationBars.firstMatch.waitForExistence(timeout: 3),
             "Home tab should load correctly regardless of CloudKit status")
@@ -182,7 +182,7 @@ final class CloudKitIntegrationUITests: XCTestCase {
         // Test that sync status accurately reflects real CloudKit availability
         let app = TestUtilities.launchAppWithCloudKitTestMode()
 
-        TestUtilities.navigateToTab(app, tabName: "Settings")
+        TestUtilities.navigateToSettings(app)
 
         let syncStatusHeader = app.staticTexts["Sync Status"]
         XCTAssertTrue(

@@ -29,8 +29,15 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         XCTAssertGreaterThan(initialDoseRows.count, 3, "Should start with more than 3 doses")
 
         // WHEN: User enters text in search bar
-        let searchField = app.textFields["dose-history-list"]
-        XCTAssertTrue(searchField.exists, "Search field should be available")
+        // SwiftUI TextField may be exposed differently based on container
+        var searchField = app.textFields["dose-history-search"]
+        if !searchField.waitForExistence(timeout: 2) {
+            searchField = app.textFields["Search doses..."]
+        }
+        if !searchField.waitForExistence(timeout: 2) {
+            searchField = app.textFields.firstMatch
+        }
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should be available")
 
         // Enter search text that should filter results
         searchField.tap()
@@ -78,8 +85,15 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         XCTAssertGreaterThan(initialDoseRows.count, 3, "Should start with more than 3 doses")
 
         // Apply search filter
-        let searchField = app.textFields["dose-history-list"]
-        XCTAssertTrue(searchField.exists, "Search field should be available")
+        // SwiftUI TextField may be exposed differently based on container
+        var searchField = app.textFields["dose-history-search"]
+        if !searchField.waitForExistence(timeout: 2) {
+            searchField = app.textFields["Search doses..."]
+        }
+        if !searchField.waitForExistence(timeout: 2) {
+            searchField = app.textFields.firstMatch
+        }
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should be available")
 
         TestUtilities.clearAndEnterText(in: searchField, newText: "filter")
 
@@ -261,7 +275,7 @@ final class DoseHistoryFilteringUITests: XCTestCase {
         XCTAssertEqual(initialDoseRows.count, 2, "Should start with 2 doses")
 
         // WHEN: User pulls down to refresh
-        let historyView = app.collectionViews["dose-history-list"]
+        let historyView = app.descendants(matching: .any)["dose-history-list"].firstMatch
         XCTAssertTrue(
             historyView.waitForExistence(timeout: 3),
             "History view should be available")

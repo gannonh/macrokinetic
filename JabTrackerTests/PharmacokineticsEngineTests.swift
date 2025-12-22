@@ -1,5 +1,3 @@
-// swiftlint:disable file_length
-
 import Foundation
 import Testing
 
@@ -261,13 +259,12 @@ struct PharmacokineticsEngineTests {
             timestamp: testDate.addingTimeInterval(-3600),  // 1 hour ago
             medication: medicationProfile)
 
-        // Note: Since we're not in a SwiftData context, we can't modify the doses relationship
-        // The calculatePeakLevel method will use medicationProfile.doses which will be empty
-        // This tests the method's behavior with no historical doses
+        // Note: Setting medication: medicationProfile in Dose init establishes the relationship
+        // The dose will be included in medicationProfile.doses via inverse relationship
         let result = self.engine.calculatePeakLevel(for: dose, medication: medicationProfile)
 
-        // With no doses in the profile, peak level will be 0
-        #expect(result.level == 0, "Peak level should be 0 when no doses in profile")
+        // Peak level should be positive since the dose is associated with the profile
+        #expect(result.level > 0, "Peak level should be positive with dose in profile")
         #expect(result.time > dose.timestamp, "Peak time should be after dose time")
 
         // For semaglutide, peak should be ~1 hour after injection

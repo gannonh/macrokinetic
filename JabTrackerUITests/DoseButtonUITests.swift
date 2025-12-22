@@ -12,9 +12,13 @@ final class DoseButtonUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // When: User taps the "+" (Add) tab button
-        let addTab = app.tabBars.element.buttons["Add"]
-        addTab.tap()
+        // When: User taps the "+" (Add) tab button to open ShortcutsSheet
+        TestUtilities.openShortcutsSheet(app)
+
+        // Then: Tap "Shots" to open QuickDoseSheet (use specific identifier to avoid tab bar conflict)
+        let shotsShortcut = app.buttons["shortcut-button-shots"]
+        XCTAssertTrue(shotsShortcut.waitForExistence(timeout: 3), "Shots shortcut should exist")
+        shotsShortcut.tap()
 
         // Then: QuickDoseSheet content should appear
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
@@ -38,9 +42,11 @@ final class DoseButtonUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // When: User opens quick dose sheet
-        let addTab = app.tabBars.element.buttons["Add"]
-        addTab.tap()
+        // When: User opens quick dose sheet via ShortcutsSheet
+        TestUtilities.openShortcutsSheet(app)
+        let shotsShortcut = app.buttons["shortcut-button-shots"]
+        XCTAssertTrue(shotsShortcut.waitForExistence(timeout: 3), "Shots shortcut should exist")
+        shotsShortcut.tap()
 
         // Verify sheet content is visible
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
@@ -71,9 +77,11 @@ final class DoseButtonUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // When: User opens quick dose sheet
-        let addTab = app.tabBars.element.buttons["Add"]
-        addTab.tap()
+        // When: User opens quick dose sheet via ShortcutsSheet
+        TestUtilities.openShortcutsSheet(app)
+        let shotsShortcut = app.buttons["shortcut-button-shots"]
+        XCTAssertTrue(shotsShortcut.waitForExistence(timeout: 3), "Shots shortcut should exist")
+        shotsShortcut.tap()
 
         // Verify sheet content is visible
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
@@ -102,8 +110,10 @@ final class DoseButtonUITests: XCTestCase {
         let app = TestUtilities.launchAppWithTestMode()
 
         // Given: User opens quick dose sheet in error scenario (no medication profiles)
-        let addTab = app.tabBars.element.buttons["Add"]
-        addTab.tap()
+        TestUtilities.openShortcutsSheet(app)
+        let shotsShortcut = app.buttons["shortcut-button-shots"]
+        XCTAssertTrue(shotsShortcut.waitForExistence(timeout: 3), "Shots shortcut should exist")
+        shotsShortcut.tap()
 
         // Verify sheet content appears (even in error state)
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
@@ -126,9 +136,11 @@ final class DoseButtonUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // When: User opens quick dose sheet
-        let addTab = app.tabBars.element.buttons["Add"]
-        addTab.tap()
+        // When: User opens quick dose sheet via ShortcutsSheet
+        TestUtilities.openShortcutsSheet(app)
+        let shotsShortcut = app.buttons["shortcut-button-shots"]
+        XCTAssertTrue(shotsShortcut.waitForExistence(timeout: 3), "Shots shortcut should exist")
+        shotsShortcut.tap()
 
         // Verify sheet content is visible
         let medicationPicker = app.buttons["quick-dose-medication-picker"]

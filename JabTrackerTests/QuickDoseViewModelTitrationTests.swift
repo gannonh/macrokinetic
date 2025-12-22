@@ -10,17 +10,17 @@ import Testing
 
 @testable import JabTracker
 
-@Suite("QuickDoseViewModel Titration Tests")
+@Suite("QuickDoseViewModel Titration Tests", .serialized)
 struct QuickDoseViewModelTitrationTests {
     // MARK: - Test Setup
 
     @MainActor
-    func createTestContext() -> ModelContext {
+    func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([User.self, MedicationProfile.self, Dose.self, DoseTitration.self])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         do {
             let container = try ModelContainer(for: schema, configurations: [config])
-            return container.mainContext
+            return (container.mainContext, container)
         } catch {
             fatalError("Failed to create test container: \(error)")
         }
@@ -57,7 +57,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("shouldShowTitrationDialog returns false when medication profile has no titration")
     @MainActor
     func titrationDialogNoTitration() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -74,7 +75,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("shouldShowTitrationDialog returns false when titration is in the future")
     @MainActor
     func titrationDialogFutureTitration() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -101,7 +103,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("shouldShowTitrationDialog returns true when titration date is today")
     @MainActor
     func titrationDialogTodayTitration() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -128,7 +131,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("shouldShowTitrationDialog returns true when titration date has passed")
     @MainActor
     func titrationDialogPastTitration() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -155,7 +159,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("shouldShowTitrationDialog returns false when titration is already completed")
     @MainActor
     func titrationDialogCompletedTitration() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -183,7 +188,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("shouldShowTitrationDialog returns false when remindLater flag is set")
     @MainActor
     func titrationDialogRemindLater() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -213,7 +219,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("getPendingTitration returns correct titration")
     @MainActor
     func getPendingTitrationCorrect() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -242,7 +249,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("getPendingTitration returns nil when no pending titration")
     @MainActor
     func getPendingTitrationNone() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -273,7 +281,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("completeTitration marks titration as completed and updates profile")
     @MainActor
     func completeTitrationSuccess() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
             context: context,
             genericName: "semaglutide",
@@ -311,7 +320,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("completeTitration saves changes to context")
     @MainActor
     func completeTitrationSavesToContext() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(context: context, currentDose: 1.0)
 
         let titration = DoseTitration(
@@ -341,7 +351,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("rescheduleTitration updates titration date")
     @MainActor
     func rescheduleTitrationSuccess() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(context: context, currentDose: 1.0)
 
         let originalDate = Date()
@@ -375,7 +386,8 @@ struct QuickDoseViewModelTitrationTests {
     @Test("rescheduleTitration saves changes to context")
     @MainActor
     func rescheduleTitrationSavesToContext() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(context: context, currentDose: 1.0)
 
         let titration = DoseTitration(

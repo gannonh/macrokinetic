@@ -12,15 +12,17 @@ struct AuthenticationView: View {
 
             // App Logo and Branding
             VStack(spacing: 16) {
-                Image(systemName: "syringe.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(DesignTokens.Colors.primaryGradient)
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
 
-                Text("JabTracker")
+                Text("MacroKinetic")
                     .font(DesignTokens.Typography.largeTitle)
                     .bold()
 
-                Text("Track your GLP-1 medication doses with precision")
+                Text("Precision nutrition tracking for your weight management journey")
                     .font(DesignTokens.Typography.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -32,7 +34,7 @@ struct AuthenticationView: View {
             // Authentication Section
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text("Welcome to JabTracker")
+                    Text("Welcome to MacroKinetic")
                         .font(DesignTokens.Typography.headline)
 
                     Text("Sign in to sync your data across devices")

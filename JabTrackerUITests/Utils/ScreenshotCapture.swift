@@ -164,16 +164,10 @@ extension DateFormatter {
 }
 
 extension TestUtilities {
-    /// Navigate to analytics tab with error handling
+    /// Navigate to analytics/concentration view with error handling
+    /// Note: Analytics tab was merged into Shots tab with segmented control
     static func navigateToAnalyticsTab(app: XCUIApplication) {
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should be visible")
-
-        let analyticsTab = tabBar.buttons["Analytics"]
-        XCTAssertTrue(analyticsTab.exists, "Analytics tab should exist")
-        analyticsTab.tap()
-
-        // Wait for navigation to complete
-        sleep(2)
+        // Use the new navigation helper that goes to Shots -> Concentration segment
+        navigateToConcentration(app)
     }
 }

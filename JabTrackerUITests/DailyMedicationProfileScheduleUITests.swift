@@ -39,10 +39,8 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
 
-        // Navigate to Settings tab
-        let settingsTab = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(settingsTab.waitForExistence(timeout: 3), "Settings tab should exist")
-        settingsTab.tap()
+        // Navigate to Settings (via More tab)
+        TestUtilities.navigateToSettings(app)
 
         // Tap Medication Profiles button
         let medicationProfilesButton = app.buttons["Medication Profiles"]

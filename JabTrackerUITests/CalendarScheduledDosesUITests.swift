@@ -37,18 +37,18 @@ final class CalendarScheduledDosesUITests: XCTestCase {
             segmentedControl.waitForExistence(timeout: 3),
             "View mode picker should be available")
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         XCTAssertTrue(calendarToggleButton.exists, "Calendar toggle should be available")
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
 
         // THEN: Scheduled dose indicators appear on appropriate calendar days
         // Wait for calendar to load dose indicators
 
-        // Look for dose indicators on calendar days (rendered as StaticText elements)
-        let calendarDays = app.staticTexts.matching(
+        // Look for calendar day elements (SwiftUI views exposed as otherElements)
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,
@@ -58,7 +58,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         // With 30 days of test data, we should have some doses visible
         // The calendar should render without crashing
         let todayDay = Calendar.current.component(.day, from: Date())
-        let todayElement = app.staticTexts["calendar-day-\(todayDay)"]
+        let todayElement = app.descendants(matching: .any)["calendar-day-\(todayDay)"].firstMatch
         XCTAssertTrue(todayElement.exists, "Today's date element should exist in calendar")
 
         print("✅ Calendar view displays with dose indicators")
@@ -77,10 +77,10 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render dose indicators
@@ -115,10 +115,10 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render
@@ -146,10 +146,10 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render
@@ -178,10 +178,10 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render
@@ -212,10 +212,10 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to render and load scheduled doses
@@ -234,7 +234,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         XCTAssertTrue(calendarView.exists, "Calendar should render and auto-refresh with scheduled doses")
 
         // Verify calendar shows month with dose data
-        let calendarDays = app.staticTexts.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,
@@ -257,13 +257,13 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
 
         // Measure calendar rendering performance
         let startTime = Date()
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render with dose indicators
@@ -279,7 +279,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
 
         // THEN: Performance remains acceptable with large dataset
         // Verify calendar successfully rendered with dose data
-        let calendarDays = app.staticTexts.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,
@@ -302,13 +302,13 @@ final class CalendarScheduledDosesUITests: XCTestCase {
         let segmentedControl = app.segmentedControls["history-view-mode-picker"]
         XCTAssertTrue(segmentedControl.waitForExistence(timeout: 3))
 
-        let calendarToggleButton = segmentedControl.buttons["history-calendar-toggle"]
+        let calendarToggleButton = segmentedControl.buttons["Calendar"]
 
         // Measure initial calendar rendering (should be fast with lazy loading)
         let startTime = Date()
         calendarToggleButton.tap()
 
-        let calendarView = app.descendants(matching: .any)["dose-calendar-view"]
+        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
         XCTAssertTrue(calendarView.waitForExistence(timeout: 3))
 
         // Wait for calendar to fully render current month
@@ -322,7 +322,7 @@ final class CalendarScheduledDosesUITests: XCTestCase {
             "Calendar should render quickly with lazy loading (not calculating all future months)")
 
         // THEN: Current month displays scheduled doses correctly
-        let calendarDays = app.staticTexts.matching(
+        let calendarDays = app.otherElements.matching(
             NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
         XCTAssertGreaterThan(
             calendarDays.count, 20,

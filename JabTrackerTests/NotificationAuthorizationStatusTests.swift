@@ -15,11 +15,11 @@ struct NotificationAuthorizationStatusTests {
         // Given
         let status = UNAuthorizationStatus.authorized
 
-        // When
-        let view = NotificationAuthorizationStatus(status: status)
+        // When - verify component creates without crash
+        _ = NotificationAuthorizationStatus(status: status)
 
-        // Then - no crash, component created successfully
-        #expect(view != nil)
+        // Then - if we get here, component created successfully
+        #expect(true, "Component initialized successfully")
     }
 
     @Test("Component initializes with denied status")
@@ -27,11 +27,11 @@ struct NotificationAuthorizationStatusTests {
         // Given
         let status = UNAuthorizationStatus.denied
 
-        // When
-        let view = NotificationAuthorizationStatus(status: status)
+        // When - verify component creates without crash
+        _ = NotificationAuthorizationStatus(status: status)
 
-        // Then
-        #expect(view != nil)
+        // Then - if we get here, component created successfully
+        #expect(true, "Component initialized successfully")
     }
 
     // MARK: - Status Icon Tests

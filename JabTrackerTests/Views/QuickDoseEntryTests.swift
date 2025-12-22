@@ -14,12 +14,12 @@ struct QuickDoseEntryTests {
     // MARK: - Test Setup
 
     @MainActor
-    func createTestContext() -> ModelContext {
+    func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([User.self, MedicationProfile.self, Dose.self, DoseTitration.self])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         do {
             let container = try ModelContainer(for: schema, configurations: [config])
-            return container.mainContext
+            return (container.mainContext, container)
         } catch {
             fatalError("Failed to create test container: \(error)")
         }
@@ -83,7 +83,8 @@ struct QuickDoseEntryTests {
     @Test("Can save dose validation includes date restrictions")
     @MainActor
     func canSaveDoseValidationWithDateRestrictions() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         _ = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()
@@ -178,7 +179,8 @@ struct QuickDoseEntryTests {
     @Test("Load edit data updates both date and time properties")
     @MainActor
     func loadEditDataUpdatesDateAndTime() async {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let specificDateTime = Calendar.current.date(
@@ -294,7 +296,8 @@ struct QuickDoseEntryTests {
     @Test("Saving dose with custom date/time uses doseDateTime")
     @MainActor
     func savingDoseWithCustomDateTime() async throws {
-        let context = self.createTestContext()
+        let (context, container) = self.createTestContext()
+        _ = container  // Keep container alive for duration of test
         let profile = self.createTestMedicationProfile(context: context)
 
         let viewModel = QuickDoseViewModel()

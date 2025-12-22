@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1640"
+   LastUpgradeVersion = "2620"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -80,7 +80,8 @@
          </TestableReference>
          <TestableReference
             skipped = "NO"
-            parallelizable = "NO">
+            parallelizable = "YES"
+            testExecutionOrdering = "random">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0EAE947DED48D0D345FE2DDA"
@@ -148,7 +149,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--force-onboarding"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
@@ -156,7 +157,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-30d"
