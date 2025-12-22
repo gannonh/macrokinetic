@@ -29,7 +29,7 @@ Progress: ░░░░░░░░░░ 0%
 ## GitHub Tracking
 
 Issue: #317
-PR: (pending first phase commit)
+PR: #318
 Branch: feat/317-custom-foods
 
 ## Performance Metrics
