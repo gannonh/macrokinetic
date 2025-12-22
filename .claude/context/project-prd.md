@@ -1,6 +1,6 @@
 ---
 created: 2024-01-15T00:00:00Z
-updated: 2025-12-21T21:11:39Z
+updated: 2025-12-21T22:39:46Z
 ---
 
 # MacroKinetic Product Requirements Document
@@ -158,7 +158,7 @@ Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
 
 ---
 
-### 🔨 Meal Logging UI
+### ✅ Meal Logging UI
 
 Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
 
@@ -170,7 +170,7 @@ Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
 | AddFoodSheet - quick add modal                        | ✅    |
 | Four meal sections (breakfast, lunch, dinner, snacks) | ✅    |
 | Serving size input with unit conversion               | ✅    |
-| Edit and delete logged entries                        |      |
+| Edit and delete logged entries                        | ✅    |
 
 ---
 
