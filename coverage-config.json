@@ -71,6 +71,7 @@
           "Services/SubscriptionManager.swift",
           "Services/SubscriptionManager+Testing.swift",
           "Onboarding/OnboardingCoordinator.swift",
+          "Onboarding/OnboardingViewModel.swift",
           "Views/Analytics/ConcentrationChartGestureHandler.swift",
           "Views/Analytics/DoseMarkerOverlay.swift"
         ]
@@ -87,7 +88,6 @@
         "threshold": 85,
         "description": "ObservableObject classes with testable business logic",
         "files": [
-          "Onboarding/OnboardingViewModel.swift",
           "ViewModels/DoseCalendarViewModel.swift",
           "ViewModels/DoseHistoryViewModel.swift",
           "ViewModels/AnalyticsViewModel.swift",

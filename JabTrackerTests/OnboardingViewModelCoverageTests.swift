@@ -376,4 +376,205 @@ struct OnboardingViewModelCoverageTests {
     // NOTE: requestNotificationPermissions() test removed - it hangs in unit tests
     // because UNUserNotificationCenter.requestAuthorization() requires user interaction
     // in the simulator. This method should be tested in E2E/UI tests instead.
+
+    @Test("selectMedication sets daily schedule pattern for daily medication")
+    @MainActor
+    func selectMedicationSetsDailyPattern() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Select a daily medication (liraglutide)
+        viewModel.selectMedication(.liraglutide)
+
+        // Should set schedule pattern to daily
+        #expect(viewModel.schedulePattern == .daily, "Should set daily pattern for daily medication")
+        #expect(viewModel.selectedMedication == .liraglutide, "Selected medication should be set")
+        #expect(viewModel.selectedDose > 0, "Default dose should be set")
+    }
+
+    @Test("selectMedication sets weekly schedule pattern for weekly medication")
+    @MainActor
+    func selectMedicationSetsWeeklyPattern() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Select a weekly medication (semaglutide)
+        viewModel.selectMedication(.semaglutide)
+
+        // Should set schedule pattern to weekly
+        #expect(viewModel.schedulePattern == .weekly, "Should set weekly pattern for weekly medication")
+        #expect(viewModel.selectedMedication == .semaglutide, "Selected medication should be set")
+    }
+
+    @Test("canProceedToNext returns false for doseSetup with empty sites")
+    @MainActor
+    func canProceedToNextFalseForEmptySites() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.currentStep = .doseSetup
+        viewModel.selectedDose = 1.0
+        // Clear all sites
+        viewModel.selectedSites = []
+
+        #expect(viewModel.canProceedToNext == false, "Should not proceed with no injection sites")
+    }
+
+    @Test("canProceedToNext returns false for doseSetup with zero dose")
+    @MainActor
+    func canProceedToNextFalseForZeroDose() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.currentStep = .doseSetup
+        viewModel.selectedDose = 0
+        viewModel.selectedSites = ["Thigh"]
+
+        #expect(viewModel.canProceedToNext == false, "Should not proceed with zero dose")
+    }
+
+    @Test("validateScheduleConfiguration returns customScheduleValid for custom pattern")
+    @MainActor
+    func validateScheduleConfigurationForCustomPattern() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Set custom pattern
+        viewModel.schedulePattern = .custom
+        viewModel.customScheduleValid = false
+
+        #expect(viewModel.validateScheduleConfiguration() == false, "Should return customScheduleValid value")
+
+        viewModel.customScheduleValid = true
+        #expect(viewModel.validateScheduleConfiguration() == true, "Should return customScheduleValid value")
+    }
+
+    @Test("saveScheduleConfiguration restores pattern on validation failure")
+    @MainActor
+    func saveScheduleConfigurationRestoresPatternOnFailure() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.currentStep = .scheduleSetup
+        viewModel.schedulePattern = .weekly
+        viewModel.customScheduleValid = false  // Custom validation will fail
+
+        // Try to save with custom pattern (which will fail validation)
+        viewModel.saveScheduleConfiguration(pattern: .custom, reminderMinutes: 60, enableMultiple: false)
+
+        // Should have error message
+        #expect(viewModel.errorMessage != nil, "Error message should be set")
+
+        // Original pattern should be restored
+        #expect(viewModel.schedulePattern == .weekly, "Should restore original pattern on failure")
+    }
+
+    @Test("totalSteps returns correct count")
+    @MainActor
+    func totalStepsReturnsCorrectCount() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        #expect(viewModel.totalSteps == OnboardingStep.allCases.count)
+        #expect(viewModel.totalSteps == 7)
+    }
+
+    @Test("progress updates when step changes")
+    @MainActor
+    func progressUpdatesWhenStepChanges() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // At welcome step, progress should be 0
+        #expect(viewModel.currentStep == .welcome)
+        #expect(viewModel.progress == 0.0)
+
+        // Move to next step
+        viewModel.moveToNextStep()
+        #expect(viewModel.currentStep == .medicationSelection)
+
+        // Progress should have increased
+        let expectedProgress = 1.0 / Double(viewModel.totalSteps - 1)
+        #expect(abs(viewModel.progress - expectedProgress) < 0.01)
+    }
+
+    @Test("areSplitDoseTimesValid returns true for non-split patterns")
+    @MainActor
+    func areSplitDoseTimesValidForNonSplitPattern() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.schedulePattern = .weekly
+        #expect(viewModel.areSplitDoseTimesValid == true)
+
+        viewModel.schedulePattern = .daily
+        #expect(viewModel.areSplitDoseTimesValid == true)
+    }
+
+    @Test("areSplitDoseTimesValid validates split-dose times correctly")
+    @MainActor
+    func areSplitDoseTimesValidForSplitPattern() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.schedulePattern = .splitDose
+
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Set times 8 hours apart (valid: 6-18 hours)
+        viewModel.selectedFirstDoseTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: today)!
+        viewModel.selectedSecondDoseTime = calendar.date(bySettingHour: 16, minute: 0, second: 0, of: today)!
+
+        #expect(viewModel.areSplitDoseTimesValid == true, "8 hours apart should be valid")
+
+        // Set times 2 hours apart (invalid: less than 6 hours)
+        viewModel.selectedFirstDoseTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: today)!
+        viewModel.selectedSecondDoseTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: today)!
+
+        #expect(viewModel.areSplitDoseTimesValid == false, "2 hours apart should be invalid")
+    }
+
+    @Test("canProceedToNext for medicationSelection requires medication")
+    @MainActor
+    func canProceedToNextMedicationSelectionRequiresMedication() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.currentStep = .medicationSelection
+        viewModel.selectedMedication = nil
+
+        #expect(viewModel.canProceedToNext == false)
+
+        viewModel.selectedMedication = .semaglutide
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext for notifications always returns true")
+    @MainActor
+    func canProceedToNextNotificationsAlwaysTrue() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.currentStep = .notifications
+        #expect(viewModel.canProceedToNext == true)
+
+        viewModel.currentStep = .healthKit
+        #expect(viewModel.canProceedToNext == true)
+
+        viewModel.currentStep = .subscription
+        #expect(viewModel.canProceedToNext == true)
+    }
 }

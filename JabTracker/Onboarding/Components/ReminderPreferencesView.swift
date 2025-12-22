@@ -127,8 +127,9 @@ struct ReminderPreferencesView: View {
                 return nil
             }
 
-            return
-                "You'll be notified at \(formatter.string(from: firstNotification)) and \(formatter.string(from: secondNotification))"
+            let firstTime = formatter.string(from: firstNotification)
+            let secondTime = formatter.string(from: secondNotification)
+            return "You'll be notified at \(firstTime) and \(secondTime)"
         } else if let dose = doseTime {
             // Weekly/Daily: Show single notification time
             guard

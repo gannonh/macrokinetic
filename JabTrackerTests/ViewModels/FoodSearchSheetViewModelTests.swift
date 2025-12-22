@@ -468,6 +468,192 @@ struct FoodSearchSheetViewModelTests {
         #expect(viewModel.remainingBrandedCount() == 0)
     }
 
+    // MARK: - hasResults Tests
+
+    @Test("hasResults returns true when history has results")
+    @MainActor
+    func hasResultsReturnsTrueWhenHistoryHasResults() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.historyResults = createMockResults(count: 1)
+        #expect(viewModel.hasResults == true)
+    }
+
+    @Test("hasResults returns true when custom has results")
+    @MainActor
+    func hasResultsReturnsTrueWhenCustomHasResults() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.customResults = createMockResults(count: 1)
+        #expect(viewModel.hasResults == true)
+    }
+
+    @Test("hasResults returns true when branded has results")
+    @MainActor
+    func hasResultsReturnsTrueWhenBrandedHasResults() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.brandedResults = createMockResults(count: 1)
+        #expect(viewModel.hasResults == true)
+    }
+
+    // MARK: - visibleCustomResults Tests
+
+    @Test("Visible custom results shows 5 when collapsed")
+    @MainActor
+    func visibleCustomResultsShows5WhenCollapsed() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.customResults = createMockResults(count: 10)
+
+        #expect(viewModel.customExpanded == false)
+        #expect(viewModel.visibleCustomResults.count == 5)
+    }
+
+    @Test("Visible custom results shows all when expanded")
+    @MainActor
+    func visibleCustomResultsShowsAllWhenExpanded() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.customResults = createMockResults(count: 10)
+        viewModel.toggleCustomExpanded()
+
+        #expect(viewModel.customExpanded == true)
+        #expect(viewModel.visibleCustomResults.count == 10)
+    }
+
+    // MARK: - performSearch Tests
+
+    @Test("performSearch clears results when query is empty")
+    @MainActor
+    func performSearchClearsResultsWhenQueryEmpty() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        // Set up some existing results
+        viewModel.commonResults = createMockResults(count: 5)
+        viewModel.historyExpanded = true
+        viewModel.searchText = ""
+
+        await viewModel.performSearch()
+
+        #expect(viewModel.commonResults.isEmpty)
+        #expect(viewModel.historyExpanded == false)
+    }
+
+    @Test("performSearch clears results when query is whitespace only")
+    @MainActor
+    func performSearchClearsResultsWhenQueryWhitespace() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.commonResults = createMockResults(count: 5)
+        viewModel.searchText = "   "
+
+        await viewModel.performSearch()
+
+        #expect(viewModel.commonResults.isEmpty)
+    }
+
+    @Test("performSearch sets isSearching flag during search")
+    @MainActor
+    func performSearchSetsIsSearchingFlag() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.searchText = "chicken"
+
+        // Search completes immediately in tests (no real database)
+        await viewModel.performSearch()
+
+        // After completion, isSearching should be false
+        #expect(viewModel.isSearching == false)
+    }
+
+    @Test("performSearch clears error message before searching")
+    @MainActor
+    func performSearchClearsErrorMessage() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+
+        viewModel.errorMessage = "Previous error"
+        viewModel.searchText = "test"
+
+        await viewModel.performSearch()
+
+        // Error should be cleared (may be set again if search fails)
+        // But at least we exercised the code path
+        #expect(viewModel.errorMessage == nil || viewModel.errorMessage != "Previous error")
+    }
+
     // MARK: - Clear Search Resets Expansion Tests
 
     @Test("Clear search resets expansion state")

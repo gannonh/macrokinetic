@@ -652,7 +652,16 @@ struct ScheduleServiceProjectionTests {
             customRecurrence: nil
         )
 
-        let startDate = Date()
+        // Use fixed reference date to avoid timing race conditions
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 6
+        components.day = 1
+        components.hour = 8
+        components.minute = 0
+        let startDate = calendar.date(from: components)!
+
         let schedule = try service.createSchedule(
             for: profile,
             pattern: .splitDose,
@@ -660,12 +669,14 @@ struct ScheduleServiceProjectionTests {
             baseSchedule: config
         )
 
-        // WHEN: Generating doses for 2 weeks
-        let endDate = Calendar.current.date(byAdding: .day, value: 14, to: startDate)!
+        // WHEN: Generating doses for 13 days (just under 2 full weeks)
+        // Note: Use 13 days to avoid boundary condition at exactly 14 days
+        // which would produce 5 doses (day 0, 3.5, 7, 10.5, 14)
+        let endDate = calendar.date(byAdding: .day, value: 13, to: startDate)!
         let doses = service.generateScheduledDoses(for: schedule, from: startDate, to: endDate)
 
-        // THEN: Should have 4 doses (2 per week for 2 weeks)
-        #expect(doses.count == 4, "Should generate 4 doses for 2 weeks with split-dose pattern")
+        // THEN: Should have 4 doses (day 0, 3.5, 7, 10.5 - day 14 excluded)
+        #expect(doses.count == 4, "Should generate 4 doses for 13 days with split-dose pattern")
 
         // THEN: Doses should be ~3.5 days apart
         for index in 0..<(doses.count - 1) {

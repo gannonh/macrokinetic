@@ -10,7 +10,7 @@ import Testing
 
 @testable import JabTracker
 
-@Suite("QuickDoseViewModel Titration Tests")
+@Suite("QuickDoseViewModel Titration Tests", .serialized)
 struct QuickDoseViewModelTitrationTests {
     // MARK: - Test Setup
 

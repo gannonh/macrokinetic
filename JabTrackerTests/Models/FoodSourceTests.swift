@@ -71,6 +71,23 @@ struct FoodSourceTests {
         #expect(FoodSource.userCreated.displayName == "Custom")
     }
 
+    // MARK: - Icon Name Tests
+
+    @Test("Local iconName returns 'leaf.fill'")
+    func testLocalIconName() {
+        #expect(FoodSource.local.iconName == "leaf.fill")
+    }
+
+    @Test("OpenFoodFacts iconName returns 'barcode'")
+    func testOpenFoodFactsIconName() {
+        #expect(FoodSource.openFoodFacts.iconName == "barcode")
+    }
+
+    @Test("UserCreated iconName returns 'person.fill'")
+    func testUserCreatedIconName() {
+        #expect(FoodSource.userCreated.iconName == "person.fill")
+    }
+
     // MARK: - Codable Conformance Tests
 
     @Test("Local case encodes and decodes correctly")

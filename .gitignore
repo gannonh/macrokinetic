@@ -40,3 +40,4 @@ scripts/usda_data/
 scripts/off_data/
 JabTracker/Resources/usda_foods.sqlite
 mocks/
+.coverage/**/*

@@ -345,7 +345,9 @@ struct ConcentrationCurvePreviewTests {
         days: Int
     ) -> [Dose] {
         var doses: [Dose] = []
-        let startDate = Date().addingTimeInterval(-Double(days) * 24 * 3600)
+        // Use single Date reference to avoid race condition between start/end calculation
+        let now = Date()
+        let startDate = now.addingTimeInterval(-Double(days) * 24 * 3600)
 
         let intervalSeconds: TimeInterval
         switch pattern {
@@ -360,7 +362,7 @@ struct ConcentrationCurvePreviewTests {
         }
 
         var currentDate = startDate
-        let endDate = Date()
+        let endDate = now
 
         while currentDate < endDate {
             let dose = Dose(
