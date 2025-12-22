@@ -9,6 +9,7 @@ allowed-tools:
   - Grep
   - AskUserQuestion
   - WebFetch
+  - Task
   - mcp__context7__*
 ---
 

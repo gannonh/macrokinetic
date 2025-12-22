@@ -156,6 +156,139 @@ From create-meta-prompts patterns:
 - Output specification includes SUMMARY.md structure
   </key_elements>
 
+<tdd_task_structure>
+## TDD Task Structure
+
+For tasks with testable business logic, use TDD task format with `approach="tdd"`:
+
+```xml
+<task type="auto" approach="tdd">
+  <name>Task N: [Feature Name]</name>
+  <files>
+    Tests: path/to/feature_tests.swift
+    Implementation: path/to/feature.swift
+  </files>
+  <action>
+    **RED**: Write failing test(s) first:
+    - Test case 1: [expected behavior]
+    - Test case 2: [edge case]
+    - Test case 3: [boundary condition]
+
+    **GREEN**: Implement minimal code to pass tests.
+    - Focus on making tests pass, not perfect code
+    - Don't over-engineer at this stage
+
+    **REFACTOR**: Clean up while keeping tests green.
+    - Extract helpers if needed
+    - Improve naming
+    - Remove duplication
+  </action>
+  <verify>./scripts/test.sh unit 1 [TestClassName]</verify>
+  <done>All tests pass, coverage threshold met for new code</done>
+</task>
+```
+
+**When to use TDD approach:**
+Ask: "Can I write `#expect(fn(input) == output)` before writing `fn`?"
+
+→ **Yes** (use `approach="tdd"`):
+  - Business logic and calculations
+  - Service methods with clear inputs/outputs
+  - Validation logic
+  - State transformations
+  - Data processing
+
+→ **No** (use standard `type="auto"`):
+  - UI layout and styling
+  - Configuration changes
+  - Glue code and wiring
+  - Exploratory work
+</tdd_task_structure>
+
+<e2e_stub_structure>
+## E2E Test Stub Structure
+
+For UI features, include E2E stub task with `approach="e2e-stub"`:
+
+```xml
+<task type="auto" approach="e2e-stub">
+  <name>Task N: Stub E2E Tests for [Feature]</name>
+  <files>JabTrackerUITests/[Feature]UITests.swift</files>
+  <action>
+    Create test file with method stubs (NO implementation yet):
+
+    ```swift
+    import XCTest
+
+    final class [Feature]UITests: XCTestCase {
+
+        override func setUpWithError() throws {
+            continueAfterFailure = false
+        }
+
+        // MARK: - Happy Path
+
+        /// User can [primary action]
+        /// Acceptance: [criteria from requirements]
+        func testUserCan[PrimaryAction]() {
+            // TODO: Implement after manual smoke test
+        }
+
+        /// User sees [expected feedback] after [action]
+        /// Acceptance: [criteria]
+        func testUserSees[Feedback]After[Action]() {
+            // TODO: Implement after manual smoke test
+        }
+
+        // MARK: - Edge Cases
+
+        /// System handles [edge case]
+        /// Acceptance: [criteria]
+        func testSystemHandles[EdgeCase]() {
+            // TODO: Implement after manual smoke test
+        }
+
+        /// User sees error when [error condition]
+        /// Acceptance: [criteria]
+        func testUserSeesErrorWhen[ErrorCondition]() {
+            // TODO: Implement after manual smoke test
+        }
+
+        // MARK: - Validation
+
+        /// [Validation scenario]
+        /// Acceptance: [criteria]
+        func test[ValidationScenario]() {
+            // TODO: Implement after manual smoke test
+        }
+    }
+    ```
+
+    **Requirements for stubs:**
+    - Descriptive method names that explain the scenario
+    - Acceptance criteria documented in comments
+    - Empty implementation body with TODO comment
+    - Organized by MARK sections (Happy Path, Edge Cases, Validation)
+  </action>
+  <verify>Build succeeds, test file exists with all stubs</verify>
+  <done>E2E test stubs created with acceptance criteria documented in comments</done>
+</task>
+```
+
+**E2E Stub Rule:**
+For phases with UI components, include an E2E stub task that:
+- Creates test file with descriptive method names
+- Documents acceptance criteria in comments
+- Leaves implementation empty (filled after manual smoke test)
+- Groups tests by scenario type (happy path, edge cases, validation)
+
+**Stub implementation timing:**
+E2E stubs are created during implementation but filled in AFTER:
+1. Manual smoke test confirms feature works
+2. User approves functionality
+3. Then implement actual test logic using `/ios-e2e-testing` skill
+</e2e_stub_structure>
+
 <scope_guidance>
 **Plan sizing:**
 

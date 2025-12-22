@@ -437,7 +437,57 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
 
 2. For each task:
 
-   **If `type="auto"`:**
+   **If `type="auto"` with `approach="tdd"`:**
+
+   - **Dispatch to dev agent for strict TDD enforcement**
+   - Use Task tool with `subagent_type="dev"` and prompt:
+     ```
+     Execute this task using STRICT TDD methodology:
+
+     Task: [task XML from plan]
+
+     **TDD Cycle - Follow Exactly:**
+
+     1. **RED** - Write failing test(s) FIRST
+        - Read the test cases specified in <action>
+        - Write tests that capture the expected behavior
+        - Run tests to confirm they FAIL (must see RED)
+        - If tests pass before implementation: tests are wrong, fix them
+
+     2. **GREEN** - Implement minimal code to pass
+        - Write the simplest code that makes tests pass
+        - Don't over-engineer or add features
+        - Run tests to confirm they PASS (must see GREEN)
+
+     3. **REFACTOR** - Clean up while keeping tests green
+        - Improve code structure, naming, organization
+        - Run tests after each change to ensure still GREEN
+        - Extract helpers if needed, remove duplication
+
+     **Rules:**
+     - NEVER write implementation before tests
+     - NEVER skip the RED phase (tests must fail first)
+     - Commit after each complete RED-GREEN-REFACTOR cycle
+     - Use conventional commit: "test: add [feature] tests" then "feat: implement [feature]"
+
+     **Verification:**
+     - Run: [verify command from task]
+     - Confirm: [done criteria from task]
+
+     Report back: tasks completed, tests written, implementation summary, commit hashes
+     ```
+   - Wait for dev agent to complete
+   - Verify tests pass with: [verify command from task]
+   - Continue to next task
+
+   **If `type="auto"` with `approach="e2e-stub"`:**
+
+   - Execute directly (simple file creation)
+   - Create test file with method stubs as specified in <action>
+   - Verify build succeeds
+   - Continue to next task
+
+   **If `type="auto"` (standard - no approach attribute):**
 
    - Work toward task completion
    - **If CLI/API returns authentication error:** Handle as authentication gate (see below)

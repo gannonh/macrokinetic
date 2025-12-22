@@ -156,6 +156,17 @@ Create a new milestone with phases for an existing project.
 
 Usage: `/gsd:new-milestone "v2.0 Features"`
 
+**`/gsd:pre-merge [pr-number]`**
+Run comprehensive PR review workflow before merging.
+
+- Runs CI checks (lint, build, tests, coverage)
+- Executes /pr-review-toolkit:review-pr all
+- Processes /qa:code-rabbit comments
+- Ensures all issues addressed before merge
+- Auto-detects PR from current branch if not specified
+
+Usage: `/gsd:pre-merge` or `/gsd:pre-merge 123`
+
 **`/gsd:complete-milestone <version>`**
 Archive completed milestone and prepare for next version.
 
@@ -290,8 +301,9 @@ Change anytime by editing `.planning/config.json`
 **Completing a milestone:**
 
 ```
+/gsd:pre-merge           # Review and fix all issues
 /gsd:complete-milestone 1.0.0
-/gsd:new-project  # Start next milestone
+/gsd:new-milestone "v1.1"  # Start next milestone
 ```
 
 ## Getting Help

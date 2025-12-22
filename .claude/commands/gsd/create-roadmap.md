@@ -69,12 +69,23 @@ The workflow handles:
 - Git commit
 </step>
 
+<step name="github_setup">
+After git commit, create GitHub issue, feature branch, and draft PR:
+- Follow github_setup step from workflow
+- Creates milestone tracking structure
+</step>
+
 <step name="done">
 ```
 Roadmap created:
 - Roadmap: .planning/ROADMAP.md
 - State: .planning/STATE.md
 - [N] phases defined
+
+GitHub setup:
+- Issue: #[ISSUE_NUM] ([Milestone] [Name])
+- Branch: feat/[ISSUE_NUM]-[slug]
+- PR: #[PR_NUM] (draft)
 
 ---
 
@@ -111,4 +122,8 @@ Roadmap created:
 - [ ] STATE.md initialized
 - [ ] Phase directories created
 - [ ] Changes committed
+- [ ] GitHub issue created for milestone
+- [ ] Feature branch created and pushed
+- [ ] Draft PR created linking to issue
+- [ ] STATE.md updated with GitHub tracking info
 </success_criteria>

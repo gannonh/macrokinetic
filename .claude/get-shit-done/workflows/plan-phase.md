@@ -469,6 +469,174 @@ For simpler domains, suggest `/gsd:discuss-phase {phase}` or proceed with roadma
 
 </step>
 
+<step name="codebase_exploration">
+**Launch 2-3 code-explorer agents in parallel for deep codebase understanding.**
+
+**When to run:** Always run for non-trivial phases (skip for config-only or doc-only phases).
+
+**Skip conditions:**
+- Phase is purely documentation or configuration
+- Phase is simple bug fix with known location
+- Previous phase already explored the same code area
+
+**Actions:**
+
+1. **Launch code-explorer agents targeting different aspects:**
+
+   Use the Task tool with `subagent_type: "code-explorer"` to launch 2-3 agents in parallel:
+
+   **Agent 1 - Similar Features:**
+   ```
+   "Find features similar to [phase goal] and trace through their implementation comprehensively.
+   Focus on understanding abstractions, architecture, and flow of control.
+   Include a list of 5-10 key files that should be read for deep understanding."
+   ```
+
+   **Agent 2 - Architecture & Patterns:**
+   ```
+   "Map the architecture and abstractions for [relevant area], tracing through code comprehensively.
+   Focus on data flow, service layers, and design patterns used.
+   Identify key interfaces, protocols, and extension points.
+   Include a list of 5-10 key files."
+   ```
+
+   **Agent 3 - UI/Testing Patterns (if applicable):**
+   ```
+   "Identify UI patterns, testing approaches, or extension points relevant to [phase goal].
+   Trace through existing implementations to understand conventions.
+   Include a list of 5-10 key files."
+   ```
+
+2. **Wait for all agents to return.**
+
+3. **Read all files identified by agents** to build deep understanding of:
+   - Existing patterns to follow
+   - Abstractions to reuse
+   - Conventions to maintain
+   - Potential integration points
+
+4. **Synthesize findings into planning context:**
+   ```
+   ## Codebase Exploration Summary
+
+   ### Existing Patterns Found
+   - [Pattern 1]: Used in [files], should follow for [reason]
+   - [Pattern 2]: Used in [files], should follow for [reason]
+
+   ### Key Abstractions to Reuse
+   - [Abstraction 1] in [file:line]
+   - [Abstraction 2] in [file:line]
+
+   ### Files to Reference in PLAN.md
+   @path/to/key/file1.swift
+   @path/to/key/file2.swift
+
+   ### Potential Pitfalls Identified
+   - [Pitfall 1]: [how to avoid]
+   - [Pitfall 2]: [how to avoid]
+   ```
+
+**Output:** Add exploration findings to planning context for task breakdown and PLAN.md context section.
+</step>
+
+<step name="architecture_design">
+**Launch 2-3 code-architect agents with different design approaches.**
+
+**When to run:** For phases involving:
+- New features or significant functionality
+- Changes affecting multiple files/components
+- Architectural decisions needed
+
+**Skip conditions:**
+- Simple single-file changes
+- Bug fixes with obvious solutions
+- Pure refactoring with clear target state
+
+**Actions:**
+
+1. **Launch code-architect agents in parallel with different focuses:**
+
+   Use the Task tool with `subagent_type: "code-architect"` to launch 2-3 agents:
+
+   **Agent 1 - Minimal Changes:**
+   ```
+   "Design implementation for [phase goal] with MINIMAL CHANGES approach:
+   - Smallest possible footprint
+   - Maximum reuse of existing code and patterns
+   - Fewest files modified
+   - Fastest path to working solution
+
+   Provide: component design, files to modify, data flow, trade-offs."
+   ```
+
+   **Agent 2 - Clean Architecture:**
+   ```
+   "Design implementation for [phase goal] with CLEAN ARCHITECTURE approach:
+   - Maximum maintainability
+   - Elegant abstractions and clear interfaces
+   - Proper separation of concerns
+   - Future extensibility
+
+   Provide: component design, files to create/modify, data flow, trade-offs."
+   ```
+
+   **Agent 3 - Pragmatic Balance:**
+   ```
+   "Design implementation for [phase goal] with PRAGMATIC BALANCE approach:
+   - Ships quickly without technical debt
+   - Good enough abstractions
+   - Reasonable extensibility
+   - Practical trade-offs
+
+   Provide: component design, files to create/modify, data flow, trade-offs."
+   ```
+
+2. **Wait for all agents to return.**
+
+3. **Review all approaches and form recommendation considering:**
+   - Is this a small fix or large feature? (small → minimal)
+   - Urgency vs thoroughness tradeoff
+   - Complexity of the phase
+   - Project conventions and existing patterns
+   - Team context (solo dev vs team)
+
+4. **Present options to user:**
+
+   ```
+   ## Architecture Options for Phase [X]: [Name]
+
+   ### Option A: Minimal Changes
+   **Summary:** [1-2 sentences]
+   **Files:** [list]
+   **Pros:** [bullets]
+   **Cons:** [bullets]
+
+   ### Option B: Clean Architecture
+   **Summary:** [1-2 sentences]
+   **Files:** [list]
+   **Pros:** [bullets]
+   **Cons:** [bullets]
+
+   ### Option C: Pragmatic Balance
+   **Summary:** [1-2 sentences]
+   **Files:** [list]
+   **Pros:** [bullets]
+   **Cons:** [bullets]
+
+   ---
+
+   ## Recommendation: Option [X]
+
+   **Reasoning:** [Based on phase characteristics: size, urgency, complexity, conventions]
+
+   Which approach would you like to use? (A / B / C / discuss)
+   ```
+
+5. **Wait for user selection** before proceeding to task breakdown.
+
+**Output:** Selected architecture approach informs task structure, file lists, and implementation strategy.
+</step>
+
 <step name="break_into_tasks">
 Decompose the phase into tasks.
 
@@ -847,6 +1015,8 @@ Phase planning is complete when:
 - [ ] If Level 2-3: DISCOVERY.md exists with current context
 - [ ] If Level 1: Quick verification performed via Context7
 - [ ] If RESEARCH.md exists: ecosystem knowledge incorporated into plan
+- [ ] **Codebase exploration completed** (2-3 code-explorer agents launched for non-trivial phases)
+- [ ] **Architecture design completed** (2-3 code-architect agents, user selected approach)
 - [ ] Prior decisions, issues, and concerns synthesized
 - [ ] One or more PLAN files exist with XML structure ({phase}-{plan}-PLAN.md)
 - [ ] Each plan has: Objective, context, tasks, verification, success criteria, output

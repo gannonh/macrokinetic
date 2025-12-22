@@ -374,6 +374,112 @@ EOF
 Confirm: "Committed: docs: initialize [project] ([N] phases)"
 </step>
 
+<step name="github_setup">
+**Create GitHub issue, feature branch, and draft PR for this milestone.**
+
+This establishes the GitHub workflow structure for tracking the milestone.
+
+**1. Extract milestone name:**
+```bash
+MILESTONE_NAME=$(grep "^# " .planning/ROADMAP.md | head -1 | sed 's/# //' | sed 's/ Roadmap//')
+echo "Milestone: $MILESTONE_NAME"
+```
+
+**2. Create GitHub Issue:**
+```bash
+ISSUE_BODY=$(cat <<'EOF'
+## Milestone Overview
+
+$(cat .planning/PROJECT.md | head -50)
+
+## Phases
+
+$(grep -A1 "^### Phase" .planning/ROADMAP.md)
+
+## Tracking
+
+This issue tracks the overall milestone progress. Individual phases may have their own tasks.
+
+---
+*Created via GSD workflow*
+EOF
+)
+
+gh issue create \
+  --title "[Milestone] $MILESTONE_NAME" \
+  --body "$ISSUE_BODY" \
+  --label "milestone"
+```
+
+**3. Get issue number and create feature branch:**
+```bash
+# Get the issue number just created
+ISSUE_NUM=$(gh issue list --limit 1 --state open --json number -q '.[0].number')
+
+# Create sanitized branch name
+BRANCH_SLUG=$(echo "$MILESTONE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-')
+BRANCH_NAME="feat/${ISSUE_NUM}-${BRANCH_SLUG}"
+
+# Create and push branch
+git checkout -b "$BRANCH_NAME"
+git push -u origin "$BRANCH_NAME"
+echo "Created branch: $BRANCH_NAME"
+```
+
+**4. Create draft PR:**
+```bash
+PHASE_LIST=$(grep "^### Phase" .planning/ROADMAP.md | sed 's/### /- [ ] /')
+
+gh pr create --draft \
+  --title "[WIP] $MILESTONE_NAME" \
+  --body "$(cat <<EOF
+Closes #$ISSUE_NUM
+
+## Phases
+$PHASE_LIST
+
+## Status
+In progress - tracking via GSD workflow.
+
+---
+*This PR will be updated as phases complete.*
+EOF
+)"
+```
+
+**5. Get PR number and update STATE.md:**
+```bash
+PR_NUM=$(gh pr view --json number -q .number)
+echo "Created PR #$PR_NUM"
+```
+
+Update STATE.md with GitHub tracking info by adding after "## Current Position":
+```markdown
+## GitHub Tracking
+
+Issue: #[ISSUE_NUM]
+PR: #[PR_NUM]
+Branch: [BRANCH_NAME]
+```
+
+**6. Commit STATE.md update:**
+```bash
+git add .planning/STATE.md
+git commit -m "chore: add GitHub tracking to STATE.md"
+git push
+```
+
+**Output:**
+```
+GitHub setup complete:
+- Issue: #[ISSUE_NUM] ([Milestone] $MILESTONE_NAME)
+- Branch: $BRANCH_NAME
+- PR: #[PR_NUM] (draft)
+
+Milestone work will be tracked in this PR.
+```
+</step>
+
 <step name="offer_next">
 ```
 Project initialized:
