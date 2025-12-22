@@ -20,7 +20,6 @@ struct CreateFoodSheet: View {
     // MARK: - Callbacks
 
     let onFoodCreated: ((Food) -> Void)?
-    let onDismiss: (() -> Void)?
 
     // MARK: - Accessibility Identifiers
 
@@ -46,12 +45,10 @@ struct CreateFoodSheet: View {
     ///   - customFoodService: Service for creating custom foods
     ///   - prefillFrom: Optional FoodSearchResult to prefill form fields
     ///   - onFoodCreated: Callback when food is successfully created
-    ///   - onDismiss: Callback when sheet is dismissed
     init(
         customFoodService: CustomFoodService,
         prefillFrom: FoodSearchResult? = nil,
-        onFoodCreated: ((Food) -> Void)? = nil,
-        onDismiss: (() -> Void)? = nil
+        onFoodCreated: ((Food) -> Void)? = nil
     ) {
         let vm = CreateFoodViewModel(customFoodService: customFoodService, mode: .create)
         if let prefill = prefillFrom {
@@ -59,18 +56,15 @@ struct CreateFoodSheet: View {
         }
         self._viewModel = State(wrappedValue: vm)
         self.onFoodCreated = onFoodCreated
-        self.onDismiss = onDismiss
     }
 
     /// Private initializer for edit mode
     private init(
         viewModel: CreateFoodViewModel,
-        onFoodCreated: ((Food) -> Void)?,
-        onDismiss: (() -> Void)?
+        onFoodCreated: ((Food) -> Void)?
     ) {
         self._viewModel = State(wrappedValue: viewModel)
         self.onFoodCreated = onFoodCreated
-        self.onDismiss = onDismiss
     }
 
     /// Create sheet for editing an existing custom food
@@ -78,13 +72,11 @@ struct CreateFoodSheet: View {
     ///   - food: The food to edit (must be a custom food)
     ///   - customFoodService: Service for updating custom foods
     ///   - onFoodCreated: Callback when food is successfully updated
-    ///   - onDismiss: Callback when sheet is dismissed
     /// - Returns: CreateFoodSheet configured for editing
     static func edit(
         food: Food,
         customFoodService: CustomFoodService,
-        onFoodCreated: ((Food) -> Void)? = nil,
-        onDismiss: (() -> Void)? = nil
+        onFoodCreated: ((Food) -> Void)? = nil
     ) -> CreateFoodSheet {
         let vm = CreateFoodViewModel(
             customFoodService: customFoodService,
@@ -93,8 +85,7 @@ struct CreateFoodSheet: View {
         )
         return CreateFoodSheet(
             viewModel: vm,
-            onFoodCreated: onFoodCreated,
-            onDismiss: onDismiss
+            onFoodCreated: onFoodCreated
         )
     }
 
@@ -113,7 +104,6 @@ struct CreateFoodSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        onDismiss?()
                         dismiss()
                     }
                     .accessibilityIdentifier(Self.cancelButtonIdentifier)
@@ -309,6 +299,8 @@ struct CreateFoodSheet: View {
             .padding(32)
             .background(Color(.systemBackground).opacity(0.9))
             .cornerRadius(16)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Saving custom food")
         }
     }
 

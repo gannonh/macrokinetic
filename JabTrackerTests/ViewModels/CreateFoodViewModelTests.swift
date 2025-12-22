@@ -11,6 +11,7 @@ import Testing
 
 @testable import JabTracker
 
+@Suite
 @MainActor
 struct CreateFoodViewModelTests {
     // MARK: - Test Helpers
@@ -34,6 +35,24 @@ struct CreateFoodViewModelTests {
     {
         let service = createService(context: context)
         return CreateFoodViewModel(customFoodService: service, mode: mode)
+    }
+
+    private func createViewModelWithFood(
+        context: ModelContext,
+        editingFood: Food
+    ) -> CreateFoodViewModel {
+        let service = createService(context: context)
+        return CreateFoodViewModel(customFoodService: service, mode: .edit, editingFood: editingFood)
+    }
+
+    /// Populate ViewModel with valid default values for testing
+    private func populateValidDefaults(_ viewModel: CreateFoodViewModel) {
+        viewModel.name = "Test Food"
+        viewModel.caloriesPer100g = 100
+        viewModel.proteinPer100g = 10
+        viewModel.carbsPer100g = 20
+        viewModel.fatPer100g = 5
+        viewModel.servingSize = 100
     }
 
     // MARK: - canSave Validation Tests
@@ -432,14 +451,161 @@ struct CreateFoodViewModelTests {
         _ = container
 
         let viewModel = createViewModel(context: context)
-
-        viewModel.name = "Valid Food"
-        viewModel.caloriesPer100g = 100
-        viewModel.servingSize = 100
+        populateValidDefaults(viewModel)
 
         // Manually set isSaving to true (simulating in-progress save)
         viewModel.isSaving = true
 
         #expect(viewModel.canSave == false)
+    }
+
+    // MARK: - Edit Mode Tests
+
+    @Test("edit mode prefills from editingFood on init")
+    func testEditModePrefillsFromEditingFood() {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Create an existing food
+        let existingFood = Food(
+            name: "Existing Food",
+            brand: "Test Brand",
+            caloriesPer100g: 200,
+            proteinPer100g: 25,
+            carbsPer100g: 15,
+            fatPer100g: 8,
+            fiberPer100g: 3,
+            servingSize: 150,
+            servingUnit: "oz",
+            servingDescription: "1 serving",
+            barcode: "1111111111"
+        )
+        existingFood.foodSource = .userCreated
+        context.insert(existingFood)
+
+        let viewModel = createViewModelWithFood(context: context, editingFood: existingFood)
+
+        #expect(viewModel.name == "Existing Food")
+        #expect(viewModel.brand == "Test Brand")
+        #expect(viewModel.caloriesPer100g == 200)
+        #expect(viewModel.proteinPer100g == 25)
+        #expect(viewModel.carbsPer100g == 15)
+        #expect(viewModel.fatPer100g == 8)
+        #expect(viewModel.fiberPer100g == 3)
+        #expect(viewModel.servingSize == 150)
+        #expect(viewModel.servingUnit == "oz")
+        #expect(viewModel.servingDescription == "1 serving")
+        #expect(viewModel.barcode == "1111111111")
+        #expect(viewModel.mode == .edit)
+    }
+
+    @Test("save in edit mode calls updateCustomFood")
+    func testSaveInEditModeCallsUpdate() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Create an existing food
+        let existingFood = Food(
+            name: "Original Name",
+            brand: "",
+            caloriesPer100g: 100,
+            proteinPer100g: 10,
+            carbsPer100g: 20,
+            fatPer100g: 5,
+            fiberPer100g: 2,
+            servingSize: 100,
+            servingUnit: "g",
+            servingDescription: "",
+            barcode: ""
+        )
+        existingFood.foodSource = .userCreated
+        context.insert(existingFood)
+        try context.save()
+
+        let viewModel = createViewModelWithFood(context: context, editingFood: existingFood)
+
+        // Modify the food
+        viewModel.name = "Updated Name"
+        viewModel.caloriesPer100g = 150
+
+        // Save should update the existing food
+        let food = try await viewModel.save()
+
+        // Should return the same food object (updated in place)
+        #expect(food.id == existingFood.id)
+        #expect(food.name == "Updated Name")
+        #expect(food.caloriesPer100g == 150)
+    }
+
+    @Test("save in edit mode returns the editingFood")
+    func testSaveInEditModeReturnsEditingFood() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Create an existing food
+        let existingFood = Food(
+            name: "Test Food",
+            brand: "",
+            caloriesPer100g: 100,
+            proteinPer100g: 10,
+            carbsPer100g: 20,
+            fatPer100g: 5,
+            fiberPer100g: 0,
+            servingSize: 100,
+            servingUnit: "g",
+            servingDescription: "",
+            barcode: ""
+        )
+        existingFood.foodSource = .userCreated
+        context.insert(existingFood)
+        try context.save()
+
+        let viewModel = createViewModelWithFood(context: context, editingFood: existingFood)
+
+        let returnedFood = try await viewModel.save()
+
+        // The returned food should be the same instance as editingFood
+        #expect(returnedFood === existingFood)
+    }
+
+    // MARK: - showingError Computed Property Tests
+
+    @Test("showingError returns true when errorMessage is set")
+    func testShowingErrorReturnsTrue() {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let viewModel = createViewModel(context: context)
+
+        viewModel.errorMessage = "Some error"
+
+        #expect(viewModel.showingError == true)
+    }
+
+    @Test("showingError returns false when errorMessage is nil")
+    func testShowingErrorReturnsFalseWhenNil() {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let viewModel = createViewModel(context: context)
+
+        viewModel.errorMessage = nil
+
+        #expect(viewModel.showingError == false)
+    }
+
+    @Test("setting showingError to false clears errorMessage")
+    func testSettingShowingErrorFalseClearsMessage() {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let viewModel = createViewModel(context: context)
+
+        viewModel.errorMessage = "Some error"
+        #expect(viewModel.showingError == true)
+
+        viewModel.showingError = false
+
+        #expect(viewModel.errorMessage == nil)
     }
 }

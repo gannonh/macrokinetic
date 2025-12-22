@@ -7,6 +7,7 @@
 
 import Foundation
 import OSLog
+import SwiftData
 
 /// ViewModel managing state for the CreateFoodSheet
 @Observable
@@ -43,7 +44,12 @@ final class CreateFoodViewModel {
 
     var isSaving: Bool = false
     var errorMessage: String?
-    var showingError: Bool = false
+
+    /// Computed binding for showing error alert (derived from errorMessage)
+    var showingError: Bool {
+        get { errorMessage != nil }
+        set { if !newValue { errorMessage = nil } }
+    }
 
     // MARK: - Mode and Editing
 
@@ -161,8 +167,7 @@ final class CreateFoodViewModel {
         Self.logger.debug("Saving custom food: \(self.name)")
 
         isSaving = true
-        errorMessage = nil
-        showingError = false
+        errorMessage = nil  // Clears showingError via computed property
 
         do {
             let input = buildInput()
@@ -183,8 +188,7 @@ final class CreateFoodViewModel {
             return food
         } catch {
             Self.logger.error("Failed to save custom food: \(error.localizedDescription)")
-            errorMessage = error.localizedDescription
-            showingError = true
+            errorMessage = error.localizedDescription  // Sets showingError via computed property
             isSaving = false
             throw error
         }
