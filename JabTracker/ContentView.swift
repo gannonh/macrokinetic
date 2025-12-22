@@ -134,7 +134,8 @@ struct ContentView: View {
                 FoodSearchSheet(
                     user: currentUser,
                     foodService: AppServices.shared.foodService,
-                    mealLogService: AppServices.shared.mealLogService
+                    mealLogService: AppServices.shared.mealLogService,
+                    customFoodService: AppServices.shared.customFoodService
                 ) {
                     // On complete - could show success message
                 }

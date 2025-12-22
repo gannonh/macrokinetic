@@ -131,7 +131,7 @@ struct CreateFoodSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(viewModel.mode == .create ? "Save" : "Update") {
                         Task {
-                            await saveFood()
+                            await saveFood(andLog: false)
                         }
                     }
                     .disabled(!viewModel.canSave || viewModel.isSaving)
@@ -167,7 +167,7 @@ struct CreateFoodSheet: View {
             Divider()
             Button {
                 Task {
-                    await saveAndAddFood()
+                    await saveFood(andLog: true)
                 }
             } label: {
                 if viewModel.isSaving {
@@ -358,29 +358,29 @@ struct CreateFoodSheet: View {
 
     // MARK: - Actions
 
-    private func saveFood() async {
+    /// Save the custom food and optionally add it to the meal log
+    /// - Parameter andLog: If true, also logs the food to the selected meal
+    private func saveFood(andLog: Bool = false) async {
         do {
             let food = try await viewModel.save()
-            onFoodCreated?(food)
-            dismiss()
-        } catch {
-            // Error is handled by viewModel's showingError
-        }
-    }
 
-    /// Save the custom food and add it to the meal log
-    private func saveAndAddFood() async {
-        do {
-            let food = try await viewModel.save()
-            if let mealLogService {
-                _ = try await mealLogService.logFood(
-                    food: food,
-                    servingGrams: viewModel.servingSize,
-                    mealSection: selectedMeal,
-                    notes: "",
-                    loggedAt: selectedTime
-                )
+            if andLog, let mealLogService {
+                do {
+                    _ = try await mealLogService.logFood(
+                        food: food,
+                        servingGrams: viewModel.servingSize,
+                        mealSection: selectedMeal,
+                        notes: "",
+                        loggedAt: selectedTime
+                    )
+                } catch {
+                    // Food was created but logging failed - inform user
+                    viewModel.errorMessage = "Food created but failed to log: \(error.localizedDescription)"
+                    viewModel.showingError = true
+                    return
+                }
             }
+
             onFoodCreated?(food)
             dismiss()
         } catch {

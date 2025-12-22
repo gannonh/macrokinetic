@@ -14,6 +14,7 @@ struct FoodSearchSheet: View {
     let user: User
     let foodService: FoodService?
     let mealLogService: MealLogService?
+    let customFoodService: CustomFoodService?
     let onComplete: () -> Void
 
     // MARK: - State
@@ -37,11 +38,13 @@ struct FoodSearchSheet: View {
         user: User,
         foodService: FoodService?,
         mealLogService: MealLogService?,
+        customFoodService: CustomFoodService? = nil,
         onComplete: @escaping () -> Void
     ) {
         self.user = user
         self.foodService = foodService
         self.mealLogService = mealLogService
+        self.customFoodService = customFoodService
         self.onComplete = onComplete
 
         // Initialize ViewModel with services
@@ -94,7 +97,8 @@ struct FoodSearchSheet: View {
                     selectedMeal: MealSection.from(date: viewModel.selectedTime),
                     selectedTime: viewModel.selectedTime,
                     foodService: foodService,
-                    mealLogService: mealLogService
+                    mealLogService: mealLogService,
+                    customFoodService: customFoodService
                 ) {
                     onComplete()
                     dismiss()

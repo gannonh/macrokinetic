@@ -17,6 +17,7 @@ struct FoodDetailSheet: View {
     let selectedTime: Date
     let foodService: FoodService?
     let mealLogService: MealLogService?
+    let customFoodService: CustomFoodService?
     let onComplete: () -> Void
 
     // MARK: - State
@@ -143,6 +144,7 @@ struct FoodDetailSheet: View {
         selectedTime: Date,
         foodService: FoodService?,
         mealLogService: MealLogService?,
+        customFoodService: CustomFoodService?,
         onComplete: @escaping () -> Void
     ) {
         self.food = food
@@ -151,6 +153,7 @@ struct FoodDetailSheet: View {
         self.selectedTime = selectedTime
         self.foodService = foodService
         self.mealLogService = mealLogService
+        self.customFoodService = customFoodService
         self.onComplete = onComplete
         self._meal = State(wrappedValue: selectedMeal)
     }
@@ -200,7 +203,7 @@ struct FoodDetailSheet: View {
             Text(errorMessage ?? "An error occurred")
         }
         .sheet(isPresented: $showingCreateCustom) {
-            if let customFoodService = AppServices.shared.customFoodService {
+            if let customFoodService {
                 CreateFoodSheet(
                     customFoodService: customFoodService,
                     mealLogService: mealLogService,
@@ -214,6 +217,23 @@ struct FoodDetailSheet: View {
                         onComplete()
                     }
                 )
+            } else {
+                // Service unavailable - show error and dismiss
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(.orange)
+                    Text("Custom Foods Unavailable")
+                        .font(.headline)
+                    Text("Please try again later.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Button("Dismiss") {
+                        showingCreateCustom = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
             }
         }
     }

@@ -470,6 +470,8 @@ struct CreateFoodViewModelTests {
         let existingFood = Food(
             name: "Existing Food",
             brand: "Test Brand",
+            source: .userCreated,
+            barcode: "1111111111",
             caloriesPer100g: 200,
             proteinPer100g: 25,
             carbsPer100g: 15,
@@ -477,10 +479,8 @@ struct CreateFoodViewModelTests {
             fiberPer100g: 3,
             servingSize: 150,
             servingUnit: "oz",
-            servingDescription: "1 serving",
-            barcode: "1111111111"
+            servingDescription: "1 serving"
         )
-        existingFood.foodSource = .userCreated
         context.insert(existingFood)
 
         let viewModel = createViewModelWithFood(context: context, editingFood: existingFood)
@@ -508,6 +508,8 @@ struct CreateFoodViewModelTests {
         let existingFood = Food(
             name: "Original Name",
             brand: "",
+            source: .userCreated,
+            barcode: "",
             caloriesPer100g: 100,
             proteinPer100g: 10,
             carbsPer100g: 20,
@@ -515,10 +517,8 @@ struct CreateFoodViewModelTests {
             fiberPer100g: 2,
             servingSize: 100,
             servingUnit: "g",
-            servingDescription: "",
-            barcode: ""
+            servingDescription: ""
         )
-        existingFood.foodSource = .userCreated
         context.insert(existingFood)
         try context.save()
 
@@ -546,6 +546,8 @@ struct CreateFoodViewModelTests {
         let existingFood = Food(
             name: "Test Food",
             brand: "",
+            source: .userCreated,
+            barcode: "",
             caloriesPer100g: 100,
             proteinPer100g: 10,
             carbsPer100g: 20,
@@ -553,10 +555,8 @@ struct CreateFoodViewModelTests {
             fiberPer100g: 0,
             servingSize: 100,
             servingUnit: "g",
-            servingDescription: "",
-            barcode: ""
+            servingDescription: ""
         )
-        existingFood.foodSource = .userCreated
         context.insert(existingFood)
         try context.save()
 
