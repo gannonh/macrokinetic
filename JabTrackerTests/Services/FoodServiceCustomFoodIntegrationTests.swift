@@ -252,23 +252,7 @@ struct FoodServiceCustomFoodIntegrationTests {
     // MARK: - Helper Methods
 
     private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
-        let schema = Schema([
-            User.self,
-            Dose.self,
-            MedicationProfile.self,
-            DoseTitration.self,
-            DoseSchedule.self,
-            ScheduledDose.self,
-            Food.self,
-            FoodEntry.self,
-        ])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
-        return (ModelContext(container), container)
+        CustomFoodTestHelpers.createTestContext()
     }
 
     private func makeInput(
@@ -284,7 +268,7 @@ struct FoodServiceCustomFoodIntegrationTests {
         servingDescription: String = "",
         barcode: String = ""
     ) -> CustomFoodInput {
-        CustomFoodInput(
+        CustomFoodTestHelpers.makeInput(
             name: name,
             brand: brand,
             caloriesPer100g: caloriesPer100g,

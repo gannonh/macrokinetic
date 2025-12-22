@@ -352,23 +352,7 @@ final class FoodService {
             return []
         }
         let customFoods = try await customFoodService.search(query: query, limit: limit)
-        return customFoods.map { food in
-            FoodSearchResult(
-                id: food.id,
-                fdcId: food.fdcId,
-                barcode: food.barcode,
-                name: food.name,
-                brand: food.brand,
-                source: .userCreated,
-                caloriesPer100g: food.caloriesPer100g,
-                proteinPer100g: food.proteinPer100g,
-                carbsPer100g: food.carbsPer100g,
-                fatPer100g: food.fatPer100g,
-                fiberPer100g: food.fiberPer100g,
-                category: nil,
-                servingSize: food.servingSize
-            )
-        }
+        return customFoods.map { $0.toSearchResult() }
     }
 
     /// Search foods the user has previously logged (from FoodEntry records)
@@ -581,27 +565,12 @@ final class FoodService {
 
         let userFoods = try context.fetch(descriptor)
 
-        // Filter by query
-        let filtered =
+        // Filter by query and convert
+        return
             userFoods
             .filter { $0.name.lowercased().contains(lowercaseQuery) }
             .prefix(limit)
-
-        return filtered.map { food in
-            FoodSearchResult(
-                fdcId: food.fdcId,
-                barcode: food.barcode,
-                name: food.name,
-                brand: food.brand,
-                source: .userCreated,
-                caloriesPer100g: food.caloriesPer100g,
-                proteinPer100g: food.proteinPer100g,
-                carbsPer100g: food.carbsPer100g,
-                fatPer100g: food.fatPer100g,
-                fiberPer100g: food.fiberPer100g,
-                category: nil
-            )
-        }
+            .map { $0.toSearchResult() }
     }
 
     /// Check if two food names are similar enough to be duplicates
@@ -628,6 +597,7 @@ extension Food {
     /// Convert Food model to FoodSearchResult for use in search UI
     func toSearchResult() -> FoodSearchResult {
         FoodSearchResult(
+            id: id,
             fdcId: fdcId,
             barcode: barcode,
             name: name,
@@ -638,7 +608,8 @@ extension Food {
             carbsPer100g: carbsPer100g,
             fatPer100g: fatPer100g,
             fiberPer100g: fiberPer100g,
-            category: nil
+            category: nil,
+            servingSize: servingSize
         )
     }
 }

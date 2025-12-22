@@ -21,7 +21,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food returns Food with source set to userCreated")
     func testCreateCustomFoodSetsSourceToUserCreated() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         let food = try await service.createCustomFood(
@@ -51,7 +52,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with empty name throws emptyName error")
     func testCreateCustomFoodWithEmptyNameThrows() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         await #expect(throws: CustomFoodError.emptyName) {
@@ -61,7 +63,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with whitespace-only name throws emptyName error")
     func testCreateCustomFoodWithWhitespaceNameThrows() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         await #expect(throws: CustomFoodError.emptyName) {
@@ -71,7 +74,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with negative calories throws negativeNutrition error")
     func testCreateCustomFoodWithNegativeCaloriesThrows() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         await #expect(throws: CustomFoodError.negativeNutrition) {
@@ -85,7 +89,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with negative protein throws negativeNutrition error")
     func testCreateCustomFoodWithNegativeProteinThrows() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         await #expect(throws: CustomFoodError.negativeNutrition) {
@@ -99,7 +104,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with zero serving size throws invalidServingSize error")
     func testCreateCustomFoodWithZeroServingSizeThrows() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         await #expect(throws: CustomFoodError.invalidServingSize) {
@@ -113,7 +119,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with negative serving size throws invalidServingSize error")
     func testCreateCustomFoodWithNegativeServingSizeThrows() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         await #expect(throws: CustomFoodError.invalidServingSize) {
@@ -127,7 +134,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with duplicate barcode throws duplicateBarcode error")
     func testCreateCustomFoodWithDuplicateBarcodeThrows() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         // Create first custom food with barcode
@@ -153,7 +161,8 @@ struct CustomFoodServiceTests {
 
     @Test("Create custom food with empty barcode does not check for duplicates")
     func testCreateCustomFoodWithEmptyBarcodeDoesNotCheckDuplicates() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         // Create two foods without barcodes - should succeed
@@ -175,7 +184,8 @@ struct CustomFoodServiceTests {
 
     @Test("getAllCustomFoods returns only userCreated foods")
     func testGetAllCustomFoodsReturnsOnlyUserCreated() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         // Create custom food
@@ -194,7 +204,8 @@ struct CustomFoodServiceTests {
 
     @Test("getAllCustomFoods respects limit parameter")
     func testGetAllCustomFoodsRespectsLimit() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         // Create 5 custom foods
@@ -209,7 +220,8 @@ struct CustomFoodServiceTests {
 
     @Test("search returns custom foods matching query")
     func testSearchReturnsMatchingCustomFoods() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         _ = try await service.createCustomFood(
@@ -243,7 +255,8 @@ struct CustomFoodServiceTests {
 
     @Test("search is case insensitive")
     func testSearchIsCaseInsensitive() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         _ = try await service.createCustomFood(
@@ -264,7 +277,8 @@ struct CustomFoodServiceTests {
 
     @Test("search respects limit parameter")
     func testSearchRespectsLimit() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         // Create 5 foods with "Food" in name
@@ -279,7 +293,8 @@ struct CustomFoodServiceTests {
 
     @Test("lookup returns food matching barcode")
     func testLookupReturnsFoodMatchingBarcode() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         _ = try await service.createCustomFood(
@@ -297,7 +312,8 @@ struct CustomFoodServiceTests {
 
     @Test("lookup returns nil for non-existent barcode")
     func testLookupReturnsNilForNonExistentBarcode() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         _ = try await service.createCustomFood(
@@ -313,7 +329,8 @@ struct CustomFoodServiceTests {
 
     @Test("lookup only searches custom foods")
     func testLookupOnlySearchesCustomFoods() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         // Create a local food with a barcode (not custom)
@@ -330,7 +347,8 @@ struct CustomFoodServiceTests {
 
     @Test("updateCustomFood modifies food properties")
     func testUpdateCustomFoodModifiesProperties() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         let food = try await service.createCustomFood(
@@ -370,7 +388,8 @@ struct CustomFoodServiceTests {
 
     @Test("updateCustomFood throws notCustomFood for local food")
     func testUpdateCustomFoodThrowsForLocalFood() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         let localFood = Food(name: "Local Food", source: .local)
@@ -384,7 +403,8 @@ struct CustomFoodServiceTests {
 
     @Test("updateCustomFood validates empty name")
     func testUpdateCustomFoodValidatesEmptyName() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         let food = try await service.createCustomFood(makeInput(name: "Original Name"))
@@ -396,7 +416,8 @@ struct CustomFoodServiceTests {
 
     @Test("updateCustomFood checks barcode conflict")
     func testUpdateCustomFoodChecksBarcodeConflict() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         // Create first food with barcode
@@ -426,7 +447,8 @@ struct CustomFoodServiceTests {
 
     @Test("updateCustomFood allows keeping same barcode")
     func testUpdateCustomFoodAllowsKeepingSameBarcode() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         let food = try await service.createCustomFood(
@@ -451,7 +473,8 @@ struct CustomFoodServiceTests {
 
     @Test("deleteCustomFood removes food from context")
     func testDeleteCustomFoodRemovesFromContext() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         let food = try await service.createCustomFood(makeInput(name: "To Delete"))
@@ -470,7 +493,8 @@ struct CustomFoodServiceTests {
 
     @Test("deleteCustomFood throws notCustomFood for local food")
     func testDeleteCustomFoodThrowsForLocalFood() async throws {
-        let context = createTestContext()
+        let (context, container) = createTestContext()
+        _ = container
         let service = CustomFoodService(context: context)
 
         let localFood = Food(name: "Local Food", source: .local)
@@ -484,24 +508,8 @@ struct CustomFoodServiceTests {
 
     // MARK: - Helper Methods
 
-    private func createTestContext() -> ModelContext {
-        let schema = Schema([
-            User.self,
-            Dose.self,
-            MedicationProfile.self,
-            DoseTitration.self,
-            DoseSchedule.self,
-            ScheduledDose.self,
-            Food.self,
-            FoodEntry.self,
-        ])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
-        return ModelContext(container)
+    private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
+        CustomFoodTestHelpers.createTestContext()
     }
 
     private func makeInput(
@@ -517,7 +525,7 @@ struct CustomFoodServiceTests {
         servingDescription: String = "",
         barcode: String = ""
     ) -> CustomFoodInput {
-        CustomFoodInput(
+        CustomFoodTestHelpers.makeInput(
             name: name,
             brand: brand,
             caloriesPer100g: caloriesPer100g,
