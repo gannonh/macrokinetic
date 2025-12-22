@@ -7,6 +7,80 @@
 
 import SwiftUI
 
+// MARK: - Impact Section
+
+extension FoodDetailSheet {
+    @ViewBuilder
+    var impactSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Impact on Targets")
+                .font(.headline)
+
+            HStack(spacing: 16) {
+                CircularProgressRing(
+                    progress: calorieImpact,
+                    label: "Calories",
+                    valueText: "\(Int(calorieImpact * 100))%",
+                    color: .orange
+                )
+
+                CircularProgressRing(
+                    progress: proteinImpact,
+                    label: "Protein",
+                    valueText: "\(Int(proteinImpact * 100))%",
+                    color: .blue
+                )
+
+                CircularProgressRing(
+                    progress: fatImpact,
+                    label: "Fat",
+                    valueText: "\(Int(fatImpact * 100))%",
+                    color: .purple
+                )
+
+                CircularProgressRing(
+                    progress: carbImpact,
+                    label: "Carbs",
+                    valueText: "\(Int(carbImpact * 100))%",
+                    color: .green
+                )
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(16)
+    }
+
+    var calorieImpact: Double {
+        guard user.dailyCalorieGoal > 0 else { return 0 }
+        return scaledCalories / user.dailyCalorieGoal
+    }
+
+    var proteinImpact: Double {
+        guard user.dailyProteinGoal > 0 else { return 0 }
+        return scaledProtein / user.dailyProteinGoal
+    }
+
+    var carbImpact: Double {
+        guard user.dailyCarbGoal > 0 else { return 0 }
+        return scaledCarbs / user.dailyCarbGoal
+    }
+
+    var fatImpact: Double {
+        guard user.dailyFatGoal > 0 else { return 0 }
+        return scaledFat / user.dailyFatGoal
+    }
+
+    var scaledProtein: Double {
+        (food.proteinPer100g * quantityInGrams) / 100.0
+    }
+
+    var scaledFat: Double {
+        (food.fatPer100g * quantityInGrams) / 100.0
+    }
+}
+
 // MARK: - Carb Breakdown Section
 
 extension FoodDetailSheet {

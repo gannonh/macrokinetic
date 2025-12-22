@@ -21,6 +21,12 @@ struct CreateFoodSheet: View {
 
     let onFoodCreated: ((Food) -> Void)?
 
+    // MARK: - Create & Add Support
+
+    private let mealLogService: MealLogService?
+    private let selectedMeal: MealSection
+    private let selectedTime: Date
+
     // MARK: - Accessibility Identifiers
 
     static let sheetIdentifier = "create-food-sheet"
@@ -37,16 +43,23 @@ struct CreateFoodSheet: View {
     static let barcodeInputIdentifier = "barcode-input"
     static let cancelButtonIdentifier = "create-food-cancel"
     static let saveButtonIdentifier = "create-food-save"
+    static let createAndAddButtonIdentifier = "create-food-create-and-add"
 
     // MARK: - Initialization
 
     /// Initialize for creating a new custom food
     /// - Parameters:
     ///   - customFoodService: Service for creating custom foods
+    ///   - mealLogService: Optional service for logging food (enables "Create & Add")
+    ///   - selectedMeal: Meal section for logging (used with "Create & Add")
+    ///   - selectedTime: Time for logging (used with "Create & Add")
     ///   - prefillFrom: Optional FoodSearchResult to prefill form fields
     ///   - onFoodCreated: Callback when food is successfully created
     init(
         customFoodService: CustomFoodService,
+        mealLogService: MealLogService? = nil,
+        selectedMeal: MealSection = .breakfast,
+        selectedTime: Date = Date(),
         prefillFrom: FoodSearchResult? = nil,
         onFoodCreated: ((Food) -> Void)? = nil
     ) {
@@ -56,6 +69,9 @@ struct CreateFoodSheet: View {
         }
         self._viewModel = State(wrappedValue: vm)
         self.onFoodCreated = onFoodCreated
+        self.mealLogService = mealLogService
+        self.selectedMeal = selectedMeal
+        self.selectedTime = selectedTime
     }
 
     /// Private initializer for edit mode
@@ -65,6 +81,9 @@ struct CreateFoodSheet: View {
     ) {
         self._viewModel = State(wrappedValue: viewModel)
         self.onFoodCreated = onFoodCreated
+        self.mealLogService = nil
+        self.selectedMeal = .breakfast
+        self.selectedTime = Date()
     }
 
     /// Create sheet for editing an existing custom food
@@ -129,10 +148,43 @@ struct CreateFoodSheet: View {
             } message: {
                 Text(viewModel.errorMessage ?? "An error occurred")
             }
+            .safeAreaInset(edge: .bottom) {
+                if viewModel.mode == .create && mealLogService != nil {
+                    createAndAddButton
+                }
+            }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .accessibilityIdentifier(Self.sheetIdentifier)
+    }
+
+    // MARK: - Create & Add Button
+
+    @ViewBuilder
+    private var createAndAddButton: some View {
+        VStack(spacing: 0) {
+            Divider()
+            Button {
+                Task {
+                    await saveAndAddFood()
+                }
+            } label: {
+                if viewModel.isSaving {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Text("Create & Add")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(!viewModel.canSave || viewModel.isSaving)
+            .padding()
+            .accessibilityIdentifier(Self.createAndAddButtonIdentifier)
+        }
+        .background(Color(.systemBackground))
     }
 
     // MARK: - Basic Info Section
@@ -309,6 +361,26 @@ struct CreateFoodSheet: View {
     private func saveFood() async {
         do {
             let food = try await viewModel.save()
+            onFoodCreated?(food)
+            dismiss()
+        } catch {
+            // Error is handled by viewModel's showingError
+        }
+    }
+
+    /// Save the custom food and add it to the meal log
+    private func saveAndAddFood() async {
+        do {
+            let food = try await viewModel.save()
+            if let mealLogService {
+                _ = try await mealLogService.logFood(
+                    food: food,
+                    servingGrams: viewModel.servingSize,
+                    mealSection: selectedMeal,
+                    notes: "",
+                    loggedAt: selectedTime
+                )
+            }
             onFoodCreated?(food)
             dismiss()
         } catch {
