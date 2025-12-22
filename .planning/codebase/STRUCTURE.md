@@ -105,9 +105,6 @@ jab-tracker-ios/
 - `JabTrackerUITests/` - E2E tests (XCUITest)
 - `JabTrackerUITests/Utils/TestUtilities.swift` - Shared test helpers
 
-**Documentation:**
-- `CLAUDE.md` - Development instructions
-- `.claude/context/` - Project context files
 
 ## Naming Conventions
 
