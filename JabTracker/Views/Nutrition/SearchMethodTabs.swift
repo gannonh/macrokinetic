@@ -42,6 +42,7 @@ enum SearchMethod: String, CaseIterable, Identifiable {
     /// Whether this method is currently functional
     var isEnabled: Bool {
         switch self {
+        case .scan: return true
         case .search: return true
         default: return false
         }

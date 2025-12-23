@@ -39,6 +39,7 @@ struct FoodSearchSheet: View {
     @State var foodToDelete: Food?
     @State var showingDeleteConfirmation = false
     @State private var showingDeleteError = false
+    @State private var scannedBarcode: String?
 
     // MARK: - Static Identifiers
 
@@ -85,11 +86,19 @@ struct FoodSearchSheet: View {
                 // Method tabs
                 methodTabsSection
 
-                // Search field
-                searchFieldSection
+                // Show scanner or search UI based on selected method
+                if viewModel.selectedMethod == .scan {
+                    BarcodeScannerContentView { barcode in
+                        scannedBarcode = barcode
+                        // Lookup handling in Plan 2
+                    }
+                } else {
+                    // Search field
+                    searchFieldSection
 
-                // Content: Recent foods or search results
-                contentSection
+                    // Content: Recent foods or search results
+                    contentSection
+                }
             }
             .navigationTitle("Add Food")
             .navigationBarTitleDisplayMode(.inline)
