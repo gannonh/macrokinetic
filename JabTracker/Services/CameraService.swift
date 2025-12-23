@@ -38,6 +38,9 @@ final class CameraService {
     /// Indicates if the torch/flash is currently on
     var isTorchOn: Bool = false
 
+    /// Error that occurred during session configuration (exposed for UI)
+    var sessionError: CameraServiceError?
+
     /// Logger for camera service operations
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "CameraService")
 
@@ -107,6 +110,9 @@ final class CameraService {
     func startSession() throws {
         logger.info("Starting camera session")
 
+        // Clear any previous error
+        sessionError = nil
+
         guard authorizationStatus == .authorized else {
             logger.error("Cannot start session: camera not authorized")
             throw CameraServiceError.notAuthorized
@@ -124,53 +130,76 @@ final class CameraService {
 
         // Configure session on background queue
         sessionQueue.async { [weak self] in
-            guard let self else { return }
+            self?.configureAndStartSession(captureSession)
+        }
+    }
 
-            captureSession.beginConfiguration()
+    /// Configure the capture session with video input and start running.
+    ///
+    /// Called on the session queue. Handles already-configured sessions by resuming.
+    /// - Parameter captureSession: The session to configure
+    private nonisolated func configureAndStartSession(_ captureSession: AVCaptureSession) {
+        // Check if session already has inputs (prevent duplicate configuration)
+        guard captureSession.inputs.isEmpty else {
+            resumeExistingSession(captureSession)
+            return
+        }
 
-            // Set session preset for barcode scanning
-            if captureSession.canSetSessionPreset(.high) {
-                captureSession.sessionPreset = .high
+        captureSession.beginConfiguration()
+
+        // Set session preset for barcode scanning
+        if captureSession.canSetSessionPreset(.high) {
+            captureSession.sessionPreset = .high
+        }
+
+        // Add video input
+        guard let videoDevice = AVCaptureDevice.default(for: .video) else {
+            Task { @MainActor [weak self] in
+                self?.logger.error("No video device available")
+                self?.sessionError = .noVideoDevice
             }
+            captureSession.commitConfiguration()
+            return
+        }
 
-            // Add video input
-            do {
-                guard let videoDevice = AVCaptureDevice.default(for: .video) else {
-                    Task { @MainActor in
-                        self.logger.error("No video device available")
-                    }
-                    captureSession.commitConfiguration()
-                    return
-                }
-
-                let videoInput = try AVCaptureDeviceInput(device: videoDevice)
-
-                if captureSession.canAddInput(videoInput) {
-                    captureSession.addInput(videoInput)
-                } else {
-                    Task { @MainActor in
-                        self.logger.error("Cannot add video input to session")
-                    }
-                    captureSession.commitConfiguration()
-                    return
-                }
-            } catch {
-                Task { @MainActor in
-                    self.logger.error("Failed to create video input: \(error.localizedDescription)")
+        do {
+            let videoInput = try AVCaptureDeviceInput(device: videoDevice)
+            guard captureSession.canAddInput(videoInput) else {
+                Task { @MainActor [weak self] in
+                    self?.logger.error("Cannot add video input to session")
+                    self?.sessionError = .sessionConfigurationFailed
                 }
                 captureSession.commitConfiguration()
                 return
             }
-
-            captureSession.commitConfiguration()
-
-            // Start running
-            captureSession.startRunning()
-
-            Task { @MainActor in
-                self.isSessionRunning = captureSession.isRunning
-                self.logger.info("Camera session started: \(captureSession.isRunning)")
+            captureSession.addInput(videoInput)
+        } catch {
+            Task { @MainActor [weak self] in
+                self?.logger.error("Failed to create video input: \(error.localizedDescription)")
+                self?.sessionError = .sessionConfigurationFailed
             }
+            captureSession.commitConfiguration()
+            return
+        }
+
+        captureSession.commitConfiguration()
+        captureSession.startRunning()
+
+        Task { @MainActor [weak self] in
+            self?.isSessionRunning = captureSession.isRunning
+            self?.logger.info("Camera session started: \(captureSession.isRunning)")
+        }
+    }
+
+    /// Resume an already-configured session.
+    /// - Parameter captureSession: The session to resume
+    private nonisolated func resumeExistingSession(_ captureSession: AVCaptureSession) {
+        if !captureSession.isRunning {
+            captureSession.startRunning()
+        }
+        Task { @MainActor [weak self] in
+            self?.isSessionRunning = captureSession.isRunning
+            self?.logger.info("Camera session resumed: \(captureSession.isRunning)")
         }
     }
 
@@ -206,6 +235,11 @@ final class CameraService {
     ///
     /// - Parameter on: True to turn torch on, false to turn off
     func toggleTorch(on: Bool) {
+        guard isSessionRunning else {
+            logger.warning("Cannot toggle torch: session not running")
+            return
+        }
+
         guard let device = AVCaptureDevice.default(for: .video),
             device.hasTorch,
             device.isTorchAvailable

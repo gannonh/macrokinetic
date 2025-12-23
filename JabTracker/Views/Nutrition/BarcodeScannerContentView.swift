@@ -66,10 +66,23 @@ struct BarcodeScannerContentView: View {
     // MARK: - Static Identifiers
 
     static let accessibilityIdentifier = "barcode-scanner-content"
+    static let cameraPreviewIdentifier = "camera-preview"
     static let scanTypeBarcodeIdentifier = "scan-type-barcode"
     static let scanTypeLabelIdentifier = "scan-type-label"
     static let torchToggleIdentifier = "torch-toggle-button"
     static let galleryButtonIdentifier = "gallery-button"
+
+    // MARK: - Theme Constants
+
+    private enum ScannerTheme {
+        static let backgroundOpacity: Double = 0.1
+        static let borderOpacity: Double = 0.3
+        static let disabledTextOpacity: Double = 0.5
+        static let reticleStrokeOpacity: Double = 0.8
+        static let reticleFillOpacity: Double = 0.05
+        static let instructionTextOpacity: Double = 0.9
+        static let instructionBackgroundOpacity: Double = 0.5
+    }
 
     // MARK: - Body
 
@@ -149,18 +162,20 @@ struct BarcodeScannerContentView: View {
                 .padding(.vertical, 8)
                 .background(
                     selectedScanType == scanType
-                        ? Color.primary.opacity(0.1)
+                        ? Color.primary.opacity(ScannerTheme.backgroundOpacity)
                         : Color.clear
                 )
                 .foregroundColor(
-                    scanType.isEnabled ? .primary : .secondary.opacity(0.5)
+                    scanType.isEnabled
+                        ? .primary
+                        : .secondary.opacity(ScannerTheme.disabledTextOpacity)
                 )
                 .cornerRadius(16)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(
                             selectedScanType == scanType
-                                ? Color.primary.opacity(0.3)
+                                ? Color.primary.opacity(ScannerTheme.borderOpacity)
                                 : Color(.systemGray4),
                             lineWidth: 1
                         )
@@ -182,6 +197,7 @@ struct BarcodeScannerContentView: View {
                 // Camera preview
                 CameraPreviewView(session: cameraService.session)
                     .ignoresSafeArea()
+                    .accessibilityIdentifier(Self.cameraPreviewIdentifier)
 
                 // Scanning reticle overlay
                 scanningReticle(in: geometry)
@@ -199,22 +215,22 @@ struct BarcodeScannerContentView: View {
 
             // Reticle frame
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.8), lineWidth: 3)
+                .stroke(Color.white.opacity(ScannerTheme.reticleStrokeOpacity), lineWidth: 3)
                 .frame(width: reticleWidth, height: reticleHeight)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.05))
+                        .fill(Color.white.opacity(ScannerTheme.reticleFillOpacity))
                 )
 
             // Instruction text
             Text("Point at a barcode")
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.9))
+                .foregroundColor(.white.opacity(ScannerTheme.instructionTextOpacity))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(Color.black.opacity(0.5))
+                        .fill(Color.black.opacity(ScannerTheme.instructionBackgroundOpacity))
                 )
 
             Spacer()
