@@ -251,6 +251,12 @@ extension FoodSearchSheet {
 
     /// Handle a detected barcode by looking up in local custom foods first, then Open Food Facts
     func handleBarcodeDetected(_ barcode: String) async {
+        // Prevent concurrent lookups - skip if already looking up
+        guard !isLookingUpBarcode else {
+            logger.debug("Skipping barcode lookup - already in progress")
+            return
+        }
+
         isLookingUpBarcode = true
         lastScannedBarcode = barcode
 

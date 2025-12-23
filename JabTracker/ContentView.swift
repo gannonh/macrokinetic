@@ -132,29 +132,10 @@ struct ContentView: View {
             )
         }
         .sheet(isPresented: $showingFoodSearchSheet) {
-            if let currentUser = users.first {
-                FoodSearchSheet(
-                    user: currentUser,
-                    foodService: AppServices.shared.foodService,
-                    mealLogService: AppServices.shared.mealLogService,
-                    customFoodService: AppServices.shared.customFoodService
-                ) {
-                    // On complete - could show success message
-                }
-            }
+            foodSearchSheet()
         }
         .sheet(isPresented: $showingFoodSearchWithScan) {
-            if let currentUser = users.first {
-                FoodSearchSheet(
-                    user: currentUser,
-                    foodService: AppServices.shared.foodService,
-                    mealLogService: AppServices.shared.mealLogService,
-                    customFoodService: AppServices.shared.customFoodService,
-                    initialMethod: .scan
-                ) {
-                    // On complete - could show success message
-                }
-            }
+            foodSearchSheet(initialMethod: .scan)
         }
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)
@@ -199,6 +180,23 @@ struct ContentView: View {
                             }
                         }
                     }
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
+    @ViewBuilder
+    private func foodSearchSheet(initialMethod: SearchMethod? = nil) -> some View {
+        if let currentUser = users.first {
+            FoodSearchSheet(
+                user: currentUser,
+                foodService: AppServices.shared.foodService,
+                mealLogService: AppServices.shared.mealLogService,
+                customFoodService: AppServices.shared.customFoodService,
+                initialMethod: initialMethod
+            ) {
+                // On complete - could show success message
             }
         }
     }

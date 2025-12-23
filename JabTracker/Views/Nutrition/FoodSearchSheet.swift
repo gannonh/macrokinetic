@@ -43,6 +43,13 @@ struct FoodSearchSheet: View {
     @State var barcodeNotFound = false
     @State var lastScannedBarcode: String?
 
+    // MARK: - Constants
+
+    /// Debounce timing for search input
+    private enum SearchTiming {
+        static let debounceNanoseconds: UInt64 = 200_000_000
+    }
+
     // MARK: - Static Identifiers
 
     static let accessibilityIdentifierValue = "food-search-sheet"
@@ -295,8 +302,7 @@ struct FoodSearchSheet: View {
         .onChange(of: viewModel.searchText) { _, _ in
             // Trigger search on any input (no minimum)
             Task {
-                // Small debounce
-                try? await Task.sleep(nanoseconds: 200_000_000)
+                try? await Task.sleep(nanoseconds: SearchTiming.debounceNanoseconds)
                 await viewModel.performSearch()
             }
         }

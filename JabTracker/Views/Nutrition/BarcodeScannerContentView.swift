@@ -65,7 +65,7 @@ struct BarcodeScannerContentView: View {
 
     // MARK: - Static Identifiers
 
-    static let accessibilityIdentifier = "barcode-scanner-content"
+    static let accessibilityIdentifierValue = "barcode-scanner-content"
     static let cameraPreviewIdentifier = "camera-preview"
     static let scanTypeBarcodeIdentifier = "scan-type-barcode"
     static let scanTypeLabelIdentifier = "scan-type-label"
@@ -100,17 +100,19 @@ struct BarcodeScannerContentView: View {
                 cameraPreviewSection
             }
         }
-        .accessibilityIdentifier(Self.accessibilityIdentifier)
+        .accessibilityIdentifier(Self.accessibilityIdentifierValue)
         .onAppear {
+            // Reset debounce state to allow re-scanning same barcode
+            cameraService.resetDebounce()
+            // Wire up barcode detection callback (direct assignment)
+            cameraService.onBarcodeDetected = onBarcodeDetected
             Task {
                 await setupCamera()
             }
-            // Wire up barcode detection callback
-            cameraService.onBarcodeDetected = { barcode in
-                onBarcodeDetected(barcode)
-            }
         }
         .onDisappear {
+            // Clear callback to prevent potential retain cycles
+            cameraService.onBarcodeDetected = nil
             cameraService.stopSession()
         }
     }
@@ -262,19 +264,17 @@ struct BarcodeScannerContentView: View {
     // MARK: - Helpers
 
     private func setupCamera() async {
-        // Check current status first
         let status = cameraService.checkAuthorizationStatus()
 
+        // Early return for denied/restricted - UI shows permission denied view
+        guard status != .denied && status != .restricted else { return }
+
+        // Request authorization if not determined
         if status == .notDetermined {
-            // Request authorization
-            let granted = await cameraService.requestAuthorization()
-            if granted {
-                startCameraSession()
-            }
-        } else if status == .authorized {
-            startCameraSession()
+            guard await cameraService.requestAuthorization() else { return }
         }
-        // For denied/restricted, UI will show permission denied view
+
+        startCameraSession()
     }
 
     private func startCameraSession() {

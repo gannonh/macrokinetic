@@ -63,6 +63,9 @@ final class CameraService: NSObject {
     /// Debounce interval in seconds
     private let debounceInterval: TimeInterval = 2.0
 
+    /// Haptic feedback generator for barcode detection (reused for performance)
+    private let hapticGenerator = UIImpactFeedbackGenerator(style: .medium)
+
     // MARK: - Initialization
 
     override init() {
@@ -319,6 +322,17 @@ final class CameraService: NSObject {
             logger.error("Failed to toggle torch: \(error.localizedDescription)")
         }
     }
+
+    // MARK: - Debounce Management
+
+    /// Reset debounce state when scanner view reappears.
+    ///
+    /// Call this when the scanner view appears to allow re-scanning the same barcode.
+    func resetDebounce() {
+        lastDetectedBarcode = nil
+        lastDetectionTime = nil
+        logger.debug("Debounce state reset")
+    }
 }
 
 // MARK: - AVCaptureMetadataOutputObjectsDelegate
@@ -364,8 +378,8 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
         lastDetectionTime = now
 
         // Haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
+        hapticGenerator.prepare()
+        hapticGenerator.impactOccurred()
 
         logger.info("Barcode detected: \(barcode)")
 

@@ -16,6 +16,12 @@ struct ShortcutItem: Identifiable {
     var id: String { label }
 }
 
+/// Timing constants for sheet transitions
+private enum SheetTransitionTiming {
+    /// Delay required for SwiftUI sheet dismissal before presenting new sheet
+    static let delay: TimeInterval = 0.3
+}
+
 /// A quarter-sheet modal displaying shortcuts for common actions.
 /// Shows when the user taps the "+" tab button.
 struct ShortcutsSheet: View {
@@ -143,24 +149,23 @@ struct ShortcutsSheet: View {
 
     // MARK: - Action Handlers
 
+    /// Dismiss sheet and present a new sheet after transition delay
+    private func dismissAndPresent(_ binding: Binding<Bool>) {
+        dismiss()
+        // Small delay to allow sheet dismissal before presenting new sheet
+        DispatchQueue.main.asyncAfter(deadline: .now() + SheetTransitionTiming.delay) {
+            binding.wrappedValue = true
+        }
+    }
+
     private func handleTopRowAction(_ shortcut: ShortcutItem) {
         switch shortcut.label {
         case "Search":
-            dismiss()
-            // Small delay to allow sheet dismissal before presenting new sheet
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                showingFoodSearch = true
-            }
+            dismissAndPresent($showingFoodSearch)
         case "Barcode":
-            dismiss()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                showingFoodSearchWithScan = true
-            }
+            dismissAndPresent($showingFoodSearchWithScan)
         case "Shots":
-            dismiss()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                showingQuickDose = true
-            }
+            dismissAndPresent($showingQuickDose)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
