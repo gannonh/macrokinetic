@@ -34,12 +34,14 @@ struct FoodSearchSheet: View {
     @State var selectedFood: FoodSearchResult?
     @State var showingFoodDetail = false
     @State private var showingComingSoon = false
-    @State private var showingTimePicker = false
+    @State var showingTimePicker = false
     @State var editingCustomFood: Food?
     @State var foodToDelete: Food?
     @State var showingDeleteConfirmation = false
     @State private var showingDeleteError = false
-    @State private var scannedBarcode: String?
+    @State var isLookingUpBarcode = false
+    @State var barcodeNotFound = false
+    @State var lastScannedBarcode: String?
 
     // MARK: - Static Identifiers
 
@@ -54,6 +56,7 @@ struct FoodSearchSheet: View {
         foodService: FoodService?,
         mealLogService: MealLogService?,
         customFoodService: CustomFoodService? = nil,
+        initialMethod: SearchMethod? = nil,
         onComplete: @escaping () -> Void
     ) {
         self.user = user
@@ -64,11 +67,15 @@ struct FoodSearchSheet: View {
 
         // Initialize ViewModel with services
         if let fs = foodService, let mls = mealLogService {
-            self._viewModel = State(
-                wrappedValue: FoodSearchSheetViewModel(
-                    foodService: fs,
-                    mealLogService: mls
-                ))
+            let vm = FoodSearchSheetViewModel(
+                foodService: fs,
+                mealLogService: mls
+            )
+            // Set initial method if provided
+            if let method = initialMethod {
+                vm.selectedMethod = method
+            }
+            self._viewModel = State(wrappedValue: vm)
         } else {
             // Fallback for previews - will need proper DI
             fatalError("FoodSearchSheet requires non-nil foodService and mealLogService")
@@ -88,9 +95,24 @@ struct FoodSearchSheet: View {
 
                 // Show scanner or search UI based on selected method
                 if viewModel.selectedMethod == .scan {
-                    BarcodeScannerContentView { barcode in
-                        scannedBarcode = barcode
-                        // Lookup handling in Plan 2
+                    ZStack {
+                        BarcodeScannerContentView { barcode in
+                            Task {
+                                await handleBarcodeDetected(barcode)
+                            }
+                        }
+
+                        // Loading overlay
+                        if isLookingUpBarcode {
+                            VStack {
+                                ProgressView("Looking up product...")
+                                    .padding()
+                                    .background(.regularMaterial)
+                                    .cornerRadius(12)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color.black.opacity(0.3))
+                        }
                     }
                 } else {
                     // Search field
@@ -167,87 +189,21 @@ struct FoodSearchSheet: View {
         } message: {
             Text("Unable to delete the custom food. Please try again.")
         }
+        .alert("Product Not Found", isPresented: $barcodeNotFound) {
+            Button("Scan Again") {
+                barcodeNotFound = false
+            }
+            Button("Search Instead") {
+                viewModel.selectedMethod = .search
+                viewModel.searchText = lastScannedBarcode ?? ""
+                barcodeNotFound = false
+            }
+        } message: {
+            Text("No product found for barcode \(lastScannedBarcode ?? ""). Try scanning again or search manually.")
+        }
         .task {
             await viewModel.loadInitialData(user: user, for: Date())
         }
-    }
-
-    // MARK: - Header Section
-
-    private var headerSection: some View {
-        HStack {
-            // Time picker button
-            Button {
-                showingTimePicker = true
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.caption)
-                    Text(viewModel.selectedTime, format: .dateTime.hour().minute())
-                        .font(.subheadline.weight(.medium))
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color(.tertiarySystemFill))
-                .cornerRadius(8)
-            }
-            .accessibilityIdentifier(Self.timePickerIdentifier)
-            .sheet(isPresented: $showingTimePicker) {
-                timePickerSheet
-            }
-
-            Spacer()
-
-            // Remaining macros display
-            HStack(spacing: 12) {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingCalories)) left")
-                        .font(.caption.weight(.medium))
-                    Text("Calories")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                Divider()
-                    .frame(height: 24)
-
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingProtein))g left")
-                        .font(.caption.weight(.medium))
-                    Text("Protein")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.secondarySystemBackground))
-    }
-
-    // MARK: - Time Picker Sheet
-
-    private var timePickerSheet: some View {
-        NavigationStack {
-            DatePicker(
-                "Entry Time",
-                selection: $viewModel.selectedTime,
-                displayedComponents: [.hourAndMinute]
-            )
-            .datePickerStyle(.wheel)
-            .labelsHidden()
-            .padding()
-            .navigationTitle("Select Time")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        showingTimePicker = false
-                    }
-                }
-            }
-        }
-        .presentationDetents([.fraction(0.4)])
     }
 
     // MARK: - Method Tabs Section

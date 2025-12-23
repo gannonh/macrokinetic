@@ -105,6 +105,10 @@ struct BarcodeScannerContentView: View {
             Task {
                 await setupCamera()
             }
+            // Wire up barcode detection callback
+            cameraService.onBarcodeDetected = { barcode in
+                onBarcodeDetected(barcode)
+            }
         }
         .onDisappear {
             cameraService.stopSession()

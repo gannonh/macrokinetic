@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var doseService: DoseService
     @State private var showingShortcuts = false
     @State private var showingFoodSearchSheet = false
+    @State private var showingFoodSearchWithScan = false
 
     // MARK: - Constants
 
@@ -126,7 +127,8 @@ struct ContentView: View {
         .sheet(isPresented: $showingShortcuts) {
             ShortcutsSheet(
                 showingFoodSearch: $showingFoodSearchSheet,
-                showingQuickDose: $showingQuickDoseSheet
+                showingQuickDose: $showingQuickDoseSheet,
+                showingFoodSearchWithScan: $showingFoodSearchWithScan
             )
         }
         .sheet(isPresented: $showingFoodSearchSheet) {
@@ -136,6 +138,19 @@ struct ContentView: View {
                     foodService: AppServices.shared.foodService,
                     mealLogService: AppServices.shared.mealLogService,
                     customFoodService: AppServices.shared.customFoodService
+                ) {
+                    // On complete - could show success message
+                }
+            }
+        }
+        .sheet(isPresented: $showingFoodSearchWithScan) {
+            if let currentUser = users.first {
+                FoodSearchSheet(
+                    user: currentUser,
+                    foodService: AppServices.shared.foodService,
+                    mealLogService: AppServices.shared.mealLogService,
+                    customFoodService: AppServices.shared.customFoodService,
+                    initialMethod: .scan
                 ) {
                     // On complete - could show success message
                 }

@@ -7,6 +7,7 @@
 
 @preconcurrency import AVFoundation
 import OSLog
+import UIKit
 
 /// CameraService manages camera access and AVCaptureSession for barcode scanning.
 ///
@@ -23,7 +24,7 @@ import OSLog
 /// Thread Safety: All public methods are @MainActor to ensure safe access to @Observable properties
 @Observable
 @MainActor
-final class CameraService {
+final class CameraService: NSObject {
     // MARK: - Properties
 
     /// Current camera authorization status
@@ -41,15 +42,31 @@ final class CameraService {
     /// Error that occurred during session configuration (exposed for UI)
     var sessionError: CameraServiceError?
 
+    /// Callback when a barcode is detected
+    var onBarcodeDetected: ((String) -> Void)?
+
     /// Logger for camera service operations
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "CameraService")
 
     /// Background queue for session operations
     private let sessionQueue = DispatchQueue(label: "com.gannonhall.JabTracker.CameraService.sessionQueue")
 
+    /// Metadata output for barcode detection
+    private var metadataOutput: AVCaptureMetadataOutput?
+
+    /// Last detected barcode for debouncing
+    private var lastDetectedBarcode: String?
+
+    /// Last detection time for debouncing
+    private var lastDetectionTime: Date?
+
+    /// Debounce interval in seconds
+    private let debounceInterval: TimeInterval = 2.0
+
     // MARK: - Initialization
 
-    init() {
+    override init() {
+        super.init()
         logger.info("CameraService initialized")
     }
 
@@ -153,31 +170,13 @@ final class CameraService {
         }
 
         // Add video input
-        guard let videoDevice = AVCaptureDevice.default(for: .video) else {
-            Task { @MainActor [weak self] in
-                self?.logger.error("No video device available")
-                self?.sessionError = .noVideoDevice
-            }
+        guard addVideoInput(to: captureSession) else {
             captureSession.commitConfiguration()
             return
         }
 
-        do {
-            let videoInput = try AVCaptureDeviceInput(device: videoDevice)
-            guard captureSession.canAddInput(videoInput) else {
-                Task { @MainActor [weak self] in
-                    self?.logger.error("Cannot add video input to session")
-                    self?.sessionError = .sessionConfigurationFailed
-                }
-                captureSession.commitConfiguration()
-                return
-            }
-            captureSession.addInput(videoInput)
-        } catch {
-            Task { @MainActor [weak self] in
-                self?.logger.error("Failed to create video input: \(error.localizedDescription)")
-                self?.sessionError = .sessionConfigurationFailed
-            }
+        // Add metadata output for barcode scanning
+        guard addMetadataOutput(to: captureSession) else {
             captureSession.commitConfiguration()
             return
         }
@@ -187,8 +186,70 @@ final class CameraService {
 
         Task { @MainActor [weak self] in
             self?.isSessionRunning = captureSession.isRunning
-            self?.logger.info("Camera session started: \(captureSession.isRunning)")
+            self?.logger.info("Camera session started with barcode detection: \(captureSession.isRunning)")
         }
+    }
+
+    /// Add video input to the capture session.
+    /// - Parameter captureSession: The session to add input to
+    /// - Returns: True if successful, false on error
+    private nonisolated func addVideoInput(to captureSession: AVCaptureSession) -> Bool {
+        guard let videoDevice = AVCaptureDevice.default(for: .video) else {
+            Task { @MainActor [weak self] in
+                self?.logger.error("No video device available")
+                self?.sessionError = .noVideoDevice
+            }
+            return false
+        }
+
+        do {
+            let videoInput = try AVCaptureDeviceInput(device: videoDevice)
+            guard captureSession.canAddInput(videoInput) else {
+                Task { @MainActor [weak self] in
+                    self?.logger.error("Cannot add video input to session")
+                    self?.sessionError = .sessionConfigurationFailed
+                }
+                return false
+            }
+            captureSession.addInput(videoInput)
+            return true
+        } catch {
+            Task { @MainActor [weak self] in
+                self?.logger.error("Failed to create video input: \(error.localizedDescription)")
+                self?.sessionError = .sessionConfigurationFailed
+            }
+            return false
+        }
+    }
+
+    /// Add metadata output for barcode scanning to the capture session.
+    /// - Parameter captureSession: The session to add output to
+    /// - Returns: True if successful, false on error
+    private nonisolated func addMetadataOutput(to captureSession: AVCaptureSession) -> Bool {
+        let metadataOutput = AVCaptureMetadataOutput()
+        guard captureSession.canAddOutput(metadataOutput) else {
+            Task { @MainActor [weak self] in
+                self?.logger.error("Cannot add metadata output to session")
+                self?.sessionError = .sessionConfigurationFailed
+            }
+            return false
+        }
+        captureSession.addOutput(metadataOutput)
+
+        // Configure metadata output on main queue for UI callback
+        metadataOutput.setMetadataObjectsDelegate(self, queue: .main)
+
+        // Set barcode types to detect (after adding output to session)
+        let supportedTypes: [AVMetadataObject.ObjectType] = [.ean8, .ean13, .upce, .code128, .qr]
+        metadataOutput.metadataObjectTypes = supportedTypes.filter {
+            metadataOutput.availableMetadataObjectTypes.contains($0)
+        }
+
+        Task { @MainActor [weak self] in
+            self?.metadataOutput = metadataOutput
+        }
+
+        return true
     }
 
     /// Resume an already-configured session.
@@ -257,6 +318,59 @@ final class CameraService {
         } catch {
             logger.error("Failed to toggle torch: \(error.localizedDescription)")
         }
+    }
+}
+
+// MARK: - AVCaptureMetadataOutputObjectsDelegate
+
+extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
+    /// Handle detected barcode metadata objects
+    nonisolated func metadataOutput(
+        _ output: AVCaptureMetadataOutput,
+        didOutput metadataObjects: [AVMetadataObject],
+        from connection: AVCaptureConnection
+    ) {
+        // Extract first barcode
+        guard let metadataObject = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+            let barcode = metadataObject.stringValue,
+            !barcode.isEmpty
+        else {
+            return
+        }
+
+        // Process on main actor for @Observable state access
+        Task { @MainActor [weak self] in
+            self?.handleBarcodeDetection(barcode)
+        }
+    }
+
+    /// Handle barcode detection with debouncing and haptic feedback
+    @MainActor
+    private func handleBarcodeDetection(_ barcode: String) {
+        let now = Date()
+
+        // Debounce: Skip if same barcode detected within debounce interval
+        if let lastBarcode = lastDetectedBarcode,
+            let lastTime = lastDetectionTime,
+            lastBarcode == barcode,
+            now.timeIntervalSince(lastTime) < debounceInterval
+        {
+            logger.debug("Debounced duplicate barcode: \(barcode)")
+            return
+        }
+
+        // Update debounce tracking
+        lastDetectedBarcode = barcode
+        lastDetectionTime = now
+
+        // Haptic feedback
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        logger.info("Barcode detected: \(barcode)")
+
+        // Call callback
+        onBarcodeDetected?(barcode)
     }
 }
 

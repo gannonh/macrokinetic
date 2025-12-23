@@ -167,4 +167,114 @@ extension FoodSearchSheet {
             description: Text("No foods found for \"\(viewModel.searchText)\"")
         )
     }
+
+    // MARK: - Time Picker Sheet
+
+    @ViewBuilder
+    var timePickerSheet: some View {
+        NavigationStack {
+            DatePicker(
+                "Entry Time",
+                selection: $viewModel.selectedTime,
+                displayedComponents: [.hourAndMinute]
+            )
+            .datePickerStyle(.wheel)
+            .labelsHidden()
+            .padding()
+            .navigationTitle("Select Time")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        showingTimePicker = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.fraction(0.4)])
+    }
+
+    // MARK: - Header Section
+
+    var headerSection: some View {
+        HStack {
+            // Time picker button
+            Button {
+                showingTimePicker = true
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.caption)
+                    Text(viewModel.selectedTime, format: .dateTime.hour().minute())
+                        .font(.subheadline.weight(.medium))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(.tertiarySystemFill))
+                .cornerRadius(8)
+            }
+            .accessibilityIdentifier(FoodSearchSheet.timePickerIdentifier)
+            .sheet(isPresented: $showingTimePicker) {
+                timePickerSheet
+            }
+
+            Spacer()
+
+            // Remaining macros display
+            HStack(spacing: 12) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(viewModel.remainingCalories)) left")
+                        .font(.caption.weight(.medium))
+                    Text("Calories")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+                    .frame(height: 24)
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(viewModel.remainingProtein))g left")
+                        .font(.caption.weight(.medium))
+                    Text("Protein")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.secondarySystemBackground))
+    }
+
+    // MARK: - Barcode Lookup
+
+    /// Handle a detected barcode by looking up in local custom foods first, then Open Food Facts
+    func handleBarcodeDetected(_ barcode: String) async {
+        isLookingUpBarcode = true
+        lastScannedBarcode = barcode
+
+        // 1. Check custom foods first (local, fast)
+        if let customFood = try? await customFoodService?.lookup(barcode: barcode) {
+            selectedFood = customFood.toSearchResult()
+            isLookingUpBarcode = false
+            showingFoodDetail = true
+            logger.info("Found custom food for barcode: \(barcode)")
+            return
+        }
+
+        // 2. Check Open Food Facts API
+        if let result = try? await foodService?.lookupBarcode(barcode) {
+            selectedFood = result
+            isLookingUpBarcode = false
+            showingFoodDetail = true
+            logger.info("Found Open Food Facts product for barcode: \(barcode)")
+            return
+        }
+
+        // 3. Not found
+        isLookingUpBarcode = false
+        barcodeNotFound = true
+        logger.info("No product found for barcode: \(barcode)")
+    }
 }

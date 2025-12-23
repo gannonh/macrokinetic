@@ -27,6 +27,9 @@ struct ShortcutsSheet: View {
     /// Binding to trigger quick dose sheet
     @Binding var showingQuickDose: Bool
 
+    /// Binding to trigger food search sheet with scanner pre-selected
+    @Binding var showingFoodSearchWithScan: Bool
+
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
@@ -37,7 +40,7 @@ struct ShortcutsSheet: View {
     /// Top row shortcuts configuration (Search, Barcode, Photo, Shots)
     static let topRowShortcuts: [ShortcutItem] = [
         ShortcutItem(icon: "magnifyingglass", label: "Search", isEnabled: true),
-        ShortcutItem(icon: "barcode.viewfinder", label: "Barcode", isEnabled: false),
+        ShortcutItem(icon: "barcode.viewfinder", label: "Barcode", isEnabled: true),
         ShortcutItem(icon: "camera.fill", label: "Photo", isEnabled: false),
         ShortcutItem(icon: "syringe.fill", label: "Shots", isEnabled: true),
     ]
@@ -148,6 +151,11 @@ struct ShortcutsSheet: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 showingFoodSearch = true
             }
+        case "Barcode":
+            dismiss()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                showingFoodSearchWithScan = true
+            }
         case "Shots":
             dismiss()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -171,13 +179,15 @@ struct ShortcutsSheet: View {
     struct PreviewWrapper: View {
         @State private var showingFoodSearch = false
         @State private var showingQuickDose = false
+        @State private var showingFoodSearchWithScan = false
 
         var body: some View {
             Color.clear
                 .sheet(isPresented: .constant(true)) {
                     ShortcutsSheet(
                         showingFoodSearch: $showingFoodSearch,
-                        showingQuickDose: $showingQuickDose
+                        showingQuickDose: $showingQuickDose,
+                        showingFoodSearchWithScan: $showingFoodSearchWithScan
                     )
                 }
         }
