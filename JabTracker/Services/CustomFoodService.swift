@@ -166,6 +166,18 @@ final class CustomFoodService {
         return results.first
     }
 
+    /// Look up a custom food by exact name
+    /// - Parameter name: Name to search for (case sensitive)
+    /// - Returns: Custom food with matching name, or nil if not found
+    func getCustomFood(named name: String) throws -> Food? {
+        let descriptor = FetchDescriptor<Food>(
+            predicate: #Predicate { food in
+                food.source == "userCreated" && food.name == name
+            }
+        )
+        return try context.fetch(descriptor).first
+    }
+
     // MARK: - Update
 
     /// Update an existing custom food

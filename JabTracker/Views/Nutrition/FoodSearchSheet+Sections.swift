@@ -29,7 +29,7 @@ extension FoodSearchSheet {
                 }
             }
 
-            // Custom section (user-created foods)
+            // My Foods section (user-created foods)
             if !viewModel.customResults.isEmpty {
                 Section {
                     ForEach(viewModel.visibleCustomResults, id: \.name) { result in
@@ -37,7 +37,7 @@ extension FoodSearchSheet {
                     }
                 } header: {
                     expandableSectionHeader(
-                        title: "Custom",
+                        title: "My Foods",
                         remainingCount: viewModel.remainingCustomCount(),
                         isExpanded: viewModel.customExpanded,
                         onToggle: viewModel.toggleCustomExpanded
@@ -114,6 +114,27 @@ extension FoodSearchSheet {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("food-result-\(result.name.lowercased().replacingOccurrences(of: " ", with: "-"))")
+        .if(result.source == .userCreated) { view in
+            view
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button("Delete", role: .destructive) {
+                        if let food = findCustomFood(for: result) {
+                            foodToDelete = food
+                            showingDeleteConfirmation = true
+                        }
+                    }
+                    .accessibilityIdentifier("delete-custom-food-button")
+                }
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    Button("Edit") {
+                        if let food = findCustomFood(for: result) {
+                            editingCustomFood = food
+                        }
+                    }
+                    .tint(.blue)
+                    .accessibilityIdentifier("edit-custom-food-button")
+                }
+        }
     }
 
     @ViewBuilder

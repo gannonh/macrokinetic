@@ -24,6 +24,9 @@ struct FoodSearchSheet: View {
     @State var showingFoodDetail = false
     @State private var showingComingSoon = false
     @State private var showingTimePicker = false
+    @State var editingCustomFood: Food?
+    @State var foodToDelete: Food?
+    @State var showingDeleteConfirmation = false
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Static Identifiers
@@ -109,6 +112,31 @@ struct FoodSearchSheet: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("\(viewModel.selectedMethod.displayName) will be available in a future update.")
+        }
+        .alert("Delete Custom Food?", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                foodToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let food = foodToDelete {
+                    Task { await deleteCustomFood(food) }
+                }
+            }
+        } message: {
+            if let food = foodToDelete {
+                Text("This will permanently delete '\(food.name)' from your custom foods.")
+            }
+        }
+        .sheet(item: $editingCustomFood) { food in
+            if let customFoodService {
+                CreateFoodSheet.edit(
+                    food: food,
+                    customFoodService: customFoodService,
+                    onFoodCreated: { _ in
+                        editingCustomFood = nil
+                    }
+                )
+            }
         }
         .task {
             await viewModel.loadInitialData(user: user, for: Date())
@@ -335,6 +363,25 @@ struct FoodSearchSheet: View {
             FoodSearchResultRow(result: result)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Custom Food Helpers
+
+    /// Look up the actual Food entity for a custom food search result
+    func findCustomFood(for result: FoodSearchResult) -> Food? {
+        guard let customFoodService else { return nil }
+        return try? customFoodService.getCustomFood(named: result.name)
+    }
+
+    /// Delete a custom food after confirmation
+    private func deleteCustomFood(_ food: Food) async {
+        guard let customFoodService else { return }
+        do {
+            try await customFoodService.deleteCustomFood(food)
+            foodToDelete = nil
+        } catch {
+            // Log error - food may have already been deleted
+        }
     }
 
 }
