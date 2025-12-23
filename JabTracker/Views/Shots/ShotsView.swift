@@ -53,41 +53,35 @@ struct ShotsView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Main section picker
-                Picker("Section", selection: $selectedSection) {
-                    ForEach(ShotsSection.allCases, id: \.self) { section in
-                        Text(section.rawValue).tag(section)
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding()
-                .accessibilityIdentifier("shots-section-picker")
-
-                // Sub-controls based on selected section
-                sectionControls
-
-                // Content based on selection
-                // Note: History List mode needs direct rendering (no ScrollView wrapper)
-                // because SwiftUI List manages its own scrolling
-                if selectedSection == .history && selectedHistoryMode == .list {
-                    historyContent
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            if isLoadingData && selectedSection != .history {
-                                ProgressView("Loading...")
-                                    .padding()
-                            } else {
-                                sectionContent
-                            }
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    // Main section picker
+                    Picker("Section", selection: $selectedSection) {
+                        ForEach(ShotsSection.allCases, id: \.self) { section in
+                            Text(section.rawValue).tag(section)
                         }
-                        .padding()
                     }
-                    .accessibilityIdentifier("shots-scroll-view")
+                    .pickerStyle(SegmentedPickerStyle())
+                    .accessibilityIdentifier("shots-section-picker")
+
+                    // Sub-controls based on selected section
+                    sectionControls
+
+                    // Content based on selection
+                    if isLoadingData && selectedSection != .history {
+                        ProgressView("Loading...")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    } else {
+                        sectionContent
+                    }
                 }
+                .padding()
             }
+            .background(Color(.systemGroupedBackground))
+            .accessibilityIdentifier("shots-scroll-view")
             .navigationTitle("Shots")
+            .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 loadData()
                 if selectedSection == .concentration {
@@ -295,11 +289,7 @@ struct ShotsView: View {
                 .multilineTextAlignment(.center)
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(radius: 2)
-        )
+        .cardStyle(cornerRadius: 12)
         .accessibilityIdentifier("no-shots-data")
     }
 
@@ -315,10 +305,7 @@ struct ShotsView: View {
         }
         .frame(height: 300)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(.systemGray6))
-        )
+        .cardStyle(cornerRadius: 12)
         .accessibilityIdentifier("chart-loading")
     }
 }

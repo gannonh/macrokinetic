@@ -43,8 +43,7 @@ extension FoodDetailSheet {
             .frame(maxWidth: .infinity)
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cardStyle()
     }
 
     /// Data-driven array for macro impact rings
@@ -112,8 +111,7 @@ extension FoodDetailSheet {
             }
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cardStyle()
     }
 
     func carbBreakdownRow(label: String, value: Double, goal: Double?) -> some View {
@@ -195,8 +193,7 @@ extension FoodDetailSheet {
             }
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cardStyle(cornerRadius: 12)
     }
 
     // MARK: - Mode and Unit Selector

@@ -51,8 +51,7 @@ struct FoodEntryCardView: View {
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cardStyle()
     }
 
     // MARK: - Computed Properties

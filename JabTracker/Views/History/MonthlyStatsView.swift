@@ -41,10 +41,7 @@ struct MonthlyStatsView: View {
             }
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.secondarySystemBackground))
-        )
+        .cardStyle(cornerRadius: 12)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Monthly Statistics")
     }

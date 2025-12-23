@@ -134,8 +134,7 @@ struct ShortcutsSheet: View {
                 }
             }
         }
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cardStyle(cornerRadius: 12)
         .padding(.horizontal, 16)
     }
 

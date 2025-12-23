@@ -275,8 +275,7 @@ struct FoodDetailSheet: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cardStyle()
     }
 
     private func macroItem(value: Double, label: String, percentage: Int, color: Color) -> some View {

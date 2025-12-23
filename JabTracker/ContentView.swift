@@ -250,10 +250,22 @@ struct DashboardView: View {
     @State private var pkEngine = PharmacokineticsEngine()
     let doseService: DoseService
 
+    init(doseService: DoseService) {
+        self.doseService = doseService
+
+        // Make inline title transparent so it doesn't appear when scrolled
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.clear]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     if let currentUser = users.first {
                         self.concentrationSection(for: currentUser)
 
@@ -269,7 +281,9 @@ struct DashboardView: View {
                 .padding()
             }
             .accessibilityIdentifier("dashboard-scroll-view")
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Dashboard")
+            .navigationBarTitleDisplayMode(.large)
         }
         .accessibilityIdentifier("dashboard-view")
     }
