@@ -5,7 +5,14 @@
 //  Enhanced food search sheet with categorized results.
 //
 
+import OSLog
 import SwiftUI
+
+/// Logger for FoodSearchSheet
+private let logger = Logger(
+    subsystem: "com.gannonhall.JabTracker",
+    category: "FoodSearchSheet"
+)
 
 /// Full-screen food search sheet with method tabs and categorized results
 struct FoodSearchSheet: View {
@@ -17,6 +24,10 @@ struct FoodSearchSheet: View {
     let customFoodService: CustomFoodService?
     let onComplete: () -> Void
 
+    // MARK: - Environment
+
+    @Environment(\.dismiss) private var dismiss
+
     // MARK: - State
 
     @State var viewModel: FoodSearchSheetViewModel
@@ -27,7 +38,7 @@ struct FoodSearchSheet: View {
     @State var editingCustomFood: Food?
     @State var foodToDelete: Food?
     @State var showingDeleteConfirmation = false
-    @Environment(\.dismiss) private var dismiss
+    @State private var showingDeleteError = false
 
     // MARK: - Static Identifiers
 
@@ -134,9 +145,18 @@ struct FoodSearchSheet: View {
                     customFoodService: customFoodService,
                     onFoodCreated: { _ in
                         editingCustomFood = nil
+                        // Refresh search results to show updated food
+                        Task {
+                            await viewModel.performSearch()
+                        }
                     }
                 )
             }
+        }
+        .alert("Delete Failed", isPresented: $showingDeleteError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Unable to delete the custom food. Please try again.")
         }
         .task {
             await viewModel.loadInitialData(user: user, for: Date())
@@ -379,8 +399,12 @@ struct FoodSearchSheet: View {
         do {
             try await customFoodService.deleteCustomFood(food)
             foodToDelete = nil
+            // Refresh search results to remove deleted food
+            await viewModel.performSearch()
+            logger.info("Deleted custom food: \(food.name)")
         } catch {
-            // Log error - food may have already been deleted
+            logger.error("Failed to delete custom food '\(food.name)': \(error.localizedDescription)")
+            showingDeleteError = true
         }
     }
 

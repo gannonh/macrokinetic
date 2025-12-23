@@ -5,7 +5,14 @@
 //  Section views for FoodSearchSheet.
 //
 
+import OSLog
 import SwiftUI
+
+/// Logger for FoodSearchSheet sections
+private let logger = Logger(
+    subsystem: "com.gannonhall.JabTracker",
+    category: "FoodSearchSheet+Sections"
+)
 
 // MARK: - Search Results Sections
 
@@ -121,6 +128,8 @@ extension FoodSearchSheet {
                         if let food = findCustomFood(for: result) {
                             foodToDelete = food
                             showingDeleteConfirmation = true
+                        } else {
+                            logger.warning("Could not find custom food for delete: \(result.name)")
                         }
                     }
                     .accessibilityIdentifier("delete-custom-food-button")
@@ -129,6 +138,8 @@ extension FoodSearchSheet {
                     Button("Edit") {
                         if let food = findCustomFood(for: result) {
                             editingCustomFood = food
+                        } else {
+                            logger.warning("Could not find custom food for edit: \(result.name)")
                         }
                     }
                     .tint(.blue)
