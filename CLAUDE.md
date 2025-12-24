@@ -1,10 +1,13 @@
-#### Essential Context
+## Essential Context
 
-1. Project PRD: @.planning/project-prd.md
-2. Technical stack: @.planning/codebase/STACK.md
-3. Architecture: @.planning/codebase/ARCHITECTURE.md
-4. Project structure: @.planning/codebase/STRUCTURE.md
-5. Coding conventions: @.planning/codebase/CONVENTIONS.md
-6. Testing: @.planning/codebase/TESTING.md
-7. Integrations: @.planning/codebase/INTEGRATIONS.md
-8. Known concerns: @.planning/codebase/CONCERNS.md
+### Codebase Conventions & Structure
+
+1. Technical stack: @.planning/codebase/STACK.md
+2. Architecture: @.planning/codebase/ARCHITECTURE.md
+3. Project structure: @.planning/codebase/STRUCTURE.md
+4. Coding conventions: @.planning/codebase/CONVENTIONS.md
+5. Testing: @.planning/codebase/TESTING.md
+6. Integrations: @.planning/codebase/INTEGRATIONS.md
+7. Known concerns: @.planning/codebase/CONCERNS.md
+
+
