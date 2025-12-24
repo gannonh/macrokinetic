@@ -21,6 +21,7 @@ struct ShortcutsSheetTests {
         var showingFoodSearch = false
         var showingQuickDose = false
         var showingFoodSearchWithScan = false
+        var showingFoodLibrary = false
 
         let sheet = ShortcutsSheet(
             showingFoodSearch: Binding(
@@ -34,6 +35,10 @@ struct ShortcutsSheetTests {
             showingFoodSearchWithScan: Binding(
                 get: { showingFoodSearchWithScan },
                 set: { showingFoodSearchWithScan = $0 }
+            ),
+            showingFoodLibrary: Binding(
+                get: { showingFoodLibrary },
+                set: { showingFoodLibrary = $0 }
             )
         )
 
@@ -41,6 +46,7 @@ struct ShortcutsSheetTests {
         #expect(sheet.showingFoodSearch == false)
         #expect(sheet.showingQuickDose == false)
         #expect(sheet.showingFoodSearchWithScan == false)
+        #expect(sheet.showingFoodLibrary == false)
     }
 
     // MARK: - Top Row Shortcut Tests
@@ -103,14 +109,14 @@ struct ShortcutsSheetTests {
 
     // MARK: - List Row Shortcut Tests
 
-    @Test("ShortcutsSheet has all list row shortcuts disabled")
+    @Test("ShortcutsSheet has Your Foods shortcut enabled")
     @MainActor
-    func hasAllListRowShortcutsDisabled() {
+    func hasYourFoodsShortcutEnabled() {
         let shortcuts = ShortcutsSheet.listRowShortcuts
 
-        for shortcut in shortcuts {
-            #expect(shortcut.isEnabled == false, "Shortcut '\(shortcut.label)' should be disabled")
-        }
+        let yourFoodsShortcut = shortcuts.first { $0.label == "Your Foods" }
+        #expect(yourFoodsShortcut != nil)
+        #expect(yourFoodsShortcut?.isEnabled == true)
     }
 
     @Test("ShortcutsSheet list rows have 6 shortcuts")

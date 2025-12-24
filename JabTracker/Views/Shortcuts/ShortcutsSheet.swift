@@ -36,6 +36,9 @@ struct ShortcutsSheet: View {
     /// Binding to trigger food search sheet with scanner pre-selected
     @Binding var showingFoodSearchWithScan: Bool
 
+    /// Binding to trigger food search sheet with library pre-selected
+    @Binding var showingFoodLibrary: Bool
+
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
@@ -56,7 +59,7 @@ struct ShortcutsSheet: View {
         ShortcutItem(icon: "scalemass.fill", label: "Weight", isEnabled: false),
         ShortcutItem(icon: "plus.circle.fill", label: "Quick Add", isEnabled: false),
         ShortcutItem(icon: "chart.bar.fill", label: "Metrics", isEnabled: false),
-        ShortcutItem(icon: "star.fill", label: "Your Foods", isEnabled: false),
+        ShortcutItem(icon: "star.fill", label: "Your Foods", isEnabled: true),
         ShortcutItem(icon: "book.fill", label: "Recipes", isEnabled: false),
         ShortcutItem(icon: "calendar.badge.plus", label: "Edit Days", isEnabled: false),
     ]
@@ -173,8 +176,13 @@ struct ShortcutsSheet: View {
     }
 
     private func handleListRowAction(_ shortcut: ShortcutItem) {
-        comingSoonFeature = shortcut.label
-        showingComingSoon = true
+        switch shortcut.label {
+        case "Your Foods":
+            dismissAndPresent($showingFoodLibrary)
+        default:
+            comingSoonFeature = shortcut.label
+            showingComingSoon = true
+        }
     }
 }
 
@@ -185,6 +193,7 @@ struct ShortcutsSheet: View {
         @State private var showingFoodSearch = false
         @State private var showingQuickDose = false
         @State private var showingFoodSearchWithScan = false
+        @State private var showingFoodLibrary = false
 
         var body: some View {
             Color.clear
@@ -192,7 +201,8 @@ struct ShortcutsSheet: View {
                     ShortcutsSheet(
                         showingFoodSearch: $showingFoodSearch,
                         showingQuickDose: $showingQuickDose,
-                        showingFoodSearchWithScan: $showingFoodSearchWithScan
+                        showingFoodSearchWithScan: $showingFoodSearchWithScan,
+                        showingFoodLibrary: $showingFoodLibrary
                     )
                 }
         }

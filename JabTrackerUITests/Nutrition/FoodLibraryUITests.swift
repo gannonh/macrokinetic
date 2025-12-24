@@ -2,7 +2,8 @@
 //  FoodLibraryUITests.swift
 //  JabTrackerUITests
 //
-//  E2E tests for Food Library Integration (My Foods section).
+//  E2E tests for Food Library Integration.
+//  Includes both the "My Foods" section in search (Phase 3) and the Library tab (Phase 7).
 //
 
 import XCTest
@@ -489,5 +490,67 @@ final class FoodLibraryUITests: XCTestCase {
         // Verify food still appears in search
         XCTAssertTrue(myFoodsSection.exists, "My Foods section should still exist")
         XCTAssertTrue(customFoodResult.exists, "Custom food should still exist after canceling delete")
+    }
+
+    // MARK: - Library Tab (Phase 7)
+
+    /// User can access Library tab from food search
+    /// Acceptance: Tap Library tab, Foods tab is selected by default
+    func testAccessLibraryTabFromFoodSearch() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User can access Library from Your Foods shortcut
+    /// Acceptance: Tap +, tap Your Foods, Library opens on Foods tab
+    func testAccessLibraryFromYourFoodsShortcut() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User sees custom foods in Library tab
+    /// Acceptance: Create a custom food, open Library, food appears in list
+    func testCustomFoodsAppearInLibraryTab() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User can sort foods by name in Library tab
+    /// Acceptance: Tap sort menu, select Name, foods reorder alphabetically
+    func testSortFoodsByNameInLibrary() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User can sort foods by date added in Library tab
+    /// Acceptance: Tap sort menu, select Modified, foods order by date
+    func testSortFoodsByDateAddedInLibrary() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User can tap food in Library to add to meal
+    /// Acceptance: Tap food in Library, FoodDetailSheet opens
+    func testTapFoodInLibraryOpensDetailSheet() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User can swipe to edit custom food in Library
+    /// Acceptance: Swipe right, tap Edit, CreateFoodSheet opens
+    func testSwipeToEditFoodInLibrary() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User can swipe to delete custom food in Library
+    /// Acceptance: Swipe left, tap Delete, confirmation appears, confirm removes food
+    func testSwipeToDeleteFoodInLibrary() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// User sees empty state when no custom foods in Library
+    /// Acceptance: With no custom foods, Library shows empty message
+    func testLibraryEmptyStateWhenNoFoods() {
+        // TODO: Implement after manual smoke test
+    }
+
+    /// Recipes and Favorites tabs show "Coming Soon"
+    /// Acceptance: Tap Recipes/Favorites, alert shows "Coming Soon"
+    func testRecipesAndFavoritesTabsShowComingSoon() {
+        // TODO: Implement after manual smoke test
     }
 }

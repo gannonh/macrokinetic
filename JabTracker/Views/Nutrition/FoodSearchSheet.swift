@@ -114,7 +114,7 @@ struct FoodSearchSheet: View {
                 // Method tabs
                 methodTabsSection
 
-                // Show scanner or search UI based on selected method
+                // Show scanner, library, or search UI based on selected method
                 if viewModel.selectedMethod == .scan {
                     ZStack {
                         BarcodeScannerContentView { barcode in
@@ -134,6 +134,25 @@ struct FoodSearchSheet: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color.black.opacity(0.3))
                         }
+                    }
+                } else if viewModel.selectedMethod == .library {
+                    if let customFoodService {
+                        FoodLibraryContentView(
+                            customFoodService: customFoodService,
+                            onFoodSelected: { food in
+                                selectedFood = food.toSearchResult()
+                                showingFoodDetail = true
+                            },
+                            editingCustomFood: $editingCustomFood,
+                            foodToDelete: $foodToDelete,
+                            showingDeleteConfirmation: $showingDeleteConfirmation
+                        )
+                    } else {
+                        ContentUnavailableView(
+                            "Service Unavailable",
+                            systemImage: "exclamationmark.triangle",
+                            description: Text("Custom food service is not available")
+                        )
                     }
                 } else {
                     // Search field

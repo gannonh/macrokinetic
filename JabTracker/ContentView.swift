@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var showingShortcuts = false
     @State private var showingFoodSearchSheet = false
     @State private var showingFoodSearchWithScan = false
+    @State private var showingFoodLibrary = false
     /// The currently selected date in FoodLogView, shared for tab bar + button
     @State private var selectedFoodLogDate = Date()
 
@@ -130,7 +131,8 @@ struct ContentView: View {
             ShortcutsSheet(
                 showingFoodSearch: $showingFoodSearchSheet,
                 showingQuickDose: $showingQuickDoseSheet,
-                showingFoodSearchWithScan: $showingFoodSearchWithScan
+                showingFoodSearchWithScan: $showingFoodSearchWithScan,
+                showingFoodLibrary: $showingFoodLibrary
             )
         }
         .sheet(isPresented: $showingFoodSearchSheet) {
@@ -138,6 +140,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingFoodSearchWithScan) {
             foodSearchSheet(initialMethod: .scan)
+        }
+        .sheet(isPresented: $showingFoodLibrary) {
+            foodSearchSheet(initialMethod: .library)
         }
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)

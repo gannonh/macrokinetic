@@ -28,7 +28,8 @@
           "Models/Food.swift",
           "Models/FoodEntry.swift",
           "Models/FoodSource.swift",
-          "Models/MealSection.swift"
+          "Models/MealSection.swift",
+          "Models/FoodLibrarySortOption.swift"
         ]
       },
       "infrastructure": {
@@ -232,6 +233,7 @@
       "Views/Nutrition/ServingInputView.swift",
       "Views/Nutrition/EditFoodEntrySheet.swift",
       "Views/Nutrition/FoodEntryCardView.swift",
+      "Views/Nutrition/FoodLibraryContentView.swift",
       "Views/Nutrition/CreateFoodSheet.swift",
       "Views/Nutrition/BarcodeScannerContentView.swift",
       "Views/Nutrition/CameraPreviewView.swift",
