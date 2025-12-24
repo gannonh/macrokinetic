@@ -37,10 +37,10 @@ Plans:
 **Goal**: Tap food entry to open editable FoodDetailSheet
 **Depends on**: Phase 5
 **Research**: Unlikely (reusing existing FoodDetailSheet)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 06-01: TBD
+- [x] 06-01: Tap-to-edit food entries with E2E test coverage
 
 #### Phase 7: Food Library
 
@@ -96,7 +96,7 @@ Phases execute in numeric order within each milestone.
 | 3. Food Library Integration | v0.1.0 | 1/1 | Complete | 2025-12-23 |
 | 4. Barcode Assignment | v0.1.0 | 2/2 | Complete | 2025-12-23 |
 | 5. Food Log Calendar | v0.2.0 | 1/1 | Complete | 2025-12-24 |
-| 6. Food Entry Editing | v0.2.0 | 0/? | Not started | - |
+| 6. Food Entry Editing | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 7. Food Library | v0.2.0 | 0/? | Not started | - |
 | 8. Quick Add | v0.2.0 | 0/? | Not started | - |
 | 9. Weight Tracking | v0.2.0 | 0/? | Not started | - |

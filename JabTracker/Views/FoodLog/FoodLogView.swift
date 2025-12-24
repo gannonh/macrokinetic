@@ -246,32 +246,37 @@ struct FoodLogView: View {
                     .listRowBackground(Color.clear)
             } else {
                 ForEach(entries, id: \.id) { entry in
-                    FoodEntryCardView(entry: entry)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                        .listRowBackground(Color.clear)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button("Delete", role: .destructive) {
-                                entryToDelete = entry
-                                showingDeleteConfirmation = true
-                            }
-                            .accessibilityIdentifier("delete-entry-button")
+                    Button {
+                        editingEntry = entry
+                    } label: {
+                        FoodEntryCardView(entry: entry)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                    .listRowBackground(Color.clear)
+                    .accessibilityIdentifier("food-entry-row")
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button("Delete", role: .destructive) {
+                            entryToDelete = entry
+                            showingDeleteConfirmation = true
                         }
-                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                            Button("Edit") {
-                                editingEntry = entry
-                            }
-                            .tint(.blue)
-                            .accessibilityIdentifier("edit-entry-button")
+                        .accessibilityIdentifier("delete-entry-button")
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button("Edit") {
+                            editingEntry = entry
+                        }
+                        .tint(.blue)
+                        .accessibilityIdentifier("edit-entry-button")
 
-                            Button("Duplicate") {
-                                Task {
-                                    await duplicateEntry(entry)
-                                }
+                        Button("Duplicate") {
+                            Task {
+                                await duplicateEntry(entry)
                             }
-                            .tint(.green)
-                            .accessibilityIdentifier("duplicate-entry-button")
                         }
-                        .accessibilityIdentifier("food-entry-row-\(entry.id.uuidString)")
+                        .tint(.green)
+                        .accessibilityIdentifier("duplicate-entry-button")
+                    }
                 }
             }
         } header: {
