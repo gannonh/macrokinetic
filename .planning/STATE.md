@@ -30,9 +30,9 @@ Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: TBD
-PR: TBD
-Branch: TBD
+Issue: #319
+PR: #320
+Branch: feat/319-v0.2.0-enhanced-tracking
 
 ## Performance Metrics
 
