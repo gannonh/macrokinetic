@@ -77,7 +77,7 @@ struct FoodLogView: View {
                 // Daily summary section
                 Section {
                     dailySummaryCard
-                        .listRowInsets(EdgeInsets())
+                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                         .listRowBackground(Color.clear)
                 }
 
@@ -88,6 +88,7 @@ struct FoodLogView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Food Log")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -155,10 +156,7 @@ struct FoodLogView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        .cardStyle(cornerRadius: 12)
     }
 
     private func macroColumn(value: Double, label: String, color: Color) -> some View {
@@ -183,15 +181,13 @@ struct FoodLogView: View {
 
         Section {
             if entries.isEmpty {
-                Text("No items logged")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
+                EmptyMealRow()
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                    .listRowBackground(Color.clear)
             } else {
                 ForEach(entries, id: \.id) { entry in
                     FoodEntryCardView(entry: entry)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                         .listRowBackground(Color.clear)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button("Delete", role: .destructive) {
@@ -299,6 +295,21 @@ struct FoodLogView: View {
         } catch {
             logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
         }
+    }
+}
+
+// MARK: - Empty Meal Row
+
+/// Styled empty state row for meal sections
+private struct EmptyMealRow: View {
+    var body: some View {
+        Text("No items logged")
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .cardStyle()
     }
 }
 

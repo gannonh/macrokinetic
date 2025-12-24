@@ -721,11 +721,11 @@ struct SearchMethodTests {
         #expect(SearchMethod.allCases.count == 5)
     }
 
-    @Test("SearchMethod.search is only enabled method")
-    func searchMethodOnlySearchEnabled() {
+    @Test("SearchMethod.search and .scan are enabled")
+    func searchMethodSearchAndScanEnabled() {
         for method in SearchMethod.allCases {
-            if method == .search {
-                #expect(method.isEnabled == true)
+            if method == .search || method == .scan {
+                #expect(method.isEnabled == true, "Method \(method.rawValue) should be enabled")
             } else {
                 #expect(method.isEnabled == false, "Method \(method.rawValue) should be disabled")
             }

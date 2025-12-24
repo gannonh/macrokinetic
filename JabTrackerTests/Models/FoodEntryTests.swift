@@ -493,4 +493,151 @@ struct FoodEntryTests {
         #expect(snackResult?.meal == .snacks)
     }
 
+    // MARK: - Validation Tests
+
+    @Test("isValid returns true for entry with name and positive serving size")
+    func testIsValidReturnsTrue() throws {
+        let entry = FoodEntry(foodName: "Chicken Breast", servingGrams: 150.0)
+
+        #expect(entry.isValid == true)
+    }
+
+    @Test("isValid returns false for entry with empty name")
+    func testIsValidReturnsFalseForEmptyName() throws {
+        let entry = FoodEntry(foodName: "", servingGrams: 150.0)
+
+        #expect(entry.isValid == false)
+    }
+
+    @Test("isValid returns false for entry with whitespace-only name")
+    func testIsValidReturnsFalseForWhitespaceName() throws {
+        let entry = FoodEntry(foodName: "   ", servingGrams: 150.0)
+
+        #expect(entry.isValid == false)
+    }
+
+    @Test("isValid returns false for entry with zero serving size")
+    func testIsValidReturnsFalseForZeroServingSize() throws {
+        let entry = FoodEntry(foodName: "Chicken Breast", servingGrams: 0.0)
+
+        #expect(entry.isValid == false)
+    }
+
+    @Test("isValid returns false for entry with negative serving size")
+    func testIsValidReturnsFalseForNegativeServingSize() throws {
+        let entry = FoodEntry(foodName: "Chicken Breast", servingGrams: -50.0)
+
+        #expect(entry.isValid == false)
+    }
+
+    // MARK: - Factory Method Tests
+
+    @Test("create() returns valid FoodEntry with all parameters")
+    func testCreateReturnsValidFoodEntry() throws {
+        let food = Food(
+            name: "Chicken Breast",
+            brand: "Generic",
+            caloriesPer100g: 165.0,
+            proteinPer100g: 31.0,
+            carbsPer100g: 0.0,
+            fatPer100g: 3.6,
+            fiberPer100g: 0.0
+        )
+
+        let entry = try FoodEntry.create(
+            from: food,
+            servingGrams: 200.0,
+            mealSection: .dinner,
+            notes: "Grilled, no oil"
+        )
+
+        #expect(entry.foodName == "Chicken Breast")
+        #expect(entry.foodBrand == "Generic")
+        #expect(entry.servingGrams == 200.0)
+        #expect(entry.meal == .dinner)
+        #expect(entry.notes == "Grilled, no oil")
+        #expect(entry.caloriesPer100g == 165.0)
+        #expect(entry.proteinPer100g == 31.0)
+    }
+
+    @Test("create() throws emptyFoodName error for empty food name")
+    func testCreateThrowsEmptyFoodNameError() throws {
+        let food = Food(name: "", caloriesPer100g: 100.0)
+
+        #expect(throws: FoodEntryValidationError.emptyFoodName) {
+            _ = try FoodEntry.create(
+                from: food,
+                servingGrams: 150.0,
+                mealSection: .lunch
+            )
+        }
+    }
+
+    @Test("create() throws emptyFoodName error for whitespace-only food name")
+    func testCreateThrowsEmptyFoodNameErrorForWhitespace() throws {
+        let food = Food(name: "   ", caloriesPer100g: 100.0)
+
+        #expect(throws: FoodEntryValidationError.emptyFoodName) {
+            _ = try FoodEntry.create(
+                from: food,
+                servingGrams: 150.0,
+                mealSection: .lunch
+            )
+        }
+    }
+
+    @Test("create() throws invalidServingSize error for zero serving size")
+    func testCreateThrowsInvalidServingSizeForZero() throws {
+        let food = Food(name: "Chicken", caloriesPer100g: 165.0)
+
+        #expect(throws: FoodEntryValidationError.invalidServingSize) {
+            _ = try FoodEntry.create(
+                from: food,
+                servingGrams: 0.0,
+                mealSection: .dinner
+            )
+        }
+    }
+
+    @Test("create() throws invalidServingSize error for negative serving size")
+    func testCreateThrowsInvalidServingSizeForNegative() throws {
+        let food = Food(name: "Chicken", caloriesPer100g: 165.0)
+
+        #expect(throws: FoodEntryValidationError.invalidServingSize) {
+            _ = try FoodEntry.create(
+                from: food,
+                servingGrams: -100.0,
+                mealSection: .dinner
+            )
+        }
+    }
+
+    @Test("create() without notes leaves notes nil")
+    func testCreateWithoutNotes() throws {
+        let food = Food(name: "Chicken", caloriesPer100g: 165.0)
+
+        let entry = try FoodEntry.create(
+            from: food,
+            servingGrams: 150.0,
+            mealSection: .lunch
+        )
+
+        #expect(entry.notes == nil)
+    }
+
+    // MARK: - FoodEntryValidationError Tests
+
+    @Test("FoodEntryValidationError.emptyFoodName has correct error description")
+    func testEmptyFoodNameErrorDescription() throws {
+        let error = FoodEntryValidationError.emptyFoodName
+
+        #expect(error.errorDescription == "Food name cannot be empty")
+    }
+
+    @Test("FoodEntryValidationError.invalidServingSize has correct error description")
+    func testInvalidServingSizeErrorDescription() throws {
+        let error = FoodEntryValidationError.invalidServingSize
+
+        #expect(error.errorDescription == "Serving size must be positive")
+    }
 }

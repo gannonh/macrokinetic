@@ -48,6 +48,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>MacroKinetic uses the camera to scan food barcodes for quick nutrition lookup.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>MacroKinetic uses Face ID to securely protect your health data and ensure only you can access your nutrition and medication tracking information.</string>
 	<key>NSHealthShareUsageDescription</key>

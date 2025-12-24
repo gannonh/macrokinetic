@@ -5,7 +5,14 @@
 //  Section views for FoodSearchSheet.
 //
 
+import OSLog
 import SwiftUI
+
+/// Logger for FoodSearchSheet sections
+private let logger = Logger(
+    subsystem: "com.gannonhall.JabTracker",
+    category: "FoodSearchSheet+Sections"
+)
 
 // MARK: - Search Results Sections
 
@@ -29,7 +36,7 @@ extension FoodSearchSheet {
                 }
             }
 
-            // Custom section (user-created foods)
+            // My Foods section (user-created foods)
             if !viewModel.customResults.isEmpty {
                 Section {
                     ForEach(viewModel.visibleCustomResults, id: \.name) { result in
@@ -37,7 +44,7 @@ extension FoodSearchSheet {
                     }
                 } header: {
                     expandableSectionHeader(
-                        title: "Custom",
+                        title: "My Foods",
                         remainingCount: viewModel.remainingCustomCount(),
                         isExpanded: viewModel.customExpanded,
                         onToggle: viewModel.toggleCustomExpanded
@@ -114,6 +121,31 @@ extension FoodSearchSheet {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("food-result-\(result.name.lowercased().replacingOccurrences(of: " ", with: "-"))")
+        .if(result.source == .userCreated) { view in
+            view
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button("Delete", role: .destructive) {
+                        if let food = findCustomFood(for: result) {
+                            foodToDelete = food
+                            showingDeleteConfirmation = true
+                        } else {
+                            logger.warning("Could not find custom food for delete: \(result.name)")
+                        }
+                    }
+                    .accessibilityIdentifier("delete-custom-food-button")
+                }
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    Button("Edit") {
+                        if let food = findCustomFood(for: result) {
+                            editingCustomFood = food
+                        } else {
+                            logger.warning("Could not find custom food for edit: \(result.name)")
+                        }
+                    }
+                    .tint(.blue)
+                    .accessibilityIdentifier("edit-custom-food-button")
+                }
+        }
     }
 
     @ViewBuilder
@@ -134,5 +166,134 @@ extension FoodSearchSheet {
             systemImage: "magnifyingglass",
             description: Text("No foods found for \"\(viewModel.searchText)\"")
         )
+    }
+
+    // MARK: - Time Picker Sheet
+
+    @ViewBuilder
+    var timePickerSheet: some View {
+        NavigationStack {
+            DatePicker(
+                "Entry Time",
+                selection: $viewModel.selectedTime,
+                displayedComponents: [.hourAndMinute]
+            )
+            .datePickerStyle(.wheel)
+            .labelsHidden()
+            .padding()
+            .navigationTitle("Select Time")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        showingTimePicker = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.fraction(0.4)])
+    }
+
+    // MARK: - Header Section
+
+    var headerSection: some View {
+        HStack {
+            // Time picker button
+            Button {
+                showingTimePicker = true
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.caption)
+                    Text(viewModel.selectedTime, format: .dateTime.hour().minute())
+                        .font(.subheadline.weight(.medium))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(.tertiarySystemFill))
+                .cornerRadius(8)
+            }
+            .accessibilityIdentifier(FoodSearchSheet.timePickerIdentifier)
+            .sheet(isPresented: $showingTimePicker) {
+                timePickerSheet
+            }
+
+            Spacer()
+
+            // Remaining macros display
+            HStack(spacing: 12) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(viewModel.remainingCalories)) left")
+                        .font(.caption.weight(.medium))
+                    Text("Calories")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+                    .frame(height: 24)
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(viewModel.remainingProtein))g left")
+                        .font(.caption.weight(.medium))
+                    Text("Protein")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.secondarySystemBackground))
+    }
+
+    // MARK: - Barcode Lookup
+
+    /// Handle a detected barcode by looking up in local custom foods first, then Open Food Facts
+    func handleBarcodeDetected(_ barcode: String) async {
+        // Prevent concurrent lookups - skip if already looking up
+        guard !isLookingUpBarcode else {
+            logger.debug("Skipping barcode lookup - already in progress")
+            return
+        }
+
+        isLookingUpBarcode = true
+        lastScannedBarcode = barcode
+
+        // 1. Check custom foods first (local, fast)
+        do {
+            if let customFood = try await customFoodService?.lookup(barcode: barcode) {
+                selectedFood = customFood.toSearchResult()
+                isLookingUpBarcode = false
+                showingFoodDetail = true
+                logger.info("Found custom food for barcode: \(barcode)")
+                return
+            }
+        } catch {
+            // Log but continue to API lookup - local lookup failure shouldn't block API
+            logger.error("Custom food barcode lookup failed: \(error.localizedDescription)")
+        }
+
+        // 2. Check Open Food Facts API
+        do {
+            if let result = try await foodService?.lookupBarcode(barcode) {
+                selectedFood = result
+                isLookingUpBarcode = false
+                showingFoodDetail = true
+                logger.info("Found Open Food Facts product for barcode: \(barcode)")
+                return
+            }
+        } catch {
+            // Log API lookup failure - this is more significant
+            logger.error("Open Food Facts barcode lookup failed: \(error.localizedDescription)")
+            // Don't show "not found" - this was a lookup error, not "not in database"
+            isLookingUpBarcode = false
+            return
+        }
+
+        // 3. Not found (both lookups succeeded but returned nil)
+        isLookingUpBarcode = false
+        barcodeNotFound = true
+        logger.info("No product found for barcode: \(barcode)")
     }
 }

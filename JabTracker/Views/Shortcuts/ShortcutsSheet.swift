@@ -16,6 +16,12 @@ struct ShortcutItem: Identifiable {
     var id: String { label }
 }
 
+/// Timing constants for sheet transitions
+private enum SheetTransitionTiming {
+    /// Delay required for SwiftUI sheet dismissal before presenting new sheet
+    static let delay: TimeInterval = 0.3
+}
+
 /// A quarter-sheet modal displaying shortcuts for common actions.
 /// Shows when the user taps the "+" tab button.
 struct ShortcutsSheet: View {
@@ -27,6 +33,9 @@ struct ShortcutsSheet: View {
     /// Binding to trigger quick dose sheet
     @Binding var showingQuickDose: Bool
 
+    /// Binding to trigger food search sheet with scanner pre-selected
+    @Binding var showingFoodSearchWithScan: Bool
+
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
@@ -37,7 +46,7 @@ struct ShortcutsSheet: View {
     /// Top row shortcuts configuration (Search, Barcode, Photo, Shots)
     static let topRowShortcuts: [ShortcutItem] = [
         ShortcutItem(icon: "magnifyingglass", label: "Search", isEnabled: true),
-        ShortcutItem(icon: "barcode.viewfinder", label: "Barcode", isEnabled: false),
+        ShortcutItem(icon: "barcode.viewfinder", label: "Barcode", isEnabled: true),
         ShortcutItem(icon: "camera.fill", label: "Photo", isEnabled: false),
         ShortcutItem(icon: "syringe.fill", label: "Shots", isEnabled: true),
     ]
@@ -134,26 +143,29 @@ struct ShortcutsSheet: View {
                 }
             }
         }
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cardStyle(cornerRadius: 12)
         .padding(.horizontal, 16)
     }
 
     // MARK: - Action Handlers
 
+    /// Dismiss sheet and present a new sheet after transition delay
+    private func dismissAndPresent(_ binding: Binding<Bool>) {
+        dismiss()
+        // Small delay to allow sheet dismissal before presenting new sheet
+        DispatchQueue.main.asyncAfter(deadline: .now() + SheetTransitionTiming.delay) {
+            binding.wrappedValue = true
+        }
+    }
+
     private func handleTopRowAction(_ shortcut: ShortcutItem) {
         switch shortcut.label {
         case "Search":
-            dismiss()
-            // Small delay to allow sheet dismissal before presenting new sheet
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                showingFoodSearch = true
-            }
+            dismissAndPresent($showingFoodSearch)
+        case "Barcode":
+            dismissAndPresent($showingFoodSearchWithScan)
         case "Shots":
-            dismiss()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                showingQuickDose = true
-            }
+            dismissAndPresent($showingQuickDose)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
@@ -172,13 +184,15 @@ struct ShortcutsSheet: View {
     struct PreviewWrapper: View {
         @State private var showingFoodSearch = false
         @State private var showingQuickDose = false
+        @State private var showingFoodSearchWithScan = false
 
         var body: some View {
             Color.clear
                 .sheet(isPresented: .constant(true)) {
                     ShortcutsSheet(
                         showingFoodSearch: $showingFoodSearch,
-                        showingQuickDose: $showingQuickDose
+                        showingQuickDose: $showingQuickDose,
+                        showingFoodSearchWithScan: $showingFoodSearchWithScan
                     )
                 }
         }

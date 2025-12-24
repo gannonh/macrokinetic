@@ -306,4 +306,292 @@ struct FoodTests {
         #expect(offResult?.foodSource == .openFoodFacts)
         #expect(customResult?.foodSource == .userCreated)
     }
+
+    // MARK: - Validation Tests
+
+    @Test("isValid returns true for food with name and positive serving size")
+    func testIsValidReturnsTrue() throws {
+        let food = Food(name: "Chicken Breast", servingSize: 100.0)
+
+        #expect(food.isValid == true)
+    }
+
+    @Test("isValid returns false for food with empty name")
+    func testIsValidReturnsFalseForEmptyName() throws {
+        let food = Food(name: "", servingSize: 100.0)
+
+        #expect(food.isValid == false)
+    }
+
+    @Test("isValid returns false for food with whitespace-only name")
+    func testIsValidReturnsFalseForWhitespaceName() throws {
+        let food = Food(name: "   ", servingSize: 100.0)
+
+        #expect(food.isValid == false)
+    }
+
+    @Test("isValid returns false for food with zero serving size")
+    func testIsValidReturnsFalseForZeroServingSize() throws {
+        let food = Food(name: "Chicken Breast", servingSize: 0.0)
+
+        #expect(food.isValid == false)
+    }
+
+    @Test("isValid returns false for food with negative serving size")
+    func testIsValidReturnsFalseForNegativeServingSize() throws {
+        let food = Food(name: "Chicken Breast", servingSize: -10.0)
+
+        #expect(food.isValid == false)
+    }
+
+    // MARK: - Factory Method Tests
+
+    @Test("create() returns valid Food with all parameters")
+    func testCreateReturnsValidFood() throws {
+        let food = try Food.create(
+            name: "Chicken Breast",
+            brand: "Generic",
+            caloriesPer100g: 165.0,
+            proteinPer100g: 31.0,
+            carbsPer100g: 0.0,
+            fatPer100g: 3.6,
+            fiberPer100g: 0.0,
+            servingSize: 100.0
+        )
+
+        #expect(food.name == "Chicken Breast")
+        #expect(food.brand == "Generic")
+        #expect(food.caloriesPer100g == 165.0)
+        #expect(food.proteinPer100g == 31.0)
+        #expect(food.carbsPer100g == 0.0)
+        #expect(food.fatPer100g == 3.6)
+        #expect(food.fiberPer100g == 0.0)
+        #expect(food.servingSize == 100.0)
+        #expect(food.foodSource == .local)
+    }
+
+    @Test("create() throws emptyName error for empty name")
+    func testCreateThrowsEmptyNameError() throws {
+        #expect(throws: FoodValidationError.emptyName) {
+            _ = try Food.create(
+                name: "",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0
+            )
+        }
+    }
+
+    @Test("create() throws emptyName error for whitespace-only name")
+    func testCreateThrowsEmptyNameErrorForWhitespace() throws {
+        #expect(throws: FoodValidationError.emptyName) {
+            _ = try Food.create(
+                name: "   ",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0
+            )
+        }
+    }
+
+    @Test("create() throws negativeNutrition error for negative calories")
+    func testCreateThrowsNegativeNutritionForNegativeCalories() throws {
+        #expect(throws: FoodValidationError.negativeNutrition) {
+            _ = try Food.create(
+                name: "Test Food",
+                caloriesPer100g: -10.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0
+            )
+        }
+    }
+
+    @Test("create() throws negativeNutrition error for negative protein")
+    func testCreateThrowsNegativeNutritionForNegativeProtein() throws {
+        #expect(throws: FoodValidationError.negativeNutrition) {
+            _ = try Food.create(
+                name: "Test Food",
+                caloriesPer100g: 100.0,
+                proteinPer100g: -5.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0
+            )
+        }
+    }
+
+    @Test("create() throws negativeNutrition error for negative carbs")
+    func testCreateThrowsNegativeNutritionForNegativeCarbs() throws {
+        #expect(throws: FoodValidationError.negativeNutrition) {
+            _ = try Food.create(
+                name: "Test Food",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: -20.0,
+                fatPer100g: 5.0
+            )
+        }
+    }
+
+    @Test("create() throws negativeNutrition error for negative fat")
+    func testCreateThrowsNegativeNutritionForNegativeFat() throws {
+        #expect(throws: FoodValidationError.negativeNutrition) {
+            _ = try Food.create(
+                name: "Test Food",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: -5.0
+            )
+        }
+    }
+
+    @Test("create() throws negativeNutrition error for negative fiber")
+    func testCreateThrowsNegativeNutritionForNegativeFiber() throws {
+        #expect(throws: FoodValidationError.negativeNutrition) {
+            _ = try Food.create(
+                name: "Test Food",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0,
+                fiberPer100g: -2.0
+            )
+        }
+    }
+
+    @Test("create() throws invalidServingSize error for zero serving size")
+    func testCreateThrowsInvalidServingSizeForZero() throws {
+        #expect(throws: FoodValidationError.invalidServingSize) {
+            _ = try Food.create(
+                name: "Test Food",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0,
+                servingSize: 0.0
+            )
+        }
+    }
+
+    @Test("create() throws invalidServingSize error for negative serving size")
+    func testCreateThrowsInvalidServingSizeForNegative() throws {
+        #expect(throws: FoodValidationError.invalidServingSize) {
+            _ = try Food.create(
+                name: "Test Food",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0,
+                servingSize: -50.0
+            )
+        }
+    }
+
+    // MARK: - Custom Food Factory Tests
+
+    @Test("createCustom() returns food with userCreated source")
+    func testCreateCustomReturnsUserCreatedSource() throws {
+        let food = try Food.createCustom(
+            name: "My Custom Recipe",
+            caloriesPer100g: 200.0,
+            proteinPer100g: 15.0,
+            carbsPer100g: 25.0,
+            fatPer100g: 8.0
+        )
+
+        #expect(food.foodSource == .userCreated)
+        #expect(food.name == "My Custom Recipe")
+    }
+
+    @Test("createCustom() sets all custom parameters correctly")
+    func testCreateCustomSetsAllParameters() throws {
+        let food = try Food.createCustom(
+            name: "Custom Smoothie",
+            brand: "Homemade",
+            caloriesPer100g: 120.0,
+            proteinPer100g: 5.0,
+            carbsPer100g: 22.0,
+            fatPer100g: 2.0,
+            fiberPer100g: 3.0,
+            servingSize: 250.0,
+            servingUnit: "ml",
+            servingDescription: "1 glass",
+            barcode: "1234567890123"
+        )
+
+        #expect(food.name == "Custom Smoothie")
+        #expect(food.brand == "Homemade")
+        #expect(food.caloriesPer100g == 120.0)
+        #expect(food.proteinPer100g == 5.0)
+        #expect(food.carbsPer100g == 22.0)
+        #expect(food.fatPer100g == 2.0)
+        #expect(food.fiberPer100g == 3.0)
+        #expect(food.servingSize == 250.0)
+        #expect(food.servingUnit == "ml")
+        #expect(food.servingDescription == "1 glass")
+        #expect(food.barcode == "1234567890123")
+        #expect(food.foodSource == .userCreated)
+    }
+
+    @Test("createCustom() throws validation errors like create()")
+    func testCreateCustomThrowsValidationErrors() throws {
+        #expect(throws: FoodValidationError.emptyName) {
+            _ = try Food.createCustom(
+                name: "",
+                caloriesPer100g: 100.0,
+                proteinPer100g: 10.0,
+                carbsPer100g: 20.0,
+                fatPer100g: 5.0
+            )
+        }
+    }
+
+    // MARK: - isCustomFood Property Tests
+
+    @Test("isCustomFood returns true for userCreated source")
+    func testIsCustomFoodReturnsTrue() throws {
+        let food = Food(name: "My Recipe", source: .userCreated)
+
+        #expect(food.isCustomFood == true)
+    }
+
+    @Test("isCustomFood returns false for local source")
+    func testIsCustomFoodReturnsFalseForLocal() throws {
+        let food = Food(name: "USDA Food", source: .local)
+
+        #expect(food.isCustomFood == false)
+    }
+
+    @Test("isCustomFood returns false for openFoodFacts source")
+    func testIsCustomFoodReturnsFalseForOpenFoodFacts() throws {
+        let food = Food(name: "OFF Product", source: .openFoodFacts)
+
+        #expect(food.isCustomFood == false)
+    }
+
+    // MARK: - FoodValidationError Tests
+
+    @Test("FoodValidationError.emptyName has correct error description")
+    func testEmptyNameErrorDescription() throws {
+        let error = FoodValidationError.emptyName
+
+        #expect(error.errorDescription == "Food name cannot be empty")
+    }
+
+    @Test("FoodValidationError.negativeNutrition has correct error description")
+    func testNegativeNutritionErrorDescription() throws {
+        let error = FoodValidationError.negativeNutrition
+
+        #expect(error.errorDescription == "Nutrition values cannot be negative")
+    }
+
+    @Test("FoodValidationError.invalidServingSize has correct error description")
+    func testInvalidServingSizeErrorDescription() throws {
+        let error = FoodValidationError.invalidServingSize
+
+        #expect(error.errorDescription == "Serving size must be positive")
+    }
 }

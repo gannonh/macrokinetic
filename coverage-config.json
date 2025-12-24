@@ -59,7 +59,8 @@
           "Services/LocalFoodDatabase.swift",
           "Services/OpenFoodFactsService.swift",
           "Services/FoodService.swift",
-          "Services/MealLogService.swift"
+          "Services/MealLogService.swift",
+          "Services/CustomFoodService.swift"
         ]
       },
       "framework_integration": {
@@ -92,6 +93,7 @@
           "ViewModels/DoseHistoryViewModel.swift",
           "ViewModels/AnalyticsViewModel.swift",
           "ViewModels/FoodSearchSheetViewModel.swift",
+          "ViewModels/CreateFoodViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift"
         ]
@@ -228,6 +230,11 @@
       "Views/Nutrition/ServingInputView.swift",
       "Views/Nutrition/EditFoodEntrySheet.swift",
       "Views/Nutrition/FoodEntryCardView.swift",
+      "Views/Nutrition/CreateFoodSheet.swift",
+      "Views/Nutrition/BarcodeScannerContentView.swift",
+      "Views/Nutrition/CameraPreviewView.swift",
+      "Services/CameraService.swift",
+      "Extensions/View+Conditional.swift",
       "Views/Shortcuts/ShortcutButton.swift",
       "Views/Shortcuts/ShortcutRowButton.swift",
       "Views/Shortcuts/ShortcutsSheet.swift",

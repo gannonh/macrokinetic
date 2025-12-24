@@ -8,7 +8,8 @@ import OSLog
 import SwiftData
 
 /// Unified food search result from any source
-struct FoodSearchResult {
+struct FoodSearchResult: Identifiable {
+    let id: UUID
     let fdcId: Int?
     let barcode: String?
     let name: String
@@ -25,6 +26,7 @@ struct FoodSearchResult {
 
     /// Initialize with all parameters
     init(
+        id: UUID = UUID(),
         fdcId: Int?,
         barcode: String?,
         name: String,
@@ -39,6 +41,7 @@ struct FoodSearchResult {
         servingSize: Double = 100.0,
         servingOptions: [ServingOption] = []
     ) {
+        self.id = id
         self.fdcId = fdcId
         self.barcode = barcode
         self.name = name
@@ -183,19 +186,35 @@ final class FoodService {
     private let context: ModelContext
     private let localDatabase: LocalFoodDatabase
     private let openFoodFacts: OpenFoodFactsService
+    private let customFoodService: CustomFoodService?
 
     /// Initialize with model context
     init(context: ModelContext) {
         self.context = context
         self.localDatabase = LocalFoodDatabase()
         self.openFoodFacts = OpenFoodFactsService()
+        self.customFoodService = nil
+    }
+
+    /// Initialize with CustomFoodService for categorized search
+    init(context: ModelContext, customFoodService: CustomFoodService) {
+        self.context = context
+        self.localDatabase = LocalFoodDatabase()
+        self.openFoodFacts = OpenFoodFactsService()
+        self.customFoodService = customFoodService
     }
 
     /// Initialize with custom services (for testing)
-    init(context: ModelContext, localDatabase: LocalFoodDatabase, openFoodFacts: OpenFoodFactsService) {
+    init(
+        context: ModelContext,
+        localDatabase: LocalFoodDatabase,
+        openFoodFacts: OpenFoodFactsService,
+        customFoodService: CustomFoodService? = nil
+    ) {
         self.context = context
         self.localDatabase = localDatabase
         self.openFoodFacts = openFoodFacts
+        self.customFoodService = customFoodService
     }
 
     // MARK: - Search Methods
@@ -291,8 +310,8 @@ final class FoodService {
         // 1. History: foods user has previously logged (from FoodEntry records)
         let history = try await searchFoodHistory(query: trimmedQuery, limit: limit)
 
-        // 2. Custom: user-created foods (stub for now - empty until feature built)
-        let custom: [FoodSearchResult] = []
+        // 2. Custom: user-created foods
+        let custom = try await searchCustomFoods(query: trimmedQuery, limit: limit)
 
         // 3. Common: USDA foods (foundation + sr_legacy)
         let common = try await searchLocalDatabase(
@@ -311,7 +330,7 @@ final class FoodService {
         Self.logger.debug(
             """
             Categorized search for '\(trimmedQuery)': \
-            history=\(history.count), common=\(common.count), branded=\(branded.count)
+            history=\(history.count), custom=\(custom.count), common=\(common.count), branded=\(branded.count)
             """
         )
 
@@ -321,6 +340,20 @@ final class FoodService {
             commonResults: common,
             brandedResults: branded
         )
+    }
+
+    /// Search custom foods created by the user
+    /// - Parameters:
+    ///   - query: Search term
+    ///   - limit: Maximum results
+    /// - Returns: Custom food search results
+    private func searchCustomFoods(query: String, limit: Int) async throws -> [FoodSearchResult] {
+        guard let customFoodService = customFoodService else {
+            Self.logger.warning("CustomFoodService is nil - custom foods will not appear in search results")
+            return []
+        }
+        let customFoods = try await customFoodService.search(query: query, limit: limit)
+        return customFoods.map { $0.toSearchResult() }
     }
 
     /// Search foods the user has previously logged (from FoodEntry records)
@@ -533,27 +566,12 @@ final class FoodService {
 
         let userFoods = try context.fetch(descriptor)
 
-        // Filter by query
-        let filtered =
+        // Filter by query and convert
+        return
             userFoods
             .filter { $0.name.lowercased().contains(lowercaseQuery) }
             .prefix(limit)
-
-        return filtered.map { food in
-            FoodSearchResult(
-                fdcId: food.fdcId,
-                barcode: food.barcode,
-                name: food.name,
-                brand: food.brand,
-                source: .userCreated,
-                caloriesPer100g: food.caloriesPer100g,
-                proteinPer100g: food.proteinPer100g,
-                carbsPer100g: food.carbsPer100g,
-                fatPer100g: food.fatPer100g,
-                fiberPer100g: food.fiberPer100g,
-                category: nil
-            )
-        }
+            .map { $0.toSearchResult() }
     }
 
     /// Check if two food names are similar enough to be duplicates
@@ -580,6 +598,7 @@ extension Food {
     /// Convert Food model to FoodSearchResult for use in search UI
     func toSearchResult() -> FoodSearchResult {
         FoodSearchResult(
+            id: id,
             fdcId: fdcId,
             barcode: barcode,
             name: name,
@@ -590,7 +609,8 @@ extension Food {
             carbsPer100g: carbsPer100g,
             fatPer100g: fatPer100g,
             fiberPer100g: fiberPer100g,
-            category: nil
+            category: nil,
+            servingSize: servingSize
         )
     }
 }

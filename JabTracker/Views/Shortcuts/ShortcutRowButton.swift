@@ -107,8 +107,7 @@ struct ShortcutRowButton: View {
             action: {}
         )
     }
-    .background(Color(.secondarySystemBackground))
-    .cornerRadius(12)
+    .cardStyle(cornerRadius: 12)
     .padding()
 }
 
@@ -119,7 +118,6 @@ struct ShortcutRowButton: View {
         isEnabled: true,
         action: {}
     )
-    .background(Color(.secondarySystemBackground))
-    .cornerRadius(12)
+    .cardStyle(cornerRadius: 12)
     .padding()
 }

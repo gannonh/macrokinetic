@@ -7,6 +7,92 @@
 
 import SwiftUI
 
+// MARK: - Macro Impact Configuration
+
+/// Data model for macro impact ring display
+private struct MacroImpactData: Identifiable {
+    let id = UUID()
+    let progress: Double
+    let label: String
+    let color: Color
+
+    var valueText: String {
+        "\(Int(progress * 100))%"
+    }
+}
+
+// MARK: - Impact Section
+
+extension FoodDetailSheet {
+    @ViewBuilder
+    var impactSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Impact on Targets")
+                .font(.headline)
+
+            HStack(spacing: 16) {
+                ForEach(macroImpactData) { data in
+                    CircularProgressRing(
+                        progress: data.progress,
+                        label: data.label,
+                        valueText: data.valueText,
+                        color: data.color
+                    )
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding()
+        .cardStyle()
+    }
+
+    /// Data-driven array for macro impact rings
+    private var macroImpactData: [MacroImpactData] {
+        [
+            MacroImpactData(progress: calorieImpact, label: "Calories", color: .orange),
+            MacroImpactData(progress: proteinImpact, label: "Protein", color: .blue),
+            MacroImpactData(progress: fatImpact, label: "Fat", color: .purple),
+            MacroImpactData(progress: carbImpact, label: "Carbs", color: .green),
+        ]
+    }
+}
+
+// MARK: - Impact Computed Properties
+
+extension FoodDetailSheet {
+    var calorieImpact: Double {
+        guard user.dailyCalorieGoal > 0 else { return 0 }
+        return scaledCalories / user.dailyCalorieGoal
+    }
+
+    var proteinImpact: Double {
+        guard user.dailyProteinGoal > 0 else { return 0 }
+        return scaledProtein / user.dailyProteinGoal
+    }
+
+    var carbImpact: Double {
+        guard user.dailyCarbGoal > 0 else { return 0 }
+        return scaledCarbs / user.dailyCarbGoal
+    }
+
+    var fatImpact: Double {
+        guard user.dailyFatGoal > 0 else { return 0 }
+        return scaledFat / user.dailyFatGoal
+    }
+}
+
+// MARK: - Scaled Macro Properties
+
+extension FoodDetailSheet {
+    var scaledProtein: Double {
+        (food.proteinPer100g * quantityInGrams) / 100.0
+    }
+
+    var scaledFat: Double {
+        (food.fatPer100g * quantityInGrams) / 100.0
+    }
+}
+
 // MARK: - Carb Breakdown Section
 
 extension FoodDetailSheet {
@@ -25,8 +111,7 @@ extension FoodDetailSheet {
             }
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cardStyle()
     }
 
     func carbBreakdownRow(label: String, value: Double, goal: Double?) -> some View {
@@ -108,8 +193,7 @@ extension FoodDetailSheet {
             }
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cardStyle(cornerRadius: 12)
     }
 
     // MARK: - Mode and Unit Selector

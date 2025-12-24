@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var doseService: DoseService
     @State private var showingShortcuts = false
     @State private var showingFoodSearchSheet = false
+    @State private var showingFoodSearchWithScan = false
 
     // MARK: - Constants
 
@@ -126,19 +127,15 @@ struct ContentView: View {
         .sheet(isPresented: $showingShortcuts) {
             ShortcutsSheet(
                 showingFoodSearch: $showingFoodSearchSheet,
-                showingQuickDose: $showingQuickDoseSheet
+                showingQuickDose: $showingQuickDoseSheet,
+                showingFoodSearchWithScan: $showingFoodSearchWithScan
             )
         }
         .sheet(isPresented: $showingFoodSearchSheet) {
-            if let currentUser = users.first {
-                FoodSearchSheet(
-                    user: currentUser,
-                    foodService: AppServices.shared.foodService,
-                    mealLogService: AppServices.shared.mealLogService
-                ) {
-                    // On complete - could show success message
-                }
-            }
+            foodSearchSheet()
+        }
+        .sheet(isPresented: $showingFoodSearchWithScan) {
+            foodSearchSheet(initialMethod: .scan)
         }
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)
@@ -183,6 +180,23 @@ struct ContentView: View {
                             }
                         }
                     }
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
+    @ViewBuilder
+    private func foodSearchSheet(initialMethod: SearchMethod? = nil) -> some View {
+        if let currentUser = users.first {
+            FoodSearchSheet(
+                user: currentUser,
+                foodService: AppServices.shared.foodService,
+                mealLogService: AppServices.shared.mealLogService,
+                customFoodService: AppServices.shared.customFoodService,
+                initialMethod: initialMethod
+            ) {
+                // On complete - could show success message
             }
         }
     }
@@ -249,10 +263,22 @@ struct DashboardView: View {
     @State private var pkEngine = PharmacokineticsEngine()
     let doseService: DoseService
 
+    init(doseService: DoseService) {
+        self.doseService = doseService
+
+        // Make inline title transparent so it doesn't appear when scrolled
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.clear]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     if let currentUser = users.first {
                         self.concentrationSection(for: currentUser)
 
@@ -268,7 +294,9 @@ struct DashboardView: View {
                 .padding()
             }
             .accessibilityIdentifier("dashboard-scroll-view")
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Dashboard")
+            .navigationBarTitleDisplayMode(.large)
         }
         .accessibilityIdentifier("dashboard-view")
     }

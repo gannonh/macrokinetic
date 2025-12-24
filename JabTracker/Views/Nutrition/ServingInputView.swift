@@ -178,8 +178,7 @@ struct ServingInputView: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cardStyle(cornerRadius: 12)
     }
 
     // MARK: - Mode and Unit Selector

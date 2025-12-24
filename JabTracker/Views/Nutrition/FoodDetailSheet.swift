@@ -17,6 +17,7 @@ struct FoodDetailSheet: View {
     let selectedTime: Date
     let foodService: FoodService?
     let mealLogService: MealLogService?
+    let customFoodService: CustomFoodService?
     let onComplete: () -> Void
 
     // MARK: - State
@@ -32,6 +33,7 @@ struct FoodDetailSheet: View {
     @State var targetValue: Double = 0
     @State var selectedUnit: ServingUnit = .item
     @State private var notes: String = ""
+    @State private var showingCreateCustom = false
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Constants
@@ -40,6 +42,7 @@ struct FoodDetailSheet: View {
     static let quantityInputIdentifier = "quantity-input"
     static let addButtonIdentifier = "add-food-button"
     static let servingPickerIdentifier = "serving-picker"
+    static let toCustomButtonIdentifier = "to-custom-button"
     static let defaultQuantity: Double = 100.0
     static let minimumQuantity: Double = 1.0
     static let maximumQuantity: Double = 2000.0
@@ -117,19 +120,9 @@ struct FoodDetailSheet: View {
         (food.caloriesPer100g * quantityInGrams) / 100.0
     }
 
-    /// Scaled protein based on quantity in grams
-    private var scaledProtein: Double {
-        (food.proteinPer100g * quantityInGrams) / 100.0
-    }
-
     /// Scaled carbs based on quantity in grams
     var scaledCarbs: Double {
         (food.carbsPer100g * quantityInGrams) / 100.0
-    }
-
-    /// Scaled fat based on quantity in grams
-    private var scaledFat: Double {
-        (food.fatPer100g * quantityInGrams) / 100.0
     }
 
     /// Scaled fiber based on quantity in grams
@@ -142,28 +135,6 @@ struct FoodDetailSheet: View {
         max(0, scaledCarbs - scaledFiber)
     }
 
-    // MARK: - Impact Percentages
-
-    private var calorieImpact: Double {
-        guard user.dailyCalorieGoal > 0 else { return 0 }
-        return scaledCalories / user.dailyCalorieGoal
-    }
-
-    private var proteinImpact: Double {
-        guard user.dailyProteinGoal > 0 else { return 0 }
-        return scaledProtein / user.dailyProteinGoal
-    }
-
-    private var carbImpact: Double {
-        guard user.dailyCarbGoal > 0 else { return 0 }
-        return scaledCarbs / user.dailyCarbGoal
-    }
-
-    private var fatImpact: Double {
-        guard user.dailyFatGoal > 0 else { return 0 }
-        return scaledFat / user.dailyFatGoal
-    }
-
     // MARK: - Initialization
 
     init(
@@ -173,6 +144,7 @@ struct FoodDetailSheet: View {
         selectedTime: Date,
         foodService: FoodService?,
         mealLogService: MealLogService?,
+        customFoodService: CustomFoodService?,
         onComplete: @escaping () -> Void
     ) {
         self.food = food
@@ -181,6 +153,7 @@ struct FoodDetailSheet: View {
         self.selectedTime = selectedTime
         self.foodService = foodService
         self.mealLogService = mealLogService
+        self.customFoodService = customFoodService
         self.onComplete = onComplete
         self._meal = State(wrappedValue: selectedMeal)
     }
@@ -229,6 +202,40 @@ struct FoodDetailSheet: View {
         } message: {
             Text(errorMessage ?? "An error occurred")
         }
+        .sheet(isPresented: $showingCreateCustom) {
+            if let customFoodService {
+                CreateFoodSheet(
+                    customFoodService: customFoodService,
+                    mealLogService: mealLogService,
+                    selectedMeal: meal,
+                    selectedTime: selectedTime,
+                    prefillFrom: food,
+                    onFoodCreated: { _ in
+                        // Food was created (and possibly logged)
+                        // Dismiss the detail sheet
+                        dismiss()
+                        onComplete()
+                    }
+                )
+            } else {
+                // Service unavailable - show error and dismiss
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(.orange)
+                    Text("Custom Foods Unavailable")
+                        .font(.headline)
+                    Text("Please try again later.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Button("Dismiss") {
+                        showingCreateCustom = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
+            }
+        }
     }
 
     // MARK: - Food Header
@@ -268,8 +275,7 @@ struct FoodDetailSheet: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cardStyle()
     }
 
     private func macroItem(value: Double, label: String, percentage: Int, color: Color) -> some View {
@@ -296,7 +302,7 @@ struct FoodDetailSheet: View {
     private var actionButtons: some View {
         HStack(spacing: 16) {
             Button {
-                // Placeholder - future feature
+                showingCreateCustom = true
             } label: {
                 VStack(spacing: 4) {
                     Image(systemName: "square.and.arrow.down")
@@ -306,7 +312,7 @@ struct FoodDetailSheet: View {
                 }
             }
             .buttonStyle(.bordered)
-            .disabled(true)
+            .accessibilityIdentifier(Self.toCustomButtonIdentifier)
 
             Button {
                 // Placeholder - future feature
@@ -321,49 +327,6 @@ struct FoodDetailSheet: View {
             .buttonStyle(.bordered)
             .disabled(true)
         }
-    }
-
-    // MARK: - Impact Section
-
-    private var impactSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Impact on Targets")
-                .font(.headline)
-
-            HStack(spacing: 16) {
-                CircularProgressRing(
-                    progress: calorieImpact,
-                    label: "Calories",
-                    valueText: "\(Int(calorieImpact * 100))%",
-                    color: .orange
-                )
-
-                CircularProgressRing(
-                    progress: proteinImpact,
-                    label: "Protein",
-                    valueText: "\(Int(proteinImpact * 100))%",
-                    color: .blue
-                )
-
-                CircularProgressRing(
-                    progress: fatImpact,
-                    label: "Fat",
-                    valueText: "\(Int(fatImpact * 100))%",
-                    color: .purple
-                )
-
-                CircularProgressRing(
-                    progress: carbImpact,
-                    label: "Carbs",
-                    valueText: "\(Int(carbImpact * 100))%",
-                    color: .green
-                )
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
     }
 
     // MARK: - Footer Section

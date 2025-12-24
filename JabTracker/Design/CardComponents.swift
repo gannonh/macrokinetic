@@ -1,5 +1,32 @@
 import SwiftUI
 
+// MARK: - Card Style Modifier
+
+/// View modifier that applies consistent card styling across the app.
+/// Uses Apple's grouped content colors - no shadows.
+/// Light mode: white cards on grouped gray background
+/// Dark mode: elevated dark cards on darker background
+struct CardStyle: ViewModifier {
+    var cornerRadius: CGFloat = 16
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+    }
+}
+
+extension View {
+    /// Applies card styling with system background color and corner radius.
+    func cardStyle(cornerRadius: CGFloat = 16) -> some View {
+        modifier(CardStyle(cornerRadius: cornerRadius))
+    }
+}
+
+// MARK: - Design Card Container
+
 struct DesignCard<Content: View>: View {
     let content: Content
 
@@ -12,11 +39,7 @@ struct DesignCard<Content: View>: View {
             self.content
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemBackground))
-                .shadow(color: Color.primary.opacity(0.1), radius: 8, x: 0, y: 2)
-        )
+        .cardStyle()
         .accessibilityElement(children: .contain)
     }
 }

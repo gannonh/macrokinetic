@@ -25,6 +25,9 @@ final class AppServices: ObservableObject {
     /// Meal log service for food entry CRUD operations
     @Published private(set) var mealLogService: MealLogService?
 
+    /// Custom food service for user-created food CRUD operations
+    @Published private(set) var customFoodService: CustomFoodService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -49,8 +52,12 @@ final class AppServices: ObservableObject {
         // Load persisted notification state
         notificationService.loadState()
 
-        // Create FoodService for food search
-        let foodService = FoodService(context: modelContext)
+        // Create CustomFoodService for user-created foods
+        let customFoodService = CustomFoodService(context: modelContext)
+        self.customFoodService = customFoodService
+
+        // Create FoodService for food search (with CustomFoodService for categorized search)
+        let foodService = FoodService(context: modelContext, customFoodService: customFoodService)
         self.foodService = foodService
 
         // Create MealLogService for meal logging
@@ -64,6 +71,7 @@ final class AppServices: ObservableObject {
         notificationService = nil
         foodService = nil
         mealLogService = nil
+        customFoodService = nil
     }
 }
 

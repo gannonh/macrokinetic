@@ -1,816 +1,1686 @@
-# Project Overview
+---
+created: 2024-01-15T00:00:00Z
+updated: 2025-12-21T22:39:46Z
+---
 
-JabTracker is a native iOS SwiftUI application for tracking injectable GLP-1 medication doses (Ozempic, Wegovy, Mounjaro) with pharmacokinetic modeling for drug concentration calculations.
+# MacroKinetic Product Requirements Document
 
-**Technology Stack:**
+## Overview
 
-- Framework: SwiftUI (iOS 17.0+)
-- Backend: CloudKit (Sync, Storage, User Management)
-- Data: SwiftData + CloudKit Sync (with graceful fallback to local-only storage)
-- Charts: Swift Charts
-- Health: HealthKit integration
-- Auth: Sign in with Apple (sole authentication method)
-- Testing: Swift Testing for unit tests, XCUITest for UI tests
+MacroKinetic is a comprehensive iOS weight management app combining precision nutrition tracking with optional GLP-1 medication management.
 
-**Development Philosophy:**
+**Target Users:**
+- Primary: Anyone on a weight loss or nutrition journey
+- Secondary: GLP-1 medication users wanting medication + nutrition integration
 
-- Outside-In TDD: Always start with E2E acceptance tests that define user-facing success. Work inward through integration and unit tests, writing only the minimal code needed to pass each test. E2E tests are the ultimate acceptance criteria for features.
-- TDD: Tests must fail before implementation (RED → GREEN → REFACTOR).
-- Medical accuracy and coverage are non-negotiable.
-- Minimal, incremental changes only; no scope creep.
+**Tech Stack:** iOS 17+, Swift/SwiftUI, SwiftData, CloudKit, SQLite FTS5
 
-## Development Commands
+---
 
-**IMPORTANT:**
+## Feature Status Legend
 
-- XcodeBuildMCP provides a range of useful tools for working with the project.
+| Status | Meaning     |
+| ------ | ----------- |
+| ✅      | Done        |
+| 🔨      | In Progress |
+| 📋      | Planned     |
 
-### Building and Running
+---
 
-```bash
-# Build the project
-xcodebuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' build
+## Features (Sequenced)
 
-# Install and launch app on simulator (manual testing)
-xcrun simctl install <SIMULATOR_ID> "<APP_PATH>"
-xcrun simctl launch <SIMULATOR_ID> com.example.JabTracker
+### ✅ Authentication
+
+| Requirement                     | Done |
+| ------------------------------- | ---- |
+| Sign in with Apple              | ✅    |
+| Face ID/Touch ID for app access | ✅    |
+| Keychain credential storage     | ✅    |
+| Persistent session state        | ✅    |
+
+---
+
+### ✅ User Onboarding (Medication Path)
+
+| Requirement                                 | Done |
+| ------------------------------------------- | ---- |
+| Welcome screens with app benefits           | ✅    |
+| Medication selection wizard (4 GLP-1 meds)  | ✅    |
+| Initial dose entry with injection site      | ✅    |
+| Schedule setup (weekly, split-dose, custom) | ✅    |
+| Notification permissions                    | ✅    |
+| Subscription screen placeholder             | ✅    |
+
+---
+
+### ✅ Medication Profile Management
+
+| Requirement                                     | Done |
+| ----------------------------------------------- | ---- |
+| CRUD for medication profiles                    | ✅    |
+| Support 4 GLP-1 medications with brand variants | ✅    |
+| Brand-aware dose validation                     | ✅    |
+| Dose escalation (titration) tracking            | ✅    |
+| Reconstitution calculator for compounded meds   | ✅    |
+| Injection site preferences                      | ✅    |
+
+---
+
+### ✅ Dose Tracking
+
+| Requirement                                      | Done |
+| ------------------------------------------------ | ---- |
+| Quick dose entry via "+" tab button              | ✅    |
+| Manual entry with date/time, amount, site, notes | ✅    |
+| Calendar view with dose indicators               | ✅    |
+| List view with search and filtering              | ✅    |
+| Edit/delete past entries                         | ✅    |
+| Statistics (adherence rates, streaks)            | ✅    |
+
+---
+
+### ✅ Pharmacokinetics Engine
+
+| Requirement                                  | Done |
+| -------------------------------------------- | ---- |
+| Exponential decay concentration modeling     | ✅    |
+| Medication-specific half-life values         | ✅    |
+| Peak, trough, and current level calculations | ✅    |
+| Steady-state progress tracking               | ✅    |
+| ConcentrationCard dashboard display          | ✅    |
+
+---
+
+### ✅ Dose Scheduling
+
+| Requirement                                    | Done |
+| ---------------------------------------------- | ---- |
+| Schedule creation (weekly, split-dose, custom) | ✅    |
+| Upcoming dose projections                      | ✅    |
+| Pause/resume schedules                         | ✅    |
+| Modification history                           | ✅    |
+| Titration completion workflow                  | ✅    |
+
+---
+
+### ✅ Notifications (Medication)
+
+| Requirement                         | Done |
+| ----------------------------------- | ---- |
+| Scheduled dose reminders            | ✅    |
+| Titration completion alerts         | ✅    |
+| Missed dose notifications           | ✅    |
+| Badge management                    | ✅    |
+| Deep linking to entry screens       | ✅    |
+| Action handling (log, snooze, skip) | ✅    |
+
+---
+
+### ✅ Analytics (Medication)
+
+| Requirement                                | Done |
+| ------------------------------------------ | ---- |
+| Concentration timeline chart (interactive) | ✅    |
+| Time period selection (7d, 30d, 90d, 1y)   | ✅    |
+| Dose markers on timeline                   | ✅    |
+| Future projections                         | ✅    |
+| Adherence insights                         | ✅    |
+| Streak tracking                            | ✅    |
+
+---
+
+### ✅ CloudKit Sync
+
+| Requirement                      | Done |
+| -------------------------------- | ---- |
+| Automatic iCloud synchronization | ✅    |
+| Real-time sync status monitoring | ✅    |
+| Graceful offline-first fallback  | ✅    |
+| Multi-device support             | ✅    |
+
+---
+
+### ✅ Food Database Infrastructure
+
+Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
+
+| Requirement                             | Done |
+| --------------------------------------- | ---- |
+| Food and FoodEntry SwiftData models     | ✅    |
+| 1.7M+ foods from USDA + Open Food Facts | ✅    |
+| SQLite FTS5 full-text search            | ✅    |
+| Barcode column with index               | ✅    |
+| Offline-first (entire database bundled) | ✅    |
+| FoodService orchestrating search        | ✅    |
+| LocalFoodDatabase service               | ✅    |
+| OpenFoodFactsService API client         | ✅    |
+| MealLogService for CRUD                 | ✅    |
+
+---
+
+### ✅ Meal Logging UI
+
+Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
+
+| Requirement                                           | Done |
+| ----------------------------------------------------- | ---- |
+| FoodSearchView - search with results list             | ✅    |
+| FoodDetailView - nutrition facts, serving adjustment  | ✅    |
+| MealLogView - today's meals by section                | ✅    |
+| AddFoodSheet - quick add modal                        | ✅    |
+| Four meal sections (breakfast, lunch, dinner, snacks) | ✅    |
+| Serving size input with unit conversion               | ✅    |
+| Edit and delete logged entries                        | ✅    |
+
+---
+
+### 📋 User Model Extension (Nutrition Goals)
+
+| Requirement                    | Done |
+| ------------------------------ | ---- |
+| Daily calorie goal field       |      |
+| Daily protein goal field       |      |
+| Daily carb goal field          |      |
+| Daily fat goal field           |      |
+| FoodEntry relationship on User |      |
+
+---
+
+### 📋 Tab Navigation Update
+
+| Requirement                              | Done |
+| ---------------------------------------- | ---- |
+| Update tab structure for nutrition focus |      |
+| "+" button opens food/dose picker        |      |
+| Combined history view (meals + doses)    |      |
+
+---
+
+### 📋 Macro Goals & Daily Tracking
+
+| Requirement                                           | Done |
+| ----------------------------------------------------- | ---- |
+| Goal configuration UI (calories, protein, carbs, fat) |      |
+| Progress rings/bars for each macro                    |      |
+| Remaining vs consumed display                         |      |
+| Color coding for under/over targets                   |      |
+| Daily summary on dashboard                            |      |
+
+---
+
+### 📋 Protein Preservation Alerts
+
+| Requirement                                              | Done |
+| -------------------------------------------------------- | ---- |
+| Minimum protein threshold based on body weight (1.6g/kg) |      |
+| ProteinMonitoringService                                 |      |
+| Evening notification if protein < 80% target             |      |
+| Protein progress ring on dashboard (prominent)           |      |
+| Color-coded severity (green/yellow/red)                  |      |
+| High-protein food suggestions                            |      |
+| Weekly protein trend analysis                            |      |
+
+---
+
+### 📋 HealthKit Integration
+
+| Requirement                                | Done |
+| ------------------------------------------ | ---- |
+| HealthKitService                           |      |
+| Request authorization                      |      |
+| Sync weight from Apple Health              |      |
+| Sync body fat percentage                   |      |
+| Sync steps and active calories             |      |
+| Display weight trend on dashboard          |      |
+| Calculate net calories (consumed - burned) |      |
+
+---
+
+### 📋 Medication-Nutrition Correlation
+
+| Requirement                                        | Done |
+| -------------------------------------------------- | ---- |
+| AppetiteEntry model (hunger, cravings, food noise) |      |
+| Daily appetite check-in UI                         |      |
+| NutritionCorrelationEngine                         |      |
+| Concentration vs. appetite chart overlay           |      |
+| Food noise reduction timeline                      |      |
+| Eating patterns by medication cycle                |      |
+| Optimal eating window calculation                  |      |
+| Correlation insights generation                    |      |
+
+---
+
+### 📋 Barcode Scanning
+
+| Requirement                     | Done |
+| ------------------------------- | ---- |
+| AVFoundation camera integration |      |
+| Open Food Facts API lookup      |      |
+| Quick-add flow after scan       |      |
+| Handle "not found" gracefully   |      |
+
+---
+
+### 📋 AI Photo to Macros
+
+| Requirement                                     | Done |
+| ----------------------------------------------- | ---- |
+| Camera capture for food photos                  |      |
+| AI vision API integration (identify food items) |      |
+| Portion size estimation from image              |      |
+| Macro estimation based on identified foods      |      |
+| User confirmation/adjustment before logging     |      |
+| Fallback to manual search if low confidence     |      |
+
+---
+
+### 📋 Unified Dashboard
+
+| Requirement                           | Done |
+| ------------------------------------- | ---- |
+| Concentration card (medication users) |      |
+| Today's nutrition summary             |      |
+| Prominent protein progress ring       |      |
+| Appetite/food noise indicator         |      |
+| Weight trend from HealthKit           |      |
+
+---
+
+### 📋 Combined Calendar View
+
+| Requirement                                    | Done |
+| ---------------------------------------------- | ---- |
+| Dose markers (existing)                        |      |
+| Meal indicators (breakfast/lunch/dinner icons) |      |
+| Protein status dots (green/yellow/red)         |      |
+| Weight data points                             |      |
+
+---
+
+### 📋 Unified Analytics
+
+| Requirement                                    | Done |
+| ---------------------------------------------- | ---- |
+| Nutrition trends (calories, protein over time) |      |
+| Concentration vs. daily calories chart         |      |
+| Food noise by day post-dose chart              |      |
+| Protein intake vs. weight change chart         |      |
+
+---
+
+### 📋 Export & Reporting
+
+| Requirement                             | Done |
+| --------------------------------------- | ---- |
+| PDF report generation                   |      |
+| CSV export                              |      |
+| Combined medication + nutrition summary |      |
+| Weight progress section                 |      |
+
+---
+
+### 📋 User Onboarding (Nutrition Path)
+
+| Requirement                                            | Done |
+| ------------------------------------------------------ | ---- |
+| Welcome screens with nutrition benefits                |      |
+| Goal selection (weight loss, maintenance, muscle gain) |      |
+| Macro target setup                                     |      |
+| Meal reminder preferences                              |      |
+| Optional: Add medication tracking                      |      |
+
+---
+
+### 🔨 Subscription Management
+
+| Requirement            | Done |
+| ---------------------- | ---- |
+| StoreKit 2 integration |      |
+| Subscription tiers     |      |
+| Paywall UI             |      |
+| Restore purchases      |      |
+
+---
+
+## Non-Functional Requirements
+
+### Performance
+| Metric                        | Target      |
+| ----------------------------- | ----------- |
+| App launch                    | < 2 seconds |
+| Food search                   | < 100ms     |
+| Calculation updates           | < 50ms      |
+| Chart rendering (365 entries) | < 500ms     |
+| Memory usage                  | < 100MB     |
+
+### Security & Privacy
+- SwiftData encryption
+- Keychain for credentials
+- Biometric protection
+- On-device processing preference
+- No third-party analytics
+
+### Accessibility
+- VoiceOver support
+- Dynamic Type scaling
+- High Contrast mode
+- Reduce Motion compatibility
+- 44x44pt minimum touch targets
+
+### Testing Coverage
+- Business Logic: 90%
+- View Models: 85%
+- Infrastructure: 62%
+- Framework Integration: 42%
+
+---
+
+## Competitive Advantages
+
+| Feature                       | Competitors     | MacroKinetic           |
+| ----------------------------- | --------------- | ---------------------- |
+| Food database                 | 100K-1M         | 1.7M+ with barcodes    |
+| Pharmacokinetics              | Basic estimates | True exponential decay |
+| Medication-nutrition insights | None            | Correlation engine     |
+| Protein preservation alerts   | None            | Yes                    |
+| Offline food search           | Limited         | Full database offline  |
+| Reconstitution calculator     | None            | Yes                    |
+| Split-dose support            | None            | Yes                    |
+
+---
+
+## Update History
+
+- 2025-12-20: Consolidated from macro-integration.md and project-prd.md into single sequenced PRD
+- 2025-12-19: Initial nutrition infrastructure documentation
+
+
+
+# Architecture
+
+**Analysis Date:** 2025-12-22
+
+## Pattern Overview
+
+**Overall:** MVVM with Service Layer
+
+**Key Characteristics:**
+- SwiftUI views with declarative state management
+- ViewModels using `@Observable` (iOS 17+)
+- Service layer for business logic coordination
+- SwiftData models with CloudKit sync
+- Singleton service coordinator (`AppServices`)
+
+## Layers
+
+**Presentation Layer (Views):**
+- Purpose: SwiftUI UI components
+- Contains: `*View.swift`, `*Sheet.swift`, `*Card.swift` files
+- Location: `JabTracker/Views/**/*.swift`
+- Depends on: ViewModels for state, Services for actions
+- Used by: App entry point, navigation
+
+**ViewModel Layer:**
+- Purpose: View state and business logic coordination
+- Contains: `@Observable` classes coordinating services
+- Location: `JabTracker/ViewModels/*.swift`, some in `Views/` subdirectories
+- Depends on: Services for operations, Models for data
+- Used by: Views (via `@State` or `@ObservedObject`)
+
+**Service Layer:**
+- Purpose: Business logic, persistence, external integrations
+- Contains: `*Service.swift`, `*Manager.swift` (28 files)
+- Location: `JabTracker/Services/*.swift`
+- Depends on: Models, ModelContext, external APIs
+- Used by: ViewModels, other Services
+
+**Data Layer (Models):**
+- Purpose: SwiftData entities, domain types
+- Contains: `@Model` classes, enums, supporting types
+- Location: `JabTracker/Models/*.swift`
+- Depends on: Nothing (pure data)
+- Used by: All layers
+
+## Data Flow
+
+**Quick Dose Entry:**
+
+1. User taps "+" tab → ContentView detects `Tab.add`
+2. `ShortcutsSheet` appears (`Views/Shortcuts/ShortcutsSheet.swift`)
+3. User taps "Log Dose" → `QuickDoseSheet` presented
+4. `QuickDoseViewModel` loads smart defaults from ModelContext
+5. User confirms → `DoseService.saveDose()` inserts into SwiftData
+6. CloudKit syncs automatically via ModelContainer
+7. `PharmacokineticsEngine` recalculates concentration
+8. Dashboard updates with new concentration display
+
+**Food Logging:**
+
+1. User opens Food Log tab → `FoodLogView` displayed
+2. User taps "+" → `FoodSearchSheet` presented
+3. `FoodSearchSheetViewModel` coordinates:
+   - `FoodService.search()` orchestrates local DB + API
+   - Results categorized by source (History/Custom/Common/Branded)
+4. User selects food → `FoodDetailSheet` shows macros
+5. User adjusts serving → Bidirectional calculation (quantity ↔ target macro)
+6. User saves → `MealLogService.logFood()` creates `FoodEntry`
+7. CloudKit syncs, `NutritionSummaryCard` updates daily totals
+
+**State Management:**
+- SwiftData models persisted automatically
+- CloudKit sync transparent to services
+- UserDefaults for app preferences (`NotificationService+Persistence.swift`)
+
+## Key Abstractions
+
+**Services:**
+- Purpose: Encapsulate business logic domains
+- Examples: `ScheduleService`, `FoodService`, `PharmacokineticsEngine`, `NotificationService`
+- Pattern: `@Observable` classes with extension-based organization
+- Location: `JabTracker/Services/*.swift`
+
+**SwiftData Models:**
+- Purpose: Persistent data entities
+- Examples: `User`, `Dose`, `MedicationProfile`, `Food`, `FoodEntry`
+- Pattern: `@Model` macro with CloudKit-compatible defaults
+- Location: `JabTracker/Models/*.swift`
+
+**Coordinators:**
+- Purpose: Flow state management
+- Examples: `OnboardingCoordinator`, `DeeplinkHandler`
+- Pattern: `@Observable` with step/state enums
+- Location: `JabTracker/Onboarding/`, `JabTracker/App/`
+
+**Service Coordinator:**
+- Purpose: Dependency injection container
+- Example: `AppServices.shared` - singleton
+- Pattern: Initializes services with ModelContext on first use
+- Location: `JabTracker/App/AppServices.swift`
+
+## Entry Points
+
+**App Entry:**
+- Location: `JabTracker/App/JabTrackerApp.swift`
+- Triggers: App launch
+- Responsibilities: Initialize managers, manage auth state, provide ModelContainer
+
+**Content View:**
+- Location: `JabTracker/ContentView.swift`
+- Triggers: After authentication
+- Responsibilities: Tab navigation, service initialization, deep link routing
+
+**Onboarding Coordinator:**
+- Location: `JabTracker/Onboarding/OnboardingCoordinator.swift`
+- Triggers: First launch or `--force-onboarding`
+- Responsibilities: Step progression, data collection, schedule setup
+
+## Error Handling
+
+**Strategy:** Throw errors from services, catch at ViewModel/View level
+
+**Patterns:**
+- Services throw typed errors (e.g., `ScheduleServiceError`)
+- ViewModels catch and expose `errorMessage` for UI
+- Graceful degradation (CloudKit unavailable → local-only)
+- `fatalError` for truly unrecoverable states (see CONCERNS.md)
+
+## Cross-Cutting Concerns
+
+**Logging:**
+- OSLog framework with category-specific loggers
+- Format: `Logger(subsystem: "com.gannonhall.JabTracker", category: "ServiceName")`
+
+**Validation:**
+- `DoseValidation` for medical input checking
+- `ProfileValidation` for user profile data
+- ViewModel-level validation before service calls
+
+**Authentication:**
+- `AuthenticationManager` handles Sign in with Apple
+- `BiometricAuthManager` handles Face ID/Touch ID
+- Both used at app launch before ContentView
+
+**Notifications:**
+- `NotificationService` with extensions for domains
+- iOS 64-notification limit managed with rolling window
+- Background refresh via BGTaskScheduler (incomplete - see CONCERNS.md)
+
+---
+
+*Architecture analysis: 2025-12-22*
+*Update when major patterns change*
+
+
+
+# Codebase Concerns
+
+**Analysis Date:** 2025-12-22
+
+## Tech Debt
+
+**Incomplete split-dose UI:**
+- Issue: Settings UI missing second time picker for split-dose schedules
+- File: `JabTracker/Views/Settings/DoseScheduleEditView.swift:368`
+- Why: Deferred to Phase 3 during initial implementation
+- Impact: Users can't configure split-dose medications via UI
+- Fix approach: Add second time picker, connect to `ScheduleConfiguration.secondTimeOfDay`
+
+**Incomplete background task scheduling:**
+- Issue: BGTaskScheduler registration is a placeholder (no-op)
+- File: `JabTracker/Services/NotificationService+Background.swift:21`
+- Why: Deferred during notification system implementation
+- Impact: Notification queue doesn't refresh when app is backgrounded
+- Fix approach: Implement BGTaskScheduler.register() and scheduling
+
+**Duplicate food deduplication logic:**
+- Issue: Food deduplication implemented in two places
+- Files: `JabTracker/Services/FoodService.swift:223-230`, `JabTracker/ViewModels/FoodSearchSheetViewModel.swift`
+- Why: Evolved organically during nutrition feature development
+- Impact: Maintenance burden, potential inconsistencies
+- Fix approach: Consolidate into FoodService, remove from ViewModel
+
+## Known Bugs
+
+**None critical identified during analysis.**
+
+Minor issues:
+- Regex parsing for serving descriptions may fail silently on malformed data
+- File: `JabTracker/Views/Nutrition/EditFoodEntrySheet.swift:53-59`
+- Workaround: Falls back to `entry.servingGrams`
+- Root cause: No logging when parse fails
+
+## Security Considerations
+
+**URL construction without encoding:**
+- Risk: Barcode directly interpolated into URL path
+- File: `JabTracker/Services/OpenFoodFactsService.swift:88`
+- Current mitigation: Barcode trimmed of whitespace only
+- Recommendations: Use proper URL encoding for barcode parameter
+
+**No rate limiting on API calls:**
+- Risk: Excessive API calls if user types quickly in search
+- File: `JabTracker/Services/OpenFoodFactsService.swift`
+- Current mitigation: None
+- Recommendations: Add debounce/throttle to search, or implement at service level
+
+## Performance Bottlenecks
+
+**Regex compilation on every parse:**
+- Problem: Serving option regex compiled for each food item
+- File: `JabTracker/Services/FoodService.swift:132`
+- Measurement: Not measured, but called per-item in search results
+- Cause: Regex pattern `#"^([\d.]+)\s*(\w+)\s*\((\d+(?:\.\d+)?)g\)$"#` created inline
+- Improvement path: Compile once as static property
+
+## Fragile Areas
+
+**Fatal errors in production paths:**
+- Files with `fatalError`:
+  - `JabTracker/DataController.swift:130` - ModelContainer creation failure
+  - `JabTracker/Views/Nutrition/FoodSearchSheet.swift:56` - Missing service injection
+  - `JabTracker/AuthenticationManager.swift:614` - No window for Sign in with Apple
+- Why fragile: App crashes immediately instead of graceful error handling
+- Common failures: Missing dependencies, unusual device states
+- Safe modification: Replace with error states or fallback behavior
+- Test coverage: Not tested (fatalError paths untestable)
+
+**Bidirectional macro calculation:**
+- File: `JabTracker/Views/Nutrition/FoodDetailSheet.swift`
+- Why fragile: Complex state transitions between quantity and target modes
+- Common failures: Values reset unexpectedly when switching modes
+- Safe modification: Read system-patterns.md section on bidirectional calculation
+- Test coverage: E2E tests cover happy path, unit tests limited
+
+## Scaling Limits
+
+**Local food database:**
+- Current capacity: 1.7M+ foods, 382 MB
+- Limit: Memory pressure on older devices during large result sets
+- Symptoms at limit: App may be terminated by iOS memory pressure
+- Scaling path: Pagination in FTS5 queries (already has LIMIT)
+
+## Dependencies at Risk
+
+**None identified.**
+- Project uses only Apple frameworks (no third-party dependencies)
+- All frameworks are actively maintained by Apple
+
+## Missing Critical Features
+
+**Error tracking/crash reporting:**
+- Problem: No Sentry, Crashlytics, or similar service
+- Current workaround: OSLog only (requires device access)
+- Blocks: Production issue investigation, crash analysis
+- Implementation complexity: Low (add Sentry SDK)
+
+**Analytics:**
+- Problem: No usage analytics or feature tracking
+- Current workaround: None
+- Blocks: Understanding user behavior, feature prioritization
+- Implementation complexity: Low (add analytics SDK)
+
+## Test Coverage Gaps
+
+**FoodSearchSheet initialization errors:**
+- What's not tested: fatalError path when services are nil
+- Risk: Crash in production if injection fails
+- Priority: High
+- Difficulty to test: Cannot test fatalError in unit tests
+
+**LocalFoodDatabase missing bundle:**
+- What's not tested: Behavior when bundled SQLite file is missing
+- Risk: Silent failure, empty search results
+- Priority: Medium
+- Difficulty to test: Would need to modify bundle in test
+
+**Service error propagation:**
+- What's not tested: OpenFoodFacts API errors distinguishable from empty results
+- Risk: User can't tell if search failed vs no results
+- Priority: Medium
+- Difficulty to test: Need to inject URLSession mock
+
+---
+
+## Summary by Priority
+
+**Critical (must fix before release):**
+1. Replace `fatalError` in `DataController.swift:130` with graceful error handling
+2. Replace `fatalError` in `FoodSearchSheet.swift:56` with optional service pattern
+3. Replace `fatalError` in `AuthenticationManager.swift:614` with error state
+
+**High Priority:**
+1. Implement BGTaskScheduler for background notification refresh
+2. Add URL encoding for barcode API calls
+3. Add error/crash reporting service
+
+**Medium Priority:**
+1. Complete split-dose UI (Phase 3 TODO)
+2. Consolidate food deduplication logic
+3. Add rate limiting to food search
+4. Static regex compilation for performance
+
+---
+
+*Concerns audit: 2025-12-22*
+*Update as issues are fixed or new ones discovered*
+
+
+
+# Coding Conventions
+
+**Analysis Date:** 2025-12-22
+
+## Naming Patterns
+
+**Files:**
+- `*View.swift` - SwiftUI views (e.g., `DashboardView.swift`, `FoodDetailSheet.swift`)
+- `*ViewModel.swift` - ViewModels (e.g., `AnalyticsViewModel.swift`)
+- `*Service.swift` - Services (e.g., `FoodService.swift`, `ScheduleService.swift`)
+- `*Manager.swift` - Managers (e.g., `MedicationManager.swift`, `AuthenticationManager.swift`)
+- `Type+Feature.swift` - Extensions (e.g., `ScheduleService+Projection.swift`, `Colors+Extensions.swift`)
+- `*Tests.swift` - Test files co-located by layer
+
+**Functions:**
+- camelCase for all functions (e.g., `calculateConcentration()`, `logFood()`)
+- No special prefix for async functions
+- `handle*` for event handlers (e.g., `handleDismiss`, `handleSave`)
+
+**Variables:**
+- camelCase for variables (e.g., `servingCount`, `quantityInGrams`)
+- camelCase for constants (e.g., `defaultQuantity`, `maxRetryAttempts`)
+- No underscore prefix for private members
+
+**Types:**
+- PascalCase for classes/structs/enums (e.g., `LocalFoodDatabase`, `MealSection`)
+- No prefix conventions (no `I` for interfaces)
+- Enum cases use camelCase (e.g., `.breakfast`, `.lunch`, `.snacks`)
+
+## Code Style
+
+**Formatting:**
+- SwiftLint with `.swiftlint.yml` (root + directory-specific)
+- Line length: warning at 120, error at 150
+- 4 space indentation (Swift default)
+- Trailing commas disabled
+
+**Linting:**
+- SwiftLint with custom rules per directory
+- Tests: Relaxed rules (no function_body_length, force_unwrapping allowed)
+- Services/Views: Extended file/type length limits
+- Run: `swiftlint` or `swiftlint --fix`
+
+**Key SwiftLint Settings (`.swiftlint.yml`):**
+```yaml
+line_length: warning: 120, error: 150
+type_body_length: warning: 350, error: 400
+function_body_length: warning: 50, error: 80
+cyclomatic_complexity: warning: 10, error: 20
 ```
 
-### Testing Commands
+## Import Organization
 
-```bash
-# Run all tests (unit + UI)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
+**Order:**
+1. Apple frameworks (SwiftUI, SwiftData, Foundation)
+2. Project imports (rarely needed due to single module)
 
-# Run only unit tests
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests
+**Grouping:**
+- No blank lines required between groups
+- Alphabetical sorting not enforced
 
-# Run only UI tests (E2E)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerUITests
+**Path Aliases:**
+- Not applicable (single-module app, no SPM)
 
-# Run specific test method
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -only-testing:JabTrackerTests/JabTrackerTests/testUserCreation
+## Error Handling
 
-# Find available simulators
-xcrun simctl list devices | grep iPhone
+**Patterns:**
+- Throw typed errors from services (e.g., `ScheduleServiceError`)
+- Catch at ViewModel/View level, expose `errorMessage` property
+- Use `try?` sparingly (prefer explicit error handling)
 
-# Pretty output with xcbeautify (install with: brew install xcbeautify)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' | xcbeautify
+**Error Types:**
+```swift
+enum ScheduleServiceError: LocalizedError {
+    case invalidSchedule
+    case scheduleNotFound
+    case contextError(Error)
 
-# xcbeautify provides better Swift Testing support than xcpretty
+    var errorDescription: String? { ... }
+}
 ```
 
-### UI Testing with Authentication
+**Async:**
+- Use `async/await` with `try` (no `.catch()` chains)
+- Annotate with `@MainActor` when touching UI state
 
-```bash
-# Launch app in UI testing mode (bypasses real authentication)
-app.launchEnvironment["UI_TESTING"] = "true"
-app.launchArguments.append("--ui-testing")
+## Logging
 
-# Reset app data for clean test state
-app.launchArguments.append("--reset-app-data")
+**Framework:**
+- OSLog via `Logger` class
+- Subsystem: `com.gannonhall.JabTracker`
+- Category: Per-service (e.g., `ScheduleService`, `FoodService`)
+
+**Patterns:**
+```swift
+private let logger = Logger(
+    subsystem: "com.gannonhall.JabTracker",
+    category: "FoodService"
+)
+logger.debug("Searching for: \(query)")
+logger.error("Failed to save: \(error)")
 ```
 
-### XcodeBuildMCP Authentication Bypass
+**When:**
+- Log state transitions and external calls
+- Log errors with context before throwing
+- Avoid logging sensitive data
 
-When using XcodeBuildMCP tools for manual testing or debugging, you can bypass authentication:
+## Comments
 
-```bash
-# Launch app with authentication bypass using XcodeBuildMCP
-launch_app_sim({
-  simulatorUuid: "SIMULATOR_UUID",
-  bundleId: "com.gannonhall.JabTracker",
-  args: ["--ui-testing"]
-})
+**When to Comment:**
+- Explain why, not what
+- Document business rules and medical calculations
+- Complex algorithms get inline explanation
+- MARK sections for file organization
 
-# This will:
-# - Skip Sign in with Apple authentication flow
-# - Create mock user data (test@uitesting.com, "UI Test User")
-# - Go directly to main app interface with all tabs accessible
-# - Enable full app functionality for testing without real Apple ID
-
-# Alternative: Build and run with bypass in one step
-build_run_sim({
-  projectPath: "/path/to/JabTracker.xcodeproj",
-  scheme: "JabTracker",
-  simulatorName: "iPhone 15",
-  extraArgs: ["--ui-testing"]  # Note: This may not work - use launch_app_sim instead
-})
+**MARK Comments:**
+```swift
+// MARK: - Properties
+// MARK: - Initialization
+// MARK: - Public Methods
+// MARK: - Private Helpers
 ```
 
-### Launch Arguments for Testing
+**Documentation:**
+```swift
+/// Log a food entry
+/// - Parameters:
+///   - food: Food item to log
+///   - servingGrams: Serving size in grams
+/// - Returns: The created FoodEntry
+func logFood(food: Food, servingGrams: Double) -> FoodEntry
+```
 
-The app supports several launch arguments for testing and development:
+**TODO Comments:**
+- Format: `// TODO: description`
+- Link issues when available: `// TODO: (Issue #123)`
 
-**`--ui-testing`**:
+## Function Design
 
-- Bypasses real Sign in with Apple authentication
-- Creates mock user (`test@uitesting.com`, "UI Test User")
-- Used by XCUITest for reliable automated testing
-- Can be enabled in Xcode scheme for manual testing without authentication
+**Size:**
+- Keep under 50 lines (warning), 80 lines (error)
+- Extract helpers for complex logic
+- Use extension files for service domains
 
-**`--reset-app-data`**:
+**Parameters:**
+- Max 3-4 parameters before considering options object
+- Use trailing closure syntax for completion handlers
+- Default parameters for common cases
 
-- Clears all SwiftData users from database on launch
-- Clears onboarding completion status from UserDefaults
-- Resets to fresh app state (like first-time install)
-- Useful for testing onboarding and first-run experiences
+**Return Values:**
+- Explicit return statements
+- Return early with guard clauses
+- Use optionals for "not found" cases
 
-**`--force-onboarding`**:
+## Module Design
 
-- Forces onboarding flow to show even if user has completed it
-- Useful for repeatedly testing onboarding flow during development
-- Overrides normal onboarding completion logic
+**Exports:**
+- Single module app (no explicit exports)
+- All types internal by default
+- `public` only for test targets (`@testable import`)
 
-**Usage Patterns:**
+**Service Extensions:**
+- Split large services into focused extensions:
+  - `ScheduleService.swift` - Base class
+  - `ScheduleService+Projection.swift` - Generate doses
+  - `ScheduleService+Adherence.swift` - Track compliance
 
-**In XCUITest:**
+## SwiftUI Patterns
+
+**Property Order in Views:**
+1. Regular properties (`let food: Food`)
+2. Environment (`@Environment(\.dismiss)`)
+3. State (`@State var count: Int`)
+4. Computed properties (`var total: Double`)
+5. Static constants
+
+**View Composition:**
+```swift
+var body: some View {
+    VStack {
+        headerSection
+        contentSection
+        footerSection
+    }
+}
+
+private var headerSection: some View { ... }
+```
+
+**Accessibility:**
+```swift
+.accessibilityIdentifier("food-detail-sheet")
+.accessibilityLabel("Daily calorie total")
+```
+
+## SwiftData Patterns
+
+**CloudKit Compatibility:**
+- All properties have default values (non-optional)
+- Parent uses `@Relationship(inverse:)`, child uses plain property
+- Relationships are optional arrays
 
 ```swift
-app.launchArguments = ["--ui-testing", "--reset-app-data"]
-// Bypasses auth + gives fresh state for each test
+// Parent
+@Relationship(deleteRule: .cascade, inverse: \Dose.user)
+var doses: [Dose]?
+
+// Child - NO @Relationship
+var user: User?
 ```
 
-**In Xcode Scheme (for Manual Testing):**
+## Observable Patterns
 
-- Edit Scheme → Run → Arguments → Arguments Passed On Launch
-- Enable flags as needed for different testing scenarios
-- `--ui-testing`: Skip authentication during development
-- `--reset-app-data`: Test first-run experience
-- `--force-onboarding`: Test onboarding flow repeatedly
+**iOS 17+ (`@Observable`):**
+```swift
+@Observable
+class ViewModel {
+    var state: State = .initial
+}
+
+// In View:
+@State private var viewModel = ViewModel()
+```
+
+**Service Coordinator:**
+```swift
+@MainActor
+final class AppServices: ObservableObject {
+    static let shared = AppServices()
+    private(set) var foodService: FoodService?
+
+    func initialize(with modelContext: ModelContext) { ... }
+}
+```
+
+---
+
+*Convention analysis: 2025-12-22*
+*Update when patterns change*
+
+
+
+# External Integrations
+
+**Analysis Date:** 2025-12-22
+
+## APIs & External Services
+
+**Open Food Facts API:**
+- Service: Open Food Facts REST API - Food search fallback
+  - Base URL: `https://world.openfoodfacts.org` - `JabTracker/Services/OpenFoodFactsService.swift`
+  - Auth: None (public API)
+  - Timeout: 30s request, 60s resource
+  - Endpoints: `/cgi/search.pl` (search), `/api/v0/product/{barcode}.json` (barcode lookup)
+  - Rate limits: Undocumented (should add throttling)
+
+**No Other External APIs:**
+- All other functionality uses Apple frameworks or local data
+
+## Data Storage
+
+**Databases:**
+- SwiftData + CloudKit - Primary user data store
+  - Connection: Automatic via ModelContainer
+  - Client: SwiftData `@Model` entities
+  - Sync: CloudKit with graceful fallback to local-only
+  - Container: `iCloud.com.gannonhall.JabTracker` - `JabTracker/JabTracker.entitlements`
+
+- SQLite3 Local Food Database - Bundled offline database
+  - Size: 382 MB with 1.7M+ foods
+  - Path: `JabTracker/Resources/usda_foods.sqlite`
+  - Client: `JabTracker/Services/LocalFoodDatabase.swift`
+  - Technology: SQLite FTS5 (Full-Text Search)
+  - Sources: USDA Foundation/SR Legacy + Open Food Facts dump
+
+**File Storage:**
+- Not applicable (no user file uploads)
+
+**Caching:**
+- `ChartDatasetCache` - In-memory chart data caching (`JabTracker/Services/ChartDatasetCache.swift`)
+- No external caching service
+
+## Authentication & Identity
+
+**Auth Provider:**
+- Sign in with Apple - Sole authentication method
+  - Implementation: `JabTracker/AuthenticationManager.swift`
+  - Token storage: Keychain via Security framework
+  - Session management: Apple-managed credentials
+
+**OAuth Integrations:**
+- None (Sign in with Apple only)
+
+**Biometric Auth:**
+- Face ID/Touch ID - App access protection
+  - Implementation: `JabTracker/BiometricAuthManager.swift`
+  - Framework: LocalAuthentication
+
+## Monitoring & Observability
+
+**Error Tracking:**
+- None currently (no Sentry, Crashlytics, etc.)
+
+**Analytics:**
+- None (no Mixpanel, Firebase, etc.)
+
+**Logs:**
+- OSLog framework - Local device logs only
+  - Subsystem: `com.gannonhall.JabTracker`
+  - Retention: iOS system log rotation
+
+## CI/CD & Deployment
+
+**Hosting:**
+- App Store - Distribution via TestFlight
+  - Bundle ID: `com.gannonhall.JabTracker`
+  - Team: `ZBZKKWF95G`
+
+**CI Pipeline:**
+- Local scripts (`scripts/check-all.sh`, `scripts/test.sh`)
+- No external CI service documented
+
+## Environment Configuration
+
+**Development:**
+- Required: Xcode 26.2, macOS
+- Launch arguments for testing: `--ui-testing`, `--reset-app-data`, `--seed-test-*`
+- No secrets required (Apple APIs use system credentials)
 
 **Production:**
+- CloudKit container auto-configured via entitlements
+- StoreKit products configured in App Store Connect
 
-- All flags should be disabled for normal user experience
+## Webhooks & Callbacks
 
-### XcodeBuildMCP Simulator Usage
+**Incoming:**
+- None
 
-**IMPORTANT**: When using XcodeBuildMCP tools, prefer `simulatorId` over `simulatorName` to avoid OS version parsing issues:
+**Outgoing:**
+- None
 
-```bash
-# ❌ This can cause "option 'OS' may only be provided once" errors
-build_run_sim({ simulatorName: "iPhone 15,OS=17.5" })
+## Data Sources Summary
 
-# ✅ Use UUID instead (get from list_sims)
-build_run_sim({ simulatorId: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB" })
+| Source | Type | Format | Coverage |
+|--------|------|--------|----------|
+| USDA FoodData Central Foundation | Bundled | SQLite | ~7,000 foods |
+| USDA SR Legacy | Bundled | SQLite | ~8,000 foods |
+| Open Food Facts dump | Bundled | SQLite | ~1.7M branded products |
+| Open Food Facts API | Remote | REST JSON | Fallback search |
+| CloudKit | Cloud sync | SwiftData | User data |
 
-# Get available simulator UUIDs
-list_sims()
+---
+
+*Integration audit: 2025-12-22*
+*Update when adding/removing external services*
+
+
+
+# Technology Stack
+
+**Analysis Date:** 2025-12-22
+
+## Languages
+
+**Primary:**
+- Swift 5.9+ - All application code (`project.yml`, all `.swift` files)
+
+**Secondary:**
+- Python 3 - Data processing scripts (`scripts/process_usda_data.py`, `scripts/process-off-data.py`)
+
+## Runtime
+
+**Environment:**
+- iOS 17.0+ (minimum deployment target) - `project.yml` line 5
+- Xcode 26.2 required - `project.yml` line 8
+
+**Package Manager:**
+- None (Apple frameworks only)
+- No Package.swift, Podfile, or Cartfile
+
+## Frameworks
+
+**Core:**
+- SwiftUI - UI Framework (137+ files)
+- SwiftData - Data persistence with `@Model` macro (`JabTracker/DataController.swift`, `JabTracker/Models/*.swift`)
+- CloudKit - iCloud sync (`JabTracker/JabTracker.entitlements`, `JabTracker/DataController.swift`)
+
+**Testing:**
+- Swift Testing - Unit tests (iOS 17+ `@Test` macro) - `JabTrackerTests/`
+- XCUITest - UI/E2E tests - `JabTrackerUITests/`
+
+**Build/Dev:**
+- XcodeGen - Project generation (`project.yml`)
+- SwiftLint - Code linting (`.swiftlint.yml`)
+- SwiftFormat - Code formatting
+- xcbeautify - Build output formatting
+
+## Key Dependencies
+
+**Zero External Dependencies** - Project uses only Apple frameworks.
+
+**Critical Apple Frameworks:**
+- AuthenticationServices - Sign in with Apple (`JabTracker/AuthenticationManager.swift`)
+- LocalAuthentication - Face ID/Touch ID (`JabTracker/BiometricAuthManager.swift`)
+- StoreKit 2 - Subscription management (`JabTracker/Services/SubscriptionManager.swift`)
+- Swift Charts - Data visualization (`JabTracker/Views/Analytics/`)
+- UserNotifications - Dose/meal reminders (`JabTracker/Services/NotificationService.swift`)
+- HealthKit - Weight data integration (`JabTracker/JabTracker.entitlements`)
+
+**Infrastructure:**
+- SQLite3 - Local food database with FTS5 (`JabTracker/Services/LocalFoodDatabase.swift`)
+- Foundation - Core APIs, URL networking
+
+## Configuration
+
+**Environment:**
+- No external environment variables required
+- Launch arguments for test modes (`--ui-testing`, `--reset-app-data`, `--seed-test-7d`)
+- CloudKit container: `iCloud.com.gannonhall.JabTracker` (`JabTracker/JabTracker.entitlements`)
+
+**Build:**
+- `project.yml` - XcodeGen project configuration
+- `JabTracker/Info.plist` - App metadata, permissions, URL schemes
+- `JabTracker/JabTracker.entitlements` - Capabilities (CloudKit, HealthKit, Sign in with Apple)
+- `JabTrackerStoreKit.storekit` - StoreKit 2 test configuration
+- `.swiftlint.yml` - Code quality rules (root + directory-specific overrides)
+
+## Platform Requirements
+
+**Development:**
+- macOS (Xcode 26.2)
+- No external dependencies or Docker required
+
+**Production:**
+- iOS 17.0+ devices
+- iCloud account (optional, for sync)
+- App Store distribution via TestFlight
+
+---
+
+*Stack analysis: 2025-12-22*
+*Update after major dependency changes*
+
+
+
+# Codebase Structure
+
+**Analysis Date:** 2025-12-22
+
+## Directory Layout
+
+```
+jab-tracker-ios/
+├── .claude/                    # Claude Code configuration
+│   ├── commands/               # Slash commands (context/, dev/, qa/, audit/)
+│   ├── context/                # Project context documentation
+│   └── skills/                 # Skill definitions (ios-dev, testing)
+├── .planning/                  # GSD planning documents
+│   └── codebase/               # This codebase analysis
+├── JabTracker/                 # Main application source
+├── JabTrackerTests/            # Unit tests (144+ files)
+├── JabTrackerUITests/          # UI/E2E tests (60+ files)
+├── scripts/                    # Build and test scripts
+├── logs/                       # Test output logs (gitignored)
+├── project.yml                 # XcodeGen configuration
+├── CLAUDE.md                   # Claude Code instructions
+└── .swiftlint.yml              # SwiftLint configuration
 ```
 
-**Simulator UUID vs Name:**
+## Directory Purposes
 
-- `simulatorName`: "iPhone 15" (without OS version) - can be unreliable
-- `simulatorId`: Full UUID from `list_sims()` - always works correctly
-- OS version is automatically detected when using UUID
+**JabTracker/App/**
+- Purpose: App entry and coordination
+- Contains: `JabTrackerApp.swift`, `AppServices.swift`, `DeeplinkHandler.swift`
+- Key files: `JabTrackerApp.swift` (@main entry point)
 
-### Documentation
+**JabTracker/Models/**
+- Purpose: SwiftData entities and domain types
+- Contains: `@Model` classes, enums, extensions
+- Key files: `User.swift`, `Dose.swift`, `Food.swift`, `FoodEntry.swift`, `Tab.swift`
+- Subdirectories: None (flat structure)
 
+**JabTracker/Services/**
+- Purpose: Business logic layer (28 files)
+- Contains: `*Service.swift`, `*Manager.swift`, `*Engine.swift`
+- Key files: `FoodService.swift`, `ScheduleService.swift`, `PharmacokineticsEngine.swift`, `LocalFoodDatabase.swift`
+- Pattern: Base service + extensions (e.g., `ScheduleService+Projection.swift`)
+
+**JabTracker/Views/**
+- Purpose: SwiftUI presentation layer
+- Contains: View files organized by feature
+- Subdirectories:
+  - `Analytics/` - Charts, trends, insights
+  - `Dashboard/` - Main dashboard, concentration cards
+  - `DoseEntry/` - Quick dose entry, titration dialogs
+  - `FoodLog/` - Today's meals view
+  - `History/` - Calendar and list views
+  - `More/` - Overflow menu (settings access)
+  - `Nutrition/` - Food search, detail, serving input
+  - `Settings/` - Profile, medications, preferences
+  - `Shortcuts/` - Quick action buttons
+  - `Shots/` - Combined analytics/history tab
+  - `Components/` - Reusable UI components
+  - `MedicationProfile/` - Medication setup
+
+**JabTracker/ViewModels/**
+- Purpose: MVVM coordination layer
+- Contains: `*ViewModel.swift`
+- Key files: `FoodSearchSheetViewModel.swift`, `AnalyticsViewModel.swift`
+- Note: Some ViewModels live in Views/ subdirectories
+
+**JabTracker/Onboarding/**
+- Purpose: First-run onboarding flow
+- Contains: Coordinator, ViewModel, step views
+- Key files: `OnboardingCoordinator.swift`, `OnboardingViewModel.swift`
+- Subdirectories: `Views/` (onboarding step screens)
+
+**JabTracker/Design/**
+- Purpose: Design system tokens and components
+- Contains: `DesignTokens.swift`, `*Components.swift`, `*Styles.swift`
+- Key files: `CircularProgressRing.swift`, `Colors+Extensions.swift`
+
+**JabTracker/Utilities/** and **JabTracker/Utils/**
+- Purpose: Shared helpers
+- Contains: Validation, constants, test data seeding
+- Key files: `DoseValidation.swift`, `TestDataSeeding.swift`, `ProfileValidation.swift`
+
+## Key File Locations
+
+**Entry Points:**
+- `JabTracker/App/JabTrackerApp.swift` - @main app entry
+- `JabTracker/ContentView.swift` - Main tab navigation
+- `JabTracker/App/AppServices.swift` - Service coordinator
+
+**Configuration:**
+- `project.yml` - XcodeGen project configuration
+- `JabTracker/Info.plist` - App metadata, permissions
+- `JabTracker/JabTracker.entitlements` - CloudKit, HealthKit, Sign in with Apple
+- `.swiftlint.yml` - Linting rules (root + per-directory)
+
+**Core Logic:**
+- `JabTracker/Services/FoodService.swift` - Food search orchestration
+- `JabTracker/Services/LocalFoodDatabase.swift` - SQLite FTS5 (1.7M foods)
+- `JabTracker/Services/ScheduleService.swift` - Dose scheduling
+- `JabTracker/Services/PharmacokineticsEngine.swift` - Concentration calculations
+- `JabTracker/DataController.swift` - SwiftData + CloudKit setup
+
+**Testing:**
+- `JabTrackerTests/` - Unit tests (Swift Testing framework)
+- `JabTrackerUITests/` - E2E tests (XCUITest)
+- `JabTrackerUITests/Utils/TestUtilities.swift` - Shared test helpers
+
+
+## Naming Conventions
+
+**Files:**
+- `*View.swift` - SwiftUI views (e.g., `DashboardView.swift`)
+- `*ViewModel.swift` - ViewModels (e.g., `AnalyticsViewModel.swift`)
+- `*Service.swift` - Services (e.g., `FoodService.swift`)
+- `*Manager.swift` - Managers (e.g., `MedicationManager.swift`)
+- `Type+Feature.swift` - Extensions (e.g., `ScheduleService+Projection.swift`)
+- `*Tests.swift` - Test files (e.g., `FoodServiceTests.swift`)
+
+**Directories:**
+- PascalCase for feature directories (e.g., `Nutrition/`, `Dashboard/`)
+- Plural for collections (e.g., `Models/`, `Services/`, `Views/`)
+
+**Special Patterns:**
+- Service extensions: `ServiceName+Domain.swift`
+- Design components: `*Components.swift`, `*Styles.swift`
+- Test utilities: `TestUtilities.swift`, `Mock*.swift`
+
+## Where to Add New Code
+
+**New Feature:**
+- Primary code: `JabTracker/Views/{FeatureName}/`
+- ViewModel: `JabTracker/ViewModels/{Feature}ViewModel.swift` or in Views subdir
+- Services: `JabTracker/Services/{Feature}Service.swift`
+- Tests: `JabTrackerTests/{layer}/{Feature}Tests.swift`
+
+**New SwiftData Model:**
+- Implementation: `JabTracker/Models/{ModelName}.swift`
+- Add to schema in `JabTracker/DataController.swift`
+- Tests: `JabTrackerTests/Models/{ModelName}Tests.swift`
+
+**New Service:**
+- Implementation: `JabTracker/Services/{Name}Service.swift`
+- Extensions: `JabTracker/Services/{Name}Service+{Domain}.swift`
+- Registration: Add to `JabTracker/App/AppServices.swift`
+- Tests: `JabTrackerTests/Services/{Name}ServiceTests.swift`
+
+**New UI Component:**
+- Shared component: `JabTracker/Design/{Name}Component.swift`
+- Feature-specific: `JabTracker/Views/{Feature}/{Name}.swift`
+
+**Utilities:**
+- Shared helpers: `JabTracker/Utilities/` or `JabTracker/Utils/`
+- Test utilities: `JabTrackerTests/Mocks/` or `JabTrackerUITests/Utils/`
+
+## Special Directories
+
+**logs/**
+- Purpose: Test output logs
+- Source: Generated by `scripts/test.sh`
+- Committed: No (gitignored)
+- Structure: `logs/{test_type}_YYYY-MM-DD_HH-MM-SS/`
+
+**scripts/**
+- Purpose: Build and test automation
+- Key files: `test.sh`, `build.sh`, `check-all.sh`, `coverage-detail.sh`
+- Data processing: `process_usda_data.py`, `process-off-data.py`
+
+**.planning/**
+- Purpose: GSD planning documents
+- Source: Generated by `/gsd:*` commands
+- Committed: Yes (planning artifacts)
+
+---
+
+*Structure analysis: 2025-12-22*
+*Update when directory structure changes*
+
+
+
+# Testing Patterns
+
+**Analysis Date:** 2025-12-22
+
+## MANDATORY: Load Testing Skills First
+
+**CRITICAL REQUIREMENT**: Before writing, debugging, or running any tests, you **MUST** load the appropriate skill:
+
+| Test Type | Required Skill | Command |
+|-----------|---------------|---------|
+| Unit/Integration Tests | `/ios-unit-testing` | Run first |
+| E2E/UI Tests | `/ios-e2e-testing` | Run first |
+
+**Why this is mandatory:**
+- Skills contain detailed patterns for Swift Testing framework and XCUITest
+- SwiftData test data management requires specific patterns (container lifetime)
+- E2E tests require debug-first element targeting approach
+- Without skills, you will likely introduce bugs or flaky tests
+
+**Always invoke the skill BEFORE:**
+- Writing new test files
+- Debugging failing tests
+- Adding test coverage
+- Fixing flaky tests
+- Setting up test data
+
+## Available Simulators
+
+> **CRITICAL**: Xcode 26.2 requires iOS 26.2 simulators to avoid SwiftData/CloudKit crashes with older runtimes.
+
+| Priority | Simulator | UUID |
+|----------|-----------|------|
+| **PRIMARY** | iPhone 17 Pro, OS=26.2 | F10F879D-2403-4529-8850-91DE259C1312 |
+| SECONDARY | iPhone 17, OS=26.2 | 63B35940-1E74-4D29-821B-4DB5CAB5FA9C |
+| TERTIARY | iPhone 17 Pro Max, OS=26.2 | 38218630-EBEC-4196-80A2-92AB0A855715 |
+
+## Test Framework
+
+**Runner:**
+- Swift Testing (iOS 17+) - Unit tests
+- XCUITest - UI/E2E tests
+- Config: `project.yml` test schemes
+
+**Assertion Library:**
+- Swift Testing: `#expect()`, `#require()`
+- XCUITest: `XCTAssert*` family
+
+**Run Commands:**
 ```bash
-# Generate Swift documentation (if using DocC)
-xcodebuild docbuild -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
-
-# Or use the convenience script
-./scripts/docs.sh
+./scripts/test.sh unit 1                              # Run all unit tests
+./scripts/test.sh unit 1 FoodServiceTests             # Single test class
+./scripts/test.sh unit 1 --coverage                   # With coverage
+./scripts/test.sh ui 1 NutritionFlowUITests           # UI test class
+./scripts/test.sh ui 1 OnboardingUITests/testComplete # Single method
 ```
 
-### Coverage Policy & Reporting
+## Test File Organization
 
+**Location:**
+- Unit tests: `JabTrackerTests/` (144+ files)
+- UI tests: `JabTrackerUITests/` (60+ files)
+- Test utilities: `JabTrackerUITests/Utils/TestUtilities.swift`
+- Mocks: `JabTrackerTests/Mocks/`
+
+**Naming:**
+- Unit tests: `{ClassName}Tests.swift`
+- UI tests: `{Feature}UITests.swift`
+- Integration: `{Feature}IntegrationTests.swift`
+
+**Structure:**
+```
+JabTrackerTests/
+├── Models/                  # Model entity tests
+├── Services/                # Service logic tests
+├── ViewModels/              # ViewModel tests
+├── Onboarding/              # Onboarding tests
+├── Integration/             # Integration tests
+└── Mocks/                   # Test doubles
+
+JabTrackerUITests/
+├── Analytics/               # Analytics E2E
+├── Utils/TestUtilities.swift
+├── NutritionFlowUITests.swift
+├── OnboardingUITests.swift
+└── CalendarIntegrationUITests.swift
+```
+
+## Test Structure
+
+**Swift Testing (Unit Tests):**
+```swift
+import Testing
+@testable import JabTracker
+
+@Suite("FoodService Tests")
+struct FoodServiceTests {
+
+    @Test("Search returns local results first")
+    @MainActor
+    func testSearchReturnsLocalFirst() async {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container  // Keep alive
+        let service = FoodService(context: context)
+
+        // When
+        let results = await service.search(query: "apple")
+
+        // Then
+        #expect(results.count > 0)
+        #expect(results.first?.source == .local)
+    }
+}
+```
+
+**XCUITest (E2E Tests):**
+```swift
+import XCTest
+
+final class NutritionFlowUITests: XCTestCase {
+    var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = TestUtilities.launchAppWithTestMode(resetData: true)
+    }
+
+    func testSearchFoodAndLog() throws {
+        // Navigate to Food Log
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+
+        // Verify view loaded
+        let foodLogView = app.otherElements["food-log-view"]
+        XCTAssertTrue(foodLogView.waitForExistence(timeout: 5))
+
+        // Search for food
+        app.buttons["add-food-button"].tap()
+        // ... continue flow
+    }
+}
+```
+
+**Patterns:**
+- Use `// Given:`, `// When:`, `// Then:` comments
+- `@MainActor` for SwiftData/UI tests
+- Keep container alive when using ModelContext
+
+## Mocking
+
+**Framework:**
+- Protocol-based mocking (no external framework)
+- Mock implementations in `JabTrackerTests/Mocks/`
+
+**Patterns:**
+```swift
+// Protocol
+protocol NotificationCenterProtocol {
+    func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
+    func add(_ request: UNNotificationRequest) async throws
+}
+
+// Production
+extension UNUserNotificationCenter: NotificationCenterProtocol {}
+
+// Mock
+class MockNotificationCenter: NotificationCenterProtocol {
+    var authorizationResult = true
+    var addedRequests: [UNNotificationRequest] = []
+
+    func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool {
+        return authorizationResult
+    }
+
+    func add(_ request: UNNotificationRequest) async throws {
+        addedRequests.append(request)
+    }
+}
+```
+
+**What to Mock:**
+- External services (NotificationCenter, URLSession)
+- System frameworks (HealthKit, StoreKit)
+- Time-dependent operations
+
+**What NOT to Mock:**
+- Internal services (test with real implementations)
+- SwiftData (use in-memory container)
+- Pure functions
+
+## Fixtures and Factories
+
+**SwiftData Test Setup (CRITICAL):**
+```swift
+// ✅ CORRECT: Return both context AND container
+func createTestContext() -> (context: ModelContext, container: ModelContainer) {
+    let schema = Schema([User.self, Dose.self, Food.self, FoodEntry.self])
+    let config = ModelConfiguration(
+        schema: schema,
+        isStoredInMemoryOnly: true,
+        cloudKitDatabase: .none  // Critical for tests
+    )
+    let container = try! ModelContainer(for: schema, configurations: [config])
+    return (container.mainContext, container)
+}
+
+// In test - MUST capture container
+@Test func testExample() {
+    let (context, container) = createTestContext()
+    _ = container  // Keep alive for duration of test
+
+    // Now context.insert() will work
+}
+
+// ❌ WRONG: Container deallocates, context becomes invalid
+func createTestContext() -> ModelContext {
+    let container = try! ModelContainer(...)
+    return container.mainContext  // Crash on insert!
+}
+```
+
+**Factory Functions:**
+```swift
+private func createTestUser(in context: ModelContext) -> User {
+    let user = User(
+        email: "test@example.com",
+        name: "Test User",
+        appleUserId: "test-apple-id"
+    )
+    context.insert(user)
+    return user
+}
+```
+
+**Location:**
+- Factory functions: Define in test file near usage
+- Shared fixtures: `JabTrackerTests/Mocks/` or test file
+
+## Coverage
+
+**Requirements (5-Tier Policy):**
+- Tier 1 - Pure Business Logic (90%): `PharmacokineticsEngine`, Models
+- Tier 2 - Infrastructure (62%): `DataController`, `MedicationManager`
+- Tier 3 - Framework Integration (42%): `AuthenticationManager`, `BiometricAuthManager`
+- Tier 4 - View Models (85%): `OnboardingViewModel`
+- Tier 5 - Utilities (75%): `ProfileValidation`, helpers
+- SwiftUI Views: No requirements (cannot be unit tested)
+
+**Configuration:**
 - Coverage config: `coverage-config.json`
-- Coverage policy: `coverage-policy.md`
+- Run: `./scripts/test.sh unit 1 --coverage`
+- Check policy: `./scripts/check-coverage.sh`
 
+**View Coverage:**
 ```bash
-# Enable coverage in Xcode scheme (already configured)
-# codeCoverageEnabled = "YES" in JabTracker.xcscheme
-
-# Check coverage policy compliance (RECOMMENDED)
-./scripts/check-coverage.sh
-
-# Run tests with coverage (automatically enabled)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5'
-
-# View coverage in Xcode UI:
-# 1. Run tests with coverage enabled
-# 2. Open Report Navigator (⌘9)
-# 3. Select test result -> Coverage tab
-
-# Generate code coverage reports (EASY WAY - use test script)
-./scripts/test.sh unit 1 --coverage     # Unit tests with coverage
-./scripts/test.sh all --coverage        # All tests with coverage
-
-# COVERAGE ANALYSIS TOOLS (use these for detailed investigation)
-./scripts/coverage-detail.sh                    # Full coverage report
-./scripts/coverage-detail.sh DataController     # Specific file coverage
-./scripts/coverage-detail.sh AuthenticationManager  # Specific file coverage
-./scripts/coverage-json.sh --summary           # Quick file overview sorted by coverage
-./scripts/coverage-json.sh --functions         # Show uncovered functions only
-./scripts/coverage-json.sh DataController      # JSON data for specific file
-
-# Manual coverage generation (if needed)
-xcodebuild test -scheme JabTracker -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' -enableCodeCoverage YES -resultBundlePath /tmp/coverage.xcresult -only-testing:JabTrackerTests
-xcrun xccov view --report /tmp/coverage.xcresult
-
-# Raw xccov commands (coverage-detail.sh and coverage-json.sh are easier)
-xcrun xccov view --report --json /tmp/coverage.xcresult | jq
-xcrun xccov view --file-list /tmp/coverage.xcresult
+./scripts/coverage-detail.sh
+./scripts/coverage-json.sh --summary
+open logs/latest/results.xcresult
 ```
 
-**Coverage Policy (SwiftUI-Aware):**
+## Test Types
 
-- **Business Logic (90% minimum)**: AuthenticationManager, BiometricAuthManager, DataController, Models
-- **View Models (85% minimum)**: ObservableObject classes with business logic (none defined yet)
-- **SwiftUI Views**: No coverage requirements (view bodies cannot be unit tested)
-- **Overall Coverage**: ~23% (informational only, not a requirement)
+**Unit Tests:**
+- Scope: Single class/function in isolation
+- Mocking: External dependencies only
+- Speed: Each test <100ms
+- Examples: `FoodServiceTests.swift`, `PharmacokineticsEngineTests.swift`
 
-See `docs/coverage-policy.md` for detailed requirements and rationale.
+**Integration Tests:**
+- Scope: Multiple components together
+- Mocking: Only external boundaries
+- Setup: In-memory SwiftData
+- Examples: `CalendarPerformanceTests.swift`
 
-#### Coverage Analysis Tips
+**E2E Tests:**
+- Framework: XCUITest
+- Scope: Full user flows
+- Setup: Launch arguments for test mode
+- Location: `JabTrackerUITests/`
 
-**Understanding xccov Output:**
+## Common Patterns
 
-- Coverage shows function-level and line-level detail
-- `0.00% (0/X)` means completely uncovered function with X executable lines
-- Private methods need indirect testing through public methods that call them
-- Async methods may need `Task.sleep()` waits in tests for proper coverage
-
-**Key Coverage Targets from Analysis:**
-
-- `DataController.checkiCloudStatus()`: 0% (30 lines) - Test via `retryCloudKitSetup()`
-- `DataController.checkCloudKitStatus()`: 0% (5 lines) - Test via initialization paths
-- `AuthenticationManager.resetAppData()`: 0% (20 lines) - Test via `--reset-app-data` argument
-- `AuthenticationManager.processAppleIDCredential(_:)`: 0% (32 lines) - Test via delegate methods
-
-**Common Coverage Issues:**
-
-- Result bundle not found: Run tests with `--coverage` first
-- Private method coverage: Use public methods that invoke them
-- Async method coverage: Add `Task.sleep()` waits in tests
-- Delegate method coverage: Create proper mock controllers/requests
-
-### Convenience Scripts
-
-```bash
-# Build project
-./scripts/build.sh
-
-# Run tests
-./scripts/test.sh unit    # Unit tests only
-./scripts/test.sh ui      # UI tests only
-./scripts/test.sh all     # All tests
-
-# Generate documentation
-./scripts/docs.sh
-
-# Run full CI check suite (recommended before PR merge)
-./scripts/check-all.sh    # Runs SwiftLint, build, unit tests, UI tests, and SwiftFormat
+**Async Testing:**
+```swift
+@Test("Async operation succeeds")
+@MainActor
+func testAsyncOperation() async {
+    let result = await service.performAsync()
+    #expect(result.isSuccess)
+}
 ```
 
-### Local CI Verification
-
-Since GitHub Actions can be unreliable, use the comprehensive check script before merging PRs:
-
-```bash
-./scripts/check-all.sh
+**Error Testing:**
+```swift
+@Test("Throws on invalid input")
+func testThrowsOnInvalid() {
+    #expect(throws: ValidationError.self) {
+        try service.validate(nil)
+    }
+}
 ```
 
-This script runs:
+**UI Test Utilities:**
+```swift
+enum TestUtilities {
+    static func launchAppWithTestMode(resetData: Bool = true) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = resetData
+            ? ["--ui-testing", "--reset-app-data"]
+            : ["--ui-testing"]
+        app.launch()
+        return app
+    }
 
-- ✅ SwiftLint code quality checks
-- ✅ Build verification
-- ✅ Unit tests (Swift Testing framework)
-- ✅ UI tests (XCUITest framework)
-- ✅ swift-format style checks (if installed)
-
-**Note:** All scripts use xcbeautify for better output formatting and Swift Testing support.
-
-**Pre-merge checklist:**
-
-1. Run `./scripts/check-all.sh`
-2. All checks must pass ✅
-3. Fix any issues with `swiftlint --fix` and `swift-format --in-place --recursive .`
-4. Re-run until all checks pass
-
-### XcodeGen Project Regeneration
-
-This project uses XcodeGen for project file management. **Important**: When adding new Swift files (especially test files), you must regenerate the Xcode project:
-
-```bash
-# Regenerate Xcode project after adding new files
-xcodegen generate
+    static func navigateToTab(_ app: XCUIApplication, tabName: String) {
+        app.tabBars.buttons[tabName].tap()
+    }
+}
 ```
 
-**Common Issue**: New test files not appearing in test runs
+**Accessibility Identifiers:**
+```swift
+// In View
+.accessibilityIdentifier("food-detail-sheet")
 
-- **Symptom**: Tests don't run or show "0 tests executed" even though test files exist
-- **Cause**: XcodeGen hasn't included the new files in the Xcode project
-- **Solution**: Run `xcodegen generate` then run tests again
-
-**When to regenerate:**
-
-- After adding new Swift files to JabTracker/, JabTrackerTests/, or JabTrackerUITests/
-- After modifying project.yml configuration
-- If build/test targets seem missing files
-- When file references appear broken in Xcode
-
-## Architecture & Code Structure
-
-### SwiftData Models
-
-The app uses three primary SwiftData models with CloudKit sync:
-
-- `User`: Profile information including weight, timezone, medication preferences
-  - ✅ `appleUserId` for authentication linking
-  - ✅ `updatedAt` for tracking profile modifications
-  - ✅ Weight unit conversion between kg/lbs with real-time validation
-- `Dose`: Individual dose records with timestamp, amount, injection site, notes
-- `MedicationProfile`: Medication details, current dose, refill dates
-
-**DataController Features:**
-
-- Automatic CloudKit sync with iCloud availability detection
-- Graceful fallback to local-only storage when iCloud is unavailable
-- Real-time sync status monitoring (`SyncStatus` enum)
-- User-friendly sync status display with actionable guidance
-
-### Key Components
-
-**Medication Support:**
-
-- Semaglutide (Ozempic, Wegovy) - 7 day half-life, weekly dosing
-- Tirzepatide (Mounjaro, Zepbound) - 5 day half-life, weekly dosing
-- Liraglutide (Victoza, Saxenda) - 0.54 day half-life, daily dosing
-- Dulaglutide (Trulicity) - 4.7 day half-life, weekly dosing
-
-**Pharmacokinetics Engine:**
-Core calculation logic for drug concentration modeling using exponential decay based on medication half-lives. Located in `PharmacokineticsEngine` class.
-
-**Authentication System:**
-
-- `AuthenticationManager`: Handles Sign in with Apple, credential management, state persistence
-- `BiometricAuthManager`: Face ID/Touch ID integration with fallback to device passcode
-- `AuthenticationView`: Clean Sign in with Apple UI following HIG
-- `UserProfileView`: Complete profile management with weight conversion, validation
-- Authentication state persistence across app launches using Keychain
-
-**Navigation Structure:**
-TabView with 5 main tabs:
-
-- Dashboard (Home) - Current levels, next dose
-- Add Dose - Quick entry and manual logging
-- History - Dose tracking and calendar view
-- Analytics - Charts and insights using Swift Charts
-- Settings - Profile, notifications, export
-
-### Data Flow
-
-1. User logs doses through AddDoseView
-2. Doses stored in SwiftData with automatic CloudKit sync (when available)
-3. PharmacokineticsEngine calculates real-time concentrations
-4. Charts display concentration timeline and trends
-5. Notifications remind users of upcoming doses
-6. SyncStatusCard displays real-time iCloud sync status to users
-
-### Project Status
-
-**Current Phase**: Core Functionality Implementation  
-**Completed**: Foundation & Infrastructure (GitHub Issues #1-4) + ✅ Authentication & User Profile (GitHub Issue #11)  
-**Next Up**: User Onboarding Flow & Dose Tracking Features
-
-For detailed progress tracking and roadmap, see `docs/implementation-plan.md`.  
-For product vision and feature specifications, see `docs/spec.md`.
-
-### Design System
-
-**Colors:** Primary gradient from #667eea to #764ba2
-**Typography:** System fonts with rounded design for large titles
-**Components:** Follow Human Interface Guidelines with accessibility support
-
-### Testing Strategy
-
-- Unit tests using Swift Testing framework for modern testing approach
-- UI tests using XCUITest for end-to-end user flow testing
-- SwiftData model and persistence testing (comprehensive coverage implemented)
-- Design system component testing for accessibility and functionality
-- ✅ Authentication unit tests (`AuthenticationTests`) - comprehensive coverage
-- ✅ Authentication UI tests (`AuthenticationUITests`) - complete E2E testing
-- ✅ Biometric authentication testing with mock scenarios
-- ✅ Keychain integration security testing
-- xcbeautify for enhanced test output formatting with Swift Testing support
-- Details: `docs/testing-strategy.md`
-
-### Privacy & Security
-
-- SwiftData encryption enabled
-- CloudKit private database for user data protection
-- Graceful handling of iCloud availability without compromising functionality
-- ✅ Keychain storage for sensitive authentication credentials (implemented)
-- ✅ Face ID/Touch ID authentication with BiometricAuthManager (implemented)
-- ✅ Sign in with Apple as sole authentication method (implemented)
-- ✅ Secure authentication state management with AuthenticationManager (implemented)
-- HIPAA compliance considerations
-- App Tracking Transparency implementation
-
-## Development Notes
-
-- Follow TDD approach especially for pharmacokinetic calculations
-- Implement authentication early to establish user context for all features
-- Use environment variables to differentiate test vs production authentication
-- Always provide UI testing bypass for authentication flows
-- Prioritize accessibility with VoiceOver, Dynamic Type, and Reduced Motion support
-- Implement offline-first functionality with CloudKit sync
-- Use ProMotion (120Hz) support for smooth animations
-- Target < 2 second app launch time and < 50ms calculation updates
-- Keep medical accuracy as top priority - validate all pharmacokinetic formulas
-
-## Regulatory Considerations
-
-This app handles medical data and dosing information. Ensure:
-
-- FDA medical device classification compliance
-- Clinical validation of pharmacokinetic models
-- Proper disclaimers about not replacing medical advice
-- Adverse event reporting mechanisms if required
-
-## Resources
-
-- Project Spec: @docs/spec.md
-- Implementation Plan: @docs/implementation-plan.md
-- GitHub Repo: https://github.com/gannonh/jab-tracker-ios
-
-## GitHub Sub-Issue Management (gh-sub-issue Integration)
-
-Claude Code: Use the `gh-sub-issue` GitHub CLI extension to maintain hierarchical task structures (epic → tasks) and compute progress metrics automatically.
-
-### TL;DR Essentials
-
-- Parent issue = "Epic" / feature container (title prefix: `Epic:` or `Feature:`)
-- Sub-issues = actionable tasks (title prefix: none / verb-led)
-- Commands: `create` (new sub-issue), `add` (link existing), `list` (query state / metrics), `remove` (unlink)
-- Always prefer JSON output for automation (`--json number,title,state` + meta fields)
-- Progress metric: `openCount/total` from `list --json parent.number,total,openCount`
-- Keep parent issue body updated with an auto-generated checklist (OPTIONAL enhancement)
-
-### Installation (idempotent)
-
-```bash
-gh extension install yahsan2/gh-sub-issue  # safe if already installed
+// In Test
+let sheet = app.otherElements["food-detail-sheet"]
+XCTAssertTrue(sheet.waitForExistence(timeout: 5))
 ```
 
-### Core Command Patterns
+## Test Data Seeding
 
-```bash
-# Create new sub-issue (preferred way to add work)
-gh sub-issue create --parent <PARENT_NUM> --title "Implement dose history export" --label backend
+**Launch Arguments:**
+- `--ui-testing` - Bypass authentication
+- `--reset-app-data` - Clear all data
+- `--seed-test-7d` - 7 days of test data
+- `--seed-test-30d` - 30 days
+- `--seed-test-90d` - 90 days
+- `--seed-test-1y` - 1 year
 
-# Link existing issue
-gh sub-issue add <PARENT_NUM> <CHILD_NUM>
-
-# List (TTY human view)
-gh sub-issue list <PARENT_NUM> --state all
-
-# List (machine JSON)
-gh sub-issue list <PARENT_NUM> --json number,title,state,parent.number,total,openCount
-
-# Remove linkage (keeps child issue alive)
-gh sub-issue remove <PARENT_NUM> <CHILD_NUM> --force
+**Usage:**
+```swift
+app.launchArguments = ["--ui-testing", "--seed-test-7d"]
+app.launch()
 ```
 
-### JSON Automation Examples
+---
 
-Progress snapshot (Bash):
+*Testing analysis: 2025-12-22*
+*Update when test patterns change*
 
-```bash
-progress_json=$(gh sub-issue list "$PARENT" --json parent.number,total,openCount 2>/dev/null)
-total=$(echo "$progress_json" | jq -r '.parent.total // .total // 0')
-open=$(echo "$progress_json" | jq -r '.parent.openCount // .openCount // 0')
-echo "EPIC #$PARENT: $((total-open)) closed / $total total ($open open)"
-```
 
-Enumerate open tasks (titles only):
 
-```bash
-gh sub-issue list "$PARENT" --state open --json number,title | jq -r '.subIssues[] | "#\(.number) - \(.title)"'
-```
-
-### Repository Conventions
-
-- Parent (epic) titles: `Epic: <High-Level Goal>` or `Feature: <User-Facing Capability>`
-- Sub-issue titles: Imperative, single responsibility, fits in < 80 chars
-- Labels:
-  - `epic` (apply manually to parent issues only)
-  - Functional area labels (e.g. `auth`, `persistence`, `ui`, `pharmacokinetics`)
-  - Priority (`p0`, `p1`, `p2`) optional
-- Milestones: attach to parent; inherit manually for critical children
-- Close rule: Parent closes automatically only when all sub-issues closed (enforced manually / by future automation script)
-
-### Recommended Workflow for New Feature
-
-1. Create parent epic (manual): `gh issue create --title "Epic: Onboarding Flow" --body "Summary..." --label epic,onboarding`
-2. Decompose into concrete tasks: use `gh sub-issue create` for each
-3. Link any pre-existing issues with `gh sub-issue add`
-4. Periodically compute progress (script snippet above) → update epic body checklist (optional)
-5. When all sub-issues closed, verify no hidden work → close epic
-
-### Epic Body Checklist Pattern (Optional Automation)
-
-Maintain a checklist block delimited by HTML comments to allow safe regeneration.
-
-```
-<!-- sub-issue-checklist:start -->
-- [ ] #123 Implement core DataController sync improvements
-- [x] #140 Add unit tests for BiometricAuthManager
-<!-- sub-issue-checklist:end -->
-```
-
-Automation script can:
-
-1. Fetch current list JSON
-2. Rebuild checklist lines with `[ ]` or `[x]`
-3. Replace block via sed/perl; post with `gh issue edit`
-
-### Integration Guidelines for Claude
-
-- Prefer creating sub-issues instead of expanding epic description with untracked tasks.
-- Use JSON mode for any reasoning requiring counts or progress metrics.
-- Before starting new task work: confirm it's linked under an epic (create if missing).
-- Avoid nesting >1 level (tool supports only single parent layer effectively for now).
-- If an issue spans multiple epics, split into smaller issues rather than dual-link.
-
-### Edge Cases & Handling
-
-- Parent not found: validate existence via `gh issue view <num>` before sub-issue operations.
-- Cross-repo linking not currently used; omit `--repo` unless explicitly needed later.
-- Removing a sub-issue does not close or delete; verify if re-homing to a different epic is required and then `add` to new parent.
-- Large epics: paginate manually with `--limit` if output > default (30); run multiple list calls if needed.
-
-### Minimal Decision Heuristics (for Claude Automation)
-
-| Situation                             | Action                                        |
-| ------------------------------------- | --------------------------------------------- |
-| Need to track new chunk of work       | `sub-issue create` under appropriate epic     |
-| Existing issue logically part of epic | `sub-issue add`                               |
-| Epic progress update needed           | `sub-issue list --json` → recompute checklist |
-| Child out of scope now                | `sub-issue remove` (keep issue open)          |
-| Epic has 0 openCount                  | Propose closing epic                          |
-
-### Quick Sanity Check Command
-
-```bash
-gh sub-issue list <PARENT> --json total,openCount || echo "Sub-issue extension or parent missing"
-```
-
-### Troubleshooting Cheatsheet
-
-| Symptom                        | Likely Cause                | Resolution                  |
-| ------------------------------ | --------------------------- | --------------------------- |
-| `gh: Could not find extension` | Extension not installed     | Re-run install command      |
-| Empty JSON fields              | Missing `--json` args       | Supply explicit field list  |
-| `parent issue not found`       | Wrong number / private repo | Verify number & permissions |
-| `rate limit exceeded`          | Heavy automation loop       | Add delays / ensure auth    |
-
-### Future Automation Opportunities
-
-- Auto-close epic when all children complete
-- CI job generating progress badge (open vs total)
-- Weekly epic status summary comment bot
-
-This section is the authoritative minimal contract for hierarchical issue management tooling in this repo.
-
-## Security Implementation Guidelines
-
-- Never log sensitive authentication credentials in production code
-- Store Apple ID credentials securely in Keychain with proper access controls
-- Implement biometric authentication with proper fallback to device passcode
-- Handle authentication errors gracefully with user-friendly guidance messages
-- Clear authentication state properly on sign out to prevent credential leakage
-- Use `@MainActor` for authentication UI updates to ensure thread safety
-- Validate authentication state on app launch for proper flow control
-- Implement test authentication bypass for reliable UI testing
-
-# Technical Learnings & Best Practices
-
-## Authentication Testing Patterns
-
-- Use `--ui-testing` launch argument for predictable test authentication
-- Reset app data with `--reset-app-data` for clean test states
-- Mock authentication in UI tests to avoid Apple ID dependencies
-- Separate test user creation for isolated test scenarios
-- Handle biometric authentication differently in test vs production
-- Use environment variables to differentiate test behavior
-- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
-
-## CloudKit + SwiftData Integration
-
-- Always implement graceful fallback when CloudKit is unavailable
-- Check for test environment before enabling CloudKit to avoid test conflicts
-- Use `@Published` properties for real-time sync status updates
-- Provide clear user feedback about sync status with actionable guidance
-
-## Testing Framework Migration
-
-- Swift Testing provides cleaner, more modern test syntax than XCTest
-- xcbeautify offers better Swift Testing output support than xcpretty
-- Never use `CODE_SIGNING_ALLOWED=NO` for UI tests - prevents app launch
-- File-based test organization improves maintainability
-
-## Info.plist Configuration
-
-- Custom Info.plist required for CloudKit background notifications
-- `remote-notification` background mode essential for CloudKit push notifications
-- XcodeGen's auto-generated Info.plist doesn't handle all CloudKit requirements
-
-## Development Tooling
-
-- xcbeautify > xcpretty for modern Xcode output formatting
-- Clean DerivedData resolves filesystem/result bundle issues
-- Comprehensive pre-merge checks prevent integration issues
-
-## XcodeGen Workflow
-
-- **CRITICAL**: Always run `xcodegen generate` after adding new Swift files
-- Project uses XcodeGen for automatic project file management
-- New test files won't appear in test runs until project is regenerated
-- Auto-includes all Swift files in respective directories (JabTracker/, JabTrackerTests/, JabTrackerUITests/)
-
-## Authentication Implementation Gotchas
-
-- Biometric authentication simulator limitations - test on real devices for accuracy
-- UserDefaults can be unreliable in UI tests - use in-memory storage when needed
-- Authentication state must be checked on app launch for proper flow control
-- Face ID prompt timing can cause test flakiness - add appropriate waits and timeouts
-- Environment variables and launch arguments are key for test/production differentiation
-- Always provide authentication bypass for UI testing to avoid external dependencies
-- Keychain access can fail in test scenarios - implement proper error handling
-
-## SwiftData Model Design Best Practices
-
-- **Avoid All-Optional Properties**: Make required fields non-optional with sensible defaults
-- **Use Proper Relationship Attributes**: Always specify `@Relationship` with appropriate `inverse` and `deleteRule`
-- **Include Apple ID Linking**: Add `appleUserId` field for Sign in with Apple authentication
-- **Provide Sensible Defaults**: Use defaults like `UUID()`, `Date()`, and reasonable values for required fields
-- **Maintain Audit Trail**: Include `createdAt` and `updatedAt` timestamps for all models
-- **Test Model Relationships**: Comprehensive testing of SwiftData relationships prevents runtime issues
-- **Use `final` Classes**: Mark SwiftData model classes as `final` for better performance
-- **Explicit Default Values**: Set explicit defaults (`= nil`, `= ""`, `= 0.0`) for clarity and consistency
-
-## Code Quality Improvement Patterns
-
-- **Consolidate Duplicate Code**: Look for similar methods and consolidate them (e.g., duplicate sign-in handlers)
-- **Remove Unsafe Force Unwrapping**: Replace `fatalError` with graceful error handling in production code
-- **Conditional Debug Logging**: Use `#if DEBUG` for development-only console output
-- **Model Validation**: Ensure required fields have appropriate defaults rather than optionals
-- **Authentication Flow Simplification**: Reduce complexity by consolidating authentication state handling
-- **Relationship Configuration**: Fix missing `@Relationship` attributes that cause sync and cascade issues
-
-## SwiftData Model Architecture Lessons
-
-- All-optional model properties create runtime uncertainty and complex nil-checking throughout the app
-- Required fields should have non-optional types with sensible defaults to prevent crashes
-- Missing authentication linking fields (`appleUserId`) cause integration issues with Sign in with Apple
-- Proper relationship configuration with `inverse` prevents cascade delete and CloudKit sync problems
-- Code quality improvements often reveal architectural inconsistencies that need addressing
-- Medical apps require especially careful data modeling - weight, doses, timestamps must be reliable
-- Audit trails (`createdAt`, `updatedAt`) are essential for debugging and data integrity
-- Default values should be meaningful - empty strings for required text, sensible numbers for medical data
-
-## Architectural Lessons Learned
-
-- All-optional SwiftData models create unnecessary complexity and runtime uncertainty
-- Missing relationship configurations cause CloudKit sync and cascade delete issues
-- Authentication flows can accumulate duplicate code that needs regular consolidation
-- Medical apps need especially reliable data models with meaningful defaults
-- Code quality analysis reveals architectural decisions that need documentation
-
-## User Onboarding Implementation Patterns
-
-- **Step-Based Navigation**: Use enum-driven state machines for multi-step flows (OnboardingStep enum with computed properties)
-- **Coordinator Pattern**: Separate navigation logic (OnboardingCoordinator) from business logic (OnboardingViewModel)
-- **Testing Arguments**: Command-line arguments are essential for reliable UI testing (`--force-onboarding`, `--ui-testing`)
-- **Permission Flow**: Always explain value proposition before requesting permissions (notifications, HealthKit)
-- **State Persistence**: Use UserDefaults for completion tracking, SwiftData for user-generated content
-- **Medical Data Modeling**: Enum-based medication system with computed properties ensures data consistency and medical accuracy
-
-## XcodeBuildMCP UI Testing & Accessibility
-
-### describe_ui Tool for Precise Element Location
-
-**CRITICAL**: Always use `describe_ui` to get precise coordinates for UI interactions instead of guessing from screenshots.
-
-```bash
-# Get complete accessibility hierarchy with precise coordinates
-describe_ui({ simulatorUuid: "SIMULATOR_UUID" })
-
-# Returns JSON with AXFrame data for every accessible element
-# Use frame coordinates for interactions: center = (x + width/2, y + height/2)
-```
-
-**Key Benefits:**
-
-- **Precise Coordinates**: Exact pixel locations for tap, swipe, and gesture actions
-- **Accessibility Identifiers**: Find elements by their `AXUniqueId` for reliable test selectors
-- **Element State**: See if elements are enabled, selected, or have specific values
-- **Element Types**: Distinguish between Button, TextField, Group, StaticText, etc.
-
-### Accessibility Configuration Requirements
-
-For `describe_ui` to work properly, the simulator must have accessibility enabled:
-
-**Common Issue**: `describe_ui` returns empty JSON hierarchy
-
-- **Cause**: Accessibility not properly configured in simulator
-- **Solution**: Enable accessibility via command line:
-
-```bash
-xcrun simctl spawn 336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB defaults write com.apple.Accessibility VoiceOverTouchEnabled -bool true
-
-# Then restart the app:
-stop_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker" })
-launch_app_sim({ simulatorUuid: "336C70E1-7A02-4FE1-ABD8-89C2E5FD38EB", bundleId: "com.gannonhall.JabTracker", args: ["--ui-testing", "--force-onboarding"] })
-```
-
-After this, `describe_ui` will return proper accessibility hierarchy with full coordinates and element data.
-
-### UI Testing Element Selector Patterns
-
-Based on onboarding flow implementation analysis:
-
-**Dose Selection Components:**
-
-- Dose buttons use pattern: `dose-button-{amount}` (e.g., `dose-button-1.0`, `dose-button-0.25`)
-- NOT TextField with `dose-amount-input` - use individual dose buttons instead
-- Each dose button shows selected state in `AXValue` field
-
-**Medication Selection:**
-
-- Medication buttons use pattern: `medication-{medication}` (e.g., `medication-semaglutide`)
-- Selection state indicated in `AXValue`: "Selected" or "Not selected"
-
-**Navigation Elements:**
-
-- Continue button: `onboarding-continue-button`
-- Back button: `onboarding-back-button`
-- Progress indicator: `onboarding-progress`
-
-**Common UI Testing Mistakes:**
-
-- Looking for TextField when implementation uses Button components
-- Assuming element visibility without checking if scrolling is required
-- Using screenshots for coordinates instead of `describe_ui` data
-
-## Medication Profile Management ✅
-
-### Core Medication Types
-
-The app supports exactly 4 GLP-1 medications with medically accurate properties:
-
-- **Semaglutide** (Ozempic/Wegovy): 7-day half-life, 0.25-2.4mg doses, weekly
-- **Tirzepatide** (Mounjaro/Zepbound): 5-day half-life, 2.5-15mg doses, weekly
-- **Liraglutide** (Victoza/Saxenda): 0.54-day half-life, 0.6-3.0mg doses, daily
-- **Dulaglutide** (Trulicity): 4.7-day half-life, 0.75-4.5mg doses, weekly
-
-### Calculation Services (Implemented)
-
-- **ReconstitutionCalculator**: For compounded medications - calculates water volume and units per dose
-  - Validates vial strength, target dose, and water volume
-  - Returns units per dose, concentration, and total units
-  - Common scenarios pre-calculated for quick reference
-- **PenClickCalculator**: For branded pens - calculates clicks needed for dose adjustments
-  - Supports all major pen types (Ozempic, Wegovy, Mounjaro, Victoza, Saxenda, Trulicity)
-  - Handles both adjustable and fixed-dose pens
-  - Medication-specific pen recommendations
-- **MedicationManager**: CRUD operations for medication profiles with validation
-  - Profile creation with compounding/pen support
-  - Dose validation against medication ranges
-  - Escalation dose recommendations
-  - Refill date tracking
-
-### SwiftData Model Enhancements ✅
-
-- Enhanced `MedicationProfile` with new fields:
-  - `isCompounded`: Boolean for medication type
-  - `vialStrength` & `reconstitutionVolume`: For compounded meds
-  - `penType`: For branded pen tracking
-  - `notes`, `createdAt`, `updatedAt`: Audit and user data
-- `Medication` enum already exists with computed medical properties
-- Integrated with existing CloudKit sync and User relationships
-
-### Testing Coverage ✅
-
-- **ReconstitutionCalculatorTests**: 11 comprehensive tests for all calculation scenarios
-- **PenClickCalculatorTests**: 15 tests covering all pen types and edge cases
-- Medical accuracy validated with real-world dosing scenarios
-- Performance targets met: <50ms calculation updates
-
-# Reminders
-
-- Use NavigationStack instead of NavigationView: https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types
-- Always test iCloud sync scenarios: available, unavailable, not signed in
-- Swift Testing framework docs: https://developer.apple.com/documentation/testing
-- XcodeBuildMCP provides a range of useful tools for working with the project.
-- Simulator name always includes OS: `iPhone 15,OS=17.5`
-- **ALWAYS use `describe_ui` for precise coordinates** - never guess from screenshots
-- **Medical accuracy is critical** - validate all calculations and dose ranges
-- Easiest way to run tests is using the convenience script:
-  - `./scripts/test.sh unit 1    # Unit tests only on iPhone 15`
-  - `./scripts/test.sh ui 1     # UI tests only on iPhone 15`
-  - `./scripts/test.sh all 1    # All tests on iPhone 15`

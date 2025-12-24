@@ -20,6 +20,7 @@ struct ShortcutsSheetTests {
     func shortcutsSheetInitializesWithBindings() {
         var showingFoodSearch = false
         var showingQuickDose = false
+        var showingFoodSearchWithScan = false
 
         let sheet = ShortcutsSheet(
             showingFoodSearch: Binding(
@@ -29,12 +30,17 @@ struct ShortcutsSheetTests {
             showingQuickDose: Binding(
                 get: { showingQuickDose },
                 set: { showingQuickDose = $0 }
+            ),
+            showingFoodSearchWithScan: Binding(
+                get: { showingFoodSearchWithScan },
+                set: { showingFoodSearchWithScan = $0 }
             )
         )
 
         // Bindings should be set
         #expect(sheet.showingFoodSearch == false)
         #expect(sheet.showingQuickDose == false)
+        #expect(sheet.showingFoodSearchWithScan == false)
     }
 
     // MARK: - Top Row Shortcut Tests
@@ -50,14 +56,14 @@ struct ShortcutsSheetTests {
         #expect(searchShortcut?.icon == "magnifyingglass")
     }
 
-    @Test("ShortcutsSheet has Barcode shortcut disabled")
+    @Test("ShortcutsSheet has Barcode shortcut enabled")
     @MainActor
-    func hasBarcodeShortcutDisabled() {
+    func hasBarcodeShortcutEnabled() {
         let shortcuts = ShortcutsSheet.topRowShortcuts
 
         let barcodeShortcut = shortcuts.first { $0.label == "Barcode" }
         #expect(barcodeShortcut != nil)
-        #expect(barcodeShortcut?.isEnabled == false)
+        #expect(barcodeShortcut?.isEnabled == true)
         #expect(barcodeShortcut?.icon == "barcode.viewfinder")
     }
 

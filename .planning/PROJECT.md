@@ -1,103 +1,102 @@
----
-created: 2025-12-22T15:38:18Z
-updated: 2025-12-22T15:38:18Z
----
+# MacroKinetic
 
-# Custom Foods
+## Current State (Updated: 2025-12-24)
+
+**Shipped:** v0.1.0 Custom Foods (2025-12-24)
+**Status:** Development / TestFlight
+**Codebase:** ~41,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+
+**v0.1.0 Delivered:**
+- Custom food creation and management with CloudKit sync
+- Barcode scanning for quick food lookup
+- "My Foods" section with search prioritization
+- "To Custom" prefill and "Create & Add" flows
+
+## Next Milestone Goals
+
+**Vision:** See PRD for planned features - Macro Goals, Protein Alerts, HealthKit, or Subscription
+
+**Candidates:**
+- Macro Goals & Daily Tracking - Goal configuration UI with progress rings
+- Protein Preservation Alerts - Minimum protein thresholds and notifications
+- HealthKit Integration - Weight sync and calorie calculations
+- Subscription Management - StoreKit 2 integration and paywall
 
 ## Vision
 
-Add the ability for users to create and manage custom foods in their personal Food Library. When viewing any food from the database, users can tap "To Custom" to create a personalized version with modified name, macros, and serving information. This solves the common problem of inaccurate database entries, homemade meals, and meal prep foods that don't exist in standard databases.
+MacroKinetic is a comprehensive iOS weight management app combining precision nutrition tracking with optional GLP-1 medication management. The app serves anyone on a weight loss or nutrition journey, with specialized features for GLP-1 medication users wanting integrated medication + nutrition tracking.
 
-Custom foods become first-class citizens in the app — appearing prominently in search results and accessible from a dedicated "My Foods" section. Users can assign barcodes to their custom foods, enabling quick scanning of frequently-used products that may have inaccurate or missing database entries.
+See [project-prd.md](./project-prd.md) for complete product requirements and feature status.
 
 ## Problem
 
-Users frequently encounter foods that:
-- Have inaccurate macro information in the database
-- Don't exist in the database (homemade meals, meal prep, local products)
-- Need personalized serving sizes (e.g., "my usual protein shake")
-- Are packaged products with barcodes but poor database coverage
-
-Currently, users must search for the closest match each time and mentally adjust the macros. There's no way to save a corrected or custom food for reuse.
+Weight management apps either focus purely on calorie counting (ignoring medication effects) or medication tracking (ignoring nutrition). Users on GLP-1 medications experience appetite changes that affect eating patterns, but no app connects these dots. Additionally, food databases are often inaccurate, and users need the ability to create and manage custom foods for their specific needs.
 
 ## Success Criteria
 
 How we know this worked:
 
-- [ ] "To Custom" button on Food Details opens Create Food view pre-filled with current food data
-- [ ] Users can edit all fields: name, calories, protein, fat, carbs, serving size, serving description
-- [ ] Two save actions: "Create" (save to library) and "Create & Add" (save + add to current meal)
-- [ ] Custom foods appear in dedicated "My Foods" section in search UI
-- [ ] Custom foods prioritized at top of general search results
-- [ ] Full edit capability for existing custom foods from Food Library
-- [ ] Delete custom food capability
-- [ ] Barcode assignment via camera scan or manual entry
-- [ ] Custom foods sync across devices via CloudKit
-- [ ] Works fully offline, syncs when connection available
+- [x] Custom food creation and barcode scanning for personalized entries
+- [ ] Complete nutrition tracking with macro goals and progress tracking
+- [ ] GLP-1 medication tracking with pharmacokinetics modeling
+- [ ] Medication-nutrition correlation insights
+- [x] CloudKit sync across all user devices
+- [x] Offline-first functionality
 
 ## Scope
 
-### Building
-- Create Food view/sheet pre-filled from Food Details
-- CustomFood SwiftData model with CloudKit compatibility
-- Food Library storage and retrieval service
-- "My Foods" section in FoodSearchSheet
-- Search result prioritization logic for custom foods
-- Edit custom food flow
-- Delete custom food with confirmation
-- Barcode scanner (AVFoundation camera integration)
-- Manual barcode entry field
-- Barcode-to-custom-food lookup during search
+### Completed (v0.1.0)
+- Custom food creation and management
+- Barcode scanning for quick food lookup
+- Food Library with "My Foods" section
+
+### Future Milestones (see PRD)
+- Macro Goals & Daily Tracking
+- Protein Preservation Alerts
+- HealthKit Integration
+- Medication-Nutrition Correlation
+- Unified Dashboard & Analytics
 
 ### Not Building
-- Recipe builder (combining multiple foods into calculated recipe)
-- Sharing custom foods with other users
-- Importing custom foods from external sources
-- Nutritional analysis beyond basic macros (micronutrients, etc.)
+- Recipe builder (combining multiple foods into calculated recipe) - deferred
+- Social features / sharing custom foods
+- Micronutrient tracking beyond basic macros
 
 ## Context
 
-**Current State:** Brownfield — MacroKinetic has complete food database infrastructure (1.7M+ foods), meal logging UI, and FoodDetailSheet. The "To Custom" button exists in the UI but is not yet functional.
+**Current State:** Brownfield — MacroKinetic has complete food database infrastructure (1.7M+ foods), meal logging UI, medication tracking, dose scheduling, pharmacokinetics engine, CloudKit sync, and now custom foods with barcode scanning.
 
 **Existing Architecture:**
 - `Food` model for database foods (SQLite FTS5)
+- `CustomFoodService` for user-created foods (SwiftData + CloudKit)
 - `FoodEntry` model for logged meals (SwiftData + CloudKit)
 - `FoodService` orchestrates search across sources
-- `LocalFoodDatabase` handles SQLite queries
-- `FoodDetailSheet` displays food and handles logging
-
-**Integration Points:**
-- FoodDetailSheet: Add "To Custom" action
-- FoodSearchSheet: Add "My Foods" section, prioritize custom in results
-- FoodService: Extend to search custom foods
-- New: CustomFood model, CustomFoodService, CreateFoodSheet
+- Complete medication tracking subsystem
+- MVVM architecture with @Observable ViewModels
 
 ## Constraints
 
-- **CloudKit Sync**: Custom foods must sync across user's devices via iCloud, following existing SwiftData + CloudKit patterns
+- **CloudKit Sync**: All user data must sync across devices via iCloud
 - **Offline-First**: Full functionality without network; sync when available
-- **Existing Patterns**: Must follow MVVM architecture, @Observable ViewModels, service layer conventions
-- **iOS 17+**: Use modern SwiftUI and SwiftData APIs
+- **MVVM Architecture**: @Observable ViewModels, service layer conventions
+- **iOS 17+**: Modern SwiftUI and SwiftData APIs
+- **Testing**: 85%+ coverage for business logic and view models
 
 ## Decisions Made
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Data Model | New `CustomFood` SwiftData model | Separates custom foods from bundled database, enables CloudKit sync |
-| Create Flow | Modal sheet or push nav | Flexibility based on UX feel during implementation |
-| Save Actions | "Create" + "Create & Add" | Supports both "save for later" and "save and log now" workflows |
-| Barcode Assignment | Scan + Manual Entry | Camera for convenience, manual as fallback |
-| Search Priority | Custom foods first | Users' own foods should surface before generic database matches |
+| Data Model | Reuse `Food` model with source = .userCreated | Existing infrastructure supports custom foods without new model |
+| Food Database | SQLite FTS5 with 1.7M+ foods | Fast full-text search, offline-first, includes barcodes |
+| Medication Modeling | Exponential decay pharmacokinetics | Accurate concentration tracking for GLP-1 medications |
+| Barcode Scanning | AVFoundation with debouncing | Native performance, 2-second debounce prevents duplicates |
 
 ## Open Questions
 
-Things to figure out during execution:
-
-- [ ] Should CustomFood have a `sourceFood` reference linking to original database food?
-- [ ] UX for barcode conflicts (custom food vs database food with same barcode)
-- [ ] Maximum number of custom foods? (Probably unlimited, but worth considering)
-- [ ] Should "My Foods" section be collapsible/expandable in search?
+- [ ] Optimal approach for medication-nutrition correlation engine
+- [ ] HealthKit integration scope and permissions flow
+- [ ] Subscription tier structure and paywall placement
 
 ---
 *Initialized: 2025-12-22*
+*v0.1.0 Shipped: 2025-12-24*

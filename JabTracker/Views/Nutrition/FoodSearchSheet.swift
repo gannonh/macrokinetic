@@ -5,7 +5,14 @@
 //  Enhanced food search sheet with categorized results.
 //
 
+import OSLog
 import SwiftUI
+
+/// Logger for FoodSearchSheet
+private let logger = Logger(
+    subsystem: "com.gannonhall.JabTracker",
+    category: "FoodSearchSheet"
+)
 
 /// Full-screen food search sheet with method tabs and categorized results
 struct FoodSearchSheet: View {
@@ -14,7 +21,12 @@ struct FoodSearchSheet: View {
     let user: User
     let foodService: FoodService?
     let mealLogService: MealLogService?
+    let customFoodService: CustomFoodService?
     let onComplete: () -> Void
+
+    // MARK: - Environment
+
+    @Environment(\.dismiss) private var dismiss
 
     // MARK: - State
 
@@ -22,8 +34,21 @@ struct FoodSearchSheet: View {
     @State var selectedFood: FoodSearchResult?
     @State var showingFoodDetail = false
     @State private var showingComingSoon = false
-    @State private var showingTimePicker = false
-    @Environment(\.dismiss) private var dismiss
+    @State var showingTimePicker = false
+    @State var editingCustomFood: Food?
+    @State var foodToDelete: Food?
+    @State var showingDeleteConfirmation = false
+    @State private var showingDeleteError = false
+    @State var isLookingUpBarcode = false
+    @State var barcodeNotFound = false
+    @State var lastScannedBarcode: String?
+
+    // MARK: - Constants
+
+    /// Debounce timing for search input
+    private enum SearchTiming {
+        static let debounceNanoseconds: UInt64 = 200_000_000
+    }
 
     // MARK: - Static Identifiers
 
@@ -37,20 +62,27 @@ struct FoodSearchSheet: View {
         user: User,
         foodService: FoodService?,
         mealLogService: MealLogService?,
+        customFoodService: CustomFoodService? = nil,
+        initialMethod: SearchMethod? = nil,
         onComplete: @escaping () -> Void
     ) {
         self.user = user
         self.foodService = foodService
         self.mealLogService = mealLogService
+        self.customFoodService = customFoodService
         self.onComplete = onComplete
 
         // Initialize ViewModel with services
         if let fs = foodService, let mls = mealLogService {
-            self._viewModel = State(
-                wrappedValue: FoodSearchSheetViewModel(
-                    foodService: fs,
-                    mealLogService: mls
-                ))
+            let vm = FoodSearchSheetViewModel(
+                foodService: fs,
+                mealLogService: mls
+            )
+            // Set initial method if provided
+            if let method = initialMethod {
+                vm.selectedMethod = method
+            }
+            self._viewModel = State(wrappedValue: vm)
         } else {
             // Fallback for previews - will need proper DI
             fatalError("FoodSearchSheet requires non-nil foodService and mealLogService")
@@ -68,11 +100,34 @@ struct FoodSearchSheet: View {
                 // Method tabs
                 methodTabsSection
 
-                // Search field
-                searchFieldSection
+                // Show scanner or search UI based on selected method
+                if viewModel.selectedMethod == .scan {
+                    ZStack {
+                        BarcodeScannerContentView { barcode in
+                            Task {
+                                await handleBarcodeDetected(barcode)
+                            }
+                        }
 
-                // Content: Recent foods or search results
-                contentSection
+                        // Loading overlay
+                        if isLookingUpBarcode {
+                            VStack {
+                                ProgressView("Looking up product...")
+                                    .padding()
+                                    .background(.regularMaterial)
+                                    .cornerRadius(12)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color.black.opacity(0.3))
+                        }
+                    }
+                } else {
+                    // Search field
+                    searchFieldSection
+
+                    // Content: Recent foods or search results
+                    contentSection
+                }
             }
             .navigationTitle("Add Food")
             .navigationBarTitleDisplayMode(.inline)
@@ -94,7 +149,8 @@ struct FoodSearchSheet: View {
                     selectedMeal: MealSection.from(date: viewModel.selectedTime),
                     selectedTime: viewModel.selectedTime,
                     foodService: foodService,
-                    mealLogService: mealLogService
+                    mealLogService: mealLogService,
+                    customFoodService: customFoodService
                 ) {
                     onComplete()
                     dismiss()
@@ -106,87 +162,55 @@ struct FoodSearchSheet: View {
         } message: {
             Text("\(viewModel.selectedMethod.displayName) will be available in a future update.")
         }
+        .alert("Delete Custom Food?", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                foodToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let food = foodToDelete {
+                    Task { await deleteCustomFood(food) }
+                }
+            }
+        } message: {
+            if let food = foodToDelete {
+                Text("This will permanently delete '\(food.name)' from your custom foods.")
+            }
+        }
+        .sheet(item: $editingCustomFood) { food in
+            if let customFoodService {
+                CreateFoodSheet.edit(
+                    food: food,
+                    customFoodService: customFoodService,
+                    onFoodCreated: { _ in
+                        editingCustomFood = nil
+                        // Refresh search results to show updated food
+                        Task {
+                            await viewModel.performSearch()
+                        }
+                    }
+                )
+            }
+        }
+        .alert("Delete Failed", isPresented: $showingDeleteError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Unable to delete the custom food. Please try again.")
+        }
+        .alert("Product Not Found", isPresented: $barcodeNotFound) {
+            Button("Scan Again") {
+                barcodeNotFound = false
+            }
+            Button("Search Instead") {
+                viewModel.selectedMethod = .search
+                viewModel.searchText = lastScannedBarcode ?? ""
+                barcodeNotFound = false
+            }
+        } message: {
+            Text("No product found for barcode \(lastScannedBarcode ?? ""). Try scanning again or search manually.")
+        }
         .task {
             await viewModel.loadInitialData(user: user, for: Date())
         }
-    }
-
-    // MARK: - Header Section
-
-    private var headerSection: some View {
-        HStack {
-            // Time picker button
-            Button {
-                showingTimePicker = true
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.caption)
-                    Text(viewModel.selectedTime, format: .dateTime.hour().minute())
-                        .font(.subheadline.weight(.medium))
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color(.tertiarySystemFill))
-                .cornerRadius(8)
-            }
-            .accessibilityIdentifier(Self.timePickerIdentifier)
-            .sheet(isPresented: $showingTimePicker) {
-                timePickerSheet
-            }
-
-            Spacer()
-
-            // Remaining macros display
-            HStack(spacing: 12) {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingCalories)) left")
-                        .font(.caption.weight(.medium))
-                    Text("Calories")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                Divider()
-                    .frame(height: 24)
-
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingProtein))g left")
-                        .font(.caption.weight(.medium))
-                    Text("Protein")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.secondarySystemBackground))
-    }
-
-    // MARK: - Time Picker Sheet
-
-    private var timePickerSheet: some View {
-        NavigationStack {
-            DatePicker(
-                "Entry Time",
-                selection: $viewModel.selectedTime,
-                displayedComponents: [.hourAndMinute]
-            )
-            .datePickerStyle(.wheel)
-            .labelsHidden()
-            .padding()
-            .navigationTitle("Select Time")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        showingTimePicker = false
-                    }
-                }
-            }
-        }
-        .presentationDetents([.fraction(0.4)])
     }
 
     // MARK: - Method Tabs Section
@@ -278,8 +302,7 @@ struct FoodSearchSheet: View {
         .onChange(of: viewModel.searchText) { _, _ in
             // Trigger search on any input (no minimum)
             Task {
-                // Small debounce
-                try? await Task.sleep(nanoseconds: 200_000_000)
+                try? await Task.sleep(nanoseconds: SearchTiming.debounceNanoseconds)
                 await viewModel.performSearch()
             }
         }
@@ -331,6 +354,37 @@ struct FoodSearchSheet: View {
             FoodSearchResultRow(result: result)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Custom Food Helpers
+
+    /// Look up the actual Food entity for a custom food search result
+    func findCustomFood(for result: FoodSearchResult) -> Food? {
+        guard let customFoodService else {
+            logger.warning("CustomFoodService unavailable for findCustomFood")
+            return nil
+        }
+        do {
+            return try customFoodService.getCustomFood(named: result.name)
+        } catch {
+            logger.error("Failed to find custom food '\(result.name)': \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Delete a custom food after confirmation
+    private func deleteCustomFood(_ food: Food) async {
+        guard let customFoodService else { return }
+        do {
+            try await customFoodService.deleteCustomFood(food)
+            foodToDelete = nil
+            // Refresh search results to remove deleted food
+            await viewModel.performSearch()
+            logger.info("Deleted custom food: \(food.name)")
+        } catch {
+            logger.error("Failed to delete custom food '\(food.name)': \(error.localizedDescription)")
+            showingDeleteError = true
+        }
     }
 
 }
