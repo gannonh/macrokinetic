@@ -360,8 +360,16 @@ struct FoodSearchSheet: View {
 
     /// Look up the actual Food entity for a custom food search result
     func findCustomFood(for result: FoodSearchResult) -> Food? {
-        guard let customFoodService else { return nil }
-        return try? customFoodService.getCustomFood(named: result.name)
+        guard let customFoodService else {
+            logger.warning("CustomFoodService unavailable for findCustomFood")
+            return nil
+        }
+        do {
+            return try customFoodService.getCustomFood(named: result.name)
+        } catch {
+            logger.error("Failed to find custom food '\(result.name)': \(error.localizedDescription)")
+            return nil
+        }
     }
 
     /// Delete a custom food after confirmation

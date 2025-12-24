@@ -55,7 +55,7 @@ enum ScanType: String, CaseIterable, Identifiable {
 struct BarcodeScannerContentView: View {
     // MARK: - Properties
 
-    /// Callback when a barcode is detected (placeholder for Phase 2)
+    /// Callback when a barcode is detected
     let onBarcodeDetected: (String) -> Void
 
     // MARK: - State
@@ -91,11 +91,13 @@ struct BarcodeScannerContentView: View {
             // Sub-toggle row
             subToggleRow
 
-            // Main content: camera preview or permission denied
+            // Main content: camera preview, error state, or permission denied
             if cameraService.authorizationStatus == .denied
                 || cameraService.authorizationStatus == .restricted
             {
                 permissionDeniedView
+            } else if let error = cameraService.sessionError {
+                cameraErrorView(error: error)
             } else {
                 cameraPreviewSection
             }
@@ -250,10 +252,27 @@ struct BarcodeScannerContentView: View {
         ContentUnavailableView {
             Label("Camera Access Required", systemImage: "camera.fill")
         } description: {
-            Text("MacroKinetic needs camera access to scan barcodes. Please enable camera access in Settings.")
+            Text("JabTracker needs camera access to scan barcodes. Please enable camera access in Settings.")
         } actions: {
             Button("Open Settings") {
                 openAppSettings()
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
+    }
+
+    // MARK: - Camera Error View
+
+    private func cameraErrorView(error: CameraServiceError) -> some View {
+        ContentUnavailableView {
+            Label("Camera Error", systemImage: "exclamationmark.camera.fill")
+        } description: {
+            Text(error.localizedDescription)
+        } actions: {
+            Button("Try Again") {
+                startCameraSession()
             }
             .buttonStyle(.borderedProminent)
         }

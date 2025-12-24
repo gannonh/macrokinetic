@@ -216,7 +216,7 @@ final class FoodLibraryUITests: XCTestCase {
     // MARK: - Edit Custom Food
 
     /// User can edit custom food via swipe action
-    /// Acceptance: Swipe left reveals Edit, tapping opens CreateFoodSheet
+    /// Acceptance: Swipe right reveals Edit, tapping opens CreateFoodSheet
     func testUserCanEditCustomFoodFromSearch() {
         let customFoodName = "Editable Test Food"
 
@@ -338,7 +338,7 @@ final class FoodLibraryUITests: XCTestCase {
     // MARK: - Delete Custom Food
 
     /// User can delete custom food with confirmation
-    /// Acceptance: Swipe right shows Delete, confirmation alert appears
+    /// Acceptance: Swipe left shows Delete, confirmation alert appears
     func testUserCanDeleteCustomFoodWithConfirmation() {
         let customFoodName = "Food To Delete"
 

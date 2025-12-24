@@ -261,24 +261,37 @@ extension FoodSearchSheet {
         lastScannedBarcode = barcode
 
         // 1. Check custom foods first (local, fast)
-        if let customFood = try? await customFoodService?.lookup(barcode: barcode) {
-            selectedFood = customFood.toSearchResult()
-            isLookingUpBarcode = false
-            showingFoodDetail = true
-            logger.info("Found custom food for barcode: \(barcode)")
-            return
+        do {
+            if let customFood = try await customFoodService?.lookup(barcode: barcode) {
+                selectedFood = customFood.toSearchResult()
+                isLookingUpBarcode = false
+                showingFoodDetail = true
+                logger.info("Found custom food for barcode: \(barcode)")
+                return
+            }
+        } catch {
+            // Log but continue to API lookup - local lookup failure shouldn't block API
+            logger.error("Custom food barcode lookup failed: \(error.localizedDescription)")
         }
 
         // 2. Check Open Food Facts API
-        if let result = try? await foodService?.lookupBarcode(barcode) {
-            selectedFood = result
+        do {
+            if let result = try await foodService?.lookupBarcode(barcode) {
+                selectedFood = result
+                isLookingUpBarcode = false
+                showingFoodDetail = true
+                logger.info("Found Open Food Facts product for barcode: \(barcode)")
+                return
+            }
+        } catch {
+            // Log API lookup failure - this is more significant
+            logger.error("Open Food Facts barcode lookup failed: \(error.localizedDescription)")
+            // Don't show "not found" - this was a lookup error, not "not in database"
             isLookingUpBarcode = false
-            showingFoodDetail = true
-            logger.info("Found Open Food Facts product for barcode: \(barcode)")
             return
         }
 
-        // 3. Not found
+        // 3. Not found (both lookups succeeded but returned nil)
         isLookingUpBarcode = false
         barcodeNotFound = true
         logger.info("No product found for barcode: \(barcode)")

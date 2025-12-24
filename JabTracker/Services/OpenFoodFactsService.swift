@@ -85,7 +85,11 @@ final class OpenFoodFactsService {
             return nil
         }
 
-        let urlString = "\(baseURL)/api/v0/product/\(trimmedBarcode).json"
+        // URL-encode barcode for path safety (prevents URL injection)
+        guard let encodedBarcode = trimmedBarcode.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
+            throw OpenFoodFactsError.invalidURL
+        }
+        let urlString = "\(baseURL)/api/v0/product/\(encodedBarcode).json"
 
         guard let url = URL(string: urlString) else {
             throw OpenFoodFactsError.invalidURL

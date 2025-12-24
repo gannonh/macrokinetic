@@ -349,6 +349,7 @@ final class FoodService {
     /// - Returns: Custom food search results
     private func searchCustomFoods(query: String, limit: Int) async throws -> [FoodSearchResult] {
         guard let customFoodService = customFoodService else {
+            Self.logger.warning("CustomFoodService is nil - custom foods will not appear in search results")
             return []
         }
         let customFoods = try await customFoodService.search(query: query, limit: limit)

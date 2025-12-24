@@ -5,10 +5,15 @@
 //  Form for creating and editing custom foods.
 //
 
+import OSLog
 import SwiftUI
 
 /// Form sheet for creating or editing custom foods
 struct CreateFoodSheet: View {
+    // MARK: - Logger
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "CreateFoodSheet")
+
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
@@ -375,8 +380,8 @@ struct CreateFoodSheet: View {
                     )
                 } catch {
                     // Food was created but logging failed - inform user
+                    // (showingError is computed from errorMessage, so setting errorMessage is sufficient)
                     viewModel.errorMessage = "Food created but failed to log: \(error.localizedDescription)"
-                    viewModel.showingError = true
                     return
                 }
             }
@@ -384,7 +389,9 @@ struct CreateFoodSheet: View {
             onFoodCreated?(food)
             dismiss()
         } catch {
-            // Error is handled by viewModel's showingError
+            // Error should be handled by viewModel (sets errorMessage which triggers showingError)
+            // Log as safety net in case ViewModel error handling fails
+            logger.error("Save failed - viewModel should display error: \(error.localizedDescription)")
         }
     }
 }
