@@ -1,6 +1,6 @@
 ---
 created: 2024-01-15T00:00:00Z
-updated: 2025-12-21T22:39:46Z
+updated: 2025-12-24T16:00:30Z
 ---
 
 # MacroKinetic Product Requirements Document
@@ -174,6 +174,33 @@ Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
 
 ---
 
+### ✅ Custom Foods (Food Library)
+
+Issue: [#317](https://github.com/gannonh/jab-tracker-ios/issues/317)
+Completed: 2025-12-24
+
+| Requirement                                          | Done |
+| ---------------------------------------------------- | ---- |
+| CustomFood SwiftData model with CloudKit sync        | ✅    |
+| "To Custom" button opens CreateFoodSheet pre-filled  | ✅    |
+| Create food with custom name, macros, serving info   | ✅    |
+| "Create" and "Create & Add" save actions             | ✅    |
+| "My Foods" section in search results                 | ✅    |
+| Custom foods prioritized in search results           | ✅    |
+| Edit existing custom foods via swipe action          | ✅    |
+| Delete custom foods with confirmation                | ✅    |
+| Barcode scanner via Scan tab in FoodSearchSheet      | ✅    |
+| Barcode shortcut in ShortcutsSheet                   | ✅    |
+| Barcode lookup in Open Food Facts database           | ✅    |
+| Assign barcode to custom food                        | ✅    |
+| Works fully offline, syncs via CloudKit              | ✅    |
+
+**Deferred:**
+- Manual barcode entry field (scan-only for now)
+- Recipe builder (combining foods into calculated recipes)
+
+---
+
 ### 📋 User Model Extension (Nutrition Goals)
 
 | Requirement                    | Done |
@@ -186,15 +213,6 @@ Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
 
 ---
 
-### 📋 Tab Navigation Update
-
-| Requirement                              | Done |
-| ---------------------------------------- | ---- |
-| Update tab structure for nutrition focus |      |
-| "+" button opens food/dose picker        |      |
-| Combined history view (meals + doses)    |      |
-
----
 
 ### 📋 Macro Goals & Daily Tracking
 
@@ -392,5 +410,6 @@ Issue: [#314](https://github.com/gannonh/jab-tracker-ios/issues/314)
 
 ## Update History
 
+- 2025-12-24: Added Custom Foods (Food Library) feature - completed with barcode scanning
 - 2025-12-20: Consolidated from macro-integration.md and project-prd.md into single sequenced PRD
 - 2025-12-19: Initial nutrition infrastructure documentation
