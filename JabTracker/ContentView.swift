@@ -19,6 +19,8 @@ struct ContentView: View {
     @State private var showingShortcuts = false
     @State private var showingFoodSearchSheet = false
     @State private var showingFoodSearchWithScan = false
+    /// The currently selected date in FoodLogView, shared for tab bar + button
+    @State private var selectedFoodLogDate = Date()
 
     // MARK: - Constants
 
@@ -44,7 +46,7 @@ struct ContentView: View {
                 }
                 .tag(Tab.dashboard)
 
-            FoodLogView()
+            FoodLogView(selectedDate: $selectedFoodLogDate)
                 .tabItem {
                     Label(Tab.foodLog.title, systemImage: Tab.foodLog.icon)
                 }
@@ -194,7 +196,8 @@ struct ContentView: View {
                 foodService: AppServices.shared.foodService,
                 mealLogService: AppServices.shared.mealLogService,
                 customFoodService: AppServices.shared.customFoodService,
-                initialMethod: initialMethod
+                initialMethod: initialMethod,
+                initialDate: selectedFoodLogDate
             ) {
                 // On complete - could show success message
             }

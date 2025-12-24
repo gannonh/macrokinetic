@@ -64,6 +64,7 @@ struct FoodSearchSheet: View {
         mealLogService: MealLogService?,
         customFoodService: CustomFoodService? = nil,
         initialMethod: SearchMethod? = nil,
+        initialDate: Date = Date(),
         onComplete: @escaping () -> Void
     ) {
         self.user = user
@@ -82,6 +83,19 @@ struct FoodSearchSheet: View {
             if let method = initialMethod {
                 vm.selectedMethod = method
             }
+            // Set initial date for logging - use current time of day on the selected date
+            // This ensures MealSection.from(date:) picks the right meal (not snacks at midnight)
+            let calendar = Calendar.current
+            let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: Date())
+            let dateComponents = calendar.dateComponents([.year, .month, .day], from: initialDate)
+            var combined = DateComponents()
+            combined.year = dateComponents.year
+            combined.month = dateComponents.month
+            combined.day = dateComponents.day
+            combined.hour = timeComponents.hour
+            combined.minute = timeComponents.minute
+            combined.second = timeComponents.second
+            vm.selectedTime = calendar.date(from: combined) ?? initialDate
             self._viewModel = State(wrappedValue: vm)
         } else {
             // Fallback for previews - will need proper DI

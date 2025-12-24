@@ -50,30 +50,49 @@ private struct MealTotals {
 struct FoodLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
-    @Query private var todayEntries: [FoodEntry]
+    @Query(sort: \FoodEntry.loggedAt, order: .forward) private var allEntries: [FoodEntry]
 
     @State private var showingAddFood = false
     @State private var entryToDelete: FoodEntry?
     @State private var showingDeleteConfirmation = false
     @State private var editingEntry: FoodEntry?
 
-    init() {
-        // Query entries for today
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? Date()
+    // Week calendar state - bound to parent for tab bar + button
+    @Binding var selectedDate: Date
+    @State private var entriesGroupedByDate: [Date: Int] = [:]
 
-        _todayEntries = Query(
-            filter: #Predicate<FoodEntry> { entry in
-                entry.loggedAt >= startOfDay && entry.loggedAt < endOfDay
-            },
-            sort: [SortDescriptor(\FoodEntry.loggedAt, order: .forward)]
-        )
+    private let calendar = Calendar.current
+
+    // MARK: - Static Formatters (cached for performance)
+
+    private static let summaryDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMM d"
+        return formatter
+    }()
+
+    init(selectedDate: Binding<Date>) {
+        self._selectedDate = selectedDate
+    }
+
+    /// Entries for the currently selected date
+    private var selectedDateEntries: [FoodEntry] {
+        allEntries.filter { calendar.isDate($0.loggedAt, inSameDayAs: selectedDate) }
     }
 
     var body: some View {
         NavigationStack {
             List {
+                // Week calendar navigation
+                Section {
+                    WeekCalendarStrip(
+                        selectedDate: $selectedDate,
+                        entriesGroupedByDate: entriesGroupedByDate
+                    )
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                    .listRowBackground(Color.clear)
+                }
+
                 // Daily summary section
                 Section {
                     dailySummaryCard
@@ -101,10 +120,12 @@ struct FoodLogView: View {
             }
             .sheet(isPresented: $showingAddFood) {
                 if let currentUser = users.first {
-                    AddFoodSheet(
+                    FoodSearchSheet(
                         user: currentUser,
                         foodService: AppServices.shared.foodService,
-                        mealLogService: AppServices.shared.mealLogService
+                        mealLogService: AppServices.shared.mealLogService,
+                        customFoodService: AppServices.shared.customFoodService,
+                        initialDate: selectedDate
                     ) {
                         showingAddFood = false
                     }
@@ -136,17 +157,56 @@ struct FoodLogView: View {
             }
         }
         .accessibilityIdentifier("food-log-view")
+        .task(id: selectedDate) {
+            loadWeekEntries()
+        }
+        .onChange(of: allEntries.count) {
+            loadWeekEntries()
+        }
+    }
+
+    // MARK: - Week Data Loading
+
+    /// Load entry counts for the current week (synchronous - data already in memory)
+    private func loadWeekEntries() {
+        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else {
+            return
+        }
+
+        var counts: [Date: Int] = [:]
+
+        // Get counts for each day of the week
+        for dayOffset in 0..<7 {
+            guard let dayDate = calendar.date(byAdding: .day, value: dayOffset, to: weekInterval.start) else {
+                continue
+            }
+            let startOfDay = calendar.startOfDay(for: dayDate)
+            let count = allEntries.filter { calendar.isDate($0.loggedAt, inSameDayAs: dayDate) }.count
+            counts[startOfDay] = count
+        }
+
+        entriesGroupedByDate = counts
     }
 
     // MARK: - Daily Summary
+
+    /// Title for daily summary - "Today" or formatted date
+    private var summaryTitle: String {
+        if calendar.isDateInToday(selectedDate) {
+            return "Today"
+        } else {
+            return Self.summaryDateFormatter.string(from: selectedDate)
+        }
+    }
 
     private var dailySummaryCard: some View {
         let totals = calculateTotals()
 
         return VStack(spacing: 12) {
-            Text("Today")
+            Text(summaryTitle)
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("daily-summary-title")
 
             HStack(spacing: 20) {
                 macroColumn(value: totals.calories, label: "Cal", color: .orange)
@@ -176,7 +236,7 @@ struct FoodLogView: View {
 
     @ViewBuilder
     private func mealSection(for section: MealSection) -> some View {
-        let entries = todayEntries.filter { $0.meal == section }
+        let entries = selectedDateEntries.filter { $0.meal == section }
         let totals = entries.isEmpty ? .zero : MealTotals(from: entries)
 
         Section {
@@ -252,10 +312,10 @@ struct FoodLogView: View {
 
     private func calculateTotals() -> DailyTotals {
         DailyTotals(
-            calories: todayEntries.reduce(0) { $0 + $1.calories },
-            protein: todayEntries.reduce(0) { $0 + $1.protein },
-            carbs: todayEntries.reduce(0) { $0 + $1.carbs },
-            fat: todayEntries.reduce(0) { $0 + $1.fat }
+            calories: selectedDateEntries.reduce(0) { $0 + $1.calories },
+            protein: selectedDateEntries.reduce(0) { $0 + $1.protein },
+            carbs: selectedDateEntries.reduce(0) { $0 + $1.carbs },
+            fat: selectedDateEntries.reduce(0) { $0 + $1.fat }
         )
     }
 
@@ -290,7 +350,8 @@ struct FoodLogView: View {
                 food: food,
                 servingGrams: entry.servingGrams,
                 mealSection: entry.meal,
-                notes: entry.notes ?? ""
+                notes: entry.notes ?? "",
+                loggedAt: selectedDate
             )
         } catch {
             logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
@@ -314,6 +375,6 @@ private struct EmptyMealRow: View {
 }
 
 #Preview {
-    FoodLogView()
+    FoodLogView(selectedDate: .constant(Date()))
         .modelContainer(for: FoodEntry.self, inMemory: true)
 }

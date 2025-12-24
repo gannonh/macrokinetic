@@ -27,10 +27,10 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 **Goal**: Week calendar navigation with day selection updating macro summary
 **Depends on**: Previous milestone complete
 **Research**: Unlikely (SwiftUI calendar patterns)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 05-01: TBD (run /gsd:plan-phase 5 to break down)
+- [x] 05-01: Week calendar strip with day selection and shared date state
 
 #### Phase 6: Food Entry Editing
 
@@ -95,7 +95,7 @@ Phases execute in numeric order within each milestone.
 | 2. Create Food UI | v0.1.0 | 2/2 | Complete | 2025-12-22 |
 | 3. Food Library Integration | v0.1.0 | 1/1 | Complete | 2025-12-23 |
 | 4. Barcode Assignment | v0.1.0 | 2/2 | Complete | 2025-12-23 |
-| 5. Food Log Calendar | v0.2.0 | 0/? | Not started | - |
+| 5. Food Log Calendar | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 6. Food Entry Editing | v0.2.0 | 0/? | Not started | - |
 | 7. Food Library | v0.2.0 | 0/? | Not started | - |
 | 8. Quick Add | v0.2.0 | 0/? | Not started | - |
