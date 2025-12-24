@@ -29,7 +29,9 @@
           "Models/FoodEntry.swift",
           "Models/FoodSource.swift",
           "Models/MealSection.swift",
-          "Models/FoodLibrarySortOption.swift"
+          "Models/FoodLibrarySortOption.swift",
+          "Models/LibraryTab.swift",
+          "Models/Food+Serving.swift"
         ]
       },
       "infrastructure": {

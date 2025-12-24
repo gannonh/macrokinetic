@@ -14,28 +14,6 @@ private let logger = Logger(
     category: "FoodLibraryContentView"
 )
 
-/// Library tabs for future expansion
-enum LibraryTab: String, CaseIterable {
-    case recipes
-    case foods
-    case favorites
-
-    var displayName: String {
-        switch self {
-        case .recipes: return "Recipes"
-        case .foods: return "Foods"
-        case .favorites: return "Favorites"
-        }
-    }
-
-    var isEnabled: Bool {
-        switch self {
-        case .foods: return true
-        default: return false
-        }
-    }
-}
-
 /// Content view for the Food Library showing custom foods
 struct FoodLibraryContentView: View {
     // MARK: - Properties
@@ -50,7 +28,7 @@ struct FoodLibraryContentView: View {
     // MARK: - State
 
     @State private var selectedTab: LibraryTab = .foods
-    @State private var selectedSort: FoodLibrarySortOption = .modified
+    @State private var selectedSort: FoodLibrarySortOption = .dateAdded
     @State private var customFoods: [Food] = []
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
@@ -70,6 +48,22 @@ struct FoodLibraryContentView: View {
         .accessibilityIdentifier("food-library-content")
         .task {
             await loadCustomFoods()
+        }
+        .onChange(of: editingCustomFood) { _, newValue in
+            // Reload when edit sheet is dismissed (food was nil, then set, then nil again)
+            if newValue == nil {
+                Task {
+                    await loadCustomFoods()
+                }
+            }
+        }
+        .onChange(of: showingDeleteConfirmation) { _, newValue in
+            // Reload when delete confirmation is dismissed
+            if !newValue {
+                Task {
+                    await loadCustomFoods()
+                }
+            }
         }
         .alert("Coming Soon", isPresented: $showingComingSoon) {
             Button("OK", role: .cancel) {}
@@ -308,34 +302,10 @@ struct FoodLibraryContentView: View {
 
     private func sortFoods() {
         switch selectedSort {
-        case .modified:
+        case .dateAdded:
             customFoods.sort { $0.createdAt > $1.createdAt }
         case .name:
             customFoods.sort { $0.name.lowercased() < $1.name.lowercased() }
         }
-    }
-}
-
-// MARK: - Food Extensions
-
-extension Food {
-    /// Calories per default serving
-    var caloriesPerServing: Double {
-        (caloriesPer100g / 100.0) * servingSize
-    }
-
-    /// Protein per default serving
-    var proteinPerServing: Double {
-        (proteinPer100g / 100.0) * servingSize
-    }
-
-    /// Carbs per default serving
-    var carbsPerServing: Double {
-        (carbsPer100g / 100.0) * servingSize
-    }
-
-    /// Fat per default serving
-    var fatPerServing: Double {
-        (fatPer100g / 100.0) * servingSize
     }
 }
