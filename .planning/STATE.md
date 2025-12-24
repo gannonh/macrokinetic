@@ -2,55 +2,54 @@
 
 ## Project Summary
 
-**Building:** Custom food creation and management for MacroKinetic, allowing users to create personalized foods with modified macros and barcode assignment.
+**Building:** Enhanced daily tracking for MacroKinetic with calendar navigation, food library management, quick macro entry, weight tracking with HealthKit, and body metrics with progress photos.
 
 **Core requirements:**
-- "To Custom" button on Food Details opens Create Food view pre-filled
-- Users can edit name, calories, protein, fat, carbs, serving size, serving description
-- Two save actions: "Create" and "Create & Add"
-- Custom foods appear in "My Foods" section and prioritized in search
-- Barcode assignment via camera scan or manual entry
+- Week calendar navigation in Food Log with day selection updating macro summary
+- Tap food entry to open editable FoodDetailSheet
+- Dedicated Food Library screen with Foods tab, sort options, tap-to-add
+- Quick Add for macro-only food logging without food lookup
+- Weight and body fat tracking with HealthKit sync
+- Configurable body metrics with progress photo capture
 
 **Constraints:**
 - CloudKit sync required for cross-device access
 - Offline-first functionality
 - Follow existing MVVM architecture and @Observable patterns
 - iOS 17+ APIs only
+- HealthKit authorization required for weight sync
 
 ## Current Position
 
-Phase: 4 of 4 (Barcode Assignment)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2025-12-23 - Completed 04-02-PLAN.md
+Phase: 5 of 10 (Food Log Calendar)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2025-12-24 - Milestone v0.2.0 created
 
-Progress: ██████████ 100%
+Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: #317
-PR: #318
-Branch: feat/317-custom-foods
+Issue: TBD
+PR: TBD
+Branch: TBD
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 7 min
-- Total execution time: 0.67 hours
+- Total plans completed: 0
+- Average duration: -
+- Total execution time: 0 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 | 1 | 15 min | 15 min |
-| 2 | 2 | 11 min | 5.5 min |
-| 3 | 1 | 6 min | 6 min |
-| 4 | 2 | 8 min | 4 min |
+| 5 | 0 | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 7 min, 4 min, 6 min, 3 min, 5 min
-- Trend: Improving
+- Last 5 plans: -
+- Trend: New milestone
 
 *Updated after each plan completion*
 
@@ -60,12 +59,7 @@ Branch: feat/317-custom-foods
 
 | Phase | Decision | Rationale |
 |-------|----------|-----------|
-| 1 | Reuse Food model with source = .userCreated | No new model needed; existing infrastructure supports custom foods |
-| 1 | Barcode uniqueness within custom foods only | Database foods can share barcodes; user custom foods must be unique |
-| 1 | Case-insensitive search for custom food names | Better user experience when searching |
-| 3 | State variables internal instead of private | Needed for extension file access in FoodSearchSheet |
-| 4 | @preconcurrency import AVFoundation | Cleanly handles Sendable warnings for AVCaptureSession |
-| 4 | Label scan type disabled initially | Placeholder for future OCR/label scanning functionality |
+| - | - | - |
 
 ### Deferred Issues
 
@@ -77,13 +71,13 @@ None yet.
 
 ## Project Alignment
 
-Last checked: Project start
+Last checked: 2025-12-24
 Status: ✓ Aligned
-Assessment: No work done yet - baseline alignment.
+Assessment: New milestone - baseline alignment.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-23T18:52:46Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2025-12-24T17:56:58Z
+Stopped at: Milestone v0.2.0 initialization
 Resume file: None
