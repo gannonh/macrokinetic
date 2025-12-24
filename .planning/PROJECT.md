@@ -1,5 +1,27 @@
 # MacroKinetic
 
+## Current State (Updated: 2025-12-24)
+
+**Shipped:** v0.1.0 Custom Foods (2025-12-24)
+**Status:** Development / TestFlight
+**Codebase:** ~41,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+
+**v0.1.0 Delivered:**
+- Custom food creation and management with CloudKit sync
+- Barcode scanning for quick food lookup
+- "My Foods" section with search prioritization
+- "To Custom" prefill and "Create & Add" flows
+
+## Next Milestone Goals
+
+**Vision:** See PRD for planned features - Macro Goals, Protein Alerts, HealthKit, or Subscription
+
+**Candidates:**
+- Macro Goals & Daily Tracking - Goal configuration UI with progress rings
+- Protein Preservation Alerts - Minimum protein thresholds and notifications
+- HealthKit Integration - Weight sync and calorie calculations
+- Subscription Management - StoreKit 2 integration and paywall
+
 ## Vision
 
 MacroKinetic is a comprehensive iOS weight management app combining precision nutrition tracking with optional GLP-1 medication management. The app serves anyone on a weight loss or nutrition journey, with specialized features for GLP-1 medication users wanting integrated medication + nutrition tracking.
@@ -14,16 +36,16 @@ Weight management apps either focus purely on calorie counting (ignoring medicat
 
 How we know this worked:
 
-- [ ] Complete nutrition tracking with 1.7M+ food database
-- [ ] Custom food creation and barcode scanning for personalized entries
+- [x] Custom food creation and barcode scanning for personalized entries
+- [ ] Complete nutrition tracking with macro goals and progress tracking
 - [ ] GLP-1 medication tracking with pharmacokinetics modeling
 - [ ] Medication-nutrition correlation insights
-- [ ] CloudKit sync across all user devices
-- [ ] Offline-first functionality
+- [x] CloudKit sync across all user devices
+- [x] Offline-first functionality
 
 ## Scope
 
-### Building (Current Focus: Custom Foods v0.1.0)
+### Completed (v0.1.0)
 - Custom food creation and management
 - Barcode scanning for quick food lookup
 - Food Library with "My Foods" section
@@ -42,10 +64,11 @@ How we know this worked:
 
 ## Context
 
-**Current State:** Brownfield — MacroKinetic has complete food database infrastructure (1.7M+ foods), meal logging UI, medication tracking, dose scheduling, pharmacokinetics engine, and CloudKit sync. The Custom Foods feature (v0.1.0) is the first milestone managed via GSD.
+**Current State:** Brownfield — MacroKinetic has complete food database infrastructure (1.7M+ foods), meal logging UI, medication tracking, dose scheduling, pharmacokinetics engine, CloudKit sync, and now custom foods with barcode scanning.
 
 **Existing Architecture:**
 - `Food` model for database foods (SQLite FTS5)
+- `CustomFoodService` for user-created foods (SwiftData + CloudKit)
 - `FoodEntry` model for logged meals (SwiftData + CloudKit)
 - `FoodService` orchestrates search across sources
 - Complete medication tracking subsystem
@@ -63,9 +86,10 @@ How we know this worked:
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Data Model | Separate `CustomFood` SwiftData model | Separates user foods from bundled database, enables CloudKit sync |
+| Data Model | Reuse `Food` model with source = .userCreated | Existing infrastructure supports custom foods without new model |
 | Food Database | SQLite FTS5 with 1.7M+ foods | Fast full-text search, offline-first, includes barcodes |
 | Medication Modeling | Exponential decay pharmacokinetics | Accurate concentration tracking for GLP-1 medications |
+| Barcode Scanning | AVFoundation with debouncing | Native performance, 2-second debounce prevents duplicates |
 
 ## Open Questions
 
@@ -75,4 +99,4 @@ How we know this worked:
 
 ---
 *Initialized: 2025-12-22*
-*Restructured to project scope: 2025-12-24*
+*v0.1.0 Shipped: 2025-12-24*
