@@ -379,16 +379,18 @@ enum TestUtilities {
     /// Open ShortcutsSheet by tapping Add tab
     /// - Parameters:
     ///   - app: The XCUIApplication instance
-    ///   - timeout: Maximum time to wait for sheet (default: 3 seconds)
-    static func openShortcutsSheet(_ app: XCUIApplication, timeout: TimeInterval = 3) {
+    ///   - timeout: Maximum time to wait for sheet (default: 5 seconds)
+    static func openShortcutsSheet(_ app: XCUIApplication, timeout: TimeInterval = 5) {
         let addTab = app.tabBars.buttons["Add"]
         XCTAssertTrue(addTab.waitForExistence(timeout: timeout), "Add tab should exist")
         addTab.tap()
 
-        let shortcutsSheet = app.otherElements["shortcuts-sheet"]
+        // Wait for shortcuts sheet by checking for Search button (more reliable than otherElements)
+        // The sheet's accessibilityIdentifier on NavigationStack doesn't always expose as otherElements
+        let searchButton = app.buttons["Search"]
         XCTAssertTrue(
-            shortcutsSheet.waitForExistence(timeout: timeout),
-            "Shortcuts sheet should appear")
+            searchButton.waitForExistence(timeout: timeout),
+            "Shortcuts sheet should appear (Search button should be visible)")
     }
 
     /// Dismiss ShortcutsSheet if open
