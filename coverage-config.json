@@ -31,7 +31,8 @@
           "Models/MealSection.swift",
           "Models/FoodLibrarySortOption.swift",
           "Models/LibraryTab.swift",
-          "Models/Food+Serving.swift"
+          "Models/Food+Serving.swift",
+          "Models/WeightEntry.swift"
         ]
       },
       "infrastructure": {
@@ -63,7 +64,8 @@
           "Services/OpenFoodFactsService.swift",
           "Services/FoodService.swift",
           "Services/MealLogService.swift",
-          "Services/CustomFoodService.swift"
+          "Services/CustomFoodService.swift",
+          "Services/WeightService.swift"
         ]
       },
       "framework_integration": {
@@ -74,6 +76,7 @@
           "Services/NotificationService+Actions.swift",
           "Services/SubscriptionManager.swift",
           "Services/SubscriptionManager+Testing.swift",
+          "Services/WeightService+HealthKit.swift",
           "Onboarding/OnboardingCoordinator.swift",
           "Onboarding/OnboardingViewModel.swift",
           "Views/Analytics/ConcentrationChartGestureHandler.swift",

@@ -68,10 +68,12 @@ Plans:
 **Depends on**: Phase 8
 **Research**: Likely (HealthKit integration)
 **Research topics**: HealthKit authorization, reading/writing weight and body fat data
-**Plans**: TBD
+**Plans**: 3
 
 Plans:
-- [ ] 09-01: TBD
+- [x] 09-01: WeightEntry model + WeightService with HealthKit sync
+- [ ] 09-02: QuickWeightSheet UI and ShortcutsSheet wiring
+- [ ] 09-03: Unit tests and E2E test stubs
 
 #### Phase 10: Metrics & Photos
 
@@ -99,5 +101,5 @@ Phases execute in numeric order within each milestone.
 | 6. Food Entry Editing | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 7. Food Library | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 8. Quick Add | v0.2.0 | 1/1 | Complete | 2025-12-25 |
-| 9. Weight Tracking | v0.2.0 | 0/? | Not started | - |
+| 9. Weight Tracking | v0.2.0 | 1/3 | In progress | - |
 | 10. Metrics & Photos | v0.2.0 | 0/? | Not started | - |

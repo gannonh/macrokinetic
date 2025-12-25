@@ -28,6 +28,9 @@ final class AppServices: ObservableObject {
     /// Custom food service for user-created food CRUD operations
     @Published private(set) var customFoodService: CustomFoodService?
 
+    /// Weight service for weight tracking and HealthKit sync
+    @Published private(set) var weightService: WeightService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -63,6 +66,10 @@ final class AppServices: ObservableObject {
         // Create MealLogService for meal logging
         let mealLogService = MealLogService(context: modelContext)
         self.mealLogService = mealLogService
+
+        // Create WeightService for weight tracking
+        let weightService = WeightService(context: modelContext)
+        self.weightService = weightService
     }
 
     /// Reset services (useful for testing or sign-out)
@@ -72,6 +79,7 @@ final class AppServices: ObservableObject {
         foodService = nil
         mealLogService = nil
         customFoodService = nil
+        weightService = nil
     }
 }
 
