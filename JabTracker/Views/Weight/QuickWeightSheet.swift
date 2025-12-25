@@ -6,11 +6,17 @@
 //
 
 import HealthKit
+import OSLog
 import SwiftData
 import SwiftUI
 
 /// Quick weight entry sheet for logging weight via shortcuts
 struct QuickWeightSheet: View {
+    // MARK: - Constants
+
+    private static let unitKg = "kg"
+    private static let unitLbs = "lbs"
+
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
@@ -20,7 +26,7 @@ struct QuickWeightSheet: View {
     // MARK: - State
 
     @State private var weightInput: String = ""
-    @State private var weightUnit: String = "kg"
+    @State private var weightUnit: String = unitKg
     @State private var bodyFatInput: String = ""
     @State private var timestamp: Date = Date()
     @State private var syncToHealthKit: Bool = true
@@ -28,6 +34,13 @@ struct QuickWeightSheet: View {
     @State private var errorMessage: String?
     @State private var showingError: Bool = false
     @State private var healthKitAuthorized: Bool = false
+
+    // MARK: - Logger
+
+    private let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "QuickWeightSheet"
+    )
 
     // MARK: - Computed Properties
 
@@ -39,17 +52,21 @@ struct QuickWeightSheet: View {
         guard let weight = Double(weightInput), weight > 0 else {
             return false
         }
-
-        // If body fat is provided, validate it
-        if !bodyFatInput.isEmpty {
-            guard let bodyFat = Double(bodyFatInput),
-                bodyFat >= 0 && bodyFat <= 100
-            else {
-                return false
-            }
+        guard bodyFatInput.isEmpty || parsedBodyFat != nil else {
+            return false
         }
-
         return true
+    }
+
+    /// Parsed body fat percentage, or nil if empty or invalid
+    private var parsedBodyFat: Double? {
+        guard !bodyFatInput.isEmpty,
+            let bodyFat = Double(bodyFatInput),
+            bodyFat >= 0 && bodyFat <= 100
+        else {
+            return nil
+        }
+        return bodyFat
     }
 
     private var weightInKg: Double? {
@@ -57,7 +74,7 @@ struct QuickWeightSheet: View {
             return nil
         }
 
-        if weightUnit == "lbs" {
+        if weightUnit == Self.unitLbs {
             return weight / WeightEntry.kgToLbsConversion
         }
         return weight
@@ -69,6 +86,8 @@ struct QuickWeightSheet: View {
     static let weightInputIdentifier = "weight-input"
     static let weightUnitPickerIdentifier = "weight-unit-picker"
     static let bodyFatInputIdentifier = "body-fat-input"
+    static let datePickerIdentifier = "weight-date-picker"
+    static let healthKitToggleIdentifier = "healthkit-sync-toggle"
     static let saveButtonIdentifier = "save-weight-button"
 
     // MARK: - Body
@@ -118,8 +137,8 @@ struct QuickWeightSheet: View {
                     .accessibilityIdentifier(Self.weightInputIdentifier)
 
                 Picker("Unit", selection: $weightUnit) {
-                    Text("kg").tag("kg")
-                    Text("lbs").tag("lbs")
+                    Text("kg").tag(Self.unitKg)
+                    Text("lbs").tag(Self.unitLbs)
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 100)
@@ -149,12 +168,14 @@ struct QuickWeightSheet: View {
                 in: ...Date(),
                 displayedComponents: [.date, .hourAndMinute]
             )
+            .accessibilityIdentifier(Self.datePickerIdentifier)
         }
     }
 
     private var healthKitSection: some View {
         Section {
             Toggle("Sync to Apple Health", isOn: $syncToHealthKit)
+                .accessibilityIdentifier(Self.healthKitToggleIdentifier)
         } footer: {
             Text("Weight will also be saved to the Health app")
         }
@@ -170,26 +191,29 @@ struct QuickWeightSheet: View {
 
         // Try to load last weight entry as default
         Task {
-            if let service = weightService,
-                let lastEntry = try? await service.getLatestEntry()
-            {
-                // Format based on current unit
-                let weightValue =
-                    weightUnit == "lbs"
-                    ? lastEntry.weightInLbs
-                    : lastEntry.weightKg
-
-                await MainActor.run {
-                    weightInput = String(format: "%.1f", weightValue)
-                }
-            }
-
-            // Check HealthKit authorization status
             if let service = weightService {
+                do {
+                    if let lastEntry = try await service.getLatestEntry() {
+                        // Format based on current unit
+                        let currentUnit = weightUnit
+                        let weightValue =
+                            currentUnit == Self.unitLbs
+                            ? lastEntry.weightInLbs
+                            : lastEntry.weightKg
+
+                        await MainActor.run {
+                            weightInput = String(format: "%.1f", weightValue)
+                        }
+                    }
+                } catch {
+                    logger.warning("Failed to load last weight entry: \(error.localizedDescription)")
+                }
+
+                // Check HealthKit authorization status
                 let status = service.getAuthorizationStatus()
                 await MainActor.run {
                     healthKitAuthorized = status == .sharingAuthorized
-                    // Default to sync if authorized, otherwise still try (will prompt)
+                    // Default to sync if available
                     syncToHealthKit = service.isHealthKitAvailable
                 }
             }
@@ -198,7 +222,8 @@ struct QuickWeightSheet: View {
 
     private func save() async {
         guard let service = weightService else {
-            errorMessage = "Weight service not available"
+            logger.error("WeightService not initialized - AppServices.initialize may not have been called")
+            errorMessage = "Unable to save weight. Please restart the app and try again."
             showingError = true
             return
         }
@@ -213,39 +238,54 @@ struct QuickWeightSheet: View {
         defer { isSaving = false }
 
         do {
-            // Parse body fat if provided
-            let bodyFat: Double?
-            if !bodyFatInput.isEmpty, let fat = Double(bodyFatInput) {
-                bodyFat = fat
-            } else {
-                bodyFat = nil
-            }
-
             // Log weight entry
             let entry = try await service.logWeight(
                 weightKg: weightKg,
-                bodyFat: bodyFat,
+                bodyFat: parsedBodyFat,
                 timestamp: timestamp
             )
 
+            logger.info("Logged weight entry: \(weightKg) kg")
+
             // Sync to HealthKit if enabled
             if syncToHealthKit {
-                // Request authorization if not already authorized
-                if !healthKitAuthorized {
-                    _ = try? await service.requestHealthKitAuthorization()
-                }
-
-                // Sync entry (handles auth denial gracefully)
-                try? await service.syncToHealthKit(entry)
+                await syncEntryToHealthKit(entry, service: service)
             }
 
             // Update User.weight with latest entry
-            try? await service.updateUserWeight()
+            do {
+                try await service.updateUserWeight()
+            } catch {
+                logger.error("Failed to update User.weight: \(error.localizedDescription)")
+                // Non-fatal: local entry saved, just profile sync failed
+            }
 
             dismiss()
         } catch {
+            logger.error("Failed to log weight: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             showingError = true
+        }
+    }
+
+    private func syncEntryToHealthKit(_ entry: WeightEntry, service: WeightService) async {
+        // Request authorization if not already authorized
+        if !healthKitAuthorized {
+            do {
+                _ = try await service.requestHealthKitAuthorization()
+            } catch {
+                logger.warning("HealthKit authorization request failed: \(error.localizedDescription)")
+                // Continue - local save succeeded, sync is optional
+            }
+        }
+
+        // Sync entry (handles auth denial gracefully internally)
+        do {
+            try await service.syncToHealthKit(entry)
+            logger.info("Synced weight to HealthKit")
+        } catch {
+            logger.error("Failed to sync weight to HealthKit: \(error.localizedDescription)")
+            // Non-fatal: local entry saved successfully
         }
     }
 }
