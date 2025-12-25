@@ -12,6 +12,17 @@ import SwiftData
 /// Note: No User relationship - entries are queried by date in a single-user app context
 @Model
 final class WeightEntry {
+    // MARK: - Constants
+
+    /// Conversion factor from kg to lbs
+    static let kgToLbsConversion: Double = 2.20462
+
+    /// Minimum valid weight in kg
+    static let minWeightKg: Double = 20.0
+
+    /// Maximum valid weight in kg
+    static let maxWeightKg: Double = 500.0
+
     // MARK: - Identity
 
     var id: UUID = UUID()
@@ -39,7 +50,7 @@ final class WeightEntry {
 
     /// Weight converted to pounds
     var weightInLbs: Double {
-        weightKg * 2.20462
+        weightKg * Self.kgToLbsConversion
     }
 
     /// Formatted weight for display with unit
@@ -52,9 +63,9 @@ final class WeightEntry {
     }
 
     /// Check if the entry has valid data
-    /// Weight must be between 20 kg (44 lbs) and 500 kg (1102 lbs)
+    /// Weight must be between 20 kg (44 lbs) and 500 kg (1102 lbs) inclusive
     var isValid: Bool {
-        weightKg > 20 && weightKg < 500
+        weightKg >= Self.minWeightKg && weightKg <= Self.maxWeightKg
     }
 
     // MARK: - Initialization
@@ -85,7 +96,7 @@ final class WeightEntry {
     ) {
         self.init(
             timestamp: timestamp,
-            weightKg: weightLbs / 2.20462,
+            weightKg: weightLbs / Self.kgToLbsConversion,
             bodyFatPercentage: bodyFatPercentage,
             source: source,
             notes: notes

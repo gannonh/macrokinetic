@@ -35,13 +35,33 @@ final class WeightService {
 
     private let context: ModelContext
 
-    /// Valid weight range in kg (20 kg to 500 kg)
-    private let minWeightKg: Double = 20.0
-    private let maxWeightKg: Double = 500.0
-
     /// Initialize with model context
     init(context: ModelContext) {
         self.context = context
+    }
+
+    // MARK: - Validation Helpers
+
+    /// Validate weight is within acceptable range
+    /// - Parameter weightKg: Weight in kilograms
+    /// - Throws: WeightServiceError.invalidWeight if out of range
+    private func validateWeight(_ weightKg: Double) throws {
+        guard weightKg >= WeightEntry.minWeightKg && weightKg <= WeightEntry.maxWeightKg else {
+            throw WeightServiceError.invalidWeight(
+                "Weight must be between \(Int(WeightEntry.minWeightKg)) kg and \(Int(WeightEntry.maxWeightKg)) kg"
+            )
+        }
+    }
+
+    /// Validate body fat percentage is within acceptable range
+    /// - Parameter bodyFat: Body fat percentage (0-100)
+    /// - Throws: WeightServiceError.invalidWeight if out of range
+    private func validateBodyFat(_ bodyFat: Double) throws {
+        guard bodyFat >= 0 && bodyFat <= 100 else {
+            throw WeightServiceError.invalidWeight(
+                "Body fat percentage must be between 0% and 100%"
+            )
+        }
     }
 
     // MARK: - Create
@@ -59,21 +79,13 @@ final class WeightService {
         bodyFat: Double? = nil,
         timestamp: Date = Date(),
         notes: String? = nil
-    ) throws -> WeightEntry {
+    ) async throws -> WeightEntry {
         // Validate weight range
-        guard weightKg >= minWeightKg && weightKg <= maxWeightKg else {
-            throw WeightServiceError.invalidWeight(
-                "Weight must be between \(Int(minWeightKg)) kg and \(Int(maxWeightKg)) kg"
-            )
-        }
+        try validateWeight(weightKg)
 
         // Validate body fat if provided
         if let bodyFat = bodyFat {
-            guard bodyFat >= 0 && bodyFat <= 100 else {
-                throw WeightServiceError.invalidWeight(
-                    "Body fat percentage must be between 0% and 100%"
-                )
-            }
+            try validateBodyFat(bodyFat)
         }
 
         let entry = WeightEntry(
@@ -99,7 +111,7 @@ final class WeightService {
 
     /// Get the most recent weight entry
     /// - Returns: The latest WeightEntry or nil if none exist
-    func getLatestEntry() throws -> WeightEntry? {
+    func getLatestEntry() async throws -> WeightEntry? {
         var descriptor = FetchDescriptor<WeightEntry>(
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
@@ -118,7 +130,7 @@ final class WeightService {
     ///   - startDate: Start of date range (inclusive)
     ///   - endDate: End of date range (inclusive)
     /// - Returns: Array of WeightEntry sorted by timestamp descending
-    func getEntries(from startDate: Date, to endDate: Date) throws -> [WeightEntry] {
+    func getEntries(from startDate: Date, to endDate: Date) async throws -> [WeightEntry] {
         let descriptor = FetchDescriptor<WeightEntry>(
             predicate: #Predicate { entry in
                 entry.timestamp >= startDate && entry.timestamp <= endDate
@@ -136,7 +148,7 @@ final class WeightService {
     /// Get all weight entries
     /// - Parameter limit: Maximum number of entries to return (nil for all)
     /// - Returns: Array of WeightEntry sorted by timestamp descending
-    func getAllEntries(limit: Int? = nil) throws -> [WeightEntry] {
+    func getAllEntries(limit: Int? = nil) async throws -> [WeightEntry] {
         var descriptor = FetchDescriptor<WeightEntry>(
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
@@ -158,31 +170,23 @@ final class WeightService {
     /// - Parameters:
     ///   - entry: Entry to update
     ///   - weightKg: New weight in kg (optional)
-    ///   - bodyFat: New body fat percentage (optional)
-    ///   - notes: New notes (optional)
+    ///   - bodyFat: New body fat percentage (optional, use inner nil to clear)
+    ///   - notes: New notes (optional, use inner nil to clear)
     /// - Throws: WeightServiceError if validation fails
     func updateEntry(
         _ entry: WeightEntry,
         weightKg: Double? = nil,
         bodyFat: Double?? = nil,
         notes: String?? = nil
-    ) throws {
+    ) async throws {
         if let weightKg = weightKg {
-            guard weightKg >= minWeightKg && weightKg <= maxWeightKg else {
-                throw WeightServiceError.invalidWeight(
-                    "Weight must be between \(Int(minWeightKg)) kg and \(Int(maxWeightKg)) kg"
-                )
-            }
+            try validateWeight(weightKg)
             entry.weightKg = weightKg
         }
 
         if let bodyFat = bodyFat {
             if let fat = bodyFat {
-                guard fat >= 0 && fat <= 100 else {
-                    throw WeightServiceError.invalidWeight(
-                        "Body fat percentage must be between 0% and 100%"
-                    )
-                }
+                try validateBodyFat(fat)
             }
             entry.bodyFatPercentage = bodyFat
         }
@@ -203,7 +207,7 @@ final class WeightService {
 
     /// Delete a weight entry
     /// - Parameter entry: Entry to delete
-    func deleteEntry(_ entry: WeightEntry) throws {
+    func deleteEntry(_ entry: WeightEntry) async throws {
         let weight = entry.weightKg
         context.delete(entry)
 
@@ -219,9 +223,9 @@ final class WeightService {
 
     /// Update the User model with the latest weight entry
     /// - Throws: WeightServiceError if no user or entries found
-    func updateUserWeight() throws {
+    func updateUserWeight() async throws {
         // Get latest weight entry
-        guard let latestEntry = try getLatestEntry() else {
+        guard let latestEntry = try await getLatestEntry() else {
             throw WeightServiceError.noEntriesFound
         }
 

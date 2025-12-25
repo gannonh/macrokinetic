@@ -88,7 +88,7 @@ extension WeightService {
     }
 
     /// Request HealthKit authorization for weight and body fat
-    /// - Returns: True if authorization was granted
+    /// - Returns: True if write authorization was granted for weight
     func requestHealthKitAuthorization() async throws -> Bool {
         guard HKHealthStore.isHealthDataAvailable() else {
             Self.logger.info("HealthKit not available on this device")
@@ -107,8 +107,13 @@ extension WeightService {
 
         do {
             try await Self.healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead)
-            Self.logger.info("HealthKit authorization requested for weight and body fat")
-            return true
+
+            // Check actual authorization status after request
+            let status = Self.healthStore.authorizationStatus(for: weightType)
+            let authorized = status == .sharingAuthorized
+
+            Self.logger.info("HealthKit authorization \(authorized ? "granted" : "not granted") for weight")
+            return authorized
         } catch {
             Self.logger.error("Failed to request HealthKit authorization: \(error.localizedDescription)")
             throw error
