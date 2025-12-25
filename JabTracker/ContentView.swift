@@ -20,7 +20,7 @@ struct ContentView: View {
     @State private var showingFoodSearchSheet = false
     @State private var showingFoodSearchWithScan = false
     @State private var showingFoodLibrary = false
-    @State private var showingQuickAdd = false
+    @State private var showingFoodSearchWithQuickAdd = false
     /// The currently selected date in FoodLogView, shared for tab bar + button
     @State private var selectedFoodLogDate = Date()
 
@@ -134,7 +134,7 @@ struct ContentView: View {
                 showingQuickDose: $showingQuickDoseSheet,
                 showingFoodSearchWithScan: $showingFoodSearchWithScan,
                 showingFoodLibrary: $showingFoodLibrary,
-                showingQuickAdd: $showingQuickAdd
+                showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd
             )
         }
         .sheet(isPresented: $showingFoodSearchSheet) {
@@ -146,15 +146,8 @@ struct ContentView: View {
         .sheet(isPresented: $showingFoodLibrary) {
             foodSearchSheet(initialMethod: .library)
         }
-        .sheet(isPresented: $showingQuickAdd) {
-            if let mealLogService = AppServices.shared.mealLogService {
-                QuickAddSheet(
-                    mealLogService: mealLogService,
-                    selectedMeal: MealSection.from(date: selectedFoodLogDate),
-                    selectedTime: selectedFoodLogDate,
-                    onComplete: {}
-                )
-            }
+        .sheet(isPresented: $showingFoodSearchWithQuickAdd) {
+            foodSearchSheet(initialMethod: .quickAdd)
         }
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)

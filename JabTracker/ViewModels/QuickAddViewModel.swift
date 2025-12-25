@@ -18,14 +18,17 @@ final class QuickAddViewModel {
 
     private let mealLogService: MealLogService
 
+    // MARK: - Constants
+
+    /// Fixed name for quick add entries
+    static let quickAddName = "Quick Add"
+
     // MARK: - Form State
 
-    var name: String = ""
-    var calories: Double = 0
+    var energy: Double = 0
     var protein: Double = 0
-    var carbs: Double = 0
     var fat: Double = 0
-    var notes: String = ""
+    var carbs: Double = 0
 
     // MARK: - UI State
 
@@ -40,15 +43,18 @@ final class QuickAddViewModel {
 
     // MARK: - Computed Properties
 
+    /// Macro sum calculation (protein*4 + carbs*4 + fat*9)
+    var macroSum: Double {
+        (protein * 4) + (carbs * 4) + (fat * 9)
+    }
+
     /// Whether the form is valid and can be saved
     var canSave: Bool {
         // Cannot save while already saving
         guard !isSaving else { return false }
 
-        // Name must not be empty or whitespace-only
-        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-
-        return true
+        // At least one value must be entered
+        return energy > 0 || protein > 0 || fat > 0 || carbs > 0
     }
 
     // MARK: - Initialization
@@ -66,25 +72,25 @@ final class QuickAddViewModel {
     /// - Returns: The created FoodEntry
     /// - Throws: FoodEntryValidationError if validation fails
     func save(mealSection: MealSection, loggedAt: Date) async throws -> FoodEntry {
-        Self.logger.debug("Saving quick add entry: \(self.name)")
+        Self.logger.debug("Saving quick add entry")
 
         isSaving = true
         errorMessage = nil
 
         do {
             let entry = try await mealLogService.logQuickAdd(
-                name: name,
-                caloriesPer100g: calories,
+                name: Self.quickAddName,
+                caloriesPer100g: energy,
                 proteinPer100g: protein,
                 carbsPer100g: carbs,
                 fatPer100g: fat,
                 servingGrams: 100.0,
                 mealSection: mealSection,
-                notes: notes,
+                notes: "",
                 loggedAt: loggedAt
             )
 
-            Self.logger.info("Created quick add entry: \(self.name)")
+            Self.logger.info("Created quick add entry")
             isSaving = false
             return entry
         } catch {
@@ -93,5 +99,14 @@ final class QuickAddViewModel {
             isSaving = false
             throw error
         }
+    }
+
+    /// Reset form to initial state
+    func reset() {
+        energy = 0
+        protein = 0
+        fat = 0
+        carbs = 0
+        errorMessage = nil
     }
 }

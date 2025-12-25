@@ -22,7 +22,7 @@ struct ShortcutsSheetTests {
         var showingQuickDose = false
         var showingFoodSearchWithScan = false
         var showingFoodLibrary = false
-        var showingQuickAdd = false
+        var showingFoodSearchWithQuickAdd = false
 
         let sheet = ShortcutsSheet(
             showingFoodSearch: Binding(
@@ -41,9 +41,9 @@ struct ShortcutsSheetTests {
                 get: { showingFoodLibrary },
                 set: { showingFoodLibrary = $0 }
             ),
-            showingQuickAdd: Binding(
-                get: { showingQuickAdd },
-                set: { showingQuickAdd = $0 }
+            showingFoodSearchWithQuickAdd: Binding(
+                get: { showingFoodSearchWithQuickAdd },
+                set: { showingFoodSearchWithQuickAdd = $0 }
             )
         )
 
@@ -52,7 +52,7 @@ struct ShortcutsSheetTests {
         #expect(sheet.showingQuickDose == false)
         #expect(sheet.showingFoodSearchWithScan == false)
         #expect(sheet.showingFoodLibrary == false)
-        #expect(sheet.showingQuickAdd == false)
+        #expect(sheet.showingFoodSearchWithQuickAdd == false)
     }
 
     // MARK: - Top Row Shortcut Tests

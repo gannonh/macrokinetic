@@ -31,6 +31,7 @@ struct FoodSearchSheet: View {
     // MARK: - State
 
     @State var viewModel: FoodSearchSheetViewModel
+    @State var quickAddViewModel: QuickAddViewModel?
     @State var selectedFood: FoodSearchResult?
     @State var showingFoodDetail = false
     @State private var showingComingSoon = false
@@ -97,6 +98,9 @@ struct FoodSearchSheet: View {
             combined.second = timeComponents.second
             vm.selectedTime = calendar.date(from: combined) ?? initialDate
             self._viewModel = State(wrappedValue: vm)
+
+            // Initialize QuickAddViewModel
+            self._quickAddViewModel = State(wrappedValue: QuickAddViewModel(mealLogService: mls))
         } else {
             // Fallback for previews - will need proper DI
             fatalError("FoodSearchSheet requires non-nil foodService and mealLogService")
@@ -114,7 +118,7 @@ struct FoodSearchSheet: View {
                 // Method tabs
                 methodTabsSection
 
-                // Show scanner, library, or search UI based on selected method
+                // Show scanner, library, quick add, or search UI based on selected method
                 if viewModel.selectedMethod == .scan {
                     ZStack {
                         BarcodeScannerContentView { barcode in
@@ -152,6 +156,19 @@ struct FoodSearchSheet: View {
                             "Service Unavailable",
                             systemImage: "exclamationmark.triangle",
                             description: Text("Custom food service is not available")
+                        )
+                    }
+                } else if viewModel.selectedMethod == .quickAdd {
+                    // Quick Add content
+                    if let quickAddVM = quickAddViewModel {
+                        QuickAddContentView(
+                            viewModel: quickAddVM,
+                            selectedMeal: MealSection.from(date: viewModel.selectedTime),
+                            selectedTime: viewModel.selectedTime,
+                            onComplete: {
+                                onComplete()
+                                dismiss()
+                            }
                         )
                     }
                 } else {

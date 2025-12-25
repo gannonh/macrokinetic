@@ -39,8 +39,8 @@ struct ShortcutsSheet: View {
     /// Binding to trigger food search sheet with library pre-selected
     @Binding var showingFoodLibrary: Bool
 
-    /// Binding to trigger quick add sheet
-    @Binding var showingQuickAdd: Bool
+    /// Binding to trigger food search sheet with quick add pre-selected
+    @Binding var showingFoodSearchWithQuickAdd: Bool
 
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
@@ -183,7 +183,7 @@ struct ShortcutsSheet: View {
         case "Your Foods":
             dismissAndPresent($showingFoodLibrary)
         case "Quick Add":
-            dismissAndPresent($showingQuickAdd)
+            dismissAndPresent($showingFoodSearchWithQuickAdd)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
@@ -199,7 +199,7 @@ struct ShortcutsSheet: View {
         @State private var showingQuickDose = false
         @State private var showingFoodSearchWithScan = false
         @State private var showingFoodLibrary = false
-        @State private var showingQuickAdd = false
+        @State private var showingFoodSearchWithQuickAdd = false
 
         var body: some View {
             Color.clear
@@ -209,7 +209,7 @@ struct ShortcutsSheet: View {
                         showingQuickDose: $showingQuickDose,
                         showingFoodSearchWithScan: $showingFoodSearchWithScan,
                         showingFoodLibrary: $showingFoodLibrary,
-                        showingQuickAdd: $showingQuickAdd
+                        showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd
                     )
                 }
         }
