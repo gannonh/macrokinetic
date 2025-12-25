@@ -84,7 +84,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 10-01: TBD
+- [x] 10-01: MetricsEntry + ProgressPhoto models and services with HealthKit sync
 
 ## Progress
 
@@ -102,4 +102,4 @@ Phases execute in numeric order within each milestone.
 | 7. Food Library | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 8. Quick Add | v0.2.0 | 1/1 | Complete | 2025-12-25 |
 | 9. Weight Tracking | v0.2.0 | 3/3 | Complete | 2025-12-25 |
-| 10. Metrics & Photos | v0.2.0 | 0/? | Not started | - |
+| 10. Metrics & Photos | v0.2.0 | 1/? | In progress | - |
