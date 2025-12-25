@@ -23,6 +23,13 @@ final class MetricsEntry {
     /// Maximum valid circumference in cm
     static let maxCircumferenceCm: Double = 300.0
 
+    /// Validate a circumference measurement is within acceptable range
+    /// - Parameter cm: Circumference in centimeters
+    /// - Returns: True if within valid range (10-300 cm)
+    static func isValidCircumference(_ cm: Double) -> Bool {
+        cm >= minCircumferenceCm && cm <= maxCircumferenceCm
+    }
+
     // MARK: - Identity
 
     var id: UUID = UUID()
@@ -85,9 +92,7 @@ final class MetricsEntry {
         guard hasAnyMetrics else { return false }
 
         let measurements = [waistCm, hipCm, chestCm, neckCm].compactMap { $0 }
-        return measurements.allSatisfy { measurement in
-            measurement >= Self.minCircumferenceCm && measurement <= Self.maxCircumferenceCm
-        }
+        return measurements.allSatisfy { Self.isValidCircumference($0) }
     }
 
     /// Formatted measurement for display with unit

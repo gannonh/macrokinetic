@@ -46,9 +46,9 @@ final class MetricsService {
     /// - Parameter cm: Circumference in centimeters
     /// - Throws: MetricsServiceError.invalidMeasurement if out of range
     private func validateCircumference(_ cm: Double) throws {
-        let minCm = Int(MetricsEntry.minCircumferenceCm)
-        let maxCm = Int(MetricsEntry.maxCircumferenceCm)
-        guard cm >= MetricsEntry.minCircumferenceCm && cm <= MetricsEntry.maxCircumferenceCm else {
+        guard MetricsEntry.isValidCircumference(cm) else {
+            let minCm = Int(MetricsEntry.minCircumferenceCm)
+            let maxCm = Int(MetricsEntry.maxCircumferenceCm)
             throw MetricsServiceError.invalidMeasurement(
                 "Circumference must be between \(minCm) cm and \(maxCm) cm"
             )

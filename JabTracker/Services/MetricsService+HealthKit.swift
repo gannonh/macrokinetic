@@ -12,13 +12,13 @@ extension MetricsService {
     /// Shared HealthKit store for metrics operations
     private static let healthStore = HKHealthStore()
 
-    private static let logger = Logger(
+    private static let healthKitLogger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "MetricsService+HealthKit"
     )
 
     /// Check if HealthKit is available on this device
-    var isHealthKitAvailable: Bool {
+    static var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
     }
 
@@ -26,8 +26,8 @@ extension MetricsService {
     /// - Parameter entry: The metrics entry to sync
     /// - Throws: Error if sync fails (authorization denied logs warning instead of throwing)
     func syncToHealthKit(_ entry: MetricsEntry) async throws {
-        guard HKHealthStore.isHealthDataAvailable() else {
-            Self.logger.info("HealthKit not available on this device, skipping sync")
+        guard Self.isHealthKitAvailable else {
+            Self.healthKitLogger.info("HealthKit not available on this device, skipping sync")
             return
         }
 
@@ -38,20 +38,20 @@ extension MetricsService {
 
         // Log warning for unsupported measurements
         if entry.hipCm != nil {
-            Self.logger.warning("Hip circumference is not supported by HealthKit, cannot sync")
+            Self.healthKitLogger.warning("Hip circumference is not supported by HealthKit, cannot sync")
         }
         if entry.chestCm != nil {
-            Self.logger.warning("Chest circumference is not supported by HealthKit, cannot sync")
+            Self.healthKitLogger.warning("Chest circumference is not supported by HealthKit, cannot sync")
         }
         if entry.neckCm != nil {
-            Self.logger.warning("Neck circumference is not supported by HealthKit, cannot sync")
+            Self.healthKitLogger.warning("Neck circumference is not supported by HealthKit, cannot sync")
         }
     }
 
     /// Sync waist circumference to HealthKit
     private func syncWaistCircumference(_ waistCm: Double, timestamp: Date) async throws {
         guard let waistType = HKQuantityType.quantityType(forIdentifier: .waistCircumference) else {
-            Self.logger.error("Failed to get waistCircumference quantity type")
+            Self.healthKitLogger.error("Failed to get waistCircumference quantity type")
             return
         }
 
@@ -65,11 +65,11 @@ extension MetricsService {
 
         do {
             try await Self.healthStore.save(waistSample)
-            Self.logger.info("Synced waist circumference \(waistCm) cm to HealthKit")
+            Self.healthKitLogger.info("Synced waist circumference \(waistCm) cm to HealthKit")
         } catch {
             // Check if authorization was denied
             if let hkError = error as? HKError, hkError.code == .errorAuthorizationDenied {
-                Self.logger.warning("HealthKit authorization denied for waist circumference, skipping sync")
+                Self.healthKitLogger.warning("HealthKit authorization denied for waist circumference, skipping sync")
                 return
             }
             throw error
@@ -79,13 +79,13 @@ extension MetricsService {
     /// Request HealthKit authorization for body metrics
     /// - Returns: True if write authorization was granted for waist circumference
     func requestHealthKitAuthorization() async throws -> Bool {
-        guard HKHealthStore.isHealthDataAvailable() else {
-            Self.logger.info("HealthKit not available on this device")
+        guard Self.isHealthKitAvailable else {
+            Self.healthKitLogger.info("HealthKit not available on this device")
             return false
         }
 
         guard let waistType = HKQuantityType.quantityType(forIdentifier: .waistCircumference) else {
-            Self.logger.error("Failed to create HealthKit quantity types")
+            Self.healthKitLogger.error("Failed to create HealthKit quantity types")
             return false
         }
 
@@ -100,10 +100,10 @@ extension MetricsService {
             let authorized = status == .sharingAuthorized
 
             let statusText = authorized ? "granted" : "not granted"
-            Self.logger.info("HealthKit authorization \(statusText) for waist circumference")
+            Self.healthKitLogger.info("HealthKit authorization \(statusText) for waist circumference")
             return authorized
         } catch {
-            Self.logger.error("Failed to request HealthKit authorization: \(error.localizedDescription)")
+            Self.healthKitLogger.error("Failed to request HealthKit authorization: \(error.localizedDescription)")
             throw error
         }
     }

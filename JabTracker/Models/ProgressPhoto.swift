@@ -53,6 +53,8 @@ final class ProgressPhoto {
     var timestamp: Date = Date()
 
     /// Image data stored as binary (JPEG compressed)
+    /// Uses external storage for efficient memory handling of large photos
+    @Attribute(.externalStorage)
     var imageData: Data?
 
     /// Photo type stored as string for CloudKit compatibility
