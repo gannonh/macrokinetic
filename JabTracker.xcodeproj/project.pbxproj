@@ -43,6 +43,7 @@
 		146D58CDEA2EC4189C36D095 /* CreateFoodSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DDD151FAB68EC671616889 /* CreateFoodSheet.swift */; };
 		14A5E7C632AC9D44B4EA39F4 /* ChartDataProcessorInterpolationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31C4739A8D20284492729D66 /* ChartDataProcessorInterpolationTests.swift */; };
 		14AEF2C8BC0EED167F0DFFB9 /* SubscriptionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */; };
+		14B7C5EEE1F00B1F10A7138B /* QuickWeightSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B5B52CFA209D164B40E8152 /* QuickWeightSheet.swift */; };
 		15934270FA0E309B92D8DDB2 /* QuickAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4115A03D244ED528179ACCF5 /* QuickAddViewModel.swift */; };
 		15DA362CB7875DA9908CBF18 /* DataControllerCloudKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */; };
 		162F01AE9AE1F576382B2097 /* MedicationProfileViewModelScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61639608F79641ACAD7953 /* MedicationProfileViewModelScheduleTests.swift */; };
@@ -643,6 +644,7 @@
 		69F35D81E5C7FD2D03D95D30 /* CustomFoodService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFoodService.swift; sourceTree = "<group>"; };
 		6A5D10958F733EFFFF528C2B /* DataControllerPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerPreviewTests.swift; sourceTree = "<group>"; };
 		6A7A66A68C069CC41D8E6F6C /* AdherenceMetricsCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceMetricsCardTests.swift; sourceTree = "<group>"; };
+		6B5B52CFA209D164B40E8152 /* QuickWeightSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickWeightSheet.swift; sourceTree = "<group>"; };
 		6C503FC88F78949C6306372C /* SearchMethodTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchMethodTabs.swift; sourceTree = "<group>"; };
 		6CBAB921A65D85DEE6280F31 /* FoodDetailSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDetailSheetTests.swift; sourceTree = "<group>"; };
 		6E7CAC44C9BE663CB47FBF47 /* NutritionFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionFlowUITests.swift; sourceTree = "<group>"; };
@@ -1150,6 +1152,14 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
+		6DC9513C7838E0B7F2E7FFB9 /* Weight */ = {
+			isa = PBXGroup;
+			children = (
+				6B5B52CFA209D164B40E8152 /* QuickWeightSheet.swift */,
+			);
+			path = Weight;
+			sourceTree = "<group>";
+		};
 		6E1C5C453521BDEC54528C22 /* More */ = {
 			isa = PBXGroup;
 			children = (
@@ -1428,6 +1438,7 @@
 				ECD344904699F445A166E3CB /* Settings */,
 				433B05AA1B13FF486D6CED27 /* Shortcuts */,
 				9BE6F032E7F5AE5FA12B2B40 /* Shots */,
+				6DC9513C7838E0B7F2E7FFB9 /* Weight */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2288,6 +2299,7 @@
 				65A42952BE48F9A01963FBBE /* QuickDoseButton.swift in Sources */,
 				60D34BE68D5EE414AEF38A40 /* QuickDoseEntry.swift in Sources */,
 				04BD48B1D11D972CCE123D6E /* QuickDoseViewModel.swift in Sources */,
+				14B7C5EEE1F00B1F10A7138B /* QuickWeightSheet.swift in Sources */,
 				020BA0D09ABD698851900B09 /* ReconstitutionCalculator.swift in Sources */,
 				7B7A0BEDA7FA80891EA27BE7 /* ReconstitutionCalculatorView.swift in Sources */,
 				63593CF8E9489B19099E836C /* ReminderPreferencesView.swift in Sources */,

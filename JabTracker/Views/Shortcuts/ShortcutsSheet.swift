@@ -42,6 +42,9 @@ struct ShortcutsSheet: View {
     /// Binding to trigger food search sheet with quick add pre-selected
     @Binding var showingFoodSearchWithQuickAdd: Bool
 
+    /// Binding to trigger quick weight sheet
+    @Binding var showingQuickWeight: Bool
+
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
@@ -59,7 +62,7 @@ struct ShortcutsSheet: View {
 
     /// List row shortcuts configuration
     static let listRowShortcuts: [ShortcutItem] = [
-        ShortcutItem(icon: "scalemass.fill", label: "Weight", isEnabled: false),
+        ShortcutItem(icon: "scalemass.fill", label: "Weight", isEnabled: true),
         ShortcutItem(icon: "plus.circle.fill", label: "Quick Add", isEnabled: true),
         ShortcutItem(icon: "chart.bar.fill", label: "Metrics", isEnabled: false),
         ShortcutItem(icon: "star.fill", label: "Your Foods", isEnabled: true),
@@ -184,6 +187,8 @@ struct ShortcutsSheet: View {
             dismissAndPresent($showingFoodLibrary)
         case "Quick Add":
             dismissAndPresent($showingFoodSearchWithQuickAdd)
+        case "Weight":
+            dismissAndPresent($showingQuickWeight)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
@@ -200,6 +205,7 @@ struct ShortcutsSheet: View {
         @State private var showingFoodSearchWithScan = false
         @State private var showingFoodLibrary = false
         @State private var showingFoodSearchWithQuickAdd = false
+        @State private var showingQuickWeight = false
 
         var body: some View {
             Color.clear
@@ -209,7 +215,8 @@ struct ShortcutsSheet: View {
                         showingQuickDose: $showingQuickDose,
                         showingFoodSearchWithScan: $showingFoodSearchWithScan,
                         showingFoodLibrary: $showingFoodLibrary,
-                        showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd
+                        showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd,
+                        showingQuickWeight: $showingQuickWeight
                     )
                 }
         }

@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var showingFoodSearchWithScan = false
     @State private var showingFoodLibrary = false
     @State private var showingFoodSearchWithQuickAdd = false
+    @State private var showingQuickWeight = false
     /// The currently selected date in FoodLogView, shared for tab bar + button
     @State private var selectedFoodLogDate = Date()
 
@@ -134,8 +135,12 @@ struct ContentView: View {
                 showingQuickDose: $showingQuickDoseSheet,
                 showingFoodSearchWithScan: $showingFoodSearchWithScan,
                 showingFoodLibrary: $showingFoodLibrary,
-                showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd
+                showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd,
+                showingQuickWeight: $showingQuickWeight
             )
+        }
+        .sheet(isPresented: $showingQuickWeight) {
+            QuickWeightSheet()
         }
         .sheet(isPresented: $showingFoodSearchSheet) {
             foodSearchSheet()
