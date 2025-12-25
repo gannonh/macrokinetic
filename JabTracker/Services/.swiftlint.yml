@@ -8,3 +8,7 @@ file_length:
 type_body_length:
   warning: 450  # Increased for service classes with extensive method collections
   error: 600
+
+function_parameter_count:
+  warning: 8  # MealLogService.logQuickAdd requires 6+ params for macro-only logging
+  error: 10

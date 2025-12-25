@@ -39,6 +39,9 @@ struct ShortcutsSheet: View {
     /// Binding to trigger food search sheet with library pre-selected
     @Binding var showingFoodLibrary: Bool
 
+    /// Binding to trigger quick add sheet
+    @Binding var showingQuickAdd: Bool
+
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
@@ -57,7 +60,7 @@ struct ShortcutsSheet: View {
     /// List row shortcuts configuration
     static let listRowShortcuts: [ShortcutItem] = [
         ShortcutItem(icon: "scalemass.fill", label: "Weight", isEnabled: false),
-        ShortcutItem(icon: "plus.circle.fill", label: "Quick Add", isEnabled: false),
+        ShortcutItem(icon: "plus.circle.fill", label: "Quick Add", isEnabled: true),
         ShortcutItem(icon: "chart.bar.fill", label: "Metrics", isEnabled: false),
         ShortcutItem(icon: "star.fill", label: "Your Foods", isEnabled: true),
         ShortcutItem(icon: "book.fill", label: "Recipes", isEnabled: false),
@@ -179,6 +182,8 @@ struct ShortcutsSheet: View {
         switch shortcut.label {
         case "Your Foods":
             dismissAndPresent($showingFoodLibrary)
+        case "Quick Add":
+            dismissAndPresent($showingQuickAdd)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
@@ -194,6 +199,7 @@ struct ShortcutsSheet: View {
         @State private var showingQuickDose = false
         @State private var showingFoodSearchWithScan = false
         @State private var showingFoodLibrary = false
+        @State private var showingQuickAdd = false
 
         var body: some View {
             Color.clear
@@ -202,7 +208,8 @@ struct ShortcutsSheet: View {
                         showingFoodSearch: $showingFoodSearch,
                         showingQuickDose: $showingQuickDose,
                         showingFoodSearchWithScan: $showingFoodSearchWithScan,
-                        showingFoodLibrary: $showingFoodLibrary
+                        showingFoodLibrary: $showingFoodLibrary,
+                        showingQuickAdd: $showingQuickAdd
                     )
                 }
         }

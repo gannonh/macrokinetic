@@ -57,10 +57,10 @@ Plans:
 **Goal**: Macro-only food logging without food lookup
 **Depends on**: Phase 7
 **Research**: Unlikely (simple form + existing logging service)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 08-01: TBD
+- [x] 08-01: Quick Add feature for macro-only food logging
 
 #### Phase 9: Weight Tracking
 
@@ -98,6 +98,6 @@ Phases execute in numeric order within each milestone.
 | 5. Food Log Calendar | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 6. Food Entry Editing | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 7. Food Library | v0.2.0 | 1/1 | Complete | 2025-12-24 |
-| 8. Quick Add | v0.2.0 | 0/? | Not started | - |
+| 8. Quick Add | v0.2.0 | 1/1 | Complete | 2025-12-25 |
 | 9. Weight Tracking | v0.2.0 | 0/? | Not started | - |
 | 10. Metrics & Photos | v0.2.0 | 0/? | Not started | - |

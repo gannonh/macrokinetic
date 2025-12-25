@@ -22,6 +22,7 @@ struct ShortcutsSheetTests {
         var showingQuickDose = false
         var showingFoodSearchWithScan = false
         var showingFoodLibrary = false
+        var showingQuickAdd = false
 
         let sheet = ShortcutsSheet(
             showingFoodSearch: Binding(
@@ -39,6 +40,10 @@ struct ShortcutsSheetTests {
             showingFoodLibrary: Binding(
                 get: { showingFoodLibrary },
                 set: { showingFoodLibrary = $0 }
+            ),
+            showingQuickAdd: Binding(
+                get: { showingQuickAdd },
+                set: { showingQuickAdd = $0 }
             )
         )
 
@@ -47,6 +52,7 @@ struct ShortcutsSheetTests {
         #expect(sheet.showingQuickDose == false)
         #expect(sheet.showingFoodSearchWithScan == false)
         #expect(sheet.showingFoodLibrary == false)
+        #expect(sheet.showingQuickAdd == false)
     }
 
     // MARK: - Top Row Shortcut Tests
@@ -145,6 +151,7 @@ struct ShortcutsSheetTests {
         let quickAddShortcut = shortcuts.first { $0.label == "Quick Add" }
         #expect(quickAddShortcut != nil)
         #expect(quickAddShortcut?.icon == "plus.circle.fill")
+        #expect(quickAddShortcut?.isEnabled == true)
     }
 
     @Test("ShortcutsSheet list rows include Metrics")
