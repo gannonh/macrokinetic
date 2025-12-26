@@ -85,10 +85,25 @@ struct QuickMetricsSheet: View {
 
     // MARK: - Visibility Preferences
 
-    private var showWaist: Bool { user?.isMetricEnabled("waist") ?? true }
-    private var showHip: Bool { user?.isMetricEnabled("hips") ?? false }
-    private var showChest: Bool { user?.isMetricEnabled("chest") ?? false }
-    private var showNeck: Bool { user?.isMetricEnabled("neck") ?? false }
+    private var showWaist: Bool {
+        user?.isMetricEnabled(MetricKey.waist.rawValue)
+            ?? User.defaultEnabledMetrics.contains(MetricKey.waist.rawValue)
+    }
+
+    private var showHip: Bool {
+        user?.isMetricEnabled(MetricKey.hip.rawValue)
+            ?? User.defaultEnabledMetrics.contains(MetricKey.hip.rawValue)
+    }
+
+    private var showChest: Bool {
+        user?.isMetricEnabled(MetricKey.chest.rawValue)
+            ?? User.defaultEnabledMetrics.contains(MetricKey.chest.rawValue)
+    }
+
+    private var showNeck: Bool {
+        user?.isMetricEnabled(MetricKey.neck.rawValue)
+            ?? User.defaultEnabledMetrics.contains(MetricKey.neck.rawValue)
+    }
 
     /// Convert input string to cm based on current unit
     private func convertToCm(_ input: String) -> Double? {

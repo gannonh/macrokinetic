@@ -6,8 +6,35 @@
 import Foundation
 import SwiftData
 
+// MARK: - Metric Key Constants
+
+/// Type-safe keys for body metrics visibility preferences
+enum MetricKey: String, CaseIterable {
+    // Upper Body
+    case neck, shoulders, bust, chest, waist, hip
+    // Arms
+    case leftBicep, rightBicep, leftForearm, rightForearm, leftWrist, rightWrist
+    // Legs
+    case leftThigh, rightThigh, leftCalf, rightCalf, leftAnkle, rightAnkle
+    // Ratios
+    case waistToHeight, waistToHip
+}
+
+/// Type-safe keys for photo type visibility preferences
+enum PhotoTypeKey: String, CaseIterable {
+    case front, side, back
+}
+
 @Model
 final class User {
+    // MARK: - Static Defaults
+
+    /// Default enabled body metrics for new users
+    static let defaultEnabledMetrics: Set<String> = [MetricKey.waist.rawValue]
+
+    /// Default enabled photo types for new users
+    static let defaultEnabledPhotoTypes: Set<String> = [PhotoTypeKey.front.rawValue]
+
     var id: UUID = UUID()
     var email: String?  // Optional - genuinely no email vs empty string ambiguity resolved
     var name: String?  // Optional - Apple might not provide
@@ -245,19 +272,22 @@ extension User {
 
     /// Toggle a body metric's visibility
     func toggleMetric(_ metric: String) {
-        if enabledBodyMetrics.contains(metric) {
-            enabledBodyMetrics.removeAll { $0 == metric }
-        } else {
-            enabledBodyMetrics.append(metric)
-        }
+        toggleItem(metric, in: &enabledBodyMetrics)
     }
 
     /// Toggle a photo type's visibility
     func togglePhotoType(_ photoType: String) {
-        if enabledPhotoTypes.contains(photoType) {
-            enabledPhotoTypes.removeAll { $0 == photoType }
+        toggleItem(photoType, in: &enabledPhotoTypes)
+    }
+
+    // MARK: - Private Helpers
+
+    /// Toggle an item in an array (add if missing, remove if present)
+    private func toggleItem(_ item: String, in array: inout [String]) {
+        if array.contains(item) {
+            array.removeAll { $0 == item }
         } else {
-            enabledPhotoTypes.append(photoType)
+            array.append(item)
         }
     }
 }

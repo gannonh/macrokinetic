@@ -73,8 +73,9 @@ struct QuickPhotoSheet: View {
 
     /// Photo types enabled based on user preferences
     private var enabledPhotoTypes: [PhotoType] {
-        PhotoType.allCases.filter {
-            user?.isPhotoTypeEnabled($0.rawValue) ?? ($0 == .front)
+        PhotoType.allCases.filter { photoType in
+            user?.isPhotoTypeEnabled(photoType.rawValue)
+                ?? User.defaultEnabledPhotoTypes.contains(photoType.rawValue)
         }
     }
 
