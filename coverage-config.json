@@ -261,26 +261,5 @@
       "Views/Photos/QuickPhotoSheet.swift",
       "Design/CircularProgressRing.swift"
     ]
-  },
-  "special_testing_notes": {
-    "cloudkit_integration": {
-      "description": "CloudKit methods tested via E2E UI tests rather than unit tests",
-      "rationale": "CloudKit requires real iCloud account and network connectivity, making unit testing impractical and unreliable",
-      "methods_covered_by_e2e": [
-        "DataController.checkiCloudStatus()",
-        "DataController.checkCloudKitStatus()"
-      ],
-      "e2e_test_file": "CloudKitIntegrationUITests.swift",
-      "unit_test_approach": "Business logic around CloudKit status handling is tested with mocks"
-    },
-    "authentication_integration": {
-      "description": "Real Sign in with Apple tested via E2E, mocked scenarios via unit tests",
-      "e2e_test_file": "AuthenticationUITests.swift",
-      "test_approach": "Hybrid - E2E for real authentication flows, unit tests for error handling and state management"
-    }
-  },
-  "overall_target": {
-    "informational_only": true,
-    "note": "Overall coverage percentage is informational due to SwiftUI architecture limitations"
   }
 }
