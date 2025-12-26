@@ -45,6 +45,12 @@ struct ShortcutsSheet: View {
     /// Binding to trigger quick weight sheet
     @Binding var showingQuickWeight: Bool
 
+    /// Binding to trigger quick metrics sheet
+    @Binding var showingQuickMetrics: Bool
+
+    /// Binding to trigger quick photo sheet
+    @Binding var showingQuickPhoto: Bool
+
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
@@ -52,11 +58,11 @@ struct ShortcutsSheet: View {
     /// Accessibility identifier for the sheet
     static let accessibilityIdentifierValue = "shortcuts-sheet"
 
-    /// Top row shortcuts configuration (Search, Barcode, Photo, Shots)
+    /// Top row shortcuts configuration (Search, Barcode, AI, Shots)
     static let topRowShortcuts: [ShortcutItem] = [
         ShortcutItem(icon: "magnifyingglass", label: "Search", isEnabled: true),
         ShortcutItem(icon: "barcode.viewfinder", label: "Barcode", isEnabled: true),
-        ShortcutItem(icon: "camera.fill", label: "Photo", isEnabled: false),
+        ShortcutItem(icon: "camera.fill", label: "AI", isEnabled: false),
         ShortcutItem(icon: "syringe.fill", label: "Shots", isEnabled: true),
     ]
 
@@ -64,7 +70,8 @@ struct ShortcutsSheet: View {
     static let listRowShortcuts: [ShortcutItem] = [
         ShortcutItem(icon: "scalemass.fill", label: "Weight", isEnabled: true),
         ShortcutItem(icon: "plus.circle.fill", label: "Quick Add", isEnabled: true),
-        ShortcutItem(icon: "chart.bar.fill", label: "Metrics", isEnabled: false),
+        ShortcutItem(icon: "chart.bar.fill", label: "Metrics", isEnabled: true),
+        ShortcutItem(icon: "camera.fill", label: "Progress Photos", isEnabled: true),
         ShortcutItem(icon: "star.fill", label: "Your Foods", isEnabled: true),
         ShortcutItem(icon: "book.fill", label: "Recipes", isEnabled: false),
         ShortcutItem(icon: "calendar.badge.plus", label: "Edit Days", isEnabled: false),
@@ -189,6 +196,10 @@ struct ShortcutsSheet: View {
             dismissAndPresent($showingFoodSearchWithQuickAdd)
         case "Weight":
             dismissAndPresent($showingQuickWeight)
+        case "Metrics":
+            dismissAndPresent($showingQuickMetrics)
+        case "Progress Photos":
+            dismissAndPresent($showingQuickPhoto)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
@@ -206,6 +217,8 @@ struct ShortcutsSheet: View {
         @State private var showingFoodLibrary = false
         @State private var showingFoodSearchWithQuickAdd = false
         @State private var showingQuickWeight = false
+        @State private var showingQuickMetrics = false
+        @State private var showingQuickPhoto = false
 
         var body: some View {
             Color.clear
@@ -216,7 +229,9 @@ struct ShortcutsSheet: View {
                         showingFoodSearchWithScan: $showingFoodSearchWithScan,
                         showingFoodLibrary: $showingFoodLibrary,
                         showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd,
-                        showingQuickWeight: $showingQuickWeight
+                        showingQuickWeight: $showingQuickWeight,
+                        showingQuickMetrics: $showingQuickMetrics,
+                        showingQuickPhoto: $showingQuickPhoto
                     )
                 }
         }

@@ -255,6 +255,8 @@
       "Views/Shortcuts/ShortcutRowButton.swift",
       "Views/Shortcuts/ShortcutsSheet.swift",
       "Views/Weight/QuickWeightSheet.swift",
+      "Views/Metrics/QuickMetricsSheet.swift",
+      "Views/Photos/QuickPhotoSheet.swift",
       "Design/CircularProgressRing.swift"
     ]
   },
