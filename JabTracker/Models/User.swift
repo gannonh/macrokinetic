@@ -41,6 +41,7 @@ final class User {
     var dateOfBirth: Date?  // Optional - user may choose not to provide
     var weight: Double = 70.0  // Required with default for medical app
     var weightUnit: String = "kg"  // Required with default
+    var measurementUnit: String = "cm"  // Required with default: cm or in
     var timezone: String = TimeZone.current.identifier  // Required with default
     var appleUserId: String?  // For Sign in with Apple linking
     var createdAt: Date = Date()  // Required - auto-generated
@@ -82,6 +83,7 @@ final class User {
         dateOfBirth: Date? = nil,
         weight: Double = 70.0,
         weightUnit: String = "kg",
+        measurementUnit: String = "cm",
         timezone: String = TimeZone.current.identifier,
         appleUserId: String? = nil,
         hasCompletedOnboarding: Bool = false,
@@ -101,6 +103,7 @@ final class User {
         self.dateOfBirth = dateOfBirth
         self.weight = weight
         self.weightUnit = weightUnit
+        self.measurementUnit = measurementUnit
         self.timezone = timezone
         self.appleUserId = appleUserId
         self.hasCompletedOnboarding = hasCompletedOnboarding
@@ -289,5 +292,19 @@ extension User {
         } else {
             array.append(item)
         }
+    }
+}
+
+// MARK: - Unit Preferences Helpers
+
+extension User {
+    /// Returns true if user prefers metric units for measurements (cm)
+    var prefersMetricMeasurements: Bool {
+        measurementUnit == "cm"
+    }
+
+    /// Returns true if user prefers metric units for weight (kg)
+    var prefersMetricWeight: Bool {
+        weightUnit == "kg"
     }
 }

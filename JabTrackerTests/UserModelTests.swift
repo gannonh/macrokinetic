@@ -300,6 +300,326 @@ struct UserModelTests {
         try context.save()
     }
 
+    // MARK: - Body Metrics Visibility Tests
+
+    @Test("User default enabled metrics contains waist only")
+    func userDefaultEnabledMetrics() throws {
+        #expect(User.defaultEnabledMetrics.contains(MetricKey.waist.rawValue))
+        #expect(User.defaultEnabledMetrics.count == 1)
+    }
+
+    @Test("User default enabled photo types contains front only")
+    func userDefaultEnabledPhotoTypes() throws {
+        #expect(User.defaultEnabledPhotoTypes.contains(PhotoTypeKey.front.rawValue))
+        #expect(User.defaultEnabledPhotoTypes.count == 1)
+    }
+
+    @Test("MetricKey enum has all expected cases")
+    func metricKeyEnumCases() throws {
+        let allKeys = MetricKey.allCases.map { $0.rawValue }
+
+        // Upper Body
+        #expect(allKeys.contains("neck"))
+        #expect(allKeys.contains("shoulders"))
+        #expect(allKeys.contains("bust"))
+        #expect(allKeys.contains("chest"))
+        #expect(allKeys.contains("waist"))
+        #expect(allKeys.contains("hip"))
+
+        // Arms
+        #expect(allKeys.contains("leftBicep"))
+        #expect(allKeys.contains("rightBicep"))
+        #expect(allKeys.contains("leftForearm"))
+        #expect(allKeys.contains("rightForearm"))
+        #expect(allKeys.contains("leftWrist"))
+        #expect(allKeys.contains("rightWrist"))
+
+        // Legs
+        #expect(allKeys.contains("leftThigh"))
+        #expect(allKeys.contains("rightThigh"))
+        #expect(allKeys.contains("leftCalf"))
+        #expect(allKeys.contains("rightCalf"))
+        #expect(allKeys.contains("leftAnkle"))
+        #expect(allKeys.contains("rightAnkle"))
+
+        // Ratios
+        #expect(allKeys.contains("waistToHeight"))
+        #expect(allKeys.contains("waistToHip"))
+    }
+
+    @Test("PhotoTypeKey enum has all expected cases")
+    func photoTypeKeyEnumCases() throws {
+        let allKeys = PhotoTypeKey.allCases.map { $0.rawValue }
+
+        #expect(allKeys.contains("front"))
+        #expect(allKeys.contains("side"))
+        #expect(allKeys.contains("back"))
+        #expect(allKeys.count == 3)
+    }
+
+    @Test("isMetricEnabled returns true for enabled metrics")
+    func isMetricEnabledReturnsTrue() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledBodyMetrics: ["waist", "chest", "hip"])
+        context.insert(user)
+
+        #expect(user.isMetricEnabled("waist") == true)
+        #expect(user.isMetricEnabled("chest") == true)
+        #expect(user.isMetricEnabled("hip") == true)
+    }
+
+    @Test("isMetricEnabled returns false for disabled metrics")
+    func isMetricEnabledReturnsFalse() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledBodyMetrics: ["waist"])
+        context.insert(user)
+
+        #expect(user.isMetricEnabled("neck") == false)
+        #expect(user.isMetricEnabled("chest") == false)
+        #expect(user.isMetricEnabled("nonexistent") == false)
+    }
+
+    @Test("isPhotoTypeEnabled returns true for enabled photo types")
+    func isPhotoTypeEnabledReturnsTrue() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledPhotoTypes: ["front", "side"])
+        context.insert(user)
+
+        #expect(user.isPhotoTypeEnabled("front") == true)
+        #expect(user.isPhotoTypeEnabled("side") == true)
+    }
+
+    @Test("isPhotoTypeEnabled returns false for disabled photo types")
+    func isPhotoTypeEnabledReturnsFalse() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledPhotoTypes: ["front"])
+        context.insert(user)
+
+        #expect(user.isPhotoTypeEnabled("side") == false)
+        #expect(user.isPhotoTypeEnabled("back") == false)
+    }
+
+    @Test("toggleMetric adds metric when not present")
+    func toggleMetricAddsMetric() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledBodyMetrics: ["waist"])
+        context.insert(user)
+
+        #expect(user.isMetricEnabled("chest") == false)
+
+        user.toggleMetric("chest")
+
+        #expect(user.isMetricEnabled("chest") == true)
+        #expect(user.enabledBodyMetrics.contains("chest"))
+    }
+
+    @Test("toggleMetric removes metric when present")
+    func toggleMetricRemovesMetric() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledBodyMetrics: ["waist", "chest"])
+        context.insert(user)
+
+        #expect(user.isMetricEnabled("chest") == true)
+
+        user.toggleMetric("chest")
+
+        #expect(user.isMetricEnabled("chest") == false)
+        #expect(!user.enabledBodyMetrics.contains("chest"))
+    }
+
+    @Test("togglePhotoType adds photo type when not present")
+    func togglePhotoTypeAddsPhotoType() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledPhotoTypes: ["front"])
+        context.insert(user)
+
+        #expect(user.isPhotoTypeEnabled("side") == false)
+
+        user.togglePhotoType("side")
+
+        #expect(user.isPhotoTypeEnabled("side") == true)
+        #expect(user.enabledPhotoTypes.contains("side"))
+    }
+
+    @Test("togglePhotoType removes photo type when present")
+    func togglePhotoTypeRemovesPhotoType() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledPhotoTypes: ["front", "side"])
+        context.insert(user)
+
+        #expect(user.isPhotoTypeEnabled("side") == true)
+
+        user.togglePhotoType("side")
+
+        #expect(user.isPhotoTypeEnabled("side") == false)
+        #expect(!user.enabledPhotoTypes.contains("side"))
+    }
+
+    @Test("toggleMetric preserves other enabled metrics")
+    func toggleMetricPreservesOthers() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledBodyMetrics: ["waist", "chest", "hip"])
+        context.insert(user)
+
+        user.toggleMetric("chest")
+
+        #expect(user.isMetricEnabled("waist") == true)
+        #expect(user.isMetricEnabled("hip") == true)
+        #expect(user.isMetricEnabled("chest") == false)
+    }
+
+    @Test("User model initializes with default visibility preferences")
+    func userModelDefaultVisibilityPreferences() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User()
+        context.insert(user)
+
+        // Default should be waist only for metrics
+        #expect(user.enabledBodyMetrics == ["waist"])
+        #expect(user.isMetricEnabled("waist") == true)
+        #expect(user.isMetricEnabled("chest") == false)
+
+        // Default should be front only for photos
+        #expect(user.enabledPhotoTypes == ["front"])
+        #expect(user.isPhotoTypeEnabled("front") == true)
+        #expect(user.isPhotoTypeEnabled("side") == false)
+    }
+
+    @Test("Visibility preferences persist after save")
+    func visibilityPreferencesPersist() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(enabledBodyMetrics: ["waist"])
+        context.insert(user)
+
+        user.toggleMetric("chest")
+        user.toggleMetric("hip")
+        user.togglePhotoType("side")
+
+        try context.save()
+
+        #expect(user.isMetricEnabled("waist") == true)
+        #expect(user.isMetricEnabled("chest") == true)
+        #expect(user.isMetricEnabled("hip") == true)
+        #expect(user.isPhotoTypeEnabled("front") == true)
+        #expect(user.isPhotoTypeEnabled("side") == true)
+    }
+
+    // MARK: - Measurement Unit Preference Tests
+
+    @Test("User model has measurementUnit field with default cm")
+    func userModelMeasurementUnitDefault() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User()
+        context.insert(user)
+
+        #expect(user.measurementUnit == "cm", "Default measurement unit should be cm")
+    }
+
+    @Test("User measurementUnit can be set to inches")
+    func userMeasurementUnitSetToInches() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(measurementUnit: "in")
+        context.insert(user)
+
+        #expect(user.measurementUnit == "in", "Measurement unit should be settable to in")
+
+        try context.save()
+
+        #expect(user.measurementUnit == "in", "Measurement unit should persist after save")
+    }
+
+    @Test("User prefersMetricMeasurements returns true for cm")
+    func prefersMetricMeasurementsReturnsTrueForCm() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(measurementUnit: "cm")
+        context.insert(user)
+
+        #expect(user.prefersMetricMeasurements == true)
+    }
+
+    @Test("User prefersMetricMeasurements returns false for inches")
+    func prefersMetricMeasurementsReturnsFalseForInches() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(measurementUnit: "in")
+        context.insert(user)
+
+        #expect(user.prefersMetricMeasurements == false)
+    }
+
+    @Test("User prefersMetricWeight returns true for kg")
+    func prefersMetricWeightReturnsTrueForKg() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(weightUnit: "kg")
+        context.insert(user)
+
+        #expect(user.prefersMetricWeight == true)
+    }
+
+    @Test("User prefersMetricWeight returns false for lbs")
+    func prefersMetricWeightReturnsFalseForLbs() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(weightUnit: "lbs")
+        context.insert(user)
+
+        #expect(user.prefersMetricWeight == false)
+    }
+
+    @Test("User measurement unit persists with other properties")
+    func measurementUnitPersistsWithOtherProperties() throws {
+        let controller = DataController.testContainer()
+        let context = controller.container.mainContext
+
+        let user = User(
+            email: "test@example.com",
+            weight: 75.0,
+            weightUnit: "lbs",
+            measurementUnit: "in"
+        )
+        context.insert(user)
+        try context.save()
+
+        #expect(user.email == "test@example.com")
+        #expect(user.weight == 75.0)
+        #expect(user.weightUnit == "lbs")
+        #expect(user.measurementUnit == "in")
+        #expect(user.prefersMetricWeight == false)
+        #expect(user.prefersMetricMeasurements == false)
+    }
+
     // MARK: - Test Data Factories
 
     static func createTestUser(

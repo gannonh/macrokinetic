@@ -85,24 +85,33 @@ struct QuickMetricsSheet: View {
 
     // MARK: - Visibility Preferences
 
+    /// Get enabled metrics from user or fall back to defaults
+    private var enabledMetrics: Set<String> {
+        guard let user = user else {
+            return User.defaultEnabledMetrics
+        }
+        return Set(user.enabledBodyMetrics)
+    }
+
     private var showWaist: Bool {
-        user?.isMetricEnabled(MetricKey.waist.rawValue)
-            ?? User.defaultEnabledMetrics.contains(MetricKey.waist.rawValue)
+        enabledMetrics.contains(MetricKey.waist.rawValue)
     }
 
     private var showHip: Bool {
-        user?.isMetricEnabled(MetricKey.hip.rawValue)
-            ?? User.defaultEnabledMetrics.contains(MetricKey.hip.rawValue)
+        enabledMetrics.contains(MetricKey.hip.rawValue)
     }
 
     private var showChest: Bool {
-        user?.isMetricEnabled(MetricKey.chest.rawValue)
-            ?? User.defaultEnabledMetrics.contains(MetricKey.chest.rawValue)
+        enabledMetrics.contains(MetricKey.chest.rawValue)
     }
 
     private var showNeck: Bool {
-        user?.isMetricEnabled(MetricKey.neck.rawValue)
-            ?? User.defaultEnabledMetrics.contains(MetricKey.neck.rawValue)
+        enabledMetrics.contains(MetricKey.neck.rawValue)
+    }
+
+    /// True if at least one supported metric is enabled
+    private var hasEnabledMetrics: Bool {
+        showWaist || showHip || showChest || showNeck
     }
 
     /// Convert input string to cm based on current unit
@@ -168,7 +177,13 @@ struct QuickMetricsSheet: View {
         }
         .presentationDetents([.large])
         .accessibilityIdentifier(Self.sheetIdentifier)
-        .onAppear { loadDefaults() }
+        .onAppear {
+            // Load user's preferred unit
+            if let preferredUnit = user?.measurementUnit {
+                unit = preferredUnit == "cm" ? Self.unitCm : Self.unitIn
+            }
+            loadDefaults()
+        }
         .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
@@ -176,37 +191,58 @@ struct QuickMetricsSheet: View {
 
     @ViewBuilder
     private var measurementsSection: some View {
-        if showWaist {
-            Section("Waist") {
-                TextField(placeholderText("waist"), text: $waistInput)
-                    .keyboardType(.decimalPad)
-                    .accessibilityIdentifier(Self.waistInputIdentifier)
+        if hasEnabledMetrics {
+            if showWaist {
+                Section("Waist") {
+                    TextField(placeholderText("waist"), text: $waistInput)
+                        .keyboardType(.decimalPad)
+                        .accessibilityIdentifier(Self.waistInputIdentifier)
+                }
             }
-        }
 
-        if showHip {
-            Section("Hip") {
-                TextField(placeholderText("hip"), text: $hipInput)
-                    .keyboardType(.decimalPad)
-                    .accessibilityIdentifier(Self.hipInputIdentifier)
+            if showHip {
+                Section("Hip") {
+                    TextField(placeholderText("hip"), text: $hipInput)
+                        .keyboardType(.decimalPad)
+                        .accessibilityIdentifier(Self.hipInputIdentifier)
+                }
             }
-        }
 
-        if showChest {
-            Section("Chest") {
-                TextField(placeholderText("chest"), text: $chestInput)
-                    .keyboardType(.decimalPad)
-                    .accessibilityIdentifier(Self.chestInputIdentifier)
+            if showChest {
+                Section("Chest") {
+                    TextField(placeholderText("chest"), text: $chestInput)
+                        .keyboardType(.decimalPad)
+                        .accessibilityIdentifier(Self.chestInputIdentifier)
+                }
             }
-        }
 
-        if showNeck {
-            Section("Neck") {
-                TextField(placeholderText("neck"), text: $neckInput)
-                    .keyboardType(.decimalPad)
-                    .accessibilityIdentifier(Self.neckInputIdentifier)
+            if showNeck {
+                Section("Neck") {
+                    TextField(placeholderText("neck"), text: $neckInput)
+                        .keyboardType(.decimalPad)
+                        .accessibilityIdentifier(Self.neckInputIdentifier)
+                }
             }
+        } else {
+            noMetricsEnabledSection
         }
+    }
+
+    private var noMetricsEnabledSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("No Metrics Enabled", systemImage: "ruler")
+                    .font(.headline)
+                Text(
+                    "You haven't enabled any body metrics for tracking. "
+                        + "Go to More → Feature Settings → Body Metrics Visibility to choose which metrics to track."
+                )
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+        }
+        .accessibilityIdentifier("no-metrics-enabled-section")
     }
 
     private func placeholderText(_ measurement: String) -> String {

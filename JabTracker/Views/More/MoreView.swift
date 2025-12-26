@@ -23,11 +23,9 @@ struct MoreView: View {
                     }
                     .accessibilityIdentifier("body-metrics-visibility-link")
 
-                    // TODO: Phase 11-02 - Replace EmptyView() with UnitsOfMeasureView()
-                    NavigationLink(destination: EmptyView()) {
+                    NavigationLink(destination: UnitsOfMeasureView()) {
                         Label("Units of Measure", systemImage: "ruler")
                     }
-                    .disabled(true)
                     .accessibilityIdentifier("units-of-measure-link")
                 }
             }

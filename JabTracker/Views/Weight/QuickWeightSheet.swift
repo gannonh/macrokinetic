@@ -230,6 +230,12 @@ struct QuickWeightSheet: View {
         isSaving = true
         defer { isSaving = false }
 
+        // Update user's preferred unit if changed
+        if let user = users.first, user.weightUnit != weightUnit {
+            user.weightUnit = weightUnit
+            try? modelContext.save()
+        }
+
         do {
             // Log weight entry
             let entry = try await service.logWeight(

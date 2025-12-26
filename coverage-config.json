@@ -231,6 +231,7 @@
       "Views/Settings/MedicationProfileSettingsView.swift",
       "Views/Settings/MedicationProfileViewModel.swift",
       "Views/Settings/BodyMetricsVisibilityView.swift",
+      "Views/Settings/UnitsOfMeasureView.swift",
       "Views/Settings/SettingsView.swift",
       "Views/SplashView.swift",
       "Views/UserProfileView.swift",

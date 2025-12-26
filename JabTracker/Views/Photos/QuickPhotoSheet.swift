@@ -61,9 +61,9 @@ struct QuickPhotoSheet: View {
         AppServices.shared.progressPhotoService
     }
 
-    /// Check if photo data is available for saving
+    /// Check if photo data is available for saving and photo types are enabled
     private var canSave: Bool {
-        photoData != nil
+        photoData != nil && hasEnabledPhotoTypes
     }
 
     /// Check if camera is available on this device
@@ -73,10 +73,20 @@ struct QuickPhotoSheet: View {
 
     /// Photo types enabled based on user preferences
     private var enabledPhotoTypes: [PhotoType] {
-        PhotoType.allCases.filter { photoType in
-            user?.isPhotoTypeEnabled(photoType.rawValue)
-                ?? User.defaultEnabledPhotoTypes.contains(photoType.rawValue)
+        guard let user = user else {
+            // Fall back to defaults if no user
+            return PhotoType.allCases.filter { photoType in
+                User.defaultEnabledPhotoTypes.contains(photoType.rawValue)
+            }
         }
+        return PhotoType.allCases.filter { photoType in
+            user.enabledPhotoTypes.contains(photoType.rawValue)
+        }
+    }
+
+    /// True if at least one photo type is enabled
+    private var hasEnabledPhotoTypes: Bool {
+        !enabledPhotoTypes.isEmpty
     }
 
     // MARK: - Accessibility Identifiers
@@ -98,10 +108,14 @@ struct QuickPhotoSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                photoSection
-                photoTypeSection
-                dateSection
-                notesSection
+                if hasEnabledPhotoTypes {
+                    photoSection
+                    photoTypeSection
+                    dateSection
+                    notesSection
+                } else {
+                    noPhotoTypesEnabledSection
+                }
             }
             .navigationTitle("Progress Photo")
             .navigationBarTitleDisplayMode(.inline)
@@ -233,6 +247,24 @@ struct QuickPhotoSheet: View {
         Section("Notes (optional)") {
             TextField("Add notes", text: $notes)
         }
+    }
+
+    private var noPhotoTypesEnabledSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("No Photo Types Enabled", systemImage: "camera")
+                    .font(.headline)
+                Text(
+                    "You haven't enabled any progress photo types for tracking. "
+                        + "Go to More → Feature Settings → Body Metrics Visibility "
+                        + "to choose which photo types to capture."
+                )
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+        }
+        .accessibilityIdentifier("no-photo-types-enabled-section")
     }
 
     // MARK: - Actions

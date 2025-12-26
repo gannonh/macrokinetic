@@ -721,10 +721,10 @@ struct SearchMethodTests {
         #expect(SearchMethod.allCases.count == 5)
     }
 
-    @Test("SearchMethod.search, .scan, and .library are enabled")
-    func searchMethodSearchScanAndLibraryEnabled() {
+    @Test("SearchMethod.search, .scan, .library, and .quickAdd are enabled")
+    func searchMethodSearchScanLibraryAndQuickAddEnabled() {
         for method in SearchMethod.allCases {
-            if method == .search || method == .scan || method == .library {
+            if method == .search || method == .scan || method == .library || method == .quickAdd {
                 #expect(method.isEnabled == true, "Method \(method.rawValue) should be enabled")
             } else {
                 #expect(method.isEnabled == false, "Method \(method.rawValue) should be disabled")
