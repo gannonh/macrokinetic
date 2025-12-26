@@ -35,6 +35,11 @@ final class User {
     var dailyCarbGoal: Double = 200.0
     var dailyFatGoal: Double = 65.0
 
+    // Body metrics visibility preferences
+    // Stores metric keys that are enabled (default: waist only)
+    var enabledBodyMetrics: [String] = ["waist"]
+    var enabledPhotoTypes: [String] = ["front"]
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]?  // CloudKit requires optional relationships
 
@@ -60,7 +65,9 @@ final class User {
         dailyCalorieGoal: Double = 2000.0,
         dailyProteinGoal: Double = 150.0,
         dailyCarbGoal: Double = 200.0,
-        dailyFatGoal: Double = 65.0
+        dailyFatGoal: Double = 65.0,
+        enabledBodyMetrics: [String] = ["waist"],
+        enabledPhotoTypes: [String] = ["front"]
     ) {
         self.email = email
         self.name = name
@@ -78,6 +85,8 @@ final class User {
         self.dailyProteinGoal = dailyProteinGoal
         self.dailyCarbGoal = dailyCarbGoal
         self.dailyFatGoal = dailyFatGoal
+        self.enabledBodyMetrics = enabledBodyMetrics
+        self.enabledPhotoTypes = enabledPhotoTypes
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
@@ -218,5 +227,37 @@ extension User {
         }
 
         return totalInterval / Double(intervals)
+    }
+}
+
+// MARK: - Metrics Visibility Helpers
+
+extension User {
+    /// Check if a specific body metric is enabled
+    func isMetricEnabled(_ metric: String) -> Bool {
+        enabledBodyMetrics.contains(metric)
+    }
+
+    /// Check if a specific photo type is enabled
+    func isPhotoTypeEnabled(_ photoType: String) -> Bool {
+        enabledPhotoTypes.contains(photoType)
+    }
+
+    /// Toggle a body metric's visibility
+    func toggleMetric(_ metric: String) {
+        if enabledBodyMetrics.contains(metric) {
+            enabledBodyMetrics.removeAll { $0 == metric }
+        } else {
+            enabledBodyMetrics.append(metric)
+        }
+    }
+
+    /// Toggle a photo type's visibility
+    func togglePhotoType(_ photoType: String) {
+        if enabledPhotoTypes.contains(photoType) {
+            enabledPhotoTypes.removeAll { $0 == photoType }
+        } else {
+            enabledPhotoTypes.append(photoType)
+        }
     }
 }

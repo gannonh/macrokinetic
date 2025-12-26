@@ -30,6 +30,9 @@ struct QuickPhotoSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var users: [User]
+
+    private var user: User? { users.first }
 
     // MARK: - State
 
@@ -66,6 +69,13 @@ struct QuickPhotoSheet: View {
     /// Check if camera is available on this device
     private var isCameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
+    }
+
+    /// Photo types enabled based on user preferences
+    private var enabledPhotoTypes: [PhotoType] {
+        PhotoType.allCases.filter {
+            user?.isPhotoTypeEnabled($0.rawValue) ?? ($0 == .front)
+        }
     }
 
     // MARK: - Accessibility Identifiers
@@ -196,7 +206,7 @@ struct QuickPhotoSheet: View {
     private var photoTypeSection: some View {
         Section("Photo Type") {
             Picker("Type", selection: $photoType) {
-                ForEach(PhotoType.allCases, id: \.self) { type in
+                ForEach(enabledPhotoTypes, id: \.self) { type in
                     Label(type.displayName, systemImage: type.icon)
                         .tag(type)
                 }

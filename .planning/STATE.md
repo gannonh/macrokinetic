@@ -11,6 +11,7 @@
 - Quick Add for macro-only food logging without food lookup
 - Weight and body fat tracking with HealthKit sync
 - Configurable body metrics with progress photo capture
+- Feature settings for body metrics visibility and units of measure
 
 **Constraints:**
 - CloudKit sync required for cross-device access
@@ -21,12 +22,12 @@
 
 ## Current Position
 
-Phase: 10 of 10 (Metrics & Photos)
-Plan: 2 of ? in current phase
+Phase: 11 of 11 (Feature Settings)
+Plan: 1 of 2 in current phase
 Status: In progress
-Last activity: 2025-12-26 - Completed 10-02-PLAN.md
+Last activity: 2025-12-26 - Completed 11-01-PLAN.md
 
-Progress: █████████░ 80%
+Progress: █████████▓ 95%
 
 ## GitHub Tracking
 
@@ -37,9 +38,9 @@ Branch: feat/319-v0.2.0-enhanced-tracking
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: ~22 min
-- Total execution time: ~3.9 hours
+- Total plans completed: 10
+- Average duration: ~20 min
+- Total execution time: ~4 hours
 
 **By Phase:**
 
@@ -50,10 +51,11 @@ Branch: feat/319-v0.2.0-enhanced-tracking
 | 7 | 1 | ~10m | ~10m |
 | 8 | 1 | ~30m | ~30m |
 | 9 | 3/3 | ~15m | ~5m |
-| 10 | 2/? | ~63m | ~32m |
+| 10 | 2/2 | ~63m | ~32m |
+| 11 | 1/2 | ~4m | ~4m |
 
 **Recent Trend:**
-- Last 5 plans: 09-01, 09-02, 09-03, 10-01, 10-02
+- Last 5 plans: 09-02, 09-03, 10-01, 10-02, 11-01
 - Trend: Phases completing smoothly
 
 *Updated after each plan completion*
@@ -81,10 +83,16 @@ Branch: feat/319-v0.2.0-enhanced-tracking
 | 10 | PhotoType as String for CloudKit | Raw value storage for CloudKit compatibility |
 | 10 | "AI" placeholder in top row shortcuts | Reserved for future CV macro entry, "Progress Photos" in list |
 | 10 | Camera + Library buttons shown upfront | Faster UX than action sheet for photo selection |
+| 11 | Default enabledBodyMetrics to ["waist"] | Most common use case, users opt-in to additional metrics |
+| 11 | Default enabledPhotoTypes to ["front"] | Minimal default, users enable additional photo types as needed |
 
 ### Deferred Issues
 
 None yet.
+
+### Roadmap Evolution
+
+- Phase 11 added: Feature Settings (Body Metrics Visibility + Units of Measure)
 
 ### Blockers/Concerns Carried Forward
 
@@ -99,6 +107,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-26T00:17:42Z
-Stopped at: Completed 10-02-PLAN.md - UI Sheets + Integration (Phase 10 plan 2 complete)
+Last session: 2025-12-26T01:06:28Z
+Stopped at: Completed 11-01-PLAN.md (Metrics Visibility Settings)
 Resume file: None

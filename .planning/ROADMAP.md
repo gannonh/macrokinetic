@@ -14,13 +14,13 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 🚧 **v0.2.0 Enhanced Tracking** - Phases 5-10 (in progress)
+- 🚧 **v0.2.0 Enhanced Tracking** - Phases 5-11 (in progress)
 
 ## Phases
 
 ### 🚧 v0.2.0 Enhanced Tracking (In Progress)
 
-**Milestone Goal:** Enhanced daily tracking with calendar navigation, food library management, quick macro entry, weight tracking with HealthKit, and body metrics with progress photos.
+**Milestone Goal:** Enhanced daily tracking with calendar navigation, food library management, quick macro entry, weight tracking with HealthKit, body metrics with progress photos, and feature settings for metrics visibility and units.
 
 #### Phase 5: Food Log Calendar
 
@@ -87,6 +87,17 @@ Plans:
 - [x] 10-01: MetricsEntry + ProgressPhoto models and services with HealthKit sync
 - [x] 10-02: UI Sheets + Integration (QuickMetricsSheet, QuickPhotoSheet, ShortcutsSheet wiring)
 
+#### Phase 11: Feature Settings
+
+**Goal**: Body metrics visibility toggles and units of measure configuration
+**Depends on**: Phase 10
+**Research**: Unlikely (settings UI patterns)
+**Plans**: 2
+
+Plans:
+- [x] 11-01: Metrics visibility preferences, BodyMetricsVisibilityView, sheet filtering
+- [ ] 11-02: Units of measure preferences, UnitsOfMeasureView, sheet integration
+
 ## Progress
 
 **Execution Order:**
@@ -103,4 +114,5 @@ Phases execute in numeric order within each milestone.
 | 7. Food Library | v0.2.0 | 1/1 | Complete | 2025-12-24 |
 | 8. Quick Add | v0.2.0 | 1/1 | Complete | 2025-12-25 |
 | 9. Weight Tracking | v0.2.0 | 3/3 | Complete | 2025-12-25 |
-| 10. Metrics & Photos | v0.2.0 | 2/? | In progress | - |
+| 10. Metrics & Photos | v0.2.0 | 2/2 | Complete | 2025-12-26 |
+| 11. Feature Settings | v0.2.0 | 1/2 | In progress | - |

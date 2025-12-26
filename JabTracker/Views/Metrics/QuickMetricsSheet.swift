@@ -24,6 +24,9 @@ struct QuickMetricsSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var users: [User]
+
+    private var user: User? { users.first }
 
     // MARK: - State
 
@@ -52,9 +55,12 @@ struct QuickMetricsSheet: View {
         AppServices.shared.metricsService
     }
 
-    /// Check if at least one measurement has valid input
+    /// Check if at least one visible measurement has valid input
     private var canSave: Bool {
-        waistCm != nil || hipCm != nil || chestCm != nil || neckCm != nil
+        (showWaist && waistCm != nil)
+            || (showHip && hipCm != nil)
+            || (showChest && chestCm != nil)
+            || (showNeck && neckCm != nil)
     }
 
     /// Convert waist input to cm based on current unit
@@ -76,6 +82,13 @@ struct QuickMetricsSheet: View {
     private var neckCm: Double? {
         convertToCm(neckInput)
     }
+
+    // MARK: - Visibility Preferences
+
+    private var showWaist: Bool { user?.isMetricEnabled("waist") ?? true }
+    private var showHip: Bool { user?.isMetricEnabled("hips") ?? false }
+    private var showChest: Bool { user?.isMetricEnabled("chest") ?? false }
+    private var showNeck: Bool { user?.isMetricEnabled("neck") ?? false }
 
     /// Convert input string to cm based on current unit
     private func convertToCm(_ input: String) -> Double? {
@@ -146,26 +159,33 @@ struct QuickMetricsSheet: View {
 
     // MARK: - Sections
 
+    @ViewBuilder
     private var measurementsSection: some View {
-        Group {
+        if showWaist {
             Section("Waist") {
                 TextField(placeholderText("waist"), text: $waistInput)
                     .keyboardType(.decimalPad)
                     .accessibilityIdentifier(Self.waistInputIdentifier)
             }
+        }
 
+        if showHip {
             Section("Hip") {
                 TextField(placeholderText("hip"), text: $hipInput)
                     .keyboardType(.decimalPad)
                     .accessibilityIdentifier(Self.hipInputIdentifier)
             }
+        }
 
+        if showChest {
             Section("Chest") {
                 TextField(placeholderText("chest"), text: $chestInput)
                     .keyboardType(.decimalPad)
                     .accessibilityIdentifier(Self.chestInputIdentifier)
             }
+        }
 
+        if showNeck {
             Section("Neck") {
                 TextField(placeholderText("neck"), text: $neckInput)
                     .keyboardType(.decimalPad)
