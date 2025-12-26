@@ -17,13 +17,7 @@ struct ContentView: View {
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
     @State private var showingShortcuts = false
-    @State private var showingFoodSearchSheet = false
-    @State private var showingFoodSearchWithScan = false
-    @State private var showingFoodLibrary = false
-    @State private var showingFoodSearchWithQuickAdd = false
-    @State private var showingQuickWeight = false
-    @State private var showingQuickMetrics = false
-    @State private var showingQuickPhoto = false
+    @State private var activeShortcutSheet: ShortcutDestination?
     /// The currently selected date in FoodLogView, shared for tab bar + button
     @State private var selectedFoodLogDate = Date()
 
@@ -132,37 +126,31 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showingShortcuts) {
-            ShortcutsSheet(
-                showingFoodSearch: $showingFoodSearchSheet,
-                showingQuickDose: $showingQuickDoseSheet,
-                showingFoodSearchWithScan: $showingFoodSearchWithScan,
-                showingFoodLibrary: $showingFoodLibrary,
-                showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd,
-                showingQuickWeight: $showingQuickWeight,
-                showingQuickMetrics: $showingQuickMetrics,
-                showingQuickPhoto: $showingQuickPhoto
-            )
+            ShortcutsSheet(activeSheet: $activeShortcutSheet)
         }
-        .sheet(isPresented: $showingQuickWeight) {
-            QuickWeightSheet()
-        }
-        .sheet(isPresented: $showingQuickMetrics) {
-            QuickMetricsSheet()
-        }
-        .sheet(isPresented: $showingQuickPhoto) {
-            QuickPhotoSheet()
-        }
-        .sheet(isPresented: $showingFoodSearchSheet) {
-            foodSearchSheet()
-        }
-        .sheet(isPresented: $showingFoodSearchWithScan) {
-            foodSearchSheet(initialMethod: .scan)
-        }
-        .sheet(isPresented: $showingFoodLibrary) {
-            foodSearchSheet(initialMethod: .library)
-        }
-        .sheet(isPresented: $showingFoodSearchWithQuickAdd) {
-            foodSearchSheet(initialMethod: .quickAdd)
+        .sheet(item: $activeShortcutSheet) { destination in
+            switch destination {
+            case .foodSearch:
+                foodSearchSheet()
+            case .quickDose:
+                QuickDoseSheet(
+                    viewModel: quickDoseViewModel,
+                    doseService: doseService,
+                    showingSuccessMessage: $showingSuccessMessage
+                )
+            case .barcodeScan:
+                foodSearchSheet(initialMethod: .scan)
+            case .foodLibrary:
+                foodSearchSheet(initialMethod: .library)
+            case .quickAdd:
+                foodSearchSheet(initialMethod: .quickAdd)
+            case .quickWeight:
+                QuickWeightSheet()
+            case .quickMetrics:
+                QuickMetricsSheet()
+            case .quickPhoto:
+                QuickPhotoSheet()
+            }
         }
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)

@@ -135,11 +135,7 @@ struct QuickPhotoSheet: View {
         .onChange(of: selectedPhotoItem) { _, newItem in
             Task { await loadPhoto(from: newItem) }
         }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "An error occurred")
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     // MARK: - Sections
@@ -270,14 +266,24 @@ struct QuickPhotoSheet: View {
     }
 
     /// Compress image to JPEG with target size under 1MB for CloudKit
+    /// Uses progressive quality reduction, then resizes if still too large
     private func compressImage(_ data: Data) -> Data? {
         guard let image = UIImage(data: data) else { return nil }
 
-        // Start with initial compression quality
+        // Try compression first
+        if let result = compressWithQuality(image: image) {
+            return result
+        }
+
+        // If compression alone doesn't work, resize and compress
+        return resizeAndCompress(image: image)
+    }
+
+    /// Attempt compression with progressively lower quality
+    private func compressWithQuality(image: UIImage) -> Data? {
         var compression: CGFloat = Self.initialCompressionQuality
         var compressed = image.jpegData(compressionQuality: compression)
 
-        // Progressively reduce quality until under target size
         while let currentData = compressed,
             currentData.count > Self.maxImageSizeBytes,
             compression > Self.minCompressionQuality
@@ -286,9 +292,55 @@ struct QuickPhotoSheet: View {
             compressed = image.jpegData(compressionQuality: compression)
         }
 
-        return compressed
+        // Return only if under target size
+        if let result = compressed, result.count <= Self.maxImageSizeBytes {
+            return result
+        }
+        return nil
     }
 
+    /// Resize image and compress to meet size target
+    private func resizeAndCompress(image: UIImage) -> Data? {
+        var currentImage = image
+        var scale: CGFloat = 0.9
+
+        // Progressively reduce dimensions until under target size
+        while scale > 0.1 {
+            let newSize = CGSize(
+                width: currentImage.size.width * scale,
+                height: currentImage.size.height * scale
+            )
+
+            let renderer = UIGraphicsImageRenderer(size: newSize)
+            let resizedImage = renderer.image { _ in
+                currentImage.draw(in: CGRect(origin: .zero, size: newSize))
+            }
+
+            // Try compressing the resized image
+            if let compressed = resizedImage.jpegData(compressionQuality: Self.initialCompressionQuality),
+                compressed.count <= Self.maxImageSizeBytes
+            {
+                logger.debug(
+                    "Resized image to \(Int(newSize.width))x\(Int(newSize.height)) (\(compressed.count) bytes)")
+                return compressed
+            }
+
+            // Try lower quality on resized image
+            if let result = compressWithQuality(image: resizedImage) {
+                logger.debug("Resized and compressed to \(result.count) bytes")
+                return result
+            }
+
+            currentImage = resizedImage
+            scale = 0.8  // More aggressive reduction on subsequent passes
+        }
+
+        logger.warning("Could not compress image below \(Self.maxImageSizeBytes) bytes")
+        // Return best effort - the smallest we could achieve
+        return currentImage.jpegData(compressionQuality: Self.minCompressionQuality)
+    }
+
+    @MainActor
     private func save() async {
         guard let service = photoService else {
             logger.error("ProgressPhotoService not initialized")

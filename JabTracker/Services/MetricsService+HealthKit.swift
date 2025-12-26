@@ -115,4 +115,32 @@ extension MetricsService {
         }
         return Self.healthStore.authorizationStatus(for: waistType)
     }
+
+    /// Sync entry to HealthKit with automatic authorization handling
+    /// Requests authorization if not yet granted, then syncs the entry
+    /// - Parameter entry: The metrics entry to sync
+    func syncToHealthKitWithAuth(_ entry: MetricsEntry) async {
+        guard Self.isHealthKitAvailable else {
+            Self.healthKitLogger.info("HealthKit not available, skipping sync")
+            return
+        }
+
+        // Request authorization if not yet determined
+        let status = getAuthorizationStatus()
+        if status == .notDetermined {
+            do {
+                _ = try await requestHealthKitAuthorization()
+            } catch {
+                Self.healthKitLogger.warning("HealthKit authorization request failed: \(error.localizedDescription)")
+            }
+        }
+
+        // Sync entry (handles auth denial gracefully)
+        do {
+            try await syncToHealthKit(entry)
+            Self.healthKitLogger.info("Synced metrics entry to HealthKit")
+        } catch {
+            Self.healthKitLogger.error("Failed to sync metrics to HealthKit: \(error.localizedDescription)")
+        }
+    }
 }

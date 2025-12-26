@@ -153,6 +153,7 @@
       "Design/CardComponents.swift",
       "Design/Colors+Extensions.swift",
       "Design/DesignTokens.swift",
+      "Design/ErrorAlertModifier.swift",
       "JabTrackerApp.swift",
       "Models/SubscriptionProducts.swift",
       "Onboarding/Components/ConcentrationCurvePreview.swift",

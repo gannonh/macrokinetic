@@ -7,6 +7,20 @@
 
 import SwiftUI
 
+/// Destination sheets that can be presented from shortcuts
+enum ShortcutDestination: String, Identifiable {
+    case foodSearch
+    case quickDose
+    case barcodeScan
+    case foodLibrary
+    case quickAdd
+    case quickWeight
+    case quickMetrics
+    case quickPhoto
+
+    var id: String { rawValue }
+}
+
 /// Data model for a shortcut item
 struct ShortcutItem: Identifiable {
     let icon: String
@@ -17,7 +31,7 @@ struct ShortcutItem: Identifiable {
 }
 
 /// Timing constants for sheet transitions
-private enum SheetTransitionTiming {
+enum SheetTransitionTiming {
     /// Delay required for SwiftUI sheet dismissal before presenting new sheet
     static let delay: TimeInterval = 0.3
 }
@@ -27,29 +41,8 @@ private enum SheetTransitionTiming {
 struct ShortcutsSheet: View {
     @Environment(\.dismiss) private var dismiss
 
-    /// Binding to trigger food search sheet
-    @Binding var showingFoodSearch: Bool
-
-    /// Binding to trigger quick dose sheet
-    @Binding var showingQuickDose: Bool
-
-    /// Binding to trigger food search sheet with scanner pre-selected
-    @Binding var showingFoodSearchWithScan: Bool
-
-    /// Binding to trigger food search sheet with library pre-selected
-    @Binding var showingFoodLibrary: Bool
-
-    /// Binding to trigger food search sheet with quick add pre-selected
-    @Binding var showingFoodSearchWithQuickAdd: Bool
-
-    /// Binding to trigger quick weight sheet
-    @Binding var showingQuickWeight: Bool
-
-    /// Binding to trigger quick metrics sheet
-    @Binding var showingQuickMetrics: Bool
-
-    /// Binding to trigger quick photo sheet
-    @Binding var showingQuickPhoto: Bool
+    /// Binding to the active sheet destination
+    @Binding var activeSheet: ShortcutDestination?
 
     /// State for "Coming Soon" alert
     @State private var showingComingSoon = false
@@ -166,22 +159,22 @@ struct ShortcutsSheet: View {
     // MARK: - Action Handlers
 
     /// Dismiss sheet and present a new sheet after transition delay
-    private func dismissAndPresent(_ binding: Binding<Bool>) {
+    private func dismissAndPresent(_ destination: ShortcutDestination) {
         dismiss()
         // Small delay to allow sheet dismissal before presenting new sheet
         DispatchQueue.main.asyncAfter(deadline: .now() + SheetTransitionTiming.delay) {
-            binding.wrappedValue = true
+            activeSheet = destination
         }
     }
 
     private func handleTopRowAction(_ shortcut: ShortcutItem) {
         switch shortcut.label {
         case "Search":
-            dismissAndPresent($showingFoodSearch)
+            dismissAndPresent(.foodSearch)
         case "Barcode":
-            dismissAndPresent($showingFoodSearchWithScan)
+            dismissAndPresent(.barcodeScan)
         case "Shots":
-            dismissAndPresent($showingQuickDose)
+            dismissAndPresent(.quickDose)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
@@ -191,15 +184,15 @@ struct ShortcutsSheet: View {
     private func handleListRowAction(_ shortcut: ShortcutItem) {
         switch shortcut.label {
         case "Your Foods":
-            dismissAndPresent($showingFoodLibrary)
+            dismissAndPresent(.foodLibrary)
         case "Quick Add":
-            dismissAndPresent($showingFoodSearchWithQuickAdd)
+            dismissAndPresent(.quickAdd)
         case "Weight":
-            dismissAndPresent($showingQuickWeight)
+            dismissAndPresent(.quickWeight)
         case "Metrics":
-            dismissAndPresent($showingQuickMetrics)
+            dismissAndPresent(.quickMetrics)
         case "Progress Photos":
-            dismissAndPresent($showingQuickPhoto)
+            dismissAndPresent(.quickPhoto)
         default:
             comingSoonFeature = shortcut.label
             showingComingSoon = true
@@ -211,28 +204,12 @@ struct ShortcutsSheet: View {
 
 #Preview("Shortcuts Sheet") {
     struct PreviewWrapper: View {
-        @State private var showingFoodSearch = false
-        @State private var showingQuickDose = false
-        @State private var showingFoodSearchWithScan = false
-        @State private var showingFoodLibrary = false
-        @State private var showingFoodSearchWithQuickAdd = false
-        @State private var showingQuickWeight = false
-        @State private var showingQuickMetrics = false
-        @State private var showingQuickPhoto = false
+        @State private var activeSheet: ShortcutDestination?
 
         var body: some View {
             Color.clear
                 .sheet(isPresented: .constant(true)) {
-                    ShortcutsSheet(
-                        showingFoodSearch: $showingFoodSearch,
-                        showingQuickDose: $showingQuickDose,
-                        showingFoodSearchWithScan: $showingFoodSearchWithScan,
-                        showingFoodLibrary: $showingFoodLibrary,
-                        showingFoodSearchWithQuickAdd: $showingFoodSearchWithQuickAdd,
-                        showingQuickWeight: $showingQuickWeight,
-                        showingQuickMetrics: $showingQuickMetrics,
-                        showingQuickPhoto: $showingQuickPhoto
-                    )
+                    ShortcutsSheet(activeSheet: $activeSheet)
                 }
         }
     }

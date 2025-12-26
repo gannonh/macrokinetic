@@ -38,7 +38,6 @@ struct QuickMetricsSheet: View {
     @State private var isSaving: Bool = false
     @State private var errorMessage: String?
     @State private var showingError: Bool = false
-    @State private var healthKitAuthorized: Bool = false
 
     // MARK: - Logger
 
@@ -142,11 +141,7 @@ struct QuickMetricsSheet: View {
         .presentationDetents([.large])
         .accessibilityIdentifier(Self.sheetIdentifier)
         .onAppear { loadDefaults() }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "An error occurred")
-        }
+        .errorAlert(isPresented: $showingError, message: errorMessage)
     }
 
     // MARK: - Sections
@@ -252,10 +247,8 @@ struct QuickMetricsSheet: View {
                 logger.warning("Failed to load last metrics entry: \(error.localizedDescription)")
             }
 
-            // Check HealthKit authorization status
-            let status = service.getAuthorizationStatus()
+            // Set HealthKit sync toggle based on availability
             await MainActor.run {
-                healthKitAuthorized = status == .sharingAuthorized
                 syncToHealthKit = MetricsService.isHealthKitAvailable
             }
         }
@@ -289,6 +282,7 @@ struct QuickMetricsSheet: View {
         return String(format: "%.1f", value * factor)
     }
 
+    @MainActor
     private func save() async {
         guard let service = metricsService else {
             logger.error("MetricsService not initialized")
@@ -313,9 +307,9 @@ struct QuickMetricsSheet: View {
 
             logger.info("Logged metrics entry")
 
-            // Sync to HealthKit if enabled
+            // Sync to HealthKit if enabled (service handles auth internally)
             if syncToHealthKit {
-                await syncEntryToHealthKit(entry, service: service)
+                await service.syncToHealthKitWithAuth(entry)
             }
 
             dismiss()
@@ -323,27 +317,6 @@ struct QuickMetricsSheet: View {
             logger.error("Failed to log metrics: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             showingError = true
-        }
-    }
-
-    private func syncEntryToHealthKit(_ entry: MetricsEntry, service: MetricsService) async {
-        // Request authorization if not already authorized
-        if !healthKitAuthorized {
-            do {
-                _ = try await service.requestHealthKitAuthorization()
-            } catch {
-                logger.warning("HealthKit authorization request failed: \(error.localizedDescription)")
-                // Continue - local save succeeded, sync is optional
-            }
-        }
-
-        // Sync entry (handles auth denial gracefully internally)
-        do {
-            try await service.syncToHealthKit(entry)
-            logger.info("Synced waist to HealthKit")
-        } catch {
-            logger.error("Failed to sync metrics to HealthKit: \(error.localizedDescription)")
-            // Non-fatal: local entry saved successfully
         }
     }
 }

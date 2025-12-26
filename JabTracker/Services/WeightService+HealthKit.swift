@@ -127,4 +127,32 @@ extension WeightService {
         }
         return Self.healthStore.authorizationStatus(for: weightType)
     }
+
+    /// Sync entry to HealthKit with automatic authorization handling
+    /// Requests authorization if not yet granted, then syncs the entry
+    /// - Parameter entry: The weight entry to sync
+    func syncToHealthKitWithAuth(_ entry: WeightEntry) async {
+        guard isHealthKitAvailable else {
+            Self.logger.info("HealthKit not available, skipping sync")
+            return
+        }
+
+        // Request authorization if not yet determined
+        let status = getAuthorizationStatus()
+        if status == .notDetermined {
+            do {
+                _ = try await requestHealthKitAuthorization()
+            } catch {
+                Self.logger.warning("HealthKit authorization request failed: \(error.localizedDescription)")
+            }
+        }
+
+        // Sync entry (handles auth denial gracefully)
+        do {
+            try await syncToHealthKit(entry)
+            Self.logger.info("Synced weight entry to HealthKit")
+        } catch {
+            Self.logger.error("Failed to sync weight to HealthKit: \(error.localizedDescription)")
+        }
+    }
 }
