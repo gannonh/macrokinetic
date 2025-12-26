@@ -19,11 +19,7 @@ struct DataControllerBasicTests {
 
         // Test that shared instance has valid container
         _ = shared1.container.mainContext
-        #expect(
-            shared1.container.schema.entities.count == 11,
-            "Should have 11 entities: User, Dose, MedicationProfile, DoseTitration, DoseSchedule, "
-                + "ScheduledDose, Food, FoodEntry, MetricsEntry, ProgressPhoto, WeightEntry"
-        )
+        #expect(shared1.container.schema.entities.count == 11)
     }
 
     @Test("DataController test container creation")

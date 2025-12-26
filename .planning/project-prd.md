@@ -1,6 +1,6 @@
 ---
 created: 2024-01-15T00:00:00Z
-updated: 2025-12-25T17:18:09Z
+updated: 2025-12-26T18:01:49Z
 ---
 
 # MacroKinetic Product Requirements Document
@@ -509,6 +509,76 @@ User-created custom foods with barcode assignment, cloud sync, and prioritized s
 
 ---
 
+### ✅ Enhanced Daily Tracking (v0.2.0)
+
+Issue: [#319](https://github.com/gannonh/jab-tracker-ios/issues/319)
+Completed: 2025-12-26
+
+Calendar navigation, food library management, quick macro entry, weight tracking with HealthKit, body metrics with progress photos, and feature settings.
+
+#### Requirements
+
+- [x] Week calendar strip with day selection updating macro summary
+- [x] Tap food entry to open editable FoodDetailSheet
+- [x] Dedicated Food Library screen with Foods tab, sort options, tap-to-add
+- [x] Quick Add for macro-only food logging without food lookup
+- [x] Weight and body fat entry with HealthKit sync
+- [x] Configurable body metrics (waist, chest, hips, bicep, thigh) with HealthKit sync (waist only)
+- [x] Progress photo capture (front, side, back) with local storage
+- [x] Body metrics visibility toggles (which metrics to show in sheets)
+- [x] Units of measure preferences (metric/imperial for weight and length)
+- [x] CloudKit sync for all new models
+
+#### User Stories
+
+##### Calendar Navigation
+- **As a user**, I want a week calendar in Food Log, so that I can navigate to past days quickly.
+- **As a user**, I want to tap a day to see that day's entries, so that I can review my eating history.
+
+##### Food Library
+- **As a user**, I want a dedicated Food Library screen, so that I can manage all my custom foods in one place.
+- **As a user**, I want to sort foods by name or date added, so that I can find foods easily.
+- **As a user**, I want swipe actions to edit or delete foods, so that management is fast.
+
+##### Quick Add
+- **As a user**, I want to log macros directly without searching for foods, so that I can log quickly when I know the values.
+
+##### Weight Tracking
+- **As a user**, I want to log my weight quickly, so that I track progress over time.
+- **As a user**, I want to log body fat percentage, so that I track body composition.
+- **As a user**, I want weight synced to Apple Health, so that my data is centralized.
+
+##### Body Metrics
+- **As a user**, I want to log body measurements, so that I track progress beyond the scale.
+- **As a user**, I want to choose which metrics to show, so that I only see what's relevant to me.
+- **As a user**, I want to take progress photos, so that I have visual records of my journey.
+
+##### Settings
+- **As a user**, I want to toggle metric visibility, so that sheets aren't cluttered with unused fields.
+- **As a user**, I want to choose my preferred units, so that values display in familiar measurements.
+
+#### Key Design Decisions
+
+1. **Week calendar strip** - Compact navigation without leaving Food Log tab.
+2. **Metric-first storage** - All measurements stored in metric (kg, cm), converted for display.
+3. **HealthKit waist only** - Apple Health only supports waistCircumference type for body metrics.
+4. **Photo types as strings** - CloudKit-compatible storage for future extensibility.
+5. **Default minimal metrics** - Waist enabled by default, others opt-in.
+
+#### Acceptance Criteria
+
+- [x] Week calendar navigates days with entry indicators
+- [x] Tapping food entry opens editable sheet
+- [x] Food Library shows custom foods with sort options
+- [x] Quick Add logs macro-only entries
+- [x] Weight entry syncs to HealthKit when enabled
+- [x] Body metrics respect visibility preferences
+- [x] Progress photos capture and store locally
+- [x] Units display according to preferences
+- [x] All data syncs via CloudKit
+
+---
+
 ### 📋 Nutrition Goals & Daily Tracking
 
 Set personalized weight and macro goals, then track daily progress with visual indicators showing intake vs. targets.
@@ -1005,6 +1075,7 @@ StoreKit 2 integration for subscription tiers with paywall UI and purchase resto
 
 ## Update History
 
+- 2025-12-26: Added Enhanced Daily Tracking (v0.2.0) - calendar navigation, food library, quick add, weight tracking, body metrics, progress photos, feature settings
 - 2025-12-24: Added Custom Foods (Food Library) feature - completed with barcode scanning
 - 2025-12-20: Consolidated from macro-integration.md and project-prd.md into single sequenced PRD
 - 2025-12-19: Initial nutrition infrastructure documentation

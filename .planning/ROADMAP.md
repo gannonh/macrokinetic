@@ -96,7 +96,7 @@ Plans:
 
 Plans:
 - [x] 11-01: Metrics visibility preferences, BodyMetricsVisibilityView, sheet filtering
-- [ ] 11-02: Units of measure preferences, UnitsOfMeasureView, sheet integration
+- [x] 11-02: Units of measure preferences, UnitsOfMeasureView, sheet integration
 
 ## Progress
 
@@ -115,4 +115,4 @@ Phases execute in numeric order within each milestone.
 | 8. Quick Add | v0.2.0 | 1/1 | Complete | 2025-12-25 |
 | 9. Weight Tracking | v0.2.0 | 3/3 | Complete | 2025-12-25 |
 | 10. Metrics & Photos | v0.2.0 | 2/2 | Complete | 2025-12-26 |
-| 11. Feature Settings | v0.2.0 | 1/2 | In progress | - |
+| 11. Feature Settings | v0.2.0 | 2/2 | Complete | 2025-12-26 |

@@ -494,63 +494,293 @@ final class FoodLibraryUITests: XCTestCase {
 
     // MARK: - Library Tab (Phase 7)
 
+    /// Navigate to Library tab from food search sheet
+    private func navigateToLibraryTab() {
+        // Given: App is launched, open food search
+        openFoodSearch()
+
+        // When: Tap Library method tab
+        let libraryTab = app.buttons["method-tab-library"]
+        XCTAssertTrue(libraryTab.waitForExistence(timeout: 5), "Library method tab should exist")
+        libraryTab.tap()
+
+        // Wait for Library content to load
+        let libraryContent = app.otherElements["food-library-content"]
+        XCTAssertTrue(libraryContent.waitForExistence(timeout: 5), "Food library content should appear")
+    }
+
     /// User can access Library tab from food search
     /// Acceptance: Tap Library tab, Foods tab is selected by default
     func testAccessLibraryTabFromFoodSearch() {
-        // TODO: Implement after manual smoke test
+        // Given: App is launched
+        // When: Open food search and tap Library tab
+        navigateToLibraryTab()
+
+        // Then: Foods tab should be selected by default
+        let foodsTab = app.buttons["food-library-tab-foods"]
+        XCTAssertTrue(foodsTab.waitForExistence(timeout: 3), "Foods tab should exist")
+        // Verify Foods tab is visually selected (it's the default)
+        // The header showing "Foods" confirms we're on the Foods tab
+        let foodsHeader = app.staticTexts["Foods"]
+        XCTAssertTrue(foodsHeader.waitForExistence(timeout: 3), "Foods header should be visible")
     }
 
     /// User can access Library from Your Foods shortcut
     /// Acceptance: Tap +, tap Your Foods, Library opens on Foods tab
     func testAccessLibraryFromYourFoodsShortcut() {
-        // TODO: Implement after manual smoke test
+        // Given: App is launched
+        // When: Open shortcuts sheet
+        TestUtilities.openShortcutsSheet(app)
+
+        // And: Tap "Your Foods" shortcut
+        let yourFoodsButton = app.buttons["Your Foods"]
+        XCTAssertTrue(yourFoodsButton.waitForExistence(timeout: 3), "Your Foods shortcut should exist")
+        yourFoodsButton.tap()
+
+        // Then: Food search sheet opens with Library tab selected
+        let foodSearchSheet = app.otherElements["food-search-sheet"]
+        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 5), "Food search sheet should appear")
+
+        // And: Library content should be visible
+        let libraryContent = app.otherElements["food-library-content"]
+        XCTAssertTrue(libraryContent.waitForExistence(timeout: 5), "Food library content should appear")
+
+        // And: Foods tab should be selected by default
+        let foodsHeader = app.staticTexts["Foods"]
+        XCTAssertTrue(foodsHeader.waitForExistence(timeout: 3), "Foods header should be visible")
     }
 
     /// User sees custom foods in Library tab
     /// Acceptance: Create a custom food, open Library, food appears in list
     func testCustomFoodsAppearInLibraryTab() {
-        // TODO: Implement after manual smoke test
+        let customFoodName = "Library Test Food"
+
+        // Given: User has created a custom food
+        createCustomFood(name: customFoodName)
+
+        // When: User opens food search and navigates to Library tab
+        navigateToLibraryTab()
+
+        // Then: Custom food should appear in the Library list
+        // Look for any food library row
+        let foodRow = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-library-row-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(foodRow.waitForExistence(timeout: 5), "Food row should appear in Library")
+
+        // And: The food name should be visible
+        let foodNameText = app.staticTexts[customFoodName]
+        XCTAssertTrue(foodNameText.waitForExistence(timeout: 3), "Custom food name should be visible in Library")
     }
 
     /// User can sort foods by name in Library tab
     /// Acceptance: Tap sort menu, select Name, foods reorder alphabetically
     func testSortFoodsByNameInLibrary() {
-        // TODO: Implement after manual smoke test
+        // Given: User has created multiple custom foods
+        createCustomFood(name: "Zebra Snack")
+        createCustomFood(name: "Apple Pie Custom")
+
+        // When: User opens Library tab
+        navigateToLibraryTab()
+
+        // And: Taps the sort menu
+        let sortMenu = app.buttons["food-library-sort-menu"]
+        XCTAssertTrue(sortMenu.waitForExistence(timeout: 3), "Sort menu should exist")
+        sortMenu.tap()
+
+        // And: Selects "Name" sort option
+        let nameOption = app.buttons["Name"]
+        XCTAssertTrue(nameOption.waitForExistence(timeout: 3), "Name sort option should exist")
+        nameOption.tap()
+
+        // Then: Sort menu should now show "Name"
+        // Re-query the sort menu to check it updated
+        let updatedSortMenu = app.buttons["food-library-sort-menu"]
+        XCTAssertTrue(updatedSortMenu.waitForExistence(timeout: 3), "Sort menu should still exist")
+        // The menu label contains the current sort option text
+        let nameText = app.staticTexts["Name"]
+        XCTAssertTrue(nameText.waitForExistence(timeout: 3), "Sort menu should show Name as selected")
     }
 
     /// User can sort foods by date added in Library tab
-    /// Acceptance: Tap sort menu, select Modified, foods order by date
+    /// Acceptance: Tap sort menu, select Date Added, foods order by date
     func testSortFoodsByDateAddedInLibrary() {
-        // TODO: Implement after manual smoke test
+        // Given: User has created custom foods
+        createCustomFood(name: "Date Test Food")
+
+        // When: User opens Library tab
+        navigateToLibraryTab()
+
+        // And: Taps the sort menu
+        let sortMenu = app.buttons["food-library-sort-menu"]
+        XCTAssertTrue(sortMenu.waitForExistence(timeout: 3), "Sort menu should exist")
+        sortMenu.tap()
+
+        // And: Selects "Date Added" sort option
+        let dateAddedOption = app.buttons["Date Added"]
+        XCTAssertTrue(dateAddedOption.waitForExistence(timeout: 3), "Date Added sort option should exist")
+        dateAddedOption.tap()
+
+        // Then: Sort menu should show "Date Added" as selected
+        let dateAddedText = app.staticTexts["Date Added"]
+        XCTAssertTrue(dateAddedText.waitForExistence(timeout: 3), "Sort menu should show Date Added as selected")
     }
 
     /// User can tap food in Library to add to meal
     /// Acceptance: Tap food in Library, FoodDetailSheet opens
     func testTapFoodInLibraryOpensDetailSheet() {
-        // TODO: Implement after manual smoke test
+        let customFoodName = "Tappable Test Food"
+
+        // Given: User has created a custom food
+        createCustomFood(name: customFoodName)
+
+        // When: User opens Library tab
+        navigateToLibraryTab()
+
+        // And: Taps on a food row
+        let foodRow = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-library-row-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(foodRow.waitForExistence(timeout: 5), "Food row should exist")
+        foodRow.tap()
+
+        // Then: FoodDetailSheet should open
+        let foodDetailSheet = app.otherElements["food-detail-sheet"]
+        XCTAssertTrue(foodDetailSheet.waitForExistence(timeout: 5), "Food detail sheet should appear")
+
+        // And: The food name should be visible in the detail sheet
+        let foodNameInDetail = app.staticTexts[customFoodName]
+        XCTAssertTrue(foodNameInDetail.waitForExistence(timeout: 3), "Food name should be visible in detail sheet")
     }
 
     /// User can swipe to edit custom food in Library
     /// Acceptance: Swipe right, tap Edit, CreateFoodSheet opens
     func testSwipeToEditFoodInLibrary() {
-        // TODO: Implement after manual smoke test
+        let customFoodName = "Editable Library Food"
+
+        // Given: User has created a custom food
+        createCustomFood(name: customFoodName)
+
+        // When: User opens Library tab
+        navigateToLibraryTab()
+
+        // And: Swipes right on a food row to reveal edit
+        let foodRow = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-library-row-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(foodRow.waitForExistence(timeout: 5), "Food row should exist")
+        foodRow.swipeRight()
+
+        // And: Taps Edit button
+        let editButton = app.buttons["edit-food-library-button"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3), "Edit button should appear after swipe right")
+        editButton.tap()
+
+        // Then: CreateFoodSheet should open for editing
+        let createFoodSheet = app.otherElements["create-food-sheet"]
+        XCTAssertTrue(createFoodSheet.waitForExistence(timeout: 5), "Create food sheet should appear for editing")
+
+        // And: Food name should be pre-filled
+        let nameField = app.textFields["food-name-input"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 3), "Name field should exist")
+        if let nameValue = nameField.value as? String {
+            XCTAssertTrue(
+                nameValue.contains("Editable") || nameValue.contains("Library"),
+                "Name field should contain the custom food name"
+            )
+        }
     }
 
     /// User can swipe to delete custom food in Library
     /// Acceptance: Swipe left, tap Delete, confirmation appears, confirm removes food
     func testSwipeToDeleteFoodInLibrary() {
-        // TODO: Implement after manual smoke test
+        let customFoodName = "Deletable Library Food"
+
+        // Given: User has created a custom food
+        createCustomFood(name: customFoodName)
+
+        // When: User opens Library tab
+        navigateToLibraryTab()
+
+        // And: Swipes left on a food row to reveal delete
+        let foodRow = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-library-row-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(foodRow.waitForExistence(timeout: 5), "Food row should exist")
+        foodRow.swipeLeft()
+
+        // And: Taps Delete button
+        let deleteButton = app.buttons["delete-food-library-button"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 3), "Delete button should appear after swipe left")
+        deleteButton.tap()
+
+        // Then: Confirmation alert should appear
+        let deleteAlert = app.alerts.firstMatch
+        XCTAssertTrue(deleteAlert.waitForExistence(timeout: 3), "Delete confirmation alert should appear")
+
+        // And: Alert should have Delete and Cancel buttons
+        let alertDeleteButton = deleteAlert.buttons["Delete"]
+        let alertCancelButton = deleteAlert.buttons["Cancel"]
+        XCTAssertTrue(alertDeleteButton.exists, "Alert should have Delete button")
+        XCTAssertTrue(alertCancelButton.exists, "Alert should have Cancel button")
+
+        // When: User confirms deletion
+        alertDeleteButton.tap()
+
+        // Then: Alert should dismiss
+        XCTAssertFalse(deleteAlert.waitForExistence(timeout: 2), "Alert should dismiss after confirming delete")
+
+        // And: Food should no longer appear in library
+        let foodNameText = app.staticTexts[customFoodName]
+        XCTAssertFalse(foodNameText.waitForExistence(timeout: 3), "Deleted food should not appear in Library")
     }
 
     /// User sees empty state when no custom foods in Library
     /// Acceptance: With no custom foods, Library shows empty message
     func testLibraryEmptyStateWhenNoFoods() {
-        // TODO: Implement after manual smoke test
+        // Given: App is launched with no custom foods (clean state from setUp)
+        // When: User opens Library tab
+        navigateToLibraryTab()
+
+        // Then: Empty state message should be visible
+        let emptyStateText = app.staticTexts["No custom foods yet"]
+        XCTAssertTrue(emptyStateText.waitForExistence(timeout: 5), "Empty state message should appear")
+
+        // And: Help text should be visible
+        let helpText = app.staticTexts["Create one to get started."]
+        XCTAssertTrue(helpText.waitForExistence(timeout: 3), "Empty state help text should be visible")
     }
 
     /// Recipes and Favorites tabs show "Coming Soon"
     /// Acceptance: Tap Recipes/Favorites, alert shows "Coming Soon"
     func testRecipesAndFavoritesTabsShowComingSoon() {
-        // TODO: Implement after manual smoke test
+        // Given: User opens Library tab
+        navigateToLibraryTab()
+
+        // When: User taps Recipes tab
+        let recipesTab = app.buttons["food-library-tab-recipes"]
+        XCTAssertTrue(recipesTab.waitForExistence(timeout: 3), "Recipes tab should exist")
+        recipesTab.tap()
+
+        // Then: "Coming Soon" alert should appear
+        let comingSoonAlert = app.alerts["Coming Soon"]
+        XCTAssertTrue(comingSoonAlert.waitForExistence(timeout: 3), "Coming Soon alert should appear for Recipes")
+
+        // Dismiss the alert
+        let okButton = comingSoonAlert.buttons["OK"]
+        XCTAssertTrue(okButton.exists, "OK button should exist in alert")
+        okButton.tap()
+
+        // When: User taps Favorites tab
+        let favoritesTab = app.buttons["food-library-tab-favorites"]
+        XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3), "Favorites tab should exist")
+        favoritesTab.tap()
+
+        // Then: "Coming Soon" alert should appear again
+        let comingSoonAlertAgain = app.alerts["Coming Soon"]
+        XCTAssertTrue(
+            comingSoonAlertAgain.waitForExistence(timeout: 3),
+            "Coming Soon alert should appear for Favorites"
+        )
     }
 }
