@@ -60,7 +60,9 @@ struct NutritionProgramTests {
         try context.save()
 
         // Then
-        #expect(program.id != UUID())
+        // ID is auto-generated - verify program was saved and can be queried
+        let saved = try context.fetch(FetchDescriptor<NutritionProgram>()).first
+        #expect(saved?.id == program.id)
         #expect(program.programStyleRaw == "coached")
         #expect(program.dietPreferenceRaw == "balanced")
         #expect(program.calorieFloorTypeRaw == "standard")

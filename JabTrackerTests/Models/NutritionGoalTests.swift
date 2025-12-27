@@ -60,7 +60,9 @@ struct NutritionGoalTests {
         try context.save()
 
         // Then
-        #expect(goal.id != UUID())  // Has a valid ID
+        // ID is auto-generated - verify goal was saved and can be queried
+        let saved = try context.fetch(FetchDescriptor<NutritionGoal>()).first
+        #expect(saved?.id == goal.id)
         #expect(goal.goalTypeRaw == "weight_loss")
         #expect(goal.isActive == true)
         #expect(goal.startingWeightKg == 70.0)

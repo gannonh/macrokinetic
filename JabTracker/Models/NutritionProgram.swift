@@ -95,6 +95,24 @@ final class NutritionProgram {
         self.updatedAt = Date()
 
         // Encode initial configuration
+        self.configurationData = Self.encodeConfiguration(
+            style: style,
+            diet: diet,
+            calorieFloor: calorieFloor,
+            distributionMode: distributionMode,
+            proteinLevel: proteinLevel
+        )
+        // Don't initialize optional relationships - let SwiftData handle them
+    }
+
+    /// Encode a ProgramConfiguration to Data
+    private static func encodeConfiguration(
+        style: ProgramStyle,
+        diet: DietPreference,
+        calorieFloor: CalorieFloorType,
+        distributionMode: WeeklyDistributionMode,
+        proteinLevel: ProteinLevel
+    ) -> Data {
         let config = ProgramConfiguration(
             programStyle: style,
             dietPreference: diet,
@@ -102,10 +120,7 @@ final class NutritionProgram {
             weeklyDistributionMode: distributionMode,
             proteinLevel: proteinLevel
         )
-        if let encoded = try? JSONEncoder().encode(config) {
-            self.configurationData = encoded
-        }
-        // Don't initialize optional relationships - let SwiftData handle them
+        return (try? JSONEncoder().encode(config)) ?? Data()
     }
 }
 
@@ -235,16 +250,13 @@ extension NutritionProgram {
 extension NutritionProgram {
     /// Re-encode configuration when properties change
     private func updateConfiguration() {
-        let config = ProgramConfiguration(
-            programStyle: style,
-            dietPreference: diet,
-            calorieFloorType: calorieFloor,
-            weeklyDistributionMode: distributionMode,
+        configurationData = Self.encodeConfiguration(
+            style: style,
+            diet: diet,
+            calorieFloor: calorieFloor,
+            distributionMode: distributionMode,
             proteinLevel: protein
         )
-        if let encoded = try? JSONEncoder().encode(config) {
-            configurationData = encoded
-        }
         updatedAt = Date()
     }
 

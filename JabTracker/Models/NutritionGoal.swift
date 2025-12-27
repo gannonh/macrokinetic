@@ -192,12 +192,7 @@ extension NutritionGoal {
     /// Formatted display string for weight change goal
     var weightChangeDisplay: String {
         let change = totalWeightChangeKg
-        if change > 0 {
-            return String(format: "+%.1f kg", change)
-        } else if change < 0 {
-            return String(format: "%.1f kg", change)
-        } else {
-            return "0.0 kg"
-        }
+        let prefix = change > 0 ? "+" : ""
+        return String(format: "%@%.1f kg", prefix, change)
     }
 }
