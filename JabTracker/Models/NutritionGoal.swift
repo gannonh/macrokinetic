@@ -178,6 +178,27 @@ extension NutritionGoal {
         targetDate > Date()
     }
 
+    /// Projected end date based on starting weight, target, and weekly pace
+    /// Returns nil for maintenance goals (no weight change) or zero pace
+    var projectedEndDate: Date? {
+        guard weeklyWeightChangePaceKg != 0,
+            abs(totalWeightChangeKg) > 0.01
+        else { return nil }
+        let weeks = estimatedWeeksToGoal
+        return createdAt.addingTimeInterval(weeks * 7 * 24 * 60 * 60)
+    }
+
+    /// Initial daily calorie budget estimate based on TDEE and weekly pace
+    /// Uses a rough estimate: TDEE ± (weekly rate × 1100 kcal/kg / 7 days)
+    /// Returns nil if no TDEE estimate is available
+    var initialDailyBudget: Int? {
+        guard let tdee = initialEstimatedTDEE ?? lastCalculatedTDEE else { return nil }
+        // 1 kg of body weight ≈ 7700 kcal, so weekly deficit/surplus
+        // = weeklyWeightChangePaceKg × 7700 / 7 days ≈ 1100 kcal/day per kg/week
+        let dailyAdjustment = weeklyWeightChangePaceKg * 1100
+        return Int(tdee + dailyAdjustment)
+    }
+
     /// Calculate progress toward goal as percentage (0.0 to 1.0+)
     /// - Parameter currentWeightKg: Current weight in kg
     /// - Returns: Progress percentage (0 = at start, 1 = at target, >1 = past target)

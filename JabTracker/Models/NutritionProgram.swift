@@ -47,6 +47,9 @@ final class NutritionProgram {
     /// Protein level stored as raw string
     var proteinLevelRaw: String = ProteinLevel.moderate.rawValue
 
+    /// Training level stored as raw string
+    var trainingLevelRaw: String = TrainingLevel.none.rawValue
+
     // MARK: - Configuration Data
 
     /// JSON-encoded ProgramConfiguration for complex settings
@@ -77,18 +80,21 @@ final class NutritionProgram {
     ///   - style: Program style (default: coached)
     ///   - diet: Diet preference (default: balanced)
     ///   - calorieFloor: Calorie floor type (default: standard)
+    ///   - trainingLevel: Training level (default: none)
     ///   - distributionMode: Weekly distribution mode (default: even)
     ///   - proteinLevel: Protein level (default: moderate)
     init(
         style: ProgramStyle = .coached,
         diet: DietPreference = .balanced,
         calorieFloor: CalorieFloorType = .standard,
+        trainingLevel: TrainingLevel = .none,
         distributionMode: WeeklyDistributionMode = .even,
         proteinLevel: ProteinLevel = .moderate
     ) {
         self.programStyleRaw = style.rawValue
         self.dietPreferenceRaw = diet.rawValue
         self.calorieFloorTypeRaw = calorieFloor.rawValue
+        self.trainingLevelRaw = trainingLevel.rawValue
         self.weeklyDistributionModeRaw = distributionMode.rawValue
         self.proteinLevelRaw = proteinLevel.rawValue
         self.createdAt = Date()
@@ -99,6 +105,7 @@ final class NutritionProgram {
             style: style,
             diet: diet,
             calorieFloor: calorieFloor,
+            trainingLevel: trainingLevel,
             distributionMode: distributionMode,
             proteinLevel: proteinLevel
         )
@@ -110,6 +117,7 @@ final class NutritionProgram {
         style: ProgramStyle,
         diet: DietPreference,
         calorieFloor: CalorieFloorType,
+        trainingLevel: TrainingLevel,
         distributionMode: WeeklyDistributionMode,
         proteinLevel: ProteinLevel
     ) -> Data {
@@ -117,6 +125,7 @@ final class NutritionProgram {
             programStyle: style,
             dietPreference: diet,
             calorieFloorType: calorieFloor,
+            trainingLevel: trainingLevel,
             weeklyDistributionMode: distributionMode,
             proteinLevel: proteinLevel
         )
@@ -178,6 +187,17 @@ extension NutritionProgram {
         }
         set {
             proteinLevelRaw = newValue.rawValue
+            updateConfiguration()
+        }
+    }
+
+    /// Type-safe accessor for training level
+    var training: TrainingLevel {
+        get {
+            TrainingLevel(rawValue: trainingLevelRaw) ?? .none
+        }
+        set {
+            trainingLevelRaw = newValue.rawValue
             updateConfiguration()
         }
     }
@@ -254,6 +274,7 @@ extension NutritionProgram {
             style: style,
             diet: diet,
             calorieFloor: calorieFloor,
+            trainingLevel: training,
             distributionMode: distributionMode,
             proteinLevel: protein
         )

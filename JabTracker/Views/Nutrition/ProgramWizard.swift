@@ -1,31 +1,32 @@
 //
-//  GoalConfigurationWizard.swift
+//  ProgramWizard.swift
 //  JabTracker
 //
-//  Multi-step wizard for creating nutrition goals and programs.
+//  Multi-step wizard for configuring nutrition programs.
+//  Separate from GoalWizard - handles Program domain (style, diet, training, etc.)
 //
 
 import SwiftData
 import SwiftUI
 
-// MARK: - Wizard Step Enum
+// MARK: - Program Wizard Step Enum
 
-/// Steps in the goal configuration wizard
-enum GoalWizardStep: String, CaseIterable {
-    case goalType
+/// Steps in the program configuration wizard
+enum ProgramWizardStep: String, CaseIterable {
     case programStyle
     case dietPreference
     case calorieFloor
+    case training
     case weeklyDistribution
     case proteinLevel
     case confirmation
 
     var title: String {
         switch self {
-        case .goalType: return "Choose Your Goal"
         case .programStyle: return "Program Style"
         case .dietPreference: return "Diet Preference"
         case .calorieFloor: return "Calorie Floor"
+        case .training: return "Training Level"
         case .weeklyDistribution: return "Weekly Distribution"
         case .proteinLevel: return "Protein Level"
         case .confirmation: return "Review & Confirm"
@@ -34,10 +35,10 @@ enum GoalWizardStep: String, CaseIterable {
 
     var subtitle: String {
         switch self {
-        case .goalType: return "What are you working toward?"
         case .programStyle: return "How much guidance do you want?"
         case .dietPreference: return "Choose your macro balance"
         case .calorieFloor: return "Set your minimum daily calories"
+        case .training: return "What's your activity level?"
         case .weeklyDistribution: return "How to spread calories across the week"
         case .proteinLevel: return "How much protein do you need?"
         case .confirmation: return "Ready to start your program"
@@ -45,66 +46,88 @@ enum GoalWizardStep: String, CaseIterable {
     }
 }
 
-// MARK: - Wizard Error
+// MARK: - Program Wizard Error
 
-/// Errors that can occur during wizard completion
-enum GoalWizardError: LocalizedError {
+/// Errors that can occur during program wizard completion
+enum ProgramWizardError: LocalizedError {
     case incompleteData
     case saveFailed(Error)
-    case noUser
+    case noGoal
 
     var errorDescription: String? {
         switch self {
         case .incompleteData:
             return "Please complete all wizard steps before saving."
         case .saveFailed(let error):
-            return "Failed to save goal: \(error.localizedDescription)"
-        case .noUser:
-            return "No user found. Please sign in and try again."
+            return "Failed to save program: \(error.localizedDescription)"
+        case .noGoal:
+            return "No goal found. Please create a goal first."
         }
     }
 }
 
-// MARK: - Wizard ViewModel
+// MARK: - Program Wizard ViewModel
 
-/// ViewModel for managing goal configuration wizard state
+/// ViewModel for managing program configuration wizard state
 @Observable
 @MainActor
-final class GoalWizardViewModel {
+final class ProgramWizardViewModel {
     // MARK: - Step Navigation
 
-    var currentStep: GoalWizardStep = .goalType
+    var currentStep: ProgramWizardStep = .programStyle
 
     // MARK: - Selections
 
-    var goalType: GoalType?
     var programStyle: ProgramStyle?
     var dietPreference: DietPreference?
     var calorieFloorType: CalorieFloorType?
+    var trainingLevel: TrainingLevel?
     var weeklyDistributionMode: WeeklyDistributionMode?
     var proteinLevel: ProteinLevel?
+
+    // MARK: - Mode
+
+    /// Whether we're editing an existing program (skips style selection)
+    var isEditMode: Bool = false
+
+    /// The existing program being edited
+    var existingProgram: NutritionProgram?
+
+    /// The goal this program belongs to
+    var goal: NutritionGoal?
+
+    // MARK: - Steps Configuration
+
+    /// Steps available based on mode
+    var availableSteps: [ProgramWizardStep] {
+        if isEditMode {
+            // Edit mode skips style selection
+            return ProgramWizardStep.allCases.filter { $0 != .programStyle }
+        }
+        return ProgramWizardStep.allCases
+    }
 
     // MARK: - Computed Properties
 
     /// Progress through the wizard (0.0 to 1.0)
     var progressPercent: Double {
-        guard let currentIndex = GoalWizardStep.allCases.firstIndex(of: currentStep) else {
+        guard let currentIndex = availableSteps.firstIndex(of: currentStep) else {
             return 0
         }
-        return Double(currentIndex) / Double(GoalWizardStep.allCases.count - 1)
+        return Double(currentIndex) / Double(availableSteps.count - 1)
     }
 
     /// Whether user can continue to next step
     var canContinue: Bool {
         switch currentStep {
-        case .goalType:
-            return goalType != nil
         case .programStyle:
             return programStyle != nil
         case .dietPreference:
             return dietPreference != nil
         case .calorieFloor:
             return calorieFloorType != nil
+        case .training:
+            return trainingLevel != nil
         case .weeklyDistribution:
             return weeklyDistributionMode != nil
         case .proteinLevel:
@@ -116,13 +139,14 @@ final class GoalWizardViewModel {
 
     /// Whether all selections are complete
     private var allSelectionsComplete: Bool {
-        goalType != nil && programStyle != nil && dietPreference != nil && calorieFloorType != nil
-            && weeklyDistributionMode != nil && proteinLevel != nil
+        let hasStyle = isEditMode || programStyle != nil
+        return hasStyle && dietPreference != nil && calorieFloorType != nil
+            && trainingLevel != nil && weeklyDistributionMode != nil && proteinLevel != nil
     }
 
     /// Whether this is the first step
     var isFirstStep: Bool {
-        currentStep == GoalWizardStep.allCases.first
+        currentStep == availableSteps.first
     }
 
     /// Whether this is the confirmation step
@@ -130,86 +154,136 @@ final class GoalWizardViewModel {
         currentStep == .confirmation
     }
 
+    /// Title for edit mode navigation bar
+    var editModeTitle: String {
+        guard let style = programStyle ?? existingProgram?.style else {
+            return "Edit Program"
+        }
+        return "Edit \(style.displayName) Program"
+    }
+
     // MARK: - Navigation
 
     func advance() {
-        guard let currentIndex = GoalWizardStep.allCases.firstIndex(of: currentStep),
-            currentIndex + 1 < GoalWizardStep.allCases.count
+        guard let currentIndex = availableSteps.firstIndex(of: currentStep),
+            currentIndex + 1 < availableSteps.count
         else {
             return
         }
-        currentStep = GoalWizardStep.allCases[currentIndex + 1]
+        currentStep = availableSteps[currentIndex + 1]
     }
 
     func goBack() {
-        guard let currentIndex = GoalWizardStep.allCases.firstIndex(of: currentStep),
+        guard let currentIndex = availableSteps.firstIndex(of: currentStep),
             currentIndex > 0
         else {
             return
         }
-        currentStep = GoalWizardStep.allCases[currentIndex - 1]
+        currentStep = availableSteps[currentIndex - 1]
+    }
+
+    // MARK: - Initialization
+
+    /// Configure for editing an existing program
+    func configureForEdit(program: NutritionProgram) {
+        isEditMode = true
+        existingProgram = program
+        goal = program.goal
+        programStyle = program.style
+        dietPreference = program.diet
+        calorieFloorType = program.calorieFloor
+        trainingLevel = program.training
+        weeklyDistributionMode = program.distributionMode
+        proteinLevel = program.protein
+
+        // Start at diet preference (skip style in edit mode)
+        currentStep = .dietPreference
+    }
+
+    /// Configure for new program with a goal
+    func configureWithGoal(_ goal: NutritionGoal) {
+        self.goal = goal
+        isEditMode = false
     }
 
     // MARK: - Save
 
-    /// Save the goal and program configuration
-    /// - Parameters:
-    ///   - context: SwiftData model context
-    ///   - user: User to associate goal with
-    func save(context: ModelContext, user: User) throws {
-        guard let goalType,
-            let programStyle,
+    /// Save the program configuration
+    /// - Parameter context: SwiftData model context
+    func save(context: ModelContext) throws {
+        guard let goal else {
+            throw ProgramWizardError.noGoal
+        }
+
+        // Get style - from selection or existing program in edit mode
+        let style = programStyle ?? existingProgram?.style
+
+        guard let style,
             let dietPreference,
             let calorieFloorType,
+            let trainingLevel,
             let weeklyDistributionMode,
             let proteinLevel
         else {
-            throw GoalWizardError.incompleteData
+            throw ProgramWizardError.incompleteData
         }
 
-        // Deactivate existing active goals
-        if let existingGoals = user.nutritionGoals {
-            for existingGoal in existingGoals where existingGoal.isActive {
-                existingGoal.isActive = false
-            }
+        if isEditMode, let existing = existingProgram {
+            // Update existing program
+            existing.style = style
+            existing.diet = dietPreference
+            existing.calorieFloor = calorieFloorType
+            existing.training = trainingLevel
+            existing.distributionMode = weeklyDistributionMode
+            existing.protein = proteinLevel
+            existing.updatedAt = Date()
+        } else {
+            // Create new program
+            let program = NutritionProgram(
+                style: style,
+                diet: dietPreference,
+                calorieFloor: calorieFloorType,
+                trainingLevel: trainingLevel,
+                distributionMode: weeklyDistributionMode,
+                proteinLevel: proteinLevel
+            )
+            program.goal = goal
+            context.insert(program)
         }
-
-        // Create NutritionGoal
-        let goal = NutritionGoal(goalType: goalType)
-        goal.user = user
-        context.insert(goal)
-
-        // Create NutritionProgram
-        let program = NutritionProgram(
-            style: programStyle,
-            diet: dietPreference,
-            calorieFloor: calorieFloorType,
-            distributionMode: weeklyDistributionMode,
-            proteinLevel: proteinLevel
-        )
-        program.goal = goal
-        context.insert(program)
 
         do {
             try context.save()
         } catch {
-            throw GoalWizardError.saveFailed(error)
+            throw ProgramWizardError.saveFailed(error)
         }
     }
 }
 
-// MARK: - Main Wizard View
+// MARK: - Main Program Wizard View
 
-/// Multi-step wizard for configuring nutrition goals and programs
-struct GoalConfigurationWizard: View {
+/// Multi-step wizard for configuring nutrition programs
+struct ProgramWizard: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var viewModel = GoalWizardViewModel()
+    @State private var viewModel = ProgramWizardViewModel()
     @State private var errorMessage: String?
     @State private var showingError = false
 
-    let user: User
+    /// The goal this program belongs to
+    let goal: NutritionGoal
+
+    /// Optional existing program to edit
+    let existingProgram: NutritionProgram?
+
+    /// Callback when program is created/updated
+    var onComplete: (() -> Void)?
+
+    init(goal: NutritionGoal, existingProgram: NutritionProgram? = nil, onComplete: (() -> Void)? = nil) {
+        self.goal = goal
+        self.existingProgram = existingProgram
+        self.onComplete = onComplete
+    }
 
     var body: some View {
         NavigationStack {
@@ -220,7 +294,7 @@ struct GoalConfigurationWizard: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 16)
                     .accessibilityLabel(
-                        "Step \(stepNumber) of \(GoalWizardStep.allCases.count)"
+                        "Step \(stepNumber) of \(viewModel.availableSteps.count)"
                     )
 
                 // Step content
@@ -242,16 +316,16 @@ struct GoalConfigurationWizard: View {
                                 viewModel.goBack()
                             }
                         }
-                        .accessibilityIdentifier("wizard-back-button")
+                        .accessibilityIdentifier("program-wizard-back-button")
                     }
 
                     Spacer()
 
                     if viewModel.isConfirmationStep {
-                        PrimaryButton(title: "Create Goal") {
-                            saveGoal()
+                        PrimaryButton(title: viewModel.isEditMode ? "Save Program" : "Create Program") {
+                            saveProgram()
                         }
-                        .accessibilityIdentifier("wizard-save-button")
+                        .accessibilityIdentifier("program-wizard-save-button")
                     } else {
                         PrimaryButton(title: "Continue") {
                             withAnimation(.spring()) {
@@ -259,7 +333,7 @@ struct GoalConfigurationWizard: View {
                             }
                         }
                         .disabled(!viewModel.canContinue)
-                        .accessibilityIdentifier("wizard-continue-button")
+                        .accessibilityIdentifier("program-wizard-continue-button")
                     }
                 }
                 .padding(.horizontal, 24)
@@ -267,12 +341,13 @@ struct GoalConfigurationWizard: View {
             }
             .background(DesignTokens.Colors.background)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(viewModel.isEditMode ? viewModel.editModeTitle : "New Program")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .accessibilityIdentifier("wizard-cancel-button")
+                    .accessibilityIdentifier("program-wizard-cancel-button")
                 }
             }
             .alert("Error", isPresented: $showingError) {
@@ -286,7 +361,13 @@ struct GoalConfigurationWizard: View {
                 }
             }
         }
-        .accessibilityIdentifier("goal-configuration-wizard")
+        .onAppear {
+            viewModel.goal = goal
+            if let existingProgram {
+                viewModel.configureForEdit(program: existingProgram)
+            }
+        }
+        .accessibilityIdentifier("program-wizard")
     }
 
     // MARK: - Step Content
@@ -294,39 +375,40 @@ struct GoalConfigurationWizard: View {
     @ViewBuilder
     private var stepContent: some View {
         switch viewModel.currentStep {
-        case .goalType:
-            GoalTypeStepView(selection: $viewModel.goalType)
-                .accessibilityIdentifier("goal-wizard-goalType-step")
         case .programStyle:
             ProgramStyleStepView(selection: $viewModel.programStyle)
-                .accessibilityIdentifier("goal-wizard-programStyle-step")
+                .accessibilityIdentifier("program-wizard-programStyle-step")
         case .dietPreference:
             DietPreferenceStepView(selection: $viewModel.dietPreference)
-                .accessibilityIdentifier("goal-wizard-dietPreference-step")
+                .accessibilityIdentifier("program-wizard-dietPreference-step")
         case .calorieFloor:
             CalorieFloorStepView(selection: $viewModel.calorieFloorType)
-                .accessibilityIdentifier("goal-wizard-calorieFloor-step")
+                .accessibilityIdentifier("program-wizard-calorieFloor-step")
+        case .training:
+            TrainingLevelStepView(selection: $viewModel.trainingLevel)
+                .accessibilityIdentifier("program-wizard-training-step")
         case .weeklyDistribution:
             WeeklyDistributionStepView(selection: $viewModel.weeklyDistributionMode)
-                .accessibilityIdentifier("goal-wizard-weeklyDistribution-step")
+                .accessibilityIdentifier("program-wizard-weeklyDistribution-step")
         case .proteinLevel:
             ProteinLevelStepView(selection: $viewModel.proteinLevel)
-                .accessibilityIdentifier("goal-wizard-proteinLevel-step")
+                .accessibilityIdentifier("program-wizard-proteinLevel-step")
         case .confirmation:
-            ConfirmationStepView(viewModel: viewModel)
-                .accessibilityIdentifier("goal-wizard-confirmation-step")
+            ProgramConfirmationStepView(viewModel: viewModel)
+                .accessibilityIdentifier("program-wizard-confirmation-step")
         }
     }
 
     private var stepNumber: Int {
-        (GoalWizardStep.allCases.firstIndex(of: viewModel.currentStep) ?? 0) + 1
+        (viewModel.availableSteps.firstIndex(of: viewModel.currentStep) ?? 0) + 1
     }
 
     // MARK: - Actions
 
-    private func saveGoal() {
+    private func saveProgram() {
         do {
-            try viewModel.save(context: modelContext, user: user)
+            try viewModel.save(context: modelContext)
+            onComplete?()
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
@@ -337,38 +419,6 @@ struct GoalConfigurationWizard: View {
 
 // MARK: - Step Views
 
-/// Goal type selection step
-private struct GoalTypeStepView: View {
-    @Binding var selection: GoalType?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: GoalWizardStep.goalType.title,
-                subtitle: GoalWizardStep.goalType.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(GoalType.allCases, id: \.self) { goalType in
-                        SelectionCard(
-                            title: goalType.displayName,
-                            description: goalType.description,
-                            isSelected: selection == goalType
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selection = goalType
-                            }
-                        }
-                        .accessibilityIdentifier("wizard-goalType-\(goalType.rawValue)")
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-}
-
 /// Program style selection step
 private struct ProgramStyleStepView: View {
     @Binding var selection: ProgramStyle?
@@ -376,8 +426,8 @@ private struct ProgramStyleStepView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
-                title: GoalWizardStep.programStyle.title,
-                subtitle: GoalWizardStep.programStyle.subtitle
+                title: ProgramWizardStep.programStyle.title,
+                subtitle: ProgramWizardStep.programStyle.subtitle
             )
 
             ScrollView {
@@ -392,7 +442,7 @@ private struct ProgramStyleStepView: View {
                                 selection = style
                             }
                         }
-                        .accessibilityIdentifier("wizard-programStyle-\(style.rawValue)")
+                        .accessibilityIdentifier("program-wizard-programStyle-\(style.rawValue)")
                     }
                 }
                 .padding(.horizontal, 24)
@@ -408,8 +458,8 @@ private struct DietPreferenceStepView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
-                title: GoalWizardStep.dietPreference.title,
-                subtitle: GoalWizardStep.dietPreference.subtitle
+                title: ProgramWizardStep.dietPreference.title,
+                subtitle: ProgramWizardStep.dietPreference.subtitle
             )
 
             ScrollView {
@@ -425,7 +475,7 @@ private struct DietPreferenceStepView: View {
                                 selection = diet
                             }
                         }
-                        .accessibilityIdentifier("wizard-dietPreference-\(diet.rawValue)")
+                        .accessibilityIdentifier("program-wizard-dietPreference-\(diet.rawValue)")
                     }
                 }
                 .padding(.horizontal, 24)
@@ -446,8 +496,8 @@ private struct CalorieFloorStepView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
-                title: GoalWizardStep.calorieFloor.title,
-                subtitle: GoalWizardStep.calorieFloor.subtitle
+                title: ProgramWizardStep.calorieFloor.title,
+                subtitle: ProgramWizardStep.calorieFloor.subtitle
             )
 
             ScrollView {
@@ -464,7 +514,39 @@ private struct CalorieFloorStepView: View {
                                 selection = floorType
                             }
                         }
-                        .accessibilityIdentifier("wizard-calorieFloor-\(floorType.rawValue)")
+                        .accessibilityIdentifier("program-wizard-calorieFloor-\(floorType.rawValue)")
+                    }
+                }
+                .padding(.horizontal, 24)
+            }
+        }
+    }
+}
+
+/// Training level selection step
+private struct TrainingLevelStepView: View {
+    @Binding var selection: TrainingLevel?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StepHeader(
+                title: ProgramWizardStep.training.title,
+                subtitle: ProgramWizardStep.training.subtitle
+            )
+
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(TrainingLevel.allCases, id: \.self) { level in
+                        SelectionCard(
+                            title: level.displayName,
+                            description: level.description,
+                            isSelected: selection == level
+                        ) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                selection = level
+                            }
+                        }
+                        .accessibilityIdentifier("program-wizard-training-\(level.rawValue)")
                     }
                 }
                 .padding(.horizontal, 24)
@@ -480,8 +562,8 @@ private struct WeeklyDistributionStepView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
-                title: GoalWizardStep.weeklyDistribution.title,
-                subtitle: GoalWizardStep.weeklyDistribution.subtitle
+                title: ProgramWizardStep.weeklyDistribution.title,
+                subtitle: ProgramWizardStep.weeklyDistribution.subtitle
             )
 
             ScrollView {
@@ -496,7 +578,7 @@ private struct WeeklyDistributionStepView: View {
                                 selection = mode
                             }
                         }
-                        .accessibilityIdentifier("wizard-weeklyDistribution-\(mode.rawValue)")
+                        .accessibilityIdentifier("program-wizard-weeklyDistribution-\(mode.rawValue)")
                     }
                 }
                 .padding(.horizontal, 24)
@@ -512,8 +594,8 @@ private struct ProteinLevelStepView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
-                title: GoalWizardStep.proteinLevel.title,
-                subtitle: GoalWizardStep.proteinLevel.subtitle
+                title: ProgramWizardStep.proteinLevel.title,
+                subtitle: ProgramWizardStep.proteinLevel.subtitle
             )
 
             ScrollView {
@@ -529,7 +611,7 @@ private struct ProteinLevelStepView: View {
                                 selection = level
                             }
                         }
-                        .accessibilityIdentifier("wizard-proteinLevel-\(level.rawValue)")
+                        .accessibilityIdentifier("program-wizard-proteinLevel-\(level.rawValue)")
                     }
                 }
                 .padding(.horizontal, 24)
@@ -538,38 +620,80 @@ private struct ProteinLevelStepView: View {
     }
 }
 
-/// Confirmation step showing all selections
-private struct ConfirmationStepView: View {
-    let viewModel: GoalWizardViewModel
+/// Confirmation step showing all program selections
+private struct ProgramConfirmationStepView: View {
+    let viewModel: ProgramWizardViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
-                title: GoalWizardStep.confirmation.title,
-                subtitle: GoalWizardStep.confirmation.subtitle
+                title: ProgramWizardStep.confirmation.title,
+                subtitle: ProgramWizardStep.confirmation.subtitle
             )
 
             ScrollView {
                 VStack(spacing: 16) {
-                    SummaryRow(label: "Goal", value: viewModel.goalType?.displayName ?? "—")
-                    SummaryRow(label: "Program Style", value: viewModel.programStyle?.displayName ?? "—")
+                    if !viewModel.isEditMode {
+                        SummaryRow(label: "Program Style", value: viewModel.programStyle?.displayName ?? "—")
+                    }
                     SummaryRow(label: "Diet Preference", value: viewModel.dietPreference?.displayName ?? "—")
                     SummaryRow(label: "Calorie Floor", value: viewModel.calorieFloorType?.displayName ?? "—")
+                    SummaryRow(label: "Training Level", value: viewModel.trainingLevel?.displayName ?? "—")
                     SummaryRow(
                         label: "Weekly Distribution",
                         value: viewModel.weeklyDistributionMode?.displayName ?? "—"
                     )
                     SummaryRow(label: "Protein Level", value: viewModel.proteinLevel?.displayName ?? "—")
+
+                    // Macro breakdown
+                    if let diet = viewModel.dietPreference {
+                        macroBreakdownCard(diet: diet)
+                    }
                 }
                 .padding(.horizontal, 24)
             }
         }
     }
+
+    private func macroBreakdownCard(diet: DietPreference) -> some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "chart.pie.fill")
+                    .foregroundColor(.blue)
+                Text("Macro Breakdown")
+                    .font(.headline)
+                Spacer()
+            }
+
+            let macros = diet.macroPercentages
+            HStack(spacing: 16) {
+                macroItem(name: "Protein", percent: Int(macros.protein), color: .blue)
+                macroItem(name: "Carbs", percent: Int(macros.carbs), color: .green)
+                macroItem(name: "Fat", percent: Int(macros.fat), color: .orange)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.blue.opacity(0.1))
+        )
+    }
+
+    private func macroItem(name: String, percent: Int, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text("\(percent)%")
+                .font(.headline)
+                .foregroundColor(color)
+            Text(name)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
 }
 
-// MARK: - Helper Views
+// MARK: - Reusable Step Header
 
-/// Step header with title and subtitle
 private struct StepHeader: View {
     let title: String
     let subtitle: String
@@ -589,6 +713,8 @@ private struct StepHeader: View {
         .padding(.top, 24)
     }
 }
+
+// MARK: - Selection Card
 
 /// Selection card for wizard options
 private struct SelectionCard: View {
@@ -683,6 +809,14 @@ private struct SummaryRow: View {
 
 // MARK: - Preview
 
-#Preview("Goal Type Step") {
-    GoalConfigurationWizard(user: User(email: "test@example.com", name: "Test User"))
+#Preview("Program Wizard - New") {
+    let goal = NutritionGoal()
+    return ProgramWizard(goal: goal)
+}
+
+#Preview("Program Wizard - Edit") {
+    let goal = NutritionGoal()
+    let program = NutritionProgram(style: .coached, diet: .balanced)
+    program.goal = goal
+    return ProgramWizard(goal: goal, existingProgram: program)
 }

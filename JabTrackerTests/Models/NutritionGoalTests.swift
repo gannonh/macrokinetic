@@ -480,4 +480,100 @@ struct NutritionGoalTests {
         #expect(goal.lastCalculatedTDEE == 2150.0)
         #expect(goal.lastTDEECalculationDate == calculationDate)
     }
+
+    // MARK: - Projected End Date Tests
+
+    @Test("projectedEndDate calculates correctly for weight loss")
+    @MainActor
+    func testProjectedEndDateLoss() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.startingWeightKg = 100.0
+        goal.targetWeightKg = 90.0  // 10kg to lose
+        goal.weeklyWeightChangePaceKg = -0.5  // 0.5kg per week = 20 weeks
+        context.insert(goal)
+
+        // Then - should be approximately 20 weeks from creation
+        let expectedWeeks = 20.0
+        let expectedSeconds = expectedWeeks * 7 * 24 * 60 * 60
+
+        #expect(goal.projectedEndDate != nil)
+        if let projectedDate = goal.projectedEndDate {
+            let diff = projectedDate.timeIntervalSince(goal.createdAt)
+            #expect(abs(diff - expectedSeconds) < 60)  // Within 1 minute tolerance
+        }
+    }
+
+    @Test("projectedEndDate returns nil for maintenance")
+    @MainActor
+    func testProjectedEndDateMaintenance() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.startingWeightKg = 75.0
+        goal.targetWeightKg = 75.0  // No change
+        goal.weeklyWeightChangePaceKg = 0.0
+        context.insert(goal)
+
+        // Then - should return nil for maintenance
+        #expect(goal.projectedEndDate == nil)
+    }
+
+    // MARK: - Initial Daily Budget Tests
+
+    @Test("initialDailyBudget calculates correctly for weight loss")
+    @MainActor
+    func testInitialDailyBudgetLoss() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.initialEstimatedTDEE = 2200.0
+        goal.weeklyWeightChangePaceKg = -0.5  // 0.5kg/week loss
+        context.insert(goal)
+
+        // Then - should be TDEE minus daily deficit
+        // Daily adjustment = -0.5 × 1100 = -550
+        // Budget = 2200 - 550 = 1650
+        #expect(goal.initialDailyBudget == 1650)
+    }
+
+    @Test("initialDailyBudget calculates correctly for weight gain")
+    @MainActor
+    func testInitialDailyBudgetGain() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.initialEstimatedTDEE = 2200.0
+        goal.weeklyWeightChangePaceKg = 0.25  // 0.25kg/week gain
+        context.insert(goal)
+
+        // Then - should be TDEE plus daily surplus
+        // Daily adjustment = 0.25 × 1100 = 275
+        // Budget = 2200 + 275 = 2475
+        #expect(goal.initialDailyBudget == 2475)
+    }
+
+    @Test("initialDailyBudget returns nil without TDEE")
+    @MainActor
+    func testInitialDailyBudgetNoTDEE() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        // No TDEE values set
+        context.insert(goal)
+
+        // Then - should return nil
+        #expect(goal.initialDailyBudget == nil)
+    }
 }

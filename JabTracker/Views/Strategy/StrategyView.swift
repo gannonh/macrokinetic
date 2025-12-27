@@ -1,0 +1,357 @@
+//
+//  StrategyView.swift
+//  JabTracker
+//
+//  Main view for managing nutrition goals and programs.
+//  Provides entry points for New Goal, Edit Goal, Edit Program, New Program flows.
+//
+
+import SwiftData
+import SwiftUI
+
+// MARK: - Strategy View
+
+/// Main view for managing nutrition strategy (goals and programs)
+struct StrategyView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var users: [User]
+
+    @State private var showingGoalWizard = false
+    @State private var showingProgramWizard = false
+    @State private var showingProgramSummary = false
+    @State private var isEditingGoal = false
+    @State private var isEditingProgram = false
+    @State private var createdGoal: NutritionGoal?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    if let user = users.first {
+                        if let activeGoal = user.activeNutritionGoal {
+                            currentProgramSection(goal: activeGoal)
+                            actionButtonsSection(user: user, hasGoal: true)
+                        } else {
+                            emptyStateSection(user: user)
+                        }
+                    } else {
+                        noUserSection
+                    }
+                }
+                .padding()
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Strategy")
+            .navigationBarTitleDisplayMode(.large)
+        }
+        .sheet(isPresented: $showingGoalWizard) {
+            if let user = users.first {
+                GoalWizard(
+                    user: user,
+                    showIntro: !isEditingGoal
+                ) { goal in
+                    createdGoal = goal
+                    showingGoalWizard = false
+
+                    if isEditingGoal {
+                        // Edit Goal flow → Show Program Summary
+                        showingProgramSummary = true
+                    } else {
+                        // New Goal flow → Chain to Program Wizard
+                        showingProgramWizard = true
+                    }
+                    isEditingGoal = false
+                }
+            }
+        }
+        .sheet(isPresented: $showingProgramWizard) {
+            if let goal = createdGoal ?? users.first?.activeNutritionGoal {
+                ProgramWizard(
+                    goal: goal,
+                    existingProgram: isEditingProgram ? goal.program : nil
+                ) {
+                    showingProgramWizard = false
+                    isEditingProgram = false
+                    createdGoal = nil
+                }
+            }
+        }
+        .sheet(isPresented: $showingProgramSummary) {
+            if let goal = createdGoal ?? users.first?.activeNutritionGoal,
+                let program = goal.program
+            {
+                ProgramSummarySheet(program: program) {
+                    // Looks Good - dismiss
+                    showingProgramSummary = false
+                    createdGoal = nil
+                } onSetNewProgram: {
+                    // Set New Program - launch Program Wizard
+                    showingProgramSummary = false
+                    showingProgramWizard = true
+                }
+            }
+        }
+        .accessibilityIdentifier("strategy-view")
+    }
+
+    // MARK: - Current Program Section
+
+    @ViewBuilder
+    private func currentProgramSection(goal: NutritionGoal) -> some View {
+        VStack(spacing: 16) {
+            // Check-in countdown (placeholder for Phase 16)
+            checkInCountdownCard(goal: goal)
+
+            // Current program display
+            if let program = goal.program {
+                currentProgramCard(goal: goal, program: program)
+            }
+        }
+    }
+
+    private func checkInCountdownCard(goal: NutritionGoal) -> some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("Next Check-In")
+                    .font(.headline)
+                Spacer()
+                // Placeholder - will be calculated in Phase 16
+                Text("7 days")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            // Countdown ring placeholder
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 8)
+                    .frame(width: 80, height: 80)
+
+                Circle()
+                    .trim(from: 0, to: 0.7)  // Placeholder progress
+                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .frame(width: 80, height: 80)
+                    .rotationEffect(.degrees(-90))
+
+                VStack(spacing: 2) {
+                    Text("7")
+                        .font(.title2.bold())
+                    Text("days")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+        )
+        .accessibilityIdentifier("check-in-countdown-card")
+    }
+
+    private func currentProgramCard(goal: NutritionGoal, program: NutritionProgram) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("In Progress")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text("\(program.style.displayName) Program")
+                        .font(.headline)
+                }
+                Spacer()
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+            }
+
+            Divider()
+
+            // Daily targets
+            VStack(spacing: 12) {
+                targetRow(
+                    icon: "flame.fill",
+                    label: "Daily Calories",
+                    value: "\(Int(goal.dailyCalorieTarget)) kcal",
+                    color: .orange
+                )
+                targetRow(
+                    icon: "p.circle.fill",
+                    label: "Protein",
+                    value: "\(Int(goal.dailyProteinTargetGrams))g",
+                    color: .blue
+                )
+                targetRow(
+                    icon: "c.circle.fill",
+                    label: "Carbs",
+                    value: "\(Int(goal.dailyCarbTargetGrams))g",
+                    color: .green
+                )
+                targetRow(
+                    icon: "f.circle.fill",
+                    label: "Fat",
+                    value: "\(Int(goal.dailyFatTargetGrams))g",
+                    color: .orange
+                )
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+        )
+        .accessibilityIdentifier("current-program-card")
+    }
+
+    private func targetRow(icon: String, label: String, value: String, color: Color) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .frame(width: 24)
+            Text(label)
+                .font(.subheadline)
+            Spacer()
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+    }
+
+    // MARK: - Action Buttons Section
+
+    @ViewBuilder
+    private func actionButtonsSection(user: User, hasGoal: Bool) -> some View {
+        VStack(spacing: 12) {
+            if hasGoal {
+                // Has existing goal - show edit options
+                HStack(spacing: 12) {
+                    actionButton(
+                        title: "Edit Goal",
+                        icon: "target",
+                        color: .blue
+                    ) {
+                        isEditingGoal = true
+                        showingGoalWizard = true
+                    }
+                    .accessibilityIdentifier("edit-goal-button")
+
+                    actionButton(
+                        title: "Edit Program",
+                        icon: "slider.horizontal.3",
+                        color: .purple
+                    ) {
+                        isEditingProgram = true
+                        showingProgramWizard = true
+                    }
+                    .accessibilityIdentifier("edit-program-button")
+                }
+
+                HStack(spacing: 12) {
+                    actionButton(
+                        title: "New Goal",
+                        icon: "plus.circle",
+                        color: .green
+                    ) {
+                        isEditingGoal = false
+                        showingGoalWizard = true
+                    }
+                    .accessibilityIdentifier("new-goal-button")
+
+                    actionButton(
+                        title: "New Program",
+                        icon: "arrow.triangle.2.circlepath",
+                        color: .orange
+                    ) {
+                        isEditingProgram = false
+                        createdGoal = user.activeNutritionGoal
+                        showingProgramWizard = true
+                    }
+                    .accessibilityIdentifier("new-program-button")
+                }
+            }
+        }
+    }
+
+    private func actionButton(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title3)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(color.opacity(0.1))
+            )
+            .foregroundColor(color)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Empty State Section
+
+    @ViewBuilder
+    private func emptyStateSection(user: User) -> some View {
+        VStack(spacing: 24) {
+            Image(systemName: "target")
+                .font(.system(size: 64))
+                .foregroundStyle(.blue.gradient)
+
+            VStack(spacing: 8) {
+                Text("No Active Goal")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("Create a goal to start tracking your nutrition progress.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            PrimaryButton(title: "Create Goal") {
+                isEditingGoal = false
+                showingGoalWizard = true
+            }
+            .padding(.horizontal, 40)
+            .accessibilityIdentifier("create-goal-button")
+        }
+        .padding(.vertical, 40)
+    }
+
+    // MARK: - No User Section
+
+    private var noUserSection: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "person.crop.circle")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+
+            Text("Set up your profile")
+                .font(.headline)
+
+            Text("Complete onboarding to start setting nutrition goals.")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .accessibilityIdentifier("no-user-section")
+    }
+}
+
+// MARK: - Preview
+
+#Preview("Strategy - With Goal") {
+    StrategyView()
+        .modelContainer(DataController.preview.container)
+}
+
+#Preview("Strategy - Empty") {
+    StrategyView()
+        .modelContainer(DataController.preview.container)
+}

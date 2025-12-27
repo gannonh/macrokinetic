@@ -197,6 +197,30 @@ enum WeeklyDistributionMode: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - TrainingLevel
+
+/// Training intensity level affecting calorie and macro adjustments
+enum TrainingLevel: String, Codable, CaseIterable, Identifiable {
+    case none
+    case relaxed
+
+    var displayName: String {
+        switch self {
+        case .none: return "None"
+        case .relaxed: return "Relaxed"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .none:
+            return "No structured training - focus on diet only"
+        case .relaxed:
+            return "Light activity or casual training routine"
+        }
+    }
+}
+
 // MARK: - ProteinLevel
 
 /// Protein intake level relative to body weight
@@ -281,6 +305,7 @@ struct ProgramConfiguration: Codable, Equatable {
     var programStyle: ProgramStyle
     var dietPreference: DietPreference
     var calorieFloorType: CalorieFloorType
+    var trainingLevel: TrainingLevel
     var weeklyDistributionMode: WeeklyDistributionMode
     var proteinLevel: ProteinLevel
     var metadata: [String: String]?
@@ -289,6 +314,7 @@ struct ProgramConfiguration: Codable, Equatable {
         programStyle: ProgramStyle,
         dietPreference: DietPreference,
         calorieFloorType: CalorieFloorType,
+        trainingLevel: TrainingLevel = .none,
         weeklyDistributionMode: WeeklyDistributionMode,
         proteinLevel: ProteinLevel,
         metadata: [String: String]? = nil
@@ -296,6 +322,7 @@ struct ProgramConfiguration: Codable, Equatable {
         self.programStyle = programStyle
         self.dietPreference = dietPreference
         self.calorieFloorType = calorieFloorType
+        self.trainingLevel = trainingLevel
         self.weeklyDistributionMode = weeklyDistributionMode
         self.proteinLevel = proteinLevel
         self.metadata = metadata
