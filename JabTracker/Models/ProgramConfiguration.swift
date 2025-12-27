@@ -7,6 +7,13 @@
 
 import Foundation
 
+// MARK: - RawRepresentable Identifiable
+
+/// Protocol extension providing automatic Identifiable conformance for String-RawValue enums
+extension Identifiable where Self: RawRepresentable, RawValue == String {
+    var id: String { rawValue }
+}
+
 // MARK: - MacroPercentages
 
 /// Macro distribution as percentages (protein, carbs, fat)
@@ -17,6 +24,11 @@ struct MacroPercentages: Codable, Equatable {
 
     /// Sum of all percentages (should equal 100 for valid distributions)
     var total: Double { protein + carbs + fat }
+
+    /// Whether this is a valid macro distribution (sums to 100, no negatives)
+    var isValid: Bool {
+        protein >= 0 && carbs >= 0 && fat >= 0 && abs(total - 100) < 0.001
+    }
 }
 
 // MARK: - GoalType
@@ -26,8 +38,6 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
     case weightLoss = "weight_loss"
     case maintenance
     case muscleGain = "muscle_gain"
-
-    var id: String { rawValue }
 
     var displayName: String {
         switch self {
@@ -45,8 +55,6 @@ enum ProgramStyle: String, Codable, CaseIterable, Identifiable {
     case coached
     case collaborative
     case manual
-
-    var id: String { rawValue }
 
     var displayName: String {
         switch self {
@@ -76,8 +84,6 @@ enum DietPreference: String, Codable, CaseIterable, Identifiable {
     case lowFat = "low_fat"
     case lowCarb = "low_carb"
     case keto
-
-    var id: String { rawValue }
 
     var displayName: String {
         switch self {
@@ -123,8 +129,6 @@ enum CalorieFloorType: String, Codable, CaseIterable, Identifiable {
     case standard
     case low
 
-    var id: String { rawValue }
-
     var displayName: String {
         switch self {
         case .standard: return "Standard"
@@ -165,8 +169,6 @@ enum WeeklyDistributionMode: String, Codable, CaseIterable, Identifiable {
     case even
     case shifted
 
-    var id: String { rawValue }
-
     var displayName: String {
         switch self {
         case .even: return "Even"
@@ -192,8 +194,6 @@ enum ProteinLevel: String, Codable, CaseIterable, Identifiable {
     case moderate
     case high
     case extraHigh = "extra_high"
-
-    var id: String { rawValue }
 
     var displayName: String {
         switch self {
@@ -242,24 +242,23 @@ struct WeeklyCalorieDistribution: Codable, Equatable {
         WeeklyCalorieDistribution(dayMultipliers: [:])
     }
 
+    /// Valid weekday range (1=Sunday through 7=Saturday, per Calendar.Component.weekday)
+    static let validWeekdayRange = 1...7
+
     /// Calculate the calorie target for a specific day
     /// - Parameters:
-    ///   - weekday: Day of week (1=Sunday through 7=Saturday)
+    ///   - weekday: Day of week (1=Sunday through 7=Saturday, per Calendar.Component.weekday)
     ///   - baseCalories: Base daily calorie target
-    /// - Returns: Adjusted calorie target for that day
-    func calorieTargetForDay(_ weekday: Int, baseCalories: Double) -> Double {
+    /// - Returns: Adjusted calorie target for that day, or nil if weekday is invalid
+    func calorieTargetForDay(_ weekday: Int, baseCalories: Double) -> Double? {
+        guard Self.validWeekdayRange.contains(weekday) else { return nil }
         let multiplier = dayMultipliers[weekday] ?? 1.0
         return baseCalories * multiplier
     }
 
     /// Validates that the weekly average equals base calories (sum of multipliers = 7.0)
     var isValid: Bool {
-        // Calculate sum of all multipliers, using 1.0 for unspecified days
-        var sum: Double = 0
-        for day in 1...7 {
-            sum += dayMultipliers[day] ?? 1.0
-        }
-        // Allow small floating point tolerance
+        let sum = Self.validWeekdayRange.reduce(0.0) { $0 + (dayMultipliers[$1] ?? 1.0) }
         return abs(sum - 7.0) < 0.001
     }
 }

@@ -13,6 +13,62 @@ import Testing
 @Suite("ProgramConfiguration Tests")
 struct ProgramConfigurationTests {
 
+    // MARK: - MacroPercentages Tests
+
+    @Test("MacroPercentages calculates total correctly")
+    func macroPercentagesTotal() {
+        let macros = MacroPercentages(protein: 30, carbs: 40, fat: 30)
+        #expect(macros.total == 100)
+
+        let unbalanced = MacroPercentages(protein: 25, carbs: 5, fat: 70)
+        #expect(unbalanced.total == 100)
+    }
+
+    @Test("MacroPercentages.isValid validates correctly")
+    func macroPercentagesIsValid() {
+        // Valid: sums to 100, no negatives
+        let valid = MacroPercentages(protein: 30, carbs: 40, fat: 30)
+        #expect(valid.isValid == true)
+
+        // Invalid: sums to 90
+        let invalidSum = MacroPercentages(protein: 30, carbs: 30, fat: 30)
+        #expect(invalidSum.isValid == false)
+
+        // Invalid: negative values
+        let negativeProtein = MacroPercentages(protein: -10, carbs: 60, fat: 50)
+        #expect(negativeProtein.isValid == false)
+
+        // Invalid: sums to 100 but has negative
+        let mixedInvalid = MacroPercentages(protein: -10, carbs: 60, fat: 50)
+        #expect(mixedInvalid.isValid == false)
+    }
+
+    @Test("MacroPercentages is Codable")
+    func macroPercentagesCodable() throws {
+        let macros = MacroPercentages(protein: 25, carbs: 50, fat: 25)
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(macros)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(MacroPercentages.self, from: data)
+
+        #expect(decoded == macros)
+        #expect(decoded.protein == 25)
+        #expect(decoded.carbs == 50)
+        #expect(decoded.fat == 25)
+    }
+
+    @Test("MacroPercentages is Equatable")
+    func macroPercentagesEquatable() {
+        let macros1 = MacroPercentages(protein: 30, carbs: 40, fat: 30)
+        let macros2 = MacroPercentages(protein: 30, carbs: 40, fat: 30)
+        let macros3 = MacroPercentages(protein: 25, carbs: 50, fat: 25)
+
+        #expect(macros1 == macros2)
+        #expect(macros1 != macros3)
+    }
+
     // MARK: - GoalType Tests
 
     @Test("GoalType has 3 cases")
@@ -187,9 +243,11 @@ struct ProgramConfigurationTests {
         let baseCalories = 2000.0
 
         // All days should return base calories
-        for weekday in 1...7 {
+        for weekday in WeeklyCalorieDistribution.validWeekdayRange {
             let target = even.calorieTargetForDay(weekday, baseCalories: baseCalories)
-            #expect(target == baseCalories, "Day \(weekday) should return \(baseCalories), got \(target)")
+            #expect(
+                target == baseCalories,
+                "Day \(weekday) should return \(baseCalories), got \(String(describing: target))")
         }
     }
 
@@ -208,11 +266,21 @@ struct ProgramConfigurationTests {
         #expect(distribution.calorieTargetForDay(7, baseCalories: baseCalories) == 2400)
 
         // Weekdays should be base (no multiplier specified means 1.0)
-        #expect(distribution.calorieTargetForDay(2, baseCalories: baseCalories) == 2000)
-        #expect(distribution.calorieTargetForDay(3, baseCalories: baseCalories) == 2000)
-        #expect(distribution.calorieTargetForDay(4, baseCalories: baseCalories) == 2000)
-        #expect(distribution.calorieTargetForDay(5, baseCalories: baseCalories) == 2000)
-        #expect(distribution.calorieTargetForDay(6, baseCalories: baseCalories) == 2000)
+        for weekday in 2...6 {
+            #expect(distribution.calorieTargetForDay(weekday, baseCalories: baseCalories) == 2000)
+        }
+    }
+
+    @Test("WeeklyCalorieDistribution returns nil for invalid weekday")
+    func weeklyCalorieDistributionInvalidWeekday() {
+        let distribution = WeeklyCalorieDistribution.even
+        let baseCalories = 2000.0
+
+        // Out of bounds values should return nil
+        #expect(distribution.calorieTargetForDay(0, baseCalories: baseCalories) == nil)
+        #expect(distribution.calorieTargetForDay(8, baseCalories: baseCalories) == nil)
+        #expect(distribution.calorieTargetForDay(-1, baseCalories: baseCalories) == nil)
+        #expect(distribution.calorieTargetForDay(100, baseCalories: baseCalories) == nil)
     }
 
     @Test("WeeklyCalorieDistribution.isValid validates sum equals 7.0")
