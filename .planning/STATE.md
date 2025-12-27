@@ -28,9 +28,9 @@ Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: TBD
-PR: TBD
-Branch: TBD
+Issue: #321
+PR: #322
+Branch: feat/321-v0.3.0-goals-nutrition-programs
 
 ## Performance Metrics
 
@@ -84,6 +84,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-27T18:20:33Z
-Stopped at: Milestone v0.3.0 initialization
+Last session: 2025-12-27T18:21:57Z
+Stopped at: Milestone v0.3.0 created with GitHub tracking
 Resume file: None
