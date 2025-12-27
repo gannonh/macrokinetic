@@ -34,7 +34,7 @@ enum PhotoType: String, Codable, CaseIterable {
         case .side:
             return "person.fill.turn.right"
         case .back:
-            return "person.fill.turn.down"
+            return "person.fill.turn.left"
         }
     }
 }

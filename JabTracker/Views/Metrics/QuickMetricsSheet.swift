@@ -12,14 +12,6 @@ import SwiftUI
 
 /// Quick metrics entry sheet for logging body measurements via shortcuts
 struct QuickMetricsSheet: View {
-    // MARK: - Constants
-
-    private static let unitCm = "cm"
-    private static let unitIn = "in"
-
-    /// Conversion factor: inches to centimeters
-    private static let inchesToCm: Double = 2.54
-
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
@@ -42,9 +34,15 @@ struct QuickMetricsSheet: View {
     @State private var errorMessage: String?
     @State private var showingError: Bool = false
 
-    // MARK: - Logger
+    // MARK: - Constants
 
-    private let logger = Logger(
+    private static let unitCm = "cm"
+    private static let unitIn = "in"
+
+    /// Conversion factor: inches to centimeters
+    private static let inchesToCm: Double = 2.54
+
+    private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "QuickMetricsSheet"
     )
@@ -315,7 +313,7 @@ struct QuickMetricsSheet: View {
                     }
                 }
             } catch {
-                logger.warning("Failed to load last metrics entry: \(error.localizedDescription)")
+                Self.logger.warning("Failed to load last metrics entry: \(error.localizedDescription)")
             }
 
             // Set HealthKit sync toggle based on availability
@@ -356,7 +354,7 @@ struct QuickMetricsSheet: View {
     @MainActor
     private func save() async {
         guard let service = metricsService else {
-            logger.error("MetricsService not initialized")
+            Self.logger.error("MetricsService not initialized")
             errorMessage = "Unable to save metrics. Please restart the app and try again."
             showingError = true
             return
@@ -376,7 +374,7 @@ struct QuickMetricsSheet: View {
                 notes: notes.isEmpty ? nil : notes
             )
 
-            logger.info("Logged metrics entry")
+            Self.logger.info("Logged metrics entry")
 
             // Sync to HealthKit if enabled (service handles auth internally)
             if syncToHealthKit {
@@ -385,7 +383,7 @@ struct QuickMetricsSheet: View {
 
             dismiss()
         } catch {
-            logger.error("Failed to log metrics: \(error.localizedDescription)")
+            Self.logger.error("Failed to log metrics: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             showingError = true
         }

@@ -2,7 +2,7 @@
 //  QuickAddViewModel.swift
 //  JabTracker
 //
-//  ViewModel for quick add food entry form.
+//  ViewModel for quick add macros entry sheet.
 //
 
 import Foundation

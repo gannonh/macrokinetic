@@ -61,6 +61,12 @@ final class MetricsEntry {
 
     // MARK: - Computed Properties
 
+    /// Type-safe source accessor
+    var sourceEnum: EntrySource {
+        get { EntrySource(rawValue: source) ?? .manual }
+        set { source = newValue.rawValue }
+    }
+
     /// Waist converted to inches
     var waistInInches: Double? {
         waistCm.map { $0 * Self.cmToInchesConversion }

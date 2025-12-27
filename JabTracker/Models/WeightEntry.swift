@@ -48,6 +48,12 @@ final class WeightEntry {
 
     // MARK: - Computed Properties
 
+    /// Type-safe source accessor
+    var sourceEnum: EntrySource {
+        get { EntrySource(rawValue: source) ?? .manual }
+        set { source = newValue.rawValue }
+    }
+
     /// Weight converted to pounds
     var weightInLbs: Double {
         weightKg * Self.kgToLbsConversion

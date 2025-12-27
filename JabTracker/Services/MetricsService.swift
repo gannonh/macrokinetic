@@ -191,18 +191,33 @@ final class MetricsService {
         neckCm: Double?? = nil,
         notes: String?? = nil
     ) async throws {
-        try updateMeasurement(&entry.waistCm, newValue: waistCm)
-        try updateMeasurement(&entry.hipCm, newValue: hipCm)
-        try updateMeasurement(&entry.chestCm, newValue: chestCm)
-        try updateMeasurement(&entry.neckCm, newValue: neckCm)
+        // Save original values for rollback on validation failure
+        let originalWaist = entry.waistCm
+        let originalHip = entry.hipCm
+        let originalChest = entry.chestCm
+        let originalNeck = entry.neckCm
 
-        if let notes = notes {
-            entry.notes = notes
-        }
+        do {
+            try updateMeasurement(&entry.waistCm, newValue: waistCm)
+            try updateMeasurement(&entry.hipCm, newValue: hipCm)
+            try updateMeasurement(&entry.chestCm, newValue: chestCm)
+            try updateMeasurement(&entry.neckCm, newValue: neckCm)
 
-        // Validate at least one measurement remains
-        guard entry.hasAnyMetrics else {
-            throw MetricsServiceError.invalidMeasurement("At least one measurement must be present")
+            if let notes = notes {
+                entry.notes = notes
+            }
+
+            // Validate at least one measurement remains
+            guard entry.hasAnyMetrics else {
+                throw MetricsServiceError.invalidMeasurement("At least one measurement must be present")
+            }
+        } catch {
+            // Roll back to original values on any validation error
+            entry.waistCm = originalWaist
+            entry.hipCm = originalHip
+            entry.chestCm = originalChest
+            entry.neckCm = originalNeck
+            throw error
         }
 
         do {

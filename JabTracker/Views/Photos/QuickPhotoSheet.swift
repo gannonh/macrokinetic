@@ -12,20 +12,6 @@ import SwiftUI
 
 /// Quick photo entry sheet for logging progress photos via shortcuts
 struct QuickPhotoSheet: View {
-    // MARK: - Constants
-
-    /// Maximum image size for CloudKit (1MB)
-    private static let maxImageSizeBytes = 1_000_000
-
-    /// Initial JPEG compression quality
-    private static let initialCompressionQuality: CGFloat = 0.8
-
-    /// Minimum compression quality before giving up
-    private static let minCompressionQuality: CGFloat = 0.1
-
-    /// Compression step size
-    private static let compressionStep: CGFloat = 0.1
-
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
@@ -48,9 +34,21 @@ struct QuickPhotoSheet: View {
     @State private var errorMessage: String?
     @State private var showingError: Bool = false
 
-    // MARK: - Logger
+    // MARK: - Constants
 
-    private let logger = Logger(
+    /// Maximum image size for CloudKit (1MB)
+    private static let maxImageSizeBytes = 1_000_000
+
+    /// Initial JPEG compression quality
+    private static let initialCompressionQuality: CGFloat = 0.8
+
+    /// Minimum compression quality before giving up
+    private static let minCompressionQuality: CGFloat = 0.1
+
+    /// Compression step size
+    private static let compressionStep: CGFloat = 0.1
+
+    private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "QuickPhotoSheet"
     )
@@ -275,7 +273,7 @@ struct QuickPhotoSheet: View {
         if let data = image.jpegData(compressionQuality: Self.initialCompressionQuality) {
             if let compressed = compressImage(data) {
                 photoData = compressed
-                logger.debug("Camera photo compressed: \(compressed.count) bytes")
+                Self.logger.debug("Camera photo compressed: \(compressed.count) bytes")
             } else {
                 photoData = data
             }
@@ -291,16 +289,16 @@ struct QuickPhotoSheet: View {
                     await MainActor.run {
                         photoData = compressed
                     }
-                    logger.debug("Loaded and compressed photo: \(compressed.count) bytes")
+                    Self.logger.debug("Loaded and compressed photo: \(compressed.count) bytes")
                 } else {
-                    logger.warning("Failed to compress photo, using original")
+                    Self.logger.warning("Failed to compress photo, using original")
                     await MainActor.run {
                         photoData = data
                     }
                 }
             }
         } catch {
-            logger.error("Failed to load photo: \(error.localizedDescription)")
+            Self.logger.error("Failed to load photo: \(error.localizedDescription)")
             await MainActor.run {
                 errorMessage = "Failed to load photo: \(error.localizedDescription)"
                 showingError = true
@@ -363,14 +361,14 @@ struct QuickPhotoSheet: View {
             if let compressed = resizedImage.jpegData(compressionQuality: Self.initialCompressionQuality),
                 compressed.count <= Self.maxImageSizeBytes
             {
-                logger.debug(
+                Self.logger.debug(
                     "Resized image to \(Int(newSize.width))x\(Int(newSize.height)) (\(compressed.count) bytes)")
                 return compressed
             }
 
             // Try lower quality on resized image
             if let result = compressWithQuality(image: resizedImage) {
-                logger.debug("Resized and compressed to \(result.count) bytes")
+                Self.logger.debug("Resized and compressed to \(result.count) bytes")
                 return result
             }
 
@@ -378,7 +376,7 @@ struct QuickPhotoSheet: View {
             scale = 0.8  // More aggressive reduction on subsequent passes
         }
 
-        logger.warning("Could not compress image below \(Self.maxImageSizeBytes) bytes")
+        Self.logger.warning("Could not compress image below \(Self.maxImageSizeBytes) bytes")
         // Return best effort - the smallest we could achieve
         return currentImage.jpegData(compressionQuality: Self.minCompressionQuality)
     }
@@ -386,7 +384,7 @@ struct QuickPhotoSheet: View {
     @MainActor
     private func save() async {
         guard let service = photoService else {
-            logger.error("ProgressPhotoService not initialized")
+            Self.logger.error("ProgressPhotoService not initialized")
             errorMessage = "Unable to save photo. Please restart the app and try again."
             showingError = true
             return
@@ -409,10 +407,10 @@ struct QuickPhotoSheet: View {
                 notes: notes.isEmpty ? nil : notes
             )
 
-            logger.info("Logged progress photo (\(photoType.displayName))")
+            Self.logger.info("Logged progress photo (\(photoType.displayName))")
             dismiss()
         } catch {
-            logger.error("Failed to log photo: \(error.localizedDescription)")
+            Self.logger.error("Failed to log photo: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             showingError = true
         }

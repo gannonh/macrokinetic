@@ -12,11 +12,6 @@ import SwiftUI
 
 /// Quick weight entry sheet for logging weight via shortcuts
 struct QuickWeightSheet: View {
-    // MARK: - Constants
-
-    private static let unitKg = "kg"
-    private static let unitLbs = "lbs"
-
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
@@ -34,9 +29,11 @@ struct QuickWeightSheet: View {
     @State private var errorMessage: String?
     @State private var showingError: Bool = false
 
-    // MARK: - Logger
+    // MARK: - Constants
 
-    private let logger = Logger(
+    private static let unitKg = "kg"
+    private static let unitLbs = "lbs"
+    private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "QuickWeightSheet"
     )
@@ -201,7 +198,7 @@ struct QuickWeightSheet: View {
                         }
                     }
                 } catch {
-                    logger.warning("Failed to load last weight entry: \(error.localizedDescription)")
+                    Self.logger.warning("Failed to load last weight entry: \(error.localizedDescription)")
                 }
 
                 // Set HealthKit sync toggle based on availability
@@ -215,7 +212,7 @@ struct QuickWeightSheet: View {
     @MainActor
     private func save() async {
         guard let service = weightService else {
-            logger.error("WeightService not initialized - AppServices.initialize may not have been called")
+            Self.logger.error("WeightService not initialized - AppServices.initialize may not have been called")
             errorMessage = "Unable to save weight. Please restart the app and try again."
             showingError = true
             return
@@ -244,7 +241,7 @@ struct QuickWeightSheet: View {
                 timestamp: timestamp
             )
 
-            logger.info("Logged weight entry: \(weightKg) kg")
+            Self.logger.info("Logged weight entry: \(weightKg) kg")
 
             // Sync to HealthKit if enabled (service handles auth internally)
             if syncToHealthKit {
@@ -255,13 +252,13 @@ struct QuickWeightSheet: View {
             do {
                 try await service.updateUserWeight()
             } catch {
-                logger.error("Failed to update User.weight: \(error.localizedDescription)")
+                Self.logger.error("Failed to update User.weight: \(error.localizedDescription)")
                 // Non-fatal: local entry saved, just profile sync failed
             }
 
             dismiss()
         } catch {
-            logger.error("Failed to log weight: \(error.localizedDescription)")
+            Self.logger.error("Failed to log weight: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             showingError = true
         }

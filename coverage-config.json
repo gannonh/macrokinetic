@@ -34,7 +34,8 @@
           "Models/Food+Serving.swift",
           "Models/WeightEntry.swift",
           "Models/MetricsEntry.swift",
-          "Models/ProgressPhoto.swift"
+          "Models/ProgressPhoto.swift",
+          "Models/EntrySource.swift"
         ]
       },
       "infrastructure": {
@@ -80,8 +81,6 @@
           "Services/NotificationService+Actions.swift",
           "Services/SubscriptionManager.swift",
           "Services/SubscriptionManager+Testing.swift",
-          "Services/WeightService+HealthKit.swift",
-          "Services/MetricsService+HealthKit.swift",
           "Onboarding/OnboardingCoordinator.swift",
           "Onboarding/OnboardingViewModel.swift",
           "Views/Analytics/ConcentrationChartGestureHandler.swift",
@@ -148,6 +147,8 @@
     ],
     "files": [
       "ContentView.swift",
+      "Services/WeightService+HealthKit.swift",
+      "Services/MetricsService+HealthKit.swift",
       "Design/ButtonComponents.swift",
       "Design/ButtonStyles.swift",
       "Design/CardComponents.swift",

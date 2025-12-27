@@ -12,7 +12,7 @@ extension WeightService {
     /// Shared HealthKit store for weight operations
     private static let healthStore = HKHealthStore()
 
-    private static let logger = Logger(
+    private static let healthKitLogger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "WeightService+HealthKit"
     )
@@ -27,13 +27,13 @@ extension WeightService {
     /// - Throws: Error if sync fails (authorization denied logs warning instead of throwing)
     func syncToHealthKit(_ entry: WeightEntry) async throws {
         guard HKHealthStore.isHealthDataAvailable() else {
-            Self.logger.info("HealthKit not available on this device, skipping sync")
+            Self.healthKitLogger.info("HealthKit not available on this device, skipping sync")
             return
         }
 
         // Write weight sample
         guard let weightType = HKQuantityType.quantityType(forIdentifier: .bodyMass) else {
-            Self.logger.error("Failed to get bodyMass quantity type")
+            Self.healthKitLogger.error("Failed to get bodyMass quantity type")
             return
         }
 
@@ -47,11 +47,11 @@ extension WeightService {
 
         do {
             try await Self.healthStore.save(weightSample)
-            Self.logger.info("Synced weight \(entry.weightKg) kg to HealthKit")
+            Self.healthKitLogger.info("Synced weight \(entry.weightKg) kg to HealthKit")
         } catch {
             // Check if authorization was denied
             if let hkError = error as? HKError, hkError.code == .errorAuthorizationDenied {
-                Self.logger.warning("HealthKit authorization denied for weight, skipping sync")
+                Self.healthKitLogger.warning("HealthKit authorization denied for weight, skipping sync")
                 return
             }
             throw error
@@ -60,7 +60,7 @@ extension WeightService {
         // Write body fat sample if present
         if let bodyFat = entry.bodyFatPercentage {
             guard let bodyFatType = HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage) else {
-                Self.logger.error("Failed to get bodyFatPercentage quantity type")
+                Self.healthKitLogger.error("Failed to get bodyFatPercentage quantity type")
                 return
             }
 
@@ -75,11 +75,11 @@ extension WeightService {
 
             do {
                 try await Self.healthStore.save(bodyFatSample)
-                Self.logger.info("Synced body fat \(bodyFat)% to HealthKit")
+                Self.healthKitLogger.info("Synced body fat \(bodyFat)% to HealthKit")
             } catch {
                 // Check if authorization was denied
                 if let hkError = error as? HKError, hkError.code == .errorAuthorizationDenied {
-                    Self.logger.warning("HealthKit authorization denied for body fat, skipping sync")
+                    Self.healthKitLogger.warning("HealthKit authorization denied for body fat, skipping sync")
                     return
                 }
                 throw error
@@ -91,14 +91,14 @@ extension WeightService {
     /// - Returns: True if write authorization was granted for weight
     func requestHealthKitAuthorization() async throws -> Bool {
         guard HKHealthStore.isHealthDataAvailable() else {
-            Self.logger.info("HealthKit not available on this device")
+            Self.healthKitLogger.info("HealthKit not available on this device")
             return false
         }
 
         guard let weightType = HKQuantityType.quantityType(forIdentifier: .bodyMass),
             let bodyFatType = HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage)
         else {
-            Self.logger.error("Failed to create HealthKit quantity types")
+            Self.healthKitLogger.error("Failed to create HealthKit quantity types")
             return false
         }
 
@@ -112,10 +112,10 @@ extension WeightService {
             let status = Self.healthStore.authorizationStatus(for: weightType)
             let authorized = status == .sharingAuthorized
 
-            Self.logger.info("HealthKit authorization \(authorized ? "granted" : "not granted") for weight")
+            Self.healthKitLogger.info("HealthKit authorization \(authorized ? "granted" : "not granted") for weight")
             return authorized
         } catch {
-            Self.logger.error("Failed to request HealthKit authorization: \(error.localizedDescription)")
+            Self.healthKitLogger.error("Failed to request HealthKit authorization: \(error.localizedDescription)")
             throw error
         }
     }
@@ -133,7 +133,7 @@ extension WeightService {
     /// - Parameter entry: The weight entry to sync
     func syncToHealthKitWithAuth(_ entry: WeightEntry) async {
         guard isHealthKitAvailable else {
-            Self.logger.info("HealthKit not available, skipping sync")
+            Self.healthKitLogger.info("HealthKit not available, skipping sync")
             return
         }
 
@@ -143,16 +143,16 @@ extension WeightService {
             do {
                 _ = try await requestHealthKitAuthorization()
             } catch {
-                Self.logger.warning("HealthKit authorization request failed: \(error.localizedDescription)")
+                Self.healthKitLogger.warning("HealthKit authorization request failed: \(error.localizedDescription)")
             }
         }
 
         // Sync entry (handles auth denial gracefully)
         do {
             try await syncToHealthKit(entry)
-            Self.logger.info("Synced weight entry to HealthKit")
+            Self.healthKitLogger.info("Synced weight entry to HealthKit")
         } catch {
-            Self.logger.error("Failed to sync weight to HealthKit: \(error.localizedDescription)")
+            Self.healthKitLogger.error("Failed to sync weight to HealthKit: \(error.localizedDescription)")
         }
     }
 }
