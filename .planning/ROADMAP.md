@@ -15,16 +15,88 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 📋 **v0.3.0** - TBD (planned)
+- 🚧 **v0.3.0 Goals & Nutrition Programs** - Phases 12-17 (in progress)
 
 ## Phases
 
-_No active phases. Run `/gsd:new-milestone` to plan next milestone._
+### 🚧 v0.3.0 Goals & Nutrition Programs (In Progress)
+
+**Milestone Goal:** Set personalized weight and macro goals with program styles (Coached/Collaborative/Manual), diet preferences, adaptive TDEE, and track daily progress with visual indicators and weekly check-ins.
+
+#### Phase 12: Goal Data Model
+
+**Goal**: SwiftData models for goals, nutrition programs, and TDEE tracking
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (internal patterns - SwiftData)
+**Plans**: TBD
+
+Plans:
+- [ ] 12-01: TBD (run /gsd:plan-phase 12 to break down)
+
+#### Phase 13: Goal Configuration Wizard
+
+**Goal**: Multi-step wizard for program style, diet preference, calorie floor, weekly distribution, and protein level
+**Depends on**: Phase 12
+**Research**: Unlikely (internal patterns - SwiftUI wizard)
+**Plans**: TBD
+
+Plans:
+- [ ] 13-01: TBD
+
+#### Phase 14: Adaptive TDEE Engine
+
+**Goal**: Personalized metabolic rate calculation from weight history with trend smoothing
+**Depends on**: Phase 13
+**Research**: Likely (algorithm research)
+**Research topics**: Adaptive TDEE algorithms, metabolic adaptation modeling, weight trend smoothing, calorie adjustment formulas
+**Plans**: TBD
+
+Plans:
+- [ ] 14-01: TBD
+
+#### Phase 15: Daily Tracking Dashboard
+
+**Goal**: Progress rings for calories/macros, remaining vs consumed display, color coding for under/on-track/over
+**Depends on**: Phase 14
+**Research**: Unlikely (internal patterns - Swift Charts)
+**Plans**: TBD
+
+Plans:
+- [ ] 15-01: TBD
+
+#### Phase 16: Weekly Check-ins
+
+**Goal**: Weight trend review, adherence summary, goal and program adjustment flow
+**Depends on**: Phase 15
+**Research**: Unlikely (internal patterns - existing weight tracking)
+**Plans**: TBD
+
+Plans:
+- [ ] 16-01: TBD
+
+#### Phase 17: Goal Settings Integration
+
+**Goal**: Edit goals and program from settings, sync state with wizard
+**Depends on**: Phase 16
+**Research**: Unlikely (internal patterns - existing settings)
+**Plans**: TBD
+
+Plans:
+- [ ] 17-01: TBD
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 12. Goal Data Model | v0.3.0 | 0/? | Not started | - |
+| 13. Goal Configuration Wizard | v0.3.0 | 0/? | Not started | - |
+| 14. Adaptive TDEE Engine | v0.3.0 | 0/? | Not started | - |
+| 15. Daily Tracking Dashboard | v0.3.0 | 0/? | Not started | - |
+| 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
+| 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
 
 <details>
 <summary>✅ v0.2.0 Enhanced Tracking (Phases 5-11) - SHIPPED 2025-12-27</summary>
