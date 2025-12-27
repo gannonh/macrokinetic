@@ -46,6 +46,17 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .muscleGain: return "Muscle Gain"
         }
     }
+
+    var description: String {
+        switch self {
+        case .weightLoss:
+            return "Focus on reducing body weight through calorie deficit"
+        case .maintenance:
+            return "Maintain current weight and body composition"
+        case .muscleGain:
+            return "Build muscle mass with calorie surplus"
+        }
+    }
 }
 
 // MARK: - ProgramStyle

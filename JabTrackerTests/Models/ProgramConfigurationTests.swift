@@ -86,6 +86,26 @@ struct ProgramConfigurationTests {
         #expect(GoalType.muscleGain.displayName == "Muscle Gain")
     }
 
+    @Test("GoalType has description")
+    func goalTypeDescription() {
+        // Verify all GoalType cases have non-empty descriptions
+        for goalType in GoalType.allCases {
+            #expect(!goalType.description.isEmpty, "\(goalType) should have non-empty description")
+        }
+
+        // Verify specific descriptions contain expected keywords
+        #expect(
+            GoalType.weightLoss.description.contains("deficit") || GoalType.weightLoss.description.contains("reducing"),
+            "weightLoss description should mention deficit or reducing")
+        #expect(
+            GoalType.maintenance.description.contains("maintain")
+                || GoalType.maintenance.description.contains("current"),
+            "maintenance description should mention maintain or current")
+        #expect(
+            GoalType.muscleGain.description.contains("muscle") || GoalType.muscleGain.description.contains("surplus"),
+            "muscleGain description should mention muscle or surplus")
+    }
+
     // MARK: - ProgramStyle Tests
 
     @Test("ProgramStyle has 3 cases")

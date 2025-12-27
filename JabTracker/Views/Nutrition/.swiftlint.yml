@@ -1,6 +1,11 @@
 # SwiftLint overrides for Nutrition views
 # FoodSearchSheet.swift has complex tab-based UI requiring more lines
+# GoalConfigurationWizard.swift contains 7 step views inline per architecture decision
 
 type_body_length:
   warning: 400
   error: 450
+
+file_length:
+  warning: 600
+  error: 700

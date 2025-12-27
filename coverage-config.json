@@ -247,6 +247,7 @@
       "Views/Nutrition/FoodDetailSheet+InputSection.swift",
       "Views/Nutrition/FoodSearchSheet.swift",
       "Views/Nutrition/FoodSearchSheet+Sections.swift",
+      "Views/Nutrition/GoalConfigurationWizard.swift",
       "Views/Nutrition/SearchMethodTabs.swift",
       "Views/Nutrition/ServingInputView.swift",
       "Views/Nutrition/EditFoodEntrySheet.swift",
