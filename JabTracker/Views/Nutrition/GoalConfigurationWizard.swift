@@ -167,6 +167,13 @@ final class GoalWizardViewModel {
             throw GoalWizardError.incompleteData
         }
 
+        // Deactivate existing active goals
+        if let existingGoals = user.nutritionGoals {
+            for existingGoal in existingGoals where existingGoal.isActive {
+                existingGoal.isActive = false
+            }
+        }
+
         // Create NutritionGoal
         let goal = NutritionGoal(goalType: goalType)
         goal.user = user
@@ -200,6 +207,7 @@ struct GoalConfigurationWizard: View {
 
     @State private var viewModel = GoalWizardViewModel()
     @State private var errorMessage: String?
+    @State private var showingError = false
 
     let user: User
 
@@ -267,8 +275,9 @@ struct GoalConfigurationWizard: View {
                     .accessibilityIdentifier("wizard-cancel-button")
                 }
             }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
+            .alert("Error", isPresented: $showingError) {
                 Button("OK") {
+                    showingError = false
                     errorMessage = nil
                 }
             } message: {
@@ -321,6 +330,7 @@ struct GoalConfigurationWizard: View {
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
+            showingError = true
         }
     }
 }
