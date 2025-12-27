@@ -221,6 +221,7 @@ struct DeeplinkHandlerTests {
     // MARK: - Handle Method Tests
 
     @Test("Handle valid deeplink posts notification")
+    @MainActor
     func testHandleValidDeeplinkPostsNotification() throws {
         // Arrange
         let scheduledDoseId = UUID()

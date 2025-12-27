@@ -6,14 +6,42 @@
 import Foundation
 import SwiftData
 
+// MARK: - Metric Key Constants
+
+/// Type-safe keys for body metrics visibility preferences
+enum MetricKey: String, CaseIterable {
+    // Upper Body
+    case neck, shoulders, bust, chest, waist, hip
+    // Arms
+    case leftBicep, rightBicep, leftForearm, rightForearm, leftWrist, rightWrist
+    // Legs
+    case leftThigh, rightThigh, leftCalf, rightCalf, leftAnkle, rightAnkle
+    // Ratios
+    case waistToHeight, waistToHip
+}
+
+/// Type-safe keys for photo type visibility preferences
+enum PhotoTypeKey: String, CaseIterable {
+    case front, side, back
+}
+
 @Model
 final class User {
+    // MARK: - Static Defaults
+
+    /// Default enabled body metrics for new users
+    static let defaultEnabledMetrics: Set<String> = [MetricKey.waist.rawValue]
+
+    /// Default enabled photo types for new users
+    static let defaultEnabledPhotoTypes: Set<String> = [PhotoTypeKey.front.rawValue]
+
     var id: UUID = UUID()
     var email: String?  // Optional - genuinely no email vs empty string ambiguity resolved
     var name: String?  // Optional - Apple might not provide
     var dateOfBirth: Date?  // Optional - user may choose not to provide
     var weight: Double = 70.0  // Required with default for medical app
     var weightUnit: String = "kg"  // Required with default
+    var measurementUnit: String = "cm"  // Required with default: cm or in
     var timezone: String = TimeZone.current.identifier  // Required with default
     var appleUserId: String?  // For Sign in with Apple linking
     var createdAt: Date = Date()  // Required - auto-generated
@@ -35,6 +63,11 @@ final class User {
     var dailyCarbGoal: Double = 200.0
     var dailyFatGoal: Double = 65.0
 
+    // Body metrics visibility preferences
+    // Stores metric keys that are enabled (default: waist only)
+    var enabledBodyMetrics: [String] = ["waist"]
+    var enabledPhotoTypes: [String] = ["front"]
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]?  // CloudKit requires optional relationships
 
@@ -50,6 +83,7 @@ final class User {
         dateOfBirth: Date? = nil,
         weight: Double = 70.0,
         weightUnit: String = "kg",
+        measurementUnit: String = "cm",
         timezone: String = TimeZone.current.identifier,
         appleUserId: String? = nil,
         hasCompletedOnboarding: Bool = false,
@@ -60,13 +94,16 @@ final class User {
         dailyCalorieGoal: Double = 2000.0,
         dailyProteinGoal: Double = 150.0,
         dailyCarbGoal: Double = 200.0,
-        dailyFatGoal: Double = 65.0
+        dailyFatGoal: Double = 65.0,
+        enabledBodyMetrics: [String] = ["waist"],
+        enabledPhotoTypes: [String] = ["front"]
     ) {
         self.email = email
         self.name = name
         self.dateOfBirth = dateOfBirth
         self.weight = weight
         self.weightUnit = weightUnit
+        self.measurementUnit = measurementUnit
         self.timezone = timezone
         self.appleUserId = appleUserId
         self.hasCompletedOnboarding = hasCompletedOnboarding
@@ -78,6 +115,8 @@ final class User {
         self.dailyProteinGoal = dailyProteinGoal
         self.dailyCarbGoal = dailyCarbGoal
         self.dailyFatGoal = dailyFatGoal
+        self.enabledBodyMetrics = enabledBodyMetrics
+        self.enabledPhotoTypes = enabledPhotoTypes
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
@@ -218,5 +257,54 @@ extension User {
         }
 
         return totalInterval / Double(intervals)
+    }
+}
+
+// MARK: - Metrics Visibility Helpers
+
+extension User {
+    /// Check if a specific body metric is enabled
+    func isMetricEnabled(_ metric: String) -> Bool {
+        enabledBodyMetrics.contains(metric)
+    }
+
+    /// Check if a specific photo type is enabled
+    func isPhotoTypeEnabled(_ photoType: String) -> Bool {
+        enabledPhotoTypes.contains(photoType)
+    }
+
+    /// Toggle a body metric's visibility
+    func toggleMetric(_ metric: String) {
+        toggleItem(metric, in: &enabledBodyMetrics)
+    }
+
+    /// Toggle a photo type's visibility
+    func togglePhotoType(_ photoType: String) {
+        toggleItem(photoType, in: &enabledPhotoTypes)
+    }
+
+    // MARK: - Private Helpers
+
+    /// Toggle an item in an array (add if missing, remove if present)
+    private func toggleItem(_ item: String, in array: inout [String]) {
+        if array.contains(item) {
+            array.removeAll { $0 == item }
+        } else {
+            array.append(item)
+        }
+    }
+}
+
+// MARK: - Unit Preferences Helpers
+
+extension User {
+    /// Returns true if user prefers metric units for measurements (cm)
+    var prefersMetricMeasurements: Bool {
+        measurementUnit == "cm"
+    }
+
+    /// Returns true if user prefers metric units for weight (kg)
+    var prefersMetricWeight: Bool {
+        weightUnit == "kg"
     }
 }

@@ -17,8 +17,9 @@ struct ContentView: View {
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var doseService: DoseService
     @State private var showingShortcuts = false
-    @State private var showingFoodSearchSheet = false
-    @State private var showingFoodSearchWithScan = false
+    @State private var activeShortcutSheet: ShortcutDestination?
+    /// The currently selected date in FoodLogView, shared for tab bar + button
+    @State private var selectedFoodLogDate = Date()
 
     // MARK: - Constants
 
@@ -44,7 +45,7 @@ struct ContentView: View {
                 }
                 .tag(Tab.dashboard)
 
-            FoodLogView()
+            FoodLogView(selectedDate: $selectedFoodLogDate)
                 .tabItem {
                     Label(Tab.foodLog.title, systemImage: Tab.foodLog.icon)
                 }
@@ -125,17 +126,31 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showingShortcuts) {
-            ShortcutsSheet(
-                showingFoodSearch: $showingFoodSearchSheet,
-                showingQuickDose: $showingQuickDoseSheet,
-                showingFoodSearchWithScan: $showingFoodSearchWithScan
-            )
+            ShortcutsSheet(activeSheet: $activeShortcutSheet)
         }
-        .sheet(isPresented: $showingFoodSearchSheet) {
-            foodSearchSheet()
-        }
-        .sheet(isPresented: $showingFoodSearchWithScan) {
-            foodSearchSheet(initialMethod: .scan)
+        .sheet(item: $activeShortcutSheet) { destination in
+            switch destination {
+            case .foodSearch:
+                foodSearchSheet()
+            case .quickDose:
+                QuickDoseSheet(
+                    viewModel: quickDoseViewModel,
+                    doseService: doseService,
+                    showingSuccessMessage: $showingSuccessMessage
+                )
+            case .barcodeScan:
+                foodSearchSheet(initialMethod: .scan)
+            case .foodLibrary:
+                foodSearchSheet(initialMethod: .library)
+            case .quickAdd:
+                foodSearchSheet(initialMethod: .quickAdd)
+            case .quickWeight:
+                QuickWeightSheet()
+            case .quickMetrics:
+                QuickMetricsSheet()
+            case .quickPhoto:
+                QuickPhotoSheet()
+            }
         }
         .onAppear {
             self.quickDoseViewModel.loadSmartDefaults(context: self.modelContext)
@@ -194,7 +209,8 @@ struct ContentView: View {
                 foodService: AppServices.shared.foodService,
                 mealLogService: AppServices.shared.mealLogService,
                 customFoodService: AppServices.shared.customFoodService,
-                initialMethod: initialMethod
+                initialMethod: initialMethod,
+                initialDate: selectedFoodLogDate
             ) {
                 // On complete - could show success message
             }

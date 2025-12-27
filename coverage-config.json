@@ -28,7 +28,12 @@
           "Models/Food.swift",
           "Models/FoodEntry.swift",
           "Models/FoodSource.swift",
-          "Models/MealSection.swift"
+          "Models/MealSection.swift",
+          "Models/Food+Serving.swift",
+          "Models/WeightEntry.swift",
+          "Models/MetricsEntry.swift",
+          "Models/ProgressPhoto.swift",
+          "Models/EntrySource.swift"
         ]
       },
       "infrastructure": {
@@ -60,7 +65,10 @@
           "Services/OpenFoodFactsService.swift",
           "Services/FoodService.swift",
           "Services/MealLogService.swift",
-          "Services/CustomFoodService.swift"
+          "Services/CustomFoodService.swift",
+          "Services/WeightService.swift",
+          "Services/MetricsService.swift",
+          "Services/ProgressPhotoService.swift"
         ]
       },
       "framework_integration": {
@@ -94,6 +102,7 @@
           "ViewModels/AnalyticsViewModel.swift",
           "ViewModels/FoodSearchSheetViewModel.swift",
           "ViewModels/CreateFoodViewModel.swift",
+          "ViewModels/QuickAddViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift"
         ]
@@ -136,11 +145,14 @@
     ],
     "files": [
       "ContentView.swift",
+      "Services/WeightService+HealthKit.swift",
+      "Services/MetricsService+HealthKit.swift",
       "Design/ButtonComponents.swift",
       "Design/ButtonStyles.swift",
       "Design/CardComponents.swift",
       "Design/Colors+Extensions.swift",
       "Design/DesignTokens.swift",
+      "Design/ErrorAlertModifier.swift",
       "JabTrackerApp.swift",
       "Models/SubscriptionProducts.swift",
       "Onboarding/Components/ConcentrationCurvePreview.swift",
@@ -173,10 +185,14 @@
       "Views/Analytics/StreakCounterView.swift",
       "Views/Analytics/TimePeriodSelector.swift",
       "Views/AuthenticationView.swift",
+      "Views/FoodLog/FoodDayView.swift",
       "Views/FoodLog/FoodLogView.swift",
+      "Views/FoodLog/WeekCalendarStrip.swift",
       "Views/More/MoreView.swift",
       "Views/Shots/ShotsView.swift",
       "Models/Tab.swift",
+      "Models/LibraryTab.swift",
+      "Models/FoodLibrarySortOption.swift",
       "Views/Dashboard/ConcentrationCard.swift",
       "Views/Dashboard/ConcentrationDisplay.swift",
       "Views/Dashboard/QuickDoseButton.swift",
@@ -215,6 +231,8 @@
       "Views/Settings/MedicationFormComponents.swift",
       "Views/Settings/MedicationProfileSettingsView.swift",
       "Views/Settings/MedicationProfileViewModel.swift",
+      "Views/Settings/BodyMetricsVisibilityView.swift",
+      "Views/Settings/UnitsOfMeasureView.swift",
       "Views/Settings/SettingsView.swift",
       "Views/SplashView.swift",
       "Views/UserProfileView.swift",
@@ -230,36 +248,20 @@
       "Views/Nutrition/ServingInputView.swift",
       "Views/Nutrition/EditFoodEntrySheet.swift",
       "Views/Nutrition/FoodEntryCardView.swift",
+      "Views/Nutrition/FoodLibraryContentView.swift",
       "Views/Nutrition/CreateFoodSheet.swift",
       "Views/Nutrition/BarcodeScannerContentView.swift",
       "Views/Nutrition/CameraPreviewView.swift",
+      "Views/Nutrition/QuickAddContentView.swift",
       "Services/CameraService.swift",
       "Extensions/View+Conditional.swift",
       "Views/Shortcuts/ShortcutButton.swift",
       "Views/Shortcuts/ShortcutRowButton.swift",
       "Views/Shortcuts/ShortcutsSheet.swift",
+      "Views/Weight/QuickWeightSheet.swift",
+      "Views/Metrics/QuickMetricsSheet.swift",
+      "Views/Photos/QuickPhotoSheet.swift",
       "Design/CircularProgressRing.swift"
     ]
-  },
-  "special_testing_notes": {
-    "cloudkit_integration": {
-      "description": "CloudKit methods tested via E2E UI tests rather than unit tests",
-      "rationale": "CloudKit requires real iCloud account and network connectivity, making unit testing impractical and unreliable",
-      "methods_covered_by_e2e": [
-        "DataController.checkiCloudStatus()",
-        "DataController.checkCloudKitStatus()"
-      ],
-      "e2e_test_file": "CloudKitIntegrationUITests.swift",
-      "unit_test_approach": "Business logic around CloudKit status handling is tested with mocks"
-    },
-    "authentication_integration": {
-      "description": "Real Sign in with Apple tested via E2E, mocked scenarios via unit tests",
-      "e2e_test_file": "AuthenticationUITests.swift",
-      "test_approach": "Hybrid - E2E for real authentication flows, unit tests for error handling and state management"
-    }
-  },
-  "overall_target": {
-    "informational_only": true,
-    "note": "Overall coverage percentage is informational due to SwiftUI architecture limitations"
   }
 }

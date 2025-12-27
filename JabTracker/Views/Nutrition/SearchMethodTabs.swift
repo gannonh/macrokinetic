@@ -44,6 +44,8 @@ enum SearchMethod: String, CaseIterable, Identifiable {
         switch self {
         case .scan: return true
         case .search: return true
+        case .library: return true
+        case .quickAdd: return true
         default: return false
         }
     }

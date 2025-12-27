@@ -31,6 +31,7 @@ struct FoodSearchSheet: View {
     // MARK: - State
 
     @State var viewModel: FoodSearchSheetViewModel
+    @State var quickAddViewModel: QuickAddViewModel?
     @State var selectedFood: FoodSearchResult?
     @State var showingFoodDetail = false
     @State private var showingComingSoon = false
@@ -64,6 +65,7 @@ struct FoodSearchSheet: View {
         mealLogService: MealLogService?,
         customFoodService: CustomFoodService? = nil,
         initialMethod: SearchMethod? = nil,
+        initialDate: Date = Date(),
         onComplete: @escaping () -> Void
     ) {
         self.user = user
@@ -82,7 +84,23 @@ struct FoodSearchSheet: View {
             if let method = initialMethod {
                 vm.selectedMethod = method
             }
+            // Set initial date for logging - use current time of day on the selected date
+            // This ensures MealSection.from(date:) picks the right meal (not snacks at midnight)
+            let calendar = Calendar.current
+            let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: Date())
+            let dateComponents = calendar.dateComponents([.year, .month, .day], from: initialDate)
+            var combined = DateComponents()
+            combined.year = dateComponents.year
+            combined.month = dateComponents.month
+            combined.day = dateComponents.day
+            combined.hour = timeComponents.hour
+            combined.minute = timeComponents.minute
+            combined.second = timeComponents.second
+            vm.selectedTime = calendar.date(from: combined) ?? initialDate
             self._viewModel = State(wrappedValue: vm)
+
+            // Initialize QuickAddViewModel
+            self._quickAddViewModel = State(wrappedValue: QuickAddViewModel(mealLogService: mls))
         } else {
             // Fallback for previews - will need proper DI
             fatalError("FoodSearchSheet requires non-nil foodService and mealLogService")
@@ -100,7 +118,7 @@ struct FoodSearchSheet: View {
                 // Method tabs
                 methodTabsSection
 
-                // Show scanner or search UI based on selected method
+                // Show scanner, library, quick add, or search UI based on selected method
                 if viewModel.selectedMethod == .scan {
                     ZStack {
                         BarcodeScannerContentView { barcode in
@@ -120,6 +138,38 @@ struct FoodSearchSheet: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color.black.opacity(0.3))
                         }
+                    }
+                } else if viewModel.selectedMethod == .library {
+                    if let customFoodService {
+                        FoodLibraryContentView(
+                            customFoodService: customFoodService,
+                            onFoodSelected: { food in
+                                selectedFood = food.toSearchResult()
+                                showingFoodDetail = true
+                            },
+                            editingCustomFood: $editingCustomFood,
+                            foodToDelete: $foodToDelete,
+                            showingDeleteConfirmation: $showingDeleteConfirmation
+                        )
+                    } else {
+                        ContentUnavailableView(
+                            "Service Unavailable",
+                            systemImage: "exclamationmark.triangle",
+                            description: Text("Custom food service is not available")
+                        )
+                    }
+                } else if viewModel.selectedMethod == .quickAdd {
+                    // Quick Add content
+                    if let quickAddVM = quickAddViewModel {
+                        QuickAddContentView(
+                            viewModel: quickAddVM,
+                            selectedMeal: MealSection.from(date: viewModel.selectedTime),
+                            selectedTime: viewModel.selectedTime,
+                            onComplete: {
+                                onComplete()
+                                dismiss()
+                            }
+                        )
                     }
                 } else {
                     // Search field

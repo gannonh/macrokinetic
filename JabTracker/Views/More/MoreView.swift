@@ -16,6 +16,18 @@ struct MoreView: View {
                         Label("Settings", systemImage: "gear")
                     }
                 }
+
+                Section("Feature Settings") {
+                    NavigationLink(destination: BodyMetricsVisibilityView()) {
+                        Label("Body Metrics Visibility", systemImage: "figure.arms.open")
+                    }
+                    .accessibilityIdentifier("body-metrics-visibility-link")
+
+                    NavigationLink(destination: UnitsOfMeasureView()) {
+                        Label("Units of Measure", systemImage: "ruler")
+                    }
+                    .accessibilityIdentifier("units-of-measure-link")
+                }
             }
             .listStyle(.insetGrouped)
             .navigationTitle("More")

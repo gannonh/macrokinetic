@@ -83,6 +83,9 @@ class DataController: ObservableObject {
             ScheduledDose.self,
             Food.self,
             FoodEntry.self,
+            WeightEntry.self,
+            MetricsEntry.self,
+            ProgressPhoto.self,
         ])
 
         // Configure CloudKit database for production vs in-memory/testing

@@ -188,4 +188,65 @@ final class MealLogService {
 
         Self.logger.info("Deleted food entry: \(name)")
     }
+
+    // MARK: - Quick Add
+
+    /// Log a quick add entry with manual macro values
+    /// - Parameters:
+    ///   - name: Name for the food entry
+    ///   - caloriesPer100g: Calories per 100g
+    ///   - proteinPer100g: Protein per 100g
+    ///   - carbsPer100g: Carbs per 100g
+    ///   - fatPer100g: Fat per 100g
+    ///   - servingGrams: Serving size in grams (default 100)
+    ///   - mealSection: Meal section (breakfast, lunch, dinner, snacks)
+    ///   - notes: Optional notes
+    ///   - loggedAt: When the entry was logged (defaults to now)
+    /// - Returns: The created FoodEntry
+    /// - Throws: FoodEntryValidationError if validation fails
+    func logQuickAdd(
+        name: String,
+        caloriesPer100g: Double,
+        proteinPer100g: Double,
+        carbsPer100g: Double,
+        fatPer100g: Double,
+        servingGrams: Double = 100.0,
+        mealSection: MealSection,
+        notes: String = "",
+        loggedAt: Date = Date()
+    ) async throws -> FoodEntry {
+        // Validate name not empty
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else {
+            throw FoodEntryValidationError.emptyFoodName
+        }
+
+        // Validate serving size positive
+        guard servingGrams > 0 else {
+            throw FoodEntryValidationError.invalidServingSize
+        }
+
+        // Create FoodEntry directly (no Food model needed)
+        let entry = FoodEntry(
+            foodId: UUID(),
+            foodName: name,
+            foodBrand: nil,
+            mealSection: mealSection,
+            loggedAt: loggedAt,
+            servingGrams: servingGrams,
+            servingDescription: nil,
+            caloriesPer100g: caloriesPer100g,
+            proteinPer100g: proteinPer100g,
+            carbsPer100g: carbsPer100g,
+            fatPer100g: fatPer100g,
+            fiberPer100g: 0,
+            notes: notes.isEmpty ? nil : notes
+        )
+
+        context.insert(entry)
+        try context.save()
+
+        Self.logger.info("Logged quick add entry: \(name) (\(servingGrams)g) for \(mealSection.displayName)")
+
+        return entry
+    }
 }

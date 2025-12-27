@@ -15,32 +15,20 @@ struct ShortcutsSheetTests {
 
     // MARK: - Initialization Tests
 
-    @Test("ShortcutsSheet initializes with bindings")
+    @Test("ShortcutsSheet initializes with activeSheet binding")
     @MainActor
-    func shortcutsSheetInitializesWithBindings() {
-        var showingFoodSearch = false
-        var showingQuickDose = false
-        var showingFoodSearchWithScan = false
+    func shortcutsSheetInitializesWithActiveSheetBinding() {
+        var activeSheet: ShortcutDestination?
 
-        let sheet = ShortcutsSheet(
-            showingFoodSearch: Binding(
-                get: { showingFoodSearch },
-                set: { showingFoodSearch = $0 }
-            ),
-            showingQuickDose: Binding(
-                get: { showingQuickDose },
-                set: { showingQuickDose = $0 }
-            ),
-            showingFoodSearchWithScan: Binding(
-                get: { showingFoodSearchWithScan },
-                set: { showingFoodSearchWithScan = $0 }
+        _ = ShortcutsSheet(
+            activeSheet: Binding(
+                get: { activeSheet },
+                set: { activeSheet = $0 }
             )
         )
 
-        // Bindings should be set
-        #expect(sheet.showingFoodSearch == false)
-        #expect(sheet.showingQuickDose == false)
-        #expect(sheet.showingFoodSearchWithScan == false)
+        // Active sheet should initially be nil
+        #expect(activeSheet == nil)
     }
 
     // MARK: - Top Row Shortcut Tests
@@ -67,15 +55,15 @@ struct ShortcutsSheetTests {
         #expect(barcodeShortcut?.icon == "barcode.viewfinder")
     }
 
-    @Test("ShortcutsSheet has Photo shortcut disabled")
+    @Test("ShortcutsSheet has AI shortcut disabled")
     @MainActor
-    func hasPhotoShortcutDisabled() {
+    func hasAIShortcutDisabled() {
         let shortcuts = ShortcutsSheet.topRowShortcuts
 
-        let photoShortcut = shortcuts.first { $0.label == "Photo" }
-        #expect(photoShortcut != nil)
-        #expect(photoShortcut?.isEnabled == false)
-        #expect(photoShortcut?.icon == "camera.fill")
+        let aiShortcut = shortcuts.first { $0.label == "AI" }
+        #expect(aiShortcut != nil)
+        #expect(aiShortcut?.isEnabled == false)
+        #expect(aiShortcut?.icon == "camera.fill")
     }
 
     @Test("ShortcutsSheet has Shots shortcut enabled")
@@ -97,28 +85,28 @@ struct ShortcutsSheetTests {
         #expect(shortcuts.count == 4)
         #expect(shortcuts[0].label == "Search")
         #expect(shortcuts[1].label == "Barcode")
-        #expect(shortcuts[2].label == "Photo")
+        #expect(shortcuts[2].label == "AI")
         #expect(shortcuts[3].label == "Shots")
     }
 
     // MARK: - List Row Shortcut Tests
 
-    @Test("ShortcutsSheet has all list row shortcuts disabled")
+    @Test("ShortcutsSheet has Your Foods shortcut enabled")
     @MainActor
-    func hasAllListRowShortcutsDisabled() {
+    func hasYourFoodsShortcutEnabled() {
         let shortcuts = ShortcutsSheet.listRowShortcuts
 
-        for shortcut in shortcuts {
-            #expect(shortcut.isEnabled == false, "Shortcut '\(shortcut.label)' should be disabled")
-        }
+        let yourFoodsShortcut = shortcuts.first { $0.label == "Your Foods" }
+        #expect(yourFoodsShortcut != nil)
+        #expect(yourFoodsShortcut?.isEnabled == true)
     }
 
-    @Test("ShortcutsSheet list rows have 6 shortcuts")
+    @Test("ShortcutsSheet list rows have 7 shortcuts")
     @MainActor
-    func listRowsHaveSixShortcuts() {
+    func listRowsHaveSevenShortcuts() {
         let shortcuts = ShortcutsSheet.listRowShortcuts
 
-        #expect(shortcuts.count == 6)
+        #expect(shortcuts.count == 7)
     }
 
     @Test("ShortcutsSheet list rows include Weight")
@@ -139,6 +127,7 @@ struct ShortcutsSheetTests {
         let quickAddShortcut = shortcuts.first { $0.label == "Quick Add" }
         #expect(quickAddShortcut != nil)
         #expect(quickAddShortcut?.icon == "plus.circle.fill")
+        #expect(quickAddShortcut?.isEnabled == true)
     }
 
     @Test("ShortcutsSheet list rows include Metrics")
@@ -149,6 +138,18 @@ struct ShortcutsSheetTests {
         let metricsShortcut = shortcuts.first { $0.label == "Metrics" }
         #expect(metricsShortcut != nil)
         #expect(metricsShortcut?.icon == "chart.bar.fill")
+        #expect(metricsShortcut?.isEnabled == true)
+    }
+
+    @Test("ShortcutsSheet list rows include Progress Photos")
+    @MainActor
+    func listRowsIncludeProgressPhotos() {
+        let shortcuts = ShortcutsSheet.listRowShortcuts
+
+        let photosShortcut = shortcuts.first { $0.label == "Progress Photos" }
+        #expect(photosShortcut != nil)
+        #expect(photosShortcut?.icon == "camera.fill")
+        #expect(photosShortcut?.isEnabled == true)
     }
 
     @Test("ShortcutsSheet list rows include Your Foods")

@@ -2,37 +2,15 @@
 
 **Analysis Date:** 2025-12-22
 
-## MANDATORY: Load Testing Skills First
-
-**CRITICAL REQUIREMENT**: Before writing, debugging, or running any tests, you **MUST** load the appropriate skill:
-
-| Test Type | Required Skill | Command |
-|-----------|---------------|---------|
-| Unit/Integration Tests | `/ios-unit-testing` | Run first |
-| E2E/UI Tests | `/ios-e2e-testing` | Run first |
-
-**Why this is mandatory:**
-- Skills contain detailed patterns for Swift Testing framework and XCUITest
-- SwiftData test data management requires specific patterns (container lifetime)
-- E2E tests require debug-first element targeting approach
-- Without skills, you will likely introduce bugs or flaky tests
-
-**Always invoke the skill BEFORE:**
-- Writing new test files
-- Debugging failing tests
-- Adding test coverage
-- Fixing flaky tests
-- Setting up test data
-
 ## Available Simulators
 
 > **CRITICAL**: Xcode 26.2 requires iOS 26.2 simulators to avoid SwiftData/CloudKit crashes with older runtimes.
 
-| Priority | Simulator | UUID |
-|----------|-----------|------|
-| **PRIMARY** | iPhone 17 Pro, OS=26.2 | F10F879D-2403-4529-8850-91DE259C1312 |
-| SECONDARY | iPhone 17, OS=26.2 | 63B35940-1E74-4D29-821B-4DB5CAB5FA9C |
-| TERTIARY | iPhone 17 Pro Max, OS=26.2 | 38218630-EBEC-4196-80A2-92AB0A855715 |
+| Priority    | Simulator                  | UUID                                 |
+| ----------- | -------------------------- | ------------------------------------ |
+| **PRIMARY** | iPhone 17 Pro, OS=26.2     | F10F879D-2403-4529-8850-91DE259C1312 |
+| SECONDARY   | iPhone 17, OS=26.2         | 63B35940-1E74-4D29-821B-4DB5CAB5FA9C |
+| TERTIARY    | iPhone 17 Pro Max, OS=26.2 | 38218630-EBEC-4196-80A2-92AB0A855715 |
 
 ## Test Framework
 
