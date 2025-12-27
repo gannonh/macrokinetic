@@ -112,11 +112,14 @@ final class WeightTrackingUITests: XCTestCase {
         XCTAssertTrue(saveButton.isEnabled, "Save button should be enabled with valid weight and body fat")
         saveButton.tap()
 
-        // THEN: Sheet should dismiss (entry is saved)
-        let weightSheet = app.otherElements["quick-weight-sheet"]
+        // Wait for sheet to dismiss
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // THEN: We should be back to the shortcuts view (not the weight sheet)
+        // The weight input should no longer be visible after sheet dismisses
         XCTAssertFalse(
-            weightSheet.waitForExistence(timeout: 3),
-            "Sheet should dismiss after saving weight with body fat"
+            weightInput.waitForExistence(timeout: 3),
+            "Weight input should not exist after sheet dismisses"
         )
     }
 
@@ -356,45 +359,39 @@ final class WeightTrackingUITests: XCTestCase {
         XCTAssertTrue(weightInput.waitForExistence(timeout: 3), "Weight input should exist")
         enterValue("71.0", in: weightInput)
 
-        // Dismiss keyboard
-        app.tap()
+        // Dismiss keyboard by scrolling down on the form - this also reveals the toggle
+        // Swiping up on the form scrolls content down and dismisses keyboard
+        app.swipeUp()
+        usleep(500_000)  // Wait for keyboard dismissal and scroll animation
 
-        // WHEN: Check if HealthKit toggle exists and interact with it
+        // WHEN: Find and interact with HealthKit toggle
         let healthKitToggle = app.switches["healthkit-sync-toggle"]
+        XCTAssertTrue(healthKitToggle.waitForExistence(timeout: 3), "HealthKit toggle should exist")
 
-        if healthKitToggle.waitForExistence(timeout: 2) {
-            // Get initial toggle state
-            let initialValue = healthKitToggle.value as? String
+        // Get initial toggle state
+        let initialValue = healthKitToggle.value as? String ?? "unknown"
 
-            // Tap the toggle to change its state
-            healthKitToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        // SwiftUI Toggles in Forms require coordinate-based tapping
+        healthKitToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
 
-            // Wait a moment for the toggle animation
-            Thread.sleep(forTimeInterval: 0.5)
+        // Wait for toggle animation to complete
+        let expectedValue = initialValue == "1" ? "0" : "1"
+        let toggleExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", expectedValue),
+            object: healthKitToggle
+        )
+        let toggleResult = XCTWaiter().wait(for: [toggleExpectation], timeout: 3.0)
+        XCTAssertEqual(toggleResult, .completed, "HealthKit toggle value should change after tap")
 
-            // Verify toggle state changed (it should be different from initial)
-            let newValue = healthKitToggle.value as? String
-            if initialValue == "1" {
-                // Started ON, should now be OFF
-                XCTAssertEqual(newValue, "0", "HealthKit toggle should be OFF after tapping when started ON")
-            } else {
-                // Started OFF, should now be ON
-                XCTAssertEqual(newValue, "1", "HealthKit toggle should be ON after tapping when started OFF")
-            }
-        } else {
-            // HealthKit not available - this test is effectively skipped
-            print("HealthKit toggle not present - HK may not be available on simulator")
-        }
-
-        // THEN: Save should work regardless of toggle state
+        // THEN: Save should work
         let saveButton = app.buttons["save-weight-button"]
         XCTAssertTrue(saveButton.isEnabled, "Save should be enabled")
         saveButton.tap()
 
-        let weightSheet = app.otherElements["quick-weight-sheet"]
+        // Verify weight input is no longer visible (sheet dismissed)
         XCTAssertFalse(
-            weightSheet.waitForExistence(timeout: 3),
-            "Sheet should dismiss after saving"
+            weightInput.waitForExistence(timeout: 3),
+            "Weight input should not exist after sheet dismisses"
         )
     }
 

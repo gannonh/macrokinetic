@@ -504,9 +504,10 @@ final class FoodLibraryUITests: XCTestCase {
         XCTAssertTrue(libraryTab.waitForExistence(timeout: 5), "Library method tab should exist")
         libraryTab.tap()
 
-        // Wait for Library content to load
-        let libraryContent = app.otherElements["food-library-content"]
-        XCTAssertTrue(libraryContent.waitForExistence(timeout: 5), "Food library content should appear")
+        // Wait for Library content to load - verify by checking for the Foods tab button
+        // which indicates we're on the Library tab
+        let foodsTab = app.buttons["food-library-tab-foods"]
+        XCTAssertTrue(foodsTab.waitForExistence(timeout: 5), "Food library content should appear (Foods tab visible)")
     }
 
     /// User can access Library tab from food search
@@ -541,11 +542,11 @@ final class FoodLibraryUITests: XCTestCase {
         let foodSearchSheet = app.otherElements["food-search-sheet"]
         XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 5), "Food search sheet should appear")
 
-        // And: Library content should be visible
-        let libraryContent = app.otherElements["food-library-content"]
-        XCTAssertTrue(libraryContent.waitForExistence(timeout: 5), "Food library content should appear")
+        // And: Library content should be visible (verified by Foods tab button presence)
+        let foodsTab = app.buttons["food-library-tab-foods"]
+        XCTAssertTrue(foodsTab.waitForExistence(timeout: 5), "Food library content should appear (Foods tab visible)")
 
-        // And: Foods tab should be selected by default
+        // And: Foods header should be visible
         let foodsHeader = app.staticTexts["Foods"]
         XCTAssertTrue(foodsHeader.waitForExistence(timeout: 3), "Foods header should be visible")
     }
@@ -583,8 +584,8 @@ final class FoodLibraryUITests: XCTestCase {
         // When: User opens Library tab
         navigateToLibraryTab()
 
-        // And: Taps the sort menu
-        let sortMenu = app.buttons["food-library-sort-menu"]
+        // And: Taps the sort menu (identifier is food-library-content, shown as "Date Added" button)
+        let sortMenu = app.buttons["food-library-content"]
         XCTAssertTrue(sortMenu.waitForExistence(timeout: 3), "Sort menu should exist")
         sortMenu.tap()
 
@@ -594,9 +595,6 @@ final class FoodLibraryUITests: XCTestCase {
         nameOption.tap()
 
         // Then: Sort menu should now show "Name"
-        // Re-query the sort menu to check it updated
-        let updatedSortMenu = app.buttons["food-library-sort-menu"]
-        XCTAssertTrue(updatedSortMenu.waitForExistence(timeout: 3), "Sort menu should still exist")
         // The menu label contains the current sort option text
         let nameText = app.staticTexts["Name"]
         XCTAssertTrue(nameText.waitForExistence(timeout: 3), "Sort menu should show Name as selected")
@@ -611,12 +609,24 @@ final class FoodLibraryUITests: XCTestCase {
         // When: User opens Library tab
         navigateToLibraryTab()
 
-        // And: Taps the sort menu
-        let sortMenu = app.buttons["food-library-sort-menu"]
+        // And: Taps the sort menu (identifier is food-library-content, default is "Date Added")
+        let sortMenu = app.buttons["food-library-content"]
         XCTAssertTrue(sortMenu.waitForExistence(timeout: 3), "Sort menu should exist")
         sortMenu.tap()
 
-        // And: Selects "Date Added" sort option
+        // First, change to "Name" sort (so "Date Added" isn't the current selection)
+        // This avoids the "multiple matching elements" issue when testing Date Added
+        let nameOption = app.buttons["Name"]
+        XCTAssertTrue(nameOption.waitForExistence(timeout: 3), "Name sort option should exist")
+        nameOption.tap()
+
+        // Verify Name is now selected
+        let nameText = app.staticTexts["Name"]
+        XCTAssertTrue(nameText.waitForExistence(timeout: 3), "Sort menu should show Name as selected")
+
+        // Now test selecting "Date Added" (only one element with this label now)
+        sortMenu.tap()
+
         let dateAddedOption = app.buttons["Date Added"]
         XCTAssertTrue(dateAddedOption.waitForExistence(timeout: 3), "Date Added sort option should exist")
         dateAddedOption.tap()
@@ -738,7 +748,7 @@ final class FoodLibraryUITests: XCTestCase {
     /// User sees empty state when no custom foods in Library
     /// Acceptance: With no custom foods, Library shows empty message
     func testLibraryEmptyStateWhenNoFoods() {
-        // Given: App is launched with no custom foods (clean state from setUp)
+        // Given: App is launched with no custom foods (clean state from setUp via --reset-app-data)
         // When: User opens Library tab
         navigateToLibraryTab()
 

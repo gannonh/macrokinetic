@@ -38,27 +38,22 @@ final class FoodLogCalendarUITests: XCTestCase {
         XCTAssertTrue(foodLogView.waitForExistence(timeout: 5), "Food Log view should appear")
 
         // THEN: Week calendar strip is visible
-        let weekCalendarStrip = app.otherElements["week-calendar-strip"]
+        let weekCalendarStrip = app.otherElements["week-calendar-strip"].firstMatch
         XCTAssertTrue(
             weekCalendarStrip.waitForExistence(timeout: 3),
             "Week calendar strip should be visible in Food Log"
         )
 
-        // THEN: 7 day cells are visible (one for each day of the week)
-        // Day cells use "food-day-{dayNumber}" identifier
-        let calendar = Calendar.current
-        let today = Date()
-        let todayDay = calendar.component(.day, from: today)
-
-        // Verify today's day cell exists (use .firstMatch for reliability)
-        let todayCell = app.buttons["food-day-\(todayDay)"].firstMatch
+        // THEN: Today's day cell exists (accessible by label containing "today")
+        // Note: Day cells are "Other" elements within the week-calendar-strip
+        // with labels like "Friday, December 26, 2025, today, 1 food entry"
+        let todayCell = findTodayCell()
         XCTAssertTrue(
             todayCell.waitForExistence(timeout: 3),
-            "Today's date cell (food-day-\(todayDay)) should exist in week calendar"
+            "Today's date cell should exist in week calendar (label should contain 'today')"
         )
 
         // THEN: Today's cell has selected trait (is highlighted)
-        // The cell should be present and interactive
         XCTAssertTrue(todayCell.isHittable, "Today's date cell should be hittable")
     }
 
@@ -79,19 +74,13 @@ final class FoodLogCalendarUITests: XCTestCase {
         XCTAssertTrue(summaryTitle.waitForExistence(timeout: 3), "Daily summary title should exist")
         XCTAssertEqual(summaryTitle.label, "Today", "Summary title should show 'Today' initially")
 
-        // WHEN: User taps a different day in the week strip
-        // Strategy: Navigate to previous week first, then tap a day there
-        // This ensures we're always testing a non-today date regardless of week boundaries
-        let previousWeekButton = app.buttons["week-calendar-previous"]
+        // WHEN: User navigates to previous week (this auto-selects first day of that week)
+        let previousWeekButton = findPreviousWeekButton()
         XCTAssertTrue(previousWeekButton.waitForExistence(timeout: 3), "Previous week button should exist")
         previousWeekButton.tap()
 
         // Wait for week to update
-        let weekTransition = XCTestExpectation(description: "Wait for week transition")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            weekTransition.fulfill()
-        }
-        wait(for: [weekTransition], timeout: 1.0)
+        waitForUIUpdate()
 
         // THEN: Summary title updates to formatted date (not "Today")
         // After navigating to previous week, the first day of that week is auto-selected
@@ -101,7 +90,7 @@ final class FoodLogCalendarUITests: XCTestCase {
             "Summary title should update to formatted date when selecting a different day"
         )
 
-        // Verify the title shows a formatted date (contains comma like "Monday, Dec 23")
+        // Verify the title shows a formatted date (contains comma like "Sunday, Dec 22")
         XCTAssertTrue(
             summaryTitle.label.contains(","),
             "Summary title should be in format 'Weekday, Mon Day' after selecting different day"
@@ -117,21 +106,17 @@ final class FoodLogCalendarUITests: XCTestCase {
         let foodLogView = app.otherElements["food-log-view"]
         XCTAssertTrue(foodLogView.waitForExistence(timeout: 5), "Food Log view should appear")
 
-        // Verify week calendar title exists
-        let weekCalendarTitle = app.staticTexts["week-calendar-title"]
+        // Verify week calendar title exists (query by matching month name pattern)
+        let weekCalendarTitle = findWeekCalendarTitle()
         XCTAssertTrue(weekCalendarTitle.waitForExistence(timeout: 3), "Week calendar title should exist")
 
         // WHEN: User taps previous week button
-        let previousWeekButton = app.buttons["week-calendar-previous"]
+        let previousWeekButton = findPreviousWeekButton()
         XCTAssertTrue(previousWeekButton.waitForExistence(timeout: 3), "Previous week button should exist")
         previousWeekButton.tap()
 
         // Wait for week transition
-        let expectation = XCTestExpectation(description: "Wait for week transition")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 1.0)
+        waitForUIUpdate()
 
         // THEN: Summary title shows formatted date (not "Today") after week navigation
         let summaryTitle = app.staticTexts["daily-summary-title"]
@@ -142,7 +127,7 @@ final class FoodLogCalendarUITests: XCTestCase {
         )
 
         // Verify the selected date is in the past by checking title format
-        // Title should be something like "Monday, Dec 23" not "Today"
+        // Title should be something like "Sunday, Dec 22" not "Today"
         XCTAssertTrue(
             summaryTitle.label.contains(","),
             "Summary title should show formatted date (contains comma) for previous week"
@@ -164,16 +149,12 @@ final class FoodLogCalendarUITests: XCTestCase {
         XCTAssertEqual(summaryTitle.label, "Today", "Summary title should start with 'Today'")
 
         // WHEN: User taps next week button
-        let nextWeekButton = app.buttons["week-calendar-next"]
+        let nextWeekButton = findNextWeekButton()
         XCTAssertTrue(nextWeekButton.waitForExistence(timeout: 3), "Next week button should exist")
         nextWeekButton.tap()
 
         // Wait for week transition
-        let expectation = XCTestExpectation(description: "Wait for week transition")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 1.0)
+        waitForUIUpdate()
 
         // THEN: Summary title shows formatted date (not "Today") after week navigation
         XCTAssertNotEqual(
@@ -203,23 +184,18 @@ final class FoodLogCalendarUITests: XCTestCase {
         let foodLogView = app.otherElements["food-log-view"]
         XCTAssertTrue(foodLogView.waitForExistence(timeout: 5), "Food Log view should appear")
 
-        let weekCalendarStrip = app.otherElements["week-calendar-strip"]
+        let weekCalendarStrip = app.otherElements["week-calendar-strip"].firstMatch
         XCTAssertTrue(weekCalendarStrip.waitForExistence(timeout: 3), "Week calendar strip should be visible")
 
-        // Get today's day number
-        let calendar = Calendar.current
-        let todayDay = calendar.component(.day, from: Date())
-
-        // THEN: Today's cell should exist (we can't directly verify the dot color in XCUITest,
-        // but we can verify the cell exists and is interactive)
-        let todayCell = app.buttons["food-day-\(todayDay)"].firstMatch
+        // THEN: Today's cell should exist with entry indicator
+        // The accessibility label includes entry count when entries exist
+        // e.g., "Friday, December 26, 2025, today, 1 food entry"
+        let todayCell = findTodayCell()
         XCTAssertTrue(
             todayCell.waitForExistence(timeout: 3),
             "Today's date cell should exist after logging entry"
         )
 
-        // The accessibility label includes entry count when entries exist
-        // e.g., "Thursday, December 26, 2024, today, 1 food entry"
         let todayLabel = todayCell.label
         XCTAssertTrue(
             todayLabel.contains("entry") || todayLabel.contains("entries"),
@@ -239,19 +215,14 @@ final class FoodLogCalendarUITests: XCTestCase {
         XCTAssertTrue(foodLogView.waitForExistence(timeout: 5), "Food Log view should appear")
 
         // WHEN: User views the week calendar
-        let weekCalendarStrip = app.otherElements["week-calendar-strip"]
+        let weekCalendarStrip = app.otherElements["week-calendar-strip"].firstMatch
         XCTAssertTrue(weekCalendarStrip.waitForExistence(timeout: 3), "Week calendar strip should be visible")
 
-        // Get today's day number
-        let calendar = Calendar.current
-        let todayDay = calendar.component(.day, from: Date())
-
         // THEN: Today's cell should exist with "today" in accessibility label
-        // Use .firstMatch to handle any potential duplicate matches
-        let todayCell = app.buttons["food-day-\(todayDay)"].firstMatch
+        let todayCell = findTodayCell()
         XCTAssertTrue(
             todayCell.waitForExistence(timeout: 3),
-            "Today's date cell (food-day-\(todayDay)) should exist"
+            "Today's date cell should exist"
         )
 
         // Verify accessibility label includes "today"
@@ -288,17 +259,13 @@ final class FoodLogCalendarUITests: XCTestCase {
         // THEN: Summary shows "Today"
         XCTAssertEqual(summaryTitle.label, "Today", "Summary title should show 'Today' initially")
 
-        // WHEN: User taps a different day (navigate to previous week first, then select a day)
-        let previousWeekButton = app.buttons["week-calendar-previous"]
+        // WHEN: User navigates to previous week
+        let previousWeekButton = findPreviousWeekButton()
         XCTAssertTrue(previousWeekButton.waitForExistence(timeout: 3), "Previous week button should exist")
         previousWeekButton.tap()
 
         // Wait for transition
-        let transition1 = XCTestExpectation(description: "Wait for week transition")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            transition1.fulfill()
-        }
-        wait(for: [transition1], timeout: 1.0)
+        waitForUIUpdate()
 
         // THEN: Summary title shows formatted date (not "Today")
         XCTAssertNotEqual(
@@ -307,40 +274,30 @@ final class FoodLogCalendarUITests: XCTestCase {
             "Summary title should show formatted date for previous week"
         )
 
-        // The formatted date should contain a comma (e.g., "Monday, Dec 23")
+        // The formatted date should contain a comma (e.g., "Sunday, Dec 22")
         XCTAssertTrue(
             summaryTitle.label.contains(","),
             "Summary title should be in format 'Weekday, Mon Day' (contains comma)"
         )
 
-        // WHEN: User taps back to today (navigate forward to current week)
-        let nextWeekButton = app.buttons["week-calendar-next"]
+        // WHEN: User navigates back to current week
+        let nextWeekButton = findNextWeekButton()
         XCTAssertTrue(nextWeekButton.waitForExistence(timeout: 3), "Next week button should exist")
         nextWeekButton.tap()
 
         // Wait for transition
-        let transition2 = XCTestExpectation(description: "Wait for week transition back")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            transition2.fulfill()
-        }
-        wait(for: [transition2], timeout: 1.0)
+        waitForUIUpdate()
 
         // Now tap today's cell to select it
-        let calendar = Calendar.current
-        let todayDay = calendar.component(.day, from: Date())
-        let todayCell = app.buttons["food-day-\(todayDay)"].firstMatch
+        let todayCell = findTodayCell()
         XCTAssertTrue(
             todayCell.waitForExistence(timeout: 3),
-            "Today's cell (food-day-\(todayDay)) should exist after navigating back"
+            "Today's cell should exist after navigating back"
         )
         todayCell.tap()
 
         // Wait for selection
-        let selectionWait = XCTestExpectation(description: "Wait for selection update")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            selectionWait.fulfill()
-        }
-        wait(for: [selectionWait], timeout: 1.0)
+        waitForUIUpdate()
 
         // THEN: Summary title shows "Today" again
         XCTAssertEqual(
@@ -350,7 +307,47 @@ final class FoodLogCalendarUITests: XCTestCase {
         )
     }
 
+    // MARK: - Element Finders
+
+    /// Find today's cell in the week calendar strip by its accessibility label
+    /// Day cells are "Other" elements with labels containing "today"
+    private func findTodayCell() -> XCUIElement {
+        let todayCellPredicate = NSPredicate(format: "label CONTAINS[c] 'today'")
+        return app.otherElements.matching(todayCellPredicate).firstMatch
+    }
+
+    /// Find the previous week navigation button by its accessibility label
+    /// The button has label "Previous week" within the week calendar strip
+    private func findPreviousWeekButton() -> XCUIElement {
+        let predicate = NSPredicate(format: "label == 'Previous week'")
+        return app.buttons.matching(predicate).firstMatch
+    }
+
+    /// Find the next week navigation button by its accessibility label
+    /// The button has label "Next week" within the week calendar strip
+    private func findNextWeekButton() -> XCUIElement {
+        let predicate = NSPredicate(format: "label == 'Next week'")
+        return app.buttons.matching(predicate).firstMatch
+    }
+
+    /// Find the week calendar title (shows month and year)
+    /// The title contains a month name followed by a year (e.g., "December 2025")
+    private func findWeekCalendarTitle() -> XCUIElement {
+        // Match pattern like "December 2025" (month followed by year)
+        let yearPattern = NSPredicate(format: "label MATCHES '.*20[0-9]{2}$'")
+        return app.staticTexts.matching(yearPattern).firstMatch
+    }
+
     // MARK: - Helpers
+
+    /// Wait for UI to update after animations/transitions
+    private func waitForUIUpdate(seconds: TimeInterval = 0.5) {
+        let expectation = XCTestExpectation(description: "Wait for UI update")
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: seconds + 0.5)
+    }
 
     /// Logs a test food entry for use in indicator tests
     private func logTestFoodEntry() {
@@ -392,6 +389,6 @@ final class FoodLogCalendarUITests: XCTestCase {
         addFoodButton.tap()
 
         // Wait for sheets to dismiss
-        Thread.sleep(forTimeInterval: 1.5)
+        waitForUIUpdate(seconds: 1.5)
     }
 }

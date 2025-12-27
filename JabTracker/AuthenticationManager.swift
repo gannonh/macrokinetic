@@ -142,67 +142,66 @@ class AuthenticationManager: NSObject, ObservableObject {
         let context = self.dataController.container.mainContext
 
         do {
-            // Clear all existing users (cascade delete will handle associated profiles)
-            let userFetchDescriptor = FetchDescriptor<User>()
-            let users = try context.fetch(userFetchDescriptor)
-            for user in users {
-                context.delete(user)
-            }
-
-            // Also explicitly clean up any orphaned medication profiles (from before relationship was added)
-            let profileFetchDescriptor = FetchDescriptor<MedicationProfile>()
-            let profiles = try context.fetch(profileFetchDescriptor)
-            for profile in profiles {
-                context.delete(profile)
-            }
-
-            // Explicitly clean up all doses (in case cascade delete didn't work properly)
-            let doseFetchDescriptor = FetchDescriptor<Dose>()
-            let doses = try context.fetch(doseFetchDescriptor)
-            for dose in doses {
-                context.delete(dose)
-            }
-
-            // Clean up dose titration records as well
-            let titrationFetchDescriptor = FetchDescriptor<DoseTitration>()
-            let titrations = try context.fetch(titrationFetchDescriptor)
-            for titration in titrations {
-                context.delete(titration)
-            }
-
-            try context.save()
-            Self.logger.info(
-                """
-                ✅ AuthenticationManager: App data reset successfully - \
-                Deleted \(users.count) users, \(profiles.count) profiles, \
-                \(doses.count) doses, \(titrations.count) titrations
-                """)
+            try deleteAllSwiftDataEntities(context: context)
         } catch {
             Self.logger.error("Failed to reset app data: \(error, privacy: .public)")
         }
 
-        // Clear onboarding status from UserDefaults
-        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
-        UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
-
-        // Clear notification preferences from UserDefaults
-        UserDefaults.standard.removeObject(forKey: "notificationsEnabled")
-        UserDefaults.standard.removeObject(forKey: "reminderMinutesBefore")
-
-        // Clear all pending notifications from notification center
-        // Note: Cannot programmatically revoke iOS notification authorization,
-        // but we can clear the queue and delivered notifications
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        Self.logger.info("✅ AuthenticationManager: Cleared all pending and delivered notifications")
-
-        // Clear chart dataset cache for test isolation
+        clearUserDefaultsForReset()
+        clearNotificationsForReset()
         clearChartDatasetCache()
 
         await MainActor.run {
             self.currentUser = nil
             self.authenticationState = .notAuthenticated
         }
+    }
+
+    /// Deletes all SwiftData entities for a clean test state
+    private func deleteAllSwiftDataEntities(context: ModelContext) throws {
+        // Delete counts for logging
+        let userCount = try deleteAll(User.self, from: context)
+        let profileCount = try deleteAll(MedicationProfile.self, from: context)
+        let doseCount = try deleteAll(Dose.self, from: context)
+        let titrationCount = try deleteAll(DoseTitration.self, from: context)
+        let foodCount = try deleteAll(Food.self, from: context)
+        let foodEntryCount = try deleteAll(FoodEntry.self, from: context)
+        let weightEntryCount = try deleteAll(WeightEntry.self, from: context)
+        let metricsEntryCount = try deleteAll(MetricsEntry.self, from: context)
+        let progressPhotoCount = try deleteAll(ProgressPhoto.self, from: context)
+
+        try context.save()
+        Self.logger.info(
+            """
+            ✅ AuthenticationManager: App data reset successfully - \
+            Deleted \(userCount) users, \(profileCount) profiles, \(doseCount) doses, \
+            \(titrationCount) titrations, \(foodCount) foods, \(foodEntryCount) food entries, \
+            \(weightEntryCount) weight entries, \(metricsEntryCount) metrics entries, \
+            \(progressPhotoCount) progress photos
+            """)
+    }
+
+    /// Generic helper to delete all entities of a given type
+    private func deleteAll<T: PersistentModel>(_ type: T.Type, from context: ModelContext) throws -> Int {
+        let fetchDescriptor = FetchDescriptor<T>()
+        let entities = try context.fetch(fetchDescriptor)
+        for entity in entities {
+            context.delete(entity)
+        }
+        return entities.count
+    }
+
+    private func clearUserDefaultsForReset() {
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
+        UserDefaults.standard.removeObject(forKey: "notificationsEnabled")
+        UserDefaults.standard.removeObject(forKey: "reminderMinutesBefore")
+    }
+
+    private func clearNotificationsForReset() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        Self.logger.info("✅ AuthenticationManager: Cleared all pending and delivered notifications")
     }
 
     private func setupUITestingUser() async {

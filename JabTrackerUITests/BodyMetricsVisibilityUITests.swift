@@ -39,13 +39,13 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     /// WHEN: User taps More tab → Body Metrics Visibility
     /// THEN: Body Metrics Visibility screen is displayed
     func testNavigateToBodyMetricsVisibility() throws {
-        // TODO: Implement
-        // 1. Navigate to More tab
-        // 2. Tap "Body Metrics Visibility" link
-        // 3. Verify body-metrics-visibility-view is displayed
-        // 4. Verify description section is visible
-        // 5. Verify section headers are visible (Weight & Body Fat, Progress Photos, etc.)
+        navigateToBodyMetricsVisibility()
+    }
 
+    // MARK: - Helper Methods
+
+    /// Navigate to Body Metrics Visibility screen
+    private func navigateToBodyMetricsVisibility() {
         // Navigate to More tab
         let moreTab = self.app.tabBars.buttons["More"]
         XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "More tab should exist")
@@ -60,8 +60,8 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
         XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
         metricsLink.tap()
 
-        // Verify Body Metrics Visibility view appears
-        let visibilityView = self.app.otherElements["body-metrics-visibility-view"]
+        // SwiftUI List maps to collectionViews in XCUITest, not otherElements
+        let visibilityView = self.app.collectionViews["body-metrics-visibility-view"]
         XCTAssertTrue(
             visibilityView.waitForExistence(timeout: 5.0),
             "Body Metrics Visibility view should appear"
@@ -76,26 +76,7 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     /// WHEN: User toggles a metric (e.g., Chest)
     /// THEN: Toggle state changes and persists
     func testToggleMetricVisibility() throws {
-        // Navigate to More tab
-        let moreTab = self.app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "More tab should exist")
-        moreTab.tap()
-
-        // Verify More view loaded
-        let moreView = self.app.otherElements["more-view"]
-        XCTAssertTrue(moreView.waitForExistence(timeout: 5.0), "More view should appear")
-
-        // Tap Body Metrics Visibility link
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
-        XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
-        metricsLink.tap()
-
-        // Verify Body Metrics Visibility view appears
-        let visibilityView = self.app.otherElements["body-metrics-visibility-view"]
-        XCTAssertTrue(
-            visibilityView.waitForExistence(timeout: 5.0),
-            "Body Metrics Visibility view should appear"
-        )
+        navigateToBodyMetricsVisibility()
 
         // Scroll down to find Chest toggle (in Upper Body section)
         self.app.swipeUp()
@@ -158,26 +139,7 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     /// WHEN: User toggles a photo type (e.g., Side Photo)
     /// THEN: Toggle state changes and persists
     func testTogglePhotoTypeVisibility() throws {
-        // Navigate to More tab
-        let moreTab = self.app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "More tab should exist")
-        moreTab.tap()
-
-        // Verify More view loaded
-        let moreView = self.app.otherElements["more-view"]
-        XCTAssertTrue(moreView.waitForExistence(timeout: 5.0), "More view should appear")
-
-        // Tap Body Metrics Visibility link
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
-        XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
-        metricsLink.tap()
-
-        // Verify Body Metrics Visibility view appears
-        let visibilityView = self.app.otherElements["body-metrics-visibility-view"]
-        XCTAssertTrue(
-            visibilityView.waitForExistence(timeout: 5.0),
-            "Body Metrics Visibility view should appear"
-        )
+        navigateToBodyMetricsVisibility()
 
         // Find the Side Photo toggle (in Progress Photos section, near top)
         let sideToggle = self.app.switches["photo-toggle-side"]
@@ -236,26 +198,7 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     /// WHEN: User navigates away and returns
     /// THEN: Toggle states are preserved
     func testPreferencesPersistAfterNavigation() throws {
-        // Navigate to More tab
-        let moreTab = self.app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "More tab should exist")
-        moreTab.tap()
-
-        // Verify More view loaded
-        let moreView = self.app.otherElements["more-view"]
-        XCTAssertTrue(moreView.waitForExistence(timeout: 5.0), "More view should appear")
-
-        // Tap Body Metrics Visibility link
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
-        XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
-        metricsLink.tap()
-
-        // Verify Body Metrics Visibility view appears
-        let visibilityView = self.app.otherElements["body-metrics-visibility-view"]
-        XCTAssertTrue(
-            visibilityView.waitForExistence(timeout: 5.0),
-            "Body Metrics Visibility view should appear"
-        )
+        navigateToBodyMetricsVisibility()
 
         // Scroll down to find Chest toggle
         self.app.swipeUp()
@@ -283,16 +226,19 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
         backButton.tap()
 
         // Verify we're back on More view
+        let moreView = self.app.otherElements["more-view"]
         XCTAssertTrue(
             moreView.waitForExistence(timeout: 5.0),
             "Should return to More view after tapping back"
         )
 
         // Navigate back to Body Metrics Visibility
+        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
         XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
         metricsLink.tap()
 
         // Verify Body Metrics Visibility view appears again
+        let visibilityView = self.app.collectionViews["body-metrics-visibility-view"]
         XCTAssertTrue(
             visibilityView.waitForExistence(timeout: 5.0),
             "Body Metrics Visibility view should appear again"
@@ -322,26 +268,7 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     /// WHEN: User opens Body Metrics Visibility
     /// THEN: Only Waist metric and Front photo are enabled by default
     func testDefaultToggleStates() throws {
-        // Navigate to More tab
-        let moreTab = self.app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "More tab should exist")
-        moreTab.tap()
-
-        // Verify More view loaded
-        let moreView = self.app.otherElements["more-view"]
-        XCTAssertTrue(moreView.waitForExistence(timeout: 5.0), "More view should appear")
-
-        // Tap Body Metrics Visibility link
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
-        XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
-        metricsLink.tap()
-
-        // Verify Body Metrics Visibility view appears
-        let visibilityView = self.app.otherElements["body-metrics-visibility-view"]
-        XCTAssertTrue(
-            visibilityView.waitForExistence(timeout: 5.0),
-            "Body Metrics Visibility view should appear"
-        )
+        navigateToBodyMetricsVisibility()
 
         // Check Progress Photos section defaults (near top of list)
         // Front Photo should be ON by default
@@ -411,90 +338,57 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     /// WHEN: User scrolls through the list
     /// THEN: All sections are accessible (Weight & Body Fat, Progress Photos, Upper Body, Arms, Legs, Ratios)
     func testAllSectionsVisible() throws {
-        // Navigate to More tab
-        let moreTab = self.app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "More tab should exist")
-        moreTab.tap()
+        navigateToBodyMetricsVisibility()
 
-        // Verify More view loaded
-        let moreView = self.app.otherElements["more-view"]
-        XCTAssertTrue(moreView.waitForExistence(timeout: 5.0), "More view should appear")
-
-        // Tap Body Metrics Visibility link
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
-        XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
-        metricsLink.tap()
-
-        // Verify Body Metrics Visibility view appears
-        let visibilityView = self.app.otherElements["body-metrics-visibility-view"]
-        XCTAssertTrue(
-            visibilityView.waitForExistence(timeout: 5.0),
-            "Body Metrics Visibility view should appear"
-        )
-
-        // Verify Weight & Body Fat section header exists (uses "Weight & Body Fat" label)
+        // Verify initial sections visible at top
         let weightSectionHeader = self.app.staticTexts["Weight & Body Fat"]
         XCTAssertTrue(
             weightSectionHeader.waitForExistence(timeout: 3.0),
             "Weight & Body Fat section header should exist"
         )
 
-        // Verify Progress Photos section header exists
         let photosSectionHeader = self.app.staticTexts["Progress Photos"]
         XCTAssertTrue(
             photosSectionHeader.waitForExistence(timeout: 3.0),
             "Progress Photos section header should exist"
         )
 
-        // Scroll down to reveal more sections
+        // Scroll to reveal more sections and verify some toggles from each section are accessible
+        // Check Upper Body section via a toggle (Waist)
         self.app.swipeUp()
         usleep(300_000)
 
-        // Verify Upper Body section header exists
-        let upperBodyHeader = self.app.staticTexts["Upper Body"]
+        let waistToggle = self.app.switches["metric-toggle-waist"]
         XCTAssertTrue(
-            upperBodyHeader.waitForExistence(timeout: 3.0),
-            "Upper Body section header should exist"
+            waistToggle.waitForExistence(timeout: 3.0),
+            "Waist toggle (Upper Body section) should exist"
         )
 
-        // Scroll down more to reveal Arms section
+        // Check Arms section via a toggle (Left Bicep)
+        let leftBicepToggle = self.app.switches["metric-toggle-leftBicep"]
+        XCTAssertTrue(
+            leftBicepToggle.waitForExistence(timeout: 3.0),
+            "Left Bicep toggle (Arms section) should exist"
+        )
+
+        // Scroll down more to reveal Legs and Ratios
+        self.app.swipeUp()
+        usleep(300_000)
         self.app.swipeUp()
         usleep(300_000)
 
-        // Verify Arms section header exists
-        let armsHeader = self.app.staticTexts["Arms"]
+        // Check Legs section via a toggle (Left Thigh)
+        let leftThighToggle = self.app.switches["metric-toggle-leftThigh"]
         XCTAssertTrue(
-            armsHeader.waitForExistence(timeout: 3.0),
-            "Arms section header should exist"
+            leftThighToggle.waitForExistence(timeout: 3.0),
+            "Left Thigh toggle (Legs section) should exist"
         )
 
-        // Scroll down more to reveal Legs section
-        self.app.swipeUp()
-        usleep(300_000)
-
-        // Verify Legs section header exists
-        let legsHeader = self.app.staticTexts["Legs"]
-        XCTAssertTrue(
-            legsHeader.waitForExistence(timeout: 3.0),
-            "Legs section header should exist"
-        )
-
-        // Scroll down more to reveal Ratios section
-        self.app.swipeUp()
-        usleep(300_000)
-
-        // Verify Ratios section header exists
-        let ratiosHeader = self.app.staticTexts["Ratios"]
-        XCTAssertTrue(
-            ratiosHeader.waitForExistence(timeout: 3.0),
-            "Ratios section header should exist"
-        )
-
-        // Verify we can see a toggle from the Ratios section
+        // Check Ratios section via a toggle (Waist to Height)
         let waistToHeightToggle = self.app.switches["metric-toggle-waistToHeight"]
         XCTAssertTrue(
             waistToHeightToggle.waitForExistence(timeout: 3.0),
-            "Waist to Height toggle should exist in Ratios section"
+            "Waist to Height toggle (Ratios section) should exist"
         )
     }
 
@@ -506,26 +400,7 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     /// WHEN: Screen loads
     /// THEN: Description explaining toggle behavior is visible
     func testDescriptionTextDisplayed() throws {
-        // Navigate to More tab
-        let moreTab = self.app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "More tab should exist")
-        moreTab.tap()
-
-        // Verify More view loaded
-        let moreView = self.app.otherElements["more-view"]
-        XCTAssertTrue(moreView.waitForExistence(timeout: 5.0), "More view should appear")
-
-        // Tap Body Metrics Visibility link
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
-        XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
-        metricsLink.tap()
-
-        // Verify Body Metrics Visibility view appears
-        let visibilityView = self.app.otherElements["body-metrics-visibility-view"]
-        XCTAssertTrue(
-            visibilityView.waitForExistence(timeout: 5.0),
-            "Body Metrics Visibility view should appear"
-        )
+        navigateToBodyMetricsVisibility()
 
         // The description text is at the top. Look for key phrases from the description.
         // The description says: "Toggling a body metric will control its visibility..."
