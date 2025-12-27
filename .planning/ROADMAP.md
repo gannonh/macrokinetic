@@ -28,10 +28,11 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 **Goal**: SwiftData models for goals, nutrition programs, and TDEE tracking
 **Depends on**: Previous milestone complete
 **Research**: Unlikely (internal patterns - SwiftData)
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] 12-01: TBD (run /gsd:plan-phase 12 to break down)
+- [x] 12-01: Data Foundation - Enums and value types (ProgramConfiguration.swift)
+- [ ] 12-02: SwiftData Models - NutritionGoal, NutritionProgram, User integration
 
 #### Phase 13: Goal Configuration Wizard
 
@@ -91,7 +92,7 @@ Phases execute in numeric order within each milestone.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Goal Data Model | v0.3.0 | 0/? | Not started | - |
+| 12. Goal Data Model | v0.3.0 | 1/2 | In progress | - |
 | 13. Goal Configuration Wizard | v0.3.0 | 0/? | Not started | - |
 | 14. Adaptive TDEE Engine | v0.3.0 | 0/? | Not started | - |
 | 15. Daily Tracking Dashboard | v0.3.0 | 0/? | Not started | - |

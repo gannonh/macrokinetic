@@ -33,7 +33,8 @@
           "Models/WeightEntry.swift",
           "Models/MetricsEntry.swift",
           "Models/ProgressPhoto.swift",
-          "Models/EntrySource.swift"
+          "Models/EntrySource.swift",
+          "Models/ProgramConfiguration.swift"
         ]
       },
       "infrastructure": {
