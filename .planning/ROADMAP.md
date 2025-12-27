@@ -36,13 +36,14 @@ Plans:
 
 #### Phase 13: Goal Configuration Wizard
 
-**Goal**: Multi-step wizard for program style, diet preference, calorie floor, weekly distribution, and protein level
+**Goal**: Separate Goal and Program wizards with correct domain boundaries, Strategy view entry points
 **Depends on**: Phase 12
 **Research**: Unlikely (internal patterns - SwiftUI wizard)
-**Plans**: 1
+**Plans**: 2
 
 Plans:
-- [x] 13-01: Wizard implementation with 7-step flow, ViewModel, MoreView integration, E2E stubs
+- [x] 13-01: Initial wizard implementation (to be refactored in 13-02)
+- [ ] 13-02: Goal/Program design refactor - Separate wizards, Strategy view, NutritionGoal model updates
 
 #### Phase 14: Adaptive TDEE Engine
 
@@ -93,7 +94,7 @@ Phases execute in numeric order within each milestone.
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. Goal Data Model | v0.3.0 | 2/2 | Complete | 2025-12-27 |
-| 13. Goal Configuration Wizard | v0.3.0 | 1/1 | Complete | 2025-12-27 |
+| 13. Goal Configuration Wizard | v0.3.0 | 1/2 | In progress | - |
 | 14. Adaptive TDEE Engine | v0.3.0 | 0/? | Not started | - |
 | 15. Daily Tracking Dashboard | v0.3.0 | 0/? | Not started | - |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |

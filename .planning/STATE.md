@@ -20,9 +20,9 @@
 ## Current Position
 
 Phase: 13 of 17 (Goal Configuration Wizard)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2025-12-27 - Completed 13-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Plan ready for execution
+Last activity: 2025-12-27 - Created 13-02-PLAN.md (Goal/Program design refactor)
 
 Progress: ███░░░░░░░ 30%
 
@@ -44,7 +44,7 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 12 | 2/2 | 14 min | 7 min |
-| 13 | 1/1 | 9 min | 9 min |
+| 13 | 1/2 | 9 min | 9 min |
 | 14 | 0/? | - | - |
 | 15 | 0/? | - | - |
 | 16 | 0/? | - | - |
@@ -64,6 +64,7 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 |-------|----------|-----------|
 | 12-01 | MacroPercentages struct instead of tuple | SwiftLint large_tuple compliance, cleaner API with named properties |
 | 13-01 | Extended file_length SwiftLint rule for Nutrition views | Wizard contains 7 inline step views per architecture decision |
+| 13-02 | Separate Goal and Program into distinct wizards | Mock review revealed incorrect domain coupling; Goal = type + target weight + rate, Program = style + diet prefs |
 
 ### Deferred Issues
 
@@ -86,6 +87,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-27T22:46:20Z
-Stopped at: Completed 13-01-PLAN.md (Phase 13 complete)
+Last session: 2025-12-27T23:09:13Z
+Stopped at: Created 13-02-PLAN.md for Goal/Program design refactor
 Resume file: None
