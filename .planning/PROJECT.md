@@ -1,25 +1,28 @@
 # MacroKinetic
 
-## Current State (Updated: 2025-12-24)
+## Current State (Updated: 2025-12-27)
 
-**Shipped:** v0.1.0 Custom Foods (2025-12-24)
+**Shipped:** v0.2.0 Enhanced Tracking (2025-12-27)
 **Status:** Development / TestFlight
-**Codebase:** ~41,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+**Codebase:** ~120,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.1.0 Delivered:**
-- Custom food creation and management with CloudKit sync
-- Barcode scanning for quick food lookup
-- "My Foods" section with search prioritization
-- "To Custom" prefill and "Create & Add" flows
+**v0.2.0 Delivered:**
+- Week calendar navigation in Food Log with day selection
+- Tap-to-edit food entries with FoodDetailSheet
+- Dedicated Food Library screen with Foods tab and sort options
+- Quick Add macro entry without food lookup
+- Weight and body fat tracking with HealthKit sync
+- Body metrics with configurable visibility and progress photos
+- Feature settings for metrics visibility and units of measure
 
 ## Next Milestone Goals
 
-**Vision:** See PRD for planned features - Macro Goals, Protein Alerts, HealthKit, or Subscription
+**Vision:** See PRD for planned features - Macro Goals, Protein Alerts, Analytics, or Subscription
 
 **Candidates:**
 - Macro Goals & Daily Tracking - Goal configuration UI with progress rings
 - Protein Preservation Alerts - Minimum protein thresholds and notifications
-- HealthKit Integration - Weight sync and calorie calculations
+- Analytics Dashboard - Weight trends, nutrition insights, medication correlation
 - Subscription Management - StoreKit 2 integration and paywall
 
 ## Vision
