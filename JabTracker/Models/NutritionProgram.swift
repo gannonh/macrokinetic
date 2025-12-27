@@ -1,0 +1,266 @@
+//
+//  NutritionProgram.swift
+//  JabTracker
+//
+//  SwiftData model for nutrition program configuration.
+//  Stores program style, diet preferences, and calorie distribution settings.
+//
+
+import Foundation
+import SwiftData
+
+// MARK: - NutritionProgram Model
+
+/// SwiftData model representing a nutrition program configuration.
+///
+/// NutritionProgram stores the detailed configuration for how a user's
+/// nutrition goals are implemented. It supports three program styles:
+/// - **Coached**: App designs calorie/macro program based on goal and preferences
+/// - **Collaborative**: User sets macro targets, app adjusts calorie budget based on progress
+/// - **Manual**: User sets everything manually
+///
+/// **CloudKit Compatibility:**
+/// - All properties have non-optional defaults
+/// - Complex configuration stored as JSON-encoded Data
+/// - Enums stored as String rawValue with computed type-safe accessors
+@Model
+final class NutritionProgram {
+    // MARK: - Identity
+
+    /// Unique identifier
+    var id: UUID = UUID()
+
+    // MARK: - Program Configuration (Stored as String rawValues)
+
+    /// Program style stored as raw string
+    var programStyleRaw: String = ProgramStyle.coached.rawValue
+
+    /// Diet preference stored as raw string
+    var dietPreferenceRaw: String = DietPreference.balanced.rawValue
+
+    /// Calorie floor type stored as raw string
+    var calorieFloorTypeRaw: String = CalorieFloorType.standard.rawValue
+
+    /// Weekly distribution mode stored as raw string
+    var weeklyDistributionModeRaw: String = WeeklyDistributionMode.even.rawValue
+
+    /// Protein level stored as raw string
+    var proteinLevelRaw: String = ProteinLevel.moderate.rawValue
+
+    // MARK: - Configuration Data
+
+    /// JSON-encoded ProgramConfiguration for complex settings
+    var configurationData: Data = Data()
+
+    /// JSON-encoded WeeklyCalorieDistribution for custom day multipliers
+    var weeklyDistributionData: Data?
+
+    // MARK: - Timestamps
+
+    /// When this program was created
+    var createdAt: Date = Date()
+
+    /// When this program was last updated
+    var updatedAt: Date = Date()
+
+    // MARK: - Relationships
+
+    /// Parent goal this program belongs to
+    /// Child side of relationship - no @Relationship attribute per CloudKit pattern
+    var goal: NutritionGoal?
+
+    // MARK: - Initialization
+
+    /// Initialize a new nutrition program with default values
+    ///
+    /// - Parameters:
+    ///   - style: Program style (default: coached)
+    ///   - diet: Diet preference (default: balanced)
+    ///   - calorieFloor: Calorie floor type (default: standard)
+    ///   - distributionMode: Weekly distribution mode (default: even)
+    ///   - proteinLevel: Protein level (default: moderate)
+    init(
+        style: ProgramStyle = .coached,
+        diet: DietPreference = .balanced,
+        calorieFloor: CalorieFloorType = .standard,
+        distributionMode: WeeklyDistributionMode = .even,
+        proteinLevel: ProteinLevel = .moderate
+    ) {
+        self.programStyleRaw = style.rawValue
+        self.dietPreferenceRaw = diet.rawValue
+        self.calorieFloorTypeRaw = calorieFloor.rawValue
+        self.weeklyDistributionModeRaw = distributionMode.rawValue
+        self.proteinLevelRaw = proteinLevel.rawValue
+        self.createdAt = Date()
+        self.updatedAt = Date()
+
+        // Encode initial configuration
+        let config = ProgramConfiguration(
+            programStyle: style,
+            dietPreference: diet,
+            calorieFloorType: calorieFloor,
+            weeklyDistributionMode: distributionMode,
+            proteinLevel: proteinLevel
+        )
+        if let encoded = try? JSONEncoder().encode(config) {
+            self.configurationData = encoded
+        }
+        // Don't initialize optional relationships - let SwiftData handle them
+    }
+}
+
+// MARK: - Type-Safe Accessors
+
+extension NutritionProgram {
+    /// Type-safe accessor for program style
+    var style: ProgramStyle {
+        get {
+            ProgramStyle(rawValue: programStyleRaw) ?? .coached
+        }
+        set {
+            programStyleRaw = newValue.rawValue
+            updateConfiguration()
+        }
+    }
+
+    /// Type-safe accessor for diet preference
+    var diet: DietPreference {
+        get {
+            DietPreference(rawValue: dietPreferenceRaw) ?? .balanced
+        }
+        set {
+            dietPreferenceRaw = newValue.rawValue
+            updateConfiguration()
+        }
+    }
+
+    /// Type-safe accessor for calorie floor type
+    var calorieFloor: CalorieFloorType {
+        get {
+            CalorieFloorType(rawValue: calorieFloorTypeRaw) ?? .standard
+        }
+        set {
+            calorieFloorTypeRaw = newValue.rawValue
+            updateConfiguration()
+        }
+    }
+
+    /// Type-safe accessor for weekly distribution mode
+    var distributionMode: WeeklyDistributionMode {
+        get {
+            WeeklyDistributionMode(rawValue: weeklyDistributionModeRaw) ?? .even
+        }
+        set {
+            weeklyDistributionModeRaw = newValue.rawValue
+            updateConfiguration()
+        }
+    }
+
+    /// Type-safe accessor for protein level
+    var protein: ProteinLevel {
+        get {
+            ProteinLevel(rawValue: proteinLevelRaw) ?? .moderate
+        }
+        set {
+            proteinLevelRaw = newValue.rawValue
+            updateConfiguration()
+        }
+    }
+
+    /// Decoded ProgramConfiguration
+    var configuration: ProgramConfiguration? {
+        guard !configurationData.isEmpty else { return nil }
+        return try? JSONDecoder().decode(ProgramConfiguration.self, from: configurationData)
+    }
+
+    /// Decoded WeeklyCalorieDistribution
+    var weeklyDistribution: WeeklyCalorieDistribution? {
+        guard let data = weeklyDistributionData else { return nil }
+        return try? JSONDecoder().decode(WeeklyCalorieDistribution.self, from: data)
+    }
+}
+
+// MARK: - Computed Properties
+
+extension NutritionProgram {
+    /// Minimum calories allowed based on calorie floor type
+    var minimumCalories: Double {
+        calorieFloor.minimumCalories
+    }
+
+    /// Whether this program uses coached macros (app designs the program)
+    var usesCoachedMacros: Bool {
+        style == .coached
+    }
+
+    /// Whether this program adjusts calories based on progress
+    var adjustsCaloriesWithProgress: Bool {
+        style == .coached || style == .collaborative
+    }
+
+    /// Calculate calorie target for a specific day of the week
+    ///
+    /// - Parameter weekday: Day of week (1=Sunday through 7=Saturday)
+    /// - Returns: Calorie target for that day, or nil if invalid weekday
+    ///
+    /// For even distribution, returns the goal's base calorie target.
+    /// For shifted distribution, applies the day-specific multiplier.
+    func calorieTargetForDay(_ weekday: Int) -> Double? {
+        guard WeeklyCalorieDistribution.validWeekdayRange.contains(weekday) else {
+            return nil
+        }
+
+        // Get base calories from goal
+        guard let baseCalories = goal?.dailyCalorieTarget else {
+            return nil
+        }
+
+        // For even distribution, return base calories
+        if distributionMode == .even {
+            return baseCalories
+        }
+
+        // For shifted distribution, apply multiplier
+        if let distribution = weeklyDistribution {
+            return distribution.calorieTargetForDay(weekday, baseCalories: baseCalories)
+        }
+
+        // Fallback to base calories
+        return baseCalories
+    }
+}
+
+// MARK: - Configuration Update
+
+extension NutritionProgram {
+    /// Re-encode configuration when properties change
+    private func updateConfiguration() {
+        let config = ProgramConfiguration(
+            programStyle: style,
+            dietPreference: diet,
+            calorieFloorType: calorieFloor,
+            weeklyDistributionMode: distributionMode,
+            proteinLevel: protein
+        )
+        if let encoded = try? JSONEncoder().encode(config) {
+            configurationData = encoded
+        }
+        updatedAt = Date()
+    }
+
+    /// Set weekly distribution with validation
+    ///
+    /// - Parameter distribution: The distribution to set
+    /// - Returns: True if distribution was set, false if invalid
+    @discardableResult
+    func setWeeklyDistribution(_ distribution: WeeklyCalorieDistribution) -> Bool {
+        guard distribution.isValid else { return false }
+
+        if let encoded = try? JSONEncoder().encode(distribution) {
+            weeklyDistributionData = encoded
+            distributionMode = .shifted
+            return true
+        }
+        return false
+    }
+}

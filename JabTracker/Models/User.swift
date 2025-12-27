@@ -74,6 +74,9 @@ final class User {
     @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
     var medicationProfiles: [MedicationProfile]?  // CloudKit requires optional relationships
 
+    @Relationship(deleteRule: .cascade, inverse: \NutritionGoal.user)
+    var nutritionGoals: [NutritionGoal]?  // CloudKit requires optional relationships
+
     // Note: FoodEntry does not have a User relationship - entries are queried by date
     // This avoids schema complexity while nutrition is user-scoped by app context
 
@@ -129,6 +132,11 @@ extension User {
     /// Formatted weight display for UI presentation
     var weightDisplay: String {
         String(format: "%.1f %@", self.weight, self.weightUnit)
+    }
+
+    /// The user's currently active nutrition goal, if any
+    var activeNutritionGoal: NutritionGoal? {
+        nutritionGoals?.first(where: { $0.isActive })
     }
 
     /// CloudKit-compatible email field - returns empty string if email is nil
