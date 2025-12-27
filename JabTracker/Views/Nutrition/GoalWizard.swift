@@ -260,10 +260,19 @@ struct GoalWizard: View {
     /// Whether to show the intro screen first (for new goal flow)
     var showIntro: Bool = true
 
+    /// Existing goal for edit mode (nil for new goal)
+    var existingGoal: NutritionGoal?
+
     @State private var showingIntro: Bool
 
-    init(user: User, showIntro: Bool = true, onComplete: ((NutritionGoal) -> Void)? = nil) {
+    init(
+        user: User,
+        existingGoal: NutritionGoal? = nil,
+        showIntro: Bool = true,
+        onComplete: ((NutritionGoal) -> Void)? = nil
+    ) {
         self.user = user
+        self.existingGoal = existingGoal
         self.showIntro = showIntro
         self.onComplete = onComplete
         self._showingIntro = State(initialValue: showIntro)
@@ -300,8 +309,13 @@ struct GoalWizard: View {
             }
         }
         .onAppear {
-            // Set current weight from user's profile weight
-            viewModel.configureWithCurrentWeight(user.weight)
+            // Configure for edit mode if editing existing goal
+            if let existingGoal {
+                viewModel.configureForEdit(goal: existingGoal)
+            } else {
+                // Set current weight from user's profile weight for new goals
+                viewModel.configureWithCurrentWeight(user.weight)
+            }
         }
         .accessibilityIdentifier("goal-wizard")
     }

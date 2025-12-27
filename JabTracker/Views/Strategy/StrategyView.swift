@@ -48,6 +48,7 @@ struct StrategyView: View {
             if let user = users.first {
                 GoalWizard(
                     user: user,
+                    existingGoal: isEditingGoal ? user.activeNutritionGoal : nil,
                     showIntro: !isEditingGoal
                 ) { goal in
                     createdGoal = goal
