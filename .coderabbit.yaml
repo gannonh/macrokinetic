@@ -1,0 +1,28 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/configuration/configuration-overview
+
+language: en-US
+
+reviews:
+  # Focus on Swift source code, exclude documentation and generated files
+  path_filters:
+    - "!**/*.md"              # Ignore markdown files
+    - "!**/docs/**"           # Ignore docs directory
+    - "!**/*.xcodeproj/**"    # Ignore Xcode project files
+    - "!**/*.xcworkspace/**"  # Ignore workspace files
+    - "!**/.claude/**"        # Ignore Claude context files
+    - "!**/logs/**"           # Ignore log files
+    - "!**/*.xcresult/**"     # Ignore test result bundles
+    - "!**/Assets.xcassets/**" # Ignore asset catalogs
+    - "!**/.gitkeep"          # Ignore gitkeep files
+
+  ## Review settings
+  # request_changes_workflow: false
+  # high_level_summary: true
+  # poem: false
+  # collapse_walkthrough: true
+
+  ## Auto-review on PR open
+  # auto_review:
+  #   enabled: false
+  #   drafts: false
