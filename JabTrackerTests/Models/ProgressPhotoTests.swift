@@ -89,7 +89,9 @@ struct ProgressPhotoTests {
     func testDefaultInitialization() {
         let photo = ProgressPhoto()
 
-        #expect(photo.id != UUID())
+        // Verify id is a valid non-nil UUID (not the zero UUID sentinel)
+        let zeroUUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+        #expect(photo.id != zeroUUID, "Photo ID should not be the zero UUID sentinel")
         #expect(photo.timestamp <= Date())
         #expect(photo.imageData == nil)
         #expect(photo.photoType == PhotoType.front.rawValue)

@@ -133,6 +133,12 @@ struct QuickPhotoSheet: View {
         }
         .presentationDetents([.large])
         .accessibilityIdentifier(Self.sheetIdentifier)
+        .onAppear {
+            // Ensure initial photoType is one of the enabled types
+            if !enabledPhotoTypes.contains(photoType), let firstEnabled = enabledPhotoTypes.first {
+                photoType = firstEnabled
+            }
+        }
         .photosPicker(
             isPresented: $showingPhotoPicker,
             selection: $selectedPhotoItem,

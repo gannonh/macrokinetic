@@ -148,6 +148,9 @@ final class FoodLogEditUITests: XCTestCase {
         addFoodButton.tap()
 
         // Wait for sheets to dismiss and entry to be logged
-        Thread.sleep(forTimeInterval: 1.5)
+        let dismissPredicate = NSPredicate(format: "exists == false")
+        let dismissExpectation = XCTNSPredicateExpectation(predicate: dismissPredicate, object: foodSearchSheet)
+        let waitResult = XCTWaiter().wait(for: [dismissExpectation], timeout: 3)
+        XCTAssertEqual(waitResult, .completed, "Food search sheet should dismiss after adding food")
     }
 }

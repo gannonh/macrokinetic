@@ -17,6 +17,9 @@ extension MetricsService {
         category: "MetricsService+HealthKit"
     )
 
+    /// Flag to log unsupported measurement warnings only once per session
+    private static var hasLoggedUnsupportedMeasurements = false
+
     /// Check if HealthKit is available on this device
     static var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
@@ -36,15 +39,20 @@ extension MetricsService {
             try await syncWaistCircumference(waistCm, timestamp: entry.timestamp)
         }
 
-        // Log warning for unsupported measurements
-        if entry.hipCm != nil {
-            Self.healthKitLogger.warning("Hip circumference is not supported by HealthKit, cannot sync")
-        }
-        if entry.chestCm != nil {
-            Self.healthKitLogger.warning("Chest circumference is not supported by HealthKit, cannot sync")
-        }
-        if entry.neckCm != nil {
-            Self.healthKitLogger.warning("Neck circumference is not supported by HealthKit, cannot sync")
+        // Log warning for unsupported measurements (once per session to avoid log noise)
+        if !Self.hasLoggedUnsupportedMeasurements {
+            var unsupportedMeasurements: [String] = []
+            if entry.hipCm != nil { unsupportedMeasurements.append("hip") }
+            if entry.chestCm != nil { unsupportedMeasurements.append("chest") }
+            if entry.neckCm != nil { unsupportedMeasurements.append("neck") }
+
+            if !unsupportedMeasurements.isEmpty {
+                let measurementList = unsupportedMeasurements.joined(separator: ", ")
+                Self.healthKitLogger.warning(
+                    "These measurements are not supported by HealthKit: \(measurementList)"
+                )
+                Self.hasLoggedUnsupportedMeasurements = true
+            }
         }
     }
 
