@@ -168,7 +168,7 @@ struct SwiftDataModelTests {
         // Required fields should be non-optional
         #expect(user.email == "test-\(uniqueID)@example.com")
         #expect(user.weight == 70.0)  // Should have default value
-        #expect(user.weightUnit == "kg")  // Should have default value
+        #expect(user.weightUnit == "lbs")  // Should have default value (US units)
         #expect(!user.timezone.isEmpty)  // Should have default timezone
         #expect(user.createdAt.timeIntervalSince1970 > 0)  // Should be auto-generated
         #expect(user.updatedAt.timeIntervalSince1970 > 0)  // Should be auto-generated
@@ -188,7 +188,7 @@ struct SwiftDataModelTests {
         // Required fields should never be nil
         #expect(user.email == "required@example.com")
         #expect(user.weight == 80.0)
-        #expect(user.weightUnit == "kg")  // Default
+        #expect(user.weightUnit == "lbs")  // Default (US units)
         #expect(!user.timezone.isEmpty)
         #expect(user.createdAt.timeIntervalSince1970 > 0)
         #expect(user.updatedAt.timeIntervalSince1970 > 0)

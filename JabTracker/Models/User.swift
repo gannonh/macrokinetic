@@ -40,8 +40,8 @@ final class User {
     var name: String?  // Optional - Apple might not provide
     var dateOfBirth: Date?  // Optional - user may choose not to provide
     var weight: Double = 70.0  // Required with default for medical app
-    var weightUnit: String = "kg"  // Required with default
-    var measurementUnit: String = "cm"  // Required with default: cm or in
+    var weightUnit: String = "lbs"  // Required with default (US units)
+    var measurementUnit: String = "in"  // Required with default (US units)
     var timezone: String = TimeZone.current.identifier  // Required with default
     var appleUserId: String?  // For Sign in with Apple linking
     var createdAt: Date = Date()  // Required - auto-generated
@@ -85,8 +85,8 @@ final class User {
         name: String? = nil,
         dateOfBirth: Date? = nil,
         weight: Double = 70.0,
-        weightUnit: String = "kg",
-        measurementUnit: String = "cm",
+        weightUnit: String = "lbs",
+        measurementUnit: String = "in",
         timezone: String = TimeZone.current.identifier,
         appleUserId: String? = nil,
         hasCompletedOnboarding: Bool = false,

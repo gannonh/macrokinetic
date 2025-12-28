@@ -193,7 +193,7 @@ struct UserModelTests {
         #expect(minimalUser.name == nil, "Default name should be nil")
         #expect(minimalUser.dateOfBirth == nil, "Default date of birth should be nil")
         #expect(minimalUser.weight == 70.0, "Default weight should be 70.0")
-        #expect(minimalUser.weightUnit == "kg", "Default weight unit should be kg")
+        #expect(minimalUser.weightUnit == "lbs", "Default weight unit should be lbs (US units)")
         #expect(!minimalUser.timezone.isEmpty, "Default timezone should be set")
         #expect(minimalUser.appleUserId == nil, "Default Apple user ID should be nil")
         #expect(minimalUser.createdAt.timeIntervalSince1970 > 0, "Created at should be set")

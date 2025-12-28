@@ -13,7 +13,7 @@ struct UserProfileView: View {
     // Profile editing states
     @State private var editingName = ""
     @State private var editingWeight = ""
-    @State private var editingWeightUnit = "kg"
+    @State private var editingWeightUnit = "lbs"
     @State private var editingTimezone = TimeZone.current.identifier
     @State private var editingDateOfBirth = Date()
 
@@ -271,7 +271,9 @@ struct UserProfileView: View {
         guard let user = authManager.currentUser else { return }
 
         self.editingName = user.name ?? ""
-        self.editingWeight = String(user.weight)
+        // Convert internal kg to display unit
+        let displayWeight = user.weightUnit == "lbs" ? user.weight * 2.20462 : user.weight
+        self.editingWeight = String(format: "%.1f", displayWeight)
         self.editingWeightUnit = user.weightUnit
         self.editingTimezone = user.timezone
         self.editingDateOfBirth = user.dateOfBirth ?? Date()
@@ -294,7 +296,12 @@ struct UserProfileView: View {
 
         // Update user properties
         user.name = self.editingName.trimmingCharacters(in: .whitespacesAndNewlines)
-        user.weight = weight
+        // Always store weight in kg internally
+        if self.editingWeightUnit == "lbs" {
+            user.weight = weight / 2.20462  // Convert lbs to kg for storage
+        } else {
+            user.weight = weight
+        }
         user.weightUnit = self.editingWeightUnit
         user.timezone = self.editingTimezone
         user.dateOfBirth = self.editingDateOfBirth

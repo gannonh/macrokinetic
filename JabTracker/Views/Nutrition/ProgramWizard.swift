@@ -309,7 +309,7 @@ struct ProgramWizard: View {
                 Spacer()
 
                 // Navigation buttons
-                HStack {
+                HStack(spacing: 12) {
                     if !viewModel.isFirstStep {
                         SecondaryButton(title: "Back") {
                             withAnimation(.spring()) {
@@ -318,8 +318,6 @@ struct ProgramWizard: View {
                         }
                         .accessibilityIdentifier("program-wizard-back-button")
                     }
-
-                    Spacer()
 
                     if viewModel.isConfirmationStep {
                         PrimaryButton(title: viewModel.isEditMode ? "Save Program" : "Create Program") {
@@ -436,6 +434,7 @@ private struct ProgramStyleStepView: View {
                         SelectionCard(
                             title: style.displayName,
                             description: style.description,
+                            icon: style.icon,
                             isSelected: selection == style
                         ) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -468,6 +467,7 @@ private struct DietPreferenceStepView: View {
                         SelectionCard(
                             title: diet.displayName,
                             description: diet.description,
+                            icon: diet.icon,
                             detail: macroDetail(for: diet),
                             isSelected: selection == diet
                         ) {
@@ -506,6 +506,7 @@ private struct CalorieFloorStepView: View {
                         SelectionCard(
                             title: floorType.displayName,
                             description: floorType.description,
+                            icon: floorType.icon,
                             detail: "\(Int(floorType.minimumCalories)) cal/day minimum",
                             isSelected: selection == floorType,
                             showWarning: floorType.requiresWarning
@@ -540,6 +541,7 @@ private struct TrainingLevelStepView: View {
                         SelectionCard(
                             title: level.displayName,
                             description: level.description,
+                            icon: level.icon,
                             isSelected: selection == level
                         ) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -572,6 +574,7 @@ private struct WeeklyDistributionStepView: View {
                         SelectionCard(
                             title: mode.displayName,
                             description: mode.description,
+                            icon: mode.icon,
                             isSelected: selection == mode
                         ) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -604,6 +607,7 @@ private struct ProteinLevelStepView: View {
                         SelectionCard(
                             title: level.displayName,
                             description: level.description,
+                            icon: level.icon,
                             detail: "\(level.gramsPerKg)g per kg body weight",
                             isSelected: selection == level
                         ) {
@@ -720,6 +724,7 @@ private struct StepHeader: View {
 private struct SelectionCard: View {
     let title: String
     let description: String
+    var icon: String?
     var detail: String?
     let isSelected: Bool
     var showWarning: Bool = false
@@ -728,6 +733,13 @@ private struct SelectionCard: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 16) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.title2)
+                        .foregroundColor(isSelected ? .blue : .secondary)
+                        .frame(width: 32)
+                }
+
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text(title)

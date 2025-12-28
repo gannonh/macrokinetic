@@ -225,7 +225,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 email: "test@uitesting.com",
                 name: "UI Test User",
                 weight: 70.0,
-                weightUnit: "kg")
+                weightUnit: "lbs")
             context.insert(mockUser)
             isNewUser = true
             Self.logger.info("✅ AuthenticationManager: Creating new UI testing mock user")
@@ -426,7 +426,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 email: "manual@uitesting.com",
                 name: "Manual UI Test User",
                 weight: 75.0,
-                weightUnit: "kg")
+                weightUnit: "lbs")
 
             context.insert(mockUser)
 

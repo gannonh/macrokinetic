@@ -60,6 +60,10 @@ enum GoalWizardError: LocalizedError {
 @Observable
 @MainActor
 final class GoalWizardViewModel {
+    // MARK: - Constants
+
+    private static let kgToLbs = 2.20462
+
     // MARK: - Step Navigation
 
     var currentStep: GoalWizardStep = .goalType
@@ -70,6 +74,66 @@ final class GoalWizardViewModel {
     var targetWeightKg: Double = 70.0
     var currentWeightKg: Double = 70.0
     var weeklyRateKg: Double = 0.5
+
+    // MARK: - Unit Preference
+
+    /// Whether user prefers metric (kg) or imperial (lbs)
+    var usesMetricWeight: Bool = false
+
+    /// Unit label for display
+    var weightUnitLabel: String {
+        usesMetricWeight ? "kg" : "lbs"
+    }
+
+    // MARK: - Display Conversions
+
+    /// Current weight in user's preferred unit (editable)
+    var currentWeightDisplay: Double {
+        get { usesMetricWeight ? currentWeightKg : currentWeightKg * Self.kgToLbs }
+        set {
+            let newWeightKg = usesMetricWeight ? newValue : newValue / Self.kgToLbs
+
+            // Ignore invalid values (user is mid-edit, e.g., backspaced to clear)
+            guard newWeightKg >= 30 else { return }
+
+            currentWeightKg = newWeightKg
+
+            // Clamp target weight to stay within valid range for the goal type
+            switch goalType {
+            case .weightLoss:
+                if targetWeightKg >= newWeightKg {
+                    targetWeightKg = newWeightKg - 0.5
+                }
+            case .muscleGain:
+                if targetWeightKg <= newWeightKg {
+                    targetWeightKg = newWeightKg + 0.5
+                }
+            case .maintenance, .none:
+                targetWeightKg = newWeightKg
+            }
+        }
+    }
+
+    /// Target weight in user's preferred unit
+    var targetWeightDisplay: Double {
+        get { usesMetricWeight ? targetWeightKg : targetWeightKg * Self.kgToLbs }
+        set {
+            targetWeightKg = usesMetricWeight ? newValue : newValue / Self.kgToLbs
+        }
+    }
+
+    /// Weekly rate in user's preferred unit
+    var weeklyRateDisplay: Double {
+        get { usesMetricWeight ? weeklyRateKg : weeklyRateKg * Self.kgToLbs }
+        set {
+            weeklyRateKg = usesMetricWeight ? newValue : newValue / Self.kgToLbs
+        }
+    }
+
+    /// Total weight change in user's preferred unit
+    var totalWeightChangeDisplay: Double {
+        usesMetricWeight ? totalWeightChange : totalWeightChange * Self.kgToLbs
+    }
 
     // MARK: - Mode
 
@@ -175,19 +239,21 @@ final class GoalWizardViewModel {
     // MARK: - Initialization
 
     /// Configure for editing an existing goal
-    func configureForEdit(goal: NutritionGoal) {
+    func configureForEdit(goal: NutritionGoal, usesMetric: Bool) {
         isEditMode = true
         existingGoal = goal
         goalType = goal.goalType
         targetWeightKg = goal.targetWeightKg
         currentWeightKg = goal.startingWeightKg
         weeklyRateKg = abs(goal.weeklyWeightChangePaceKg)
+        usesMetricWeight = usesMetric
     }
 
-    /// Configure with user's current weight
-    func configureWithCurrentWeight(_ weight: Double) {
+    /// Configure with user's current weight and unit preference
+    func configureWithCurrentWeight(_ weight: Double, usesMetric: Bool) {
         currentWeightKg = weight
         targetWeightKg = weight  // Start at same weight, user adjusts
+        usesMetricWeight = usesMetric
     }
 
     // MARK: - Save
@@ -311,10 +377,10 @@ struct GoalWizard: View {
         .onAppear {
             // Configure for edit mode if editing existing goal
             if let existingGoal {
-                viewModel.configureForEdit(goal: existingGoal)
+                viewModel.configureForEdit(goal: existingGoal, usesMetric: user.prefersMetricWeight)
             } else {
                 // Set current weight from user's profile weight for new goals
-                viewModel.configureWithCurrentWeight(user.weight)
+                viewModel.configureWithCurrentWeight(user.weight, usesMetric: user.prefersMetricWeight)
             }
         }
         .accessibilityIdentifier("goal-wizard")
@@ -409,7 +475,7 @@ struct GoalWizard: View {
             Spacer()
 
             // Navigation buttons
-            HStack {
+            HStack(spacing: 12) {
                 if !viewModel.isFirstStep {
                     SecondaryButton(title: "Back") {
                         withAnimation(.spring()) {
@@ -418,8 +484,6 @@ struct GoalWizard: View {
                     }
                     .accessibilityIdentifier("goal-wizard-back-button")
                 }
-
-                Spacer()
 
                 if viewModel.isSummaryStep {
                     PrimaryButton(title: viewModel.isEditMode ? "Save Goal" : "Continue to Program") {
@@ -498,6 +562,7 @@ private struct GoalTypeSelectionView: View {
                         SelectionCard(
                             title: goalType.displayName,
                             description: goalType.description,
+                            icon: goalType.icon,
                             isSelected: selection == goalType
                         ) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -526,11 +591,8 @@ private struct TargetWeightStepView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
-                    // Current weight display
-                    infoCard(
-                        title: "Current Weight",
-                        value: String(format: "%.1f kg", viewModel.currentWeightKg)
-                    )
+                    // Current weight (editable)
+                    currentWeightSection
 
                     // Target weight slider (skip for maintenance)
                     if viewModel.goalType != .maintenance {
@@ -546,31 +608,64 @@ private struct TargetWeightStepView: View {
         }
     }
 
+    private var currentWeightSection: some View {
+        HStack {
+            Text("Current Weight")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Spacer()
+            HStack(spacing: 4) {
+                TextField(
+                    "",
+                    value: $viewModel.currentWeightDisplay,
+                    format: .number.precision(.fractionLength(1))
+                )
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 60)
+                .font(.headline)
+                .accessibilityIdentifier("goal-wizard-current-weight-input")
+
+                Text(viewModel.weightUnitLabel)
+                    .font(.headline)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.05))
+        )
+    }
+
+    private var weightFormat: String {
+        viewModel.usesMetricWeight ? "%.1f %@" : "%.0f %@"
+    }
+
     private var targetWeightSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Target Weight")
                     .font(.headline)
                 Spacer()
-                Text(String(format: "%.1f kg", viewModel.targetWeightKg))
+                Text(String(format: weightFormat, viewModel.targetWeightDisplay, viewModel.weightUnitLabel))
                     .font(.headline)
                     .foregroundColor(.blue)
             }
 
             Slider(
-                value: $viewModel.targetWeightKg,
-                in: targetWeightRange,
-                step: 0.5
+                value: $viewModel.targetWeightDisplay,
+                in: targetWeightRangeDisplay,
+                step: viewModel.usesMetricWeight ? 0.5 : 1.0
             )
             .tint(.blue)
             .accessibilityIdentifier("goal-wizard-target-weight-slider")
 
             HStack {
-                Text(String(format: "%.0f kg", targetWeightRange.lowerBound))
+                Text(String(format: "%.0f %@", targetWeightRangeDisplay.lowerBound, viewModel.weightUnitLabel))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text(String(format: "%.0f kg", targetWeightRange.upperBound))
+                Text(String(format: "%.0f %@", targetWeightRangeDisplay.upperBound, viewModel.weightUnitLabel))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -582,41 +677,61 @@ private struct TargetWeightStepView: View {
         )
     }
 
-    private var targetWeightRange: ClosedRange<Double> {
+    private var targetWeightRangeDisplay: ClosedRange<Double> {
+        let kgToLbs = 2.20462
+        let multiplier = viewModel.usesMetricWeight ? 1.0 : kgToLbs
+
+        // Round to align with slider step (1.0 for lbs, 0.5 for kg)
+        func roundMin(_ value: Double) -> Double {
+            viewModel.usesMetricWeight ? (value * 2).rounded(.up) / 2 : value.rounded(.up)
+        }
+        func roundMax(_ value: Double) -> Double {
+            viewModel.usesMetricWeight ? (value * 2).rounded(.down) / 2 : value.rounded(.down)
+        }
+
         switch viewModel.goalType {
         case .weightLoss:
-            let minWeight = max(40, viewModel.currentWeightKg * 0.7)
-            return minWeight...(viewModel.currentWeightKg - 0.5)
+            let minWeight = roundMin(max(40, viewModel.currentWeightKg * 0.7) * multiplier)
+            let maxWeight = roundMax((viewModel.currentWeightKg - 0.5) * multiplier)
+            let safeMax = max(minWeight, maxWeight)
+            return minWeight...safeMax
         case .muscleGain:
-            let maxWeight = viewModel.currentWeightKg * 1.3
-            return (viewModel.currentWeightKg + 0.5)...maxWeight
+            let minWeight = roundMin((viewModel.currentWeightKg + 0.5) * multiplier)
+            let maxWeight = roundMax(viewModel.currentWeightKg * 1.3 * multiplier)
+            let safeMax = max(minWeight, maxWeight)
+            return minWeight...safeMax
         case .maintenance, .none:
-            return viewModel.currentWeightKg...viewModel.currentWeightKg
+            let weight = viewModel.currentWeightKg * multiplier
+            return weight...weight
         }
     }
 
     private var weeklyRateSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let minRate = viewModel.usesMetricWeight ? 0.25 : 0.5
+        let maxRate = viewModel.usesMetricWeight ? 1.0 : 2.0
+        let stepRate = viewModel.usesMetricWeight ? 0.25 : 0.5
+
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Weekly Rate")
                     .font(.headline)
                 Spacer()
-                Text(String(format: "%.2f kg/week", viewModel.weeklyRateKg))
+                Text(String(format: "%.1f %@/week", viewModel.weeklyRateDisplay, viewModel.weightUnitLabel))
                     .font(.headline)
                     .foregroundColor(.blue)
             }
 
             Slider(
-                value: $viewModel.weeklyRateKg,
-                in: 0.25...1.0,
-                step: 0.25
+                value: $viewModel.weeklyRateDisplay,
+                in: minRate...maxRate,
+                step: stepRate
             )
             .tint(.blue)
             .accessibilityIdentifier("goal-wizard-rate-slider")
 
             HStack {
                 VStack(alignment: .leading) {
-                    Text("0.25 kg")
+                    Text(String(format: "%.1f %@", minRate, viewModel.weightUnitLabel))
                         .font(.caption)
                     Text("Gradual")
                         .font(.caption2)
@@ -624,7 +739,7 @@ private struct TargetWeightStepView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing) {
-                    Text("1.0 kg")
+                    Text(String(format: "%.1f %@", maxRate, viewModel.weightUnitLabel))
                         .font(.caption)
                     Text("Aggressive")
                         .font(.caption2)
@@ -653,9 +768,10 @@ private struct TargetWeightStepView: View {
                 resultItem(
                     title: "Change",
                     value: String(
-                        format: "%@%.1f kg",
-                        viewModel.totalWeightChange > 0 ? "+" : "",
-                        viewModel.totalWeightChange
+                        format: viewModel.usesMetricWeight ? "%@%.1f %@" : "%@%.0f %@",
+                        viewModel.totalWeightChangeDisplay > 0 ? "+" : "",
+                        viewModel.totalWeightChangeDisplay,
+                        viewModel.weightUnitLabel
                     )
                 )
                 resultItem(
@@ -698,22 +814,6 @@ private struct TargetWeightStepView: View {
         )
     }
 
-    private func infoCard(title: String, value: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            Spacer()
-            Text(value)
-                .font(.headline)
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
-    }
-
     private func resultItem(title: String, value: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
@@ -730,6 +830,14 @@ private struct TargetWeightStepView: View {
 private struct GoalSummaryStepView: View {
     let viewModel: GoalWizardViewModel
 
+    private var weightFormat: String {
+        viewModel.usesMetricWeight ? "%.1f %@" : "%.0f %@"
+    }
+
+    private var changeFormat: String {
+        viewModel.usesMetricWeight ? "%@%.1f %@" : "%@%.0f %@"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
@@ -742,24 +850,30 @@ private struct GoalSummaryStepView: View {
                     SummaryRow(label: "Goal Type", value: viewModel.goalType?.displayName ?? "—")
                     SummaryRow(
                         label: "Current Weight",
-                        value: String(format: "%.1f kg", viewModel.currentWeightKg)
+                        value: String(format: weightFormat, viewModel.currentWeightDisplay, viewModel.weightUnitLabel)
                     )
 
                     if viewModel.goalType != .maintenance {
                         SummaryRow(
                             label: "Target Weight",
-                            value: String(format: "%.1f kg", viewModel.targetWeightKg)
+                            value: String(
+                                format: weightFormat, viewModel.targetWeightDisplay, viewModel.weightUnitLabel)
                         )
                         SummaryRow(
                             label: "Weekly Rate",
-                            value: String(format: "%.2f kg/week", viewModel.weeklyRateKg)
+                            value: String(
+                                format: "%.1f %@/week",
+                                viewModel.weeklyRateDisplay,
+                                viewModel.weightUnitLabel
+                            )
                         )
                         SummaryRow(
                             label: "Total Change",
                             value: String(
-                                format: "%@%.1f kg",
-                                viewModel.totalWeightChange > 0 ? "+" : "",
-                                viewModel.totalWeightChange
+                                format: changeFormat,
+                                viewModel.totalWeightChangeDisplay > 0 ? "+" : "",
+                                viewModel.totalWeightChangeDisplay,
+                                viewModel.weightUnitLabel
                             )
                         )
                         SummaryRow(label: "Duration", value: viewModel.durationDisplay)
@@ -825,6 +939,7 @@ private struct StepHeader: View {
 private struct SelectionCard: View {
     let title: String
     let description: String
+    var icon: String?
     var detail: String?
     let isSelected: Bool
     var showWarning: Bool = false
@@ -833,6 +948,13 @@ private struct SelectionCard: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 16) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.title2)
+                        .foregroundColor(isSelected ? .blue : .secondary)
+                        .frame(width: 32)
+                }
+
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text(title)

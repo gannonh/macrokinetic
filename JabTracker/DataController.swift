@@ -42,7 +42,7 @@ class DataController: ObservableObject {
             email: "preview@example.com",
             name: "Preview User",
             weight: 70.0,
-            weightUnit: "kg",
+            weightUnit: "lbs",
             timezone: "UTC")
 
         let sampleMedication = MedicationProfile(

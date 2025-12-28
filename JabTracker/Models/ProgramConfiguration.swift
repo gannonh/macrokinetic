@@ -57,6 +57,14 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
             return "Build muscle mass with calorie surplus"
         }
     }
+
+    var icon: String {
+        switch self {
+        case .weightLoss: return "arrow.down.circle"
+        case .maintenance: return "equal.circle"
+        case .muscleGain: return "arrow.up.circle"
+        }
+    }
 }
 
 // MARK: - ProgramStyle
@@ -83,6 +91,14 @@ enum ProgramStyle: String, Codable, CaseIterable, Identifiable {
             return "You set macro targets, app adjusts calorie budget based on your progress"
         case .manual:
             return "You set all targets manually with full control"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .coached: return "sparkles"
+        case .collaborative: return "person.2"
+        case .manual: return "slider.horizontal.3"
         }
     }
 }
@@ -115,6 +131,15 @@ enum DietPreference: String, Codable, CaseIterable, Identifiable {
             return "Reduced carbohydrate intake with higher fat"
         case .keto:
             return "Very low carbohydrates, high fat for ketosis"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .balanced: return "circle.grid.3x3"
+        case .lowFat: return "heart.circle"
+        case .lowCarb: return "leaf"
+        case .keto: return "flame"
         }
     }
 
@@ -153,6 +178,13 @@ enum CalorieFloorType: String, Codable, CaseIterable, Identifiable {
             return "Recommended minimum of 1,538 calories per day"
         case .low:
             return "Lower minimum of 1,025 calories (consult healthcare provider)"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .standard: return "checkmark.shield"
+        case .low: return "exclamationmark.triangle"
         }
     }
 
@@ -195,28 +227,52 @@ enum WeeklyDistributionMode: String, Codable, CaseIterable, Identifiable {
             return "Custom calorie targets for different days of the week"
         }
     }
+
+    var icon: String {
+        switch self {
+        case .even: return "equal.square"
+        case .shifted: return "calendar.badge.clock"
+        }
+    }
 }
 
 // MARK: - TrainingLevel
 
-/// Training intensity level affecting calorie and macro adjustments
+/// Training type affecting calorie and macro adjustments
 enum TrainingLevel: String, Codable, CaseIterable, Identifiable {
     case none
-    case relaxed
+    case lifting
+    case cardio
+    case cardioAndLifting = "cardio_and_lifting"
 
     var displayName: String {
         switch self {
-        case .none: return "None"
-        case .relaxed: return "Relaxed"
+        case .none: return "None or Relaxed Activity"
+        case .lifting: return "Lifting"
+        case .cardio: return "Cardio"
+        case .cardioAndLifting: return "Cardio & Lifting"
         }
     }
 
     var description: String {
         switch self {
         case .none:
-            return "No structured training - focus on diet only"
-        case .relaxed:
-            return "Light activity or casual training routine"
+            return "No structured training or light daily activity"
+        case .lifting:
+            return "Resistance training, weight lifting, or strength work"
+        case .cardio:
+            return "Running, cycling, swimming, or other aerobic exercise"
+        case .cardioAndLifting:
+            return "Combined strength and cardiovascular training"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .none: return "figure.walk"
+        case .lifting: return "dumbbell"
+        case .cardio: return "figure.run"
+        case .cardioAndLifting: return "figure.strengthtraining.functional"
         }
     }
 }
@@ -249,6 +305,15 @@ enum ProteinLevel: String, Codable, CaseIterable, Identifiable {
             return "2.0g per kg body weight - strength training"
         case .extraHigh:
             return "2.4g per kg body weight - intensive training"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .low: return "1.circle"
+        case .moderate: return "2.circle"
+        case .high: return "3.circle"
+        case .extraHigh: return "4.circle"
         }
     }
 
