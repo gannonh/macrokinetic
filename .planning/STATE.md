@@ -19,10 +19,10 @@
 
 ## Current Position
 
-Phase: 15 of 17 (Daily Tracking Dashboard)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2025-12-28 - Completed 15-01 (circular progress rings)
+Phase: 15.1 of 17 (Initial TDEE Integration) - INSERTED
+Plan: 0 of ? in current phase
+Status: Not planned yet
+Last activity: 2025-12-28 - Inserted Phase 15.1 for TDEE integration
 
 Progress: ██████░░░░ 56%
 
@@ -47,6 +47,7 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 13 | 2/2 | 34 min | 17 min |
 | 14 | 3/3 | 28 min | 9 min |
 | 15 | 1/1 | 2 min | 2 min |
+| 15.1 | 0/? | - | - |
 | 16 | 0/? | - | - |
 | 17 | 0/? | - | - |
 
@@ -75,6 +76,7 @@ None yet.
 ### Roadmap Evolution
 
 - Milestone v0.3.0 created: Goals & Nutrition Programs, 6 phases (Phase 12-17)
+- Phase 15.1 inserted after Phase 15: Initial TDEE Integration (URGENT) - Wire up TDEEService to goal creation, collect biometrics, calculate initial calorie/macro targets. Required before Phase 16 (Weekly Check-ins) which depends on TDEE working.
 
 ### Blockers/Concerns Carried Forward
 

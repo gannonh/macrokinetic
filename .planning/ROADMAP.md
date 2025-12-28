@@ -68,10 +68,32 @@ Plans:
 Plans:
 - [x] 15-01: Circular progress rings for NutritionSummaryCard with color thresholds
 
+#### Phase 15.1: Initial TDEE Integration (INSERTED)
+
+**Goal**: Complete HealthKit read/write integration for biometrics, wire TDEEService to goal creation, calculate and apply personalized calorie/macro targets
+**Depends on**: Phase 15
+**Research**: Unlikely (internal patterns - TDEEService built in Phase 14, HealthKit write exists)
+**Plans**: TBD
+
+**Scope:**
+- HealthKit READ integration: Import height, sex, DOB, weight when available
+- HealthKit WRITE integration: Sync user-modified values back to HealthKit
+- Granular HealthKit permissions UI in Settings (read/write per data type)
+- Biometrics collection fallback UI when HealthKit unavailable/declined
+- Wire TDEEService.calculateInitialTDEE() to goal creation flow
+- Apply calculated TDEE to User.dailyCalorieGoal and macro targets
+- Update Strategy view to display calculated (not default) values
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 15.1 to break down)
+
+**Details:**
+[To be added during planning]
+
 #### Phase 16: Weekly Check-ins
 
 **Goal**: Weight trend review, adherence summary, goal and program adjustment flow
-**Depends on**: Phase 15
+**Depends on**: Phase 15.1
 **Research**: Unlikely (internal patterns - existing weight tracking)
 **Plans**: TBD
 
@@ -99,6 +121,7 @@ Phases execute in numeric order within each milestone.
 | 13. Goal Configuration Wizard | v0.3.0 | 2/2 | Complete | 2025-12-28 |
 | 14. Adaptive TDEE Engine | v0.3.0 | 3/3 | Complete | 2025-12-28 |
 | 15. Daily Tracking Dashboard | v0.3.0 | 1/1 | Complete | 2025-12-28 |
+| 15.1 Initial TDEE Integration | v0.3.0 | 0/? | Not started | - |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
 

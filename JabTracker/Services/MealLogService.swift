@@ -23,14 +23,24 @@ struct DailyNutritionTotals {
 /// Service for managing meal log entries
 /// Provides CRUD operations, date-based queries, and daily totals
 @MainActor
+@Observable
 final class MealLogService {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "MealLogService")
 
     private let context: ModelContext
 
+    /// Tracks data mutations for reactive UI updates
+    /// Views can observe this property to refresh when food entries change
+    private(set) var dataVersion = UUID()
+
     /// Initialize with model context
     init(context: ModelContext) {
         self.context = context
+    }
+
+    /// Notify observers that data has changed
+    private func notifyDataChanged() {
+        dataVersion = UUID()
     }
 
     // MARK: - Create
@@ -56,6 +66,7 @@ final class MealLogService {
 
         context.insert(entry)
         try context.save()
+        notifyDataChanged()
 
         Self.logger.info("Logged food entry: \(food.name) (\(servingGrams)g) for \(mealSection.displayName)")
 
@@ -173,6 +184,7 @@ final class MealLogService {
         }
 
         try context.save()
+        notifyDataChanged()
 
         Self.logger.info("Updated food entry: \(entry.foodName)")
     }
@@ -185,6 +197,7 @@ final class MealLogService {
         let name = entry.foodName
         context.delete(entry)
         try context.save()
+        notifyDataChanged()
 
         Self.logger.info("Deleted food entry: \(name)")
     }
@@ -244,6 +257,7 @@ final class MealLogService {
 
         context.insert(entry)
         try context.save()
+        notifyDataChanged()
 
         Self.logger.info("Logged quick add entry: \(name) (\(servingGrams)g) for \(mealSection.displayName)")
 

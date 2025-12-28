@@ -15,9 +15,6 @@ struct NutritionSummaryCard: View {
     let user: User
     let mealLogService: MealLogService?
 
-    /// Optional binding to trigger refresh from parent view
-    var refreshTrigger: UUID?
-
     @State private var totals: DailyNutritionTotals = .zero
     @State private var isLoading = true
     @State private var loadError: Error?
@@ -55,7 +52,7 @@ struct NutritionSummaryCard: View {
             }
         }
         .accessibilityIdentifier("nutrition-rings-card")
-        .task(id: refreshTrigger) {
+        .task(id: mealLogService?.dataVersion) {
             await loadTotals()
         }
     }

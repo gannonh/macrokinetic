@@ -76,7 +76,10 @@ final class TDEECalculationEngine {
 
         let bmr = baseBMR + adjustment
         logger.debug(
-            "BMR calculated: \(bmr, format: .fixed(precision: 1)) kcal (weight=\(weightKg)kg, height=\(heightCm)cm, age=\(age), gender=\(gender))"
+            """
+            BMR calculated: \(bmr, format: .fixed(precision: 1)) kcal \
+            (weight=\(weightKg)kg, height=\(heightCm)cm, age=\(age), gender=\(gender))
+            """
         )
         return bmr
     }
@@ -113,7 +116,10 @@ final class TDEECalculationEngine {
 
         let tdee = bmr * clampedMultiplier
         logger.debug(
-            "TDEE calculated: \(tdee, format: .fixed(precision: 1)) kcal (BMR=\(bmr, format: .fixed(precision: 1)), multiplier=\(clampedMultiplier))"
+            """
+            TDEE calculated: \(tdee, format: .fixed(precision: 1)) kcal \
+            (BMR=\(bmr, format: .fixed(precision: 1)), multiplier=\(clampedMultiplier))
+            """
         )
         return tdee
     }
