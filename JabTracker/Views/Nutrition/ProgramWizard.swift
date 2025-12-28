@@ -269,6 +269,7 @@ struct ProgramWizard: View {
     @State private var viewModel = ProgramWizardViewModel()
     @State private var errorMessage: String?
     @State private var showingError = false
+    @State private var tdeeService: TDEEService?
 
     /// The goal this program belongs to
     let goal: NutritionGoal
@@ -361,6 +362,7 @@ struct ProgramWizard: View {
         }
         .onAppear {
             viewModel.goal = goal
+            tdeeService = TDEEService(context: modelContext)
             if let existingProgram {
                 viewModel.configureForEdit(program: existingProgram)
             }
@@ -406,12 +408,94 @@ struct ProgramWizard: View {
     private func saveProgram() {
         do {
             try viewModel.save(context: modelContext)
+
+            // Calculate TDEE for Coached programs
+            if viewModel.programStyle == .coached {
+                Task {
+                    await calculateAndApplyTDEE()
+                }
+            }
+
             onComplete?()
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
             showingError = true
         }
+    }
+
+    private func calculateAndApplyTDEE() async {
+        guard let goal = viewModel.goal,
+            let user = goal.user,
+            let service = tdeeService
+        else {
+            return
+        }
+
+        do {
+            // Calculate initial TDEE using user biometrics + training level
+            try await service.calculateInitialTDEE(for: user, goal: goal)
+
+            // Apply TDEE to derive calorie target based on goal pace
+            applyTDEEToGoal(goal: goal)
+
+            try modelContext.save()
+        } catch {
+            // Log error but don't block - user can still use default targets
+            print("TDEE calculation failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func applyTDEEToGoal(goal: NutritionGoal) {
+        guard let tdee = goal.initialEstimatedTDEE else { return }
+
+        // Calculate daily calorie target from TDEE and weekly pace
+        // ~1100 kcal deficit/surplus per kg of weekly weight change
+        let weeklyCalorieAdjustment = goal.weeklyWeightChangePaceKg * 1100
+        let dailyCalorieTarget = tdee + (weeklyCalorieAdjustment / 7)
+
+        // Apply calorie floor if configured in program
+        let calorieFloor = goal.program?.calorieFloor.minimumCalories ?? 1200.0
+        goal.dailyCalorieTarget = max(dailyCalorieTarget, calorieFloor)
+
+        // Calculate macros from program settings
+        if let program = goal.program {
+            let macros = calculateMacrosFromProgram(
+                calories: goal.dailyCalorieTarget,
+                program: program,
+                weightKg: goal.user?.weight ?? 70.0
+            )
+            goal.dailyProteinTargetGrams = macros.protein
+            goal.dailyFatTargetGrams = macros.fat
+            goal.dailyCarbTargetGrams = macros.carbs
+        }
+    }
+
+    private func calculateMacrosFromProgram(
+        calories: Double,
+        program: NutritionProgram,
+        weightKg: Double
+    ) -> (protein: Double, fat: Double, carbs: Double) {
+        // Protein from program's protein level (g per kg body weight)
+        let proteinGrams = program.protein.gramsPerKg * weightKg
+        let proteinCalories = proteinGrams * 4
+
+        // Remaining calories for fat and carbs
+        let remainingCalories = calories - proteinCalories
+
+        // Use diet preference macro split for remaining calories
+        let macroSplit = program.diet.macroPercentages
+        let fatPercent = macroSplit.fat / (macroSplit.fat + macroSplit.carbs)
+        let carbPercent = macroSplit.carbs / (macroSplit.fat + macroSplit.carbs)
+
+        let fatCalories = remainingCalories * fatPercent
+        let carbCalories = remainingCalories * carbPercent
+
+        return (
+            protein: proteinGrams,
+            fat: fatCalories / 9,  // 9 cal per gram fat
+            carbs: carbCalories / 4  // 4 cal per gram carbs
+        )
     }
 }
 

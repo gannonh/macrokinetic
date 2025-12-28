@@ -54,14 +54,19 @@ struct StrategyView: View {
                     createdGoal = goal
                     showingGoalWizard = false
 
-                    if isEditingGoal {
-                        // Edit Goal flow → Show Program Summary
-                        showingProgramSummary = true
-                    } else {
-                        // New Goal flow → Chain to Program Wizard
-                        showingProgramWizard = true
+                    // Delay chained sheet presentation to ensure:
+                    // 1. GoalWizard dismissal animation completes
+                    // 2. createdGoal state propagates to child views
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        if isEditingGoal {
+                            // Edit Goal flow → Show Program Summary
+                            showingProgramSummary = true
+                        } else {
+                            // New Goal flow → Chain to Program Wizard
+                            showingProgramWizard = true
+                        }
+                        isEditingGoal = false
                     }
-                    isEditingGoal = false
                 }
             }
         }

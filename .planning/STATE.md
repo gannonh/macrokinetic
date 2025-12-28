@@ -20,11 +20,11 @@
 ## Current Position
 
 Phase: 15.1 of 17 (Initial TDEE Integration) - INSERTED
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2025-12-28 - Completed 15.1-01-PLAN.md
+Last activity: 2025-12-28 - Completed 15.1-02-PLAN.md
 
-Progress: ██████░░░░ 59%
+Progress: ██████░░░░ 63%
 
 ## GitHub Tracking
 
@@ -47,13 +47,13 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 13 | 2/2 | 34 min | 17 min |
 | 14 | 3/3 | 28 min | 9 min |
 | 15 | 1/1 | 2 min | 2 min |
-| 15.1 | 1/3 | 5 min | 5 min |
+| 15.1 | 2/3 | 11 min | 5.5 min |
 | 16 | 0/? | - | - |
 | 17 | 0/? | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 14-02 (9 min), 14-03 (11 min), 15-01 (2 min), 15.1-01 (5 min)
-- Trend: Phase 15.1 in progress
+- Last 5 plans: 14-03 (11 min), 15-01 (2 min), 15.1-01 (5 min), 15.1-02 (6 min)
+- Trend: Phase 15.1 progressing steadily
 
 *Updated after each plan completion*
 
@@ -68,6 +68,7 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 13-02 | Separate Goal and Program into distinct wizards | Mock review revealed incorrect domain coupling; Goal = type + target weight + rate, Program = style + diet prefs |
 | 14-01 | Empty string default for gender with case-insensitive matching | CloudKit compatibility; unknown gender averages male/female BMR formulas |
 | 15-01 | Ring size 70pt with 6pt line width, consumed inside ring | Compact display fits 4 rings on iPhone SE, uses existing CircularProgressRing |
+| 15.1-02 | DispatchQueue 0.35s delay for sheet chaining | Minimal code change vs fullScreenCover(item:); ensures GoalWizard dismissal animation completes before ProgramWizard presents |
 
 ### Deferred Issues
 
@@ -91,6 +92,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-28T21:47:29Z
-Stopped at: Completed 15.1-01-PLAN.md
+Last session: 2025-12-28T22:09:49Z
+Stopped at: Completed 15.1-02-PLAN.md
 Resume file: None

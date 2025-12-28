@@ -84,7 +84,7 @@ Plans:
 
 Plans:
 - [x] 15.1-01: HealthKit Foundation - HealthKitService, Settings UI, Info.plist
-- [ ] 15.1-02: TDEE Integration - Wire TDEEService to ProgramWizard, fix race condition
+- [x] 15.1-02: TDEE Integration - Wire TDEEService to ProgramWizard, fix race condition
 - [ ] 15.1-03: Program Summary - Display calculated targets, E2E test stubs
 
 #### Phase 15.2: Program Style Implementation (INSERTED)
@@ -134,7 +134,7 @@ Phases execute in numeric order within each milestone.
 | 13. Goal Configuration Wizard | v0.3.0 | 2/2 | Complete | 2025-12-28 |
 | 14. Adaptive TDEE Engine | v0.3.0 | 3/3 | Complete | 2025-12-28 |
 | 15. Daily Tracking Dashboard | v0.3.0 | 1/1 | Complete | 2025-12-28 |
-| 15.1 Initial TDEE Integration | v0.3.0 | 1/3 | In progress | - |
+| 15.1 Initial TDEE Integration | v0.3.0 | 2/3 | In progress | - |
 | 15.2 Program Style Implementation | v0.3.0 | 0/? | Not started | - |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
