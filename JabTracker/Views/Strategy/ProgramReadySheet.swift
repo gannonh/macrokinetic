@@ -59,6 +59,8 @@ struct ProgramReadySheet: View {
 
     // MARK: - Weekly Macro Grid
 
+    private static let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+
     private var weeklyMacroGrid: some View {
         VStack(spacing: 0) {
             // Day headers
@@ -66,7 +68,7 @@ struct ProgramReadySheet: View {
                 Text("")
                     .frame(width: 30)
 
-                ForEach(["M", "T", "W", "T", "F", "S", "S"], id: \.self) { day in
+                ForEach(Array(Self.dayLabels.enumerated()), id: \.offset) { _, day in
                     Text(day)
                         .font(.caption2)
                         .fontWeight(.semibold)
@@ -127,7 +129,10 @@ struct ProgramReadySheet: View {
         color: Color,
         isPill: Bool
     ) -> some View {
-        HStack(spacing: 4) {
+        let macroName = macroDisplayName(for: label)
+        let valueText = "\(value)\(unit)"
+
+        return HStack(spacing: 4) {
             // Label column
             Text(label)
                 .font(.caption)
@@ -136,7 +141,7 @@ struct ProgramReadySheet: View {
                 .frame(width: 30, alignment: .leading)
 
             // 7 days with same value (Even distribution for Phase 15.1)
-            ForEach(0..<7, id: \.self) { _ in
+            ForEach(Array(Self.dayLabels.enumerated()), id: \.offset) { _, dayName in
                 ZStack {
                     if isPill {
                         Capsule()
@@ -146,15 +151,26 @@ struct ProgramReadySheet: View {
                             .fill(color.opacity(0.15))
                     }
 
-                    Text("\(value)\(unit)")
+                    Text(valueText)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(color)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: isPill ? 28 : 32)
+                .accessibilityLabel("\(dayName): \(value) \(macroName)")
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func macroDisplayName(for label: String) -> String {
+        switch label {
+        case "Cals": return "calories"
+        case "P": return "grams protein"
+        case "F": return "grams fat"
+        case "C": return "grams carbs"
+        default: return label
+        }
     }
 
     // MARK: - Calculation Explanation
@@ -250,29 +266,19 @@ struct ProgramReadySheet: View {
     }
 
     private func formatCalories(_ value: Double) -> String {
-        String(format: "%.0f kcal", value)
+        if value <= 0 {
+            return "Calculating..."
+        }
+        return String(format: "%.0f kcal", value)
     }
 
     // MARK: - Done Button
 
     private var doneButton: some View {
-        Button(
-            action: {
-                onDone()
-                dismiss()
-            },
-            label: {
-                Text("Done")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.accentColor)
-                    )
-            }
-        )
+        PrimaryButton(title: "Done") {
+            onDone()
+            dismiss()
+        }
         .accessibilityIdentifier("done-button")
     }
 }

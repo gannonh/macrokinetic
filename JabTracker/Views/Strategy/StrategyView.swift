@@ -9,6 +9,13 @@
 import SwiftData
 import SwiftUI
 
+// MARK: - Constants
+
+private enum SheetConstants {
+    /// Delay between chained sheet presentations to ensure smooth animations
+    static let chainedSheetDelay: TimeInterval = 0.35
+}
+
 // MARK: - Strategy View
 
 /// Main view for managing nutrition strategy (goals and programs)
@@ -58,7 +65,7 @@ struct StrategyView: View {
                     // Delay chained sheet presentation to ensure:
                     // 1. GoalWizard dismissal animation completes
                     // 2. createdGoal state propagates to child views
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
                         if isEditingGoal {
                             // Edit Goal flow → Show Program Summary
                             showingProgramSummary = true
@@ -81,7 +88,7 @@ struct StrategyView: View {
 
                     // Show Program Ready sheet for new Coached programs
                     if !isEditingProgram, goal.program?.style == .coached {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
                             showingProgramReady = true
                         }
                     } else {
@@ -91,14 +98,19 @@ struct StrategyView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingProgramReady) {
-            if let goal = createdGoal ?? users.first?.activeNutritionGoal {
-                ProgramReadySheet(goal: goal) {
-                    isEditingProgram = false
-                    createdGoal = nil
+        .sheet(
+            isPresented: $showingProgramReady,
+            onDismiss: {
+                // Clean up state when sheet is dismissed (via Done button or swipe)
+                isEditingProgram = false
+                createdGoal = nil
+            },
+            content: {
+                if let goal = createdGoal ?? users.first?.activeNutritionGoal {
+                    ProgramReadySheet(goal: goal) {}
                 }
             }
-        }
+        )
         .sheet(isPresented: $showingProgramSummary) {
             if let goal = createdGoal ?? users.first?.activeNutritionGoal,
                 let program = goal.program
