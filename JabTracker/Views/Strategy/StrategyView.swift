@@ -19,6 +19,7 @@ struct StrategyView: View {
     @State private var showingGoalWizard = false
     @State private var showingProgramWizard = false
     @State private var showingProgramSummary = false
+    @State private var showingProgramReady = false
     @State private var isEditingGoal = false
     @State private var isEditingProgram = false
     @State private var createdGoal: NutritionGoal?
@@ -77,6 +78,22 @@ struct StrategyView: View {
                     existingProgram: isEditingProgram ? goal.program : nil
                 ) {
                     showingProgramWizard = false
+
+                    // Show Program Ready sheet for new Coached programs
+                    if !isEditingProgram, goal.program?.style == .coached {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            showingProgramReady = true
+                        }
+                    } else {
+                        isEditingProgram = false
+                        createdGoal = nil
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingProgramReady) {
+            if let goal = createdGoal ?? users.first?.activeNutritionGoal {
+                ProgramReadySheet(goal: goal) {
                     isEditingProgram = false
                     createdGoal = nil
                 }

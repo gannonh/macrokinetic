@@ -372,6 +372,7 @@
 		C4ED1DFE1CB042935C7E34DE /* RescheduleDoseSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B31DE0C0D0ED5E7B59F06DE /* RescheduleDoseSheetTests.swift */; };
 		C58F9C3E622882A3CAB09EC5 /* SubscriptionUINetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7BDD01F8A8E4B98F73EDB4 /* SubscriptionUINetworkTests.swift */; };
 		C5B289EC33F6AA3464E07D3C /* DoseHistoryViewModelErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1B06AAB60967FA3C0B9B69 /* DoseHistoryViewModelErrorTests.swift */; };
+		C635E3B0A3853CA708E4F3C3 /* ProgramReadySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79859B423B900312AAA431D2 /* ProgramReadySheet.swift */; };
 		C747F7E9786071C9222263C5 /* ErrorAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2940A898D3A820BB36E320C4 /* ErrorAlertModifier.swift */; };
 		C83EC5EB4591A1F7C387EA58 /* TDEECalculationEngine+Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D648F0B29707CC8E563B4003 /* TDEECalculationEngine+Validation.swift */; };
 		C973ADE77CA780B351B507F4 /* QuickDoseEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F473B4ACD616736B51CFBE /* QuickDoseEntryTests.swift */; };
@@ -450,6 +451,7 @@
 		EAC3462E3FC281C2D8B170F6 /* UnitsOfMeasureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76642EFC47CC4850D74DBA12 /* UnitsOfMeasureView.swift */; };
 		EB5981E0798CF268F488281F /* ChartDataEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D51E304C8E3F02B581E6570 /* ChartDataEnums.swift */; };
 		EBC736A79E9EF990422F7BEB /* SubscriptionUITermsPrivacyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98447312C9BA4AA09459C90B /* SubscriptionUITermsPrivacyTests.swift */; };
+		EC1325BC4A1E7FC206AD1327 /* ProgramReadySheetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68241EADED57FDF499D7011 /* ProgramReadySheetUITests.swift */; };
 		ECAB08E4BB141CEF2A7100B4 /* UserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FB6D909C39DB0BF6399824 /* UserTests.swift */; };
 		ED3200EBCF17BA8E5B44A2A6 /* StrategyViewUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEAD2D2EBA629B6069CF0FE /* StrategyViewUITests.swift */; };
 		ED3F4D347AD7DF4AD8CBC9E0 /* FoodSearchSheetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D0DAEAAE5AC89EDCB6ED24 /* FoodSearchSheetViewModel.swift */; };
@@ -753,6 +755,7 @@
 		78475804BE3FA10B539F70D5 /* Dose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dose.swift; sourceTree = "<group>"; };
 		7960D0186DBE4671EC6B18AF /* MedicationProfileCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileCalculatorUITests.swift; sourceTree = "<group>"; };
 		797DA89486FFE995221D6609 /* SubscriptionManager+Testing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SubscriptionManager+Testing.swift"; sourceTree = "<group>"; };
+		79859B423B900312AAA431D2 /* ProgramReadySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramReadySheet.swift; sourceTree = "<group>"; };
 		79BCDD0B3705821DEA51F9BC /* FoodDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDetailSheet.swift; sourceTree = "<group>"; };
 		7AB602E699FA04416237C321 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7AC3FBCB52A8904067EE9B0A /* WeightServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightServiceTests.swift; sourceTree = "<group>"; };
@@ -856,6 +859,7 @@
 		B5E4377CE09B893651E0CA29 /* ChartDataProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataProcessor.swift; sourceTree = "<group>"; };
 		B646DFE39FF9073CB28E972A /* ChartExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartExportView.swift; sourceTree = "<group>"; };
 		B64F0B00ED2C1D0738CE9FF5 /* MedicationProfileScheduleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileScheduleUITests.swift; sourceTree = "<group>"; };
+		B68241EADED57FDF499D7011 /* ProgramReadySheetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramReadySheetUITests.swift; sourceTree = "<group>"; };
 		B6BF07DD02813C719A348BA0 /* ConcentrationCurvePreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationCurvePreviewTests.swift; sourceTree = "<group>"; };
 		B8263198848FEF424A3543CD /* ChartDatasetCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDatasetCache.swift; sourceTree = "<group>"; };
 		B82B2B82577F66F242DB7E33 /* SchedulePatternPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulePatternPicker.swift; sourceTree = "<group>"; };
@@ -1373,6 +1377,7 @@
 		7B12130637A89D18EEB1FC70 /* Strategy */ = {
 			isa = PBXGroup;
 			children = (
+				79859B423B900312AAA431D2 /* ProgramReadySheet.swift */,
 				BF83A469D02EA8A53F1657B8 /* ProgramSummarySheet.swift */,
 				691036959E1EDCE3A69E8E44 /* StrategyView.swift */,
 			);
@@ -1848,6 +1853,7 @@
 				CE2E4DCF3A284F0E06D02ADC /* OnboardingScheduleSetupUITests.swift */,
 				FAC5025DB7552ECF121A4C89 /* OnboardingUITests.swift */,
 				8245E14253AE60C255187224 /* PKEngineUITests.swift */,
+				B68241EADED57FDF499D7011 /* ProgramReadySheetUITests.swift */,
 				620A62A1FE3AA4F964C05946 /* ProgramSummarySheetUITests.swift */,
 				B39424A55372AC94E9F8231E /* ProgramWizardUITests.swift */,
 				DD80A84700BF23D039F95AD2 /* QuickAddUITests.swift */,
@@ -2141,6 +2147,7 @@
 				A056E6E8830AE886F0B25D44 /* OnboardingScheduleSetupUITests.swift in Sources */,
 				1165999CC86E5304AEDFBF10 /* OnboardingUITests.swift in Sources */,
 				74E6DC7E13C647A9AAE7F362 /* PKEngineUITests.swift in Sources */,
+				EC1325BC4A1E7FC206AD1327 /* ProgramReadySheetUITests.swift in Sources */,
 				9C3F026C487546E098FA9EE2 /* ProgramSummarySheetUITests.swift in Sources */,
 				B3BD0704DF517776D13D741A /* ProgramWizardUITests.swift in Sources */,
 				29EE31A9252020E91F81DD5D /* QuickAddUITests.swift in Sources */,
@@ -2517,6 +2524,7 @@
 				E80350DFF681490AF7CEDAA8 /* ProfileField.swift in Sources */,
 				86BFBEB2E2BE5AEC1807DE71 /* ProfileValidation.swift in Sources */,
 				917B2011DC8EE93C9A8F2564 /* ProgramConfiguration.swift in Sources */,
+				C635E3B0A3853CA708E4F3C3 /* ProgramReadySheet.swift in Sources */,
 				D13BD68D456BABC603688447 /* ProgramSummarySheet.swift in Sources */,
 				D19752FA0878611CB7C56F41 /* ProgramWizard.swift in Sources */,
 				9C467F89F2B5E390969F6E59 /* ProgressPhoto.swift in Sources */,
