@@ -136,9 +136,11 @@ final class User {
 
 extension User {
     /// Calculated age from dateOfBirth
-    /// Returns nil if dateOfBirth is not set
+    /// Returns nil if dateOfBirth is not set or if birth date is in the future
     var age: Int? {
         guard let dateOfBirth else { return nil }
+        // Guard against future birth dates (data corruption protection)
+        guard dateOfBirth <= Date() else { return nil }
         return Calendar.current.dateComponents([.year], from: dateOfBirth, to: Date()).year
     }
 

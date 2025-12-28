@@ -15,6 +15,25 @@ import Testing
 @Suite("TDEECalculationEngine Tests")
 struct TDEECalculationEngineTests {
 
+    // MARK: - Test Helpers
+
+    /// Standard test parameters for a male subject (BMR = 1617.5)
+    private static let standardMaleParams = (weightKg: 70.0, heightCm: 170.0, age: 30, gender: "male")
+
+    /// Calculate TDEE with standard male parameters and specified training level
+    private func calculateTDEEWithStandardParams(
+        engine: TDEECalculationEngine,
+        trainingLevel: TrainingLevel
+    ) -> Double {
+        engine.calculateInitialTDEE(
+            weightKg: Self.standardMaleParams.weightKg,
+            heightCm: Self.standardMaleParams.heightCm,
+            age: Self.standardMaleParams.age,
+            gender: Self.standardMaleParams.gender,
+            trainingLevel: trainingLevel
+        )
+    }
+
     // MARK: - BMR Calculation Tests (Mifflin-St Jeor Formula)
 
     @Test("calculateBMR for male returns correct value (80kg, 180cm, 30yo)")
@@ -270,44 +289,88 @@ struct TDEECalculationEngineTests {
     func testCalculateInitialTDEEAllTrainingLevels() {
         // Given
         let engine = TDEECalculationEngine()
-        let baseParams = (weightKg: 70.0, heightCm: 170.0, age: 30, gender: "male")
-        // BMR = (10x70) + (6.25x170) - (5x30) + 5 = 700 + 1062.5 - 150 + 5 = 1617.5
+        // Using standard male params: BMR = 1617.5
 
         // When/Then - verify all training levels produce expected TDEE
-        let tdeeNone = engine.calculateInitialTDEE(
-            weightKg: baseParams.weightKg,
-            heightCm: baseParams.heightCm,
-            age: baseParams.age,
-            gender: baseParams.gender,
-            trainingLevel: .none
-        )
-        #expect(tdeeNone == 1617.5 * 1.2)  // 1941.0
+        #expect(calculateTDEEWithStandardParams(engine: engine, trainingLevel: .none) == 1617.5 * 1.2)
+        #expect(calculateTDEEWithStandardParams(engine: engine, trainingLevel: .lifting) == 1617.5 * 1.55)
+        #expect(calculateTDEEWithStandardParams(engine: engine, trainingLevel: .cardio) == 1617.5 * 1.55)
+        #expect(calculateTDEEWithStandardParams(engine: engine, trainingLevel: .cardioAndLifting) == 1617.5 * 1.725)
+    }
 
-        let tdeeLifting = engine.calculateInitialTDEE(
-            weightKg: baseParams.weightKg,
-            heightCm: baseParams.heightCm,
-            age: baseParams.age,
-            gender: baseParams.gender,
-            trainingLevel: .lifting
-        )
-        #expect(tdeeLifting == 1617.5 * 1.55)  // 2507.125
+    // MARK: - Input Validation Tests
 
-        let tdeeCardio = engine.calculateInitialTDEE(
-            weightKg: baseParams.weightKg,
-            heightCm: baseParams.heightCm,
-            age: baseParams.age,
-            gender: baseParams.gender,
-            trainingLevel: .cardio
-        )
-        #expect(tdeeCardio == 1617.5 * 1.55)  // 2507.125
+    @Test("calculateBMR returns 0 for negative weight")
+    @MainActor
+    func testCalculateBMRNegativeWeight() {
+        let engine = TDEECalculationEngine()
+        let bmr = engine.calculateBMR(weightKg: -80.0, heightCm: 180.0, age: 30, gender: "male")
+        #expect(bmr == 0)
+    }
 
-        let tdeeCardioAndLifting = engine.calculateInitialTDEE(
-            weightKg: baseParams.weightKg,
-            heightCm: baseParams.heightCm,
-            age: baseParams.age,
-            gender: baseParams.gender,
-            trainingLevel: .cardioAndLifting
+    @Test("calculateBMR returns 0 for zero height")
+    @MainActor
+    func testCalculateBMRZeroHeight() {
+        let engine = TDEECalculationEngine()
+        let bmr = engine.calculateBMR(weightKg: 80.0, heightCm: 0, age: 30, gender: "male")
+        #expect(bmr == 0)
+    }
+
+    @Test("calculateBMR returns 0 for zero age")
+    @MainActor
+    func testCalculateBMRZeroAge() {
+        let engine = TDEECalculationEngine()
+        let bmr = engine.calculateBMR(weightKg: 80.0, heightCm: 180.0, age: 0, gender: "male")
+        #expect(bmr == 0)
+    }
+
+    @Test("calculateBMR returns 0 for negative age")
+    @MainActor
+    func testCalculateBMRNegativeAge() {
+        let engine = TDEECalculationEngine()
+        let bmr = engine.calculateBMR(weightKg: 80.0, heightCm: 180.0, age: -5, gender: "male")
+        #expect(bmr == 0)
+    }
+
+    @Test("calculateInitialTDEE clamps activity multiplier below minimum")
+    @MainActor
+    func testCalculateInitialTDEEClampsLowMultiplier() {
+        // Given
+        let engine = TDEECalculationEngine()
+        // BMR for male 80kg, 180cm, 30yo = 1780
+        // Multiplier 0.5 should be clamped to 1.0
+
+        // When
+        let tdee = engine.calculateInitialTDEE(
+            weightKg: 80.0,
+            heightCm: 180.0,
+            age: 30,
+            gender: "male",
+            activityMultiplier: 0.5
         )
-        #expect(tdeeCardioAndLifting == 1617.5 * 1.725)  // 2790.1875
+
+        // Then - should use clamped multiplier of 1.0
+        #expect(tdee == 1780.0 * 1.0)
+    }
+
+    @Test("calculateInitialTDEE clamps activity multiplier above maximum")
+    @MainActor
+    func testCalculateInitialTDEEClampsHighMultiplier() {
+        // Given
+        let engine = TDEECalculationEngine()
+        // BMR for male 80kg, 180cm, 30yo = 1780
+        // Multiplier 5.0 should be clamped to 2.5
+
+        // When
+        let tdee = engine.calculateInitialTDEE(
+            weightKg: 80.0,
+            heightCm: 180.0,
+            age: 30,
+            gender: "male",
+            activityMultiplier: 5.0
+        )
+
+        // Then - should use clamped multiplier of 2.5
+        #expect(tdee == 1780.0 * 2.5)
     }
 }

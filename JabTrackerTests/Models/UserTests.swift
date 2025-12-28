@@ -53,7 +53,7 @@ struct UserHeightGenderAgeTests {
     func testHeightCmDefaultsToNil() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         // When
         let user = User()
@@ -69,7 +69,7 @@ struct UserHeightGenderAgeTests {
     func testHeightCmPersists() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         // When
         let user = User()
@@ -87,7 +87,7 @@ struct UserHeightGenderAgeTests {
     func testHeightCmInitialization() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         // When
         let user = User(heightCm: 165.5)
@@ -105,7 +105,7 @@ struct UserHeightGenderAgeTests {
     func testGenderDefaultsToEmptyString() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         // When
         let user = User()
@@ -121,7 +121,7 @@ struct UserHeightGenderAgeTests {
     func testGenderPersists() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         // When
         let user = User()
@@ -139,7 +139,7 @@ struct UserHeightGenderAgeTests {
     func testGenderInitialization() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         // When
         let user = User(gender: "female")
@@ -157,7 +157,7 @@ struct UserHeightGenderAgeTests {
     func testAgeReturnsNilWhenNoBirthDate() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         // When
         let user = User()
@@ -173,7 +173,7 @@ struct UserHeightGenderAgeTests {
     func testAgeCalculatesCorrectly() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         let calendar = Calendar.current
         // Set birth date to exactly 30 years ago
@@ -193,7 +193,7 @@ struct UserHeightGenderAgeTests {
     func testAgeCalculationsForDifferentAges() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         let calendar = Calendar.current
 
@@ -221,7 +221,7 @@ struct UserHeightGenderAgeTests {
     func testAgeHandlesBirthdayNotYetOccurred() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         let calendar = Calendar.current
         // Set birth date to 30 years ago plus 1 day (birthday hasn't happened yet)
@@ -237,6 +237,26 @@ struct UserHeightGenderAgeTests {
         #expect(user.age == 29)
     }
 
+    @Test("age returns nil for future birth date (data corruption protection)")
+    @MainActor
+    func testAgeReturnsNilForFutureBirthDate() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
+
+        let calendar = Calendar.current
+        // Set birth date to 1 year in the future (invalid data)
+        let futureDate = calendar.date(byAdding: .year, value: 1, to: Date())!
+
+        // When
+        let user = User()
+        user.dateOfBirth = futureDate
+        context.insert(user)
+
+        // Then - age should be nil for future birth dates (protects against data corruption)
+        #expect(user.age == nil)
+    }
+
     // MARK: - Combined Initialization Tests
 
     @Test("User can be initialized with all new TDEE-related fields")
@@ -244,7 +264,7 @@ struct UserHeightGenderAgeTests {
     func testFullTDEEFieldsInitialization() throws {
         // Given
         let (context, container) = createTestContext()
-        _ = container
+        _ = container  // Keep container alive - context becomes invalid if container deallocates
 
         let calendar = Calendar.current
         let birthDate = calendar.date(byAdding: .year, value: -35, to: Date())!
