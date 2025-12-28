@@ -75,7 +75,8 @@
           "Services/CustomFoodService.swift",
           "Services/WeightService.swift",
           "Services/MetricsService.swift",
-          "Services/ProgressPhotoService.swift"
+          "Services/ProgressPhotoService.swift",
+          "Services/TDEEService.swift"
         ]
       },
       "framework_integration": {
