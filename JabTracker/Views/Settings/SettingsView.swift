@@ -58,6 +58,36 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Health Integration Section
+                    DesignCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Health Integration")
+                                .font(DesignTokens.Typography.headline)
+                                .accessibilityIdentifier("health-integration-header")
+
+                            NavigationLink(destination: HealthIntegrationView()) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Profile & HealthKit")
+                                            .font(DesignTokens.Typography.body)
+                                            .foregroundColor(.primary)
+
+                                        Text("Manage profile data for calorie calculations")
+                                            .font(DesignTokens.Typography.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                }
+                            }
+                            .accessibilityIdentifier("health-integration-link")
+                        }
+                    }
+
                     // Subscription Status Section (added to support UI tests)
                     DesignCard {
                         VStack(alignment: .leading, spacing: 12) {

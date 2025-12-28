@@ -53,7 +53,7 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>MacroKinetic uses Face ID to securely protect your health data and ensure only you can access your nutrition and medication tracking information.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>MacroKinetic would like to read your weight data from Health to provide personalized nutrition tracking and insights.</string>
+	<string>MacroKinetic would like to read your height, weight, biological sex, and date of birth from Health to calculate your Total Daily Energy Expenditure (TDEE) for personalized calorie and macro targets.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>MacroKinetic would like to update your weight data in Health to keep your health records synchronized.</string>
 	<key>CFBundleURLTypes</key>

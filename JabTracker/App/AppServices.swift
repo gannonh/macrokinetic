@@ -37,6 +37,9 @@ final class AppServices: ObservableObject {
     /// Progress photo service for photo tracking
     @Published private(set) var progressPhotoService: ProgressPhotoService?
 
+    /// HealthKit service for reading biometric data
+    @Published private(set) var healthKitService: HealthKitService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -84,6 +87,10 @@ final class AppServices: ObservableObject {
         // Create ProgressPhotoService for photo tracking
         let progressPhotoService = ProgressPhotoService(context: modelContext)
         self.progressPhotoService = progressPhotoService
+
+        // Create HealthKitService for reading biometric data
+        let healthKitService = HealthKitService(context: modelContext)
+        self.healthKitService = healthKitService
     }
 
     /// Reset services (useful for testing or sign-out)
@@ -96,6 +103,7 @@ final class AppServices: ObservableObject {
         weightService = nil
         metricsService = nil
         progressPhotoService = nil
+        healthKitService = nil
     }
 }
 
