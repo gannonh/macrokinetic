@@ -8,9 +8,19 @@
 import XCTest
 
 final class NutritionDashboardUITests: XCTestCase {
+    var app: XCUIApplication!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        app = TestUtilities.launchAppWithTestMode(resetData: true)
+
+        // Wait for app to be ready
+        let tabBar = app.tabBars.element
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should appear after launch")
+    }
+
+    override func tearDownWithError() throws {
+        app = nil
     }
 
     // MARK: - Card Visibility
@@ -46,6 +56,14 @@ final class NutritionDashboardUITests: XCTestCase {
     /// User sees remaining amount below each ring
     /// Acceptance: "X left" or "+X over" text visible
     func testRemainingTextDisplayed() {
+        // TODO: Implement after manual smoke test
+    }
+
+    // MARK: - Error State
+
+    /// User sees error indicator when data fails to load
+    /// Acceptance: Error state with identifier "nutrition-error-state" displays
+    func testErrorStateDisplayed() {
         // TODO: Implement after manual smoke test
     }
 }
