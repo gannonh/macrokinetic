@@ -63,10 +63,10 @@ Plans:
 **Goal**: Progress rings for calories/macros, remaining vs consumed display, color coding for under/on-track/over
 **Depends on**: Phase 14
 **Research**: Unlikely (internal patterns - Swift Charts)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 15-01: TBD
+- [x] 15-01: Circular progress rings for NutritionSummaryCard with color thresholds
 
 #### Phase 16: Weekly Check-ins
 
@@ -98,7 +98,7 @@ Phases execute in numeric order within each milestone.
 | 12. Goal Data Model | v0.3.0 | 2/2 | Complete | 2025-12-27 |
 | 13. Goal Configuration Wizard | v0.3.0 | 2/2 | Complete | 2025-12-28 |
 | 14. Adaptive TDEE Engine | v0.3.0 | 3/3 | Complete | 2025-12-28 |
-| 15. Daily Tracking Dashboard | v0.3.0 | 0/? | Not started | - |
+| 15. Daily Tracking Dashboard | v0.3.0 | 1/1 | Complete | 2025-12-28 |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
 

@@ -2,13 +2,13 @@
 //  NutritionSummaryCard.swift
 //  JabTracker
 //
-//  Dashboard card showing daily nutrition progress.
+//  Dashboard card showing daily nutrition progress with circular progress rings.
 //
 
 import SwiftUI
 import os
 
-/// Dashboard card displaying daily macro progress vs goals
+/// Dashboard card displaying daily macro progress vs goals using circular progress rings
 struct NutritionSummaryCard: View {
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -37,91 +37,106 @@ struct NutritionSummaryCard: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                 } else {
-                    // Macro progress bars
-                    VStack(spacing: 10) {
-                        macroProgressRow(
+                    // Macro progress rings
+                    HStack(spacing: 16) {
+                        macroRing(
                             label: "Calories",
-                            current: totals.calories,
+                            consumed: totals.calories,
                             goal: user.dailyCalorieGoal,
-                            color: .orange,
+                            defaultColor: .orange,
                             unit: "kcal"
                         )
-
-                        macroProgressRow(
+                        macroRing(
                             label: "Protein",
-                            current: totals.protein,
+                            consumed: totals.protein,
                             goal: user.dailyProteinGoal,
-                            color: .red,
+                            defaultColor: .red,
                             unit: "g"
                         )
-
-                        macroProgressRow(
+                        macroRing(
                             label: "Carbs",
-                            current: totals.carbs,
+                            consumed: totals.carbs,
                             goal: user.dailyCarbGoal,
-                            color: .blue,
+                            defaultColor: .blue,
                             unit: "g"
                         )
-
-                        macroProgressRow(
+                        macroRing(
                             label: "Fat",
-                            current: totals.fat,
+                            consumed: totals.fat,
                             goal: user.dailyFatGoal,
-                            color: .yellow,
+                            defaultColor: .yellow,
                             unit: "g"
                         )
                     }
+                    .frame(maxWidth: .infinity)
                 }
             }
         }
-        .accessibilityIdentifier("nutrition-summary-card")
+        .accessibilityIdentifier("nutrition-rings-card")
         .task {
             await loadTotals()
         }
     }
 
-    private func macroProgressRow(
+    // MARK: - Macro Ring View Builder
+
+    @ViewBuilder
+    private func macroRing(
         label: String,
-        current: Double,
+        consumed: Double,
         goal: Double,
-        color: Color,
+        defaultColor: Color,
         unit: String
     ) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(label)
-                    .font(DesignTokens.Typography.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("\(Int(current))/\(Int(goal)) \(unit)")
-                    .font(DesignTokens.Typography.caption)
-                    .foregroundColor(.secondary)
-            }
+        let progress = progressPercentage(consumed: consumed, goal: goal)
+        let color = progressColor(for: progress, defaultColor: defaultColor)
 
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    // Background
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(color.opacity(0.2))
-                        .frame(height: 8)
+        VStack(spacing: 4) {
+            CircularProgressRing(
+                progress: progress,
+                label: label,
+                valueText: "\(Int(consumed))",
+                color: color,
+                lineWidth: 6,
+                size: 70
+            )
 
-                    // Progress
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(color)
-                        .frame(
-                            width: progressWidth(current: current, goal: goal, maxWidth: geometry.size.width), height: 8
-                        )
-                }
-            }
-            .frame(height: 8)
+            // Goal text below ring
+            Text("\(Int(goal)) \(unit)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            // Remaining/over text
+            Text(remainingText(consumed: consumed, goal: goal))
+                .font(.caption2)
+                .foregroundColor(progress > 1.0 ? .red : .secondary)
         }
-        .accessibilityIdentifier("macro-progress-\(label.lowercased())")
     }
 
-    private func progressWidth(current: Double, goal: Double, maxWidth: CGFloat) -> CGFloat {
+    // MARK: - Helper Functions
+
+    private func progressPercentage(consumed: Double, goal: Double) -> Double {
         guard goal > 0 else { return 0 }
-        let progress = min(current / goal, 1.0)
-        return maxWidth * progress
+        return consumed / goal
+    }
+
+    private func progressColor(for progress: Double, defaultColor: Color) -> Color {
+        if progress > 1.0 {
+            return .red
+        } else if progress >= 0.85 {
+            return defaultColor
+        } else {
+            return defaultColor.opacity(0.7)
+        }
+    }
+
+    private func remainingText(consumed: Double, goal: Double) -> String {
+        let remaining = goal - consumed
+        if remaining >= 0 {
+            return "\(Int(remaining)) left"
+        } else {
+            return "+\(Int(abs(remaining))) over"
+        }
     }
 
     private func loadTotals() async {
