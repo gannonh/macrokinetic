@@ -67,6 +67,8 @@ struct TDEEServiceIntegrationTests {
         }
     }
 
+    // Note: This helper creates one FoodEntry per day with caloriesPer100g = dailyCalories
+    // and servingGrams = 100, so each entry's calories = dailyCalories (100g * dailyCalories/100g)
     @MainActor
     func seedFoodData(days: Int, dailyCalories: Double, in context: ModelContext) {
         for day in 0..<days {
@@ -134,7 +136,7 @@ struct TDEEServiceIntegrationTests {
 
         // Calculate adaptive TDEE
         let service = TDEEService(context: context)
-        let result = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
 
         // Expected: TDEE = 2000 - (weightChange * 7700 / days)
         // weightChange = -2.0 kg (0.5 kg/week * 4 weeks)
@@ -163,7 +165,7 @@ struct TDEEServiceIntegrationTests {
 
         // Calculate adaptive TDEE
         let service = TDEEService(context: context)
-        let result = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
 
         // Expected: TDEE = 2800 - (weightChange * 7700 / days)
         // weightChange = +1.0 kg (0.25 kg/week * 4 weeks)
@@ -190,7 +192,7 @@ struct TDEEServiceIntegrationTests {
         try context.save()
 
         let service = TDEEService(context: context)
-        let result = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
 
         // Should detect metabolic adaptation (actual TDEE ~1800 vs expected 2500)
         #expect(result.hasMetabolicAdaptation)
@@ -262,9 +264,9 @@ struct TDEEServiceIntegrationTests {
         #expect(service.shouldRecalculateTDEE(goal: goal))
 
         // Step 4: Calculate adaptive TDEE
-        let result = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
         #expect(result.tdee > 0)
-        #expect(result.daysAnalyzed == 28)
+        #expect(result.daysWithData == 28)
 
         // Step 5: Update goal
         try service.updateGoalWithAdaptiveTDEE(goal: goal, result: result)
@@ -291,7 +293,7 @@ struct TDEEServiceIntegrationTests {
         try context.save()
 
         let service = TDEEService(context: context)
-        let result = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
 
         // Should have high confidence with 28 days and 100% consistency
         #expect(result.confidence > 0.7)

@@ -154,7 +154,7 @@ struct TDEEServiceTests {
         let service = TDEEService(context: context)
 
         // When/Then
-        await #expect(throws: TDEEService.TDEEServiceError.self) {
+        await #expect(throws: TDEEServiceError.self) {
             try await service.calculateInitialTDEE(for: user, goal: goal)
         }
     }
@@ -181,7 +181,7 @@ struct TDEEServiceTests {
         let service = TDEEService(context: context)
 
         // When/Then
-        await #expect(throws: TDEEService.TDEEServiceError.self) {
+        await #expect(throws: TDEEServiceError.self) {
             try await service.calculateInitialTDEE(for: user, goal: goal)
         }
     }
@@ -201,7 +201,7 @@ struct TDEEServiceTests {
         let service = TDEEService(context: context)
 
         // When/Then
-        await #expect(throws: TDEEService.TDEEServiceError.self) {
+        await #expect(throws: TDEEServiceError.self) {
             try await service.calculateInitialTDEE(for: user, goal: goal)
         }
     }
@@ -247,6 +247,8 @@ struct TDEEServiceTests {
 
     @MainActor
     func seedFoodData(days: Int, dailyCalories: Double, in context: ModelContext) {
+        // Note: caloriesPer100g = dailyCalories with servingGrams = 100
+        // means each entry has dailyCalories total (100g * dailyCalories/100g)
         for day in 0..<days {
             let date = Calendar.current.date(byAdding: .day, value: -days + day + 1, to: Date())!
             let entry = FoodEntry(
@@ -282,11 +284,11 @@ struct TDEEServiceTests {
         let service = TDEEService(context: context)
 
         // When
-        let result = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
 
         // Then
         #expect(result.tdee > 0)
-        #expect(result.daysAnalyzed == 28)
+        #expect(result.daysWithData == 28)
     }
 
     @Test("calculateAdaptiveTDEE throws if insufficient weight data")
@@ -307,8 +309,8 @@ struct TDEEServiceTests {
         let service = TDEEService(context: context)
 
         // When/Then
-        await #expect(throws: TDEEService.TDEEServiceError.self) {
-            _ = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        await #expect(throws: TDEEServiceError.self) {
+            _ = try await service.calculateAdaptiveTDEE(goal: goal)
         }
     }
 
@@ -330,8 +332,8 @@ struct TDEEServiceTests {
         let service = TDEEService(context: context)
 
         // When/Then
-        await #expect(throws: TDEEService.TDEEServiceError.self) {
-            _ = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        await #expect(throws: TDEEServiceError.self) {
+            _ = try await service.calculateAdaptiveTDEE(goal: goal)
         }
     }
 
@@ -351,7 +353,7 @@ struct TDEEServiceTests {
         try context.save()
 
         let service = TDEEService(context: context)
-        let result = try await service.calculateAdaptiveTDEE(for: user, goal: goal)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
 
         // When
         try service.updateGoalWithAdaptiveTDEE(goal: goal, result: result)

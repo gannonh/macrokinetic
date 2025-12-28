@@ -7,33 +7,96 @@
 //
 
 import Foundation
+import OSLog
 import SwiftData
-import os
 
-/// Orchestrates TDEE calculation and persistence
+// MARK: - Types
+
+/// Result of adaptive TDEE calculation
+struct AdaptiveTDEEResult {
+    let tdee: Double
+    let confidence: Double
+    let weightChangeRateKgPerWeek: Double
+    let averageDailyIntake: Double
+    let daysWithData: Int
+    let hasMetabolicAdaptation: Bool
+
+    var isHighConfidence: Bool { confidence >= 0.7 }
+}
+
+/// Errors that can occur during TDEE calculation
+enum TDEEServiceError: LocalizedError {
+    case missingUserData(String)
+    case invalidUserData(String)
+    case noWeightData
+    case insufficientWeightData(required: Int, actual: Int)
+    case insufficientFoodData(consistency: Double)
+    case cannotDetermineWeightTrend
+    case calculationFailed
+    case dateCalculationFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .missingUserData(let field):
+            return "Please add your \(field) in Settings to calculate TDEE."
+        case .invalidUserData(let field):
+            return "Please check your \(field) value in Settings."
+        case .noWeightData:
+            return "Please log your weight to calculate TDEE."
+        case .insufficientWeightData(let required, let actual):
+            return "Need at least \(required) days of weight data. You have \(actual) days."
+        case .insufficientFoodData(let consistency):
+            return "Need to log food on at least 70% of days. Current: \(Int(consistency * 100))%."
+        case .cannotDetermineWeightTrend:
+            return "Cannot determine weight trend from available data."
+        case .calculationFailed:
+            return "TDEE calculation failed. Please check your data."
+        case .dateCalculationFailed:
+            return "Unable to calculate date range. Please try again."
+        }
+    }
+}
+
+// MARK: - TDEEService
+
+/// Orchestrates TDEE calculation and persistence.
+/// Coordinates WeightService, MealLogService, and TDEECalculationEngine
+/// to calculate initial and adaptive TDEE values, updating NutritionGoal.
 @MainActor
-@Observable
 final class TDEEService {
 
     // MARK: - Properties
 
     private let context: ModelContext
     private let engine: TDEECalculationEngine
-    private let logger = Logger(
+    private let weightService: WeightService
+
+    private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "TDEEService"
     )
 
-    // Configuration
-    var ewmaAlpha: Double = 0.2
-    var minimumDaysForAdaptive: Int = 14
-    var minimumConsistencyForAdaptive: Double = 0.7
+    // Configuration (immutable after initialization)
+    let ewmaAlpha: Double
+    let minimumDaysForAdaptive: Int
+    let minimumConsistencyForAdaptive: Double
 
     // MARK: - Initialization
 
-    init(context: ModelContext, engine: TDEECalculationEngine = TDEECalculationEngine()) {
+    init(
+        context: ModelContext,
+        engine: TDEECalculationEngine = TDEECalculationEngine(),
+        weightService: WeightService? = nil,
+        ewmaAlpha: Double = 0.2,
+        minimumDaysForAdaptive: Int = 14,
+        minimumConsistencyForAdaptive: Double = 0.7
+    ) {
         self.context = context
         self.engine = engine
+        self.weightService = weightService ?? WeightService(context: context)
+        self.ewmaAlpha = ewmaAlpha
+        self.minimumDaysForAdaptive = minimumDaysForAdaptive
+        self.minimumConsistencyForAdaptive = minimumConsistencyForAdaptive
     }
 
     // MARK: - Initial TDEE
@@ -42,14 +105,17 @@ final class TDEEService {
     /// - Parameters:
     ///   - user: User with profile data (height, gender, dateOfBirth)
     ///   - goal: NutritionGoal to update
-    /// - Throws: TDEEServiceError if required data is missing
+    /// - Throws: TDEEServiceError if required data is missing or invalid
     func calculateInitialTDEE(
         for user: User,
         goal: NutritionGoal
     ) async throws {
         // Validate user data
-        guard let heightCm = user.heightCm, heightCm > 0 else {
+        guard let heightCm = user.heightCm else {
             throw TDEEServiceError.missingUserData("height")
+        }
+        guard heightCm > 0 else {
+            throw TDEEServiceError.invalidUserData("height")
         }
         guard let age = user.age else {
             throw TDEEServiceError.missingUserData("date of birth")
@@ -59,7 +125,6 @@ final class TDEEService {
         let trainingLevel = goal.program?.training ?? .none
 
         // Get current weight
-        let weightService = WeightService(context: context)
         guard let latestWeight = try await weightService.getLatestEntry() else {
             throw TDEEServiceError.noWeightData
         }
@@ -87,8 +152,8 @@ final class TDEEService {
 
         try context.save()
 
-        logger.info(
-            "Initial TDEE calculated: \(Int(tdee)) kcal/day for user with training level \(trainingLevel.displayName)"
+        Self.logger.debug(
+            "Initial TDEE calculated: \(Int(tdee)) kcal/day for training level \(trainingLevel.displayName)"
         )
     }
 }
@@ -97,32 +162,17 @@ final class TDEEService {
 
 extension TDEEService {
 
-    /// Result of adaptive TDEE calculation
-    struct AdaptiveTDEEResult {
-        let tdee: Double
-        let confidence: Double
-        let weightChangeRateKgPerWeek: Double
-        let averageDailyIntake: Double
-        let daysAnalyzed: Int
-        let daysWithData: Int
-        let hasMetabolicAdaptation: Bool
-
-        var isHighConfidence: Bool { confidence >= 0.7 }
-    }
-
     /// Calculate adaptive TDEE from historical data
     /// - Parameters:
-    ///   - user: User for context
     ///   - goal: NutritionGoal with initial TDEE estimate
     ///   - lookbackDays: Number of days to analyze (default 28)
     /// - Returns: AdaptiveTDEEResult with calculated values
     /// - Throws: TDEEServiceError if insufficient data
     func calculateAdaptiveTDEE(
-        for user: User,
         goal: NutritionGoal,
         lookbackDays: Int = 28
     ) async throws -> AdaptiveTDEEResult {
-        let (startDate, endDate) = getDateRange(lookbackDays: lookbackDays)
+        let (startDate, endDate) = try getDateRange(lookbackDays: lookbackDays)
 
         // Get and validate weight data
         let (smoothedWeights, changeRate) = try await getWeightTrendData(
@@ -154,7 +204,7 @@ extension TDEEService {
             expectedTDEE: expectedTDEE
         )
 
-        logger.info(
+        Self.logger.debug(
             "Adaptive TDEE: \(Int(tdee)) kcal, confidence: \(Int(confidence * 100))%"
         )
 
@@ -163,7 +213,6 @@ extension TDEEService {
             confidence: confidence,
             weightChangeRateKgPerWeek: changeRate,
             averageDailyIntake: averageDailyIntake,
-            daysAnalyzed: lookbackDays,
             daysWithData: uniqueDaysWithFood,
             hasMetabolicAdaptation: hasMetabolicAdaptation
         )
@@ -182,7 +231,7 @@ extension TDEEService {
 
         try context.save()
 
-        logger.info("Goal updated with adaptive TDEE: \(Int(result.tdee)) kcal/day")
+        Self.logger.debug("Goal updated with adaptive TDEE: \(Int(result.tdee)) kcal/day")
     }
 
     /// Check if TDEE should be recalculated (weekly)
@@ -202,17 +251,21 @@ extension TDEEService {
 
         return daysSinceLastCalc >= 7
     }
+}
 
-    // MARK: - Private Helpers
+// MARK: - Private Helpers
 
-    private func getDateRange(lookbackDays: Int) -> (start: Date, end: Date) {
+extension TDEEService {
+
+    private func getDateRange(lookbackDays: Int) throws -> (start: Date, end: Date) {
         let endDate = Date()
         guard
             let startDate = Calendar.current.date(
                 byAdding: .day, value: -lookbackDays, to: endDate
             )
         else {
-            return (endDate, endDate)
+            Self.logger.error("Failed to calculate date range for \(lookbackDays) days lookback")
+            throw TDEEServiceError.dateCalculationFailed
         }
         return (startDate, endDate)
     }
@@ -221,7 +274,6 @@ extension TDEEService {
         from startDate: Date,
         to endDate: Date
     ) async throws -> (smoothed: [(date: Date, smoothedWeight: Double)], changeRate: Double) {
-        let weightService = WeightService(context: context)
         let weightEntries = try await weightService.getEntries(from: startDate, to: endDate)
 
         guard weightEntries.count >= minimumDaysForAdaptive else {
@@ -241,7 +293,8 @@ extension TDEEService {
         let changeRate: Double
         do {
             changeRate = try engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
-        } catch {
+        } catch let underlyingError {
+            Self.logger.error("Weight trend calculation failed: \(underlyingError.localizedDescription)")
             throw TDEEServiceError.cannotDetermineWeightTrend
         }
 
@@ -267,7 +320,12 @@ extension TDEEService {
         }
 
         let totalCalories = foodEntries.reduce(0.0) { $0 + $1.calories }
-        let averageDailyIntake = totalCalories / Double(lookbackDays)
+        // Calculate average based on days with data, not total lookback days
+        // This gives accurate per-day intake for TDEE calculation
+        let averageDailyIntake =
+            uniqueDaysWithFood > 0
+            ? totalCalories / Double(uniqueDaysWithFood)
+            : 0.0
 
         return (averageDailyIntake, uniqueDaysWithFood)
     }
@@ -291,7 +349,8 @@ extension TDEEService {
                 weightChangeKg: weightChangeKg,
                 durationDays: lookbackDays
             )
-        } catch {
+        } catch let underlyingError {
+            Self.logger.error("Adaptive TDEE calculation failed: \(underlyingError.localizedDescription)")
             throw TDEEServiceError.calculationFailed
         }
     }
@@ -306,36 +365,5 @@ extension TDEEService {
         )
 
         return try context.fetch(descriptor)
-    }
-}
-
-// MARK: - Errors
-
-extension TDEEService {
-
-    enum TDEEServiceError: LocalizedError {
-        case missingUserData(String)
-        case noWeightData
-        case insufficientWeightData(required: Int, actual: Int)
-        case insufficientFoodData(consistency: Double)
-        case cannotDetermineWeightTrend
-        case calculationFailed
-
-        var errorDescription: String? {
-            switch self {
-            case .missingUserData(let field):
-                return "Please add your \(field) in Settings to calculate TDEE."
-            case .noWeightData:
-                return "Please log your weight to calculate TDEE."
-            case .insufficientWeightData(let required, let actual):
-                return "Need at least \(required) days of weight data. You have \(actual) days."
-            case .insufficientFoodData(let consistency):
-                return "Need to log food on at least 70% of days. Current: \(Int(consistency * 100))%."
-            case .cannotDetermineWeightTrend:
-                return "Cannot determine weight trend from available data."
-            case .calculationFailed:
-                return "TDEE calculation failed. Please check your data."
-            }
-        }
     }
 }
