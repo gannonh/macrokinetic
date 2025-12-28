@@ -6,8 +6,27 @@
 //
 
 import Foundation
+import os
 
 extension TDEECalculationEngine {
+
+    // MARK: - Constants
+
+    /// Calories per kilogram of body weight change (1 lb fat ≈ 3500 kcal, metric conversion)
+    private static let caloriesPerKgBodyWeight: Double = 7700
+
+    /// Days at which duration confidence factor reaches maximum (1.0)
+    private static let maxConfidenceDurationDays: Double = 28.0
+
+    /// Weight change rate (kg/week) at which trend clarity factor reaches maximum
+    private static let maxConfidenceWeightChangeRate: Double = 0.5
+
+    // MARK: - Logging
+
+    private static let adaptiveLogger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "TDEECalculationEngine.Adaptive"
+    )
 
     // MARK: - Adaptive TDEE Calculations
 
@@ -23,22 +42,36 @@ extension TDEECalculationEngine {
     ///   - averageDailyIntake: Average calories consumed per day
     ///   - weightChangeKg: Total weight change in kg (negative = loss, positive = gain)
     ///   - durationDays: Number of days in the analysis period
-    /// - Returns: Calculated TDEE, or nil if parameters invalid
+    /// - Returns: Calculated TDEE
+    /// - Throws: ValidationError if inputs are invalid
     func calculateAdaptiveTDEE(
         averageDailyIntake: Double,
         weightChangeKg: Double,
         durationDays: Int
-    ) -> Double? {
-        guard durationDays > 0, averageDailyIntake > 0 else { return nil }
+    ) throws -> Double {
+        try validateAdaptiveTDEEInputs(averageDailyIntake: averageDailyIntake, durationDays: durationDays)
 
-        // 1 kg body weight = 7700 calories
-        let caloriesFromWeightChange = weightChangeKg * 7700
+        let caloriesFromWeightChange = weightChangeKg * Self.caloriesPerKgBodyWeight
         let dailyCalorieChange = caloriesFromWeightChange / Double(durationDays)
 
         // TDEE = intake - (weightChange * 7700 / days)
         // If weightChange is negative (loss), this adds to intake (TDEE > intake)
         // If weightChange is positive (gain), this subtracts from intake (TDEE < intake)
         let tdee = averageDailyIntake - dailyCalorieChange
+
+        Self.adaptiveLogger.debug(
+            """
+            Adaptive TDEE: intake=\(averageDailyIntake, format: .fixed(precision: 0)), \
+            weightΔ=\(weightChangeKg, format: .fixed(precision: 2))kg, \
+            days=\(durationDays) → TDEE=\(tdee, format: .fixed(precision: 0))
+            """
+        )
+
+        if !isReasonableTDEE(tdee) {
+            Self.adaptiveLogger.warning(
+                "Adaptive TDEE calculation resulted in unreasonable value: \(tdee, format: .fixed(precision: 0)) kcal"
+            )
+        }
 
         return tdee
     }
@@ -51,13 +84,13 @@ extension TDEECalculationEngine {
         weightChangeRateKgPerWeek: Double
     ) -> Double {
         // Duration factor (0-1): 14 days = 0.5, 28+ days = 1.0
-        let durationFactor = min(Double(durationDays) / 28.0, 1.0)
+        let durationFactor = min(Double(durationDays) / Self.maxConfidenceDurationDays, 1.0)
 
         // Consistency factor (0-1): % of days with logged data
         let consistencyFactor = Double(daysWithData) / Double(max(durationDays, 1))
 
         // Trend clarity factor (0-1): abs(rate) > 0.5 kg/week = high confidence
-        let trendClarityFactor = min(abs(weightChangeRateKgPerWeek) / 0.5, 1.0)
+        let trendClarityFactor = min(abs(weightChangeRateKgPerWeek) / Self.maxConfidenceWeightChangeRate, 1.0)
 
         // Weighted average (consistency most important for accuracy)
         let confidence = (durationFactor * 0.3 + consistencyFactor * 0.5 + trendClarityFactor * 0.2)

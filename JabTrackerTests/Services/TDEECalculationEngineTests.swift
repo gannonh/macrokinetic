@@ -37,7 +37,6 @@ struct TDEECalculationEngineTests {
     // MARK: - BMR Calculation Tests (Mifflin-St Jeor Formula)
 
     @Test("calculateBMR for male returns correct value (80kg, 180cm, 30yo)")
-    @MainActor
     func testCalculateBMRMale() {
         // Given
         // Mifflin-St Jeor for male: BMR = (10 x weight) + (6.25 x height) - (5 x age) + 5
@@ -58,7 +57,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateBMR for female returns correct value (60kg, 165cm, 25yo)")
-    @MainActor
     func testCalculateBMRFemale() {
         // Given
         // Mifflin-St Jeor for female: BMR = (10 x weight) + (6.25 x height) - (5 x age) - 161
@@ -79,7 +77,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateBMR accepts lowercase and abbreviated gender values")
-    @MainActor
     func testCalculateBMRGenderVariants() {
         // Given
         let engine = TDEECalculationEngine()
@@ -113,7 +110,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateBMR with unknown gender returns average of male/female formulas")
-    @MainActor
     func testCalculateBMRUnknownGender() {
         // Given
         // For unknown gender, use average: baseBMR - 78 (midpoint between +5 and -161)
@@ -136,7 +132,6 @@ struct TDEECalculationEngineTests {
     // MARK: - Initial TDEE Calculation Tests
 
     @Test("calculateInitialTDEE applies activity multiplier correctly")
-    @MainActor
     func testCalculateInitialTDEEWithMultiplier() {
         // Given
         // BMR for male 80kg, 180cm, 30yo = 1780
@@ -157,7 +152,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateInitialTDEE with sedentary multiplier (1.2)")
-    @MainActor
     func testCalculateInitialTDEESedentary() {
         // Given
         // BMR for male 80kg, 180cm, 30yo = 1780
@@ -178,7 +172,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateInitialTDEE with TrainingLevel.cardioAndLifting (very active)")
-    @MainActor
     func testCalculateInitialTDEEWithTrainingLevel() {
         // Given
         // BMR for male 80kg, 180cm, 30yo = 1780
@@ -200,7 +193,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateInitialTDEE with TrainingLevel.none (sedentary)")
-    @MainActor
     func testCalculateInitialTDEEWithTrainingLevelNone() {
         // Given
         // BMR for female 60kg, 165cm, 25yo = 1345.25
@@ -222,7 +214,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateInitialTDEE with TrainingLevel.lifting")
-    @MainActor
     func testCalculateInitialTDEEWithTrainingLevelLifting() {
         // Given
         // BMR for male 75kg, 175cm, 28yo = (10x75) + (6.25x175) - (5x28) + 5
@@ -247,7 +238,6 @@ struct TDEECalculationEngineTests {
     // MARK: - Edge Case Tests
 
     @Test("calculateBMR with minimum valid inputs")
-    @MainActor
     func testCalculateBMRMinimumInputs() {
         // Given - minimum reasonable values
         let engine = TDEECalculationEngine()
@@ -266,7 +256,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateBMR with maximum valid inputs")
-    @MainActor
     func testCalculateBMRMaximumInputs() {
         // Given - maximum reasonable values
         let engine = TDEECalculationEngine()
@@ -285,7 +274,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateInitialTDEE with all training levels")
-    @MainActor
     func testCalculateInitialTDEEAllTrainingLevels() {
         // Given
         let engine = TDEECalculationEngine()
@@ -301,7 +289,6 @@ struct TDEECalculationEngineTests {
     // MARK: - Input Validation Tests
 
     @Test("calculateBMR returns 0 for negative weight")
-    @MainActor
     func testCalculateBMRNegativeWeight() {
         let engine = TDEECalculationEngine()
         let bmr = engine.calculateBMR(weightKg: -80.0, heightCm: 180.0, age: 30, gender: "male")
@@ -309,7 +296,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateBMR returns 0 for zero height")
-    @MainActor
     func testCalculateBMRZeroHeight() {
         let engine = TDEECalculationEngine()
         let bmr = engine.calculateBMR(weightKg: 80.0, heightCm: 0, age: 30, gender: "male")
@@ -317,7 +303,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateBMR returns 0 for zero age")
-    @MainActor
     func testCalculateBMRZeroAge() {
         let engine = TDEECalculationEngine()
         let bmr = engine.calculateBMR(weightKg: 80.0, heightCm: 180.0, age: 0, gender: "male")
@@ -325,7 +310,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateBMR returns 0 for negative age")
-    @MainActor
     func testCalculateBMRNegativeAge() {
         let engine = TDEECalculationEngine()
         let bmr = engine.calculateBMR(weightKg: 80.0, heightCm: 180.0, age: -5, gender: "male")
@@ -333,7 +317,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateInitialTDEE clamps activity multiplier below minimum")
-    @MainActor
     func testCalculateInitialTDEEClampsLowMultiplier() {
         // Given
         let engine = TDEECalculationEngine()
@@ -354,7 +337,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateInitialTDEE clamps activity multiplier above maximum")
-    @MainActor
     func testCalculateInitialTDEEClampsHighMultiplier() {
         // Given
         let engine = TDEECalculationEngine()
@@ -377,8 +359,7 @@ struct TDEECalculationEngineTests {
     // MARK: - EWMA Weight Smoothing Tests
 
     @Test("calculateEWMA smooths a simple 3-point series")
-    @MainActor
-    func testCalculateEWMASimpleSeries() {
+    func testCalculateEWMASimpleSeries() throws {
         // Given: 3 weights over 3 days
         let engine = TDEECalculationEngine()
         let baseDate = Date()
@@ -389,7 +370,7 @@ struct TDEECalculationEngineTests {
         ]
 
         // When
-        let smoothed = engine.calculateEWMA(weights: weights, alpha: 0.2)
+        let smoothed = try engine.calculateEWMA(weights: weights, alpha: 0.2)
 
         // Then: Should have 3 smoothed values
         #expect(smoothed.count == 3)
@@ -402,8 +383,7 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateEWMA reduces volatility from weight spike")
-    @MainActor
-    func testCalculateEWMAReducesVolatility() {
+    func testCalculateEWMAReducesVolatility() throws {
         // Given: Weight series with a spike at 82kg
         let engine = TDEECalculationEngine()
         let baseDate = Date()
@@ -416,7 +396,7 @@ struct TDEECalculationEngineTests {
         ]
 
         // When
-        let smoothed = engine.calculateEWMA(weights: weights, alpha: 0.2)
+        let smoothed = try engine.calculateEWMA(weights: weights, alpha: 0.2)
 
         // Then: The smoothed spike should be less than 82
         let spikeIndex = 2
@@ -425,8 +405,7 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateWeightChangeRate returns correct kg/week for weight loss")
-    @MainActor
-    func testCalculateWeightChangeRateWeightLoss() {
+    func testCalculateWeightChangeRateWeightLoss() throws {
         // Given: Lost 1kg over 14 days = 0.5 kg/week
         let engine = TDEECalculationEngine()
         let baseDate = Date()
@@ -437,16 +416,14 @@ struct TDEECalculationEngineTests {
         ]
 
         // When
-        let rate = engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
+        let rate = try engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
 
         // Then: -1 kg over 14 days = -0.5 kg/week
-        #expect(rate != nil)
-        #expect(abs(rate! - (-0.5)) < 0.01)
+        #expect(abs(rate - (-0.5)) < 0.01)
     }
 
     @Test("calculateWeightChangeRate returns correct kg/week for weight gain")
-    @MainActor
-    func testCalculateWeightChangeRateWeightGain() {
+    func testCalculateWeightChangeRateWeightGain() throws {
         // Given: Gained 0.7kg over 7 days = 0.7 kg/week
         let engine = TDEECalculationEngine()
         let baseDate = Date()
@@ -456,15 +433,13 @@ struct TDEECalculationEngineTests {
         ]
 
         // When
-        let rate = engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
+        let rate = try engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
 
         // Then: +0.7 kg over 7 days = +0.7 kg/week
-        #expect(rate != nil)
-        #expect(abs(rate! - 0.7) < 0.01)
+        #expect(abs(rate - 0.7) < 0.01)
     }
 
     @Test("isWeightPlateau returns true for small changes")
-    @MainActor
     func testIsWeightPlateauTrue() {
         // Given
         let engine = TDEECalculationEngine()
@@ -476,7 +451,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("isWeightPlateau returns false for significant changes")
-    @MainActor
     func testIsWeightPlateauFalse() {
         // Given
         let engine = TDEECalculationEngine()
@@ -487,23 +461,20 @@ struct TDEECalculationEngineTests {
         #expect(engine.isWeightPlateau(changeRateKgPerWeek: 0.1) == false)
     }
 
-    @Test("calculateEWMA returns empty array for empty input")
-    @MainActor
+    @Test("calculateEWMA throws for empty input")
     func testCalculateEWMAEmptyInput() {
         // Given
         let engine = TDEECalculationEngine()
         let weights: [(date: Date, weightKg: Double)] = []
 
-        // When
-        let smoothed = engine.calculateEWMA(weights: weights)
-
-        // Then
-        #expect(smoothed.isEmpty)
+        // When/Then: Empty array should throw insufficientData error
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.calculateEWMA(weights: weights)
+        }
     }
 
     @Test("calculateEWMA handles single entry")
-    @MainActor
-    func testCalculateEWMASingleEntry() {
+    func testCalculateEWMASingleEntry() throws {
         // Given
         let engine = TDEECalculationEngine()
         let weights: [(date: Date, weightKg: Double)] = [
@@ -511,152 +482,127 @@ struct TDEECalculationEngineTests {
         ]
 
         // When
-        let smoothed = engine.calculateEWMA(weights: weights)
+        let smoothed = try engine.calculateEWMA(weights: weights)
 
         // Then: Single entry returns that value
         #expect(smoothed.count == 1)
         #expect(smoothed[0].smoothedWeight == 75.0)
     }
 
-    @Test("calculateWeightChangeRate returns nil for insufficient data")
-    @MainActor
+    @Test("calculateWeightChangeRate throws for insufficient data")
     func testCalculateWeightChangeRateInsufficientData() {
         // Given
         let engine = TDEECalculationEngine()
 
-        // When/Then: Empty array
-        let rate1 = engine.calculateWeightChangeRate(smoothedWeights: [])
-        #expect(rate1 == nil)
+        // When/Then: Empty array should throw
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.calculateWeightChangeRate(smoothedWeights: [])
+        }
 
-        // When/Then: Single entry
-        let rate2 = engine.calculateWeightChangeRate(smoothedWeights: [(Date(), 80.0)])
-        #expect(rate2 == nil)
+        // When/Then: Single entry should throw
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.calculateWeightChangeRate(smoothedWeights: [(Date(), 80.0)])
+        }
 
-        // When/Then: Less than 7 days span
+        // When/Then: Less than 7 days span should throw
         let baseDate = Date()
         let shortSpan: [(date: Date, smoothedWeight: Double)] = [
             (baseDate, 80.0),
             (baseDate.addingTimeInterval(5 * 86400), 79.5),  // Only 5 days
         ]
-        let rate3 = engine.calculateWeightChangeRate(smoothedWeights: shortSpan)
-        #expect(rate3 == nil)
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.calculateWeightChangeRate(smoothedWeights: shortSpan)
+        }
     }
 
     // MARK: - Adaptive TDEE Tests
 
     @Test("calculateAdaptiveTDEE for weight loss scenario")
-    @MainActor
-    func testCalculateAdaptiveTDEEWeightLoss() {
+    func testCalculateAdaptiveTDEEWeightLoss() throws {
         // Given: Lost 2kg over 14 days while eating 1800 kcal/day
-        // TDEE = 1800 + ((-2) * 7700 / 14) = 1800 + (-1100) = 1800 - (-1100) = 1800 + 1100 = 2900
-        // Formula: TDEE = intake + (weightChange * 7700 / days)
-        // If losing weight while eating 1800, actual TDEE must be higher
+        // Formula: TDEE = intake - (weightChange * 7700 / days)
+        // = 1800 - (-2 * 7700 / 14) = 1800 - (-1100) = 1800 + 1100 = 2900
         let engine = TDEECalculationEngine()
 
         // When
-        let tdee = engine.calculateAdaptiveTDEE(
+        let tdee = try engine.calculateAdaptiveTDEE(
             averageDailyIntake: 1800,
             weightChangeKg: -2.0,  // Lost 2kg
             durationDays: 14
         )
 
-        // Then: TDEE = 1800 + (-2 * 7700 / 14) = 1800 + (-1100) = 700? No wait...
-        // If you lost weight, your TDEE > intake. Formula correction:
-        // Deficit = TDEE - Intake = Weight loss * 7700 / days
-        // TDEE = Intake + Deficit = 1800 + (2 * 7700 / 14) = 1800 + 1100 = 2900
-        // weightChange is -2 (loss), so: TDEE = 1800 + (-(-2) * 7700 / 14) = 1800 + 1100
-        // Actually: TDEE = intake - (weightChange * 7700 / days) for negative change
-        // Let me recalculate: The plan says + but let's check the math
-        // Lost 2kg = -2kg change, 7700 cal/kg, 14 days
-        // Daily deficit = 2 * 7700 / 14 = 1100 cal/day
-        // So TDEE = intake + deficit = 1800 + 1100 = 2900
-        // With formula: TDEE = intake + (weightChange * 7700 / days)
-        // = 1800 + (-2 * 7700 / 14) = 1800 - 1100 = 700? That's wrong.
-        // The formula should be: TDEE = intake - (weightChange * 7700 / days)
-        // = 1800 - (-2 * 7700 / 14) = 1800 + 1100 = 2900
-
-        #expect(tdee != nil)
-        // Using formula from plan: TDEE = intake + (weightChange * 7700 / days)
-        // But that gives 700 which is wrong. Let me check the plan again...
-        // Plan says: "TDEE = Average Daily Intake + (Weight Change * 7700 cal/kg / Days)"
-        // With weightChange = -2: TDEE = 1800 + (-2 * 7700 / 14) = 1800 - 1100 = 700
-        // This is wrong for weight loss scenario. Need to verify implementation.
-        // Actually maybe the plan formula has a sign error. Let me just test the logic:
-        // If eating 1800 and losing 2kg in 14 days, TDEE should be ~2900
-        #expect(abs(tdee! - 2900) < 1)
+        // Then: If eating 1800 and losing 2kg in 14 days, TDEE should be ~2900
+        #expect(abs(tdee - 2900) < 1)
     }
 
     @Test("calculateAdaptiveTDEE for weight gain scenario")
-    @MainActor
-    func testCalculateAdaptiveTDEEWeightGain() {
+    func testCalculateAdaptiveTDEEWeightGain() throws {
         // Given: Gained 1kg over 14 days while eating 2500 kcal/day
         // Surplus = 1 * 7700 / 14 = 550 kcal/day
         // TDEE = intake - surplus = 2500 - 550 = 1950
         let engine = TDEECalculationEngine()
 
         // When
-        let tdee = engine.calculateAdaptiveTDEE(
+        let tdee = try engine.calculateAdaptiveTDEE(
             averageDailyIntake: 2500,
             weightChangeKg: 1.0,  // Gained 1kg
             durationDays: 14
         )
 
         // Then: TDEE = 2500 - (1 * 7700 / 14) = 2500 - 550 = 1950
-        #expect(tdee != nil)
-        #expect(abs(tdee! - 1950) < 1)
+        #expect(abs(tdee - 1950) < 1)
     }
 
     @Test("calculateAdaptiveTDEE for maintenance scenario")
-    @MainActor
-    func testCalculateAdaptiveTDEEMaintenance() {
+    func testCalculateAdaptiveTDEEMaintenance() throws {
         // Given: No weight change while eating 2200 kcal/day
         // TDEE should equal intake
         let engine = TDEECalculationEngine()
 
         // When
-        let tdee = engine.calculateAdaptiveTDEE(
+        let tdee = try engine.calculateAdaptiveTDEE(
             averageDailyIntake: 2200,
             weightChangeKg: 0.0,  // No change
             durationDays: 14
         )
 
         // Then: TDEE = intake (no deficit/surplus)
-        #expect(tdee != nil)
-        #expect(tdee! == 2200)
+        #expect(tdee == 2200)
     }
 
-    @Test("calculateAdaptiveTDEE returns nil for invalid inputs")
-    @MainActor
+    @Test("calculateAdaptiveTDEE throws for invalid inputs")
     func testCalculateAdaptiveTDEEInvalidInputs() {
         let engine = TDEECalculationEngine()
 
-        // When/Then: Zero duration
-        let tdee1 = engine.calculateAdaptiveTDEE(
-            averageDailyIntake: 2000,
-            weightChangeKg: -1.0,
-            durationDays: 0
-        )
-        #expect(tdee1 == nil)
+        // When/Then: Zero duration should throw
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.calculateAdaptiveTDEE(
+                averageDailyIntake: 2000,
+                weightChangeKg: -1.0,
+                durationDays: 0
+            )
+        }
 
-        // When/Then: Zero intake
-        let tdee2 = engine.calculateAdaptiveTDEE(
-            averageDailyIntake: 0,
-            weightChangeKg: -1.0,
-            durationDays: 14
-        )
-        #expect(tdee2 == nil)
+        // When/Then: Zero intake should throw
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.calculateAdaptiveTDEE(
+                averageDailyIntake: 0,
+                weightChangeKg: -1.0,
+                durationDays: 14
+            )
+        }
 
-        // When/Then: Negative duration
-        let tdee3 = engine.calculateAdaptiveTDEE(
-            averageDailyIntake: 2000,
-            weightChangeKg: -1.0,
-            durationDays: -7
-        )
-        #expect(tdee3 == nil)
+        // When/Then: Negative duration should throw
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.calculateAdaptiveTDEE(
+                averageDailyIntake: 2000,
+                weightChangeKg: -1.0,
+                durationDays: -7
+            )
+        }
     }
 
     @Test("calculateConfidenceScore returns higher score for longer duration")
-    @MainActor
     func testCalculateConfidenceScoreDuration() {
         let engine = TDEECalculationEngine()
 
@@ -679,7 +625,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateConfidenceScore returns higher score for better consistency")
-    @MainActor
     func testCalculateConfidenceScoreConsistency() {
         let engine = TDEECalculationEngine()
 
@@ -700,7 +645,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("calculateConfidenceScore returns value between 0 and 1")
-    @MainActor
     func testCalculateConfidenceScoreRange() {
         let engine = TDEECalculationEngine()
 
@@ -722,7 +666,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("detectMetabolicAdaptation returns true when TDEE drops >15%")
-    @MainActor
     func testDetectMetabolicAdaptationTrue() {
         let engine = TDEECalculationEngine()
 
@@ -737,7 +680,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("detectMetabolicAdaptation returns false for normal TDEE")
-    @MainActor
     func testDetectMetabolicAdaptationFalse() {
         let engine = TDEECalculationEngine()
 
@@ -752,7 +694,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("detectMetabolicAdaptation returns false at exactly 15% threshold")
-    @MainActor
     func testDetectMetabolicAdaptationAtThreshold() {
         let engine = TDEECalculationEngine()
 
@@ -767,7 +708,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("detectMetabolicAdaptation handles zero expected TDEE")
-    @MainActor
     func testDetectMetabolicAdaptationZeroExpected() {
         let engine = TDEECalculationEngine()
 
@@ -784,7 +724,6 @@ struct TDEECalculationEngineTests {
     // MARK: - Validation Tests
 
     @Test("validateBMRInputs throws for weight below 20kg")
-    @MainActor
     func testValidateBMRInputsLowWeight() {
         let engine = TDEECalculationEngine()
 
@@ -794,7 +733,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateBMRInputs throws for weight above 500kg")
-    @MainActor
     func testValidateBMRInputsHighWeight() {
         let engine = TDEECalculationEngine()
 
@@ -804,7 +742,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateBMRInputs throws for height below 100cm")
-    @MainActor
     func testValidateBMRInputsLowHeight() {
         let engine = TDEECalculationEngine()
 
@@ -814,7 +751,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateBMRInputs throws for height above 250cm")
-    @MainActor
     func testValidateBMRInputsHighHeight() {
         let engine = TDEECalculationEngine()
 
@@ -824,7 +760,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateBMRInputs throws for age below 10")
-    @MainActor
     func testValidateBMRInputsLowAge() {
         let engine = TDEECalculationEngine()
 
@@ -834,7 +769,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateBMRInputs throws for age above 120")
-    @MainActor
     func testValidateBMRInputsHighAge() {
         let engine = TDEECalculationEngine()
 
@@ -844,7 +778,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateBMRInputs succeeds for valid inputs")
-    @MainActor
     func testValidateBMRInputsValid() throws {
         let engine = TDEECalculationEngine()
 
@@ -853,7 +786,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateEWMAInputs throws for empty weights array")
-    @MainActor
     func testValidateEWMAInputsEmptyWeights() {
         let engine = TDEECalculationEngine()
 
@@ -862,25 +794,28 @@ struct TDEECalculationEngineTests {
         }
     }
 
-    @Test("validateEWMAInputs throws for alpha outside 0-1 range")
-    @MainActor
+    @Test("validateEWMAInputs throws for alpha outside 0.01-1.0 range")
     func testValidateEWMAInputsInvalidAlpha() {
         let engine = TDEECalculationEngine()
         let weights: [(date: Date, weightKg: Double)] = [(Date(), 70.0), (Date(), 71.0)]
 
-        // Alpha = 0 should throw
+        // Alpha = 0 should throw (below minimum 0.01)
         #expect(throws: TDEECalculationEngine.ValidationError.self) {
             try engine.validateEWMAInputs(weights: weights, alpha: 0.0)
         }
 
-        // Alpha = 1.5 should throw
+        // Alpha = 0.005 should throw (below minimum 0.01)
+        #expect(throws: TDEECalculationEngine.ValidationError.self) {
+            try engine.validateEWMAInputs(weights: weights, alpha: 0.005)
+        }
+
+        // Alpha = 1.5 should throw (above maximum 1.0)
         #expect(throws: TDEECalculationEngine.ValidationError.self) {
             try engine.validateEWMAInputs(weights: weights, alpha: 1.5)
         }
     }
 
     @Test("validateEWMAInputs succeeds for valid inputs")
-    @MainActor
     func testValidateEWMAInputsValid() throws {
         let engine = TDEECalculationEngine()
         let weights: [(date: Date, weightKg: Double)] = [(Date(), 70.0), (Date(), 71.0)]
@@ -890,7 +825,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateAdaptiveTDEEInputs throws for invalid duration")
-    @MainActor
     func testValidateAdaptiveTDEEInputsInvalidDuration() {
         let engine = TDEECalculationEngine()
 
@@ -906,7 +840,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateAdaptiveTDEEInputs throws for invalid intake")
-    @MainActor
     func testValidateAdaptiveTDEEInputsInvalidIntake() {
         let engine = TDEECalculationEngine()
 
@@ -920,7 +853,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("validateAdaptiveTDEEInputs succeeds for valid inputs")
-    @MainActor
     func testValidateAdaptiveTDEEInputsValid() throws {
         let engine = TDEECalculationEngine()
 
@@ -929,7 +861,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("ValidationError provides user-friendly error descriptions")
-    @MainActor
     func testValidationErrorDescriptions() {
         // Test that each error type has a meaningful description
         let weightError = TDEECalculationEngine.ValidationError.invalidWeight(15.0)
@@ -959,7 +890,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("isReasonableTDEE returns true for valid TDEE values")
-    @MainActor
     func testIsReasonableTDEEValid() {
         let engine = TDEECalculationEngine()
 
@@ -971,7 +901,6 @@ struct TDEECalculationEngineTests {
     }
 
     @Test("isReasonableTDEE returns false for unreasonable TDEE values")
-    @MainActor
     func testIsReasonableTDEEInvalid() {
         let engine = TDEECalculationEngine()
 
