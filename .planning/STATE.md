@@ -20,11 +20,11 @@
 ## Current Position
 
 Phase: 14 of 17 (Adaptive TDEE Engine)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2025-12-28 - Completed 14-01 (TDEE data foundation, BMR engine)
+Last activity: 2025-12-28 - Completed 14-02 (EWMA smoothing, adaptive TDEE, validation)
 
-Progress: █████░░░░░ 45%
+Progress: █████░░░░░ 48%
 
 ## GitHub Tracking
 
@@ -45,13 +45,13 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 |-------|-------|-------|----------|
 | 12 | 2/2 | 14 min | 7 min |
 | 13 | 2/2 | 34 min | 17 min |
-| 14 | 1/3 | 8 min | 8 min |
+| 14 | 2/3 | 17 min | 8.5 min |
 | 15 | 0/? | - | - |
 | 16 | 0/? | - | - |
 | 17 | 0/? | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 12-02 (8 min), 13-01 (9 min), 13-02 (25 min), 14-01 (8 min)
+- Last 5 plans: 13-01 (9 min), 13-02 (25 min), 14-01 (8 min), 14-02 (9 min)
 - Trend: Phase 14 in progress
 
 *Updated after each plan completion*
@@ -88,6 +88,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-28T15:47:45Z
-Stopped at: Completed 14-01-PLAN.md
+Last session: 2025-12-28T16:28:49Z
+Stopped at: Completed 14-02-PLAN.md
 Resume file: None
