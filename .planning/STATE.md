@@ -19,12 +19,12 @@
 
 ## Current Position
 
-Phase: 13 of 17 (Goal Configuration Wizard) - COMPLETE
-Plan: 2 of 2 in current phase - COMPLETE
-Status: Ready for Phase 14
-Last activity: 2025-12-28 - Completed 13-02 polish (UX improvements, icons, unit defaults)
+Phase: 14 of 17 (Adaptive TDEE Engine)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2025-12-28 - Completed 14-01 (TDEE data foundation, BMR engine)
 
-Progress: ████░░░░░░ 40%
+Progress: █████░░░░░ 45%
 
 ## GitHub Tracking
 
@@ -45,14 +45,14 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 |-------|-------|-------|----------|
 | 12 | 2/2 | 14 min | 7 min |
 | 13 | 2/2 | 34 min | 17 min |
-| 14 | 0/? | - | - |
+| 14 | 1/3 | 8 min | 8 min |
 | 15 | 0/? | - | - |
 | 16 | 0/? | - | - |
 | 17 | 0/? | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 12-01 (6 min), 12-02 (8 min), 13-01 (9 min), 13-02 (25 min)
-- Trend: Phases 12-13 complete
+- Last 5 plans: 12-02 (8 min), 13-01 (9 min), 13-02 (25 min), 14-01 (8 min)
+- Trend: Phase 14 in progress
 
 *Updated after each plan completion*
 
@@ -65,6 +65,7 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 12-01 | MacroPercentages struct instead of tuple | SwiftLint large_tuple compliance, cleaner API with named properties |
 | 13-01 | Extended file_length SwiftLint rule for Nutrition views | Wizard contains 7 inline step views per architecture decision |
 | 13-02 | Separate Goal and Program into distinct wizards | Mock review revealed incorrect domain coupling; Goal = type + target weight + rate, Program = style + diet prefs |
+| 14-01 | Empty string default for gender with case-insensitive matching | CloudKit compatibility; unknown gender averages male/female BMR formulas |
 
 ### Deferred Issues
 
@@ -87,6 +88,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-28T01:40:42Z
-Stopped at: Completed 13-02 polish, ready for Phase 14
+Last session: 2025-12-28T15:47:45Z
+Stopped at: Completed 14-01-PLAN.md
 Resume file: None

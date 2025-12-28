@@ -393,3 +393,19 @@ struct ProgramConfiguration: Codable, Equatable {
         self.metadata = metadata
     }
 }
+
+// MARK: - TrainingLevel TDEE Extension
+
+extension TrainingLevel {
+    /// TDEE activity multiplier based on training level
+    /// Maps training levels to standard activity multipliers used in TDEE calculations:
+    /// - sedentary (1.2), lightly active (1.375), moderately active (1.55), very active (1.725)
+    var tdeeMultiplier: Double {
+        switch self {
+        case .none: return 1.2  // Sedentary
+        case .lifting: return 1.55  // Moderately active
+        case .cardio: return 1.55  // Moderately active
+        case .cardioAndLifting: return 1.725  // Very active
+        }
+    }
+}

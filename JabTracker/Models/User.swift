@@ -39,6 +39,8 @@ final class User {
     var email: String?  // Optional - genuinely no email vs empty string ambiguity resolved
     var name: String?  // Optional - Apple might not provide
     var dateOfBirth: Date?  // Optional - user may choose not to provide
+    var heightCm: Double?  // Optional - user may choose not to provide (for TDEE calculation)
+    var gender: String = ""  // Empty string default for CloudKit compatibility
     var weight: Double = 70.0  // Required with default for medical app
     var weightUnit: String = "lbs"  // Required with default (US units)
     var measurementUnit: String = "in"  // Required with default (US units)
@@ -84,6 +86,8 @@ final class User {
         email: String? = nil,
         name: String? = nil,
         dateOfBirth: Date? = nil,
+        heightCm: Double? = nil,
+        gender: String = "",
         weight: Double = 70.0,
         weightUnit: String = "lbs",
         measurementUnit: String = "in",
@@ -104,6 +108,8 @@ final class User {
         self.email = email
         self.name = name
         self.dateOfBirth = dateOfBirth
+        self.heightCm = heightCm
+        self.gender = gender
         self.weight = weight
         self.weightUnit = weightUnit
         self.measurementUnit = measurementUnit
@@ -129,6 +135,13 @@ final class User {
 // MARK: - Computed Properties
 
 extension User {
+    /// Calculated age from dateOfBirth
+    /// Returns nil if dateOfBirth is not set
+    var age: Int? {
+        guard let dateOfBirth else { return nil }
+        return Calendar.current.dateComponents([.year], from: dateOfBirth, to: Date()).year
+    }
+
     /// Formatted weight display for UI presentation
     var weightDisplay: String {
         String(format: "%.1f %@", self.weight, self.weightUnit)

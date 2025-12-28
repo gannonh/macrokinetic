@@ -16,6 +16,7 @@
           "Models/DoseSchedule.swift",
           "Models/ScheduledDose.swift",
           "Services/PharmacokineticsEngine.swift",
+          "Services/TDEECalculationEngine.swift",
           "Services/ReconstitutionCalculator.swift",
           "Models/DoseTitration.swift",
           "Models/AdherenceStatistics.swift",

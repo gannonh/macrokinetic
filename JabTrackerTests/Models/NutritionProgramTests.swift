@@ -15,6 +15,7 @@ import Testing
 
 /// Creates an in-memory SwiftData context for testing
 /// Returns both context and container - container must be kept alive for context to remain valid
+@MainActor
 private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
     let schema = Schema([
         User.self,

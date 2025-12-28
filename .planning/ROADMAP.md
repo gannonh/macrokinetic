@@ -54,7 +54,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 14-01: TBD
+- [x] 14-01: TDEE data foundation - User height/gender, TrainingLevel multipliers, TDEECalculationEngine
+- [ ] 14-02: TBD
+- [ ] 14-03: TBD
 
 #### Phase 15: Daily Tracking Dashboard
 
@@ -95,7 +97,7 @@ Phases execute in numeric order within each milestone.
 |-------|-----------|----------------|--------|-----------|
 | 12. Goal Data Model | v0.3.0 | 2/2 | Complete | 2025-12-27 |
 | 13. Goal Configuration Wizard | v0.3.0 | 2/2 | Complete | 2025-12-28 |
-| 14. Adaptive TDEE Engine | v0.3.0 | 0/? | Not started | - |
+| 14. Adaptive TDEE Engine | v0.3.0 | 1/3 | In progress | - |
 | 15. Daily Tracking Dashboard | v0.3.0 | 0/? | Not started | - |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
