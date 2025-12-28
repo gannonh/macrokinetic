@@ -283,19 +283,19 @@ struct UserModelTests {
         let lightUser = User(email: "light@example.com", weight: 0.1)
         context.insert(lightUser)
 
-        #expect(lightUser.weightDisplay == "0.1 kg", "Should handle very low weights")
+        #expect(lightUser.weightDisplay == "0.1 lbs", "Should handle very low weights")
 
         // Test high weight
         let heavyUser = User(email: "heavy@example.com", weight: 999.9)
         context.insert(heavyUser)
 
-        #expect(heavyUser.weightDisplay == "999.9 kg", "Should handle high weights")
+        #expect(heavyUser.weightDisplay == "999.9 lbs", "Should handle high weights")
 
         // Test zero weight (edge case)
         let zeroUser = User(email: "zero@example.com", weight: 0.0)
         context.insert(zeroUser)
 
-        #expect(zeroUser.weightDisplay == "0.0 kg", "Should handle zero weight")
+        #expect(zeroUser.weightDisplay == "0.0 lbs", "Should handle zero weight")
 
         try context.save()
     }
@@ -528,7 +528,7 @@ struct UserModelTests {
 
     // MARK: - Measurement Unit Preference Tests
 
-    @Test("User model has measurementUnit field with default cm")
+    @Test("User model has measurementUnit field with default in (US units)")
     func userModelMeasurementUnitDefault() throws {
         let controller = DataController.testContainer()
         let context = controller.container.mainContext
@@ -536,7 +536,7 @@ struct UserModelTests {
         let user = User()
         context.insert(user)
 
-        #expect(user.measurementUnit == "cm", "Default measurement unit should be cm")
+        #expect(user.measurementUnit == "in", "Default measurement unit should be in (US units)")
     }
 
     @Test("User measurementUnit can be set to inches")
