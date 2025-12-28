@@ -816,72 +816,11 @@ AI-powered food recognition from photos with portion estimation and macro calcul
 
 ---
 
-### 📋 Unified Dashboard
+### 📋 Dashboard
 
-Combined dashboard showing medication concentration, nutrition summary, and health metrics.
+Unified dashboard with nutrition tracking, energy balance, body metrics, and weight analytics.
 
-#### Requirements
-
-- [ ] Concentration card (medication users)
-- [ ] Today's nutrition summary
-- [ ] Prominent protein progress ring
-- [ ] Appetite/food noise indicator
-- [ ] Weight trend from HealthKit
-
-#### User Stories
-
-##### Overview
-- **As a user**, I want one dashboard, so that I see all my health data together.
-- **As a user**, I want protein prominently displayed, so that I prioritize it.
-
-##### Context
-- **As a medication user**, I want concentration shown, so that I understand my current level.
-- **As a user**, I want weight trend visible, so that I see my progress.
-
-#### Key Design Decisions
-
-1. **Modular cards** - Show relevant cards based on user type.
-2. **Protein prominence** - Larger ring than other macros.
-3. **Medication-optional** - Works for nutrition-only users.
-
-#### Acceptance Criteria
-
-- [ ] Dashboard shows relevant cards for user type
-- [ ] Protein ring prominent
-- [ ] Weight trend displayed
-- [ ] Cards update in real-time
-
----
-
-### 📋 Combined Calendar View
-
-Unified calendar showing doses, meals, protein status, and weight data points.
-
-#### Requirements
-
-- [ ] Dose markers (existing)
-- [ ] Meal indicators (breakfast/lunch/dinner icons)
-- [ ] Protein status dots (green/yellow/red)
-- [ ] Weight data points
-
-#### User Stories
-
-##### Visualization
-- **As a user**, I want to see all data on one calendar, so that I understand daily patterns.
-- **As a user**, I want protein status visible, so that I identify low-protein days.
-
-#### Key Design Decisions
-
-1. **Layered indicators** - Multiple data types on same day cell.
-2. **Color coding** - Consistent colors across app.
-3. **Tap for details** - Day view shows full breakdown.
-
-#### Acceptance Criteria
-
-- [ ] Dose markers shown
-- [ ] Meal indicators visible
-- [ ] Protein status color-coded
-- [ ] Weight data points displayed
+@.planning/project-prd+dashboard.md
 
 ---
 
