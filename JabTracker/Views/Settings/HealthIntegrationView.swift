@@ -16,10 +16,16 @@ import SwiftUI
 /// - Display of current profile data (height, sex, DOB)
 /// - Manual entry fallback for when HealthKit is unavailable
 struct HealthIntegrationView: View {
+    // MARK: - Environment
+
     @Environment(\.modelContext) private var modelContext
+
+    // MARK: - Query
+
     @Query private var users: [User]
 
-    @State private var healthKitService: HealthKitService?
+    // MARK: - State
+
     @State private var isAuthorized = false
     @State private var isSyncing = false
     @State private var errorMessage: String?
@@ -32,6 +38,12 @@ struct HealthIntegrationView: View {
         Calendar.current.date(
             byAdding: .year, value: -30, to: Date()
         ) ?? Date()
+
+    // MARK: - Computed Properties
+
+    private var healthKitService: HealthKitService? {
+        AppServices.shared.healthKitService
+    }
 
     var body: some View {
         Form {
@@ -126,7 +138,7 @@ struct HealthIntegrationView: View {
         }
         .navigationTitle("Health Integration")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { initializeService() }
+        .onAppear { initializeState() }
         .alert("Error", isPresented: $showingError) {
             Button("OK") {}
         } message: {
@@ -157,8 +169,11 @@ struct HealthIntegrationView: View {
 
     // MARK: - Actions
 
-    private func initializeService() {
-        healthKitService = HealthKitService(context: modelContext)
+    private func initializeState() {
+        // Check actual authorization status from HealthKit
+        if let service = healthKitService {
+            isAuthorized = service.hasAnyAuthorization()
+        }
 
         // Pre-populate manual entry fields with existing user data
         if let user = users.first {
@@ -172,16 +187,20 @@ struct HealthIntegrationView: View {
         }
     }
 
+    @MainActor
     private func requestAuthorization() async {
         guard let service = healthKitService else { return }
         do {
-            isAuthorized = try await service.requestReadAuthorization()
+            _ = try await service.requestReadAuthorization()
+            // Check actual authorization status after request
+            isAuthorized = service.hasAnyAuthorization()
         } catch {
             errorMessage = error.localizedDescription
             showingError = true
         }
     }
 
+    @MainActor
     private func syncFromHealthKit() async {
         guard let service = healthKitService, let user = users.first else { return }
         isSyncing = true
@@ -201,7 +220,12 @@ struct HealthIntegrationView: View {
         user.heightCm = manualHeightCm
         user.gender = manualGender
         user.dateOfBirth = manualDateOfBirth
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            errorMessage = error.localizedDescription
+            showingError = true
+        }
     }
 
     // MARK: - Formatters

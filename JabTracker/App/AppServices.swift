@@ -89,7 +89,7 @@ final class AppServices: ObservableObject {
         self.progressPhotoService = progressPhotoService
 
         // Create HealthKitService for reading biometric data
-        let healthKitService = HealthKitService(context: modelContext)
+        let healthKitService = HealthKitService()
         self.healthKitService = healthKitService
     }
 

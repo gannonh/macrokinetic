@@ -9,7 +9,6 @@
 import Foundation
 import HealthKit
 import OSLog
-import SwiftData
 
 /// Service for reading biometric data from HealthKit.
 ///
@@ -18,9 +17,10 @@ import SwiftData
 /// - Fetch height, biological sex, date of birth from HealthKit
 /// - Populate User model with fetched biometric data
 @MainActor
+@Observable
 final class HealthKitService {
     /// Shared HealthKit store for biometric queries
-    private static let healthStore = HKHealthStore()
+    private nonisolated static let healthStore = HKHealthStore()
 
     /// Logger for HealthKit operations - nonisolated for use in HealthKit callbacks
     private nonisolated static let logger = Logger(
@@ -38,16 +38,10 @@ final class HealthKitService {
         return types
     }()
 
-    /// ModelContext for database operations
-    private let context: ModelContext
-
     // MARK: - Initialization
 
-    /// Initialize with a ModelContext for database access
-    /// - Parameter context: SwiftData ModelContext
-    init(context: ModelContext) {
-        self.context = context
-    }
+    /// Initialize the HealthKit service
+    init() {}
 
     // MARK: - Public Properties
 
@@ -57,6 +51,20 @@ final class HealthKitService {
     }
 
     // MARK: - Authorization
+
+    /// Check if we have authorization to read a specific data type
+    /// - Parameter type: The HealthKit object type to check
+    /// - Returns: True if authorized to read, false otherwise
+    func isAuthorized(for type: HKObjectType) -> Bool {
+        let status = Self.healthStore.authorizationStatus(for: type)
+        return status == .sharingAuthorized
+    }
+
+    /// Check if we have authorization for any of our read types
+    /// - Returns: True if at least one type is authorized
+    func hasAnyAuthorization() -> Bool {
+        Self.readTypes.contains { isAuthorized(for: $0) }
+    }
 
     /// Request read authorization for biometric data types
     /// - Returns: True if authorization request completed successfully
@@ -83,36 +91,11 @@ final class HealthKitService {
     /// Fetch height from HealthKit
     /// - Returns: Height in centimeters, or nil if not available
     func fetchHeight() async throws -> Double? {
-        guard isAvailable else { return nil }
-
-        let heightType = HKQuantityType(.height)
-        let sortByDate = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: heightType,
-                predicate: nil,
-                limit: 1,
-                sortDescriptors: [sortByDate]
-            ) { _, samples, error in
-                if let error {
-                    Self.logger.error("Failed to fetch height: \(error.localizedDescription)")
-                    continuation.resume(throwing: error)
-                    return
-                }
-
-                guard let sample = samples?.first as? HKQuantitySample else {
-                    Self.logger.debug("No height samples found in HealthKit")
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let heightCm = sample.quantity.doubleValue(for: .meterUnit(with: .centi))
-                Self.logger.info("Fetched height from HealthKit: \(heightCm) cm")
-                continuation.resume(returning: heightCm)
-            }
-            Self.healthStore.execute(query)
-        }
+        try await fetchLatestQuantitySample(
+            type: HKQuantityType(.height),
+            unit: .meterUnit(with: .centi),
+            logName: "height"
+        )
     }
 
     /// Fetch biological sex from HealthKit
@@ -122,20 +105,19 @@ final class HealthKitService {
 
         do {
             let biologicalSex = try Self.healthStore.biologicalSex().biologicalSex
+            let result: String
             switch biologicalSex {
             case .male:
-                Self.logger.info("Fetched biological sex from HealthKit: male")
-                return "male"
+                result = "male"
             case .female:
-                Self.logger.info("Fetched biological sex from HealthKit: female")
-                return "female"
+                result = "female"
             case .other, .notSet:
-                Self.logger.debug("Biological sex not set or other in HealthKit")
-                return ""
+                result = ""
             @unknown default:
-                Self.logger.debug("Unknown biological sex value in HealthKit")
-                return ""
+                result = ""
             }
+            Self.logger.debug("Fetched biological sex from HealthKit: \(result.isEmpty ? "not set" : result)")
+            return result
         } catch {
             // Authorization denied returns an error, treat as not available
             Self.logger.debug("Could not fetch biological sex: \(error.localizedDescription)")
@@ -154,7 +136,7 @@ final class HealthKitService {
                 Self.logger.debug("Could not convert DOB components to Date")
                 return nil
             }
-            Self.logger.info("Fetched date of birth from HealthKit")
+            Self.logger.debug("Fetched date of birth from HealthKit")
             return date
         } catch {
             // Authorization denied returns an error, treat as not available
@@ -166,36 +148,11 @@ final class HealthKitService {
     /// Fetch latest weight from HealthKit
     /// - Returns: Weight in kilograms, or nil if not available
     func fetchLatestWeight() async throws -> Double? {
-        guard isAvailable else { return nil }
-
-        let weightType = HKQuantityType(.bodyMass)
-        let sortByDate = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: weightType,
-                predicate: nil,
-                limit: 1,
-                sortDescriptors: [sortByDate]
-            ) { _, samples, error in
-                if let error {
-                    Self.logger.error("Failed to fetch weight: \(error.localizedDescription)")
-                    continuation.resume(throwing: error)
-                    return
-                }
-
-                guard let sample = samples?.first as? HKQuantitySample else {
-                    Self.logger.debug("No weight samples found in HealthKit")
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let weightKg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
-                Self.logger.info("Fetched weight from HealthKit: \(weightKg) kg")
-                continuation.resume(returning: weightKg)
-            }
-            Self.healthStore.execute(query)
-        }
+        try await fetchLatestQuantitySample(
+            type: HKQuantityType(.bodyMass),
+            unit: .gramUnit(with: .kilo),
+            logName: "weight"
+        )
     }
 
     // MARK: - Profile Population
@@ -234,6 +191,50 @@ final class HealthKitService {
         }
 
         Self.logger.info("HealthKit profile sync completed")
+    }
+
+    // MARK: - Private Helpers
+
+    /// Generic helper to fetch the latest quantity sample from HealthKit
+    /// - Parameters:
+    ///   - type: The quantity type to fetch
+    ///   - unit: The unit to convert the result to
+    ///   - logName: Name for logging purposes
+    /// - Returns: The value in the specified unit, or nil if not available
+    private func fetchLatestQuantitySample(
+        type: HKQuantityType,
+        unit: HKUnit,
+        logName: String
+    ) async throws -> Double? {
+        guard isAvailable else { return nil }
+
+        let sortByDate = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: type,
+                predicate: nil,
+                limit: 1,
+                sortDescriptors: [sortByDate]
+            ) { _, samples, error in
+                if let error {
+                    Self.logger.error("Failed to fetch \(logName): \(error.localizedDescription)")
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    Self.logger.debug("No \(logName) samples found in HealthKit")
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let value = sample.quantity.doubleValue(for: unit)
+                Self.logger.debug("Fetched \(logName) from HealthKit: \(value)")
+                continuation.resume(returning: value)
+            }
+            Self.healthStore.execute(query)
+        }
     }
 }
 
