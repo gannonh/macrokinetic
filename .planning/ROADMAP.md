@@ -70,30 +70,43 @@ Plans:
 
 #### Phase 15.1: Initial TDEE Integration (INSERTED)
 
-**Goal**: Complete HealthKit read/write integration for biometrics, wire TDEEService to goal creation, calculate and apply personalized calorie/macro targets
+**Goal**: HealthKit biometrics integration, wire TDEEService to Coached mode goal creation, fix Program Wizard bugs
 **Depends on**: Phase 15
 **Research**: Unlikely (internal patterns - TDEEService built in Phase 14, HealthKit write exists)
-**Plans**: TBD
+**Plans**: 3
 
 **Scope:**
 - HealthKit READ integration: Import height, sex, DOB, weight when available
-- HealthKit WRITE integration: Sync user-modified values back to HealthKit
-- Granular HealthKit permissions UI in Settings (read/write per data type)
-- Biometrics collection fallback UI when HealthKit unavailable/declined
-- Wire TDEEService.calculateInitialTDEE() to goal creation flow
-- Apply calculated TDEE to User.dailyCalorieGoal and macro targets
-- Update Strategy view to display calculated (not default) values
+- Settings → Health Integration UI with manual entry fallback
+- Wire TDEEService.calculateInitialTDEE() to Coached mode goal creation
+- Fix Program Wizard blank screen race condition bug
+- Program summary screen with calculated TDEE/targets display
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 15.1 to break down)
+- [ ] 15.1-01: HealthKit Foundation - HealthKitService, Settings UI, Info.plist
+- [ ] 15.1-02: TDEE Integration - Wire TDEEService to ProgramWizard, fix race condition
+- [ ] 15.1-03: Program Summary - Display calculated targets, E2E test stubs
 
-**Details:**
-[To be added during planning]
+#### Phase 15.2: Program Style Implementation (INSERTED)
+
+**Goal**: Implement Collaborative and Manual program styles with weekly macro distribution
+**Depends on**: Phase 15.1
+**Research**: Unlikely (UI patterns from mocks)
+**Plans**: TBD
+
+**Scope:**
+- Collaborative mode: Weekly macro grid with per-day editing (sliders for protein g/lb, carb:fat ratio)
+- Manual mode: Same targets all week vs Different targets per day
+- Weekly Distribution mode actually functional (Even vs Shifted)
+- Per-day macro storage in NutritionProgram model
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 15.2 to break down)
 
 #### Phase 16: Weekly Check-ins
 
 **Goal**: Weight trend review, adherence summary, goal and program adjustment flow
-**Depends on**: Phase 15.1
+**Depends on**: Phase 15.2
 **Research**: Unlikely (internal patterns - existing weight tracking)
 **Plans**: TBD
 
@@ -121,7 +134,8 @@ Phases execute in numeric order within each milestone.
 | 13. Goal Configuration Wizard | v0.3.0 | 2/2 | Complete | 2025-12-28 |
 | 14. Adaptive TDEE Engine | v0.3.0 | 3/3 | Complete | 2025-12-28 |
 | 15. Daily Tracking Dashboard | v0.3.0 | 1/1 | Complete | 2025-12-28 |
-| 15.1 Initial TDEE Integration | v0.3.0 | 0/? | Not started | - |
+| 15.1 Initial TDEE Integration | v0.3.0 | 0/3 | Not started | - |
+| 15.2 Program Style Implementation | v0.3.0 | 0/? | Not started | - |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
 
