@@ -185,14 +185,14 @@ final class ProgramWizardViewModel {
         }
     }
 
+    /// Base steps included in all program styles (handles edit mode)
+    private var baseSteps: [ProgramWizardStep] {
+        isEditMode ? [] : [.programStyle]
+    }
+
     /// Steps for Coached mode
     private var coachedSteps: [ProgramWizardStep] {
-        var steps: [ProgramWizardStep] = []
-
-        // programStyle (skip in edit mode)
-        if !isEditMode {
-            steps.append(.programStyle)
-        }
+        var steps = baseSteps
 
         // profileCompletion (only if needed)
         if needsProfileCompletion {
@@ -213,12 +213,7 @@ final class ProgramWizardViewModel {
 
     /// Steps for Collaborative mode
     private var collaborativeSteps: [ProgramWizardStep] {
-        var steps: [ProgramWizardStep] = []
-
-        // programStyle (skip in edit mode)
-        if !isEditMode {
-            steps.append(.programStyle)
-        }
+        var steps = baseSteps
 
         // Collaborative shows: training, weeklyDistribution, macroCustomization
         steps.append(contentsOf: [.training, .weeklyDistribution, .macroCustomization, .confirmation])
@@ -227,12 +222,7 @@ final class ProgramWizardViewModel {
 
     /// Steps for Manual mode
     private var manualSteps: [ProgramWizardStep] {
-        var steps: [ProgramWizardStep] = []
-
-        // programStyle (skip in edit mode)
-        if !isEditMode {
-            steps.append(.programStyle)
-        }
+        var steps = baseSteps
 
         // Manual shows: targetMode, then singleWeekMacros OR perDayMacros
         steps.append(.targetMode)
@@ -281,7 +271,11 @@ final class ProgramWizardViewModel {
         case .singleWeekMacros:
             return singleWeekCalories > 0 && singleWeekProtein >= 0
         case .perDayMacros:
-            return !perDayMacros.isEmpty
+            // All 7 days must have valid macros with calories > 0
+            return WeeklyConstants.validWeekdayRange.allSatisfy { weekday in
+                guard let macros = perDayMacros[weekday] else { return false }
+                return macros.calories > 0
+            }
         case .shiftedDaySelection:
             return !highCalorieDays.isEmpty  // At least one day must be selected
         case .confirmation:
@@ -319,7 +313,11 @@ final class ProgramWizardViewModel {
             if useSameTargetsAllWeek {
                 return singleWeekCalories > 0 && singleWeekProtein >= 0
             } else {
-                return !perDayMacros.isEmpty
+                // All 7 days must have valid macros
+                return WeeklyConstants.validWeekdayRange.allSatisfy { weekday in
+                    guard let macros = perDayMacros[weekday] else { return false }
+                    return macros.calories > 0
+                }
             }
         case nil:
             return false

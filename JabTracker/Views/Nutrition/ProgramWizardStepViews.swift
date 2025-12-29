@@ -7,6 +7,56 @@
 
 import SwiftUI
 
+// MARK: - Weekday Utility
+
+/// Shared weekday representation for consistent day handling across wizard steps
+enum Weekday: Int, CaseIterable {
+    case sunday = 1
+    case monday = 2
+    case tuesday = 3
+    case wednesday = 4
+    case thursday = 5
+    case friday = 6
+    case saturday = 7
+
+    var fullName: String {
+        switch self {
+        case .sunday: return "Sunday"
+        case .monday: return "Monday"
+        case .tuesday: return "Tuesday"
+        case .wednesday: return "Wednesday"
+        case .thursday: return "Thursday"
+        case .friday: return "Friday"
+        case .saturday: return "Saturday"
+        }
+    }
+
+    /// Weekdays ordered Monday-first (common display preference)
+    static var mondayFirst: [Weekday] {
+        [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
+    }
+}
+
+// MARK: - View Modifiers
+
+/// Card background modifier for consistent card styling
+struct CardBackgroundModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.gray.opacity(0.05))
+            )
+    }
+}
+
+extension View {
+    func cardBackground() -> some View {
+        modifier(CardBackgroundModifier())
+    }
+}
+
 // MARK: - Step Views
 
 /// Program style selection step
@@ -530,10 +580,6 @@ struct SummaryRow: View {
 /// Mock: mocks/goal-program/Collaborative/02.PNG
 struct MacroCustomizationStepView: View {
     @Bindable var viewModel: ProgramWizardViewModel
-    @State private var selectedDay: Int = 4  // Wednesday default (4=Wed in Calendar weekday)
-
-    private let dayLabels = ["S", "M", "T", "W", "T", "F", "S"]
-    private let weekdayNumbers = [1, 2, 3, 4, 5, 6, 7]  // Sun=1 through Sat=7 (Calendar.Component.weekday)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -544,9 +590,6 @@ struct MacroCustomizationStepView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
-                    // Day selector (S M T W T F S)
-                    daySelector
-
                     // Protein slider (g per lb)
                     proteinSlider
 
@@ -557,33 +600,6 @@ struct MacroCustomizationStepView: View {
             }
         }
         .accessibilityIdentifier("macro-customization-step")
-    }
-
-    // Day selector buttons (S M T W T F S)
-    private var daySelector: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Select Day")
-                .font(.headline)
-
-            HStack(spacing: 8) {
-                ForEach(Array(zip(dayLabels, weekdayNumbers)), id: \.1) { label, weekday in
-                    Button {
-                        selectedDay = weekday
-                    } label: {
-                        Text(label)
-                            .font(.subheadline.bold())
-                            .foregroundColor(selectedDay == weekday ? .white : .primary)
-                            .frame(width: 36, height: 36)
-                            .background(
-                                Circle()
-                                    .fill(selectedDay == weekday ? Color.blue : Color.gray.opacity(0.1))
-                            )
-                    }
-                    .accessibilityLabel(dayName(for: weekday))
-                    .accessibilityAddTraits(selectedDay == weekday ? .isSelected : [])
-                }
-            }
-        }
     }
 
     // Protein slider with g/lb display
@@ -605,11 +621,7 @@ struct MacroCustomizationStepView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
+        .cardBackground()
     }
 
     // Carb/Fat ratio slider
@@ -641,17 +653,7 @@ struct MacroCustomizationStepView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
-    }
-
-    private func dayName(for weekday: Int) -> String {
-        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        guard weekday >= 1 && weekday <= 7 else { return "" }
-        return names[weekday - 1]
+        .cardBackground()
     }
 }
 
@@ -719,6 +721,7 @@ struct TargetModeStepView: View {
 /// Mock: mocks/goal-program/Manual/02.1.PNG
 struct SingleWeekMacrosStepView: View {
     @Bindable var viewModel: ProgramWizardViewModel
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -748,6 +751,15 @@ struct SingleWeekMacrosStepView: View {
                 .padding(.horizontal, 24)
             }
         }
+        .focused($isInputFocused)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isInputFocused = false
+                }
+            }
+        }
         .accessibilityIdentifier("single-week-macros-step")
     }
 
@@ -764,11 +776,7 @@ struct SingleWeekMacrosStepView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
+        .cardBackground()
     }
 }
 
@@ -778,9 +786,7 @@ struct SingleWeekMacrosStepView: View {
 /// Mock: mocks/goal-program/Manual/03.1.PNG
 struct PerDayMacrosStepView: View {
     @Bindable var viewModel: ProgramWizardViewModel
-
-    private let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    private let weekdayNumbers = [2, 3, 4, 5, 6, 7, 1]  // Mon=2 through Sun=1 (Calendar.Component.weekday)
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -791,44 +797,49 @@ struct PerDayMacrosStepView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
-                    ForEach(Array(zip(days, weekdayNumbers)), id: \.1) { day, weekday in
-                        dayMacroSection(day: day, weekday: weekday)
+                    ForEach(Weekday.mondayFirst, id: \.rawValue) { weekday in
+                        dayMacroSection(weekday: weekday)
                     }
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 8)
             }
         }
+        .focused($isInputFocused)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isInputFocused = false
+                }
+            }
+        }
         .accessibilityIdentifier("per-day-macros-step")
     }
 
-    private func dayMacroSection(day: String, weekday: Int) -> some View {
+    private func dayMacroSection(weekday: Weekday) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             // Day header
-            Text(day)
+            Text(weekday.fullName)
                 .font(.headline)
 
             // Energy field
             macroInputRow(
                 label: "Energy",
                 unit: "kcal",
-                weekday: weekday,
+                weekday: weekday.rawValue,
                 keyPath: \.calories
             )
 
             // P/F/C in a row
             HStack(spacing: 8) {
-                macroInputRow(label: "P", unit: "g", weekday: weekday, keyPath: \.proteinGrams)
-                macroInputRow(label: "F", unit: "g", weekday: weekday, keyPath: \.fatGrams)
-                macroInputRow(label: "C", unit: "g", weekday: weekday, keyPath: \.carbsGrams)
+                macroInputRow(label: "P", unit: "g", weekday: weekday.rawValue, keyPath: \.proteinGrams)
+                macroInputRow(label: "F", unit: "g", weekday: weekday.rawValue, keyPath: \.fatGrams)
+                macroInputRow(label: "C", unit: "g", weekday: weekday.rawValue, keyPath: \.carbsGrams)
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
-        .accessibilityIdentifier("per-day-macros-\(day.lowercased())")
+        .cardBackground()
+        .accessibilityIdentifier("per-day-macros-\(weekday.fullName.lowercased())")
     }
 
     private func macroInputRow(
@@ -874,16 +885,6 @@ struct PerDayMacrosStepView: View {
 struct ShiftedDaySelectionStepView: View {
     @Binding var highCalorieDays: Set<Int>
 
-    private let days = [
-        (name: "Monday", weekday: 2),
-        (name: "Tuesday", weekday: 3),
-        (name: "Wednesday", weekday: 4),
-        (name: "Thursday", weekday: 5),
-        (name: "Friday", weekday: 6),
-        (name: "Saturday", weekday: 7),
-        (name: "Sunday", weekday: 1),
-    ]
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(
@@ -893,9 +894,9 @@ struct ShiftedDaySelectionStepView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    ForEach(days, id: \.weekday) { day in
-                        dayRow(name: day.name, weekday: day.weekday)
-                        if day.weekday != 1 {
+                    ForEach(Weekday.mondayFirst, id: \.rawValue) { weekday in
+                        dayRow(weekday: weekday)
+                        if weekday != .sunday {
                             Divider()
                                 .padding(.leading, 24)
                         }
@@ -907,26 +908,27 @@ struct ShiftedDaySelectionStepView: View {
         .accessibilityIdentifier("shifted-day-selection-step")
     }
 
-    private func dayRow(name: String, weekday: Int) -> some View {
-        Button {
-            if highCalorieDays.contains(weekday) {
-                highCalorieDays.remove(weekday)
+    private func dayRow(weekday: Weekday) -> some View {
+        let weekdayValue = weekday.rawValue
+        return Button {
+            if highCalorieDays.contains(weekdayValue) {
+                highCalorieDays.remove(weekdayValue)
             } else {
-                highCalorieDays.insert(weekday)
+                highCalorieDays.insert(weekdayValue)
             }
         } label: {
             HStack {
-                Text(name)
+                Text(weekday.fullName)
                     .foregroundColor(.primary)
                 Spacer()
-                Image(systemName: highCalorieDays.contains(weekday) ? "checkmark.square.fill" : "square")
-                    .foregroundColor(highCalorieDays.contains(weekday) ? .blue : .secondary)
+                Image(systemName: highCalorieDays.contains(weekdayValue) ? "checkmark.square.fill" : "square")
+                    .foregroundColor(highCalorieDays.contains(weekdayValue) ? .blue : .secondary)
                     .font(.title2)
             }
             .padding(.vertical, 16)
         }
-        .accessibilityLabel(name)
-        .accessibilityAddTraits(highCalorieDays.contains(weekday) ? .isSelected : [])
-        .accessibilityIdentifier("shifted-day-\(name.lowercased())")
+        .accessibilityLabel(weekday.fullName)
+        .accessibilityAddTraits(highCalorieDays.contains(weekdayValue) ? .isSelected : [])
+        .accessibilityIdentifier("shifted-day-\(weekday.fullName.lowercased())")
     }
 }
