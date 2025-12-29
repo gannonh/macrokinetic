@@ -220,7 +220,11 @@ struct QuickWeightSheet: View {
         // Update user's preferred unit if changed
         if user.weightUnit != weightUnit {
             user.weightUnit = weightUnit
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                Self.logger.error("Failed to save weight unit preference: \(error.localizedDescription)")
+            }
         }
 
         // Save weight (MetricsService respects healthSyncEnabled setting)

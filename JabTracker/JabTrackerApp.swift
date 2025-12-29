@@ -6,7 +6,7 @@ struct JabTrackerApp: App {
     let dataController = DataController.shared
     @StateObject private var authManager = AuthenticationManager()
     /// Biometric authentication manager (shared singleton)
-    @ObservedObject private var biometricManager = BiometricAuthManager.shared
+    @StateObject private var biometricManager = BiometricAuthManager.shared
     @StateObject private var onboardingCoordinator: OnboardingCoordinator
     @Environment(\.scenePhase) var scenePhase
     @State private var showingOnboarding = false
@@ -105,7 +105,6 @@ struct JabTrackerApp: App {
                 if authManager.authenticationState == .authenticated
                     && biometricManager.isBiometricEnabled
                 {
-                    print("📱 JabTrackerApp: Re-locking app (returning from background)")
                     isAppLocked = true
                 }
             }

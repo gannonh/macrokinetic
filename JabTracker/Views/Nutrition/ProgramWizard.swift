@@ -6,6 +6,7 @@
 //  Separate from GoalWizard - handles Program domain (style, diet, training, etc.)
 //
 
+import OSLog
 import SwiftData
 import SwiftUI
 
@@ -374,6 +375,11 @@ struct ProgramWizard: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "ProgramWizard"
+    )
+
     @State private var viewModel = ProgramWizardViewModel()
     @State private var errorMessage: String?
     @State private var showingError = false
@@ -531,7 +537,15 @@ struct ProgramWizard: View {
     private func handleContinue() async {
         // Save profile data when leaving profileCompletion step
         if viewModel.currentStep == .profileCompletion {
-            guard let user = goal.user, let service = metricsService else {
+            guard let user = goal.user else {
+                Self.logger.warning("Profile completion skipped: user is nil")
+                withAnimation(.spring()) {
+                    viewModel.advance()
+                }
+                return
+            }
+            guard let service = metricsService else {
+                Self.logger.warning("Profile completion skipped: MetricsService not initialized")
                 withAnimation(.spring()) {
                     viewModel.advance()
                 }
@@ -570,10 +584,18 @@ struct ProgramWizard: View {
     }
 
     private func calculateAndApplyTDEE() async {
-        guard let goal = viewModel.goal,
-            let user = goal.user,
-            let service = tdeeService
-        else {
+        guard let goal = viewModel.goal else {
+            Self.logger.error("TDEE calculation skipped: goal is nil")
+            return
+        }
+        guard let user = goal.user else {
+            Self.logger.error("TDEE calculation skipped: user is nil")
+            errorMessage = "Could not calculate personalized targets: User profile not found."
+            showingError = true
+            return
+        }
+        guard let service = tdeeService else {
+            Self.logger.error("TDEE calculation skipped: TDEEService not initialized")
             return
         }
 
@@ -581,8 +603,10 @@ struct ProgramWizard: View {
             // Use TDEEService for all calculations (TDEE, calories, macros)
             try await service.calculateAndApplyFullTDEE(for: user, goal: goal)
         } catch {
-            // Log error but don't block - user can still use default targets
-            print("TDEE calculation failed: \(error.localizedDescription)")
+            // Log error and show user feedback - they need to know why targets aren't calculated
+            Self.logger.error("TDEE calculation failed: \(error.localizedDescription)")
+            errorMessage = "Could not calculate personalized targets: \(error.localizedDescription)"
+            showingError = true
         }
     }
 }

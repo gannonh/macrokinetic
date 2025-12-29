@@ -100,12 +100,9 @@ final class MetricsService {
         timestamp: Date = Date(),
         notes: String? = nil
     ) async throws -> WeightEntry {
-        // Debug logging
-        print("🟢 MetricsService.logWeight:")
-        print("   weightKg received: \(weightKg)")
-        print("   in lbs: \(weightKg * WeightEntry.kgToLbsConversion)")
-        print("   user.weightUnit: \(user.weightUnit)")
-        print("   user.healthSyncEnabled: \(user.healthSyncEnabled)")
+        Self.logger.debug(
+            "logWeight: \(weightKg) kg, unit=\(user.weightUnit), healthSync=\(user.healthSyncEnabled)"
+        )
 
         // Validate weight range
         try validateWeight(weightKg)

@@ -60,7 +60,7 @@ enum TDEEServiceError: LocalizedError {
 // MARK: - TDEEService
 
 /// Orchestrates TDEE calculation and persistence.
-/// Coordinates WeightService, MealLogService, and TDEECalculationEngine
+/// Coordinates MetricsService and TDEECalculationEngine
 /// to calculate initial and adaptive TDEE values, updating NutritionGoal.
 @MainActor
 final class TDEEService {
@@ -380,6 +380,7 @@ extension TDEEService {
 
     /// Apply TDEE to derive calorie targets based on goal pace
     /// - Parameter goal: NutritionGoal with initialEstimatedTDEE set
+    /// - Note: Enforces minimum calorie floor from program settings (default: 1200 kcal)
     func applyTDEEToGoal(_ goal: NutritionGoal) {
         guard let tdee = goal.initialEstimatedTDEE else { return }
 

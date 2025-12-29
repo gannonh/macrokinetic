@@ -5,6 +5,7 @@
 //  Account management with Profile data and Account settings.
 //
 
+import OSLog
 import SwiftData
 import SwiftUI
 
@@ -26,6 +27,11 @@ struct AccountView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var authManager: AuthenticationManager
     @EnvironmentObject private var biometricManager: BiometricAuthManager
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "AccountView"
+    )
 
     @Query private var users: [User]
 
@@ -305,13 +311,12 @@ struct AccountView: View {
 
     @MainActor
     private func saveWeightEntry(weightKg: Double, for user: User) async {
-        print("🔵 AccountView.saveWeightEntry:")
-        print("   weightKg: \(weightKg)")
-        print("   user.healthSyncEnabled: \(user.healthSyncEnabled)")
-        print("   metricsService available: \(metricsService != nil)")
+        Self.logger.debug(
+            "saveWeightEntry: weightKg=\(weightKg), healthSyncEnabled=\(user.healthSyncEnabled)"
+        )
 
         guard let service = metricsService else {
-            print("   ⚠️ No metricsService - using fallback")
+            Self.logger.warning("No metricsService - using local fallback")
             // Fallback: convert kg back to user's preferred unit for storage
             if user.weightUnit == "lbs" {
                 user.weight = weightKg * WeightEntry.kgToLbsConversion
@@ -319,15 +324,21 @@ struct AccountView: View {
                 user.weight = weightKg
             }
             user.updatedAt = Date()
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                Self.logger.error("Failed to save weight locally: \(error.localizedDescription)")
+                errorMessage = "Could not save weight: \(error.localizedDescription)"
+                showingError = true
+            }
             return
         }
 
         do {
             _ = try await service.logWeight(weightKg: weightKg, for: user)
-            print("   ✅ Weight saved successfully via MetricsService")
+            Self.logger.debug("Weight saved successfully via MetricsService")
         } catch {
-            print("   ❌ Error saving weight: \(error)")
+            Self.logger.error("Error saving weight: \(error.localizedDescription)")
             errorMessage = "Could not save weight: \(error.localizedDescription)"
             showingError = true
         }
@@ -525,14 +536,14 @@ extension AccountView {
         editCardioExperience = user.cardioExperience
         editLiftingExperience = user.liftingExperience
 
-        print("🔵 AccountView.loadUserData:")
-        print("   healthSyncEnabled: \(user.healthSyncEnabled)")
-        print("   metricsService available: \(metricsService != nil)")
+        Self.logger.debug(
+            "loadUserData: healthSyncEnabled=\(user.healthSyncEnabled), metricsService=\(metricsService != nil)"
+        )
 
         // Load biometric data from HealthKit if sync is enabled
         if user.healthSyncEnabled {
             guard let service = metricsService else {
-                print("   ⚠️ MetricsService is nil - loading local values only")
+                Self.logger.warning("MetricsService is nil - loading local values only")
                 // Service not available yet - load local values but don't clear HealthKit display state
                 editHeightCm = user.heightCm ?? 170.0
                 editWeight = user.weight
@@ -545,7 +556,7 @@ extension AccountView {
                 heightInches = Int(totalInches.truncatingRemainder(dividingBy: 12))
                 return
             }
-            print("   ✅ MetricsService available - loading from HealthKit")
+            Self.logger.debug("MetricsService available - loading from HealthKit")
 
             // Get current weight (from HealthKit if enabled, otherwise local)
             let weightKg = await service.getCurrentWeight(for: user)
@@ -565,7 +576,7 @@ extension AccountView {
                 displayedSex = sex
                 editSex = sex
                 sexFromHealthKit = true
-                print("   Read biological sex from HealthKit: \(sex)")
+                Self.logger.debug("Read biological sex from HealthKit: \(sex)")
             } else {
                 // HealthKit doesn't have sex - use local value, allow editing
                 displayedSex = nil
@@ -578,7 +589,7 @@ extension AccountView {
                 displayedBirthday = dob
                 editBirthday = dob
                 birthdayFromHealthKit = true
-                print("   Read date of birth from HealthKit: \(dob)")
+                Self.logger.debug("Read date of birth from HealthKit")
             } else {
                 // HealthKit doesn't have DOB - use local value, allow editing
                 displayedBirthday = nil
@@ -657,7 +668,13 @@ extension AccountView {
         }
 
         user.updatedAt = Date()
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            Self.logger.error("Failed to save field: \(error.localizedDescription)")
+            errorMessage = "Could not save changes: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     func signOut() async {
@@ -673,7 +690,13 @@ extension AccountView {
         guard let user = users.first else { return }
         user.hasCompletedOnboarding = false
         user.onboardingCompletedAt = nil
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            Self.logger.error("Failed to save onboarding reset: \(error.localizedDescription)")
+            errorMessage = "Could not restart onboarding: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 }
 

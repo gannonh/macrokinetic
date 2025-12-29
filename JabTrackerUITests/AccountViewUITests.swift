@@ -120,8 +120,8 @@ final class AccountViewUITests: XCTestCase {
 
         // THEN: HealthKit permission dialog may appear
         // Note: Actual dialog requires simulator reset and cannot be fully automated
-        // We verify the toggle interaction works
-        usleep(500_000)  // Wait for any dialog or state change
+        // We verify the toggle interaction works by waiting for any UI change
+        _ = healthToggle.waitForExistence(timeout: 1)
     }
 
     // MARK: - 3. Health Sync - Disable Flow
@@ -179,8 +179,8 @@ final class AccountViewUITests: XCTestCase {
         weightRow.tap()
 
         // THEN: Edit weight sheet should appear
-        let weightStepper = app.steppers["edit-weight-stepper"]
-        XCTAssertTrue(weightStepper.waitForExistence(timeout: 3), "Weight stepper should appear in edit sheet")
+        let weightPicker = app.otherElements["edit-weight-picker"]
+        XCTAssertTrue(weightPicker.waitForExistence(timeout: 3), "Weight picker should appear in edit sheet")
 
         // WHEN: Adjust weight and save
         // Note: Stepper interaction is complex in XCUITest - verify UI is present
@@ -192,7 +192,7 @@ final class AccountViewUITests: XCTestCase {
 
         // THEN: Sheet should dismiss
         XCTAssertFalse(
-            weightStepper.waitForExistence(timeout: 2),
+            weightPicker.waitForExistence(timeout: 2),
             "Edit sheet should dismiss after save"
         )
     }
@@ -373,7 +373,8 @@ final class AccountViewUITests: XCTestCase {
         biometricToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
 
         // THEN: State should change (or biometric prompt appears)
-        usleep(500_000)  // Wait for state change or prompt
+        // Wait for any UI change using condition-based wait
+        _ = biometricToggle.waitForExistence(timeout: 1)
 
         // Note: Actual biometric prompt cannot be automated
         // We verify the toggle is interactive
