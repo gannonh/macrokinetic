@@ -413,4 +413,202 @@ struct TDEEServiceTests {
         // When/Then
         #expect(!service.shouldRecalculateTDEE(goal: goal))
     }
+
+    // MARK: - Calorie & Macro Calculation Tests
+
+    @Test("applyTDEEToGoal calculates correct deficit for 1 lb/week weight loss")
+    @MainActor
+    func testApplyTDEEToGoalCalculatesCorrectDeficit() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+        goal.initialEstimatedTDEE = 2700.0
+        // 1 lb/week = 0.4536 kg/week, weeklyWeightChangePaceKg is negative for weight loss
+        goal.weeklyWeightChangePaceKg = -0.4536
+
+        let service = TDEEService(context: context)
+
+        // When
+        service.applyTDEEToGoal(goal)
+
+        // Then
+        // Daily deficit = 0.4536 * 1100 = 499 kcal
+        // Daily target = 2700 - 499 = 2201 kcal
+        let expectedTarget = 2700.0 - (0.4536 * 1100)
+        #expect(abs(goal.dailyCalorieTarget - expectedTarget) < 1.0)
+    }
+
+    @Test("applyTDEEToGoal calculates correct surplus for weight gain")
+    @MainActor
+    func testApplyTDEEToGoalCalculatesCorrectSurplus() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+        goal.initialEstimatedTDEE = 2500.0
+        // 1 lb/week gain = +0.4536 kg/week
+        goal.weeklyWeightChangePaceKg = 0.4536
+
+        let service = TDEEService(context: context)
+
+        // When
+        service.applyTDEEToGoal(goal)
+
+        // Then
+        // Daily surplus = 0.4536 * 1100 = 499 kcal
+        // Daily target = 2500 + 499 = 2999 kcal
+        let expectedTarget = 2500.0 + (0.4536 * 1100)
+        #expect(abs(goal.dailyCalorieTarget - expectedTarget) < 1.0)
+    }
+
+    @Test("applyTDEEToGoal respects calorie floor")
+    @MainActor
+    func testApplyTDEEToGoalRespectsCalorieFloor() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+        goal.initialEstimatedTDEE = 1500.0
+        goal.weeklyWeightChangePaceKg = -0.9  // Aggressive deficit
+
+        // Set calorie floor to 1200
+        goal.program?.calorieFloorRaw = CalorieFloorType.standard.rawValue
+
+        let service = TDEEService(context: context)
+
+        // When
+        service.applyTDEEToGoal(goal)
+
+        // Then
+        // Calculated would be 1500 - (0.9 * 1100) = 510 kcal (below floor)
+        // Should be clamped to 1200
+        #expect(goal.dailyCalorieTarget >= 1200.0)
+    }
+
+    @Test("calculateMacros returns correct protein based on weight and protein level")
+    @MainActor
+    func testCalculateMacrosReturnsCorrectProtein() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+
+        // Set protein level to moderate (1.6 g/kg)
+        goal.program?.proteinLevelRaw = ProteinLevel.moderate.rawValue
+
+        let service = TDEEService(context: context)
+
+        // When
+        let macros = service.calculateMacros(
+            calories: 2000.0,
+            program: goal.program!,
+            weightKg: 80.0
+        )
+
+        // Then
+        // Protein = 1.6 g/kg * 80 kg = 128g
+        let expectedProtein = ProteinLevel.moderate.gramsPerKg * 80.0
+        #expect(abs(macros.protein - expectedProtein) < 1.0)
+    }
+
+    @Test("calculateMacros distributes remaining calories to fat and carbs")
+    @MainActor
+    func testCalculateMacrosDistributesRemainingCalories() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+
+        // Set diet to balanced (30% P, 40% C, 30% F)
+        goal.program?.dietPreferenceRaw = DietPreference.balanced.rawValue
+        goal.program?.proteinLevelRaw = ProteinLevel.moderate.rawValue
+
+        let service = TDEEService(context: context)
+
+        // When
+        let macros = service.calculateMacros(
+            calories: 2000.0,
+            program: goal.program!,
+            weightKg: 80.0
+        )
+
+        // Then
+        // Verify macros add up to approximately total calories
+        let proteinCals = macros.protein * 4
+        let fatCals = macros.fat * 9
+        let carbCals = macros.carbs * 4
+        let totalCals = proteinCals + fatCals + carbCals
+
+        #expect(abs(totalCals - 2000.0) < 10.0)  // Within 10 kcal tolerance
+    }
+
+    @Test("calculateAndApplyMacros updates goal with calculated values")
+    @MainActor
+    func testCalculateAndApplyMacrosUpdatesGoal() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+        goal.dailyCalorieTarget = 2000.0
+        goal.startingWeightKg = 80.0
+        goal.program?.proteinLevelRaw = ProteinLevel.moderate.rawValue
+        goal.program?.dietPreferenceRaw = DietPreference.balanced.rawValue
+
+        let service = TDEEService(context: context)
+
+        // When
+        service.calculateAndApplyMacros(for: goal)
+
+        // Then
+        #expect(goal.dailyProteinTargetGrams > 0)
+        #expect(goal.dailyFatTargetGrams > 0)
+        #expect(goal.dailyCarbTargetGrams > 0)
+    }
+
+    @Test("calculateAndApplyFullTDEE orchestrates complete calculation flow")
+    @MainActor
+    func testCalculateAndApplyFullTDEEOrchestration() async throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+        goal.weeklyWeightChangePaceKg = -0.4536  // 1 lb/week loss
+        goal.startingWeightKg = 80.0
+
+        // Add weight entry for TDEE calculation
+        let weightEntry = WeightEntry(timestamp: Date(), weightKg: 80.0)
+        context.insert(weightEntry)
+        try context.save()
+
+        let service = TDEEService(context: context)
+
+        // When
+        try await service.calculateAndApplyFullTDEE(for: user, goal: goal)
+
+        // Then
+        // Verify all values are set
+        #expect(goal.initialEstimatedTDEE != nil)
+        #expect(goal.dailyCalorieTarget > 0)
+        #expect(goal.dailyProteinTargetGrams > 0)
+        #expect(goal.dailyFatTargetGrams > 0)
+        #expect(goal.dailyCarbTargetGrams > 0)
+
+        // Verify calorie target is less than TDEE (for weight loss)
+        #expect(goal.dailyCalorieTarget < goal.initialEstimatedTDEE!)
+    }
 }

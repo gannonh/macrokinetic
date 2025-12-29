@@ -154,6 +154,107 @@ final class ProgramWizardUITests: XCTestCase {
         // TODO: Verify wizard is dismissed
         // TODO: Verify no program created/modified
     }
+
+    // MARK: - TDEE Integration Tests (Phase 15.1)
+
+    func testCoachedProgramShowsProfileCompletionStepWhenMissingData() throws {
+        // TODO: Set up user with missing profile data (height, sex, or birthday)
+        // TODO: Navigate to Strategy → Set Goal → create goal
+        // TODO: Select "Coached" program style
+        // TODO: Verify: "Complete Your Profile" step appears
+        // TODO: Verify: Missing fields shown (height picker, sex picker, birthday picker)
+        // TODO: Verify: Info banner explains why profile data is needed
+        // TODO: Fill in missing fields
+        // TODO: Tap Continue
+        // TODO: Verify: Proceeds to next wizard step
+    }
+
+    func testCoachedProgramSkipsProfileCompletionWhenDataComplete() throws {
+        // TODO: Set up user with complete profile (height, sex, birthday)
+        // TODO: Navigate to Strategy → create goal → select "Coached"
+        // TODO: Verify: Profile completion step is NOT shown
+        // TODO: Verify: Goes directly to Diet Preference step
+    }
+
+    func testProgramReadySheetDisplaysTDEECalculation() throws {
+        // TODO: Set up profile: Male, 180 lbs, 5'10", age 30, activity level set
+        // TODO: Create goal: Weight Loss, 1.0 lbs/week, Target 170 lbs
+        // TODO: Select Coached program with Balanced diet
+        // TODO: Complete all wizard steps
+        // TODO: Verify: Program Ready Sheet appears
+        // TODO: Verify: "Your macro program is ready" header
+        // TODO: Verify: Step 1 shows "Estimated Expenditure (TDEE)" with value ~2700-2800 kcal
+        // TODO: Verify: Step 2 shows "Daily Target" with value ~2200-2300 kcal
+        // TODO: Verify: Step 3 shows "Macro Split" with diet name and P/F/C breakdown
+    }
+
+    func testProgramReadySheetWeeklyMacroGrid() throws {
+        // TODO: Complete Coached program creation
+        // TODO: Verify: Program Ready Sheet shows weekly macro grid (M-T-W-T-F-S-S)
+        // TODO: Verify: All 7 days show identical values (Even distribution)
+        // TODO: Verify: Calorie values displayed in pill-shaped cells
+        // TODO: Verify: Protein/Fat/Carbs rows visible with colored cells
+        // TODO: Verify: Values are integers (no decimals)
+    }
+
+    func testCalorieDeficitCalculationAccuracy() throws {
+        // Test Case: 1 lb/week weight loss should show ~500 kcal deficit
+        // TODO: Set up profile: Male, 180 lbs, 5'10", age 30
+        // TODO: Create goal: Weight Loss, 1.0 lbs/week pace
+        // TODO: Complete Coached program
+        // TODO: Verify: Daily Target = TDEE - ~500 kcal
+        // TODO: Verify: Daily Target NOT suspiciously close to TDEE (regression check)
+        //
+        // Expected: If TDEE ~2700, Daily Target should be ~2200
+        // Bug regression: Previous bug showed ~2630 (divided by 7 twice)
+    }
+
+    func testCalorieSurplusCalculationAccuracy() throws {
+        // Test Case: 1 lb/week weight gain should show ~500 kcal surplus
+        // TODO: Set up profile: Male, 180 lbs, 5'10", age 30
+        // TODO: Create goal: Weight Gain, 1.0 lbs/week pace
+        // TODO: Complete Coached program
+        // TODO: Verify: Daily Target = TDEE + ~500 kcal
+        //
+        // Expected: If TDEE ~2700, Daily Target should be ~3200
+    }
+
+    func testSlowerPaceShowsSmallDeficit() throws {
+        // Test Case: 0.5 lbs/week weight loss should show ~250 kcal deficit
+        // TODO: Set up profile: Male, 180 lbs, 5'10", age 30
+        // TODO: Create goal: Weight Loss, 0.5 lbs/week pace
+        // TODO: Complete Coached program
+        // TODO: Verify: Daily Target = TDEE - ~250 kcal
+    }
+
+    func testDietPreferenceAffectsMacros() throws {
+        // TODO: Create Coached program with Balanced diet
+        // TODO: Note macro values on Program Ready Sheet
+        // TODO: Create another Coached program with High Protein diet
+        // TODO: Verify: Protein grams increased
+        // TODO: Verify: Carb grams decreased to compensate
+        //
+        // Each diet preference should produce different macro distributions
+    }
+
+    func testStrategyViewPersistsCalculatedTargets() throws {
+        // TODO: Complete Coached program creation
+        // TODO: Verify Program Ready Sheet values
+        // TODO: Tap "Start Program" or dismiss
+        // TODO: Navigate to Strategy view
+        // TODO: Verify: Strategy card shows same values as Program Ready Sheet
+        // TODO: Restart app (terminate and relaunch)
+        // TODO: Verify: Values persist after restart
+    }
+
+    func testProgramWizardRaceConditionFix() throws {
+        // Regression test: Fast tapping should not show blank screen
+        // TODO: Navigate to Strategy → Set Goal → create goal
+        // TODO: Select Coached style and tap Continue rapidly
+        // TODO: Continue through steps quickly (tap immediately when available)
+        // TODO: Verify: No blank screens appear
+        // TODO: Verify: Program Ready Sheet loads with calculated values (not "Calculating...")
+    }
 }
 
 // MARK: - Accessibility Identifiers Reference
@@ -205,3 +306,19 @@ final class ProgramWizardUITests: XCTestCase {
 // - "program-wizard-protein-moderate"
 // - "program-wizard-protein-high"
 // - "program-wizard-protein-very_high"
+//
+// Profile Completion Step (Phase 15.1):
+// - "program-wizard-profileCompletion-step"
+// - "program-wizard-height-picker"
+// - "program-wizard-sex-picker"
+// - "program-wizard-birthday-picker"
+// - "program-wizard-profile-info-banner"
+//
+// Program Ready Sheet (Phase 15.1):
+// - "program-ready-sheet"
+// - "program-ready-header"
+// - "program-ready-tdee-value"
+// - "program-ready-daily-target-value"
+// - "program-ready-macro-split"
+// - "program-ready-weekly-grid"
+// - "program-ready-start-button"
