@@ -69,7 +69,7 @@ final class TDEEService {
 
     private let context: ModelContext
     private let engine: TDEECalculationEngine
-    private let weightService: WeightService
+    private let metricsService: MetricsService
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -86,14 +86,14 @@ final class TDEEService {
     init(
         context: ModelContext,
         engine: TDEECalculationEngine = TDEECalculationEngine(),
-        weightService: WeightService? = nil,
+        metricsService: MetricsService? = nil,
         ewmaAlpha: Double = 0.2,
         minimumDaysForAdaptive: Int = 14,
         minimumConsistencyForAdaptive: Double = 0.7
     ) {
         self.context = context
         self.engine = engine
-        self.weightService = weightService ?? WeightService(context: context)
+        self.metricsService = metricsService ?? MetricsService(context: context)
         self.ewmaAlpha = ewmaAlpha
         self.minimumDaysForAdaptive = minimumDaysForAdaptive
         self.minimumConsistencyForAdaptive = minimumConsistencyForAdaptive
@@ -125,7 +125,7 @@ final class TDEEService {
         let trainingLevel = goal.program?.training ?? .none
 
         // Get current weight
-        guard let latestWeight = try await weightService.getLatestEntry() else {
+        guard let latestWeight = try await metricsService.getLatestWeightEntry() else {
             throw TDEEServiceError.noWeightData
         }
 
@@ -274,7 +274,7 @@ extension TDEEService {
         from startDate: Date,
         to endDate: Date
     ) async throws -> (smoothed: [(date: Date, smoothedWeight: Double)], changeRate: Double) {
-        let weightEntries = try await weightService.getEntries(from: startDate, to: endDate)
+        let weightEntries = try await metricsService.getWeightEntries(from: startDate, to: endDate)
 
         guard weightEntries.count >= minimumDaysForAdaptive else {
             throw TDEEServiceError.insufficientWeightData(

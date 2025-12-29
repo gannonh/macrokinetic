@@ -73,7 +73,6 @@
           "Services/FoodService.swift",
           "Services/MealLogService.swift",
           "Services/CustomFoodService.swift",
-          "Services/WeightService.swift",
           "Services/MetricsService.swift",
           "Services/ProgressPhotoService.swift",
           "Services/TDEEService.swift"
@@ -87,7 +86,6 @@
           "Services/NotificationService+Actions.swift",
           "Services/SubscriptionManager.swift",
           "Services/SubscriptionManager+Testing.swift",
-          "Services/HealthKitService.swift",
           "Onboarding/OnboardingCoordinator.swift",
           "Onboarding/OnboardingViewModel.swift",
           "Views/Analytics/ConcentrationChartGestureHandler.swift",
@@ -154,7 +152,6 @@
     ],
     "files": [
       "ContentView.swift",
-      "Services/WeightService+HealthKit.swift",
       "Services/MetricsService+HealthKit.swift",
       "Design/ButtonComponents.swift",
       "Design/ButtonStyles.swift",
@@ -243,7 +240,7 @@
       "Views/Settings/BodyMetricsVisibilityView.swift",
       "Views/Settings/UnitsOfMeasureView.swift",
       "Views/Settings/SettingsView.swift",
-      "Views/Settings/HealthIntegrationView.swift",
+      "Views/Settings/AccountView.swift",
       "Views/SplashView.swift",
       "Views/UserProfileView.swift",
       "Views/Nutrition/NutritionSummaryCard.swift",

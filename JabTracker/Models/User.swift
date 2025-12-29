@@ -70,6 +70,13 @@ final class User {
     var enabledBodyMetrics: [String] = ["waist"]
     var enabledPhotoTypes: [String] = ["front"]
 
+    // Training experience levels (for TDEE calculations)
+    var cardioExperience: String = "intermediate"  // beginner, intermediate, advanced
+    var liftingExperience: String = "intermediate"  // beginner, intermediate, advanced
+
+    // Health integration preferences
+    var healthSyncEnabled: Bool = false  // Whether user has enabled Health app integration
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]?  // CloudKit requires optional relationships
 
@@ -103,7 +110,10 @@ final class User {
         dailyCarbGoal: Double = 200.0,
         dailyFatGoal: Double = 65.0,
         enabledBodyMetrics: [String] = ["waist"],
-        enabledPhotoTypes: [String] = ["front"]
+        enabledPhotoTypes: [String] = ["front"],
+        cardioExperience: String = "intermediate",
+        liftingExperience: String = "intermediate",
+        healthSyncEnabled: Bool = false
     ) {
         self.email = email
         self.name = name
@@ -126,6 +136,9 @@ final class User {
         self.dailyFatGoal = dailyFatGoal
         self.enabledBodyMetrics = enabledBodyMetrics
         self.enabledPhotoTypes = enabledPhotoTypes
+        self.cardioExperience = cardioExperience
+        self.liftingExperience = liftingExperience
+        self.healthSyncEnabled = healthSyncEnabled
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it

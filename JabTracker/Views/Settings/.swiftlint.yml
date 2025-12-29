@@ -1,0 +1,6 @@
+# SwiftLint overrides for Settings views
+# These views contain multiple edit sheets and form sections that increase file length
+
+file_length:
+  warning: 600
+  error: 700

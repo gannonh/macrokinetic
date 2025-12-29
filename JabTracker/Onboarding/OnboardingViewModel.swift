@@ -192,33 +192,21 @@ class OnboardingViewModel: ObservableObject {
             return
         }
 
-        let isAvailable = self.testIsHealthDataAvailable ?? HKHealthStore.isHealthDataAvailable()
+        let isAvailable = self.testIsHealthDataAvailable ?? MetricsService.isHealthKitAvailable
         guard isAvailable else {
             self.healthKitGranted = false
             return
         }
 
-        let healthStore = HKHealthStore()
-        guard let bodyMassType = HKObjectType.quantityType(forIdentifier: .bodyMass),
-            let bodyMassIndexType = HKObjectType.quantityType(forIdentifier: .bodyMassIndex)
-        else {
-            self.errorMessage = "Failed to create HealthKit types"
-            self.healthKitGranted = false
-            return
-        }
-
-        let typesToRead: Set<HKObjectType> = [bodyMassType, bodyMassIndexType]
-        let typesToShare: Set<HKSampleType> = [bodyMassType, bodyMassIndexType]
-
         if let forced = testForcedHealthAuthResult {
             self.healthKitGranted = forced
         } else {
+            // Use MetricsService as single source of truth for HealthKit authorization
+            let metricsService = MetricsService(context: dataController.container.mainContext)
             do {
-                try await healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead)
-                // Check authorization status for the weight type
-                let authStatus = healthStore.authorizationStatus(for: bodyMassType)
-                self.healthKitGranted = authStatus == .sharingAuthorized
-                if !self.healthKitGranted {
+                let granted = try await metricsService.requestFullHealthKitAuthorization()
+                self.healthKitGranted = granted
+                if !granted {
                     self.errorMessage =
                         "HealthKit permissions were denied. You can enable them later in Settings."
                 } else {
