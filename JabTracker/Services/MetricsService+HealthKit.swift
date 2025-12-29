@@ -300,6 +300,9 @@ extension MetricsService {
     }
 
     private func writeWeightToHealthKit(_ weightKg: Double, timestamp: Date) async {
+        print("🟡 writeWeightToHealthKit:")
+        print("   weightKg to write: \(weightKg)")
+        print("   in lbs: \(weightKg * WeightEntry.kgToLbsConversion)")
         let quantity = HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: weightKg)
         await writeQuantity(quantity, type: Self.weightType, timestamp: timestamp)
     }

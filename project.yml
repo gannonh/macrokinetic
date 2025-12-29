@@ -89,12 +89,12 @@ schemes:
         "--seed-test-1y": false
     run:
       commandLineArguments:
-        "--force-onboarding": false 
-        "--reset-app-data": true # seeding only works if true
-        "--ui-testing": true # Enable to bypass auth
+        "--force-onboarding": false # resets onboarding if true
+        "--reset-app-data": false # seeding only works if true
+        "--ui-testing": true # Enable to bypasses auth AND auto-complete onboarding 
         "--seed-test-7d": false
         "--seed-test-30d": false
         "--seed-test-90d": false
-        "--seed-test-1y": true
+        "--seed-test-1y": false
         "--test-titration-data": false
       storeKitConfiguration: JabTrackerStoreKit.storekit

@@ -19,8 +19,9 @@ struct QuickWeightSheet: View {
 
     // MARK: - State
 
-    @State private var weightInput: String = ""
-    @State private var weightUnit: String = unitKg
+    @State private var weightWhole: Int = 150
+    @State private var weightDecimal: Int = 0
+    @State private var weightUnit: String = unitLbs
     @State private var bodyFatInput: String = ""
     @State private var timestamp: Date = Date()
     @State private var isSaving: Bool = false
@@ -43,9 +44,7 @@ struct QuickWeightSheet: View {
     }
 
     private var canSave: Bool {
-        guard let weight = Double(weightInput), weight > 0 else {
-            return false
-        }
+        // Weight picker always has a valid value
         guard bodyFatInput.isEmpty || parsedBodyFat != nil else {
             return false
         }
@@ -63,10 +62,8 @@ struct QuickWeightSheet: View {
         return bodyFat
     }
 
-    private var weightInKg: Double? {
-        guard let weight = Double(weightInput), weight > 0 else {
-            return nil
-        }
+    private var weightInKg: Double {
+        let weight = Double(weightWhole) + Double(weightDecimal) / 10.0
 
         if weightUnit == Self.unitLbs {
             return weight / WeightEntry.kgToLbsConversion
@@ -117,17 +114,37 @@ struct QuickWeightSheet: View {
 
     private var weightSection: some View {
         Section("Weight") {
-            HStack {
-                TextField("Enter weight", text: $weightInput)
-                    .keyboardType(.decimalPad)
-                    .accessibilityIdentifier(Self.weightInputIdentifier)
+            VStack(spacing: 12) {
+                HStack(spacing: 0) {
+                    Picker("Whole", selection: $weightWhole) {
+                        ForEach(30...400, id: \.self) { Text("\($0)").tag($0) }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(width: 100, height: 150)
+                    .clipped()
+
+                    Text(".")
+                        .font(.title)
+
+                    Picker("Decimal", selection: $weightDecimal) {
+                        ForEach(0...9, id: \.self) { Text("\($0)").tag($0) }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(width: 60, height: 150)
+                    .clipped()
+
+                    Text(weightUnit)
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                        .padding(.leading, 8)
+                }
+                .accessibilityIdentifier(Self.weightInputIdentifier)
 
                 Picker("Unit", selection: $weightUnit) {
                     Text("kg").tag(Self.unitKg)
                     Text("lbs").tag(Self.unitLbs)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 100)
                 .accessibilityIdentifier(Self.weightUnitPickerIdentifier)
             }
         }
@@ -179,7 +196,8 @@ struct QuickWeightSheet: View {
                             : lastEntry.weightKg
 
                         await MainActor.run {
-                            weightInput = String(format: "%.1f", weightValue)
+                            weightWhole = Int(weightValue)
+                            weightDecimal = Int(((weightValue - Double(Int(weightValue))) * 10).rounded())
                         }
                     }
                 } catch {
@@ -191,6 +209,26 @@ struct QuickWeightSheet: View {
 
     @MainActor
     private func save() async {
+        guard let user = users.first else {
+            errorMessage = "No user found"
+            showingError = true
+            return
+        }
+
+        let weightKg = weightInKg
+
+        // Update user's preferred unit if changed
+        if user.weightUnit != weightUnit {
+            user.weightUnit = weightUnit
+            try? modelContext.save()
+        }
+
+        // Save weight (MetricsService respects healthSyncEnabled setting)
+        await saveWeightEntry(weightKg: weightKg, for: user)
+    }
+
+    @MainActor
+    private func saveWeightEntry(weightKg: Double, for user: User) async {
         guard let service = metricsService else {
             Self.logger.error("MetricsService not initialized - AppServices.initialize may not have been called")
             errorMessage = "Unable to save weight. Please restart the app and try again."
@@ -198,26 +236,8 @@ struct QuickWeightSheet: View {
             return
         }
 
-        guard let user = users.first else {
-            errorMessage = "No user found"
-            showingError = true
-            return
-        }
-
-        guard let weightKg = weightInKg else {
-            errorMessage = "Please enter a valid weight"
-            showingError = true
-            return
-        }
-
         isSaving = true
         defer { isSaving = false }
-
-        // Update user's preferred unit if changed
-        if user.weightUnit != weightUnit {
-            user.weightUnit = weightUnit
-            try? modelContext.save()
-        }
 
         do {
             // Log weight entry (also updates User.weight and syncs to HealthKit if enabled)

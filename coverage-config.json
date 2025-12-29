@@ -223,6 +223,7 @@
       "Views/History/MonthlyStatsView+Helpers.swift",
       "Views/History/MonthlyStatsView.swift",
       "Views/History/ScheduledDoseIndicator.swift",
+      "Views/LockScreenView.swift",
       "Views/MedicationProfile/DoseTitrationView.swift",
       "Views/MedicationProfile/ReconstitutionCalculatorView.swift",
       "Views/Settings/Components/MedicationProfileHeader.swift",

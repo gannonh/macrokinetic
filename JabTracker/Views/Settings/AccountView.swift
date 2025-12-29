@@ -37,7 +37,7 @@ struct AccountView: View {
     @State private var editHeightCm: Double = 170.0
     @State private var heightFeet: Int = 5
     @State private var heightInches: Int = 7
-    @State private var editWeight: Double = 70.0
+    @State private var editWeight: Double = 70.0  // Used for initial load
     @State private var editCardioExperience: String = "intermediate"
     @State private var editLiftingExperience: String = "intermediate"
 
@@ -46,6 +46,21 @@ struct AccountView: View {
     @State private var showingDisableHealthSync = false
     @State private var errorMessage: String?
     @State private var showingError = false
+
+    // HealthKit-sourced values for display
+    @State private var displayedWeightKg: Double?
+    @State private var displayedHeightCm: Double?
+    @State private var displayedSex: String?
+    @State private var displayedBirthday: Date?
+
+    // Track if values came from HealthKit (read-only)
+    @State private var sexFromHealthKit = false
+    @State private var birthdayFromHealthKit = false
+    @State private var showingHealthKitReadOnlyAlert = false
+    @State private var healthKitReadOnlyField: String?
+
+    // Refresh trigger to reload HealthKit data when view appears
+    @State private var refreshTrigger = UUID()
 
     private var metricsService: MetricsService? {
         AppServices.shared.metricsService
@@ -61,8 +76,17 @@ struct AccountView: View {
             // MARK: - Profile Details
             Section("Details") {
                 profileRow(label: "Name", value: users.first?.name ?? "Not set", field: "name")
-                profileRow(label: "Birthday", value: formatBirthday(users.first?.dateOfBirth), field: "birthday")
-                profileRow(label: "Sex", value: formatSex(users.first?.gender), field: "sex")
+                if birthdayFromHealthKit {
+                    healthKitReadOnlyRow(
+                        label: "Birthday", value: formatBirthday(users.first?.dateOfBirth), field: "birthday")
+                } else {
+                    profileRow(label: "Birthday", value: formatBirthday(users.first?.dateOfBirth), field: "birthday")
+                }
+                if sexFromHealthKit {
+                    healthKitReadOnlyRow(label: "Sex", value: formatSex(users.first?.gender), field: "sex")
+                } else {
+                    profileRow(label: "Sex", value: formatSex(users.first?.gender), field: "sex")
+                }
                 profileRow(label: "Height", value: formatHeight(users.first?.heightCm), field: "height")
                 profileRow(label: "Weight", value: formatWeight(users.first), field: "weight")
                 profileRow(
@@ -156,7 +180,8 @@ struct AccountView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Account")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { loadUserData() }
+        .task(id: refreshTrigger) { await loadUserData() }
+        .onAppear { refreshTrigger = UUID() }
         .sheet(item: $editingField) { field in
             editSheet(for: field)
         }
@@ -183,15 +208,21 @@ struct AccountView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text(
-                "This will stop syncing your health data, including weight and other metrics, "
-                    + "with Apple Health. To completely revoke permissions, go to Settings → Health → "
-                    + "Data Access & Devices → MacroKinetic."
+                "This will stop syncing your health data with Apple Health. "
+                    + "To completely revoke permissions, open Health → Sharing → Apps → MacroKinetic."
             )
         }
         .alert("Error", isPresented: $showingError) {
             Button("OK") {}
         } message: {
             Text(errorMessage ?? "An error occurred")
+        }
+        .alert("Synced from Health", isPresented: $showingHealthKitReadOnlyAlert) {
+            Button("OK") {}
+        } message: {
+            Text(
+                "\(healthKitReadOnlyField ?? "This field") is synced from the Health app. To change it, go to Settings → Health → Health Details."
+            )
         }
         .accessibilityIdentifier("account-view")
     }
@@ -272,6 +303,36 @@ struct AccountView: View {
         }
     }
 
+    @MainActor
+    private func saveWeightEntry(weightKg: Double, for user: User) async {
+        print("🔵 AccountView.saveWeightEntry:")
+        print("   weightKg: \(weightKg)")
+        print("   user.healthSyncEnabled: \(user.healthSyncEnabled)")
+        print("   metricsService available: \(metricsService != nil)")
+
+        guard let service = metricsService else {
+            print("   ⚠️ No metricsService - using fallback")
+            // Fallback: convert kg back to user's preferred unit for storage
+            if user.weightUnit == "lbs" {
+                user.weight = weightKg * WeightEntry.kgToLbsConversion
+            } else {
+                user.weight = weightKg
+            }
+            user.updatedAt = Date()
+            try? modelContext.save()
+            return
+        }
+
+        do {
+            _ = try await service.logWeight(weightKg: weightKg, for: user)
+            print("   ✅ Weight saved successfully via MetricsService")
+        } catch {
+            print("   ❌ Error saving weight: \(error)")
+            errorMessage = "Could not save weight: \(error.localizedDescription)"
+            showingError = true
+        }
+    }
+
     // MARK: - Profile Row
 
     private func profileRow(label: String, value: String, field: String) -> some View {
@@ -289,6 +350,30 @@ struct AccountView: View {
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(Color(.tertiaryLabel))
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("\(field)-row")
+    }
+
+    private func healthKitReadOnlyRow(label: String, value: String, field: String) -> some View {
+        Button {
+            healthKitReadOnlyField = label
+            showingHealthKitReadOnlyAlert = true
+        } label: {
+            HStack {
+                Text(label)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                Spacer()
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                    Text(value)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
             }
         }
         .buttonStyle(.plain)
@@ -369,19 +454,41 @@ struct AccountView: View {
         .accessibilityIdentifier("height-picker")
     }
 
-    private var weightEditor: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Weight: \(formatWeightValue(editWeight, unit: users.first?.weightUnit ?? "lbs"))")
-                .font(.headline)
+    @State private var weightWhole: Int = 70
+    @State private var weightDecimal: Int = 0
 
-            Stepper(
-                "Weight",
-                value: $editWeight,
-                in: 30...300,
-                step: 0.5
-            )
-            .accessibilityIdentifier("edit-weight-stepper")
+    private var weightEditor: some View {
+        let unit = users.first?.weightUnit ?? "lbs"
+
+        return HStack(spacing: 0) {
+            Picker("Whole", selection: $weightWhole) {
+                ForEach(30...400, id: \.self) { Text("\($0)").tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(width: 100, height: 150)
+            .clipped()
+
+            Text(".")
+                .font(.title)
+
+            Picker("Decimal", selection: $weightDecimal) {
+                ForEach(0...9, id: \.self) { Text("\($0)").tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(width: 60, height: 150)
+            .clipped()
+
+            Text(unit)
+                .font(.title3)
+                .foregroundColor(.secondary)
+                .padding(.leading, 8)
         }
+        .onAppear {
+            // Initialize picker from editWeight
+            weightWhole = Int(editWeight)
+            weightDecimal = Int(((editWeight - Double(Int(editWeight))) * 10).rounded())
+        }
+        .accessibilityIdentifier("edit-weight-picker")
     }
 
     private func experiencePicker(selection: Binding<String>, label: String) -> some View {
@@ -412,19 +519,66 @@ extension AccountView {
         }
     }
 
-    func loadUserData() {
+    func loadUserData() async {
         guard let user = users.first else { return }
         editName = user.name ?? ""
-        editBirthday = user.dateOfBirth ?? Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
-        editSex = user.gender
-        editHeightCm = user.heightCm ?? 170.0
+        editCardioExperience = user.cardioExperience
+        editLiftingExperience = user.liftingExperience
+
+        // Load biometric data from HealthKit if sync is enabled
+        if user.healthSyncEnabled, let service = metricsService {
+            // Get current weight (from HealthKit if enabled, otherwise local)
+            let weightKg = await service.getCurrentWeight(for: user)
+            displayedWeightKg = weightKg
+            editWeight = user.weightUnit == "lbs" ? weightKg * WeightEntry.kgToLbsConversion : weightKg
+
+            // Get current height (from HealthKit if enabled, otherwise local)
+            if let heightCm = await service.getCurrentHeight(for: user) {
+                displayedHeightCm = heightCm
+                editHeightCm = heightCm
+            } else {
+                editHeightCm = user.heightCm ?? 170.0
+            }
+
+            // Get biological sex from HealthKit (only if not already set locally)
+            if user.gender.isEmpty, let sex = await service.fetchBiologicalSex() {
+                displayedSex = sex
+                editSex = sex
+                sexFromHealthKit = true
+            } else {
+                editSex = user.gender
+                sexFromHealthKit = false
+            }
+
+            // Get date of birth from HealthKit (only if not already set locally)
+            if user.dateOfBirth == nil, let dob = await service.fetchDateOfBirth() {
+                displayedBirthday = dob
+                editBirthday = dob
+                birthdayFromHealthKit = true
+            } else {
+                editBirthday =
+                    user.dateOfBirth ?? Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+                birthdayFromHealthKit = false
+            }
+        } else {
+            // Clear HealthKit displayed values - use local data only
+            displayedWeightKg = nil
+            displayedHeightCm = nil
+            displayedSex = nil
+            displayedBirthday = nil
+
+            editHeightCm = user.heightCm ?? 170.0
+            editWeight = user.weight
+            editSex = user.gender
+            editBirthday = user.dateOfBirth ?? Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+            sexFromHealthKit = false
+            birthdayFromHealthKit = false
+        }
+
         // Convert cm to feet/inches for picker
         let totalInches = editHeightCm / 2.54
         heightFeet = Int(totalInches / 12)
         heightInches = Int(totalInches.truncatingRemainder(dividingBy: 12))
-        editWeight = user.weight
-        editCardioExperience = user.cardioExperience
-        editLiftingExperience = user.liftingExperience
     }
 
     func saveField(_ field: String) async {
@@ -454,19 +608,20 @@ extension AccountView {
                 user.heightCm = heightCm
             }
         case "weight":
-            if let service = metricsService {
-                do {
-                    // Log weight entry (also updates User.weight and syncs to HealthKit if enabled)
-                    _ = try await service.logWeight(weightKg: editWeight, for: user)
-                    return
-                } catch {
-                    errorMessage = "Could not save weight: \(error.localizedDescription)"
-                    showingError = true
-                    return
-                }
+            // Compute weight from picker state
+            let pickerWeight = Double(weightWhole) + Double(weightDecimal) / 10.0
+
+            // Convert to kg if user's unit is lbs
+            let weightKg: Double
+            if user.weightUnit == "lbs" {
+                weightKg = pickerWeight / WeightEntry.kgToLbsConversion
             } else {
-                user.weight = editWeight
+                weightKg = pickerWeight
             }
+
+            // Save weight (via HealthKit if enabled, otherwise locally)
+            await saveWeightEntry(weightKg: weightKg, for: user)
+            return  // saveWeightEntry already updates user and saves context
         case "cardio":
             user.cardioExperience = editCardioExperience
         case "lifting":
@@ -500,12 +655,16 @@ extension AccountView {
 
 extension AccountView {
     func formatBirthday(_ date: Date?) -> String {
-        guard let date else { return "Not set" }
-        return date.formatted(date: .abbreviated, time: .omitted)
+        // Use HealthKit value if available, otherwise fall back to local
+        let birthday = displayedBirthday ?? date
+        guard let birthday else { return "Not set" }
+        return birthday.formatted(date: .abbreviated, time: .omitted)
     }
 
     func formatSex(_ gender: String?) -> String {
-        switch gender {
+        // Use HealthKit value if available, otherwise fall back to local
+        let sex = displayedSex ?? gender
+        switch sex {
         case "male": return "Male"
         case "female": return "Female"
         default: return "Not set"
@@ -513,8 +672,10 @@ extension AccountView {
     }
 
     func formatHeight(_ cm: Double?) -> String {
-        guard let cm else { return "Not set" }
-        let totalInches = cm / 2.54
+        // Use HealthKit value if available, otherwise fall back to local
+        let heightCm = displayedHeightCm ?? cm
+        guard let heightCm else { return "Not set" }
+        let totalInches = heightCm / 2.54
         let feet = Int(totalInches / 12)
         let inches = Int(totalInches.truncatingRemainder(dividingBy: 12))
         return "\(feet)' \(inches)\""
@@ -522,6 +683,11 @@ extension AccountView {
 
     func formatWeight(_ user: User?) -> String {
         guard let user else { return "Not set" }
+        // Use HealthKit value if available, otherwise fall back to local
+        if let weightKg = displayedWeightKg {
+            let displayValue = user.weightUnit == "lbs" ? weightKg * WeightEntry.kgToLbsConversion : weightKg
+            return formatWeightValue(displayValue, unit: user.weightUnit)
+        }
         return formatWeightValue(user.weight, unit: user.weightUnit)
     }
 

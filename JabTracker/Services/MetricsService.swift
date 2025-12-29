@@ -100,6 +100,13 @@ final class MetricsService {
         timestamp: Date = Date(),
         notes: String? = nil
     ) async throws -> WeightEntry {
+        // Debug logging
+        print("🟢 MetricsService.logWeight:")
+        print("   weightKg received: \(weightKg)")
+        print("   in lbs: \(weightKg * WeightEntry.kgToLbsConversion)")
+        print("   user.weightUnit: \(user.weightUnit)")
+        print("   user.healthSyncEnabled: \(user.healthSyncEnabled)")
+
         // Validate weight range
         try validateWeight(weightKg)
 
@@ -118,8 +125,12 @@ final class MetricsService {
 
         context.insert(entry)
 
-        // Update User.weight to latest
-        user.weight = weightKg
+        // Update User.weight to latest (in user's preferred unit)
+        if user.weightUnit == "lbs" {
+            user.weight = weightKg * WeightEntry.kgToLbsConversion
+        } else {
+            user.weight = weightKg
+        }
         user.updatedAt = Date()
 
         do {
