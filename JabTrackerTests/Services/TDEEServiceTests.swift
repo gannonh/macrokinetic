@@ -479,7 +479,7 @@ struct TDEEServiceTests {
         goal.weeklyWeightChangePaceKg = -0.9  // Aggressive deficit
 
         // Set calorie floor to 1200
-        goal.program?.calorieFloorRaw = CalorieFloorType.standard.rawValue
+        goal.program?.calorieFloorTypeRaw = CalorieFloorType.standard.rawValue
 
         let service = TDEEService(context: context)
 

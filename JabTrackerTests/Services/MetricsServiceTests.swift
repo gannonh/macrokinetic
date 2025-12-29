@@ -415,7 +415,7 @@ struct MetricsServiceTests {
     func testNoEntriesFoundErrorDescription() throws {
         let error = MetricsServiceError.noEntriesFound
 
-        #expect(error.errorDescription == "No metrics entries found")
+        #expect(error.errorDescription == "No entries found")
     }
 
     @Test("MetricsServiceError.contextError has correct description")
