@@ -101,7 +101,8 @@ Plans:
 - Per-day macro storage in NutritionProgram model
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 15.2 to break down)
+- [x] 15.2-01: Data Model Foundation - WeeklyMacroDistribution, DailyMacros, NutritionProgram extensions
+- [ ] TBD (run /gsd:plan-phase 15.2 to continue)
 
 #### Phase 16: Weekly Check-ins
 
@@ -135,7 +136,7 @@ Phases execute in numeric order within each milestone.
 | 14. Adaptive TDEE Engine | v0.3.0 | 3/3 | Complete | 2025-12-28 |
 | 15. Daily Tracking Dashboard | v0.3.0 | 1/1 | Complete | 2025-12-28 |
 | 15.1 Initial TDEE Integration | v0.3.0 | 3/3 | Complete | 2025-12-28 |
-| 15.2 Program Style Implementation | v0.3.0 | 0/? | Not started | - |
+| 15.2 Program Style Implementation | v0.3.0 | 1/? | In progress | - |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
 

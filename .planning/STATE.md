@@ -19,12 +19,12 @@
 
 ## Current Position
 
-Phase: 15.1 of 17 (Initial TDEE Integration) - INSERTED
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2025-12-28 - Completed 15.1-03-PLAN.md
+Phase: 15.2 of 17 (Program Style Implementation) - INSERTED
+Plan: 1 of ? in current phase
+Status: In progress
+Last activity: 2025-12-29 - Completed 15.2-01-PLAN.md
 
-Progress: ███████░░░ 68%
+Progress: ███████░░░ 70%
 
 ## GitHub Tracking
 
@@ -48,12 +48,13 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 14 | 3/3 | 28 min | 9 min |
 | 15 | 1/1 | 2 min | 2 min |
 | 15.1 | 3/3 | 15 min | 5 min |
+| 15.2 | 1/? | 7 min | 7 min |
 | 16 | 0/? | - | - |
 | 17 | 0/? | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 15-01 (2 min), 15.1-01 (5 min), 15.1-02 (6 min), 15.1-03 (4 min)
-- Trend: Phase 15.1 complete
+- Last 5 plans: 15.1-01 (5 min), 15.1-02 (6 min), 15.1-03 (4 min), 15.2-01 (7 min)
+- Trend: Phase 15.2 started
 
 *Updated after each plan completion*
 
@@ -69,6 +70,7 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 14-01 | Empty string default for gender with case-insensitive matching | CloudKit compatibility; unknown gender averages male/female BMR formulas |
 | 15-01 | Ring size 70pt with 6pt line width, consumed inside ring | Compact display fits 4 rings on iPhone SE, uses existing CircularProgressRing |
 | 15.1-02 | DispatchQueue 0.35s delay for sheet chaining | Minimal code change vs fullScreenCover(item:); ensures GoalWizard dismissal animation completes before ProgramWizard presents |
+| 15.2-01 | WeeklyConstants enum for shared validWeekdayRange | DRY principle; both WeeklyMacroDistribution and WeeklyCalorieDistribution use same constant |
 
 ### Deferred Issues
 
@@ -92,6 +94,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-28T22:22:40Z
-Stopped at: Completed 15.1-03-PLAN.md
+Last session: 2025-12-29T22:48:15Z
+Stopped at: Completed 15.2-01-PLAN.md
 Resume file: None

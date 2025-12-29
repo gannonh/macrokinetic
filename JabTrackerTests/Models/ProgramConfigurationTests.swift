@@ -399,4 +399,188 @@ struct ProgramConfigurationTests {
         #expect(config1 == config2)
         #expect(config1 != config3)
     }
+
+    // MARK: - DailyMacros Tests
+
+    @Test("DailyMacros.zero returns all zeroes")
+    func dailyMacrosZero() {
+        let zero = DailyMacros.zero
+
+        #expect(zero.calories == 0)
+        #expect(zero.proteinGrams == 0)
+        #expect(zero.fatGrams == 0)
+        #expect(zero.carbsGrams == 0)
+    }
+
+    @Test("DailyMacros is Codable")
+    func dailyMacrosCodable() throws {
+        let macros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(macros)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(DailyMacros.self, from: data)
+
+        #expect(decoded == macros)
+        #expect(decoded.calories == 2000)
+        #expect(decoded.proteinGrams == 150)
+        #expect(decoded.fatGrams == 80)
+        #expect(decoded.carbsGrams == 200)
+    }
+
+    @Test("DailyMacros is Equatable")
+    func dailyMacrosEquatable() {
+        let macros1 = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let macros2 = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let macros3 = DailyMacros(calories: 1800, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+
+        #expect(macros1 == macros2)
+        #expect(macros1 != macros3)
+    }
+
+    // MARK: - WeeklyMacroDistribution Tests
+
+    @Test("WeeklyMacroDistribution.even returns same macros for all days")
+    func weeklyMacroDistributionEven() {
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let even = WeeklyMacroDistribution.even(macros: defaultMacros)
+
+        // All days should return the same default macros
+        for weekday in WeeklyMacroDistribution.validWeekdayRange {
+            let dayMacros = even.macrosForDay(weekday)
+            #expect(
+                dayMacros == defaultMacros,
+                "Day \(weekday) should return default macros")
+        }
+    }
+
+    @Test("WeeklyMacroDistribution initialization with empty dayMacros returns defaults")
+    func weeklyMacroDistributionEmptyDayMacros() {
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let distribution = WeeklyMacroDistribution(dayMacros: [:], defaultMacros: defaultMacros)
+
+        // All days should return default macros when no specific day macros are set
+        for weekday in 1...7 {
+            let dayMacros = distribution.macrosForDay(weekday)
+            #expect(dayMacros == defaultMacros, "Day \(weekday) should return default macros")
+        }
+    }
+
+    @Test("WeeklyMacroDistribution.macrosForDay returns day-specific values")
+    func weeklyMacroDistributionDaySpecificValues() {
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let sundayMacros = DailyMacros(calories: 2400, proteinGrams: 180, fatGrams: 96, carbsGrams: 240)
+        let saturdayMacros = DailyMacros(calories: 2200, proteinGrams: 165, fatGrams: 88, carbsGrams: 220)
+
+        let distribution = WeeklyMacroDistribution(
+            dayMacros: [
+                1: sundayMacros,  // Sunday
+                7: saturdayMacros,  // Saturday
+            ],
+            defaultMacros: defaultMacros
+        )
+
+        // Sunday (1) should return Sunday-specific macros
+        #expect(distribution.macrosForDay(1) == sundayMacros)
+
+        // Saturday (7) should return Saturday-specific macros
+        #expect(distribution.macrosForDay(7) == saturdayMacros)
+
+        // Weekdays should return default macros
+        for weekday in 2...6 {
+            #expect(
+                distribution.macrosForDay(weekday) == defaultMacros,
+                "Day \(weekday) should return default macros")
+        }
+    }
+
+    @Test("WeeklyMacroDistribution.macrosForDay returns nil for invalid weekday")
+    func weeklyMacroDistributionInvalidWeekday() {
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let distribution = WeeklyMacroDistribution.even(macros: defaultMacros)
+
+        // Out of bounds values should return nil
+        #expect(distribution.macrosForDay(0) == nil)
+        #expect(distribution.macrosForDay(8) == nil)
+        #expect(distribution.macrosForDay(-1) == nil)
+        #expect(distribution.macrosForDay(100) == nil)
+    }
+
+    @Test("WeeklyMacroDistribution.isValid validates all days have sensible values")
+    func weeklyMacroDistributionIsValid() {
+        // Valid: all positive values
+        let validMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let validDistribution = WeeklyMacroDistribution.even(macros: validMacros)
+        #expect(validDistribution.isValid == true)
+
+        // Invalid: zero calories
+        let zeroCalories = DailyMacros(calories: 0, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let invalidZeroCalories = WeeklyMacroDistribution.even(macros: zeroCalories)
+        #expect(invalidZeroCalories.isValid == false)
+
+        // Invalid: negative protein
+        let negativeProtein = DailyMacros(calories: 2000, proteinGrams: -10, fatGrams: 80, carbsGrams: 200)
+        let invalidNegativeProtein = WeeklyMacroDistribution.even(macros: negativeProtein)
+        #expect(invalidNegativeProtein.isValid == false)
+
+        // Invalid: negative fat
+        let negativeFat = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: -10, carbsGrams: 200)
+        let invalidNegativeFat = WeeklyMacroDistribution.even(macros: negativeFat)
+        #expect(invalidNegativeFat.isValid == false)
+
+        // Invalid: negative carbs
+        let negativeCarbs = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: -10)
+        let invalidNegativeCarbs = WeeklyMacroDistribution.even(macros: negativeCarbs)
+        #expect(invalidNegativeCarbs.isValid == false)
+
+        // Valid: one day with different but valid macros
+        let highDay = DailyMacros(calories: 2400, proteinGrams: 180, fatGrams: 96, carbsGrams: 240)
+        let shiftedDistribution = WeeklyMacroDistribution(
+            dayMacros: [1: highDay],
+            defaultMacros: validMacros
+        )
+        #expect(shiftedDistribution.isValid == true)
+
+        // Invalid: one day has zero calories
+        let invalidShifted = WeeklyMacroDistribution(
+            dayMacros: [1: zeroCalories],
+            defaultMacros: validMacros
+        )
+        #expect(invalidShifted.isValid == false)
+    }
+
+    @Test("WeeklyMacroDistribution is Codable")
+    func weeklyMacroDistributionCodable() throws {
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let sundayMacros = DailyMacros(calories: 2400, proteinGrams: 180, fatGrams: 96, carbsGrams: 240)
+
+        let distribution = WeeklyMacroDistribution(
+            dayMacros: [1: sundayMacros],
+            defaultMacros: defaultMacros
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(distribution)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WeeklyMacroDistribution.self, from: data)
+
+        #expect(decoded == distribution)
+        #expect(decoded.macrosForDay(1) == sundayMacros)
+        #expect(decoded.macrosForDay(2) == defaultMacros)
+    }
+
+    @Test("WeeklyMacroDistribution is Equatable")
+    func weeklyMacroDistributionEquatable() {
+        let macros1 = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let macros2 = DailyMacros(calories: 1800, proteinGrams: 135, fatGrams: 72, carbsGrams: 180)
+
+        let dist1 = WeeklyMacroDistribution.even(macros: macros1)
+        let dist2 = WeeklyMacroDistribution.even(macros: macros1)
+        let dist3 = WeeklyMacroDistribution.even(macros: macros2)
+
+        #expect(dist1 == dist2)
+        #expect(dist1 != dist3)
+    }
 }

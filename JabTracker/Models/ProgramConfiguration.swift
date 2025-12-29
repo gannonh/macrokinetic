@@ -328,6 +328,68 @@ enum ProteinLevel: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Weekly Constants
+
+/// Shared constants for weekly distribution types
+enum WeeklyConstants {
+    /// Valid weekday range (1=Sunday through 7=Saturday, per Calendar.Component.weekday)
+    static let validWeekdayRange = 1...7
+}
+
+// MARK: - DailyMacros
+
+/// Daily macro targets for a single day
+struct DailyMacros: Codable, Equatable {
+    var calories: Double
+    var proteinGrams: Double
+    var fatGrams: Double
+    var carbsGrams: Double
+
+    /// Zero macro values
+    static var zero: DailyMacros {
+        DailyMacros(calories: 0, proteinGrams: 0, fatGrams: 0, carbsGrams: 0)
+    }
+}
+
+// MARK: - WeeklyMacroDistribution
+
+/// Per-day macro targets for the week
+struct WeeklyMacroDistribution: Codable, Equatable {
+    /// Macro targets for each day (1=Sunday through 7=Saturday)
+    /// Days without explicit macros use defaultMacros
+    var dayMacros: [Int: DailyMacros]
+
+    /// Default macros for unconfigured days
+    var defaultMacros: DailyMacros
+
+    /// Even distribution with same macros all week
+    static func even(macros: DailyMacros) -> WeeklyMacroDistribution {
+        WeeklyMacroDistribution(dayMacros: [:], defaultMacros: macros)
+    }
+
+    /// Valid weekday range (1=Sunday through 7=Saturday)
+    static var validWeekdayRange: ClosedRange<Int> { WeeklyConstants.validWeekdayRange }
+
+    /// Get macros for specific day, falling back to default
+    func macrosForDay(_ weekday: Int) -> DailyMacros? {
+        guard WeeklyConstants.validWeekdayRange.contains(weekday) else { return nil }
+        return dayMacros[weekday] ?? defaultMacros
+    }
+
+    /// Validates all configured days have sensible macro values
+    var isValid: Bool {
+        for day in WeeklyConstants.validWeekdayRange {
+            let macros = macrosForDay(day) ?? defaultMacros
+            guard macros.calories > 0, macros.proteinGrams >= 0,
+                macros.fatGrams >= 0, macros.carbsGrams >= 0
+            else {
+                return false
+            }
+        }
+        return true
+    }
+}
+
 // MARK: - WeeklyCalorieDistribution
 
 /// Custom calorie distribution across days of the week
@@ -342,8 +404,8 @@ struct WeeklyCalorieDistribution: Codable, Equatable {
         WeeklyCalorieDistribution(dayMultipliers: [:])
     }
 
-    /// Valid weekday range (1=Sunday through 7=Saturday, per Calendar.Component.weekday)
-    static let validWeekdayRange = 1...7
+    /// Valid weekday range (1=Sunday through 7=Saturday)
+    static var validWeekdayRange: ClosedRange<Int> { WeeklyConstants.validWeekdayRange }
 
     /// Calculate the calorie target for a specific day
     /// - Parameters:
@@ -351,14 +413,14 @@ struct WeeklyCalorieDistribution: Codable, Equatable {
     ///   - baseCalories: Base daily calorie target
     /// - Returns: Adjusted calorie target for that day, or nil if weekday is invalid
     func calorieTargetForDay(_ weekday: Int, baseCalories: Double) -> Double? {
-        guard Self.validWeekdayRange.contains(weekday) else { return nil }
+        guard WeeklyConstants.validWeekdayRange.contains(weekday) else { return nil }
         let multiplier = dayMultipliers[weekday] ?? 1.0
         return baseCalories * multiplier
     }
 
     /// Validates that the weekly average equals base calories (sum of multipliers = 7.0)
     var isValid: Bool {
-        let sum = Self.validWeekdayRange.reduce(0.0) { $0 + (dayMultipliers[$1] ?? 1.0) }
+        let sum = WeeklyConstants.validWeekdayRange.reduce(0.0) { $0 + (dayMultipliers[$1] ?? 1.0) }
         return abs(sum - 7.0) < 0.001
     }
 }

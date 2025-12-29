@@ -563,4 +563,208 @@ struct NutritionProgramTests {
         // Then
         #expect(program.updatedAt > originalUpdatedAt)
     }
+
+    // MARK: - WeeklyMacros Tests
+
+    @Test("weeklyMacros returns nil when weeklyMacroDistributionData is nil")
+    @MainActor
+    func testWeeklyMacrosNil() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // Then
+        #expect(program.weeklyMacros == nil)
+    }
+
+    @Test("weeklyMacros returns decoded WeeklyMacroDistribution")
+    @MainActor
+    func testWeeklyMacrosDecoded() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let distribution = WeeklyMacroDistribution.even(macros: defaultMacros)
+
+        // When
+        let didSet = program.setWeeklyMacros(distribution)
+
+        // Then
+        #expect(didSet == true)
+        #expect(program.weeklyMacros != nil)
+        #expect(program.weeklyMacros?.defaultMacros == defaultMacros)
+    }
+
+    @Test("setWeeklyMacros returns false for invalid distribution")
+    @MainActor
+    func testSetWeeklyMacrosInvalid() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // Invalid: zero calories
+        let invalidMacros = DailyMacros(calories: 0, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let invalidDistribution = WeeklyMacroDistribution.even(macros: invalidMacros)
+
+        // When
+        let didSet = program.setWeeklyMacros(invalidDistribution)
+
+        // Then
+        #expect(didSet == false)
+        #expect(program.weeklyMacros == nil)
+    }
+
+    @Test("macrosForDay returns correct values for even distribution")
+    @MainActor
+    func testMacrosForDayEven() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.dailyCalorieTarget = 2000
+        goal.dailyProteinTargetGrams = 150
+        goal.dailyFatTargetGrams = 80
+        goal.dailyCarbTargetGrams = 200
+        context.insert(goal)
+
+        let program = NutritionProgram()
+        context.insert(program)
+        program.goal = goal
+
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let distribution = WeeklyMacroDistribution.even(macros: defaultMacros)
+        program.setWeeklyMacros(distribution)
+
+        try context.save()
+
+        // Then - all days should return the same macros
+        for weekday in 1...7 {
+            let macros = program.macrosForDay(weekday, goal: goal)
+            #expect(macros != nil, "Day \(weekday) should return macros")
+            #expect(macros?.calories == 2000, "Day \(weekday) should have 2000 calories")
+            #expect(macros?.proteinGrams == 150, "Day \(weekday) should have 150g protein")
+            #expect(macros?.fatGrams == 80, "Day \(weekday) should have 80g fat")
+            #expect(macros?.carbsGrams == 200, "Day \(weekday) should have 200g carbs")
+        }
+    }
+
+    @Test("macrosForDay returns correct values for shifted distribution")
+    @MainActor
+    func testMacrosForDayShifted() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.dailyCalorieTarget = 2000
+        goal.dailyProteinTargetGrams = 150
+        goal.dailyFatTargetGrams = 80
+        goal.dailyCarbTargetGrams = 200
+        context.insert(goal)
+
+        let program = NutritionProgram()
+        context.insert(program)
+        program.goal = goal
+
+        let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        let sundayMacros = DailyMacros(calories: 2400, proteinGrams: 180, fatGrams: 96, carbsGrams: 240)
+
+        let distribution = WeeklyMacroDistribution(
+            dayMacros: [1: sundayMacros],  // Sunday has higher macros
+            defaultMacros: defaultMacros
+        )
+        program.setWeeklyMacros(distribution)
+
+        try context.save()
+
+        // Then
+        // Sunday (1) should have higher macros
+        let sundayResult = program.macrosForDay(1, goal: goal)
+        #expect(sundayResult?.calories == 2400)
+        #expect(sundayResult?.proteinGrams == 180)
+        #expect(sundayResult?.fatGrams == 96)
+        #expect(sundayResult?.carbsGrams == 240)
+
+        // Other days should have default macros
+        let mondayResult = program.macrosForDay(2, goal: goal)
+        #expect(mondayResult?.calories == 2000)
+        #expect(mondayResult?.proteinGrams == 150)
+    }
+
+    @Test("macrosForDay falls back to goal defaults when no per-day config")
+    @MainActor
+    func testMacrosForDayFallbackToGoal() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.dailyCalorieTarget = 1800
+        goal.dailyProteinTargetGrams = 135
+        goal.dailyFatTargetGrams = 72
+        goal.dailyCarbTargetGrams = 180
+        context.insert(goal)
+
+        let program = NutritionProgram()
+        context.insert(program)
+        program.goal = goal
+        // Don't set weeklyMacros - should fall back to goal
+
+        try context.save()
+
+        // Then - should return goal values
+        let result = program.macrosForDay(1, goal: goal)
+        #expect(result != nil)
+        #expect(result?.calories == 1800)
+        #expect(result?.proteinGrams == 135)
+        #expect(result?.fatGrams == 72)
+        #expect(result?.carbsGrams == 180)
+    }
+
+    @Test("macrosForDay returns nil for invalid weekday")
+    @MainActor
+    func testMacrosForDayInvalidWeekday() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.dailyCalorieTarget = 2000
+        context.insert(goal)
+
+        let program = NutritionProgram()
+        context.insert(program)
+        program.goal = goal
+
+        // Then
+        #expect(program.macrosForDay(0, goal: goal) == nil)
+        #expect(program.macrosForDay(8, goal: goal) == nil)
+        #expect(program.macrosForDay(-1, goal: goal) == nil)
+    }
+
+    @Test("macrosForDay returns nil when goal is nil")
+    @MainActor
+    func testMacrosForDayNoGoal() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+        // No goal set, no weeklyMacros set
+
+        // Then
+        #expect(program.macrosForDay(1, goal: nil) == nil)
+    }
 }

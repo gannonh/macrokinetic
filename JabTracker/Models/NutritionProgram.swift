@@ -58,6 +58,9 @@ final class NutritionProgram {
     /// JSON-encoded WeeklyCalorieDistribution for custom day multipliers
     var weeklyDistributionData: Data?
 
+    /// JSON-encoded WeeklyMacroDistribution for per-day macro targets
+    var weeklyMacroDistributionData: Data?
+
     // MARK: - Timestamps
 
     /// When this program was created
@@ -213,6 +216,12 @@ extension NutritionProgram {
         guard let data = weeklyDistributionData else { return nil }
         return try? JSONDecoder().decode(WeeklyCalorieDistribution.self, from: data)
     }
+
+    /// Decoded WeeklyMacroDistribution
+    var weeklyMacros: WeeklyMacroDistribution? {
+        guard let data = weeklyMacroDistributionData else { return nil }
+        return try? JSONDecoder().decode(WeeklyMacroDistribution.self, from: data)
+    }
 }
 
 // MARK: - Computed Properties
@@ -295,5 +304,44 @@ extension NutritionProgram {
             return true
         }
         return false
+    }
+
+    /// Set weekly macro distribution with validation
+    ///
+    /// - Parameter distribution: The macro distribution to set
+    /// - Returns: True if distribution was set, false if invalid
+    @discardableResult
+    func setWeeklyMacros(_ distribution: WeeklyMacroDistribution) -> Bool {
+        guard distribution.isValid else { return false }
+
+        if let encoded = try? JSONEncoder().encode(distribution) {
+            weeklyMacroDistributionData = encoded
+            return true
+        }
+        return false
+    }
+
+    /// Get macro targets for a specific day of the week
+    ///
+    /// - Parameters:
+    ///   - weekday: Day of week (1=Sunday through 7=Saturday)
+    ///   - goal: Fallback goal for default macros
+    /// - Returns: DailyMacros for that day, or goal defaults if no per-day config
+    func macrosForDay(_ weekday: Int, goal: NutritionGoal?) -> DailyMacros? {
+        // Check for per-day macros first (handles weekday validation internally)
+        if let weeklyMacros = weeklyMacros {
+            return weeklyMacros.macrosForDay(weekday)
+        }
+
+        // Fall back to goal's single daily targets
+        guard WeeklyConstants.validWeekdayRange.contains(weekday),
+            let goal
+        else { return nil }
+        return DailyMacros(
+            calories: goal.dailyCalorieTarget,
+            proteinGrams: goal.dailyProteinTargetGrams,
+            fatGrams: goal.dailyFatTargetGrams,
+            carbsGrams: goal.dailyCarbTargetGrams
+        )
     }
 }
