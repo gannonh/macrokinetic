@@ -523,3 +523,410 @@ struct SummaryRow: View {
         )
     }
 }
+
+// MARK: - Macro Customization Step View (Collaborative)
+
+/// Step view for Collaborative mode macro customization
+/// Mock: mocks/goal-program/Collaborative/02.PNG
+struct MacroCustomizationStepView: View {
+    @Bindable var viewModel: ProgramWizardViewModel
+    @State private var selectedDay: Int = 4  // Wednesday default (4=Wed in Calendar weekday)
+
+    private let dayLabels = ["S", "M", "T", "W", "T", "F", "S"]
+    private let weekdayNumbers = [1, 2, 3, 4, 5, 6, 7]  // Sun=1 through Sat=7 (Calendar.Component.weekday)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StepHeader(
+                title: ProgramWizardStep.macroCustomization.title,
+                subtitle: ProgramWizardStep.macroCustomization.subtitle
+            )
+
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Day selector (S M T W T F S)
+                    daySelector
+
+                    // Protein slider (g per lb)
+                    proteinSlider
+
+                    // Carb/Fat ratio slider
+                    carbFatRatioSlider
+                }
+                .padding(.horizontal, 24)
+            }
+        }
+        .accessibilityIdentifier("macro-customization-step")
+    }
+
+    // Day selector buttons (S M T W T F S)
+    private var daySelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Select Day")
+                .font(.headline)
+
+            HStack(spacing: 8) {
+                ForEach(Array(zip(dayLabels, weekdayNumbers)), id: \.1) { label, weekday in
+                    Button {
+                        selectedDay = weekday
+                    } label: {
+                        Text(label)
+                            .font(.subheadline.bold())
+                            .foregroundColor(selectedDay == weekday ? .white : .primary)
+                            .frame(width: 36, height: 36)
+                            .background(
+                                Circle()
+                                    .fill(selectedDay == weekday ? Color.blue : Color.gray.opacity(0.1))
+                            )
+                    }
+                    .accessibilityLabel(dayName(for: weekday))
+                    .accessibilityAddTraits(selectedDay == weekday ? .isSelected : [])
+                }
+            }
+        }
+    }
+
+    // Protein slider with g/lb display
+    private var proteinSlider: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Protein")
+                    .font(.headline)
+                Spacer()
+                Text(String(format: "%.1f g/lb", viewModel.proteinGramsPerLb))
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+            }
+
+            Slider(value: $viewModel.proteinGramsPerLb, in: 0.5...1.5, step: 0.1)
+                .tint(.blue)
+
+            Text("Higher protein helps preserve muscle during weight loss")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.05))
+        )
+    }
+
+    // Carb/Fat ratio slider
+    private var carbFatRatioSlider: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Carb : Fat Ratio")
+                    .font(.headline)
+                Spacer()
+                let carbPct = viewModel.carbFatRatio * 100
+                let fatPct = (1 - viewModel.carbFatRatio) * 100
+                Text(String(format: "%.0f%% : %.0f%%", carbPct, fatPct))
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+            }
+
+            HStack {
+                Text("Fat")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Slider(value: $viewModel.carbFatRatio, in: 0...1, step: 0.05)
+                    .tint(.blue)
+                Text("Carbs")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Text("Adjust the balance of remaining calories between carbs and fat")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.05))
+        )
+    }
+
+    private func dayName(for weekday: Int) -> String {
+        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        guard weekday >= 1 && weekday <= 7 else { return "" }
+        return names[weekday - 1]
+    }
+}
+
+// MARK: - Target Mode Step View (Manual)
+
+/// Step view for Manual mode target selection
+/// Mock: mocks/goal-program/Manual/01.PNG, 02.PNG, 03.PNG
+struct TargetModeStepView: View {
+    @Binding var useSameTargetsAllWeek: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StepHeader(
+                title: ProgramWizardStep.targetMode.title,
+                subtitle: ProgramWizardStep.targetMode.subtitle
+            )
+
+            ScrollView {
+                VStack(spacing: 24) {
+                    Text("Do you want to follow the same targets all week?")
+                        .font(.title3.bold())
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 8)
+
+                    VStack(spacing: 12) {
+                        // Same targets all week option
+                        SelectionCard(
+                            title: "Same targets all week",
+                            description: "You will set the same macro and Calorie targets for all days in the week.",
+                            icon: "arrow.turn.down.right",
+                            isSelected: useSameTargetsAllWeek
+                        ) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                useSameTargetsAllWeek = true
+                            }
+                        }
+                        .accessibilityIdentifier("target-mode-same")
+
+                        // Different targets per day option
+                        SelectionCard(
+                            title: "Different targets per day",
+                            description:
+                                "You will set different macro and Calorie targets for different days of the week.",
+                            icon: "calendar",
+                            isSelected: !useSameTargetsAllWeek
+                        ) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                useSameTargetsAllWeek = false
+                            }
+                        }
+                        .accessibilityIdentifier("target-mode-different")
+                    }
+                }
+                .padding(.horizontal, 24)
+            }
+        }
+        .accessibilityIdentifier("target-mode-step")
+    }
+}
+
+// MARK: - Single Week Macros Step View (Manual - Same All Week)
+
+/// Step view for single macro entry in Manual mode (same all week)
+/// Mock: mocks/goal-program/Manual/02.1.PNG
+struct SingleWeekMacrosStepView: View {
+    @Bindable var viewModel: ProgramWizardViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StepHeader(
+                title: ProgramWizardStep.singleWeekMacros.title,
+                subtitle: ProgramWizardStep.singleWeekMacros.subtitle
+            )
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Energy field (kcal)
+                    macroInputField(label: "Energy", unit: "kcal", value: $viewModel.singleWeekCalories)
+                        .accessibilityIdentifier("single-week-calories")
+
+                    // Protein field (g)
+                    macroInputField(label: "Protein", unit: "g", value: $viewModel.singleWeekProtein)
+                        .accessibilityIdentifier("single-week-protein")
+
+                    // Fat field (g)
+                    macroInputField(label: "Fat", unit: "g", value: $viewModel.singleWeekFat)
+                        .accessibilityIdentifier("single-week-fat")
+
+                    // Carbs field (g)
+                    macroInputField(label: "Carbs", unit: "g", value: $viewModel.singleWeekCarbs)
+                        .accessibilityIdentifier("single-week-carbs")
+                }
+                .padding(.horizontal, 24)
+            }
+        }
+        .accessibilityIdentifier("single-week-macros-step")
+    }
+
+    private func macroInputField(label: String, unit: String, value: Binding<Double>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            HStack {
+                TextField("", value: value, format: .number)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.roundedBorder)
+                Text(unit)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.05))
+        )
+    }
+}
+
+// MARK: - Per Day Macros Step View (Manual - Different Per Day)
+
+/// Step view for per-day macro entry in Manual mode
+/// Mock: mocks/goal-program/Manual/03.1.PNG
+struct PerDayMacrosStepView: View {
+    @Bindable var viewModel: ProgramWizardViewModel
+
+    private let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    private let weekdayNumbers = [2, 3, 4, 5, 6, 7, 1]  // Mon=2 through Sun=1 (Calendar.Component.weekday)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StepHeader(
+                title: ProgramWizardStep.perDayMacros.title,
+                subtitle: ProgramWizardStep.perDayMacros.subtitle
+            )
+
+            ScrollView {
+                VStack(spacing: 24) {
+                    ForEach(Array(zip(days, weekdayNumbers)), id: \.1) { day, weekday in
+                        dayMacroSection(day: day, weekday: weekday)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 8)
+            }
+        }
+        .accessibilityIdentifier("per-day-macros-step")
+    }
+
+    private func dayMacroSection(day: String, weekday: Int) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Day header
+            Text(day)
+                .font(.headline)
+
+            // Energy field
+            macroInputRow(
+                label: "Energy",
+                unit: "kcal",
+                weekday: weekday,
+                keyPath: \.calories
+            )
+
+            // P/F/C in a row
+            HStack(spacing: 8) {
+                macroInputRow(label: "P", unit: "g", weekday: weekday, keyPath: \.proteinGrams)
+                macroInputRow(label: "F", unit: "g", weekday: weekday, keyPath: \.fatGrams)
+                macroInputRow(label: "C", unit: "g", weekday: weekday, keyPath: \.carbsGrams)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.05))
+        )
+        .accessibilityIdentifier("per-day-macros-\(day.lowercased())")
+    }
+
+    private func macroInputRow(
+        label: String,
+        unit: String,
+        weekday: Int,
+        keyPath: WritableKeyPath<DailyMacros, Double>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 4) {
+                TextField(
+                    "",
+                    value: Binding(
+                        get: { viewModel.perDayMacros[weekday]?[keyPath: keyPath] ?? 0 },
+                        set: { newValue in
+                            var macros = viewModel.perDayMacros[weekday] ?? .zero
+                            macros[keyPath: keyPath] = newValue
+                            viewModel.perDayMacros[weekday] = macros
+                        }
+                    ),
+                    format: .number
+                )
+                .keyboardType(.numberPad)
+                .textFieldStyle(.roundedBorder)
+                .frame(minWidth: 50)
+
+                Text(unit)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+// MARK: - Shifted Day Selection Step View (Coached/Shifted)
+
+/// Step view for selecting high calorie days in Coached/Shifted mode
+/// Mock: mocks/goal-program/Coached-Shift/IMG_2102.PNG
+struct ShiftedDaySelectionStepView: View {
+    @Binding var highCalorieDays: Set<Int>
+
+    private let days = [
+        (name: "Monday", weekday: 2),
+        (name: "Tuesday", weekday: 3),
+        (name: "Wednesday", weekday: 4),
+        (name: "Thursday", weekday: 5),
+        (name: "Friday", weekday: 6),
+        (name: "Saturday", weekday: 7),
+        (name: "Sunday", weekday: 1),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StepHeader(
+                title: ProgramWizardStep.shiftedDaySelection.title,
+                subtitle: ProgramWizardStep.shiftedDaySelection.subtitle
+            )
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(days, id: \.weekday) { day in
+                        dayRow(name: day.name, weekday: day.weekday)
+                        if day.weekday != 1 {
+                            Divider()
+                                .padding(.leading, 24)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+            }
+        }
+        .accessibilityIdentifier("shifted-day-selection-step")
+    }
+
+    private func dayRow(name: String, weekday: Int) -> some View {
+        Button {
+            if highCalorieDays.contains(weekday) {
+                highCalorieDays.remove(weekday)
+            } else {
+                highCalorieDays.insert(weekday)
+            }
+        } label: {
+            HStack {
+                Text(name)
+                    .foregroundColor(.primary)
+                Spacer()
+                Image(systemName: highCalorieDays.contains(weekday) ? "checkmark.square.fill" : "square")
+                    .foregroundColor(highCalorieDays.contains(weekday) ? .blue : .secondary)
+                    .font(.title2)
+            }
+            .padding(.vertical, 16)
+        }
+        .accessibilityLabel(name)
+        .accessibilityAddTraits(highCalorieDays.contains(weekday) ? .isSelected : [])
+        .accessibilityIdentifier("shifted-day-\(name.lowercased())")
+    }
+}

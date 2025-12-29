@@ -21,6 +21,11 @@ enum ProgramWizardStep: String, CaseIterable {
     case training
     case weeklyDistribution
     case proteinLevel
+    case macroCustomization  // For Collaborative: weekly grid + sliders for protein g/lb, carb:fat ratio
+    case targetMode  // For Manual: Same all week vs Different per day
+    case singleWeekMacros  // For Manual with same targets: single macro entry form
+    case perDayMacros  // For Manual with different targets: edit each day
+    case shiftedDaySelection  // For Coached/Shifted: select which days have higher calories
     case confirmation
 
     var title: String {
@@ -32,6 +37,11 @@ enum ProgramWizardStep: String, CaseIterable {
         case .training: return "Training Level"
         case .weeklyDistribution: return "Weekly Distribution"
         case .proteinLevel: return "Protein Level"
+        case .macroCustomization: return "Customize Macros"
+        case .targetMode: return "Target Mode"
+        case .singleWeekMacros: return "Weekly Targets"
+        case .perDayMacros: return "Daily Targets"
+        case .shiftedDaySelection: return "High Calorie Days"
         case .confirmation: return "Review & Confirm"
         }
     }
@@ -45,6 +55,11 @@ enum ProgramWizardStep: String, CaseIterable {
         case .training: return "What's your activity level?"
         case .weeklyDistribution: return "How to spread calories across the week"
         case .proteinLevel: return "How much protein do you need?"
+        case .macroCustomization: return "Adjust your daily macro ratios"
+        case .targetMode: return "Same targets all week or different each day?"
+        case .singleWeekMacros: return "Set your targets for the week"
+        case .perDayMacros: return "Set macros for each day of the week"
+        case .shiftedDaySelection: return "Which days would you like to have higher Calories?"
         case .confirmation: return "Ready to start your program"
         }
     }
@@ -89,6 +104,35 @@ final class ProgramWizardViewModel {
     var weeklyDistributionMode: WeeklyDistributionMode?
     var proteinLevel: ProteinLevel?
 
+    // MARK: - Macro Customization State (Collaborative)
+
+    /// Protein target in grams per pound of body weight
+    var proteinGramsPerLb: Double = 0.8
+
+    /// Carb to fat ratio (0.0 = all fat, 1.0 = all carbs)
+    var carbFatRatio: Double = 0.5
+
+    // MARK: - Target Mode State (Manual)
+
+    /// Whether Manual mode uses same targets all week
+    var useSameTargetsAllWeek: Bool = true
+
+    /// Per-day macro targets for Manual mode
+    var perDayMacros: [Int: DailyMacros] = [:]
+
+    // MARK: - Single Week Macros State (Manual - Same All Week)
+
+    var singleWeekCalories: Double = 2000
+    var singleWeekProtein: Double = 150
+    var singleWeekFat: Double = 65
+    var singleWeekCarbs: Double = 200
+
+    // MARK: - Shifted Distribution State (Coached)
+
+    /// Days with higher calorie targets (weekday numbers: 2=Mon through 1=Sun)
+    /// See mock: mocks/goal-program/Coached-Shift/IMG_2102.PNG
+    var highCalorieDays: Set<Int> = []
+
     // MARK: - Profile Completion State
 
     /// Missing profile fields for TDEE calculation
@@ -126,20 +170,80 @@ final class ProgramWizardViewModel {
 
     // MARK: - Steps Configuration
 
-    /// Steps available based on mode and profile completion needs
+    /// Steps available based on mode, program style, and profile completion needs
     var availableSteps: [ProgramWizardStep] {
-        var steps = ProgramWizardStep.allCases
+        switch programStyle {
+        case .coached:
+            return coachedSteps
+        case .collaborative:
+            return collaborativeSteps
+        case .manual:
+            return manualSteps
+        case nil:
+            // Before style is selected, show minimal steps
+            return isEditMode ? [.confirmation] : [.programStyle, .confirmation]
+        }
+    }
 
-        // Remove programStyle in edit mode
-        if isEditMode {
-            steps = steps.filter { $0 != .programStyle }
+    /// Steps for Coached mode
+    private var coachedSteps: [ProgramWizardStep] {
+        var steps: [ProgramWizardStep] = []
+
+        // programStyle (skip in edit mode)
+        if !isEditMode {
+            steps.append(.programStyle)
         }
 
-        // Remove profileCompletion unless needed for Coached mode
-        if !needsProfileCompletion {
-            steps = steps.filter { $0 != .profileCompletion }
+        // profileCompletion (only if needed)
+        if needsProfileCompletion {
+            steps.append(.profileCompletion)
         }
 
+        // Coached-specific steps
+        steps.append(contentsOf: [.dietPreference, .calorieFloor, .training, .weeklyDistribution])
+
+        // shiftedDaySelection (only if Shifted distribution selected)
+        if weeklyDistributionMode == .shifted {
+            steps.append(.shiftedDaySelection)
+        }
+
+        steps.append(contentsOf: [.proteinLevel, .confirmation])
+        return steps
+    }
+
+    /// Steps for Collaborative mode
+    private var collaborativeSteps: [ProgramWizardStep] {
+        var steps: [ProgramWizardStep] = []
+
+        // programStyle (skip in edit mode)
+        if !isEditMode {
+            steps.append(.programStyle)
+        }
+
+        // Collaborative shows: training, weeklyDistribution, macroCustomization
+        steps.append(contentsOf: [.training, .weeklyDistribution, .macroCustomization, .confirmation])
+        return steps
+    }
+
+    /// Steps for Manual mode
+    private var manualSteps: [ProgramWizardStep] {
+        var steps: [ProgramWizardStep] = []
+
+        // programStyle (skip in edit mode)
+        if !isEditMode {
+            steps.append(.programStyle)
+        }
+
+        // Manual shows: targetMode, then singleWeekMacros OR perDayMacros
+        steps.append(.targetMode)
+
+        if useSameTargetsAllWeek {
+            steps.append(.singleWeekMacros)
+        } else {
+            steps.append(.perDayMacros)
+        }
+
+        steps.append(.confirmation)
         return steps
     }
 
@@ -170,6 +274,16 @@ final class ProgramWizardViewModel {
             return weeklyDistributionMode != nil
         case .proteinLevel:
             return proteinLevel != nil
+        case .macroCustomization:
+            return proteinGramsPerLb > 0 && carbFatRatio >= 0 && carbFatRatio <= 1
+        case .targetMode:
+            return true  // Always can continue, just choosing mode
+        case .singleWeekMacros:
+            return singleWeekCalories > 0 && singleWeekProtein >= 0
+        case .perDayMacros:
+            return !perDayMacros.isEmpty
+        case .shiftedDaySelection:
+            return !highCalorieDays.isEmpty  // At least one day must be selected
         case .confirmation:
             return allSelectionsComplete
         }
@@ -183,11 +297,33 @@ final class ProgramWizardViewModel {
         return hasHeight && hasSex && hasBirthday
     }
 
-    /// Whether all selections are complete
+    /// Whether all selections are complete for current program style
     private var allSelectionsComplete: Bool {
         let hasStyle = isEditMode || programStyle != nil
-        return hasStyle && dietPreference != nil && calorieFloorType != nil
-            && trainingLevel != nil && weeklyDistributionMode != nil && proteinLevel != nil
+        guard hasStyle else { return false }
+
+        switch programStyle {
+        case .coached:
+            let base =
+                dietPreference != nil && calorieFloorType != nil
+                && trainingLevel != nil && weeklyDistributionMode != nil && proteinLevel != nil
+            // If shifted, must have selected days
+            if weeklyDistributionMode == .shifted {
+                return base && !highCalorieDays.isEmpty
+            }
+            return base
+        case .collaborative:
+            return trainingLevel != nil && weeklyDistributionMode != nil
+                && proteinGramsPerLb > 0 && carbFatRatio >= 0 && carbFatRatio <= 1
+        case .manual:
+            if useSameTargetsAllWeek {
+                return singleWeekCalories > 0 && singleWeekProtein >= 0
+            } else {
+                return !perDayMacros.isEmpty
+            }
+        case nil:
+            return false
+        }
     }
 
     /// Whether this is the first step
@@ -522,6 +658,21 @@ struct ProgramWizard: View {
         case .proteinLevel:
             ProteinLevelStepView(selection: $viewModel.proteinLevel)
                 .accessibilityIdentifier("program-wizard-proteinLevel-step")
+        case .macroCustomization:
+            MacroCustomizationStepView(viewModel: viewModel)
+                .accessibilityIdentifier("program-wizard-macroCustomization-step")
+        case .targetMode:
+            TargetModeStepView(useSameTargetsAllWeek: $viewModel.useSameTargetsAllWeek)
+                .accessibilityIdentifier("program-wizard-targetMode-step")
+        case .singleWeekMacros:
+            SingleWeekMacrosStepView(viewModel: viewModel)
+                .accessibilityIdentifier("program-wizard-singleWeekMacros-step")
+        case .perDayMacros:
+            PerDayMacrosStepView(viewModel: viewModel)
+                .accessibilityIdentifier("program-wizard-perDayMacros-step")
+        case .shiftedDaySelection:
+            ShiftedDaySelectionStepView(highCalorieDays: $viewModel.highCalorieDays)
+                .accessibilityIdentifier("program-wizard-shiftedDaySelection-step")
         case .confirmation:
             ProgramConfirmationStepView(viewModel: viewModel)
                 .accessibilityIdentifier("program-wizard-confirmation-step")
