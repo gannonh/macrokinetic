@@ -271,9 +271,8 @@ struct UserProfileView: View {
         guard let user = authManager.currentUser else { return }
 
         self.editingName = user.name ?? ""
-        // Convert internal kg to display unit
-        let displayWeight = user.weightUnit == "lbs" ? user.weight * 2.20462 : user.weight
-        self.editingWeight = String(format: "%.1f", displayWeight)
+        // user.weight is stored in user's preferred unit (lbs or kg based on weightUnit)
+        self.editingWeight = String(format: "%.1f", user.weight)
         self.editingWeightUnit = user.weightUnit
         self.editingTimezone = user.timezone
         self.editingDateOfBirth = user.dateOfBirth ?? Date()
@@ -296,12 +295,8 @@ struct UserProfileView: View {
 
         // Update user properties
         user.name = self.editingName.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Always store weight in kg internally
-        if self.editingWeightUnit == "lbs" {
-            user.weight = weight / 2.20462  // Convert lbs to kg for storage
-        } else {
-            user.weight = weight
-        }
+        // user.weight is stored in user's preferred unit (no conversion needed)
+        user.weight = weight
         user.weightUnit = self.editingWeightUnit
         user.timezone = self.editingTimezone
         user.dateOfBirth = self.editingDateOfBirth

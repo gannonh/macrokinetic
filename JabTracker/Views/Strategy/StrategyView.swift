@@ -356,6 +356,11 @@ struct StrategyView: View {
             .accessibilityIdentifier("create-goal-button")
         }
         .padding(.vertical, 40)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+        )
     }
 
     // MARK: - No User Section

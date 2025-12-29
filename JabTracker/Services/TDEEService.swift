@@ -110,21 +110,27 @@ final class TDEEService {
         for user: User,
         goal: NutritionGoal
     ) async throws {
-        // Validate user data
-        guard let heightCm = user.heightCm else {
+        // Get biometrics from MetricsService (reads from HealthKit if enabled)
+        guard let heightCm = await metricsService.getCurrentHeight(for: user) else {
             throw TDEEServiceError.missingUserData("height")
         }
         guard heightCm > 0 else {
             throw TDEEServiceError.invalidUserData("height")
         }
-        guard let age = user.age else {
+
+        // Get date of birth from MetricsService (reads from HealthKit if enabled)
+        guard let dateOfBirth = await metricsService.getCurrentDateOfBirth(for: user) else {
             throw TDEEServiceError.missingUserData("date of birth")
         }
+        let age = Calendar.current.dateComponents([.year], from: dateOfBirth, to: Date()).year ?? 0
+
+        // Get gender from MetricsService (reads from HealthKit if enabled)
+        let gender = await metricsService.getCurrentGender(for: user)
 
         // Get training level from program
         let trainingLevel = goal.program?.training ?? .none
 
-        // Get current weight
+        // Get current weight from MetricsService (reads from HealthKit if enabled)
         guard let latestWeight = try await metricsService.getLatestWeightEntry() else {
             throw TDEEServiceError.noWeightData
         }
@@ -141,7 +147,7 @@ final class TDEEService {
             weightKg: latestWeight.weightKg,
             heightCm: heightCm,
             age: age,
-            gender: user.gender,
+            gender: gender,
             trainingLevel: trainingLevel
         )
 
@@ -365,5 +371,102 @@ extension TDEEService {
         )
 
         return try context.fetch(descriptor)
+    }
+}
+
+// MARK: - Calorie & Macro Calculations
+
+extension TDEEService {
+
+    /// Apply TDEE to derive calorie targets based on goal pace
+    /// - Parameter goal: NutritionGoal with initialEstimatedTDEE set
+    func applyTDEEToGoal(_ goal: NutritionGoal) {
+        guard let tdee = goal.initialEstimatedTDEE else { return }
+
+        // Calculate daily calorie target from TDEE and weekly pace
+        // 1 kg fat = ~7700 kcal, so daily adjustment = weeklyPaceKg * 7700 / 7 = weeklyPaceKg * 1100
+        let dailyCalorieAdjustment = goal.weeklyWeightChangePaceKg * 1100
+        let dailyCalorieTarget = tdee + dailyCalorieAdjustment
+
+        // Apply calorie floor if configured in program
+        let calorieFloor = goal.program?.calorieFloor.minimumCalories ?? 1200.0
+        goal.dailyCalorieTarget = max(dailyCalorieTarget, calorieFloor)
+
+        Self.logger.debug(
+            "Applied TDEE to goal: TDEE=\(Int(tdee)), adjustment=\(Int(dailyCalorieAdjustment)), target=\(Int(goal.dailyCalorieTarget))"
+        )
+    }
+
+    /// Calculate macros from program settings and apply to goal
+    /// - Parameter goal: NutritionGoal with program and dailyCalorieTarget set
+    func calculateAndApplyMacros(for goal: NutritionGoal) {
+        guard let program = goal.program else { return }
+
+        let macros = calculateMacros(
+            calories: goal.dailyCalorieTarget,
+            program: program,
+            weightKg: goal.startingWeightKg
+        )
+
+        goal.dailyProteinTargetGrams = macros.protein
+        goal.dailyFatTargetGrams = macros.fat
+        goal.dailyCarbTargetGrams = macros.carbs
+
+        Self.logger.debug(
+            "Applied macros to goal: P=\(Int(macros.protein))g, F=\(Int(macros.fat))g, C=\(Int(macros.carbs))g"
+        )
+    }
+
+    /// Calculate macros from program settings
+    /// - Parameters:
+    ///   - calories: Daily calorie target
+    ///   - program: Nutrition program with diet and protein settings
+    ///   - weightKg: User's weight in kg for protein calculation
+    /// - Returns: Tuple of protein, fat, carbs in grams
+    func calculateMacros(
+        calories: Double,
+        program: NutritionProgram,
+        weightKg: Double
+    ) -> (protein: Double, fat: Double, carbs: Double) {
+        // Protein from program's protein level (g per kg body weight)
+        let proteinGrams = program.protein.gramsPerKg * weightKg
+        let proteinCalories = proteinGrams * 4
+
+        // Remaining calories for fat and carbs
+        let remainingCalories = calories - proteinCalories
+
+        // Use diet preference macro split for remaining calories
+        let macroSplit = program.diet.macroPercentages
+        let fatPercent = macroSplit.fat / (macroSplit.fat + macroSplit.carbs)
+        let carbPercent = macroSplit.carbs / (macroSplit.fat + macroSplit.carbs)
+
+        let fatCalories = remainingCalories * fatPercent
+        let carbCalories = remainingCalories * carbPercent
+
+        return (
+            protein: proteinGrams,
+            fat: fatCalories / 9,  // 9 cal per gram fat
+            carbs: carbCalories / 4  // 4 cal per gram carbs
+        )
+    }
+
+    /// Full TDEE application: calculate TDEE, apply to goal, calculate macros
+    /// Convenience method that orchestrates the full flow
+    /// - Parameters:
+    ///   - user: User with biometric data
+    ///   - goal: NutritionGoal to update
+    func calculateAndApplyFullTDEE(for user: User, goal: NutritionGoal) async throws {
+        // Calculate initial TDEE
+        try await calculateInitialTDEE(for: user, goal: goal)
+
+        // Apply TDEE to get calorie target
+        applyTDEEToGoal(goal)
+
+        // Calculate and apply macros
+        calculateAndApplyMacros(for: goal)
+
+        try context.save()
+
+        Self.logger.debug("Full TDEE calculation complete for goal")
     }
 }

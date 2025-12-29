@@ -96,6 +96,34 @@ extension MetricsService {
         return user.heightCm
     }
 
+    // MARK: - Gender (Read-only from HealthKit)
+
+    /// Get current gender - reads from HealthKit if sync enabled, otherwise local
+    /// - Parameter user: The user to check sync status and get local value from
+    /// - Returns: Gender string ("male" or "female"), or empty string if not set
+    func getCurrentGender(for user: User) async -> String {
+        if user.healthSyncEnabled {
+            if let hkGender = await fetchBiologicalSex() {
+                return hkGender
+            }
+        }
+        return user.gender
+    }
+
+    // MARK: - Date of Birth (Read-only from HealthKit)
+
+    /// Get current date of birth - reads from HealthKit if sync enabled, otherwise local
+    /// - Parameter user: The user to check sync status and get local value from
+    /// - Returns: Date of birth, or nil if not set
+    func getCurrentDateOfBirth(for user: User) async -> Date? {
+        if user.healthSyncEnabled {
+            if let hkDOB = await fetchDateOfBirth() {
+                return hkDOB
+            }
+        }
+        return user.dateOfBirth
+    }
+
     /// Save height - writes to HealthKit if sync enabled, always saves locally
     /// - Parameters:
     ///   - heightCm: Height in centimeters

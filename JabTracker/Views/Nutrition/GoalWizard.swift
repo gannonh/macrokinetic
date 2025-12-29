@@ -251,8 +251,10 @@ final class GoalWizardViewModel {
 
     /// Configure with user's current weight and unit preference
     func configureWithCurrentWeight(_ weight: Double, usesMetric: Bool) {
-        currentWeightKg = weight
-        targetWeightKg = weight  // Start at same weight, user adjusts
+        // Convert to kg if weight is in lbs (usesMetric=false means lbs)
+        let weightInKg = usesMetric ? weight : weight / WeightEntry.kgToLbsConversion
+        currentWeightKg = weightInKg
+        targetWeightKg = weightInKg  // Start at same weight, user adjusts
         usesMetricWeight = usesMetric
     }
 
@@ -374,13 +376,28 @@ struct GoalWizard: View {
                 }
             }
         }
-        .onAppear {
+        .task {
             // Configure for edit mode if editing existing goal
             if let existingGoal {
                 viewModel.configureForEdit(goal: existingGoal, usesMetric: user.prefersMetricWeight)
             } else {
-                // Set current weight from user's profile weight for new goals
-                viewModel.configureWithCurrentWeight(user.weight, usesMetric: user.prefersMetricWeight)
+                // Get current weight from HealthKit if sync enabled, otherwise use local value
+                let currentWeightKg: Double
+                if user.healthSyncEnabled, let service = AppServices.shared.metricsService {
+                    currentWeightKg = await service.getCurrentWeight(for: user)
+                } else {
+                    // Local weight is stored in user's preferred unit
+                    currentWeightKg =
+                        user.prefersMetricWeight
+                        ? user.weight
+                        : user.weight / WeightEntry.kgToLbsConversion
+                }
+                // configureWithCurrentWeight expects weight in user's display unit
+                let displayWeight =
+                    user.prefersMetricWeight
+                    ? currentWeightKg
+                    : currentWeightKg * WeightEntry.kgToLbsConversion
+                viewModel.configureWithCurrentWeight(displayWeight, usesMetric: user.prefersMetricWeight)
             }
         }
         .accessibilityIdentifier("goal-wizard")

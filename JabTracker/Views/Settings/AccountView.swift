@@ -525,8 +525,28 @@ extension AccountView {
         editCardioExperience = user.cardioExperience
         editLiftingExperience = user.liftingExperience
 
+        print("🔵 AccountView.loadUserData:")
+        print("   healthSyncEnabled: \(user.healthSyncEnabled)")
+        print("   metricsService available: \(metricsService != nil)")
+
         // Load biometric data from HealthKit if sync is enabled
-        if user.healthSyncEnabled, let service = metricsService {
+        if user.healthSyncEnabled {
+            guard let service = metricsService else {
+                print("   ⚠️ MetricsService is nil - loading local values only")
+                // Service not available yet - load local values but don't clear HealthKit display state
+                editHeightCm = user.heightCm ?? 170.0
+                editWeight = user.weight
+                editSex = user.gender
+                editBirthday =
+                    user.dateOfBirth ?? Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+                // Convert cm to feet/inches for picker
+                let totalInches = editHeightCm / 2.54
+                heightFeet = Int(totalInches / 12)
+                heightInches = Int(totalInches.truncatingRemainder(dividingBy: 12))
+                return
+            }
+            print("   ✅ MetricsService available - loading from HealthKit")
+
             // Get current weight (from HealthKit if enabled, otherwise local)
             let weightKg = await service.getCurrentWeight(for: user)
             displayedWeightKg = weightKg
@@ -540,28 +560,34 @@ extension AccountView {
                 editHeightCm = user.heightCm ?? 170.0
             }
 
-            // Get biological sex from HealthKit (only if not already set locally)
-            if user.gender.isEmpty, let sex = await service.fetchBiologicalSex() {
+            // Get biological sex from HealthKit (read-only characteristic)
+            if let sex = await service.fetchBiologicalSex() {
                 displayedSex = sex
                 editSex = sex
                 sexFromHealthKit = true
+                print("   Read biological sex from HealthKit: \(sex)")
             } else {
+                // HealthKit doesn't have sex - use local value, allow editing
+                displayedSex = nil
                 editSex = user.gender
                 sexFromHealthKit = false
             }
 
-            // Get date of birth from HealthKit (only if not already set locally)
-            if user.dateOfBirth == nil, let dob = await service.fetchDateOfBirth() {
+            // Get date of birth from HealthKit (read-only characteristic)
+            if let dob = await service.fetchDateOfBirth() {
                 displayedBirthday = dob
                 editBirthday = dob
                 birthdayFromHealthKit = true
+                print("   Read date of birth from HealthKit: \(dob)")
             } else {
+                // HealthKit doesn't have DOB - use local value, allow editing
+                displayedBirthday = nil
                 editBirthday =
                     user.dateOfBirth ?? Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
                 birthdayFromHealthKit = false
             }
         } else {
-            // Clear HealthKit displayed values - use local data only
+            // Health sync is explicitly disabled - clear HealthKit displayed values, use local data only
             displayedWeightKg = nil
             displayedHeightCm = nil
             displayedSex = nil

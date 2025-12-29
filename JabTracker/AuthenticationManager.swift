@@ -238,14 +238,20 @@ class AuthenticationManager: NSObject, ObservableObject {
                 self.authenticationState = .authenticated
             }
 
-            // Mark onboarding as complete if bypass flag is set
-            if ProcessInfo.processInfo.arguments.contains("--bypass-onboarding") {
+            // Mark onboarding as complete for UI testing (unless --force-onboarding is set)
+            // This prevents issues with existing CloudKit users that have medication profiles
+            // but hasCompletedOnboarding=false
+            let shouldBypassOnboarding =
+                ProcessInfo.processInfo.arguments.contains("--bypass-onboarding")
+                || !ProcessInfo.processInfo.arguments.contains("--force-onboarding")
+
+            if shouldBypassOnboarding && !mockUser.hasCompletedOnboarding {
                 mockUser.hasCompletedOnboarding = true
                 mockUser.onboardingCompletedAt = Date()
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
                 try? context.save()
-                Self.logger.info("✅ AuthenticationManager: Marked onboarding as complete (bypass enabled)")
+                Self.logger.info("✅ AuthenticationManager: Marked onboarding as complete (UI testing mode)")
             }
 
             // Only seed test data on first launch

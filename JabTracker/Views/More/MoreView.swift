@@ -44,9 +44,9 @@ struct MoreView: View {
                     .accessibilityIdentifier("dashboard-settings-link")
 
                     NavigationLink(destination: StrategyView()) {
-                        Label("Food Log", systemImage: "leaf")
+                        Label("Strategy", systemImage: "target")
                     }
-                    .accessibilityIdentifier("food-log-settings-link")
+                    .accessibilityIdentifier("strategy-link")
 
                     NavigationLink(destination: SettingsView()) {
                         Label("Shortcuts", systemImage: "bolt.horizontal")

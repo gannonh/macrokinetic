@@ -14,6 +14,7 @@ import SwiftUI
 /// Steps in the program configuration wizard
 enum ProgramWizardStep: String, CaseIterable {
     case programStyle
+    case profileCompletion  // Only shown for Coached when profile data missing
     case dietPreference
     case calorieFloor
     case training
@@ -24,6 +25,7 @@ enum ProgramWizardStep: String, CaseIterable {
     var title: String {
         switch self {
         case .programStyle: return "Program Style"
+        case .profileCompletion: return "Complete Your Profile"
         case .dietPreference: return "Diet Preference"
         case .calorieFloor: return "Calorie Floor"
         case .training: return "Training Level"
@@ -36,6 +38,7 @@ enum ProgramWizardStep: String, CaseIterable {
     var subtitle: String {
         switch self {
         case .programStyle: return "How much guidance do you want?"
+        case .profileCompletion: return "We need a few details to calculate your targets"
         case .dietPreference: return "Choose your macro balance"
         case .calorieFloor: return "Set your minimum daily calories"
         case .training: return "What's your activity level?"
@@ -85,6 +88,30 @@ final class ProgramWizardViewModel {
     var weeklyDistributionMode: WeeklyDistributionMode?
     var proteinLevel: ProteinLevel?
 
+    // MARK: - Profile Completion State
+
+    /// Missing profile fields for TDEE calculation
+    var missingHeight: Bool = false
+    var missingSex: Bool = false
+    var missingBirthday: Bool = false
+
+    /// Edit values for profile completion
+    var editHeightFeet: Int = 5
+    var editHeightInches: Int = 7
+    var editSex: String = ""
+    var editBirthday: Date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+
+    /// Whether profile completion step is needed
+    var needsProfileCompletion: Bool {
+        programStyle == .coached && (missingHeight || missingSex || missingBirthday)
+    }
+
+    /// Height in cm from feet/inches
+    var editHeightCm: Double {
+        let totalInches = Double(editHeightFeet * 12 + editHeightInches)
+        return totalInches * 2.54
+    }
+
     // MARK: - Mode
 
     /// Whether we're editing an existing program (skips style selection)
@@ -98,13 +125,21 @@ final class ProgramWizardViewModel {
 
     // MARK: - Steps Configuration
 
-    /// Steps available based on mode
+    /// Steps available based on mode and profile completion needs
     var availableSteps: [ProgramWizardStep] {
+        var steps = ProgramWizardStep.allCases
+
+        // Remove programStyle in edit mode
         if isEditMode {
-            // Edit mode skips style selection
-            return ProgramWizardStep.allCases.filter { $0 != .programStyle }
+            steps = steps.filter { $0 != .programStyle }
         }
-        return ProgramWizardStep.allCases
+
+        // Remove profileCompletion unless needed for Coached mode
+        if !needsProfileCompletion {
+            steps = steps.filter { $0 != .profileCompletion }
+        }
+
+        return steps
     }
 
     // MARK: - Computed Properties
@@ -122,6 +157,8 @@ final class ProgramWizardViewModel {
         switch currentStep {
         case .programStyle:
             return programStyle != nil
+        case .profileCompletion:
+            return isProfileDataComplete
         case .dietPreference:
             return dietPreference != nil
         case .calorieFloor:
@@ -135,6 +172,14 @@ final class ProgramWizardViewModel {
         case .confirmation:
             return allSelectionsComplete
         }
+    }
+
+    /// Whether all required profile data is filled in (for profile completion step)
+    private var isProfileDataComplete: Bool {
+        let hasHeight = !missingHeight || (editHeightFeet >= 3 && editHeightFeet <= 7)
+        let hasSex = !missingSex || !editSex.isEmpty
+        let hasBirthday = !missingBirthday || true  // DatePicker always has a value
+        return hasHeight && hasSex && hasBirthday
     }
 
     /// Whether all selections are complete
@@ -257,6 +302,69 @@ final class ProgramWizardViewModel {
             throw ProgramWizardError.saveFailed(error)
         }
     }
+
+    // MARK: - Profile Completion
+
+    /// Check which profile fields are missing for TDEE calculation
+    /// - Parameters:
+    ///   - user: User to check
+    ///   - metricsService: Service to check HealthKit values
+    func checkMissingProfileFields(user: User, metricsService: MetricsService) async {
+        // Check height
+        let height = await metricsService.getCurrentHeight(for: user)
+        missingHeight = height == nil || height == 0
+
+        // Check sex
+        let sex = await metricsService.getCurrentGender(for: user)
+        missingSex = sex.isEmpty
+
+        // Check birthday
+        let birthday = await metricsService.getCurrentDateOfBirth(for: user)
+        missingBirthday = birthday == nil
+
+        // Pre-populate edit fields with current values (or defaults)
+        if let height, height > 0 {
+            let totalInches = height / 2.54
+            editHeightFeet = Int(totalInches / 12)
+            editHeightInches = Int(totalInches.truncatingRemainder(dividingBy: 12))
+        }
+        if !sex.isEmpty {
+            editSex = sex
+        }
+        if let birthday {
+            editBirthday = birthday
+        }
+    }
+
+    /// Save profile completion data
+    /// - Parameters:
+    ///   - user: User to update
+    ///   - metricsService: Service to save to HealthKit
+    ///   - context: Model context for saving
+    func saveProfileData(user: User, metricsService: MetricsService, context: ModelContext) async throws {
+        // Save height if it was missing
+        if missingHeight {
+            try await metricsService.saveHeight(editHeightCm, for: user)
+        }
+
+        // Save sex if it was missing (local only - HealthKit sex is read-only)
+        if missingSex {
+            user.gender = editSex
+        }
+
+        // Save birthday if it was missing (local only - HealthKit DOB is read-only)
+        if missingBirthday {
+            user.dateOfBirth = editBirthday
+        }
+
+        user.updatedAt = Date()
+        try context.save()
+
+        // Clear missing flags
+        missingHeight = false
+        missingSex = false
+        missingBirthday = false
+    }
 }
 
 // MARK: - Main Program Wizard View
@@ -270,6 +378,7 @@ struct ProgramWizard: View {
     @State private var errorMessage: String?
     @State private var showingError = false
     @State private var tdeeService: TDEEService?
+    @State private var metricsService: MetricsService?
 
     /// The goal this program belongs to
     let goal: NutritionGoal
@@ -322,13 +431,15 @@ struct ProgramWizard: View {
 
                     if viewModel.isConfirmationStep {
                         PrimaryButton(title: viewModel.isEditMode ? "Save Program" : "Create Program") {
-                            saveProgram()
+                            Task {
+                                await saveProgram()
+                            }
                         }
                         .accessibilityIdentifier("program-wizard-save-button")
                     } else {
                         PrimaryButton(title: "Continue") {
-                            withAnimation(.spring()) {
-                                viewModel.advance()
+                            Task {
+                                await handleContinue()
                             }
                         }
                         .disabled(!viewModel.canContinue)
@@ -363,8 +474,17 @@ struct ProgramWizard: View {
         .onAppear {
             viewModel.goal = goal
             tdeeService = TDEEService(context: modelContext)
+            metricsService = MetricsService(context: modelContext)
             if let existingProgram {
                 viewModel.configureForEdit(program: existingProgram)
+            }
+        }
+        .onChange(of: viewModel.programStyle) { _, newStyle in
+            // Check for missing profile fields when Coached is selected
+            if newStyle == .coached, let user = goal.user, let service = metricsService {
+                Task {
+                    await viewModel.checkMissingProfileFields(user: user, metricsService: service)
+                }
             }
         }
         .accessibilityIdentifier("program-wizard")
@@ -378,6 +498,9 @@ struct ProgramWizard: View {
         case .programStyle:
             ProgramStyleStepView(selection: $viewModel.programStyle)
                 .accessibilityIdentifier("program-wizard-programStyle-step")
+        case .profileCompletion:
+            ProfileCompletionStepView(viewModel: viewModel)
+                .accessibilityIdentifier("program-wizard-profileCompletion-step")
         case .dietPreference:
             DietPreferenceStepView(selection: $viewModel.dietPreference)
                 .accessibilityIdentifier("program-wizard-dietPreference-step")
@@ -405,15 +528,37 @@ struct ProgramWizard: View {
 
     // MARK: - Actions
 
-    private func saveProgram() {
+    private func handleContinue() async {
+        // Save profile data when leaving profileCompletion step
+        if viewModel.currentStep == .profileCompletion {
+            guard let user = goal.user, let service = metricsService else {
+                withAnimation(.spring()) {
+                    viewModel.advance()
+                }
+                return
+            }
+
+            do {
+                try await viewModel.saveProfileData(user: user, metricsService: service, context: modelContext)
+            } catch {
+                errorMessage = error.localizedDescription
+                showingError = true
+                return
+            }
+        }
+
+        withAnimation(.spring()) {
+            viewModel.advance()
+        }
+    }
+
+    private func saveProgram() async {
         do {
             try viewModel.save(context: modelContext)
 
-            // Calculate TDEE for Coached programs
+            // Calculate TDEE for Coached programs (await to ensure it completes before dismiss)
             if viewModel.programStyle == .coached {
-                Task {
-                    await calculateAndApplyTDEE()
-                }
+                await calculateAndApplyTDEE()
             }
 
             onComplete?()
@@ -433,473 +578,12 @@ struct ProgramWizard: View {
         }
 
         do {
-            // Calculate initial TDEE using user biometrics + training level
-            try await service.calculateInitialTDEE(for: user, goal: goal)
-
-            // Apply TDEE to derive calorie target based on goal pace
-            applyTDEEToGoal(goal: goal)
-
-            try modelContext.save()
+            // Use TDEEService for all calculations (TDEE, calories, macros)
+            try await service.calculateAndApplyFullTDEE(for: user, goal: goal)
         } catch {
             // Log error but don't block - user can still use default targets
             print("TDEE calculation failed: \(error.localizedDescription)")
         }
-    }
-
-    private func applyTDEEToGoal(goal: NutritionGoal) {
-        guard let tdee = goal.initialEstimatedTDEE else { return }
-
-        // Calculate daily calorie target from TDEE and weekly pace
-        // ~1100 kcal deficit/surplus per kg of weekly weight change
-        let weeklyCalorieAdjustment = goal.weeklyWeightChangePaceKg * 1100
-        let dailyCalorieTarget = tdee + (weeklyCalorieAdjustment / 7)
-
-        // Apply calorie floor if configured in program
-        let calorieFloor = goal.program?.calorieFloor.minimumCalories ?? 1200.0
-        goal.dailyCalorieTarget = max(dailyCalorieTarget, calorieFloor)
-
-        // Calculate macros from program settings
-        if let program = goal.program {
-            let macros = calculateMacrosFromProgram(
-                calories: goal.dailyCalorieTarget,
-                program: program,
-                weightKg: goal.user?.weight ?? 70.0
-            )
-            goal.dailyProteinTargetGrams = macros.protein
-            goal.dailyFatTargetGrams = macros.fat
-            goal.dailyCarbTargetGrams = macros.carbs
-        }
-    }
-
-    private func calculateMacrosFromProgram(
-        calories: Double,
-        program: NutritionProgram,
-        weightKg: Double
-    ) -> (protein: Double, fat: Double, carbs: Double) {
-        // Protein from program's protein level (g per kg body weight)
-        let proteinGrams = program.protein.gramsPerKg * weightKg
-        let proteinCalories = proteinGrams * 4
-
-        // Remaining calories for fat and carbs
-        let remainingCalories = calories - proteinCalories
-
-        // Use diet preference macro split for remaining calories
-        let macroSplit = program.diet.macroPercentages
-        let fatPercent = macroSplit.fat / (macroSplit.fat + macroSplit.carbs)
-        let carbPercent = macroSplit.carbs / (macroSplit.fat + macroSplit.carbs)
-
-        let fatCalories = remainingCalories * fatPercent
-        let carbCalories = remainingCalories * carbPercent
-
-        return (
-            protein: proteinGrams,
-            fat: fatCalories / 9,  // 9 cal per gram fat
-            carbs: carbCalories / 4  // 4 cal per gram carbs
-        )
-    }
-}
-
-// MARK: - Step Views
-
-/// Program style selection step
-private struct ProgramStyleStepView: View {
-    @Binding var selection: ProgramStyle?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.programStyle.title,
-                subtitle: ProgramWizardStep.programStyle.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(ProgramStyle.allCases, id: \.self) { style in
-                        SelectionCard(
-                            title: style.displayName,
-                            description: style.description,
-                            icon: style.icon,
-                            isSelected: selection == style
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selection = style
-                            }
-                        }
-                        .accessibilityIdentifier("program-wizard-programStyle-\(style.rawValue)")
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-}
-
-/// Diet preference selection step
-private struct DietPreferenceStepView: View {
-    @Binding var selection: DietPreference?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.dietPreference.title,
-                subtitle: ProgramWizardStep.dietPreference.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(DietPreference.allCases, id: \.self) { diet in
-                        SelectionCard(
-                            title: diet.displayName,
-                            description: diet.description,
-                            icon: diet.icon,
-                            detail: macroDetail(for: diet),
-                            isSelected: selection == diet
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selection = diet
-                            }
-                        }
-                        .accessibilityIdentifier("program-wizard-dietPreference-\(diet.rawValue)")
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-
-    private func macroDetail(for diet: DietPreference) -> String {
-        let macros = diet.macroPercentages
-        return "P: \(Int(macros.protein))% C: \(Int(macros.carbs))% F: \(Int(macros.fat))%"
-    }
-}
-
-/// Calorie floor selection step
-private struct CalorieFloorStepView: View {
-    @Binding var selection: CalorieFloorType?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.calorieFloor.title,
-                subtitle: ProgramWizardStep.calorieFloor.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(CalorieFloorType.allCases, id: \.self) { floorType in
-                        SelectionCard(
-                            title: floorType.displayName,
-                            description: floorType.description,
-                            icon: floorType.icon,
-                            detail: "\(Int(floorType.minimumCalories)) cal/day minimum",
-                            isSelected: selection == floorType,
-                            showWarning: floorType.requiresWarning
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selection = floorType
-                            }
-                        }
-                        .accessibilityIdentifier("program-wizard-calorieFloor-\(floorType.rawValue)")
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-}
-
-/// Training level selection step
-private struct TrainingLevelStepView: View {
-    @Binding var selection: TrainingLevel?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.training.title,
-                subtitle: ProgramWizardStep.training.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(TrainingLevel.allCases, id: \.self) { level in
-                        SelectionCard(
-                            title: level.displayName,
-                            description: level.description,
-                            icon: level.icon,
-                            isSelected: selection == level
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selection = level
-                            }
-                        }
-                        .accessibilityIdentifier("program-wizard-training-\(level.rawValue)")
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-}
-
-/// Weekly distribution selection step
-private struct WeeklyDistributionStepView: View {
-    @Binding var selection: WeeklyDistributionMode?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.weeklyDistribution.title,
-                subtitle: ProgramWizardStep.weeklyDistribution.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(WeeklyDistributionMode.allCases, id: \.self) { mode in
-                        SelectionCard(
-                            title: mode.displayName,
-                            description: mode.description,
-                            icon: mode.icon,
-                            isSelected: selection == mode
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selection = mode
-                            }
-                        }
-                        .accessibilityIdentifier("program-wizard-weeklyDistribution-\(mode.rawValue)")
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-}
-
-/// Protein level selection step
-private struct ProteinLevelStepView: View {
-    @Binding var selection: ProteinLevel?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.proteinLevel.title,
-                subtitle: ProgramWizardStep.proteinLevel.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(ProteinLevel.allCases, id: \.self) { level in
-                        SelectionCard(
-                            title: level.displayName,
-                            description: level.description,
-                            icon: level.icon,
-                            detail: "\(level.gramsPerKg)g per kg body weight",
-                            isSelected: selection == level
-                        ) {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selection = level
-                            }
-                        }
-                        .accessibilityIdentifier("program-wizard-proteinLevel-\(level.rawValue)")
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-}
-
-/// Confirmation step showing all program selections
-private struct ProgramConfirmationStepView: View {
-    let viewModel: ProgramWizardViewModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.confirmation.title,
-                subtitle: ProgramWizardStep.confirmation.subtitle
-            )
-
-            ScrollView {
-                VStack(spacing: 16) {
-                    if !viewModel.isEditMode {
-                        SummaryRow(label: "Program Style", value: viewModel.programStyle?.displayName ?? "—")
-                    }
-                    SummaryRow(label: "Diet Preference", value: viewModel.dietPreference?.displayName ?? "—")
-                    SummaryRow(label: "Calorie Floor", value: viewModel.calorieFloorType?.displayName ?? "—")
-                    SummaryRow(label: "Training Level", value: viewModel.trainingLevel?.displayName ?? "—")
-                    SummaryRow(
-                        label: "Weekly Distribution",
-                        value: viewModel.weeklyDistributionMode?.displayName ?? "—"
-                    )
-                    SummaryRow(label: "Protein Level", value: viewModel.proteinLevel?.displayName ?? "—")
-
-                    // Macro breakdown
-                    if let diet = viewModel.dietPreference {
-                        macroBreakdownCard(diet: diet)
-                    }
-                }
-                .padding(.horizontal, 24)
-            }
-        }
-    }
-
-    private func macroBreakdownCard(diet: DietPreference) -> some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "chart.pie.fill")
-                    .foregroundColor(.blue)
-                Text("Macro Breakdown")
-                    .font(.headline)
-                Spacer()
-            }
-
-            let macros = diet.macroPercentages
-            HStack(spacing: 16) {
-                macroItem(name: "Protein", percent: Int(macros.protein), color: .blue)
-                macroItem(name: "Carbs", percent: Int(macros.carbs), color: .green)
-                macroItem(name: "Fat", percent: Int(macros.fat), color: .orange)
-            }
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.1))
-        )
-    }
-
-    private func macroItem(name: String, percent: Int, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text("\(percent)%")
-                .font(.headline)
-                .foregroundColor(color)
-            Text(name)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-// MARK: - Reusable Step Header
-
-private struct StepHeader: View {
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 24)
-    }
-}
-
-// MARK: - Selection Card
-
-/// Selection card for wizard options
-private struct SelectionCard: View {
-    let title: String
-    let description: String
-    var icon: String?
-    var detail: String?
-    let isSelected: Bool
-    var showWarning: Bool = false
-    let onSelect: () -> Void
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 16) {
-                if let icon {
-                    Image(systemName: icon)
-                        .font(.title2)
-                        .foregroundColor(isSelected ? .blue : .secondary)
-                        .frame(width: 32)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(title)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-
-                        if showWarning {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                                .font(.caption)
-                        }
-                    }
-
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if let detail {
-                        Text(detail)
-                            .font(.caption2)
-                            .foregroundColor(.blue)
-                            .padding(.top, 2)
-                    }
-                }
-
-                Spacer()
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
-                        .font(.title2)
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.gray.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title)
-        .accessibilityHint(description)
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
-    }
-}
-
-/// Summary row for confirmation step
-private struct SummaryRow: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.05))
-        )
     }
 }
 

@@ -255,6 +255,7 @@
       "Views/Nutrition/GoalWizard.swift",
       "Views/Nutrition/GoalWizard+Steps.swift",
       "Views/Nutrition/ProgramWizard.swift",
+      "Views/Nutrition/ProgramWizardStepViews.swift",
       "Views/Strategy/StrategyView.swift",
       "Views/Strategy/ProgramSummarySheet.swift",
       "Views/Strategy/ProgramReadySheet.swift",
