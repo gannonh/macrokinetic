@@ -22,9 +22,6 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // User Profile Section
-                    UserProfileView()
-
                     // Medication Profiles Section
                     DesignCard {
                         VStack(alignment: .leading, spacing: 16) {
