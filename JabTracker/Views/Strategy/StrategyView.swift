@@ -92,8 +92,8 @@ struct StrategyView: View {
                 ) {
                     showingProgramWizard = false
 
-                    // Show Program Ready sheet for new Coached programs
-                    if !isEditingProgram, goal.program?.style == .coached {
+                    // Show Program Ready sheet for new programs (not edits)
+                    if !isEditingProgram {
                         DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
                             showingProgramReady = true
                         }
@@ -112,7 +112,8 @@ struct StrategyView: View {
                 createdGoal = nil
             },
             content: {
-                if let goal = createdGoal ?? users.first?.activeNutritionGoal {
+                // Use queried user's active goal - @Query ensures relationships are loaded
+                if let goal = users.first?.activeNutritionGoal {
                     ProgramReadySheet(goal: goal) {}
                 }
             }
@@ -151,6 +152,9 @@ struct StrategyView: View {
             if let program = goal.program {
                 currentProgramCard(goal: goal, program: program)
             }
+
+            // Goal summary card
+            goalSummaryCard(goal: goal)
         }
     }
 
@@ -261,6 +265,95 @@ struct StrategyView: View {
             Text(value)
                 .font(.subheadline)
                 .fontWeight(.medium)
+        }
+    }
+
+    // MARK: - Goal Summary Card
+
+    private func goalSummaryCard(goal: NutritionGoal) -> some View {
+        let user = users.first
+        let usesMetric = user?.prefersMetricWeight ?? false
+        let weightUnit = usesMetric ? "kg" : "lbs"
+        let kgToLbs = 2.20462
+
+        // Target weight in display units
+        let targetWeight = usesMetric ? goal.targetWeightKg : goal.targetWeightKg * kgToLbs
+
+        // Weekly rate in display units (absolute value for display, sign handled separately)
+        let weeklyRateKg = goal.weeklyWeightChangePaceKg
+        let weeklyRateDisplay = usesMetric ? weeklyRateKg : weeklyRateKg * kgToLbs
+
+        // Weekly rate as percentage of body weight
+        let currentWeightKg = goal.startingWeightKg > 0 ? goal.startingWeightKg : 80.0
+        let ratePercent = (weeklyRateKg / currentWeightKg) * 100
+
+        // Format date range
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d"
+        let startDate = dateFormatter.string(from: goal.createdAt)
+
+        return VStack(alignment: .leading, spacing: 16) {
+            // Header - matches program card style
+            VStack(alignment: .leading, spacing: 4) {
+                Text("In Progress")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("\(goal.goalType.displayName) Goal")
+                    .font(.headline)
+                Text("\(startDate) – Now")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            // Stats grid
+            HStack(spacing: 0) {
+                // Goal Weight
+                goalStatColumn(
+                    value: String(format: "%.0f", targetWeight),
+                    unit: weightUnit,
+                    label: "Goal Weight"
+                )
+
+                Spacer()
+
+                // Goal Rate (absolute)
+                goalStatColumn(
+                    value: String(format: "%+.2f", weeklyRateDisplay),
+                    unit: "\(weightUnit)/wk",
+                    label: "Goal Rate"
+                )
+
+                Spacer()
+
+                // Goal Rate (percentage)
+                goalStatColumn(
+                    value: String(format: "%+.1f", ratePercent),
+                    unit: "%/wk",
+                    label: "Goal Rate"
+                )
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+        )
+        .accessibilityIdentifier("goal-summary-card")
+    }
+
+    private func goalStatColumn(value: String, unit: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(.title)
+                    .fontWeight(.medium)
+                Text(unit)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 
