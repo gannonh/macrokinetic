@@ -51,9 +51,26 @@ struct CardBackgroundModifier: ViewModifier {
     }
 }
 
+/// Compact card background modifier for tighter layouts
+struct CompactCardBackgroundModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.gray.opacity(0.05))
+            )
+    }
+}
+
 extension View {
     func cardBackground() -> some View {
         modifier(CardBackgroundModifier())
+    }
+
+    func compactCardBackground() -> some View {
+        modifier(CompactCardBackgroundModifier())
     }
 }
 
@@ -942,18 +959,26 @@ struct CollaborativeDistributionStepView: View {
     @FocusState private var isCaloriesInputFocused: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(
-                title: ProgramWizardStep.collaborativeDistribution.title,
-                subtitle: ProgramWizardStep.collaborativeDistribution.subtitle
-            )
+        VStack(alignment: .leading, spacing: 8) {
+            // Compact header
+            VStack(alignment: .leading, spacing: 4) {
+                Text(ProgramWizardStep.collaborativeDistribution.title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text(ProgramWizardStep.collaborativeDistribution.subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
 
             ScrollView {
-                VStack(spacing: 20) {
-                    // Weekly summary grid
+                VStack(spacing: 12) {
+                    // Weekly summary grid (compact)
                     weeklyGridSection
 
-                    // Day selector
+                    // Day selector (compact)
                     daySelectorSection
 
                     // Selected day header with reset and lock
@@ -968,7 +993,7 @@ struct CollaborativeDistributionStepView: View {
                     // Carb/Fat ratio slider
                     carbFatRatioSection
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 16)
             }
         }
         .focused($isCaloriesInputFocused)
@@ -994,21 +1019,20 @@ struct CollaborativeDistributionStepView: View {
     private var weeklyGridSection: some View {
         VStack(spacing: 0) {
             // Day headers
-            HStack(spacing: 4) {
+            HStack(spacing: 2) {
                 Text("")
-                    .frame(width: 30)
+                    .frame(width: 28)
 
                 ForEach(Weekday.mondayFirst, id: \.rawValue) { weekday in
                     Text(weekday.shortLetter)
-                        .font(.caption2)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(
                             viewModel.collaborativeSelectedDay == weekday.rawValue ? .blue : .secondary
                         )
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, 4)
 
             // Calorie row (blue pill style)
             weeklyMacroRow(
@@ -1063,16 +1087,16 @@ struct CollaborativeDistributionStepView: View {
             }
             HStack {
                 Spacer()
-                Text("Weekly Total: \(Int(weeklyTotal)) cal")
-                    .font(.caption)
+                Text("Weekly: \(Int(weeklyTotal)) cal")
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
         }
-        .cardBackground()
+        .compactCardBackground()
     }
 
-    /// Reusable macro row for weekly grid (matches ProgramReadySheet style)
+    /// Reusable macro row for weekly grid (compact style)
     private func weeklyMacroRow(
         label: String,
         values: [Int],
@@ -1080,13 +1104,12 @@ struct CollaborativeDistributionStepView: View {
         color: Color,
         isPill: Bool
     ) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             // Label column
             Text(label)
-                .font(.caption)
-                .fontWeight(.medium)
+                .font(.system(size: 10, weight: .medium))
                 .foregroundColor(.secondary)
-                .frame(width: 30, alignment: .leading)
+                .frame(width: 28, alignment: .leading)
 
             // 7 days with individual values
             ForEach(Array(values.enumerated()), id: \.offset) { _, value in
@@ -1097,25 +1120,25 @@ struct CollaborativeDistributionStepView: View {
                         Capsule()
                             .fill(color.opacity(0.15))
                     } else {
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(color.opacity(0.15))
                     }
 
                     Text(valueText)
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundColor(color)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: isPill ? 28 : 32)
+                .frame(height: isPill ? 22 : 24)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
     }
 
     // MARK: - Day Selector Section
 
     private var daySelectorSection: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             ForEach(Weekday.mondayFirst, id: \.rawValue) { weekday in
                 let isSelected = viewModel.collaborativeSelectedDay == weekday.rawValue
                 let isLocked = viewModel.collaborativeDays[weekday.rawValue]?.isLocked ?? false
@@ -1127,19 +1150,19 @@ struct CollaborativeDistributionStepView: View {
                 } label: {
                     ZStack(alignment: .topTrailing) {
                         Text(weekday.shortLetter)
-                            .font(.headline)
-                            .frame(width: 40, height: 40)
+                            .font(.system(size: 14, weight: .semibold))
+                            .frame(width: 36, height: 36)
                             .background(
                                 Circle()
-                                    .fill(isSelected ? Color.blue : Color.gray.opacity(0.2))
+                                    .fill(isSelected ? Color.blue : Color.gray.opacity(0.15))
                             )
                             .foregroundColor(isSelected ? .white : .primary)
 
                         if isLocked {
                             Image(systemName: "lock.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: 8))
                                 .foregroundColor(.orange)
-                                .offset(x: 4, y: -4)
+                                .offset(x: 2, y: -2)
                         }
                     }
                 }
@@ -1148,7 +1171,7 @@ struct CollaborativeDistributionStepView: View {
                 .accessibilityIdentifier("collab-day-selector-\(weekday.fullName.lowercased())")
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
     }
 
     // MARK: - Selected Day Header Section
@@ -1159,7 +1182,7 @@ struct CollaborativeDistributionStepView: View {
 
         return HStack {
             Text(selectedWeekday.fullName)
-                .font(.title3.bold())
+                .font(.headline)
 
             Spacer()
 
@@ -1168,7 +1191,7 @@ struct CollaborativeDistributionStepView: View {
                     viewModel.resetCollaborativeDaysToEven()
                 }
             }
-            .font(.subheadline)
+            .font(.caption)
             .foregroundColor(.blue)
             .accessibilityIdentifier("collab-reset-all-button")
 
@@ -1178,7 +1201,7 @@ struct CollaborativeDistributionStepView: View {
                 }
             } label: {
                 Image(systemName: isLocked ? "lock.fill" : "lock.open")
-                    .font(.title3)
+                    .font(.subheadline)
                     .foregroundColor(isLocked ? .orange : .secondary)
             }
             .accessibilityLabel(isLocked ? "Unlock day" : "Lock day")
@@ -1201,13 +1224,13 @@ struct CollaborativeDistributionStepView: View {
         let selectedDay = viewModel.collaborativeSelectedDay
         let currentCalories = viewModel.collaborativeDays[selectedDay]?.calories ?? 0
 
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Calories")
-                    .font(.headline)
+                    .font(.subheadline.bold())
                 Spacer()
                 Text("\(Int(currentCalories)) cal")
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.blue)
             }
 
@@ -1224,16 +1247,18 @@ struct CollaborativeDistributionStepView: View {
                 )
                 .keyboardType(.numberPad)
                 .textFieldStyle(.roundedBorder)
+                .frame(height: 36)
 
                 Text("cal")
+                    .font(.caption)
                     .foregroundColor(.secondary)
             }
 
-            Text("Changing calories will auto-adjust other unlocked days")
-                .font(.caption)
+            Text("Auto-adjusts unlocked days")
+                .font(.system(size: 10))
                 .foregroundColor(.secondary)
         }
-        .cardBackground()
+        .compactCardBackground()
         .accessibilityIdentifier("collab-calories-input")
     }
 
@@ -1243,13 +1268,13 @@ struct CollaborativeDistributionStepView: View {
         let selectedDay = viewModel.collaborativeSelectedDay
         let currentProtein = viewModel.collaborativeDays[selectedDay]?.proteinGramsPerLb ?? 0.8
 
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Protein")
-                    .font(.headline)
+                    .font(.subheadline.bold())
                 Spacer()
                 Text(String(format: "%.1f g/lb", currentProtein))
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.blue)
             }
 
@@ -1268,11 +1293,11 @@ struct CollaborativeDistributionStepView: View {
             .tint(.blue)
 
             let proteinGrams = Int(currentProtein * viewModel.bodyWeightLb)
-            Text("\(proteinGrams)g protein for your body weight")
-                .font(.caption)
+            Text("\(proteinGrams)g for your body weight")
+                .font(.system(size: 10))
                 .foregroundColor(.secondary)
         }
-        .cardBackground()
+        .compactCardBackground()
         .accessibilityIdentifier("collab-protein-slider")
     }
 
@@ -1282,21 +1307,21 @@ struct CollaborativeDistributionStepView: View {
         let selectedDay = viewModel.collaborativeSelectedDay
         let currentRatio = viewModel.collaborativeDays[selectedDay]?.carbFatRatio ?? 0.5
 
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Carb : Fat Ratio")
-                    .font(.headline)
+                    .font(.subheadline.bold())
                 Spacer()
                 let carbPct = currentRatio * 100
                 let fatPct = (1 - currentRatio) * 100
                 Text(String(format: "%.0f%% : %.0f%%", carbPct, fatPct))
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.blue)
             }
 
             HStack {
                 Text("Fat")
-                    .font(.caption)
+                    .font(.system(size: 10))
                     .foregroundColor(.secondary)
                 Slider(
                     value: Binding(
@@ -1312,15 +1337,15 @@ struct CollaborativeDistributionStepView: View {
                 )
                 .tint(.blue)
                 Text("Carbs")
-                    .font(.caption)
+                    .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
 
-            Text("Balance remaining calories between carbs and fat")
-                .font(.caption)
+            Text("Balance remaining calories")
+                .font(.system(size: 10))
                 .foregroundColor(.secondary)
         }
-        .cardBackground()
+        .compactCardBackground()
         .accessibilityIdentifier("collab-carbfat-slider")
     }
 
