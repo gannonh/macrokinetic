@@ -6,6 +6,7 @@
 //  Provides entry points for New Goal, Edit Goal, Edit Program, New Program flows.
 //
 
+import OSLog
 import SwiftData
 import SwiftUI
 
@@ -30,6 +31,11 @@ struct StrategyView: View {
     @State private var isEditingGoal = false
     @State private var isEditingProgram = false
     @State private var createdGoal: NutritionGoal?
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "StrategyView"
+    )
 
     var body: some View {
         NavigationStack {
@@ -67,11 +73,8 @@ struct StrategyView: View {
                     // 2. createdGoal state propagates to child views
                     DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
                         if isEditingGoal {
-                            // Edit Goal flow → Show Program Summary (only if program exists)
-                            if goal.program != nil {
-                                showingProgramSummary = true
-                            }
-                            // If no program, just finish - user only edited the goal
+                            // Edit Goal flow → Show Program Summary
+                            showingProgramSummary = true
                         } else {
                             // New Goal flow → Chain to Program Wizard
                             showingProgramWizard = true
@@ -115,11 +118,15 @@ struct StrategyView: View {
             }
         )
         .sheet(isPresented: $showingProgramSummary) {
-            if let goal = createdGoal ?? users.first?.activeNutritionGoal,
+            // Use queried user's active goal - @Query ensures relationships are loaded
+            if let goal = users.first?.activeNutritionGoal,
                 let program = goal.program
             {
                 ProgramSummarySheet(program: program) {
-                    // Looks Good - dismiss
+                    // Looks Good - recalculate targets with existing program settings
+                    Task {
+                        await recalculateProgramTargets(for: goal)
+                    }
                     showingProgramSummary = false
                     createdGoal = nil
                 } onSetNewProgram: {
@@ -385,6 +392,27 @@ struct StrategyView: View {
         }
         .padding()
         .accessibilityIdentifier("no-user-section")
+    }
+
+    // MARK: - Recalculation
+
+    /// Recalculate program targets after goal edit using existing program settings
+    @MainActor
+    private func recalculateProgramTargets(for goal: NutritionGoal) async {
+        guard let user = users.first else {
+            Self.logger.error("No user found for target recalculation")
+            return
+        }
+
+        let tdeeService = TDEEService(context: modelContext)
+
+        do {
+            // Recalculate TDEE and apply calorie/macro targets
+            try await tdeeService.calculateAndApplyFullTDEE(for: user, goal: goal)
+            Self.logger.info("Successfully recalculated program targets after goal edit")
+        } catch {
+            Self.logger.error("Failed to recalculate program targets: \(error.localizedDescription)")
+        }
     }
 }
 
