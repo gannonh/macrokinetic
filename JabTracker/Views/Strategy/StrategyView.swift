@@ -67,8 +67,11 @@ struct StrategyView: View {
                     // 2. createdGoal state propagates to child views
                     DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
                         if isEditingGoal {
-                            // Edit Goal flow → Show Program Summary
-                            showingProgramSummary = true
+                            // Edit Goal flow → Show Program Summary (only if program exists)
+                            if goal.program != nil {
+                                showingProgramSummary = true
+                            }
+                            // If no program, just finish - user only edited the goal
                         } else {
                             // New Goal flow → Chain to Program Wizard
                             showingProgramWizard = true
