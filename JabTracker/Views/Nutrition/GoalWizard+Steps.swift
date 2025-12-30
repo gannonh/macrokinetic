@@ -48,6 +48,11 @@ struct GoalTypeSelectionView: View {
 struct TargetWeightStepView: View {
     @Bindable var viewModel: GoalWizardViewModel
 
+    // State for weight picker sheet
+    @State private var showingWeightPicker = false
+    @State private var weightWhole: Int = 150
+    @State private var weightDecimal: Int = 0
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             GoalStepHeader(
@@ -69,35 +74,75 @@ struct TargetWeightStepView: View {
                 .padding(.horizontal, 24)
             }
         }
+        .sheet(isPresented: $showingWeightPicker) {
+            weightPickerSheet
+        }
     }
 
     private var currentWeightSection: some View {
-        HStack {
-            Text("Current Weight")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            Spacer()
-            HStack(spacing: 4) {
-                TextField(
-                    "",
-                    value: $viewModel.currentWeightDisplay,
-                    format: .number.precision(.fractionLength(1))
-                )
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 60)
-                .font(.headline)
-                .accessibilityIdentifier("goal-wizard-current-weight-input")
-
-                Text(viewModel.weightUnitLabel)
+        Button {
+            // Initialize picker values before showing sheet
+            let (whole, decimal) = WeightPickerView.pickerValues(
+                from: viewModel.currentWeightDisplay.rounded(toPlaces: 1)
+            )
+            weightWhole = whole
+            weightDecimal = decimal
+            showingWeightPicker = true
+        } label: {
+            HStack {
+                Text("Current Weight")
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                Spacer()
+                Text(formattedCurrentWeight)
                     .font(.headline)
+                    .foregroundColor(.blue)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(Color(.tertiaryLabel))
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.gray.opacity(0.05))
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("goal-wizard-current-weight-row")
+    }
+
+    private var formattedCurrentWeight: String {
+        let format = viewModel.usesMetricWeight ? "%.1f %@" : "%.0f %@"
+        return String(format: format, viewModel.currentWeightDisplay.rounded(toPlaces: 1), viewModel.weightUnitLabel)
+    }
+
+    private var weightPickerSheet: some View {
+        NavigationStack {
+            Form {
+                WeightPickerView(
+                    weightWhole: $weightWhole,
+                    weightDecimal: $weightDecimal,
+                    unit: viewModel.weightUnitLabel
+                )
+            }
+            .navigationTitle("Current Weight")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showingWeightPicker = false
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let pickerWeight = Double(weightWhole) + Double(weightDecimal) / 10.0
+                        viewModel.currentWeightDisplay = pickerWeight
+                        showingWeightPicker = false
+                    }
+                }
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
+        .presentationDetents([.medium])
     }
 
     private var weightFormat: String {
@@ -143,6 +188,8 @@ struct TargetWeightStepView: View {
     private var targetWeightRangeDisplay: ClosedRange<Double> {
         let kgToLbs = 2.20462
         let multiplier = viewModel.usesMetricWeight ? 1.0 : kgToLbs
+        // Minimum step size for the slider
+        let minStep = viewModel.usesMetricWeight ? 0.5 : 1.0
 
         func roundMin(_ value: Double) -> Double {
             viewModel.usesMetricWeight ? (value * 2).rounded(.up) / 2 : value.rounded(.up)
@@ -155,12 +202,14 @@ struct TargetWeightStepView: View {
         case .weightLoss:
             let minWeight = roundMin(max(40, viewModel.currentWeightKg * 0.7) * multiplier)
             let maxWeight = roundMax((viewModel.currentWeightKg - 0.5) * multiplier)
-            let safeMax = max(minWeight, maxWeight)
+            // Ensure range has at least one step of width to prevent Slider crash
+            let safeMax = max(minWeight + minStep, maxWeight)
             return minWeight...safeMax
         case .muscleGain:
             let minWeight = roundMin((viewModel.currentWeightKg + 0.5) * multiplier)
             let maxWeight = roundMax(viewModel.currentWeightKg * 1.3 * multiplier)
-            let safeMax = max(minWeight, maxWeight)
+            // Ensure range has at least one step of width to prevent Slider crash
+            let safeMax = max(minWeight + minStep, maxWeight)
             return minWeight...safeMax
         case .maintenance, .none:
             let weight = viewModel.currentWeightKg * multiplier

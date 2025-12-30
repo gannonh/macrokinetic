@@ -143,6 +143,13 @@ extension MetricsService {
         Self.healthKitLogger.info("Saved height: \(heightCm) cm (HealthKit: \(user.healthSyncEnabled))")
     }
 
+    /// Write height to HealthKit only (no local save)
+    /// Use this when local save is handled separately to avoid double context.save() calls
+    func writeHeightToHealthKitIfEnabled(_ heightCm: Double, for user: User, timestamp: Date = Date()) async {
+        guard user.healthSyncEnabled else { return }
+        await writeHeightToHealthKit(heightCm, timestamp: timestamp)
+    }
+
     // MARK: - Health Sync Toggle
 
     /// Enable or disable HealthKit sync for the user

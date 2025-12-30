@@ -471,33 +471,16 @@ struct AccountView: View {
     private var weightEditor: some View {
         let unit = users.first?.weightUnit ?? "lbs"
 
-        return HStack(spacing: 0) {
-            Picker("Whole", selection: $weightWhole) {
-                ForEach(30...400, id: \.self) { Text("\($0)").tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(width: 100, height: 150)
-            .clipped()
-
-            Text(".")
-                .font(.title)
-
-            Picker("Decimal", selection: $weightDecimal) {
-                ForEach(0...9, id: \.self) { Text("\($0)").tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(width: 60, height: 150)
-            .clipped()
-
-            Text(unit)
-                .font(.title3)
-                .foregroundColor(.secondary)
-                .padding(.leading, 8)
-        }
+        return WeightPickerView(
+            weightWhole: $weightWhole,
+            weightDecimal: $weightDecimal,
+            unit: unit
+        )
         .onAppear {
             // Initialize picker from editWeight
-            weightWhole = Int(editWeight)
-            weightDecimal = Int(((editWeight - Double(Int(editWeight))) * 10).rounded())
+            let (whole, decimal) = WeightPickerView.pickerValues(from: editWeight)
+            weightWhole = whole
+            weightDecimal = decimal
         }
         .accessibilityIdentifier("edit-weight-picker")
     }

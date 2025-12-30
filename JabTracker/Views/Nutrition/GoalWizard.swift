@@ -6,6 +6,7 @@
 //  Separate from ProgramWizard - handles Goal domain (type, target, rate).
 //
 
+import OSLog
 import SwiftData
 import SwiftUI
 
@@ -319,6 +320,12 @@ struct GoalWizard: View {
     @State private var viewModel = GoalWizardViewModel()
     @State private var errorMessage: String?
     @State private var showingError = false
+    @State private var metricsService: MetricsService?
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "GoalWizard"
+    )
 
     let user: User
 
@@ -377,16 +384,19 @@ struct GoalWizard: View {
             }
         }
         .task {
+            // Initialize MetricsService
+            metricsService = MetricsService(context: modelContext)
+
             // Configure for edit mode if editing existing goal
             if let existingGoal {
                 viewModel.configureForEdit(goal: existingGoal, usesMetric: user.prefersMetricWeight)
             } else {
-                // Get current weight from HealthKit if sync enabled, otherwise use local value
+                // Get current weight from MetricsService (handles HealthKit if enabled)
                 let currentWeightKg: Double
-                if user.healthSyncEnabled, let service = AppServices.shared.metricsService {
+                if let service = metricsService {
                     currentWeightKg = await service.getCurrentWeight(for: user)
                 } else {
-                    // Local weight is stored in user's preferred unit
+                    // Fallback: Local weight is stored in user's preferred unit
                     currentWeightKg =
                         user.prefersMetricWeight
                         ? user.weight
@@ -546,8 +556,33 @@ struct GoalWizard: View {
     // MARK: - Actions
 
     private func saveGoal() {
+        Task {
+            await saveGoalAsync()
+        }
+    }
+
+    private func saveGoalAsync() async {
         do {
+            // Save the goal first
             let goal = try viewModel.save(context: modelContext, user: user)
+
+            // Log weight via MetricsService to create WeightEntry for TDEE calculations
+            // This is critical: TDEEService.calculateInitialTDEE requires a WeightEntry record
+            if let service = metricsService {
+                do {
+                    _ = try await service.logWeight(
+                        weightKg: viewModel.currentWeightKg,
+                        for: user
+                    )
+                    Self.logger.info("Logged starting weight: \(viewModel.currentWeightKg) kg via MetricsService")
+                } catch {
+                    // Log error but don't block goal creation - weight entry is supplementary
+                    Self.logger.warning("Failed to log weight entry: \(error.localizedDescription)")
+                }
+            } else {
+                Self.logger.warning("MetricsService not available - weight entry not created")
+            }
+
             if let onComplete {
                 onComplete(goal)
             } else {

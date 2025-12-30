@@ -145,37 +145,38 @@ struct StrategyView: View {
     }
 
     private func checkInCountdownCard(goal: NutritionGoal) -> some View {
-        VStack(spacing: 12) {
-            HStack {
+        HStack(spacing: 16) {
+            // Countdown ring
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                    .frame(width: 64, height: 64)
+
+                Circle()
+                    .trim(from: 0, to: 0.7)  // Placeholder progress
+                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 64, height: 64)
+                    .rotationEffect(.degrees(-90))
+
+                VStack(spacing: 0) {
+                    Text("7")
+                        .font(.title3.bold())
+                    Text("days")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text("Next Check-In")
                     .font(.headline)
-                Spacer()
                 // Placeholder - will be calculated in Phase 16
-                Text("7 days")
+                Text("Weekly progress review")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
 
-            // Countdown ring placeholder
-            ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 8)
-                    .frame(width: 80, height: 80)
-
-                Circle()
-                    .trim(from: 0, to: 0.7)  // Placeholder progress
-                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .frame(width: 80, height: 80)
-                    .rotationEffect(.degrees(-90))
-
-                VStack(spacing: 2) {
-                    Text("7")
-                        .font(.title2.bold())
-                    Text("days")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
+            Spacer()
         }
         .padding()
         .background(

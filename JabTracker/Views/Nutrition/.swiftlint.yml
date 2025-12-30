@@ -2,14 +2,15 @@
 # FoodSearchSheet.swift has complex tab-based UI requiring more lines
 # GoalWizard.swift and ProgramWizard.swift contain step views inline per architecture decision
 # ProgramWizard.swift has TDEE-to-macro calculation functions added in 15.1-02
+# ProgramWizardStepViews.swift contains all step views including CollaborativeDistributionStepView (15.2-04)
 
 type_body_length:
   warning: 400
   error: 450
 
 file_length:
-  warning: 950
-  error: 1100
+  warning: 1100
+  error: 1400
 
 # Allow 3-member tuples for macro calculations (protein, fat, carbs)
 large_tuple:

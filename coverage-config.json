@@ -243,7 +243,6 @@
       "Views/Settings/SettingsView.swift",
       "Views/Settings/AccountView.swift",
       "Views/SplashView.swift",
-      "Views/UserProfileView.swift",
       "Views/Nutrition/NutritionSummaryCard.swift",
       "Views/Nutrition/FoodSearchView.swift",
       "Views/Nutrition/AddFoodSheet.swift",
@@ -276,7 +275,8 @@
       "Views/Weight/QuickWeightSheet.swift",
       "Views/Metrics/QuickMetricsSheet.swift",
       "Views/Photos/QuickPhotoSheet.swift",
-      "Design/CircularProgressRing.swift"
+      "Design/CircularProgressRing.swift",
+      "Design/WeightPickerView.swift"
     ]
   }
 }

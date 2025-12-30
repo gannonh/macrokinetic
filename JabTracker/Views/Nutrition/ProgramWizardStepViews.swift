@@ -932,3 +932,420 @@ struct ShiftedDaySelectionStepView: View {
         .accessibilityIdentifier("shifted-day-\(weekday.fullName.lowercased())")
     }
 }
+
+// MARK: - Collaborative Distribution Step View
+
+/// Step view for Collaborative mode per-day distribution editor
+/// Mock: mocks/goal-program/Collaborative/02.PNG
+struct CollaborativeDistributionStepView: View {
+    @Bindable var viewModel: ProgramWizardViewModel
+    @FocusState private var isCaloriesInputFocused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            StepHeader(
+                title: ProgramWizardStep.collaborativeDistribution.title,
+                subtitle: ProgramWizardStep.collaborativeDistribution.subtitle
+            )
+
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Weekly summary grid
+                    weeklyGridSection
+
+                    // Day selector
+                    daySelectorSection
+
+                    // Selected day header with reset and lock
+                    selectedDayHeaderSection
+
+                    // Calories input
+                    caloriesInputSection
+
+                    // Protein slider
+                    proteinSliderSection
+
+                    // Carb/Fat ratio slider
+                    carbFatRatioSection
+                }
+                .padding(.horizontal, 24)
+            }
+        }
+        .focused($isCaloriesInputFocused)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isCaloriesInputFocused = false
+                }
+            }
+        }
+        .onAppear {
+            // Initialize collaborative days if empty
+            if viewModel.collaborativeDays.isEmpty {
+                viewModel.initializeCollaborativeDaysFromGoal()
+            }
+        }
+        .accessibilityIdentifier("collaborative-distribution-step")
+    }
+
+    // MARK: - Weekly Grid Section
+
+    private var weeklyGridSection: some View {
+        VStack(spacing: 0) {
+            // Day headers
+            HStack(spacing: 4) {
+                Text("")
+                    .frame(width: 30)
+
+                ForEach(Weekday.mondayFirst, id: \.rawValue) { weekday in
+                    Text(weekday.shortLetter)
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(
+                            viewModel.collaborativeSelectedDay == weekday.rawValue ? .blue : .secondary
+                        )
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.bottom, 8)
+
+            // Calorie row (blue pill style)
+            weeklyMacroRow(
+                label: "Cals",
+                values: Weekday.mondayFirst.map { weekday in
+                    Int(viewModel.collaborativeDays[weekday.rawValue]?.calories ?? 0)
+                },
+                unit: "",
+                color: .blue,
+                isPill: true
+            )
+
+            // Protein row (orange)
+            weeklyMacroRow(
+                label: "P",
+                values: Weekday.mondayFirst.map { weekday in
+                    let config = viewModel.collaborativeDays[weekday.rawValue]
+                    return Int(config?.proteinGrams(bodyWeightLb: viewModel.bodyWeightLb) ?? 0)
+                },
+                unit: "g",
+                color: .orange,
+                isPill: false
+            )
+
+            // Fat row (yellow)
+            weeklyMacroRow(
+                label: "F",
+                values: Weekday.mondayFirst.map { weekday in
+                    let config = viewModel.collaborativeDays[weekday.rawValue]
+                    return Int(config?.fatGrams(bodyWeightLb: viewModel.bodyWeightLb) ?? 0)
+                },
+                unit: "g",
+                color: .yellow,
+                isPill: false
+            )
+
+            // Carbs row (green)
+            weeklyMacroRow(
+                label: "C",
+                values: Weekday.mondayFirst.map { weekday in
+                    let config = viewModel.collaborativeDays[weekday.rawValue]
+                    return Int(config?.carbGrams(bodyWeightLb: viewModel.bodyWeightLb) ?? 0)
+                },
+                unit: "g",
+                color: .green,
+                isPill: false
+            )
+
+            // Weekly total
+            let weeklyTotal = WeeklyConstants.validWeekdayRange.reduce(0.0) { sum, day in
+                sum + (viewModel.collaborativeDays[day]?.calories ?? 0)
+            }
+            HStack {
+                Spacer()
+                Text("Weekly Total: \(Int(weeklyTotal)) cal")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, 8)
+        }
+        .cardBackground()
+    }
+
+    /// Reusable macro row for weekly grid (matches ProgramReadySheet style)
+    private func weeklyMacroRow(
+        label: String,
+        values: [Int],
+        unit: String,
+        color: Color,
+        isPill: Bool
+    ) -> some View {
+        HStack(spacing: 4) {
+            // Label column
+            Text(label)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+                .frame(width: 30, alignment: .leading)
+
+            // 7 days with individual values
+            ForEach(Array(values.enumerated()), id: \.offset) { _, value in
+                let valueText = "\(value)\(unit)"
+
+                ZStack {
+                    if isPill {
+                        Capsule()
+                            .fill(color.opacity(0.15))
+                    } else {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(color.opacity(0.15))
+                    }
+
+                    Text(valueText)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(color)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: isPill ? 28 : 32)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Day Selector Section
+
+    private var daySelectorSection: some View {
+        HStack(spacing: 8) {
+            ForEach(Weekday.mondayFirst, id: \.rawValue) { weekday in
+                let isSelected = viewModel.collaborativeSelectedDay == weekday.rawValue
+                let isLocked = viewModel.collaborativeDays[weekday.rawValue]?.isLocked ?? false
+
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        viewModel.collaborativeSelectedDay = weekday.rawValue
+                    }
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Text(weekday.shortLetter)
+                            .font(.headline)
+                            .frame(width: 40, height: 40)
+                            .background(
+                                Circle()
+                                    .fill(isSelected ? Color.blue : Color.gray.opacity(0.2))
+                            )
+                            .foregroundColor(isSelected ? .white : .primary)
+
+                        if isLocked {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(.orange)
+                                .offset(x: 4, y: -4)
+                        }
+                    }
+                }
+                .accessibilityLabel("\(weekday.fullName)\(isLocked ? ", locked" : "")")
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityIdentifier("collab-day-selector-\(weekday.fullName.lowercased())")
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    // MARK: - Selected Day Header Section
+
+    private var selectedDayHeaderSection: some View {
+        let selectedWeekday = Weekday(rawValue: viewModel.collaborativeSelectedDay) ?? .monday
+        let isLocked = viewModel.collaborativeDays[viewModel.collaborativeSelectedDay]?.isLocked ?? false
+
+        return HStack {
+            Text(selectedWeekday.fullName)
+                .font(.title3.bold())
+
+            Spacer()
+
+            Button("Reset All") {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    viewModel.resetCollaborativeDaysToEven()
+                }
+            }
+            .font(.subheadline)
+            .foregroundColor(.blue)
+            .accessibilityIdentifier("collab-reset-all-button")
+
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    toggleLock(for: viewModel.collaborativeSelectedDay)
+                }
+            } label: {
+                Image(systemName: isLocked ? "lock.fill" : "lock.open")
+                    .font(.title3)
+                    .foregroundColor(isLocked ? .orange : .secondary)
+            }
+            .accessibilityLabel(isLocked ? "Unlock day" : "Lock day")
+            .accessibilityIdentifier("collab-lock-button")
+        }
+    }
+
+    // MARK: - Calories Input Section
+
+    /// Integer formatter for calorie input
+    private static let calorieFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        formatter.usesGroupingSeparator = false
+        return formatter
+    }()
+
+    private var caloriesInputSection: some View {
+        let selectedDay = viewModel.collaborativeSelectedDay
+        let currentCalories = viewModel.collaborativeDays[selectedDay]?.calories ?? 0
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Calories")
+                    .font(.headline)
+                Spacer()
+                Text("\(Int(currentCalories)) cal")
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+            }
+
+            HStack {
+                TextField(
+                    "Calories",
+                    value: Binding(
+                        get: { currentCalories },
+                        set: { newValue in
+                            viewModel.adjustCollaborativeCalories(forDay: selectedDay, newCalories: newValue)
+                        }
+                    ),
+                    formatter: Self.calorieFormatter
+                )
+                .keyboardType(.numberPad)
+                .textFieldStyle(.roundedBorder)
+
+                Text("cal")
+                    .foregroundColor(.secondary)
+            }
+
+            Text("Changing calories will auto-adjust other unlocked days")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .cardBackground()
+        .accessibilityIdentifier("collab-calories-input")
+    }
+
+    // MARK: - Protein Slider Section
+
+    private var proteinSliderSection: some View {
+        let selectedDay = viewModel.collaborativeSelectedDay
+        let currentProtein = viewModel.collaborativeDays[selectedDay]?.proteinGramsPerLb ?? 0.8
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Protein")
+                    .font(.headline)
+                Spacer()
+                Text(String(format: "%.1f g/lb", currentProtein))
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+            }
+
+            Slider(
+                value: Binding(
+                    get: { currentProtein },
+                    set: { newValue in
+                        guard var config = viewModel.collaborativeDays[selectedDay] else { return }
+                        config.proteinGramsPerLb = newValue
+                        viewModel.collaborativeDays[selectedDay] = config
+                    }
+                ),
+                in: 0.5...1.5,
+                step: 0.1
+            )
+            .tint(.blue)
+
+            let proteinGrams = Int(currentProtein * viewModel.bodyWeightLb)
+            Text("\(proteinGrams)g protein for your body weight")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .cardBackground()
+        .accessibilityIdentifier("collab-protein-slider")
+    }
+
+    // MARK: - Carb/Fat Ratio Section
+
+    private var carbFatRatioSection: some View {
+        let selectedDay = viewModel.collaborativeSelectedDay
+        let currentRatio = viewModel.collaborativeDays[selectedDay]?.carbFatRatio ?? 0.5
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Carb : Fat Ratio")
+                    .font(.headline)
+                Spacer()
+                let carbPct = currentRatio * 100
+                let fatPct = (1 - currentRatio) * 100
+                Text(String(format: "%.0f%% : %.0f%%", carbPct, fatPct))
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+            }
+
+            HStack {
+                Text("Fat")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Slider(
+                    value: Binding(
+                        get: { currentRatio },
+                        set: { newValue in
+                            guard var config = viewModel.collaborativeDays[selectedDay] else { return }
+                            config.carbFatRatio = newValue
+                            viewModel.collaborativeDays[selectedDay] = config
+                        }
+                    ),
+                    in: 0...1,
+                    step: 0.05
+                )
+                .tint(.blue)
+                Text("Carbs")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Text("Balance remaining calories between carbs and fat")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .cardBackground()
+        .accessibilityIdentifier("collab-carbfat-slider")
+    }
+
+    // MARK: - Helpers
+
+    private func toggleLock(for weekday: Int) {
+        guard var config = viewModel.collaborativeDays[weekday] else { return }
+        config.isLocked.toggle()
+        viewModel.collaborativeDays[weekday] = config
+    }
+}
+
+// MARK: - Weekday Extension
+
+extension Weekday {
+    /// Single letter abbreviation for compact display
+    var shortLetter: String {
+        switch self {
+        case .sunday: return "S"
+        case .monday: return "M"
+        case .tuesday: return "T"
+        case .wednesday: return "W"
+        case .thursday: return "T"
+        case .friday: return "F"
+        case .saturday: return "S"
+        }
+    }
+}

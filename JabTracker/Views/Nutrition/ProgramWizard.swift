@@ -21,7 +21,8 @@ enum ProgramWizardStep: String, CaseIterable {
     case training
     case weeklyDistribution
     case proteinLevel
-    case macroCustomization  // For Collaborative: weekly grid + sliders for protein g/lb, carb:fat ratio
+    case macroCustomization  // Legacy: single sliders for protein g/lb, carb:fat ratio
+    case collaborativeDistribution  // For Collaborative: per-day distribution editor with auto-adjust
     case targetMode  // For Manual: Same all week vs Different per day
     case singleWeekMacros  // For Manual with same targets: single macro entry form
     case perDayMacros  // For Manual with different targets: edit each day
@@ -38,6 +39,7 @@ enum ProgramWizardStep: String, CaseIterable {
         case .weeklyDistribution: return "Weekly Distribution"
         case .proteinLevel: return "Protein Level"
         case .macroCustomization: return "Customize Macros"
+        case .collaborativeDistribution: return "Weekly Distribution"
         case .targetMode: return "Target Mode"
         case .singleWeekMacros: return "Weekly Targets"
         case .perDayMacros: return "Daily Targets"
@@ -56,6 +58,7 @@ enum ProgramWizardStep: String, CaseIterable {
         case .weeklyDistribution: return "How to spread calories across the week"
         case .proteinLevel: return "How much protein do you need?"
         case .macroCustomization: return "Adjust your daily macro ratios"
+        case .collaborativeDistribution: return "Customize calories and macros for each day"
         case .targetMode: return "Same targets all week or different each day?"
         case .singleWeekMacros: return "Set your targets for the week"
         case .perDayMacros: return "Set macros for each day of the week"
@@ -104,13 +107,53 @@ final class ProgramWizardViewModel {
     var weeklyDistributionMode: WeeklyDistributionMode?
     var proteinLevel: ProteinLevel?
 
-    // MARK: - Macro Customization State (Collaborative)
+    // MARK: - Macro Customization State (Collaborative - Legacy)
 
-    /// Protein target in grams per pound of body weight
+    /// Protein target in grams per pound of body weight (legacy single-value)
     var proteinGramsPerLb: Double = 0.8
 
-    /// Carb to fat ratio (0.0 = all fat, 1.0 = all carbs)
+    /// Carb to fat ratio (0.0 = all fat, 1.0 = all carbs) (legacy single-value)
     var carbFatRatio: Double = 0.5
+
+    // MARK: - Collaborative Distribution State
+
+    /// Selected day for editing (weekday: 1=Sun, 2=Mon, ..., 7=Sat)
+    var collaborativeSelectedDay: Int = 2  // Default to Monday
+
+    /// Per-day configuration for Collaborative mode
+    struct CollaborativeDayConfig: Equatable {
+        var calories: Double
+        var proteinGramsPerLb: Double
+        var carbFatRatio: Double
+        var isLocked: Bool
+
+        /// Calculate actual protein grams from body weight in pounds
+        func proteinGrams(bodyWeightLb: Double) -> Double {
+            proteinGramsPerLb * bodyWeightLb
+        }
+
+        /// Calculate fat grams from remaining calories after protein
+        func fatGrams(bodyWeightLb: Double) -> Double {
+            let proteinCals = proteinGrams(bodyWeightLb: bodyWeightLb) * 4
+            let remaining = calories - proteinCals
+            let fatCalories = remaining * (1 - carbFatRatio)
+            return fatCalories / 9
+        }
+
+        /// Calculate carb grams from remaining calories after protein
+        func carbGrams(bodyWeightLb: Double) -> Double {
+            let proteinCals = proteinGrams(bodyWeightLb: bodyWeightLb) * 4
+            let remaining = calories - proteinCals
+            let carbCalories = remaining * carbFatRatio
+            return carbCalories / 4
+        }
+    }
+
+    /// Per-day configurations for Collaborative mode (weekday: 1=Sun, 2=Mon, ..., 7=Sat)
+    var collaborativeDays: [Int: CollaborativeDayConfig] = [:]
+
+    /// Weekly calorie budget (from goal)
+    var weeklyCalorieBudget: Double = 14000
 
     // MARK: - Target Mode State (Manual)
 
@@ -147,8 +190,10 @@ final class ProgramWizardViewModel {
     var editBirthday: Date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
 
     /// Whether profile completion step is needed
+    /// Both Coached and Collaborative modes need profile data for TDEE calculations
     var needsProfileCompletion: Bool {
-        programStyle == .coached && (missingHeight || missingSex || missingBirthday)
+        let requiresProfile = programStyle == .coached || programStyle == .collaborative
+        return requiresProfile && (missingHeight || missingSex || missingBirthday)
     }
 
     /// Height in cm from feet/inches
@@ -215,8 +260,13 @@ final class ProgramWizardViewModel {
     private var collaborativeSteps: [ProgramWizardStep] {
         var steps = baseSteps
 
-        // Collaborative shows: training, weeklyDistribution, macroCustomization
-        steps.append(contentsOf: [.training, .weeklyDistribution, .macroCustomization, .confirmation])
+        // profileCompletion (only if needed - same as Coached)
+        if needsProfileCompletion {
+            steps.append(.profileCompletion)
+        }
+
+        // Collaborative shows: collaborativeDistribution -> confirmation
+        steps.append(contentsOf: [.collaborativeDistribution, .confirmation])
         return steps
     }
 
@@ -269,6 +319,12 @@ final class ProgramWizardViewModel {
             return proteinLevel != nil
         case .macroCustomization:
             return proteinGramsPerLb > 0 && carbFatRatio >= 0 && carbFatRatio <= 1
+        case .collaborativeDistribution:
+            // All 7 days must have valid calories > 0
+            return WeeklyConstants.validWeekdayRange.allSatisfy { weekday in
+                guard let config = collaborativeDays[weekday] else { return false }
+                return config.calories > 0
+            }
         case .targetMode:
             return true  // Always can continue, just choosing mode
         case .singleWeekMacros:
@@ -310,8 +366,12 @@ final class ProgramWizardViewModel {
             }
             return base
         case .collaborative:
-            return trainingLevel != nil && weeklyDistributionMode != nil
-                && proteinGramsPerLb > 0 && carbFatRatio >= 0 && carbFatRatio <= 1
+            // All 7 days must have valid configurations
+            return WeeklyConstants.validWeekdayRange.allSatisfy { weekday in
+                guard let config = collaborativeDays[weekday] else { return false }
+                return config.calories > 0 && config.proteinGramsPerLb > 0
+                    && config.carbFatRatio >= 0 && config.carbFatRatio <= 1
+            }
         case .manual:
             if useSameTargetsAllWeek {
                 return singleWeekCalories > 0 && singleWeekProtein >= 0
@@ -363,6 +423,83 @@ final class ProgramWizardViewModel {
             return
         }
         currentStep = availableSteps[currentIndex - 1]
+    }
+
+    // MARK: - Collaborative Distribution Methods
+
+    /// Initialize collaborative days with even distribution from goal
+    func initializeCollaborativeDaysFromGoal() {
+        guard let goal else { return }
+
+        weeklyCalorieBudget = goal.dailyCalorieTarget * 7
+        let dailyCals = goal.dailyCalorieTarget
+
+        // Initialize all 7 days with even distribution
+        for weekday in WeeklyConstants.validWeekdayRange {
+            collaborativeDays[weekday] = CollaborativeDayConfig(
+                calories: dailyCals,
+                proteinGramsPerLb: proteinGramsPerLb,
+                carbFatRatio: carbFatRatio,
+                isLocked: false
+            )
+        }
+    }
+
+    /// Adjust calories for a specific day with auto-redistribution to unlocked days
+    ///
+    /// When user changes Day X's calories:
+    /// - Calculate delta (new - old)
+    /// - Distribute -delta across all UNLOCKED days (not X, not locked)
+    /// - Maintain total weekly budget
+    ///
+    /// - Parameters:
+    ///   - weekday: The day being edited (1=Sun through 7=Sat)
+    ///   - newCalories: The new calorie value for that day
+    func adjustCollaborativeCalories(forDay weekday: Int, newCalories: Double) {
+        guard var dayConfig = collaborativeDays[weekday] else { return }
+
+        let oldCalories = dayConfig.calories
+        let delta = newCalories - oldCalories
+
+        // Update the edited day
+        dayConfig.calories = newCalories
+        collaborativeDays[weekday] = dayConfig
+
+        // Find unlocked days that aren't the edited day
+        let unlockedDays = WeeklyConstants.validWeekdayRange.filter { day in
+            day != weekday && !(collaborativeDays[day]?.isLocked ?? false)
+        }
+
+        // Distribute the negative delta across unlocked days
+        guard !unlockedDays.isEmpty else { return }
+
+        let adjustmentPerDay = -delta / Double(unlockedDays.count)
+
+        for day in unlockedDays {
+            guard var config = collaborativeDays[day] else { continue }
+            // Ensure calories don't go negative
+            config.calories = max(0, config.calories + adjustmentPerDay)
+            collaborativeDays[day] = config
+        }
+    }
+
+    /// Reset all collaborative days to even distribution
+    func resetCollaborativeDaysToEven() {
+        let dailyCals = weeklyCalorieBudget / 7
+
+        for weekday in WeeklyConstants.validWeekdayRange {
+            collaborativeDays[weekday] = CollaborativeDayConfig(
+                calories: dailyCals,
+                proteinGramsPerLb: proteinGramsPerLb,
+                carbFatRatio: carbFatRatio,
+                isLocked: false
+            )
+        }
+    }
+
+    /// Get body weight in pounds from goal
+    var bodyWeightLb: Double {
+        (goal?.startingWeightKg ?? 70) * 2.205
     }
 
     // MARK: - Initialization
@@ -434,21 +571,32 @@ final class ProgramWizardViewModel {
             return nil
 
         case .collaborative:
-            // Collaborative: calculate from proteinGramsPerLb and carbFatRatio
-            let weightLb = goal.startingWeightKg * 2.205
-            let proteinGrams = proteinGramsPerLb * weightLb
-            let proteinCalories = proteinGrams * 4
-            let remainingCalories = goal.dailyCalorieTarget - proteinCalories
-            let fatCalories = remainingCalories * (1 - carbFatRatio)
-            let carbCalories = remainingCalories * carbFatRatio
+            // Collaborative: build per-day macros from collaborativeDays
+            guard !collaborativeDays.isEmpty else { return nil }
 
-            let defaultMacros = DailyMacros(
-                calories: goal.dailyCalorieTarget,
-                proteinGrams: proteinGrams,
-                fatGrams: fatCalories / 9,
-                carbsGrams: carbCalories / 4
-            )
-            return .even(macros: defaultMacros)
+            let weightLb = goal.startingWeightKg * 2.205
+            var dayMacros: [Int: DailyMacros] = [:]
+
+            for weekday in WeeklyConstants.validWeekdayRange {
+                guard let config = collaborativeDays[weekday] else { continue }
+
+                let proteinGrams = config.proteinGramsPerLb * weightLb
+                let proteinCalories = proteinGrams * 4
+                let remainingCalories = config.calories - proteinCalories
+                let fatCalories = remainingCalories * (1 - config.carbFatRatio)
+                let carbCalories = remainingCalories * config.carbFatRatio
+
+                dayMacros[weekday] = DailyMacros(
+                    calories: config.calories,
+                    proteinGrams: proteinGrams,
+                    fatGrams: fatCalories / 9,
+                    carbsGrams: carbCalories / 4
+                )
+            }
+
+            // Use first day as default (should always exist)
+            let defaultMacros = dayMacros.values.first ?? .zero
+            return WeeklyMacroDistribution(dayMacros: dayMacros, defaultMacros: defaultMacros)
 
         case .manual:
             if useSameTargetsAllWeek {
@@ -572,28 +720,37 @@ final class ProgramWizardViewModel {
     ///   - metricsService: Service to save to HealthKit
     ///   - context: Model context for saving
     func saveProfileData(user: User, metricsService: MetricsService, context: ModelContext) async throws {
-        // Save height if it was missing
-        if missingHeight {
-            try await metricsService.saveHeight(editHeightCm, for: user)
+        // Capture flags before clearing (we need to save based on what was missing)
+        let savingHeight = missingHeight
+        let savingSex = missingSex
+        let savingBirthday = missingBirthday
+
+        // Save all profile data locally first (single context.save to avoid SwiftData observation conflicts)
+        if savingHeight {
+            user.heightCm = editHeightCm
         }
 
-        // Save sex if it was missing (local only - HealthKit sex is read-only)
-        if missingSex {
+        if savingSex {
             user.gender = editSex
         }
 
-        // Save birthday if it was missing (local only - HealthKit DOB is read-only)
-        if missingBirthday {
+        if savingBirthday {
             user.dateOfBirth = editBirthday
         }
 
         user.updatedAt = Date()
         try context.save()
 
-        // Clear missing flags
-        missingHeight = false
-        missingSex = false
-        missingBirthday = false
+        // Write height to HealthKit after local save (non-blocking, won't cause view issues)
+        if savingHeight, user.healthSyncEnabled {
+            Task {
+                await metricsService.writeHeightToHealthKitIfEnabled(editHeightCm, for: user)
+            }
+        }
+
+        // NOTE: Don't clear missing flags here - doing so causes UI to re-render
+        // while currentStep is still .profileCompletion, breaking the view.
+        // Flags will be reset when wizard is dismissed/completed.
     }
 }
 
@@ -721,11 +878,26 @@ struct ProgramWizard: View {
             }
         }
         .onChange(of: viewModel.programStyle) { _, newStyle in
-            // Check for missing profile fields when Coached is selected
-            if newStyle == .coached, let user = goal.user, let service = metricsService {
+            // Check for missing profile fields when Coached or Collaborative is selected
+            if newStyle == .coached || newStyle == .collaborative,
+                let user = goal.user,
+                let service = metricsService
+            {
                 Task {
                     await viewModel.checkMissingProfileFields(user: user, metricsService: service)
+
+                    // For Collaborative, calculate TDEE now if profile is complete
+                    // This ensures distribution editor shows real values even if profileCompletion step is skipped
+                    if newStyle == .collaborative, !viewModel.needsProfileCompletion {
+                        await calculateAndApplyTDEE()
+                        viewModel.initializeCollaborativeDaysFromGoal()
+                    }
                 }
+            }
+            // Initialize collaborative days when Collaborative is selected
+            // (will be re-initialized with real values after TDEE calculation)
+            if newStyle == .collaborative {
+                viewModel.initializeCollaborativeDaysFromGoal()
             }
         }
         .accessibilityIdentifier("program-wizard")
@@ -760,6 +932,9 @@ struct ProgramWizard: View {
         case .macroCustomization:
             MacroCustomizationStepView(viewModel: viewModel)
                 .accessibilityIdentifier("program-wizard-macroCustomization-step")
+        case .collaborativeDistribution:
+            CollaborativeDistributionStepView(viewModel: viewModel)
+                .accessibilityIdentifier("program-wizard-collaborativeDistribution-step")
         case .targetMode:
             TargetModeStepView(useSameTargetsAllWeek: $viewModel.useSameTargetsAllWeek)
                 .accessibilityIdentifier("program-wizard-targetMode-step")
@@ -804,6 +979,13 @@ struct ProgramWizard: View {
 
             do {
                 try await viewModel.saveProfileData(user: user, metricsService: service, context: modelContext)
+
+                // For Collaborative mode, calculate TDEE now so distribution editor shows real values
+                if viewModel.programStyle == .collaborative {
+                    await calculateAndApplyTDEE()
+                    // Re-initialize collaborative days with calculated values
+                    viewModel.initializeCollaborativeDaysFromGoal()
+                }
             } catch {
                 errorMessage = error.localizedDescription
                 showingError = true

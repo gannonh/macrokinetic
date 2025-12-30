@@ -115,29 +115,11 @@ struct QuickWeightSheet: View {
     private var weightSection: some View {
         Section("Weight") {
             VStack(spacing: 12) {
-                HStack(spacing: 0) {
-                    Picker("Whole", selection: $weightWhole) {
-                        ForEach(30...400, id: \.self) { Text("\($0)").tag($0) }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(width: 100, height: 150)
-                    .clipped()
-
-                    Text(".")
-                        .font(.title)
-
-                    Picker("Decimal", selection: $weightDecimal) {
-                        ForEach(0...9, id: \.self) { Text("\($0)").tag($0) }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(width: 60, height: 150)
-                    .clipped()
-
-                    Text(weightUnit)
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .padding(.leading, 8)
-                }
+                WeightPickerView(
+                    weightWhole: $weightWhole,
+                    weightDecimal: $weightDecimal,
+                    unit: weightUnit
+                )
                 .accessibilityIdentifier(Self.weightInputIdentifier)
 
                 Picker("Unit", selection: $weightUnit) {

@@ -105,10 +105,13 @@ final class TDEEService {
     /// - Parameters:
     ///   - user: User with profile data (height, gender, dateOfBirth)
     ///   - goal: NutritionGoal to update
+    ///   - trainingLevelOverride: Optional training level to use instead of program's value.
+    ///     Use this when program doesn't exist yet (e.g., during Collaborative setup).
     /// - Throws: TDEEServiceError if required data is missing or invalid
     func calculateInitialTDEE(
         for user: User,
-        goal: NutritionGoal
+        goal: NutritionGoal,
+        trainingLevelOverride: TrainingLevel? = nil
     ) async throws {
         // Get biometrics from MetricsService (reads from HealthKit if enabled)
         guard let heightCm = await metricsService.getCurrentHeight(for: user) else {
@@ -127,8 +130,10 @@ final class TDEEService {
         // Get gender from MetricsService (reads from HealthKit if enabled)
         let gender = await metricsService.getCurrentGender(for: user)
 
-        // Get training level from program
-        let trainingLevel = goal.program?.training ?? .none
+        // Get training level from override, program, or default to lifting (moderate activity)
+        // Default to .lifting instead of .none because most users setting nutrition goals
+        // have at least moderate activity levels
+        let trainingLevel = trainingLevelOverride ?? goal.program?.training ?? .lifting
 
         // Get current weight from MetricsService (reads from HealthKit if enabled)
         guard let latestWeight = try await metricsService.getLatestWeightEntry() else {
@@ -456,9 +461,15 @@ extension TDEEService {
     /// - Parameters:
     ///   - user: User with biometric data
     ///   - goal: NutritionGoal to update
-    func calculateAndApplyFullTDEE(for user: User, goal: NutritionGoal) async throws {
+    ///   - trainingLevelOverride: Optional training level to use instead of program's value.
+    ///     Use this when program doesn't exist yet (e.g., during Collaborative setup).
+    func calculateAndApplyFullTDEE(
+        for user: User,
+        goal: NutritionGoal,
+        trainingLevelOverride: TrainingLevel? = nil
+    ) async throws {
         // Calculate initial TDEE
-        try await calculateInitialTDEE(for: user, goal: goal)
+        try await calculateInitialTDEE(for: user, goal: goal, trainingLevelOverride: trainingLevelOverride)
 
         // Apply TDEE to get calorie target
         applyTDEEToGoal(goal)
