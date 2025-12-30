@@ -20,11 +20,11 @@
 ## Current Position
 
 Phase: 15.2 of 17 (Program Style Implementation) - INSERTED
-Plan: 3 of 3 in current phase
+Plan: 4 of 4 in current phase
 Status: Phase complete
-Last activity: 2025-12-30 - Completed 15.2-03-PLAN.md
+Last activity: 2025-12-30 - Completed 15.2-04-PLAN.md
 
-Progress: ████████░░ 76%
+Progress: ████████░░ 78%
 
 ## GitHub Tracking
 
@@ -48,12 +48,12 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 14 | 3/3 | 28 min | 9 min |
 | 15 | 1/1 | 2 min | 2 min |
 | 15.1 | 3/3 | 15 min | 5 min |
-| 15.2 | 3/3 | 20 min | 7 min |
+| 15.2 | 4/4 | 32 min | 8 min |
 | 16 | 0/? | - | - |
 | 17 | 0/? | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 15.1-03 (4 min), 15.2-01 (7 min), 15.2-02 (5 min), 15.2-03 (8 min)
+- Last 5 plans: 15.2-01 (7 min), 15.2-02 (5 min), 15.2-03 (8 min), 15.2-04 (12 min)
 - Trend: Phase 15.2 complete
 
 *Updated after each plan completion*
@@ -72,6 +72,7 @@ Branch: feat/321-v0.3.0-goals-nutrition-programs
 | 15.1-02 | DispatchQueue 0.35s delay for sheet chaining | Minimal code change vs fullScreenCover(item:); ensures GoalWizard dismissal animation completes before ProgramWizard presents |
 | 15.2-01 | WeeklyConstants enum for shared validWeekdayRange | DRY principle; both WeeklyMacroDistribution and WeeklyCalorieDistribution use same constant |
 | 15.2-03 | Use defaults for missing optional fields in save() | Collaborative/Manual modes don't require all Coached fields; validation relaxed per program style |
+| 15.2-04 | CollaborativeDayConfig struct for per-day state | Holds calories, proteinGramsPerLb, carbFatRatio, isLocked; auto-adjust distributes delta to unlocked days |
 
 ### Deferred Issues
 
@@ -95,6 +96,17 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-30T00:46:00Z
-Stopped at: Completed 15.2-03-PLAN.md (Phase 15.2 complete)
+Last session: 2025-12-30T19:28:21Z
+Stopped at: Smoke testing fixes - Collaborative TDEE calculation and compact layout
 Resume file: None
+
+### Recent Fixes (2025-12-30)
+- Fixed Collaborative TDEE showing wrong calories (1564 vs 2166) - training level default changed from `.none` to `.lifting`
+- Added integer formatter for calorie TextField (was showing decimals)
+- Updated Collaborative Weekly Distribution UI with color-coded macro rows (P/F/C)
+- Made CollaborativeDistributionStepView compact to fit above the fold:
+  - Reduced header, card, and slider spacing
+  - Added compactCardBackground modifier with tighter padding
+  - Shrunk weekly grid with smaller fonts and row heights
+  - Made day selector circles smaller (36px vs 40px)
+  - Shortened helper text

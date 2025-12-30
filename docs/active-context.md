@@ -33,6 +33,7 @@ Entry point: More > Strategy > Create Goal
       - Should look like mock: @mocks/goal-program/Collaborative/02.PNG
         - Color coded macros/cals bars
 
+---
 
 Scenario 2: User data exists (health data already set)
 
@@ -43,6 +44,7 @@ New Goal
   - Target Weight: 170 lbs
   - Weekly Rate: 1.0 lbs/week
 > Goal Summary > 
+
 Program Style: Coached (1428)
 > Preferred Diet - Balanced
 > Calorie Floor - Standard
@@ -60,9 +62,6 @@ Program: 2190/kcal, P 130g, F 29g, C: 238g
 Program Style: Collaborative
 > Weekly Distribution
 
-RESULTS: 
-TDEE: ?; 
-Program: 2190/kcal, P 144, F 89, C: 201
 
 ---
 
@@ -70,16 +69,3 @@ Test:
 - Coached / Shifted
 - How Protein setting effects calculated macros/cals
 
-FLOWS:
-
-MF:
-New Goal > Weight Loss > Set Target (with health data already set) > Goal Summary > 
-Program Style: Coached (1428)
-> Preferred Diet
-> Calorie Floor
-> Training
-> Distribution
-> Protein
-
-Program Style: Collaborative
-> Weekly Distribution
