@@ -217,3 +217,55 @@ extension NutritionGoal {
         return String(format: "%@%.1f kg", prefix, change)
     }
 }
+
+// MARK: - Per-Day Macro Targets
+
+extension NutritionGoal {
+    /// Get macro targets for a specific date, considering per-day distribution
+    ///
+    /// This method supports three sources of macro values (in priority order):
+    /// 1. Per-day macros from WeeklyMacroDistribution (for Manual/Collaborative)
+    /// 2. Shifted calorie distribution applied to base macros (for Coached/Shifted)
+    /// 3. Goal's single daily targets (fallback)
+    ///
+    /// - Parameter date: The date to get targets for
+    /// - Returns: DailyMacros for that date
+    func macroTargetsForDate(_ date: Date) -> DailyMacros {
+        let weekday = Calendar.current.component(.weekday, from: date)
+
+        // Try per-day macros from program first (Manual, Collaborative)
+        if let program = program,
+            let dayMacros = program.weeklyMacros?.macrosForDay(weekday)
+        {
+            // Apply shifted calorie distribution if also set
+            var macros = dayMacros
+            if let distribution = program.weeklyDistribution,
+                let multiplier = distribution.calorieTargetForDay(weekday, baseCalories: 1.0)
+            {
+                macros.calories *= multiplier
+            }
+            return macros
+        }
+
+        // Try shifted calorie distribution on base macros (Coached/Shifted)
+        if let program = program,
+            let distribution = program.weeklyDistribution
+        {
+            let multiplier = distribution.calorieTargetForDay(weekday, baseCalories: 1.0) ?? 1.0
+            return DailyMacros(
+                calories: dailyCalorieTarget * multiplier,
+                proteinGrams: dailyProteinTargetGrams,
+                fatGrams: dailyFatTargetGrams,
+                carbsGrams: dailyCarbTargetGrams
+            )
+        }
+
+        // Fall back to goal's single daily targets
+        return DailyMacros(
+            calories: dailyCalorieTarget,
+            proteinGrams: dailyProteinTargetGrams,
+            fatGrams: dailyFatTargetGrams,
+            carbsGrams: dailyCarbTargetGrams
+        )
+    }
+}

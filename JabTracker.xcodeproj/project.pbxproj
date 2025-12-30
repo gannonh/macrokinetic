@@ -409,6 +409,7 @@
 		D7ADFE126C5A8EAAA10BA4A3 /* SubscriptionUITests+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2637EC9BBAF683E18CB1F8F2 /* SubscriptionUITests+Helpers.swift */; };
 		D80D32EF16FEF4A7775C4835 /* NutritionGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D9988DC169C265C5CFC291 /* NutritionGoal.swift */; };
 		D8649639D419FC3DC0F9C5D1 /* ReminderTimingPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7EF7771344BE60817527A9 /* ReminderTimingPicker.swift */; };
+		D8714A254FB1D7BDAA6027C2 /* ProgramStyleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF29E42C5E33386197C1BEFF /* ProgramStyleUITests.swift */; };
 		D89C80E010862C922AFB67DA /* DoseDayDetailViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F6208272FB1A53E2C39EC0 /* DoseDayDetailViewTests.swift */; };
 		D8C9A1F356C9290EFC59416A /* ChartData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61AFA297A4701D1F16676C6D /* ChartData.swift */; };
 		DA0D619F46F9C28B62D22627 /* BiometricEnumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72C377F30F091F203828A17 /* BiometricEnumTests.swift */; };
@@ -959,6 +960,7 @@
 		ECB88DE7639B9DA3922B8A95 /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
 		ED9DD1B775E8FB6F3FA02047 /* AdherencePattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherencePattern.swift; sourceTree = "<group>"; };
 		EE66B10C09A23B18DE262674 /* CardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardComponents.swift; sourceTree = "<group>"; };
+		EF29E42C5E33386197C1BEFF /* ProgramStyleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramStyleUITests.swift; sourceTree = "<group>"; };
 		EF5486756E163374C18E8696 /* NotificationServiceActivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceActivationTests.swift; sourceTree = "<group>"; };
 		EFAC98568E2B6DDACE02702F /* ShortcutRowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRowButton.swift; sourceTree = "<group>"; };
 		EFF8B252630E402BBA4F704A /* LibraryTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryTab.swift; sourceTree = "<group>"; };
@@ -1851,6 +1853,7 @@
 				FAC5025DB7552ECF121A4C89 /* OnboardingUITests.swift */,
 				8245E14253AE60C255187224 /* PKEngineUITests.swift */,
 				B68241EADED57FDF499D7011 /* ProgramReadySheetUITests.swift */,
+				EF29E42C5E33386197C1BEFF /* ProgramStyleUITests.swift */,
 				620A62A1FE3AA4F964C05946 /* ProgramSummarySheetUITests.swift */,
 				B39424A55372AC94E9F8231E /* ProgramWizardUITests.swift */,
 				DD80A84700BF23D039F95AD2 /* QuickAddUITests.swift */,
@@ -2146,6 +2149,7 @@
 				1165999CC86E5304AEDFBF10 /* OnboardingUITests.swift in Sources */,
 				74E6DC7E13C647A9AAE7F362 /* PKEngineUITests.swift in Sources */,
 				EC1325BC4A1E7FC206AD1327 /* ProgramReadySheetUITests.swift in Sources */,
+				D8714A254FB1D7BDAA6027C2 /* ProgramStyleUITests.swift in Sources */,
 				9C3F026C487546E098FA9EE2 /* ProgramSummarySheetUITests.swift in Sources */,
 				B3BD0704DF517776D13D741A /* ProgramWizardUITests.swift in Sources */,
 				29EE31A9252020E91F81DD5D /* QuickAddUITests.swift in Sources */,

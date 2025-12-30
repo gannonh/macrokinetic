@@ -388,6 +388,76 @@ final class ProgramWizardViewModel {
 
     // MARK: - Save
 
+    /// Build WeeklyCalorieDistribution from highCalorieDays selection
+    /// See mock: mocks/goal-program/Coached-Shift/IMG_2103.PNG
+    private func buildWeeklyCalorieDistribution() -> WeeklyCalorieDistribution? {
+        guard weeklyDistributionMode == .shifted, !highCalorieDays.isEmpty else {
+            return nil
+        }
+
+        // Create multipliers: high days get boost, low days get reduction
+        // Sum of multipliers should equal 7.0 to maintain weekly average
+        let highDayCount = Double(highCalorieDays.count)
+        let lowDayCount = 7.0 - highDayCount
+
+        // Example: if 3 high days, high=1.1, low=0.95 -> 3*1.1 + 4*0.95 = 3.3 + 3.8 = 7.1 ~ 7
+        let highMultiplier = 1.1
+        let lowMultiplier = (7.0 - highDayCount * highMultiplier) / lowDayCount
+
+        var dayMultipliers: [Int: Double] = [:]
+        for weekday in WeeklyConstants.validWeekdayRange {
+            dayMultipliers[weekday] = highCalorieDays.contains(weekday) ? highMultiplier : lowMultiplier
+        }
+
+        return WeeklyCalorieDistribution(dayMultipliers: dayMultipliers)
+    }
+
+    /// Build WeeklyMacroDistribution from wizard selections
+    private func buildWeeklyMacroDistribution(goal: NutritionGoal) -> WeeklyMacroDistribution? {
+        guard let style = programStyle ?? existingProgram?.style else { return nil }
+
+        switch style {
+        case .coached:
+            // Coached mode uses TDEE-calculated macros with optional shifted calories
+            // WeeklyCalorieDistribution handled separately
+            return nil
+
+        case .collaborative:
+            // Collaborative: calculate from proteinGramsPerLb and carbFatRatio
+            let weightLb = goal.startingWeightKg * 2.205
+            let proteinGrams = proteinGramsPerLb * weightLb
+            let proteinCalories = proteinGrams * 4
+            let remainingCalories = goal.dailyCalorieTarget - proteinCalories
+            let fatCalories = remainingCalories * (1 - carbFatRatio)
+            let carbCalories = remainingCalories * carbFatRatio
+
+            let defaultMacros = DailyMacros(
+                calories: goal.dailyCalorieTarget,
+                proteinGrams: proteinGrams,
+                fatGrams: fatCalories / 9,
+                carbsGrams: carbCalories / 4
+            )
+            return .even(macros: defaultMacros)
+
+        case .manual:
+            if useSameTargetsAllWeek {
+                // Same all week - use single week macros from wizard
+                let defaultMacros = DailyMacros(
+                    calories: singleWeekCalories,
+                    proteinGrams: singleWeekProtein,
+                    fatGrams: singleWeekFat,
+                    carbsGrams: singleWeekCarbs
+                )
+                return .even(macros: defaultMacros)
+            } else {
+                // Different per day - use perDayMacros
+                guard !perDayMacros.isEmpty else { return nil }
+                let first = perDayMacros.values.first ?? .zero
+                return WeeklyMacroDistribution(dayMacros: perDayMacros, defaultMacros: first)
+            }
+        }
+    }
+
     /// Save the program configuration
     /// - Parameter context: SwiftData model context
     func save(context: ModelContext) throws {
@@ -397,38 +467,52 @@ final class ProgramWizardViewModel {
 
         // Get style - from selection or existing program in edit mode
         let style = programStyle ?? existingProgram?.style
-
-        guard let style,
-            let dietPreference,
-            let calorieFloorType,
-            let trainingLevel,
-            let weeklyDistributionMode,
-            let proteinLevel
-        else {
+        guard let style else {
             throw ProgramWizardError.incompleteData
         }
 
+        // Validate required fields based on style
+        let diet = dietPreference ?? (isEditMode ? existingProgram?.diet : nil) ?? .balanced
+        let floor = calorieFloorType ?? (isEditMode ? existingProgram?.calorieFloor : nil) ?? .standard
+        let training = trainingLevel ?? (isEditMode ? existingProgram?.training : nil) ?? .none
+        let distribution = weeklyDistributionMode ?? (isEditMode ? existingProgram?.distributionMode : nil) ?? .even
+        let protein = proteinLevel ?? (isEditMode ? existingProgram?.protein : nil) ?? .moderate
+
+        let program: NutritionProgram
         if isEditMode, let existing = existingProgram {
             // Update existing program
             existing.style = style
-            existing.diet = dietPreference
-            existing.calorieFloor = calorieFloorType
-            existing.training = trainingLevel
-            existing.distributionMode = weeklyDistributionMode
-            existing.protein = proteinLevel
+            existing.diet = diet
+            existing.calorieFloor = floor
+            existing.training = training
+            existing.distributionMode = distribution
+            existing.protein = protein
             existing.updatedAt = Date()
+            program = existing
         } else {
             // Create new program
-            let program = NutritionProgram(
+            let newProgram = NutritionProgram(
                 style: style,
-                diet: dietPreference,
-                calorieFloor: calorieFloorType,
-                trainingLevel: trainingLevel,
-                distributionMode: weeklyDistributionMode,
-                proteinLevel: proteinLevel
+                diet: diet,
+                calorieFloor: floor,
+                trainingLevel: training,
+                distributionMode: distribution,
+                proteinLevel: protein
             )
-            program.goal = goal
-            context.insert(program)
+            newProgram.goal = goal
+            context.insert(newProgram)
+            program = newProgram
+        }
+
+        // Store per-day macros if applicable (Collaborative, Manual)
+        if let macroDistribution = buildWeeklyMacroDistribution(goal: goal) {
+            program.setWeeklyMacros(macroDistribution)
+        }
+
+        // Store shifted calorie distribution if applicable (Coached/Shifted)
+        // See mock: mocks/goal-program/Coached-Shift/IMG_2103.PNG
+        if let calorieDistribution = buildWeeklyCalorieDistribution() {
+            program.setWeeklyDistribution(calorieDistribution)
         }
 
         do {

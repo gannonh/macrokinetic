@@ -103,7 +103,7 @@ Plans:
 Plans:
 - [x] 15.2-01: Data Model Foundation - WeeklyMacroDistribution, DailyMacros, NutritionProgram extensions
 - [x] 15.2-02: Wizard Conditional Steps - Step views for Collaborative, Manual, Coached/Shifted modes
-- [ ] TBD (run /gsd:plan-phase 15.2 to continue)
+- [x] 15.2-03: Per-Day UI - ProgramReadySheet per-day display, wizard save, Dashboard/FoodLog wiring
 
 #### Phase 16: Weekly Check-ins
 
@@ -137,7 +137,7 @@ Phases execute in numeric order within each milestone.
 | 14. Adaptive TDEE Engine | v0.3.0 | 3/3 | Complete | 2025-12-28 |
 | 15. Daily Tracking Dashboard | v0.3.0 | 1/1 | Complete | 2025-12-28 |
 | 15.1 Initial TDEE Integration | v0.3.0 | 3/3 | Complete | 2025-12-28 |
-| 15.2 Program Style Implementation | v0.3.0 | 2/? | In progress | - |
+| 15.2 Program Style Implementation | v0.3.0 | 3/3 | Complete | 2025-12-30 |
 | 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
 

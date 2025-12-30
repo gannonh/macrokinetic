@@ -61,8 +61,31 @@ struct ProgramReadySheet: View {
 
     private static let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
 
+    /// Map day labels to weekday numbers: M=2, T=3, W=4, T=5, F=6, S=7, S=1
+    private static let weekdayNumbers = [2, 3, 4, 5, 6, 7, 1]
+
+    /// Get macros for a specific weekday (1=Sun, 2=Mon, ..., 7=Sat)
+    private func macrosForWeekday(_ weekday: Int) -> DailyMacros {
+        // Try per-day macros from program first
+        if let program = goal.program,
+            let dayMacros = program.macrosForDay(weekday, goal: goal)
+        {
+            return dayMacros
+        }
+        // Fall back to goal's single daily targets
+        return DailyMacros(
+            calories: goal.dailyCalorieTarget,
+            proteinGrams: goal.dailyProteinTargetGrams,
+            fatGrams: goal.dailyFatTargetGrams,
+            carbsGrams: goal.dailyCarbTargetGrams
+        )
+    }
+
     private var weeklyMacroGrid: some View {
-        VStack(spacing: 0) {
+        // Get macros for each day of the week
+        let dayMacros = Self.weekdayNumbers.map { macrosForWeekday($0) }
+
+        return VStack(spacing: 0) {
             // Day headers
             HStack(spacing: 4) {
                 Text("")
@@ -78,10 +101,10 @@ struct ProgramReadySheet: View {
             }
             .padding(.bottom, 8)
 
-            // Calorie row (blue pill style)
+            // Calorie row (blue pill style) with per-day values
             macroRow(
                 label: "Cals",
-                value: Int(goal.dailyCalorieTarget),
+                values: dayMacros.map { Int($0.calories) },
                 unit: "",
                 color: .blue,
                 isPill: true
@@ -90,7 +113,7 @@ struct ProgramReadySheet: View {
             // Protein row (orange)
             macroRow(
                 label: "P",
-                value: Int(goal.dailyProteinTargetGrams),
+                values: dayMacros.map { Int($0.proteinGrams) },
                 unit: "g",
                 color: .orange,
                 isPill: false
@@ -99,7 +122,7 @@ struct ProgramReadySheet: View {
             // Fat row (yellow)
             macroRow(
                 label: "F",
-                value: Int(goal.dailyFatTargetGrams),
+                values: dayMacros.map { Int($0.fatGrams) },
                 unit: "g",
                 color: .yellow,
                 isPill: false
@@ -108,7 +131,7 @@ struct ProgramReadySheet: View {
             // Carbs row (green)
             macroRow(
                 label: "C",
-                value: Int(goal.dailyCarbTargetGrams),
+                values: dayMacros.map { Int($0.carbsGrams) },
                 unit: "g",
                 color: .green,
                 isPill: false
@@ -124,13 +147,12 @@ struct ProgramReadySheet: View {
 
     private func macroRow(
         label: String,
-        value: Int,
+        values: [Int],
         unit: String,
         color: Color,
         isPill: Bool
     ) -> some View {
         let macroName = macroDisplayName(for: label)
-        let valueText = "\(value)\(unit)"
 
         return HStack(spacing: 4) {
             // Label column
@@ -140,8 +162,11 @@ struct ProgramReadySheet: View {
                 .foregroundColor(.secondary)
                 .frame(width: 30, alignment: .leading)
 
-            // 7 days with same value (Even distribution for Phase 15.1)
-            ForEach(Array(Self.dayLabels.enumerated()), id: \.offset) { _, dayName in
+            // 7 days with individual values
+            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
+                let dayName = Self.dayLabels[index]
+                let valueText = "\(value)\(unit)"
+
                 ZStack {
                     if isPill {
                         Capsule()

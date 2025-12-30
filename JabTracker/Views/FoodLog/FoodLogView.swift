@@ -63,6 +63,28 @@ struct FoodLogView: View {
 
     private let calendar = Calendar.current
 
+    /// Get the active nutrition goal from the current user
+    private var activeGoal: NutritionGoal? {
+        users.first?.nutritionGoals?.first { $0.isActive }
+    }
+
+    /// Get macro targets for the selected date, considering per-day distribution
+    private var macroTargets: DailyMacros {
+        if let goal = activeGoal {
+            return goal.macroTargetsForDate(selectedDate)
+        }
+        // Fall back to user's direct macro goals (legacy support)
+        guard let user = users.first else {
+            return .zero
+        }
+        return DailyMacros(
+            calories: user.dailyCalorieGoal,
+            proteinGrams: user.dailyProteinGoal,
+            fatGrams: user.dailyFatGoal,
+            carbsGrams: user.dailyCarbGoal
+        )
+    }
+
     // MARK: - Static Formatters (cached for performance)
 
     private static let summaryDateFormatter: DateFormatter = {
@@ -201,6 +223,7 @@ struct FoodLogView: View {
 
     private var dailySummaryCard: some View {
         let totals = calculateTotals()
+        let targets = macroTargets
 
         return VStack(spacing: 12) {
             Text(summaryTitle)
@@ -209,25 +232,54 @@ struct FoodLogView: View {
                 .accessibilityIdentifier("daily-summary-title")
 
             HStack(spacing: 20) {
-                macroColumn(value: totals.calories, label: "Cal", color: .orange)
-                macroColumn(value: totals.protein, label: "Protein", color: .blue)
-                macroColumn(value: totals.carbs, label: "Carbs", color: .green)
-                macroColumn(value: totals.fat, label: "Fat", color: .purple)
+                macroColumn(
+                    consumed: totals.calories,
+                    target: targets.calories,
+                    label: "Cal",
+                    color: .orange
+                )
+                macroColumn(
+                    consumed: totals.protein,
+                    target: targets.proteinGrams,
+                    label: "Protein",
+                    color: .blue
+                )
+                macroColumn(
+                    consumed: totals.carbs,
+                    target: targets.carbsGrams,
+                    label: "Carbs",
+                    color: .green
+                )
+                macroColumn(
+                    consumed: totals.fat,
+                    target: targets.fatGrams,
+                    label: "Fat",
+                    color: .purple
+                )
             }
         }
         .padding()
         .cardStyle(cornerRadius: 12)
     }
 
-    private func macroColumn(value: Double, label: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text("\(Int(value))")
+    private func macroColumn(consumed: Double, target: Double, label: String, color: Color) -> some View {
+        let remaining = target - consumed
+        let isOver = remaining < 0
+
+        return VStack(spacing: 4) {
+            Text("\(Int(consumed))")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundColor(color)
+                .foregroundColor(isOver ? .red : color)
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
+            // Show remaining/over if target is set
+            if target > 0 {
+                Text(isOver ? "+\(Int(abs(remaining)))" : "\(Int(remaining)) left")
+                    .font(.caption2)
+                    .foregroundColor(isOver ? .red : .secondary)
+            }
         }
         .frame(maxWidth: .infinity)
     }

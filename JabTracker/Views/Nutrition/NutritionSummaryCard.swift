@@ -15,9 +15,31 @@ struct NutritionSummaryCard: View {
     let user: User
     let mealLogService: MealLogService?
 
+    /// Date to display targets for (default: today)
+    var targetDate: Date = Date()
+
     @State private var totals: DailyNutritionTotals = .zero
     @State private var isLoading = true
     @State private var loadError: Error?
+
+    /// Get the active nutrition goal from user's goals
+    private var activeGoal: NutritionGoal? {
+        user.nutritionGoals?.first { $0.isActive }
+    }
+
+    /// Get macro targets for the target date, considering per-day distribution
+    private var macroTargets: DailyMacros {
+        if let goal = activeGoal {
+            return goal.macroTargetsForDate(targetDate)
+        }
+        // Fall back to user's direct macro goals (legacy support)
+        return DailyMacros(
+            calories: user.dailyCalorieGoal,
+            proteinGrams: user.dailyProteinGoal,
+            fatGrams: user.dailyFatGoal,
+            carbsGrams: user.dailyCarbGoal
+        )
+    }
 
     // MARK: - Constants
 
@@ -88,32 +110,34 @@ struct NutritionSummaryCard: View {
     }
 
     private var macroRingsSection: some View {
-        HStack(spacing: 16) {
+        let targets = macroTargets
+
+        return HStack(spacing: 16) {
             macroRing(
                 label: "Calories",
                 consumed: totals.calories,
-                goal: user.dailyCalorieGoal,
+                goal: targets.calories,
                 defaultColor: .orange,
                 unit: "kcal"
             )
             macroRing(
                 label: "Protein",
                 consumed: totals.protein,
-                goal: user.dailyProteinGoal,
+                goal: targets.proteinGrams,
                 defaultColor: .red,
                 unit: "g"
             )
             macroRing(
                 label: "Carbs",
                 consumed: totals.carbs,
-                goal: user.dailyCarbGoal,
+                goal: targets.carbsGrams,
                 defaultColor: .blue,
                 unit: "g"
             )
             macroRing(
                 label: "Fat",
                 consumed: totals.fat,
-                goal: user.dailyFatGoal,
+                goal: targets.fatGrams,
                 defaultColor: .yellow,
                 unit: "g"
             )
