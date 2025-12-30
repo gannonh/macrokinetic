@@ -244,6 +244,9 @@ final class ProgramWizardViewModel {
         guard let currentIndex = availableSteps.firstIndex(of: currentStep) else {
             return 0
         }
+        guard availableSteps.count > 1 else {
+            return 1.0
+        }
         return Double(currentIndex) / Double(availableSteps.count - 1)
     }
 
@@ -388,6 +391,9 @@ final class ProgramWizardViewModel {
 
     // MARK: - Save
 
+    /// 10% calorie boost on high days (e.g., training days)
+    private static let shiftedHighDayMultiplier = 1.1
+
     /// Build WeeklyCalorieDistribution from highCalorieDays selection
     /// See mock: mocks/goal-program/Coached-Shift/IMG_2103.PNG
     private func buildWeeklyCalorieDistribution() -> WeeklyCalorieDistribution? {
@@ -400,8 +406,13 @@ final class ProgramWizardViewModel {
         let highDayCount = Double(highCalorieDays.count)
         let lowDayCount = 7.0 - highDayCount
 
+        // If all days are high, just use even distribution (no shift needed)
+        guard lowDayCount > 0 else {
+            return nil
+        }
+
         // Example: if 3 high days, high=1.1, low=0.95 -> 3*1.1 + 4*0.95 = 3.3 + 3.8 = 7.1 ~ 7
-        let highMultiplier = 1.1
+        let highMultiplier = Self.shiftedHighDayMultiplier
         let lowMultiplier = (7.0 - highDayCount * highMultiplier) / lowDayCount
 
         var dayMultipliers: [Int: Double] = [:]
@@ -590,19 +601,7 @@ final class ProgramWizardViewModel {
 
 /// Multi-step wizard for configuring nutrition programs
 struct ProgramWizard: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-
-    private static let logger = Logger(
-        subsystem: "com.gannonhall.JabTracker",
-        category: "ProgramWizard"
-    )
-
-    @State private var viewModel = ProgramWizardViewModel()
-    @State private var errorMessage: String?
-    @State private var showingError = false
-    @State private var tdeeService: TDEEService?
-    @State private var metricsService: MetricsService?
+    // MARK: - Properties
 
     /// The goal this program belongs to
     let goal: NutritionGoal
@@ -612,6 +611,24 @@ struct ProgramWizard: View {
 
     /// Callback when program is created/updated
     var onComplete: (() -> Void)?
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var viewModel = ProgramWizardViewModel()
+    @State private var errorMessage: String?
+    @State private var showingError = false
+    @State private var tdeeService: TDEEService?
+    @State private var metricsService: MetricsService?
+
+    // MARK: - Static Properties
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "ProgramWizard"
+    )
+
+    // MARK: - Initialization
 
     init(goal: NutritionGoal, existingProgram: NutritionProgram? = nil, onComplete: (() -> Void)? = nil) {
         self.goal = goal

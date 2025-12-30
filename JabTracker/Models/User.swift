@@ -167,6 +167,22 @@ extension User {
         nutritionGoals?.first(where: { $0.isActive })
     }
 
+    /// Get macro targets for a specific date, using active goal or legacy user preferences
+    /// - Parameter date: The date to get targets for (affects per-day distribution)
+    /// - Returns: DailyMacros for the specified date
+    func macroTargetsForDate(_ date: Date) -> DailyMacros {
+        if let goal = activeNutritionGoal {
+            return goal.macroTargetsForDate(date)
+        }
+        // Fall back to user's direct macro goals (legacy support)
+        return DailyMacros(
+            calories: dailyCalorieGoal,
+            proteinGrams: dailyProteinGoal,
+            fatGrams: dailyFatGoal,
+            carbsGrams: dailyCarbGoal
+        )
+    }
+
     /// CloudKit-compatible email field - returns empty string if email is nil
     /// This handles CloudKit's requirement for non-nil values while preserving semantic meaning
     var emailForCloudKit: String {

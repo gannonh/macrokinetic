@@ -9,12 +9,6 @@ import SwiftData
 import SwiftUI
 import os
 
-/// Logger for FoodLogView
-private let logger = Logger(
-    subsystem: "com.gannonhall.JabTracker",
-    category: "FoodLogView"
-)
-
 /// Daily macro totals for the summary card
 private struct DailyTotals {
     let calories: Double
@@ -48,7 +42,13 @@ private struct MealTotals {
 }
 
 struct FoodLogView: View {
+    // MARK: - Properties
+
+    // Week calendar state - bound to parent for tab bar + button
+    @Binding var selectedDate: Date
+
     @Environment(\.modelContext) private var modelContext
+
     @Query private var users: [User]
     @Query(sort: \FoodEntry.loggedAt, order: .forward) private var allEntries: [FoodEntry]
 
@@ -56,42 +56,32 @@ struct FoodLogView: View {
     @State private var entryToDelete: FoodEntry?
     @State private var showingDeleteConfirmation = false
     @State private var editingEntry: FoodEntry?
-
-    // Week calendar state - bound to parent for tab bar + button
-    @Binding var selectedDate: Date
     @State private var entriesGroupedByDate: [Date: Int] = [:]
 
     private let calendar = Calendar.current
 
-    /// Get the active nutrition goal from the current user
-    private var activeGoal: NutritionGoal? {
-        users.first?.nutritionGoals?.first { $0.isActive }
-    }
-
     /// Get macro targets for the selected date, considering per-day distribution
     private var macroTargets: DailyMacros {
-        if let goal = activeGoal {
-            return goal.macroTargetsForDate(selectedDate)
-        }
-        // Fall back to user's direct macro goals (legacy support)
         guard let user = users.first else {
             return .zero
         }
-        return DailyMacros(
-            calories: user.dailyCalorieGoal,
-            proteinGrams: user.dailyProteinGoal,
-            fatGrams: user.dailyFatGoal,
-            carbsGrams: user.dailyCarbGoal
-        )
+        return user.macroTargetsForDate(selectedDate)
     }
 
-    // MARK: - Static Formatters (cached for performance)
+    // MARK: - Static Properties
 
     private static let summaryDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMM d"
         return formatter
     }()
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "FoodLogView"
+    )
+
+    // MARK: - Initialization
 
     init(selectedDate: Binding<Date>) {
         self._selectedDate = selectedDate
@@ -382,7 +372,7 @@ struct FoodLogView: View {
             try await mealLogService.deleteEntry(entry)
             entryToDelete = nil
         } catch {
-            logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
+            Self.logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
         }
     }
 
@@ -411,7 +401,7 @@ struct FoodLogView: View {
                 loggedAt: selectedDate
             )
         } catch {
-            logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
+            Self.logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
         }
     }
 }

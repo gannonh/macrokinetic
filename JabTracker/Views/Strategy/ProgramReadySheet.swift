@@ -12,10 +12,12 @@ import SwiftUI
 
 /// Sheet shown after Coached program creation with calculated targets
 struct ProgramReadySheet: View {
-    @Environment(\.dismiss) private var dismiss
+    // MARK: - Properties
 
     let goal: NutritionGoal
     let onDone: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -66,19 +68,12 @@ struct ProgramReadySheet: View {
 
     /// Get macros for a specific weekday (1=Sun, 2=Mon, ..., 7=Sat)
     private func macrosForWeekday(_ weekday: Int) -> DailyMacros {
-        // Try per-day macros from program first
-        if let program = goal.program,
-            let dayMacros = program.macrosForDay(weekday, goal: goal)
-        {
-            return dayMacros
-        }
-        // Fall back to goal's single daily targets
-        return DailyMacros(
-            calories: goal.dailyCalorieTarget,
-            proteinGrams: goal.dailyProteinTargetGrams,
-            fatGrams: goal.dailyFatTargetGrams,
-            carbsGrams: goal.dailyCarbTargetGrams
-        )
+        // Create a date with the specified weekday for lookup
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+        components.weekday = weekday
+        let date = calendar.date(from: components) ?? Date()
+        return goal.macroTargetsForDate(date)
     }
 
     private var weeklyMacroGrid: some View {

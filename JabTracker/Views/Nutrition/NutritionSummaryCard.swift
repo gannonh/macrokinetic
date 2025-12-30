@@ -22,23 +22,9 @@ struct NutritionSummaryCard: View {
     @State private var isLoading = true
     @State private var loadError: Error?
 
-    /// Get the active nutrition goal from user's goals
-    private var activeGoal: NutritionGoal? {
-        user.nutritionGoals?.first { $0.isActive }
-    }
-
     /// Get macro targets for the target date, considering per-day distribution
     private var macroTargets: DailyMacros {
-        if let goal = activeGoal {
-            return goal.macroTargetsForDate(targetDate)
-        }
-        // Fall back to user's direct macro goals (legacy support)
-        return DailyMacros(
-            calories: user.dailyCalorieGoal,
-            proteinGrams: user.dailyProteinGoal,
-            fatGrams: user.dailyFatGoal,
-            carbsGrams: user.dailyCarbGoal
-        )
+        user.macroTargetsForDate(targetDate)
     }
 
     // MARK: - Constants
@@ -74,7 +60,7 @@ struct NutritionSummaryCard: View {
             }
         }
         .accessibilityIdentifier("nutrition-rings-card")
-        .task(id: mealLogService?.dataVersion) {
+        .task(id: "\(mealLogService?.dataVersion.uuidString ?? "none")-\(targetDate.timeIntervalSince1970)") {
             await loadTotals()
         }
     }
@@ -218,7 +204,7 @@ struct NutritionSummaryCard: View {
         }
 
         do {
-            totals = try await service.getDailyTotals(for: Date())
+            totals = try await service.getDailyTotals(for: targetDate)
             loadError = nil
         } catch {
             loadError = error
