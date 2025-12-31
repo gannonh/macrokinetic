@@ -26,7 +26,7 @@ import SwiftData
 ///
 /// **TDEE Foundation:**
 /// - `initialEstimatedTDEE`, `lastCalculatedTDEE`, `lastTDEECalculationDate` fields
-///   support adaptive TDEE calculations in Phase 14
+///   support adaptive TDEE calculations
 @Model
 final class NutritionGoal {
     // MARK: - Identity
@@ -72,7 +72,7 @@ final class NutritionGoal {
     /// Daily fat target in grams
     var dailyFatTargetGrams: Double = 65.0
 
-    // MARK: - TDEE Tracking (Phase 14)
+    // MARK: - TDEE Tracking
 
     /// Last calculated TDEE based on actual weight changes
     /// Nil until adaptive TDEE calculation runs
@@ -188,23 +188,34 @@ extension NutritionGoal {
         return createdAt.addingTimeInterval(weeks * 7 * 24 * 60 * 60)
     }
 
+    /// Calories per kg of body weight (fat tissue energy density)
+    private static let caloriesPerKgBodyWeight: Double = 7700
+
+    /// Daily calorie adjustment per kg of weekly weight change
+    /// Derived from: 7700 kcal/kg ÷ 7 days = 1100 kcal/day per kg/week
+    private static var dailyCaloriesPerKgWeeklyChange: Double {
+        caloriesPerKgBodyWeight / 7.0
+    }
+
     /// Initial daily calorie budget estimate based on TDEE and weekly pace
-    /// Uses a rough estimate: TDEE ± (weekly rate × 1100 kcal/kg / 7 days)
+    /// Uses formula: TDEE ± (weekly rate × 7700 kcal/kg ÷ 7 days)
     /// Returns nil if no TDEE estimate is available
     var initialDailyBudget: Int? {
         guard let tdee = initialEstimatedTDEE ?? lastCalculatedTDEE else { return nil }
-        // 1 kg of body weight ≈ 7700 kcal, so weekly deficit/surplus
-        // = weeklyWeightChangePaceKg × 7700 / 7 days ≈ 1100 kcal/day per kg/week
-        let dailyAdjustment = weeklyWeightChangePaceKg * 1100
+        let dailyAdjustment = weeklyWeightChangePaceKg * Self.dailyCaloriesPerKgWeeklyChange
         return Int(tdee + dailyAdjustment)
     }
 
     /// Calculate progress toward goal as percentage (0.0 to 1.0+)
     /// - Parameter currentWeightKg: Current weight in kg
     /// - Returns: Progress percentage (0 = at start, 1 = at target, >1 = past target)
+    ///
+    /// For maintenance goals (no weight change target), returns 1.0 since the user
+    /// is already at their target weight by definition.
     func progressPercentage(currentWeightKg: Double) -> Double {
         let totalChange = totalWeightChangeKg
-        guard totalChange != 0 else { return 0 }
+        // For maintenance goals, user is already at target
+        guard totalChange != 0 else { return 1.0 }
 
         let actualChange = currentWeightKg - startingWeightKg
         return actualChange / totalChange

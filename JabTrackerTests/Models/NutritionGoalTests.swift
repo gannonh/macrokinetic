@@ -314,7 +314,7 @@ struct NutritionGoalTests {
         #expect(progress == 1.0)
     }
 
-    @Test("progressPercentage returns 0 for maintenance goal")
+    @Test("progressPercentage returns 1.0 for maintenance goal")
     @MainActor
     func testProgressPercentageMaintenance() throws {
         // Given
@@ -329,8 +329,8 @@ struct NutritionGoalTests {
         // When - at target (maintenance)
         let progress = goal.progressPercentage(currentWeightKg: 75.0)
 
-        // Then - 0 because no change needed
-        #expect(progress == 0.0)
+        // Then - 1.0 because user is already at target (maintenance = complete)
+        #expect(progress == 1.0)
     }
 
     // MARK: - isOnTrack Tests
@@ -576,5 +576,105 @@ struct NutritionGoalTests {
 
         // Then - should return nil
         #expect(goal.initialDailyBudget == nil)
+    }
+
+    // MARK: - macroTargetsForDate Tests
+
+    @Test("macroTargetsForDate returns goal defaults when no program")
+    @MainActor
+    func testMacroTargetsForDateNoProgram() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal(
+            dailyCalorieTarget: 2000.0,
+            dailyProteinTargetGrams: 150.0,
+            dailyCarbTargetGrams: 200.0,
+            dailyFatTargetGrams: 65.0
+        )
+        context.insert(goal)
+
+        // When - request macros for any date
+        let macros = goal.macroTargetsForDate(Date())
+
+        // Then - returns goal's base targets
+        #expect(macros.calories == 2000.0)
+        #expect(macros.proteinGrams == 150.0)
+        #expect(macros.carbsGrams == 200.0)
+        #expect(macros.fatGrams == 65.0)
+    }
+
+    @Test("macroTargetsForDate returns goal defaults when program has no per-day config")
+    @MainActor
+    func testMacroTargetsForDateProgramNoPerDayConfig() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal(
+            dailyCalorieTarget: 2500.0,
+            dailyProteinTargetGrams: 180.0,
+            dailyCarbTargetGrams: 300.0,
+            dailyFatTargetGrams: 70.0
+        )
+        let program = NutritionProgram(style: .coached)
+        goal.program = program
+        context.insert(goal)
+        context.insert(program)
+
+        // When - program exists but has no per-day macros or distribution
+        let macros = goal.macroTargetsForDate(Date())
+
+        // Then - returns goal's base targets
+        #expect(macros.calories == 2500.0)
+        #expect(macros.proteinGrams == 180.0)
+        #expect(macros.carbsGrams == 300.0)
+        #expect(macros.fatGrams == 70.0)
+    }
+
+    @Test("macroTargetsForDate uses per-day macros when available")
+    @MainActor
+    func testMacroTargetsForDateWithPerDayMacros() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal(
+            dailyCalorieTarget: 2000.0,
+            dailyProteinTargetGrams: 150.0,
+            dailyCarbTargetGrams: 200.0,
+            dailyFatTargetGrams: 65.0
+        )
+        let program = NutritionProgram(style: .collaborative)
+
+        // Create per-day macros (Sunday = 1 in Calendar.weekday)
+        let sundayMacros = DailyMacros(calories: 2200.0, proteinGrams: 160.0, fatGrams: 70.0, carbsGrams: 220.0)
+        let mondayMacros = DailyMacros(calories: 1800.0, proteinGrams: 140.0, fatGrams: 60.0, carbsGrams: 180.0)
+
+        var dayMacros: [Int: DailyMacros] = [:]
+        dayMacros[1] = sundayMacros  // Sunday
+        dayMacros[2] = mondayMacros  // Monday
+
+        let weeklyMacros = WeeklyMacroDistribution(dayMacros: dayMacros)
+        _ = program.setWeeklyMacros(weeklyMacros)
+
+        goal.program = program
+        context.insert(goal)
+        context.insert(program)
+
+        // When - get Sunday's macros (weekday = 1)
+        var calendar = Calendar.current
+        calendar.firstWeekday = 1  // Sunday
+        let sunday = calendar.date(
+            from: DateComponents(year: 2025, month: 12, day: 28, hour: 12))!  // Known Sunday
+
+        let macros = goal.macroTargetsForDate(sunday)
+
+        // Then - returns per-day targets
+        #expect(macros.calories == 2200.0)
+        #expect(macros.proteinGrams == 160.0)
+        #expect(macros.carbsGrams == 220.0)
+        #expect(macros.fatGrams == 70.0)
     }
 }
