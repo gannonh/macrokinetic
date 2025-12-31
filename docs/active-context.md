@@ -1,71 +1,15 @@
-Context:
-Currently smoke testing @.planning/phases/15.2-program-style-implementation/15.2-04-PLAN.md
+# weekly Check-in Plan Feedback
 
+For avoidance of doubt, a few additional requirements to consider:
 
-Scenario 1: First time use (basic health data not set)
+- Users can change check-in day of the week
+- Check-ins happen weekly
+- Functionaally, check-ins are the application of our dynamic TDEE algorithm to re-calculate and optimize the user's macro program for the next week. The update is based on progress (actual scale weight) and changes in metabolism 
+- Traditional, static TDEE calculations are "best guesses" based on established formulas. Our dynamic TDEE algorithm uses real user data to make more accurate adjustments over time.
+- The first screen should set context of what we're doing with a button: Start Program Optimization
+- we want to simulate complex calculations with an anuimation or progress indicator to show the user we're doing something sophisticated
+- After calculations, show a summary screen with key insights and the new program details, which users can accept or decline (if Coached) or accept/modify or decline (if Collaborative) (eg: /Users/gannonhall/Downloads/IMG_2112.PNG)
+- Manual programs do not have a checkin flow, as users are expected to manage their own adjustments.
 
-Entry point: More > Strategy > Create Goal  
-- Weight Loss
-- Set Your Target: 
-  - Current Weight: 180 lbs
-  - Target Weight: 170 lbs
-  - Weekly Rate: 1.0 lbs/week
-  - Continue 
-    - ❌ ISSUE: 
-      - Should ask to sync health data if not set (like profile or quick weight entry)
-- Goal Summary > continue to Program
-
-- Program Style: Coached
-- Complete Your Profile
-  - Height: 5'7"
-  - Age: 30
-  - Sex: Male
-  - Continue 
-    - ❌ ISSUE
-      - UI Freezes
-
-- Program Style: Collaborative
-- Weekly Distribution 
-    - ❌ ISSUE: 
-      - Showing generic results instead of actual TDEE/macro calculation to modify
-      - Should ask to complete profile if data missing (like Coached)
-      - Should show calculated cals/macros evenly distributed for modification.
-      - Should look like mock: @mocks/goal-program/Collaborative/02.PNG
-        - Color coded macros/cals bars
-
----
-
-Scenario 2: User data exists (health data already set)
-
-New Goal 
-> Weight Loss 
-> Set Target (with health data already set) 
-  - Current Weight: 180 lbs
-  - Target Weight: 170 lbs
-  - Weekly Rate: 1.0 lbs/week
-> Goal Summary > 
-
-Program Style: Coached (1428)
-> Preferred Diet - Balanced
-> Calorie Floor - Standard
-> Training - Cardio
-> Distribution - Even
-> Protein - Moderate
-> Review & Confirm - Create Program
-
-RESULTS: 
-TDEE: 2689kcal; 
-Program: 2190/kcal, P 130g, F 29g, C: 238g
-
----
-
-Program Style: Collaborative
-> Weekly Distribution
-
-
----
-
-Test:
-- Coached / Shifted
-- How Protein setting effects calculated macros/cals
+Please update the plans accordingly, or let me know if you need additional clarification on anything.
 
