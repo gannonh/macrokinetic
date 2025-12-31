@@ -31,6 +31,7 @@ struct StrategyView: View {
     @State private var createdGoal: NutritionGoal?
     @State private var goalToEdit: NutritionGoal?
     @State private var programToEdit: NutritionProgram?
+    @State private var recalculationError: String?
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -166,6 +167,21 @@ struct StrategyView: View {
                             }
                         }
                     }
+            }
+        }
+        .alert(
+            "Update Failed",
+            isPresented: Binding(
+                get: { recalculationError != nil },
+                set: { if !$0 { recalculationError = nil } }
+            )
+        ) {
+            Button("OK") {
+                recalculationError = nil
+            }
+        } message: {
+            if let error = recalculationError {
+                Text(error)
             }
         }
         .accessibilityIdentifier("strategy-view")
@@ -575,6 +591,7 @@ struct StrategyView: View {
     private func recalculateProgramTargets(for goal: NutritionGoal) async {
         guard let user = users.first else {
             Self.logger.error("No user found for target recalculation")
+            recalculationError = "Unable to update targets: user profile not found."
             return
         }
 
@@ -586,6 +603,7 @@ struct StrategyView: View {
             Self.logger.info("Successfully recalculated program targets after goal edit")
         } catch {
             Self.logger.error("Failed to recalculate program targets: \(error.localizedDescription)")
+            recalculationError = "Unable to update calorie targets. Please try editing your goal again."
         }
     }
 }

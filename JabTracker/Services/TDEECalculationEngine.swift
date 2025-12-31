@@ -10,7 +10,9 @@ import os
 
 /// Stateless TDEE calculation engine
 /// Provides foundational TDEE calculations using Mifflin-St Jeor formula
-@Observable
+///
+/// Note: This class is intentionally not @Observable as it has no published state.
+/// It is a pure calculation engine used by @MainActor services like TDEEService.
 final class TDEECalculationEngine {
 
     // MARK: - Constants
@@ -41,11 +43,12 @@ final class TDEECalculationEngine {
 
     /// Calculate Basal Metabolic Rate using Mifflin-St Jeor equation
     /// - Parameters:
-    ///   - weightKg: Weight in kilograms (must be > 0)
-    ///   - heightCm: Height in centimeters (must be > 0)
-    ///   - age: Age in years (must be > 0)
+    ///   - weightKg: Weight in kilograms (must be in valid range)
+    ///   - heightCm: Height in centimeters (must be in valid range)
+    ///   - age: Age in years (must be in valid range)
     ///   - gender: Gender string ("male", "m", "female", "f", or other for average)
-    /// - Returns: BMR in calories per day, or 0 if inputs are invalid
+    /// - Returns: BMR in calories per day
+    /// - Throws: ValidationError if inputs are outside valid ranges
     ///
     /// Formula:
     /// - Men: BMR = (10 x weight kg) + (6.25 x height cm) - (5 x age) + 5
@@ -55,12 +58,9 @@ final class TDEECalculationEngine {
         heightCm: Double,
         age: Int,
         gender: String
-    ) -> Double {
-        // Validate inputs
-        guard weightKg > 0, heightCm > 0, age > 0 else {
-            logger.warning("Invalid BMR inputs: weight=\(weightKg), height=\(heightCm), age=\(age)")
-            return 0
-        }
+    ) throws -> Double {
+        // Validate inputs - throws ValidationError if invalid
+        try validateBMRInputs(weightKg: weightKg, heightCm: heightCm, age: age)
 
         let baseBMR = (10 * weightKg) + (6.25 * heightCm) - (5 * Double(age))
 
@@ -94,14 +94,15 @@ final class TDEECalculationEngine {
     ///   - gender: Gender string
     ///   - activityMultiplier: Activity multiplier (clamped to 1.0-2.5 range)
     /// - Returns: TDEE in calories per day
+    /// - Throws: ValidationError if BMR inputs are invalid
     func calculateInitialTDEE(
         weightKg: Double,
         heightCm: Double,
         age: Int,
         gender: String,
         activityMultiplier: Double
-    ) -> Double {
-        let bmr = calculateBMR(
+    ) throws -> Double {
+        let bmr = try calculateBMR(
             weightKg: weightKg,
             heightCm: heightCm,
             age: age,
@@ -132,14 +133,15 @@ final class TDEECalculationEngine {
     ///   - gender: Gender string
     ///   - trainingLevel: Training level enum value
     /// - Returns: TDEE in calories per day
+    /// - Throws: ValidationError if BMR inputs are invalid
     func calculateInitialTDEE(
         weightKg: Double,
         heightCm: Double,
         age: Int,
         gender: String,
         trainingLevel: TrainingLevel
-    ) -> Double {
-        calculateInitialTDEE(
+    ) throws -> Double {
+        try calculateInitialTDEE(
             weightKg: weightKg,
             heightCm: heightCm,
             age: age,

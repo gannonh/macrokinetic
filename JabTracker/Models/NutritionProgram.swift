@@ -8,8 +8,15 @@
 
 import Foundation
 import SwiftData
+import os
 
 // MARK: - NutritionProgram Model
+
+/// Logger for NutritionProgram JSON encoding/decoding operations
+private let nutritionProgramLogger = Logger(
+    subsystem: "com.gannonhall.JabTracker",
+    category: "NutritionProgram"
+)
 
 /// SwiftData model representing a nutrition program configuration.
 ///
@@ -136,7 +143,14 @@ final class NutritionProgram {
             weeklyDistributionMode: distributionMode,
             proteinLevel: proteinLevel
         )
-        return (try? JSONEncoder().encode(config)) ?? Data()
+        do {
+            return try JSONEncoder().encode(config)
+        } catch {
+            nutritionProgramLogger.error(
+                "Failed to encode ProgramConfiguration: \(error.localizedDescription)"
+            )
+            return Data()
+        }
     }
 }
 
@@ -212,19 +226,40 @@ extension NutritionProgram {
     /// Decoded ProgramConfiguration
     var configuration: ProgramConfiguration? {
         guard !configurationData.isEmpty else { return nil }
-        return try? JSONDecoder().decode(ProgramConfiguration.self, from: configurationData)
+        do {
+            return try JSONDecoder().decode(ProgramConfiguration.self, from: configurationData)
+        } catch {
+            nutritionProgramLogger.error(
+                "Failed to decode ProgramConfiguration: \(error.localizedDescription)"
+            )
+            return nil
+        }
     }
 
     /// Decoded WeeklyCalorieDistribution
     var weeklyDistribution: WeeklyCalorieDistribution? {
         guard let data = weeklyDistributionData else { return nil }
-        return try? JSONDecoder().decode(WeeklyCalorieDistribution.self, from: data)
+        do {
+            return try JSONDecoder().decode(WeeklyCalorieDistribution.self, from: data)
+        } catch {
+            nutritionProgramLogger.error(
+                "Failed to decode WeeklyCalorieDistribution: \(error.localizedDescription)"
+            )
+            return nil
+        }
     }
 
     /// Decoded WeeklyMacroDistribution
     var weeklyMacros: WeeklyMacroDistribution? {
         guard let data = weeklyMacroDistributionData else { return nil }
-        return try? JSONDecoder().decode(WeeklyMacroDistribution.self, from: data)
+        do {
+            return try JSONDecoder().decode(WeeklyMacroDistribution.self, from: data)
+        } catch {
+            nutritionProgramLogger.error(
+                "Failed to decode WeeklyMacroDistribution: \(error.localizedDescription)"
+            )
+            return nil
+        }
     }
 }
 
@@ -371,16 +406,31 @@ struct CollaborativeConfigStorage: Codable {
 
 extension NutritionProgram {
     /// Save Collaborative day configurations
-    func setCollaborativeConfig(_ dayConfigs: [Int: CollaborativeDayConfigStorage], weeklyBudget: Double) {
+    /// - Returns: True if configuration was saved successfully, false on encoding failure
+    @discardableResult
+    func setCollaborativeConfig(_ dayConfigs: [Int: CollaborativeDayConfigStorage], weeklyBudget: Double) -> Bool {
         let storage = CollaborativeConfigStorage(dayConfigs: dayConfigs, weeklyCalorieBudget: weeklyBudget)
-        if let encoded = try? JSONEncoder().encode(storage) {
-            collaborativeConfigData = encoded
+        do {
+            collaborativeConfigData = try JSONEncoder().encode(storage)
+            return true
+        } catch {
+            nutritionProgramLogger.error(
+                "Failed to encode CollaborativeConfigStorage: \(error.localizedDescription)"
+            )
+            return false
         }
     }
 
     /// Load Collaborative day configurations
     var collaborativeConfig: CollaborativeConfigStorage? {
         guard let data = collaborativeConfigData else { return nil }
-        return try? JSONDecoder().decode(CollaborativeConfigStorage.self, from: data)
+        do {
+            return try JSONDecoder().decode(CollaborativeConfigStorage.self, from: data)
+        } catch {
+            nutritionProgramLogger.error(
+                "Failed to decode CollaborativeConfigStorage: \(error.localizedDescription)"
+            )
+            return nil
+        }
     }
 }

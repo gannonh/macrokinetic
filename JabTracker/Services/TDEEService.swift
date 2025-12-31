@@ -140,15 +140,8 @@ final class TDEEService {
             throw TDEEServiceError.noWeightData
         }
 
-        // Validate inputs
-        try engine.validateBMRInputs(
-            weightKg: latestWeight.weightKg,
-            heightCm: heightCm,
-            age: age
-        )
-
-        // Calculate initial TDEE
-        let tdee = engine.calculateInitialTDEE(
+        // Calculate initial TDEE (validates inputs internally)
+        let tdee = try engine.calculateInitialTDEE(
             weightKg: latestWeight.weightKg,
             heightCm: heightCm,
             age: age,
@@ -385,9 +378,14 @@ extension TDEEService {
 
     /// Apply TDEE to derive calorie targets based on goal pace
     /// - Parameter goal: NutritionGoal with initialEstimatedTDEE set
+    /// - Returns: True if targets were applied, false if TDEE was missing
     /// - Note: Enforces minimum calorie floor from program settings (default: 1200 kcal)
-    func applyTDEEToGoal(_ goal: NutritionGoal) {
-        guard let tdee = goal.initialEstimatedTDEE else { return }
+    @discardableResult
+    func applyTDEEToGoal(_ goal: NutritionGoal) -> Bool {
+        guard let tdee = goal.initialEstimatedTDEE else {
+            Self.logger.warning("applyTDEEToGoal called but initialEstimatedTDEE is nil - calorie targets not updated")
+            return false
+        }
 
         // Calculate daily calorie target from TDEE and weekly pace
         // 1 kg fat = ~7700 kcal, so daily adjustment = weeklyPaceKg * 7700 / 7 = weeklyPaceKg * 1100
@@ -401,6 +399,7 @@ extension TDEEService {
         Self.logger.debug(
             "Applied TDEE to goal: TDEE=\(Int(tdee)), adjustment=\(Int(dailyCalorieAdjustment)), target=\(Int(goal.dailyCalorieTarget))"
         )
+        return true
     }
 
     /// Calculate macros from program settings and apply to goal
