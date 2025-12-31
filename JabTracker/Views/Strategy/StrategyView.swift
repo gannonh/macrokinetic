@@ -202,11 +202,20 @@ struct StrategyView: View {
 
             // Goal summary card
             goalSummaryCard(goal: goal)
+
+            // Check-in settings (only for non-Manual programs)
+            if program?.style != .manual {
+                checkInSettingsCard(goal: goal)
+            }
         }
     }
 
     private func checkInCountdownCard(goal: NutritionGoal) -> some View {
-        HStack(spacing: 16) {
+        let checkInService = WeeklyCheckInService(context: modelContext)
+        let daysUntil = checkInService.daysUntilCheckIn(for: goal)
+        let progress = max(0, min(1, Double(7 - daysUntil) / 7.0))
+
+        return HStack(spacing: 16) {
             // Countdown ring
             ZStack {
                 Circle()
@@ -214,15 +223,15 @@ struct StrategyView: View {
                     .frame(width: 64, height: 64)
 
                 Circle()
-                    .trim(from: 0, to: 0.7)  // Placeholder progress
+                    .trim(from: 0, to: progress)
                     .stroke(Color.blue, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                     .frame(width: 64, height: 64)
                     .rotationEffect(.degrees(-90))
 
                 VStack(spacing: 0) {
-                    Text("7")
+                    Text("\(daysUntil)")
                         .font(.title3.bold())
-                    Text("days")
+                    Text(daysUntil == 1 ? "day" : "days")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -231,8 +240,8 @@ struct StrategyView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Next Check-In")
                     .font(.headline)
-                // Placeholder - will be calculated in Phase 16
-                Text("Weekly progress review")
+                let dayName = dayOfWeekName(for: goal.checkInDayOfWeek)
+                Text("Every \(dayName)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -245,6 +254,58 @@ struct StrategyView: View {
                 .fill(Color(.systemBackground))
         )
         .accessibilityIdentifier("check-in-countdown-card")
+    }
+
+    private func checkInSettingsCard(goal: NutritionGoal) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Check-In Settings")
+                .font(.headline)
+
+            Picker(
+                "Check-In Day",
+                selection: Binding(
+                    get: { goal.checkInDayOfWeek },
+                    set: { newValue in
+                        goal.checkInDayOfWeek = newValue
+                        goal.updatedAt = Date()
+                        try? modelContext.save()
+                    }
+                )
+            ) {
+                Text("Sunday").tag(1)
+                Text("Monday").tag(2)
+                Text("Tuesday").tag(3)
+                Text("Wednesday").tag(4)
+                Text("Thursday").tag(5)
+                Text("Friday").tag(6)
+                Text("Saturday").tag(7)
+            }
+
+            Text(
+                "You'll be prompted to review and optimize your program each \(dayOfWeekName(for: goal.checkInDayOfWeek))."
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+        )
+        .accessibilityIdentifier("check-in-settings-card")
+    }
+
+    private func dayOfWeekName(for weekday: Int) -> String {
+        switch weekday {
+        case 1: return "Sunday"
+        case 2: return "Monday"
+        case 3: return "Tuesday"
+        case 4: return "Wednesday"
+        case 5: return "Thursday"
+        case 6: return "Friday"
+        case 7: return "Saturday"
+        default: return "Monday"
+        }
     }
 
     private func currentProgramCard(goal: NutritionGoal, program: NutritionProgram) -> some View {

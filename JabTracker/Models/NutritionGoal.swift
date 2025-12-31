@@ -84,6 +84,15 @@ final class NutritionGoal {
     /// Initial TDEE estimate from formula (before adaptive adjustments)
     var initialEstimatedTDEE: Double?
 
+    // MARK: - Check-In Configuration
+
+    /// Day of week for weekly check-ins (1=Sunday, 2=Monday, ..., 7=Saturday)
+    /// Default to Monday (2) for new goals
+    var checkInDayOfWeek: Int = 2
+
+    /// Date of last completed check-in
+    var lastCheckInDate: Date?
+
     // MARK: - Timestamps
 
     /// When this goal was created

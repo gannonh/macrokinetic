@@ -111,10 +111,17 @@ Plans:
 **Goal**: Weight trend review, adherence summary, goal and program adjustment flow
 **Depends on**: Phase 15.2
 **Research**: Unlikely (internal patterns - existing weight tracking)
-**Plans**: TBD
+**Plans**: 2
+
+**Scope:**
+- WeeklyCheckInService for summary generation (EWMA weight smoothing, nutrition adherence)
+- WeeklyCheckInSheet UI with weight progress and nutrition summary cards
+- Dynamic countdown card in StrategyView with check-in trigger
+- Navigation to goal/program adjustment from check-in
 
 Plans:
-- [ ] 16-01: TBD
+- [x] 16-01: WeeklyCheckInService, lastCheckInDate field, check-in day settings UI
+- [ ] 16-02: StrategyView integration, dynamic countdown, E2E test stubs
 
 #### Phase 17: Goal Settings Integration
 
@@ -139,7 +146,7 @@ Phases execute in numeric order within each milestone.
 | 15. Daily Tracking Dashboard | v0.3.0 | 1/1 | Complete | 2025-12-28 |
 | 15.1 Initial TDEE Integration | v0.3.0 | 3/3 | Complete | 2025-12-28 |
 | 15.2 Program Style Implementation | v0.3.0 | 4/4 | Complete | 2025-12-30 |
-| 16. Weekly Check-ins | v0.3.0 | 0/? | Not started | - |
+| 16. Weekly Check-ins | v0.3.0 | 1/2 | In progress | - |
 | 17. Goal Settings Integration | v0.3.0 | 0/? | Not started | - |
 
 <details>
