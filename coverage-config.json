@@ -259,6 +259,7 @@
       "Views/Strategy/StrategyView.swift",
       "Views/Strategy/ProgramSummarySheet.swift",
       "Views/Strategy/ProgramReadySheet.swift",
+      "Views/Strategy/ProgramOptimizationSheet.swift",
       "Views/Nutrition/SearchMethodTabs.swift",
       "Views/Nutrition/ServingInputView.swift",
       "Views/Nutrition/EditFoodEntrySheet.swift",

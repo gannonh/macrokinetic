@@ -32,6 +32,8 @@ struct StrategyView: View {
     @State private var goalToEdit: NutritionGoal?
     @State private var programToEdit: NutritionProgram?
     @State private var recalculationError: String?
+    @State private var showingProgramOptimization = false
+    @State private var checkInError: String?
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -184,6 +186,47 @@ struct StrategyView: View {
                 Text(error)
             }
         }
+        // Program Optimization sheet
+        .sheet(isPresented: $showingProgramOptimization) {
+            if let goal = users.first?.activeNutritionGoal {
+                ProgramOptimizationSheet(
+                    goal: goal,
+                    onAccept: { result in
+                        applyOptimization(result, to: goal)
+                        showingProgramOptimization = false
+                    },
+                    onModify: { _ in
+                        // Dismiss optimization, chain to program edit
+                        showingProgramOptimization = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
+                            if let program = goal.program {
+                                programToEdit = program
+                            }
+                        }
+                    },
+                    onDecline: {
+                        declineOptimization(for: goal)
+                        showingProgramOptimization = false
+                    }
+                )
+            }
+        }
+        // Check-in error alert
+        .alert(
+            "Check-In Failed",
+            isPresented: Binding(
+                get: { checkInError != nil },
+                set: { if !$0 { checkInError = nil } }
+            )
+        ) {
+            Button("OK") {
+                checkInError = nil
+            }
+        } message: {
+            if let error = checkInError {
+                Text(error)
+            }
+        }
         .accessibilityIdentifier("strategy-view")
     }
 
@@ -210,50 +253,93 @@ struct StrategyView: View {
         }
     }
 
+    @ViewBuilder
     private func checkInCountdownCard(goal: NutritionGoal) -> some View {
-        let checkInService = WeeklyCheckInService(context: modelContext)
-        let daysUntil = checkInService.daysUntilCheckIn(for: goal)
-        let progress = max(0, min(1, Double(7 - daysUntil) / 7.0))
+        // Hide for Manual programs (they manage their own adjustments)
+        if goal.program?.style == .manual {
+            EmptyView()
+        } else {
+            let checkInService = WeeklyCheckInService(context: modelContext)
+            let daysUntil = checkInService.daysUntilCheckIn(for: goal)
+            let isCheckInDue = checkInService.isCheckInDue(for: goal)
+            let progress = max(0, min(1, Double(7 - daysUntil) / 7.0))
 
-        return HStack(spacing: 16) {
-            // Countdown ring
-            ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 6)
-                    .frame(width: 64, height: 64)
+            let cardContent = HStack(spacing: 16) {
+                // Countdown ring
+                ZStack {
+                    Circle()
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                        .frame(width: 64, height: 64)
 
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .frame(width: 64, height: 64)
-                    .rotationEffect(.degrees(-90))
+                    Circle()
+                        .trim(from: 0, to: isCheckInDue ? 1.0 : progress)
+                        .stroke(
+                            isCheckInDue ? Color.green : Color.blue,
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        )
+                        .frame(width: 64, height: 64)
+                        .rotationEffect(.degrees(-90))
 
-                VStack(spacing: 0) {
-                    Text("\(daysUntil)")
-                        .font(.title3.bold())
-                    Text(daysUntil == 1 ? "day" : "days")
-                        .font(.caption2)
+                    if isCheckInDue {
+                        Image(systemName: "checkmark")
+                            .font(.title2.bold())
+                            .foregroundColor(.green)
+                    } else {
+                        VStack(spacing: 0) {
+                            Text("\(daysUntil)")
+                                .font(.title3.bold())
+                            Text(daysUntil == 1 ? "day" : "days")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    if isCheckInDue {
+                        Text("Check-In Ready")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                        Text("Tap to optimize your program")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Next Check-In")
+                            .font(.headline)
+                        let dayName = dayOfWeekName(for: goal.checkInDayOfWeek)
+                        Text("Every \(dayName)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if isCheckInDue {
+                    Image(systemName: "chevron.right")
                         .foregroundColor(.secondary)
                 }
             }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+            )
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Next Check-In")
-                    .font(.headline)
-                let dayName = dayOfWeekName(for: goal.checkInDayOfWeek)
-                Text("Every \(dayName)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            if isCheckInDue {
+                Button {
+                    showingProgramOptimization = true
+                } label: {
+                    cardContent
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("check-in-countdown-card")
+                .accessibilityLabel("Check-in ready. Tap to optimize your program.")
+            } else {
+                cardContent
+                    .accessibilityIdentifier("check-in-countdown-card")
             }
-
-            Spacer()
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-        )
-        .accessibilityIdentifier("check-in-countdown-card")
     }
 
     private func checkInSettingsCard(goal: NutritionGoal) -> some View {
@@ -281,11 +367,10 @@ struct StrategyView: View {
                 Text("Saturday").tag(7)
             }
 
-            Text(
-                "You'll be prompted to review and optimize your program each \(dayOfWeekName(for: goal.checkInDayOfWeek))."
-            )
-            .font(.caption)
-            .foregroundColor(.secondary)
+            let dayName = dayOfWeekName(for: goal.checkInDayOfWeek)
+            Text("You'll be prompted to review and optimize your program each \(dayName).")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding()
         .background(
@@ -665,6 +750,31 @@ struct StrategyView: View {
         } catch {
             Self.logger.error("Failed to recalculate program targets: \(error.localizedDescription)")
             recalculationError = "Unable to update calorie targets. Please try editing your goal again."
+        }
+    }
+
+    // MARK: - Program Optimization
+
+    /// Apply accepted optimization to goal/program
+    private func applyOptimization(_ result: ProgramOptimizationResult, to goal: NutritionGoal) {
+        let service = WeeklyCheckInService(context: modelContext)
+        do {
+            try service.applyOptimization(result, to: goal)
+            Self.logger.info("Program optimization applied")
+        } catch {
+            Self.logger.error("Failed to apply optimization: \(error.localizedDescription)")
+            checkInError = error.localizedDescription
+        }
+    }
+
+    /// Mark check-in complete without applying changes (decline)
+    private func declineOptimization(for goal: NutritionGoal) {
+        let service = WeeklyCheckInService(context: modelContext)
+        do {
+            try service.declineOptimization(for: goal)
+            Self.logger.info("Program optimization declined")
+        } catch {
+            Self.logger.error("Failed to decline optimization: \(error.localizedDescription)")
         }
     }
 }
