@@ -18,9 +18,19 @@ enum BiometricAvailability {
     case unknown
 }
 
+/// Manages biometric authentication (Face ID, Touch ID, Optic ID) for app access.
+///
+/// **Usage Pattern:**
+/// - Use `BiometricAuthManager.shared` for app-wide biometric state in views
+/// - For testing, create a new instance directly: `BiometricAuthManager()`
+///
+/// The singleton pattern is intentional here because biometric state must be
+/// consistent across the app - there's only one Face ID/Touch ID sensor per device.
 @MainActor
 class BiometricAuthManager: ObservableObject {
-    /// Shared singleton instance for app-wide biometric state
+    /// Shared singleton instance for app-wide biometric state.
+    ///
+    /// Use this in production code. For testing, create a new instance directly.
     static let shared = BiometricAuthManager()
 
     private static let logger = Logger(

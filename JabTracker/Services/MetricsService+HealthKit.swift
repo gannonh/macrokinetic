@@ -78,6 +78,9 @@ extension MetricsService {
             if let hkWeight = await readWeightFromHealthKit() {
                 return hkWeight
             }
+            Self.healthKitLogger.debug(
+                "HealthKit weight unavailable, falling back to user profile: \(user.weight) kg"
+            )
         }
         return user.weight
     }
@@ -91,6 +94,11 @@ extension MetricsService {
         if user.healthSyncEnabled {
             if let hkHeight = await readHeightFromHealthKit() {
                 return hkHeight
+            }
+            if let localHeight = user.heightCm {
+                Self.healthKitLogger.debug(
+                    "HealthKit height unavailable, falling back to user profile: \(localHeight) cm"
+                )
             }
         }
         return user.heightCm
