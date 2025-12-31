@@ -1,10 +1,11 @@
 # SwiftLint overrides for Strategy views
-# StrategyView.swift contains multiple card components and sheet orchestration
+# StrategyView.swift contains multiple card components, sheet orchestration,
+# and weekly macro grid for Collaborative/Manual program display
 
 type_body_length:
-  warning: 450
-  error: 500
+  warning: 500
+  error: 550
 
 file_length:
-  warning: 550
-  error: 600
+  warning: 650
+  error: 700

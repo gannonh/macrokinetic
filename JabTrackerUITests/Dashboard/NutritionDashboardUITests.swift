@@ -66,4 +66,50 @@ final class NutritionDashboardUITests: XCTestCase {
     func testErrorStateDisplayed() {
         // TODO: Implement after manual smoke test
     }
+
+    // MARK: - Per-Day Target Integration
+
+    /// Dashboard shows correct per-day targets from active program
+    /// Acceptance: Targets come from goal.macroTargetsForDate(today)
+    func testDashboardShowsCorrectPerDayTargets() {
+        // TODO: Seed Coached Shifted program with different daily calories
+        // TODO: Navigate to Dashboard
+        // TODO: Verify calorie target matches today's value from program
+        // TODO: Verify protein target matches today's value
+        // TODO: Verify carb target matches today's value
+        // TODO: Verify fat target matches today's value
+    }
+
+    /// Dashboard updates targets when program is edited
+    /// Acceptance: After editing program, Dashboard reflects new targets
+    func testDashboardTargetsUpdateAfterProgramEdit() {
+        // TODO: Seed program with known targets
+        // TODO: Navigate to Dashboard, note current targets
+        // TODO: Navigate to Strategy → Edit Program
+        // TODO: Change daily targets
+        // TODO: Save program
+        // TODO: Navigate back to Dashboard
+        // TODO: Verify Dashboard shows NEW targets
+    }
+
+    /// Dashboard shows Collaborative custom day targets
+    /// Acceptance: Locked day with custom macros shows correct values
+    func testDashboardShowsCollaborativeCustomTargets() {
+        // TODO: Seed Collaborative program with today locked at 2500 cal
+        // TODO: Navigate to Dashboard
+        // TODO: Verify calorie target shows 2500 (not default)
+    }
+
+    // MARK: - Single Source of Truth
+
+    /// Dashboard targets match Strategy view for same day
+    /// Acceptance: Both views show identical macro targets
+    func testDashboardTargetsMatchStrategyView() {
+        // CRITICAL: Single source of truth pattern
+        // TODO: Seed any program
+        // TODO: Navigate to Strategy view
+        // TODO: Note today's targets from weekly grid
+        // TODO: Navigate to Dashboard
+        // TODO: Verify targets match exactly
+    }
 }

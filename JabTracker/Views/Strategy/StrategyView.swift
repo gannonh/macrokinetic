@@ -24,13 +24,13 @@ struct StrategyView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
 
-    @State private var showingGoalWizard = false
-    @State private var showingProgramWizard = false
+    @State private var showingNewGoalWizard = false
+    @State private var showingNewProgramWizard = false
     @State private var showingProgramSummary = false
     @State private var showingProgramReady = false
-    @State private var isEditingGoal = false
-    @State private var isEditingProgram = false
     @State private var createdGoal: NutritionGoal?
+    @State private var goalToEdit: NutritionGoal?
+    @State private var programToEdit: NutritionProgram?
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -43,8 +43,9 @@ struct StrategyView: View {
                 VStack(spacing: 24) {
                     if let user = users.first {
                         if let activeGoal = user.activeNutritionGoal {
-                            currentProgramSection(goal: activeGoal)
-                            actionButtonsSection(user: user, hasGoal: true)
+                            // Access program through goal's forward relationship
+                            currentProgramSection(goal: activeGoal, program: activeGoal.program)
+                            actionButtonsSection(user: user, activeGoal: activeGoal)
                         } else {
                             emptyStateSection(user: user)
                         }
@@ -58,48 +59,66 @@ struct StrategyView: View {
             .navigationTitle("Strategy")
             .navigationBarTitleDisplayMode(.large)
         }
-        .sheet(isPresented: $showingGoalWizard) {
+        // Edit Goal sheet - uses sheet(item:) to ensure goal is passed directly
+        .sheet(item: $goalToEdit) { goal in
             if let user = users.first {
                 GoalWizard(
                     user: user,
-                    existingGoal: isEditingGoal ? user.activeNutritionGoal : nil,
-                    showIntro: !isEditingGoal
-                ) { goal in
-                    createdGoal = goal
-                    showingGoalWizard = false
+                    existingGoal: goal,
+                    showIntro: false
+                ) { savedGoal in
+                    createdGoal = savedGoal
+                    goalToEdit = nil
 
-                    // Delay chained sheet presentation to ensure:
-                    // 1. GoalWizard dismissal animation completes
-                    // 2. createdGoal state propagates to child views
+                    // Delay chained sheet presentation for Edit Goal → Program Summary
                     DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
-                        if isEditingGoal {
-                            // Edit Goal flow → Show Program Summary
-                            showingProgramSummary = true
-                        } else {
-                            // New Goal flow → Chain to Program Wizard
-                            showingProgramWizard = true
-                        }
-                        isEditingGoal = false
+                        showingProgramSummary = true
                     }
                 }
             }
         }
-        .sheet(isPresented: $showingProgramWizard) {
+        // New Goal sheet - uses sheet(isPresented:)
+        .sheet(isPresented: $showingNewGoalWizard) {
+            if let user = users.first {
+                GoalWizard(
+                    user: user,
+                    existingGoal: nil,
+                    showIntro: true
+                ) { goal in
+                    createdGoal = goal
+                    showingNewGoalWizard = false
+
+                    // Delay chained sheet presentation for New Goal → Program Wizard
+                    DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
+                        showingNewProgramWizard = true
+                    }
+                }
+            }
+        }
+        // Edit Program sheet - uses sheet(item:) to pass program directly
+        .sheet(item: $programToEdit) { program in
+            if let goal = program.goal {
+                ProgramWizard(
+                    goal: goal,
+                    existingProgram: program
+                ) {
+                    programToEdit = nil
+                    createdGoal = nil
+                }
+            }
+        }
+        // New Program sheet - uses sheet(isPresented:)
+        .sheet(isPresented: $showingNewProgramWizard) {
             if let goal = createdGoal ?? users.first?.activeNutritionGoal {
                 ProgramWizard(
                     goal: goal,
-                    existingProgram: isEditingProgram ? goal.program : nil
+                    existingProgram: nil
                 ) {
-                    showingProgramWizard = false
+                    showingNewProgramWizard = false
 
-                    // Show Program Ready sheet for new programs (not edits)
-                    if !isEditingProgram {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
-                            showingProgramReady = true
-                        }
-                    } else {
-                        isEditingProgram = false
-                        createdGoal = nil
+                    // Show Program Ready sheet for new programs
+                    DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
+                        showingProgramReady = true
                     }
                 }
             }
@@ -108,18 +127,19 @@ struct StrategyView: View {
             isPresented: $showingProgramReady,
             onDismiss: {
                 // Clean up state when sheet is dismissed (via Done button or swipe)
-                isEditingProgram = false
                 createdGoal = nil
             },
             content: {
-                // Use queried user's active goal - @Query ensures relationships are loaded
-                if let goal = users.first?.activeNutritionGoal {
-                    ProgramReadySheet(goal: goal) {}
+                // Access program through goal's forward relationship
+                if let goal = createdGoal ?? users.first?.activeNutritionGoal,
+                    let program = goal.program
+                {
+                    ProgramReadySheet(goal: goal, program: program) {}
                 }
             }
         )
         .sheet(isPresented: $showingProgramSummary) {
-            // Use queried user's active goal - @Query ensures relationships are loaded
+            // Access program through goal's forward relationship
             if let goal = users.first?.activeNutritionGoal,
                 let program = goal.program
             {
@@ -133,8 +153,19 @@ struct StrategyView: View {
                 } onSetNewProgram: {
                     // Set New Program - launch Program Wizard
                     showingProgramSummary = false
-                    showingProgramWizard = true
+                    showingNewProgramWizard = true
                 }
+            } else {
+                // Fallback: show loading or dismiss if no program found
+                ProgressView("Loading...")
+                    .onAppear {
+                        // If no program found after a moment, dismiss and show error
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            if users.first?.activeNutritionGoal?.program == nil {
+                                showingProgramSummary = false
+                            }
+                        }
+                    }
             }
         }
         .accessibilityIdentifier("strategy-view")
@@ -143,13 +174,13 @@ struct StrategyView: View {
     // MARK: - Current Program Section
 
     @ViewBuilder
-    private func currentProgramSection(goal: NutritionGoal) -> some View {
+    private func currentProgramSection(goal: NutritionGoal, program: NutritionProgram?) -> some View {
         VStack(spacing: 16) {
             // Check-in countdown (placeholder for Phase 16)
             checkInCountdownCard(goal: goal)
 
             // Current program display
-            if let program = goal.program {
+            if let program {
                 currentProgramCard(goal: goal, program: program)
             }
 
@@ -201,50 +232,25 @@ struct StrategyView: View {
     }
 
     private func currentProgramCard(goal: NutritionGoal, program: NutritionProgram) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("In Progress")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("\(program.style.displayName) Program")
-                        .font(.headline)
-                }
-                Spacer()
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.title2)
-                    .foregroundColor(.blue)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d"
+        let startDate = dateFormatter.string(from: program.createdAt)
+
+        return VStack(alignment: .leading, spacing: 16) {
+            // Header with date range
+            VStack(alignment: .leading, spacing: 4) {
+                Text("In Progress")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("\(program.style.displayName) Program")
+                    .font(.headline)
+                Text("\(startDate) – Now")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
-            Divider()
-
-            // Daily targets
-            VStack(spacing: 12) {
-                targetRow(
-                    icon: "flame.fill",
-                    label: "Daily Calories",
-                    value: "\(Int(goal.dailyCalorieTarget)) kcal",
-                    color: .orange
-                )
-                targetRow(
-                    icon: "p.circle.fill",
-                    label: "Protein",
-                    value: "\(Int(goal.dailyProteinTargetGrams))g",
-                    color: .blue
-                )
-                targetRow(
-                    icon: "c.circle.fill",
-                    label: "Carbs",
-                    value: "\(Int(goal.dailyCarbTargetGrams))g",
-                    color: .green
-                )
-                targetRow(
-                    icon: "f.circle.fill",
-                    label: "Fat",
-                    value: "\(Int(goal.dailyFatTargetGrams))g",
-                    color: .orange
-                )
-            }
+            // Always show weekly grid for all program types
+            weeklyMacroGrid(goal: goal)
         }
         .padding()
         .background(
@@ -252,6 +258,81 @@ struct StrategyView: View {
                 .fill(Color(.systemBackground))
         )
         .accessibilityIdentifier("current-program-card")
+    }
+
+    // MARK: - Weekly Macro Grid (Collaborative/Manual)
+
+    private static let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+    private static let weekdayNumbers = [2, 3, 4, 5, 6, 7, 1]  // Mon-Sun mapped to weekday numbers
+
+    private func weeklyMacroGrid(goal: NutritionGoal) -> some View {
+        let dayMacros = Self.weekdayNumbers.map { goal.macroTargetsForDate(dateForWeekday($0)) }
+
+        return VStack(spacing: 0) {
+            // Day headers
+            HStack(spacing: 2) {
+                ForEach(Array(Self.dayLabels.enumerated()), id: \.offset) { _, day in
+                    Text(day)
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.bottom, 4)
+
+            // Calorie row (blue)
+            weeklyMacroRow(
+                values: dayMacros.map { Int($0.calories) },
+                unit: "",
+                color: .blue
+            )
+
+            // Protein row (orange)
+            weeklyMacroRow(
+                values: dayMacros.map { Int($0.proteinGrams) },
+                unit: " P",
+                color: .orange
+            )
+
+            // Fat row (yellow)
+            weeklyMacroRow(
+                values: dayMacros.map { Int($0.fatGrams) },
+                unit: " F",
+                color: .yellow
+            )
+
+            // Carbs row (green)
+            weeklyMacroRow(
+                values: dayMacros.map { Int($0.carbsGrams) },
+                unit: " C",
+                color: .green
+            )
+        }
+    }
+
+    private func weeklyMacroRow(values: [Int], unit: String, color: Color) -> some View {
+        HStack(spacing: 2) {
+            ForEach(Array(values.enumerated()), id: \.offset) { _, value in
+                Text("\(value)\(unit)")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundColor(color)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(color.opacity(0.15))
+                    )
+            }
+        }
+        .padding(.vertical, 1)
+    }
+
+    private func dateForWeekday(_ weekday: Int) -> Date {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+        components.weekday = weekday
+        return calendar.date(from: components) ?? Date()
     }
 
     private func targetRow(icon: String, label: String, value: String, color: Color) -> some View {
@@ -360,54 +441,55 @@ struct StrategyView: View {
     // MARK: - Action Buttons Section
 
     @ViewBuilder
-    private func actionButtonsSection(user: User, hasGoal: Bool) -> some View {
+    private func actionButtonsSection(user: User, activeGoal: NutritionGoal) -> some View {
         VStack(spacing: 12) {
-            if hasGoal {
-                // Has existing goal - show edit options
-                HStack(spacing: 12) {
-                    actionButton(
-                        title: "Edit Goal",
-                        icon: "target",
-                        color: .blue
-                    ) {
-                        isEditingGoal = true
-                        showingGoalWizard = true
-                    }
-                    .accessibilityIdentifier("edit-goal-button")
-
-                    actionButton(
-                        title: "Edit Program",
-                        icon: "slider.horizontal.3",
-                        color: .purple
-                    ) {
-                        isEditingProgram = true
-                        showingProgramWizard = true
-                    }
-                    .accessibilityIdentifier("edit-program-button")
+            // Has existing goal - show edit options
+            HStack(spacing: 12) {
+                actionButton(
+                    title: "Edit Goal",
+                    icon: "target",
+                    color: .blue
+                ) {
+                    // Setting goalToEdit triggers sheet(item:) presentation
+                    goalToEdit = activeGoal
                 }
+                .accessibilityIdentifier("edit-goal-button")
 
-                HStack(spacing: 12) {
-                    actionButton(
-                        title: "New Goal",
-                        icon: "plus.circle",
-                        color: .green
-                    ) {
-                        isEditingGoal = false
-                        showingGoalWizard = true
+                actionButton(
+                    title: "Edit Program",
+                    icon: "slider.horizontal.3",
+                    color: .purple
+                ) {
+                    // Setting programToEdit triggers sheet(item:) presentation
+                    if let program = activeGoal.program {
+                        programToEdit = program
+                    } else {
+                        Self.logger.warning("Edit Program tapped but activeGoal.program is nil")
                     }
-                    .accessibilityIdentifier("new-goal-button")
-
-                    actionButton(
-                        title: "New Program",
-                        icon: "arrow.triangle.2.circlepath",
-                        color: .orange
-                    ) {
-                        isEditingProgram = false
-                        createdGoal = user.activeNutritionGoal
-                        showingProgramWizard = true
-                    }
-                    .accessibilityIdentifier("new-program-button")
                 }
+                .accessibilityIdentifier("edit-program-button")
+            }
+
+            HStack(spacing: 12) {
+                actionButton(
+                    title: "New Goal",
+                    icon: "plus.circle",
+                    color: .green
+                ) {
+                    // Use showingNewGoalWizard for new goal flow
+                    showingNewGoalWizard = true
+                }
+                .accessibilityIdentifier("new-goal-button")
+
+                actionButton(
+                    title: "New Program",
+                    icon: "arrow.triangle.2.circlepath",
+                    color: .orange
+                ) {
+                    createdGoal = activeGoal
+                    showingNewProgramWizard = true
+                }
+                .accessibilityIdentifier("new-program-button")
             }
         }
     }
@@ -453,8 +535,7 @@ struct StrategyView: View {
             }
 
             PrimaryButton(title: "Create Goal") {
-                isEditingGoal = false
-                showingGoalWizard = true
+                showingNewGoalWizard = true
             }
             .padding(.horizontal, 40)
             .accessibilityIdentifier("create-goal-button")

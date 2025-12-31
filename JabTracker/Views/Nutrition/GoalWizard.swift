@@ -180,9 +180,10 @@ final class GoalWizardViewModel {
         }
     }
 
-    /// Whether this is the first step
+    /// Whether this is the first step (targetWeight in edit mode, goalType otherwise)
     var isFirstStep: Bool {
-        currentStep == GoalWizardStep.allCases.first
+        let firstStep: GoalWizardStep = isEditMode ? .targetWeight : .goalType
+        return currentStep == firstStep
     }
 
     /// Whether this is the summary step
@@ -234,6 +235,13 @@ final class GoalWizardViewModel {
         else {
             return
         }
+        // In edit mode, don't go back before targetWeight (skip goalType)
+        let minStep: GoalWizardStep = isEditMode ? .targetWeight : .goalType
+        guard let minIndex = GoalWizardStep.allCases.firstIndex(of: minStep),
+            currentIndex > minIndex
+        else {
+            return
+        }
         currentStep = GoalWizardStep.allCases[currentIndex - 1]
     }
 
@@ -248,6 +256,8 @@ final class GoalWizardViewModel {
         currentWeightKg = goal.startingWeightKg
         weeklyRateKg = abs(goal.weeklyWeightChangePaceKg)
         usesMetricWeight = usesMetric
+        // Skip goalType step for edit mode - go straight to targets
+        currentStep = .targetWeight
     }
 
     /// Configure with user's current weight and unit preference
@@ -339,6 +349,7 @@ struct GoalWizard: View {
     var existingGoal: NutritionGoal?
 
     @State private var showingIntro: Bool
+    @State private var hasConfiguredViewModel = false
 
     init(
         user: User,
@@ -351,6 +362,15 @@ struct GoalWizard: View {
         self.showIntro = showIntro
         self.onComplete = onComplete
         self._showingIntro = State(initialValue: showIntro)
+
+        // Configure ViewModel synchronously for edit mode
+        // This ensures values are set before the view renders
+        if let goal = existingGoal {
+            let vm = GoalWizardViewModel()
+            vm.configureForEdit(goal: goal, usesMetric: user.prefersMetricWeight)
+            self._viewModel = State(initialValue: vm)
+            self._hasConfiguredViewModel = State(initialValue: true)
+        }
     }
 
     var body: some View {
@@ -387,28 +407,30 @@ struct GoalWizard: View {
             // Initialize MetricsService
             metricsService = MetricsService(context: modelContext)
 
-            // Configure for edit mode if editing existing goal
-            if let existingGoal {
-                viewModel.configureForEdit(goal: existingGoal, usesMetric: user.prefersMetricWeight)
-            } else {
-                // Get current weight from MetricsService (handles HealthKit if enabled)
-                let currentWeightKg: Double
-                if let service = metricsService {
-                    currentWeightKg = await service.getCurrentWeight(for: user)
-                } else {
-                    // Fallback: Local weight is stored in user's preferred unit
-                    currentWeightKg =
-                        user.prefersMetricWeight
-                        ? user.weight
-                        : user.weight / WeightEntry.kgToLbsConversion
-                }
-                // configureWithCurrentWeight expects weight in user's display unit
-                let displayWeight =
-                    user.prefersMetricWeight
-                    ? currentWeightKg
-                    : currentWeightKg * WeightEntry.kgToLbsConversion
-                viewModel.configureWithCurrentWeight(displayWeight, usesMetric: user.prefersMetricWeight)
+            // Skip if already configured in init (edit mode)
+            guard !hasConfiguredViewModel else {
+                Self.logger.info("ViewModel already configured for edit mode")
+                return
             }
+
+            Self.logger.info("Configuring for new goal mode")
+            // Get current weight from MetricsService (handles HealthKit if enabled)
+            let currentWeightKg: Double
+            if let service = metricsService {
+                currentWeightKg = await service.getCurrentWeight(for: user)
+            } else {
+                // Fallback: Local weight is stored in user's preferred unit
+                currentWeightKg =
+                    user.prefersMetricWeight
+                    ? user.weight
+                    : user.weight / WeightEntry.kgToLbsConversion
+            }
+            // configureWithCurrentWeight expects weight in user's display unit
+            let displayWeight =
+                user.prefersMetricWeight
+                ? currentWeightKg
+                : currentWeightKg * WeightEntry.kgToLbsConversion
+            viewModel.configureWithCurrentWeight(displayWeight, usesMetric: user.prefersMetricWeight)
         }
         .accessibilityIdentifier("goal-wizard")
     }
@@ -420,7 +442,7 @@ struct GoalWizard: View {
             Spacer()
 
             // Rocket illustration placeholder
-            Image(systemName: "rocket.fill")
+            Image(systemName: "target")
                 .font(.system(size: 80))
                 .foregroundStyle(.blue.gradient)
                 .accessibilityHidden(true)

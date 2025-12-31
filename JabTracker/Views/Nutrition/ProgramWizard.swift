@@ -308,7 +308,9 @@ final class ProgramWizardViewModel {
         case .profileCompletion:
             return isProfileDataComplete
         case .dietPreference:
-            return dietPreference != nil
+            let result = dietPreference != nil
+            print("DEBUG canContinue dietPreference: \(result)")
+            return result
         case .calorieFloor:
             return calorieFloorType != nil
         case .training:
@@ -408,12 +410,18 @@ final class ProgramWizardViewModel {
     // MARK: - Navigation
 
     func advance() {
-        guard let currentIndex = availableSteps.firstIndex(of: currentStep),
-            currentIndex + 1 < availableSteps.count
-        else {
+        print("DEBUG advance() - currentStep: \(currentStep), availableSteps: \(availableSteps.map { $0.rawValue })")
+        guard let currentIndex = availableSteps.firstIndex(of: currentStep) else {
+            print("DEBUG advance() - currentStep NOT FOUND in availableSteps!")
             return
         }
-        currentStep = availableSteps[currentIndex + 1]
+        guard currentIndex + 1 < availableSteps.count else {
+            print("DEBUG advance() - already at last step")
+            return
+        }
+        let nextStep = availableSteps[currentIndex + 1]
+        print("DEBUG advance() - moving from \(currentStep.rawValue) to \(nextStep.rawValue)")
+        currentStep = nextStep
     }
 
     func goBack() {
@@ -516,8 +524,72 @@ final class ProgramWizardViewModel {
         weeklyDistributionMode = program.distributionMode
         proteinLevel = program.protein
 
-        // Start at diet preference (skip style in edit mode)
-        currentStep = .dietPreference
+        // Load Collaborative per-day configurations from saved program
+        if program.style == .collaborative {
+            loadCollaborativeConfig(from: program)
+        }
+
+        // Load Manual per-day macros from saved program
+        if program.style == .manual, let weeklyMacros = program.weeklyMacros {
+            loadManualDaysFromMacros(weeklyMacros)
+        }
+
+        // Start at the first available step for this program style
+        // (different styles have different step sequences)
+        currentStep = availableSteps.first ?? .confirmation
+        print("DEBUG configureForEdit - style: \(program.style.rawValue), step: \(currentStep.rawValue)")
+    }
+
+    /// Load collaborative config from saved program's weeklyMacros (single source of truth)
+    private func loadCollaborativeConfig(from program: NutritionProgram) {
+        guard let weeklyMacros = program.weeklyMacros else {
+            print("DEBUG loadCollabConfig - no weeklyMacros found")
+            return
+        }
+
+        let weightLb = (goal?.startingWeightKg ?? 70) * 2.205
+
+        for weekday in WeeklyConstants.validWeekdayRange {
+            guard let macros = weeklyMacros.macrosForDay(weekday) else { continue }
+
+            // Derive UI parameters from stored macro values
+            let proteinGramsPerLb = weightLb > 0 ? macros.proteinGrams / weightLb : 0.8
+            let proteinCalories = macros.proteinGrams * 4
+            let remainingCalories = macros.calories - proteinCalories
+            let carbCalories = macros.carbsGrams * 4
+            let carbFatRatio = remainingCalories > 0 ? carbCalories / remainingCalories : 0.5
+
+            collaborativeDays[weekday] = CollaborativeDayConfig(
+                calories: macros.calories,
+                proteinGramsPerLb: proteinGramsPerLb,
+                carbFatRatio: min(1, max(0, carbFatRatio)),
+                isLocked: macros.isLocked
+            )
+        }
+
+        weeklyCalorieBudget = collaborativeDays.values.reduce(0) { $0 + $1.calories }
+        print("DEBUG loadCollabConfig - loaded \(collaborativeDays.count) days from weeklyMacros")
+    }
+
+    /// Load manual per-day macros from saved weekly macros
+    private func loadManualDaysFromMacros(_ weeklyMacros: WeeklyMacroDistribution) {
+        for weekday in WeeklyConstants.validWeekdayRange {
+            if let macros = weeklyMacros.macrosForDay(weekday) {
+                perDayMacros[weekday] = macros
+            }
+        }
+
+        // Check if all days are the same (same targets all week)
+        let uniqueMacros = Set(perDayMacros.values.map { "\($0.calories)-\($0.proteinGrams)" })
+        useSameTargetsAllWeek = uniqueMacros.count <= 1
+
+        // If same all week, populate single week values
+        if useSameTargetsAllWeek, let first = perDayMacros.values.first {
+            singleWeekCalories = first.calories
+            singleWeekProtein = first.proteinGrams
+            singleWeekFat = first.fatGrams
+            singleWeekCarbs = first.carbsGrams
+        }
     }
 
     /// Configure for new program with a goal
@@ -590,7 +662,8 @@ final class ProgramWizardViewModel {
                     calories: config.calories,
                     proteinGrams: proteinGrams,
                     fatGrams: fatCalories / 9,
-                    carbsGrams: carbCalories / 4
+                    carbsGrams: carbCalories / 4,
+                    isLocked: config.isLocked
                 )
             }
 
@@ -658,20 +731,27 @@ final class ProgramWizardViewModel {
                 distributionMode: distribution,
                 proteinLevel: protein
             )
+            // Set both sides of the relationship explicitly for SwiftData
             newProgram.goal = goal
+            goal.program = newProgram
             context.insert(newProgram)
             program = newProgram
         }
 
-        // Store per-day macros if applicable (Collaborative, Manual)
+        // Store per-day macros (Collaborative, Manual) - single source of truth including isLocked
         if let macroDistribution = buildWeeklyMacroDistribution(goal: goal) {
             program.setWeeklyMacros(macroDistribution)
+        } else {
+            // Clear per-day macros if not applicable (e.g., switching from Collaborative to Coached)
+            program.weeklyMacroDistributionData = nil
         }
 
         // Store shifted calorie distribution if applicable (Coached/Shifted)
-        // See mock: mocks/goal-program/Coached-Shift/IMG_2103.PNG
         if let calorieDistribution = buildWeeklyCalorieDistribution() {
             program.setWeeklyDistribution(calorieDistribution)
+        } else {
+            // Clear shifted distribution if not applicable (e.g., switching to Even mode)
+            program.weeklyDistributionData = nil
         }
 
         do {
@@ -836,6 +916,7 @@ struct ProgramWizard: View {
                         .accessibilityIdentifier("program-wizard-save-button")
                     } else {
                         PrimaryButton(title: "Continue") {
+                            print("DEBUG Continue tapped - step: \(viewModel.currentStep.rawValue)")
                             Task {
                                 await handleContinue()
                             }
@@ -874,7 +955,11 @@ struct ProgramWizard: View {
             tdeeService = TDEEService(context: modelContext)
             metricsService = MetricsService(context: modelContext)
             if let existingProgram {
+                Self.logger.info("Configuring for edit mode - program style: \(existingProgram.style.rawValue)")
                 viewModel.configureForEdit(program: existingProgram)
+            } else {
+                let hasProgram = goal.program != nil
+                Self.logger.info("Configuring for new program mode - goal.program: \(hasProgram)")
             }
         }
         .onChange(of: viewModel.programStyle) { _, newStyle in
@@ -888,7 +973,8 @@ struct ProgramWizard: View {
 
                     // For Collaborative, calculate TDEE now if profile is complete
                     // This ensures distribution editor shows real values even if profileCompletion step is skipped
-                    if newStyle == .collaborative, !viewModel.needsProfileCompletion {
+                    // BUT skip this in edit mode - we already loaded the saved config
+                    if newStyle == .collaborative, !viewModel.needsProfileCompletion, !viewModel.isEditMode {
                         await calculateAndApplyTDEE()
                         viewModel.initializeCollaborativeDaysFromGoal()
                     }
@@ -896,7 +982,8 @@ struct ProgramWizard: View {
             }
             // Initialize collaborative days when Collaborative is selected
             // (will be re-initialized with real values after TDEE calculation)
-            if newStyle == .collaborative {
+            // Skip in edit mode - we already loaded the saved config
+            if newStyle == .collaborative, !viewModel.isEditMode {
                 viewModel.initializeCollaborativeDaysFromGoal()
             }
         }
@@ -960,6 +1047,8 @@ struct ProgramWizard: View {
     // MARK: - Actions
 
     private func handleContinue() async {
+        print("DEBUG handleContinue() called - currentStep: \(viewModel.currentStep.rawValue)")
+
         // Save profile data when leaving profileCompletion step
         if viewModel.currentStep == .profileCompletion {
             guard let user = goal.user else {
@@ -981,7 +1070,8 @@ struct ProgramWizard: View {
                 try await viewModel.saveProfileData(user: user, metricsService: service, context: modelContext)
 
                 // For Collaborative mode, calculate TDEE now so distribution editor shows real values
-                if viewModel.programStyle == .collaborative {
+                // Skip in edit mode - we already have the saved values
+                if viewModel.programStyle == .collaborative, !viewModel.isEditMode {
                     await calculateAndApplyTDEE()
                     // Re-initialize collaborative days with calculated values
                     viewModel.initializeCollaborativeDaysFromGoal()
@@ -993,9 +1083,11 @@ struct ProgramWizard: View {
             }
         }
 
+        print("DEBUG handleContinue() - about to call advance()")
         withAnimation(.spring()) {
             viewModel.advance()
         }
+        print("DEBUG handleContinue() - advance() completed, currentStep is now: \(viewModel.currentStep.rawValue)")
     }
 
     private func saveProgram() async {

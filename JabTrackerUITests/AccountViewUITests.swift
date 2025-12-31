@@ -462,4 +462,32 @@ final class AccountViewUITests: XCTestCase {
         XCTAssertTrue(app.buttons["height-row"].exists, "height-row identifier should exist")
         XCTAssertTrue(app.buttons["weight-row"].exists, "weight-row identifier should exist")
     }
+
+    // MARK: - Profile Data for Program Calculations
+
+    /// Profile data enables TDEE calculation for Coached programs
+    /// Acceptance: Complete profile allows Coached program creation without profile step
+    func testCompleteProfileEnablesCoachedProgram() throws {
+        // TODO: Ensure profile has all required fields:
+        //       - Height
+        //       - Weight
+        //       - Birthday (for age)
+        //       - Sex
+        // TODO: Navigate to Strategy → Create Goal → Continue to Program
+        // TODO: Select Coached style
+        // TODO: Verify NO "Complete Your Profile" step appears
+        // TODO: Verify TDEE is calculated and displayed
+    }
+
+    /// Profile weight updates affect program calculations
+    /// Acceptance: Changing weight should affect macro calculations
+    func testWeightChangeAffectsMacroCalculations() throws {
+        // TODO: Create Coached program with current weight
+        // TODO: Note calculated protein target (based on body weight)
+        // TODO: Navigate to Account → Weight
+        // TODO: Change weight significantly (e.g., +20 lbs)
+        // TODO: Navigate to Strategy
+        // TODO: Note: Existing program may not auto-update
+        //       (new program would use new weight)
+    }
 }

@@ -344,10 +344,19 @@ struct DailyMacros: Codable, Equatable {
     var proteinGrams: Double
     var fatGrams: Double
     var carbsGrams: Double
+    var isLocked: Bool
+
+    init(calories: Double, proteinGrams: Double, fatGrams: Double, carbsGrams: Double, isLocked: Bool = false) {
+        self.calories = calories
+        self.proteinGrams = proteinGrams
+        self.fatGrams = fatGrams
+        self.carbsGrams = carbsGrams
+        self.isLocked = isLocked
+    }
 
     /// Zero macro values
     static var zero: DailyMacros {
-        DailyMacros(calories: 0, proteinGrams: 0, fatGrams: 0, carbsGrams: 0)
+        DailyMacros(calories: 0, proteinGrams: 0, fatGrams: 0, carbsGrams: 0, isLocked: false)
     }
 }
 

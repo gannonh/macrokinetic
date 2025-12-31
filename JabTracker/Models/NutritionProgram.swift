@@ -61,6 +61,10 @@ final class NutritionProgram {
     /// JSON-encoded WeeklyMacroDistribution for per-day macro targets
     var weeklyMacroDistributionData: Data?
 
+    /// JSON-encoded Collaborative day configurations (calories, proteinGramsPerLb, carbFatRatio, isLocked)
+    /// Stores the user's actual input parameters for Collaborative mode editing
+    var collaborativeConfigData: Data?
+
     // MARK: - Timestamps
 
     /// When this program was created
@@ -343,5 +347,40 @@ extension NutritionProgram {
             fatGrams: goal.dailyFatTargetGrams,
             carbsGrams: goal.dailyCarbTargetGrams
         )
+    }
+}
+
+// MARK: - Collaborative Configuration Storage
+
+/// Codable structure for storing Collaborative mode day configurations
+struct CollaborativeDayConfigStorage: Codable {
+    var calories: Double
+    var proteinGramsPerLb: Double
+    var carbFatRatio: Double
+    var isLocked: Bool
+}
+
+/// Wrapper for storing all Collaborative day configs
+struct CollaborativeConfigStorage: Codable {
+    /// Per-day configurations (weekday: 1=Sun, 2=Mon, ..., 7=Sat)
+    var dayConfigs: [Int: CollaborativeDayConfigStorage]
+
+    /// Weekly calorie budget
+    var weeklyCalorieBudget: Double
+}
+
+extension NutritionProgram {
+    /// Save Collaborative day configurations
+    func setCollaborativeConfig(_ dayConfigs: [Int: CollaborativeDayConfigStorage], weeklyBudget: Double) {
+        let storage = CollaborativeConfigStorage(dayConfigs: dayConfigs, weeklyCalorieBudget: weeklyBudget)
+        if let encoded = try? JSONEncoder().encode(storage) {
+            collaborativeConfigData = encoded
+        }
+    }
+
+    /// Load Collaborative day configurations
+    var collaborativeConfig: CollaborativeConfigStorage? {
+        guard let data = collaborativeConfigData else { return nil }
+        return try? JSONDecoder().decode(CollaborativeConfigStorage.self, from: data)
     }
 }

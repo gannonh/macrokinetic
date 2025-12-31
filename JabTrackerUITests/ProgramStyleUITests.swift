@@ -218,4 +218,66 @@ final class ProgramStyleUITests: XCTestCase {
         //    - Different targets for different dates
         //    - "X left" calculations based on correct target
     }
+
+    // MARK: - Edit Mode - Single Source of Truth
+
+    /// Edit Program loads values from single source (weeklyMacroDistribution)
+    /// Acceptance: Edit wizard shows same values as Strategy view
+    func testEditProgramLoadsFromSingleSource() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // CRITICAL: Verify single source of truth pattern
+        // 1. Create Collaborative program with custom day values
+        // 2. Navigate to Strategy view
+        // 3. Note values displayed in weekly grid
+        // 4. Tap "Edit Program"
+        // 5. Verify Edit wizard shows EXACT same values
+        // 6. Cancel edit
+        // 7. Verify Strategy view unchanged
+    }
+
+    /// Edit Collaborative loads locked states correctly
+    /// Acceptance: Locked days show lock icon filled, unlocked days show empty lock
+    func testEditCollaborativeLoadsLockStates() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // CRITICAL: isLocked state must persist in weeklyMacroDistribution
+        // 1. Create Collaborative program with M/S locked
+        // 2. Navigate to Strategy → Edit Program
+        // 3. Verify Monday shows:
+        //    - Custom calories
+        //    - Lock icon filled (isLocked = true)
+        // 4. Verify Saturday shows:
+        //    - Custom calories
+        //    - Lock icon filled (isLocked = true)
+        // 5. Verify other days show:
+        //    - Default calories
+        //    - Lock icon empty (isLocked = false)
+    }
+
+    /// Edit Coached Even → Shifted clears old distribution data
+    /// Acceptance: Old even values replaced with shifted distribution
+    func testEditCoachedEvenToShiftedClearsOldData() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Create Coached Even program (same values all days)
+        // 2. Navigate to Strategy → Edit Program
+        // 3. Continue to Weekly Distribution step
+        // 4. Switch from "Even" to "Shifted"
+        // 5. Configure shifted distribution
+        // 6. Save program
+        // 7. Verify Strategy view shows varied daily values
+        // 8. Verify old even distribution data is cleared
+    }
+
+    /// Edit Coached Shifted → Even clears distribution multipliers
+    /// Acceptance: Old shifted multipliers cleared, even values across all days
+    func testEditCoachedShiftedToEvenClearsMultipliers() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // CRITICAL: Switching Shifted → Even must redistribute evenly
+        // 1. Create Coached Shifted program (varied per day)
+        // 2. Navigate to Strategy → Edit Program
+        // 3. Continue to Weekly Distribution step
+        // 4. Switch from "Shifted" to "Even"
+        // 5. Save program
+        // 6. Verify Strategy view shows IDENTICAL values all 7 days
+        // 7. Verify weeklyDistributionData is cleared
+    }
 }

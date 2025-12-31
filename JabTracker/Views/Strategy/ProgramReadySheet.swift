@@ -15,6 +15,7 @@ struct ProgramReadySheet: View {
     // MARK: - Properties
 
     let goal: NutritionGoal
+    let program: NutritionProgram
     let onDone: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -214,14 +215,12 @@ struct ProgramReadySheet: View {
                     detail: weeklyPaceDetail
                 )
 
-                if let program = goal.program {
-                    explanationStep(
-                        number: 3,
-                        title: "Macro Split",
-                        value: program.diet.displayName,
-                        detail: macroSplitDetail
-                    )
-                }
+                explanationStep(
+                    number: 3,
+                    title: "Macro Split",
+                    value: program.diet.displayName,
+                    detail: macroSplitDetail
+                )
             }
         }
         .padding()
@@ -317,5 +316,7 @@ struct ProgramReadySheet: View {
     )
     goal.initialEstimatedTDEE = 2200
 
-    return ProgramReadySheet(goal: goal) {}
+    let program = NutritionProgram(style: .coached, diet: .balanced)
+
+    return ProgramReadySheet(goal: goal, program: program) {}
 }

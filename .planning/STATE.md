@@ -96,8 +96,8 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-30T19:28:21Z
-Stopped at: Smoke testing fixes - Collaborative TDEE calculation and compact layout
+Last session: 2025-12-30T20:15:00Z
+Stopped at: Phase 15.2 complete - All smoke testing fixes applied
 Resume file: None
 
 ### Recent Fixes (2025-12-30)
@@ -110,3 +110,7 @@ Resume file: None
   - Shrunk weekly grid with smaller fonts and row heights
   - Made day selector circles smaller (36px vs 40px)
   - Shortened helper text
+- Fixed Edit Goal flow - ProgramSummarySheet/ProgramReadySheet now use @Query goal for loaded relationships
+- Added recalculateProgramTargets() to update calorie/macro targets when "Looks Good" clicked after goal edit
+- Show ProgramReadySheet for ALL new programs (not just Coached)
+- Added Goal Summary card to Strategy view with target weight and weekly rate display

@@ -3,7 +3,7 @@
 //  JabTrackerUITests
 //
 //  E2E tests for the Program wizard flow.
-//  Tests program creation, editing, and navigation.
+//  Tests program creation, editing, and navigation across all program styles.
 //
 
 import XCTest
@@ -16,48 +16,181 @@ final class ProgramWizardUITests: XCTestCase {
         app = TestUtilities.launchAppWithTestMode(resetData: true)
     }
 
-    // MARK: - New Program Flow
+    // MARK: - New Coached Program - Even Distribution
 
-    func testNewProgramWizardComplete() throws {
-        // TODO: Navigate to Strategy view (with existing goal)
+    func testNewCoachedProgramEvenComplete() throws {
+        // TODO: Seed goal or create goal first
+        // TODO: Navigate to Strategy view
         // TODO: Tap "New Program" button
-        // TODO: Verify program style step appears
-        // TODO: Select "Coached"
-        // TODO: Continue through all steps:
-        //       - Diet Preference
-        //       - Calorie Floor
-        //       - Training Level
-        //       - Weekly Distribution
-        //       - Protein Level
-        // TODO: Verify confirmation screen shows all selections
+        // TODO: Select "Coached" program style
+        // TODO: Continue → Diet Preference step
+        // TODO: Select "Balanced"
+        // TODO: Continue → Calorie Floor step
+        // TODO: Select "Standard"
+        // TODO: Continue → Training Level step
+        // TODO: Select training option
+        // TODO: Continue → Weekly Distribution step
+        // TODO: Select "Even" (same every day)
+        // TODO: Continue → Protein Level step
+        // TODO: Select protein level
+        // TODO: Continue → Confirmation step
+        // TODO: Verify all selections displayed
         // TODO: Tap "Save Program"
-        // TODO: Verify wizard dismissed
+        // TODO: Verify ProgramReadySheet appears with calculated macros
     }
 
-    func testNewProgramAllStepsVisible() throws {
+    func testNewCoachedEvenShowsSameMacrosAllDays() throws {
+        // TODO: Create Coached program with Even distribution
+        // TODO: Verify ProgramReadySheet weekly grid shows identical values for all 7 days
+        // TODO: Verify Strategy view weekly grid shows same values
+    }
+
+    // MARK: - New Coached Program - Shifted Distribution
+
+    func testNewCoachedProgramShiftedComplete() throws {
+        // TODO: Seed goal or create goal first
         // TODO: Navigate to Strategy view
         // TODO: Tap "New Program"
-        // TODO: Verify all 7 steps can be navigated
-        // TODO: Verify back navigation works
+        // TODO: Select "Coached"
+        // TODO: Continue through steps to Weekly Distribution
+        // TODO: Select "Shifted" (custom per-day calories)
+        // TODO: Verify per-day calorie editor appears
+        // TODO: Adjust multipliers (e.g., higher on weekends)
+        // TODO: Continue through remaining steps
+        // TODO: Tap "Save Program"
+        // TODO: Verify ProgramReadySheet shows varied daily calories
     }
 
-    // MARK: - Edit Program Flow
+    func testCoachedShiftedShowsVariedMacros() throws {
+        // TODO: Create Coached Shifted program with weekend higher calories
+        // TODO: Verify ProgramReadySheet weekly grid shows different values per day
+        // TODO: Verify Strategy view reflects shifted distribution
+    }
 
-    func testEditProgramFlow() throws {
-        // TODO: Create goal with program (or seed test data)
+    // MARK: - Edit Coached Program
+
+    func testEditCoachedProgramFlow() throws {
+        // CRITICAL: Edit Coached skips program style step
+        // Flow: Diet Pref → Calorie Floor → Training → Distribution → Protein → Confirm → Save
+        // TODO: Seed test data with existing Coached program
         // TODO: Navigate to Strategy view
         // TODO: Tap "Edit Program"
-        // TODO: Verify NO program style step (edit mode skips style)
-        // TODO: Verify starts at Diet Preference step
-        // TODO: Modify a setting
-        // TODO: Complete wizard
-        // TODO: Verify program updated
+        // TODO: Verify NO program style step (starts at Diet Preference)
+        // TODO: Verify current selections are pre-populated
+        // TODO: Modify diet preference
+        // TODO: Continue through: Calorie Floor → Training → Distribution → Protein → Confirm
+        // TODO: Tap "Save"
+        // TODO: Verify Strategy view reflects updated program
     }
 
-    func testEditProgramSkipsStyleSelection() throws {
-        // TODO: Start Edit Program flow
-        // TODO: Verify first step is Diet Preference (not Program Style)
-        // TODO: Verify step count is 6 (not 7)
+    func testEditCoachedLoadsSavedSelections() throws {
+        // TODO: Seed Coached program with specific selections:
+        //       - Diet: Balanced
+        //       - Floor: Standard
+        //       - Training: Lifting
+        //       - Distribution: Even
+        //       - Protein: High
+        // TODO: Navigate to Strategy → Edit Program
+        // TODO: Verify each step shows the saved selection pre-selected
+    }
+
+    func testEditCoachedShiftedToEvenClearsDistribution() throws {
+        // CRITICAL: Switching Shifted → Even should redistribute calories evenly
+        // TODO: Seed Coached Shifted program with custom day multipliers
+        // TODO: Navigate to Strategy → Edit Program
+        // TODO: Continue to Weekly Distribution step
+        // TODO: Verify Shifted is selected with custom values
+        // TODO: Select "Even"
+        // TODO: Continue through remaining steps → Save
+        // TODO: Verify Strategy view shows identical values for all 7 days
+        // TODO: Verify old shifted data is cleared
+    }
+
+    // MARK: - New Collaborative Program
+
+    func testNewCollaborativeProgramComplete() throws {
+        // TODO: Seed goal or create goal first
+        // TODO: Navigate to Strategy view
+        // TODO: Tap "New Program"
+        // TODO: Select "Collaborative" program style
+        // TODO: Verify TDEE calculated and displayed
+        // TODO: Verify per-day calorie/macro editor appears
+        // TODO: Customize Monday's values
+        // TODO: Customize Sunday's values
+        // TODO: Continue to confirmation
+        // TODO: Verify per-day values displayed correctly
+        // TODO: Tap "Save Program"
+    }
+
+    func testCollaborativeLockDays() throws {
+        // TODO: Create Collaborative program
+        // TODO: Customize Monday with specific values
+        // TODO: Tap lock icon on Monday (isLocked = true)
+        // TODO: Customize Saturday with different values
+        // TODO: Tap lock icon on Saturday (isLocked = true)
+        // TODO: Leave other days unlocked (default values)
+        // TODO: Save program
+        // TODO: Verify Strategy view shows locked days with custom values
+    }
+
+    func testEditCollaborativeLoadsValuesAndLocks() throws {
+        // CRITICAL: Edit mode must load saved values WITH lock states
+        // TODO: Seed Collaborative program with:
+        //       - Monday: 2200 cal, locked
+        //       - Saturday: 2500 cal, locked
+        //       - Other days: default, unlocked
+        // TODO: Navigate to Strategy → Edit Program
+        // TODO: Verify Monday shows 2200 cal AND lock icon filled
+        // TODO: Verify Saturday shows 2500 cal AND lock icon filled
+        // TODO: Verify other days show default values AND unlocked
+    }
+
+    func testEditCollaborativeModifyAndSavePersists() throws {
+        // TODO: Seed Collaborative program with Monday locked at 2200
+        // TODO: Navigate to Strategy → Edit Program
+        // TODO: Change Monday to 2300 cal
+        // TODO: Lock Tuesday at 2100 cal
+        // TODO: Unlock Saturday (if previously locked)
+        // TODO: Save program
+        // TODO: Verify Strategy view reflects ALL changes
+        // TODO: Navigate to Edit Program again
+        // TODO: Verify Monday: 2300, locked
+        // TODO: Verify Tuesday: 2100, locked
+        // TODO: Verify Saturday: unlocked
+    }
+
+    // MARK: - New Manual Program
+
+    func testNewManualProgramSameAllWeek() throws {
+        // TODO: Seed goal or create goal first
+        // TODO: Navigate to Strategy view
+        // TODO: Tap "New Program"
+        // TODO: Select "Manual" program style
+        // TODO: Verify manual macro entry appears
+        // TODO: Enter calories: 2000
+        // TODO: Enter protein: 150g
+        // TODO: Enter carbs: 200g
+        // TODO: Enter fat: 67g
+        // TODO: Keep "Same all week" mode
+        // TODO: Save program
+        // TODO: Verify Strategy view shows 2000/150/200/67 for all days
+    }
+
+    func testNewManualProgramPerDay() throws {
+        // TODO: Select Manual program style
+        // TODO: Enable "Per-day" mode
+        // TODO: Enter different values for each day
+        // TODO: Save program
+        // TODO: Verify Strategy view shows varied daily targets
+    }
+
+    func testEditManualLoadsValues() throws {
+        // TODO: Seed Manual program with specific values
+        // TODO: Navigate to Strategy → Edit Program
+        // TODO: Verify all saved macro values are pre-populated
+        // TODO: Modify calorie value
+        // TODO: Save
+        // TODO: Verify Strategy view reflects change
     }
 
     // MARK: - Program Style Selection
@@ -66,7 +199,8 @@ final class ProgramWizardUITests: XCTestCase {
         // TODO: Start New Program wizard
         // TODO: Verify all program styles visible:
         //       - Coached
-        //       - Relaxed
+        //       - Collaborative
+        //       - Manual
     }
 
     func testContinueDisabledWithoutProgramStyle() throws {
@@ -82,9 +216,9 @@ final class ProgramWizardUITests: XCTestCase {
         // TODO: Navigate to Diet Preference step
         // TODO: Verify all diet options visible:
         //       - Balanced
+        //       - Low Fat
         //       - Low Carb
         //       - Keto
-        //       - Plant Based
     }
 
     // MARK: - Calorie Floor
@@ -92,8 +226,8 @@ final class ProgramWizardUITests: XCTestCase {
     func testCalorieFloorOptions() throws {
         // TODO: Navigate to Calorie Floor step
         // TODO: Verify all options visible:
-        //       - Standard
-        //       - Aggressive
+        //       - Standard (1538 cal minimum)
+        //       - Low (1025 cal minimum - shows warning)
     }
 
     // MARK: - Training Level
@@ -101,8 +235,10 @@ final class ProgramWizardUITests: XCTestCase {
     func testTrainingLevelOptions() throws {
         // TODO: Navigate to Training step
         // TODO: Verify all training levels visible:
-        //       - None
-        //       - Relaxed
+        //       - None or Relaxed Activity
+        //       - Lifting
+        //       - Cardio
+        //       - Cardio & Lifting
     }
 
     // MARK: - Weekly Distribution
@@ -111,7 +247,7 @@ final class ProgramWizardUITests: XCTestCase {
         // TODO: Navigate to Weekly Distribution step
         // TODO: Verify all distribution modes visible:
         //       - Even (same every day)
-        //       - High/Low cycling
+        //       - Shifted (custom per-day)
     }
 
     // MARK: - Protein Level
@@ -119,9 +255,10 @@ final class ProgramWizardUITests: XCTestCase {
     func testProteinLevelOptions() throws {
         // TODO: Navigate to Protein Level step
         // TODO: Verify all protein levels visible:
+        //       - Low
         //       - Moderate
         //       - High
-        //       - Very High
+        //       - Extra High
     }
 
     // MARK: - Confirmation
@@ -153,6 +290,29 @@ final class ProgramWizardUITests: XCTestCase {
         // TODO: Tap Cancel
         // TODO: Verify wizard is dismissed
         // TODO: Verify no program created/modified
+    }
+
+    // MARK: - Data Validation
+
+    func testProgramDataMatchesBetweenStrategyAndEdit() throws {
+        // CRITICAL: Single source of truth - data must match everywhere
+        // TODO: Create program with specific values
+        // TODO: Note all values shown in ProgramReadySheet
+        // TODO: Navigate to Strategy view
+        // TODO: Verify Strategy weekly grid matches ProgramReadySheet
+        // TODO: Tap Edit Program
+        // TODO: Verify Edit wizard shows same values
+        // TODO: Cancel edit
+        // TODO: Verify Strategy still shows same values
+    }
+
+    func testMacroMathCorrect() throws {
+        // TODO: Create Coached Balanced program
+        // TODO: Note daily calories on ProgramReadySheet
+        // TODO: Verify: protein_cal + carb_cal + fat_cal ≈ total_cal
+        //       - Protein: g × 4
+        //       - Carbs: g × 4
+        //       - Fat: g × 9
     }
 
     // MARK: - TDEE Integration Tests (Phase 15.1)
