@@ -1,6 +1,21 @@
 import SwiftUI
 
 enum DesignTokens {
+    // MARK: - Corner Radii
+
+    enum CornerRadius {
+        /// Tiny elements: pills, small badges, progress bars (4pt)
+        static let small: CGFloat = 4
+        /// Small elements: buttons, inputs, chips, tags (8pt)
+        static let medium: CGFloat = 8
+        /// Standard cards: list items, content cards (10pt - matches iOS insetGrouped list)
+        static let card: CGFloat = 10
+        /// Large cards: main containers, sheets, modals (16pt)
+        static let large: CGFloat = 16
+    }
+
+    // MARK: - Colors
+
     enum Colors {
         static let primary = Color.primaryBlue
         static let primaryLight = Color(hex: "8b9ff4") ?? .blue

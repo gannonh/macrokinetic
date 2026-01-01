@@ -7,7 +7,7 @@ import SwiftUI
 /// Light mode: white cards on grouped gray background
 /// Dark mode: elevated dark cards on darker background
 struct CardStyle: ViewModifier {
-    var cornerRadius: CGFloat = 16
+    var cornerRadius: CGFloat = DesignTokens.CornerRadius.card
 
     func body(content: Content) -> some View {
         content
@@ -20,8 +20,52 @@ struct CardStyle: ViewModifier {
 
 extension View {
     /// Applies card styling with system background color and corner radius.
-    func cardStyle(cornerRadius: CGFloat = 16) -> some View {
+    /// Default uses `DesignTokens.CornerRadius.card` (12pt).
+    func cardStyle(cornerRadius: CGFloat = DesignTokens.CornerRadius.card) -> some View {
         modifier(CardStyle(cornerRadius: cornerRadius))
+    }
+}
+
+// MARK: - Card List Styling
+
+/// View modifier for List containers that want card-based styling with full corner control.
+/// Removes List's default backgrounds and separators, allowing cards to define their own appearance.
+struct CardListStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(DesignTokens.Colors.groupedBackground)
+    }
+}
+
+/// View modifier for list rows containing cards.
+/// Clears row backgrounds, hides separators, and applies consistent padding.
+struct CardListRow: ViewModifier {
+    var horizontalPadding: CGFloat = 16
+    var verticalPadding: CGFloat = 4
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+    }
+}
+
+extension View {
+    /// Applies card-friendly styling to a List container.
+    /// Use with `.plain` list style for full control over card corners.
+    func cardListStyle() -> some View {
+        modifier(CardListStyle())
+    }
+
+    /// Applies card-friendly styling to a list row.
+    /// Clears backgrounds, hides separators, and adds consistent padding.
+    func cardListRow(horizontalPadding: CGFloat = 16, verticalPadding: CGFloat = 4) -> some View {
+        modifier(CardListRow(horizontalPadding: horizontalPadding, verticalPadding: verticalPadding))
     }
 }
 

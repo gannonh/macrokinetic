@@ -101,23 +101,23 @@ struct FoodLogView: View {
                         selectedDate: $selectedDate,
                         entriesGroupedByDate: entriesGroupedByDate
                     )
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .cardListRow()
                 }
+                .listSectionSeparator(.hidden)
 
                 // Daily summary section
                 Section {
                     dailySummaryCard
-                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                        .listRowBackground(Color.clear)
+                        .cardListRow()
                 }
+                .listSectionSeparator(.hidden)
 
                 // Meal sections
                 ForEach(MealSection.allCases) { section in
                     mealSection(for: section)
                 }
             }
-            .listStyle(.insetGrouped)
+            .cardListStyle()
             .navigationTitle("Food Log")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -249,7 +249,7 @@ struct FoodLogView: View {
             }
         }
         .padding()
-        .cardStyle(cornerRadius: 12)
+        .cardStyle()
     }
 
     private func macroColumn(consumed: Double, target: Double, label: String, color: Color) -> some View {
@@ -284,8 +284,7 @@ struct FoodLogView: View {
         Section {
             if entries.isEmpty {
                 EmptyMealRow()
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .cardListRow()
             } else {
                 ForEach(entries, id: \.id) { entry in
                     Button {
@@ -294,8 +293,7 @@ struct FoodLogView: View {
                         FoodEntryCardView(entry: entry)
                     }
                     .buttonStyle(.plain)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .cardListRow()
                     .accessibilityIdentifier("food-entry-row")
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button("Delete", role: .destructive) {
@@ -323,7 +321,9 @@ struct FoodLogView: View {
             }
         } header: {
             mealSectionHeader(section: section, totals: totals)
+                .padding(.horizontal)
         }
+        .listSectionSeparator(.hidden)
     }
 
     private func mealSectionHeader(section: MealSection, totals: MealTotals) -> some View {

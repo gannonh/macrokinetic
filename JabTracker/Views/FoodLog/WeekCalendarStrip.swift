@@ -38,7 +38,7 @@ struct WeekCalendarStrip: View {
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 8)
-        .cardStyle(cornerRadius: 12)
+        .cardStyle()
         .accessibilityIdentifier("week-calendar-strip")
         .onAppear {
             // Initialize currentWeekStart on first appear only
