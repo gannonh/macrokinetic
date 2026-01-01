@@ -141,7 +141,7 @@ Plans:
 Plans:
 - [x] 17-01: MoreView restructure, SecurityPrivacyView, SubscriptionSettingsView (mock)
 - [x] 17-02: NotificationSettingsView with NotificationService extensions
-- [ ] 17-03: CalorieExpenditureView (mock), inactive placeholders, E2E test stubs
+- [x] 17-03: CalorieExpenditureView (mock), inactive placeholders, E2E test stubs
 
 ## Progress
 
@@ -157,7 +157,7 @@ Phases execute in numeric order within each milestone.
 | 15.1 Initial TDEE Integration | v0.3.0 | 3/3 | Complete | 2025-12-28 |
 | 15.2 Program Style Implementation | v0.3.0 | 4/4 | Complete | 2025-12-30 |
 | 16. Weekly Check-ins | v0.3.0 | 2/2 | Complete | 2025-12-31 |
-| 17. More Tab Refinements | v0.3.0 | 1/3 | In progress | - |
+| 17. More Tab Refinements | v0.3.0 | 3/3 | Complete | 2026-01-01 |
 
 <details>
 <summary>✅ v0.2.0 Enhanced Tracking (Phases 5-11) - SHIPPED 2025-12-27</summary>

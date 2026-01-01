@@ -20,12 +20,12 @@ struct MoreView: View {
                     NavigationLink(destination: StrategyView()) {
                         Label("Goals & Strategy", systemImage: "target")
                     }
-                    .accessibilityIdentifier("goals-strategy-link")
+                    .accessibilityIdentifier("goals-strategy-row")
 
                     NavigationLink(destination: FoodLibraryView()) {
                         Label("Food Library", systemImage: "book.closed")
                     }
-                    .accessibilityIdentifier("food-library-link")
+                    .accessibilityIdentifier("food-library-row")
 
                     NavigationLink(
                         destination: MedicationProfileSettingsView(
@@ -35,7 +35,7 @@ struct MoreView: View {
                     ) {
                         Label("GLP-1 Medications", systemImage: "pills")
                     }
-                    .accessibilityIdentifier("medications-link")
+                    .accessibilityIdentifier("medications-row")
                 }
 
                 // Feature Settings Section
@@ -48,7 +48,7 @@ struct MoreView: View {
                     // Food Log - inactive placeholder
                     Label("Food Log", systemImage: "fork.knife")
                         .foregroundColor(.secondary)
-                        .accessibilityIdentifier("food-log-settings-placeholder")
+                        .accessibilityIdentifier("food-log-placeholder")
 
                     NavigationLink(destination: BodyMetricsVisibilityView()) {
                         Label("Metrics", systemImage: "chart.bar")
@@ -63,12 +63,12 @@ struct MoreView: View {
                     NavigationLink(destination: CalorieExpenditureView()) {
                         Label("Calorie Expenditure", systemImage: "flame")
                     }
-                    .accessibilityIdentifier("calorie-expenditure-link")
+                    .accessibilityIdentifier("calorie-expenditure-row")
 
                     // Shortcuts & Tabs - inactive placeholder
                     Label("Shortcuts & Tabs", systemImage: "bolt.horizontal")
                         .foregroundColor(.secondary)
-                        .accessibilityIdentifier("shortcuts-settings-placeholder")
+                        .accessibilityIdentifier("shortcuts-placeholder")
                 }
 
                 // Account Settings Section
@@ -81,17 +81,17 @@ struct MoreView: View {
                     NavigationLink(destination: SubscriptionSettingsView()) {
                         Label("Subscription", systemImage: "tag")
                     }
-                    .accessibilityIdentifier("subscription-link")
+                    .accessibilityIdentifier("subscription-row")
 
                     NavigationLink(destination: SecurityPrivacyView()) {
                         Label("Security & Privacy", systemImage: "lock.shield")
                     }
-                    .accessibilityIdentifier("security-privacy-link")
+                    .accessibilityIdentifier("security-privacy-row")
 
                     NavigationLink(destination: NotificationSettingsView()) {
                         Label("Notifications", systemImage: "bell")
                     }
-                    .accessibilityIdentifier("notifications-link")
+                    .accessibilityIdentifier("notifications-row")
                 }
 
                 // Support Section
