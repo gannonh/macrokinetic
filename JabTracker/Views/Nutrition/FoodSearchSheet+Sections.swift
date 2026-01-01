@@ -197,7 +197,20 @@ extension FoodSearchSheet {
     // MARK: - Header Section
 
     var headerSection: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Close button
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.body.weight(.medium))
+                    .foregroundColor(.primary)
+                    .frame(width: 32, height: 32)
+                    .background(Color(.tertiarySystemFill))
+                    .clipShape(Circle())
+            }
+            .accessibilityIdentifier("food-search-cancel-button")
+
             // Time picker button
             Button {
                 showingTimePicker = true
