@@ -2,7 +2,7 @@
 //  MoreView.swift
 //  JabTracker
 //
-//  More tab with account, settings, and feature configuration.
+//  More tab with overflow navigation, feature settings, account settings, and support.
 //
 
 import SwiftData
@@ -15,43 +15,101 @@ struct MoreView: View {
     var body: some View {
         NavigationStack {
             List {
-                // User Header
-                userHeaderSection
-
-                // General Section
-                Section("General") {
-                    NavigationLink(destination: AccountView()) {
-                        Label("Account", systemImage: "person.circle")
+                // Overflow Menu - items not in top-level tabs
+                Section {
+                    NavigationLink(destination: StrategyView()) {
+                        Label("Goals & Strategy", systemImage: "target")
                     }
-                    .accessibilityIdentifier("account-link")
+                    .accessibilityIdentifier("goals-strategy-link")
 
-                    NavigationLink(destination: SettingsView()) {
-                        Label("Subscription", systemImage: "tag")
+                    NavigationLink(destination: FoodLibraryView()) {
+                        Label("Food Library", systemImage: "book.closed")
                     }
-                    .accessibilityIdentifier("subscription-link")
+                    .accessibilityIdentifier("food-library-link")
 
-                    NavigationLink(destination: UnitsOfMeasureView()) {
-                        Label("Units", systemImage: "ruler")
+                    NavigationLink(
+                        destination: MedicationProfileSettingsView(
+                            medicationManager: MedicationManager(
+                                modelContext: DataController.shared.container.mainContext)
+                        )
+                    ) {
+                        Label("GLP-1 Medications", systemImage: "pills")
                     }
-                    .accessibilityIdentifier("units-link")
+                    .accessibilityIdentifier("medications-link")
                 }
 
                 // Feature Settings Section
                 Section("Feature Settings") {
+                    // Dashboard - inactive placeholder
+                    Label("Dashboard", systemImage: "square.grid.2x2")
+                        .foregroundColor(.secondary)
+                        .accessibilityIdentifier("dashboard-settings-placeholder")
+
+                    // Food Log - inactive placeholder
+                    Label("Food Log", systemImage: "fork.knife")
+                        .foregroundColor(.secondary)
+                        .accessibilityIdentifier("food-log-settings-placeholder")
+
                     NavigationLink(destination: BodyMetricsVisibilityView()) {
-                        Label("Dashboard", systemImage: "square.grid.2x2")
+                        Label("Metrics", systemImage: "chart.bar")
                     }
-                    .accessibilityIdentifier("dashboard-settings-link")
+                    .accessibilityIdentifier("metrics-settings-link")
 
-                    NavigationLink(destination: StrategyView()) {
-                        Label("Strategy", systemImage: "target")
+                    NavigationLink(destination: UnitsOfMeasureView()) {
+                        Label("Units of Measurement", systemImage: "ruler")
                     }
-                    .accessibilityIdentifier("strategy-link")
+                    .accessibilityIdentifier("units-link")
 
-                    NavigationLink(destination: SettingsView()) {
-                        Label("Shortcuts", systemImage: "bolt.horizontal")
+                    NavigationLink(destination: CalorieExpenditureView()) {
+                        Label("Calorie Expenditure", systemImage: "flame")
                     }
-                    .accessibilityIdentifier("shortcuts-settings-link")
+                    .accessibilityIdentifier("calorie-expenditure-link")
+
+                    // Shortcuts & Tabs - inactive placeholder
+                    Label("Shortcuts & Tabs", systemImage: "bolt.horizontal")
+                        .foregroundColor(.secondary)
+                        .accessibilityIdentifier("shortcuts-settings-placeholder")
+                }
+
+                // Account Settings Section
+                Section("Account Settings") {
+                    NavigationLink(destination: AccountView()) {
+                        Label("Profile", systemImage: "person.circle")
+                    }
+                    .accessibilityIdentifier("profile-link")
+
+                    NavigationLink(destination: SubscriptionSettingsView()) {
+                        Label("Subscription", systemImage: "tag")
+                    }
+                    .accessibilityIdentifier("subscription-link")
+
+                    NavigationLink(destination: SecurityPrivacyView()) {
+                        Label("Security & Privacy", systemImage: "lock.shield")
+                    }
+                    .accessibilityIdentifier("security-privacy-link")
+
+                    NavigationLink(destination: NotificationSettingsView()) {
+                        Label("Notifications", systemImage: "bell")
+                    }
+                    .accessibilityIdentifier("notifications-link")
+                }
+
+                // Support Section
+                Section("Support") {
+                    // FAQ - inactive placeholder
+                    Label("FAQ", systemImage: "questionmark.circle")
+                        .foregroundColor(.secondary)
+                        .accessibilityIdentifier("faq-placeholder")
+
+                    // Help & Support - inactive placeholder
+                    Label("Help & Support", systemImage: "lifepreserver")
+                        .foregroundColor(.secondary)
+                        .accessibilityIdentifier("help-support-placeholder")
+
+                    NavigationLink(destination: GeneralSettingsView()) {
+                        Label("General", systemImage: "info.circle")
+                    }
+                    .accessibilityIdentifier("general-link")
                 }
             }
             .listStyle(.insetGrouped)
@@ -59,58 +117,6 @@ struct MoreView: View {
             .navigationBarTitleDisplayMode(.large)
         }
         .accessibilityIdentifier("more-view")
-    }
-
-    // MARK: - User Header Section
-
-    private var userHeaderSection: some View {
-        Section {
-            HStack(spacing: 16) {
-                // Avatar with initials
-                ZStack {
-                    Circle()
-                        .fill(Color(.systemGray5))
-                        .frame(width: 56, height: 56)
-
-                    Text(userInitials)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(users.first?.name ?? "Guest")
-                        .font(.headline)
-
-                    Text(memberSinceText)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding(.vertical, 8)
-        }
-        .accessibilityIdentifier("user-header-section")
-    }
-
-    private var userInitials: String {
-        guard let name = users.first?.name, !name.isEmpty else { return "?" }
-        let components = name.split(separator: " ")
-        if components.count >= 2 {
-            let first = components[0].prefix(1)
-            let last = components[1].prefix(1)
-            return "\(first)\(last)".uppercased()
-        } else {
-            return String(name.prefix(2)).uppercased()
-        }
-    }
-
-    private var memberSinceText: String {
-        guard let user = users.first else { return "" }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM d, yyyy"
-        return "Member Since \(formatter.string(from: user.createdAt))"
     }
 }
 
