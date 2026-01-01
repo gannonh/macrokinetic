@@ -12,6 +12,10 @@ struct MoreView: View {
     @EnvironmentObject private var authManager: AuthenticationManager
     @Query private var users: [User]
 
+    @State private var showingFoodLibrary = false
+
+    private var currentUser: User? { users.first }
+
     var body: some View {
         NavigationStack {
             List {
@@ -22,8 +26,11 @@ struct MoreView: View {
                     }
                     .accessibilityIdentifier("goals-strategy-row")
 
-                    NavigationLink(destination: FoodLibraryView()) {
+                    Button {
+                        showingFoodLibrary = true
+                    } label: {
                         Label("Food Library", systemImage: "book.closed")
+                            .foregroundColor(.primary)
                     }
                     .accessibilityIdentifier("food-library-row")
 
@@ -115,6 +122,18 @@ struct MoreView: View {
             .listStyle(.insetGrouped)
             .navigationTitle("More")
             .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showingFoodLibrary) {
+                if let user = currentUser {
+                    FoodSearchSheet(
+                        user: user,
+                        foodService: AppServices.shared.foodService,
+                        mealLogService: AppServices.shared.mealLogService,
+                        customFoodService: AppServices.shared.customFoodService,
+                        initialMethod: .library,
+                        onComplete: { showingFoodLibrary = false }
+                    )
+                }
+            }
         }
         .accessibilityIdentifier("more-view")
     }
