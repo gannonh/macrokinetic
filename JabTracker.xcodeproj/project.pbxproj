@@ -343,6 +343,7 @@
 		AAC9B1752C6B3446E16410ED /* DataControllerInitializationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F18B2F234252433B0A0D03A /* DataControllerInitializationTests.swift */; };
 		AB25D747246225F9FD4D14ED /* GoalWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DAD9EA777212A7438F70AC /* GoalWizard.swift */; };
 		AB5953187EF6D42971766F44 /* WelcomeScreensView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92A804E466621A27A71962A4 /* WelcomeScreensView.swift */; };
+		AC243CCCBB9E838D85F6ECE0 /* ReminderToggleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5152BB0C94BFCFEBA6B138 /* ReminderToggleRow.swift */; };
 		AC3E82EAE20BFEABB0BCE323 /* ChartDataEnumsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F43C2AEC2CBDE7FEEE6D54 /* ChartDataEnumsTests.swift */; };
 		ADEA9CFD18B1FC49C3386247 /* SchedulePatternCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C148491E3FC518E69B8B5E95 /* SchedulePatternCard.swift */; };
 		AE24DAB538FBC6A2E26EBFB2 /* ChartControlsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8C49DC32DA4FF954C3C2DE /* ChartControlsUITests.swift */; };
@@ -1013,6 +1014,7 @@
 		FCA736FED86EAA65C843009E /* ScheduleServiceTitrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleServiceTitrationTests.swift; sourceTree = "<group>"; };
 		FCDC5B0C0A508F16597EEF3E /* DoseHistoryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryViewModelTests.swift; sourceTree = "<group>"; };
 		FD50A693411A3CE1A28E2071 /* ScheduleServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleServiceTests.swift; sourceTree = "<group>"; };
+		FD5152BB0C94BFCFEBA6B138 /* ReminderToggleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderToggleRow.swift; sourceTree = "<group>"; };
 		FDC9C32A41650E72788A6F64 /* ScheduleHistoryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleHistoryRow.swift; sourceTree = "<group>"; };
 		FE8C09A0577005D7848EAB16 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		FEA5F565F4FA79596D9D6117 /* ConcentrationChartStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationChartStateTests.swift; sourceTree = "<group>"; };
@@ -1776,6 +1778,7 @@
 				F557EDDA6D9BA00312971726 /* NotificationAuthorizationStatus.swift */,
 				584F253236E089BB85EE1998 /* PauseScheduleSheet.swift */,
 				4B7EF7771344BE60817527A9 /* ReminderTimingPicker.swift */,
+				FD5152BB0C94BFCFEBA6B138 /* ReminderToggleRow.swift */,
 				440B6921C6A12EB5FC76FF36 /* ScheduleHistoryItem.swift */,
 				FDC9C32A41650E72788A6F64 /* ScheduleHistoryRow.swift */,
 				22D5E63F0AC4ED845A32E899 /* ScheduleSummaryView.swift */,
@@ -2584,6 +2587,7 @@
 				7B7A0BEDA7FA80891EA27BE7 /* ReconstitutionCalculatorView.swift in Sources */,
 				63593CF8E9489B19099E836C /* ReminderPreferencesView.swift in Sources */,
 				D8649639D419FC3DC0F9C5D1 /* ReminderTimingPicker.swift in Sources */,
+				AC243CCCBB9E838D85F6ECE0 /* ReminderToggleRow.swift in Sources */,
 				82A33932CA0EA17B714A17A4 /* RescheduleDoseSheet.swift in Sources */,
 				5D54D0CFCC5A7B8788A1BD91 /* ScheduleHistoryItem.swift in Sources */,
 				E97BFE08FBE747C81090E7C5 /* ScheduleHistoryRow.swift in Sources */,

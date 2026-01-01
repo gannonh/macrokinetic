@@ -137,7 +137,8 @@
         "threshold": 15,
         "description": "SwiftUI view components with minimal testable business logic",
         "files": [
-          "Views/Components/ProfileField.swift"
+          "Views/Components/ProfileField.swift",
+          "Views/Settings/Components/ReminderToggleRow.swift"
         ]
       }
     }

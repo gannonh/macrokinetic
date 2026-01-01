@@ -19,6 +19,10 @@ struct NotificationSettingsView: View {
         AppServices.shared.notificationService
     }
 
+    // Error state
+    @State private var weighInError: String?
+    @State private var medicationError: String?
+
     // Weekday options for weekly weigh-in picker
     private let weekdayOptions = [
         (value: 1, label: "Sunday"),
@@ -63,7 +67,13 @@ struct NotificationSettingsView: View {
                         guard let service = notificationService else { return }
                         service.weighInDailyEnabled = newValue
                         service.saveState()
-                        Task { try? await service.scheduleWeighInDailyReminder() }
+                        Task {
+                            do {
+                                try await service.scheduleWeighInDailyReminder()
+                            } catch {
+                                weighInError = "Failed to schedule daily reminder: \(error.localizedDescription)"
+                            }
+                        }
                     }
                 )
             )
@@ -78,11 +88,18 @@ struct NotificationSettingsView: View {
                             guard let service = notificationService else { return }
                             service.weighInDailyTime = newValue
                             service.saveState()
-                            Task { try? await service.scheduleWeighInDailyReminder() }
+                            Task {
+                                do {
+                                    try await service.scheduleWeighInDailyReminder()
+                                } catch {
+                                    weighInError = "Failed to update time: \(error.localizedDescription)"
+                                }
+                            }
                         }
                     ),
                     displayedComponents: .hourAndMinute
                 )
+                .accessibilityIdentifier("weigh-in-daily-time-picker")
             }
 
             // Weekly weigh-in toggle
@@ -94,7 +111,13 @@ struct NotificationSettingsView: View {
                         guard let service = notificationService else { return }
                         service.weighInWeeklyEnabled = newValue
                         service.saveState()
-                        Task { try? await service.scheduleWeighInWeeklyReminder() }
+                        Task {
+                            do {
+                                try await service.scheduleWeighInWeeklyReminder()
+                            } catch {
+                                weighInError = "Failed to schedule weekly reminder: \(error.localizedDescription)"
+                            }
+                        }
                     }
                 )
             )
@@ -109,7 +132,13 @@ struct NotificationSettingsView: View {
                             guard let service = notificationService else { return }
                             service.weighInWeeklyDay = newValue
                             service.saveState()
-                            Task { try? await service.scheduleWeighInWeeklyReminder() }
+                            Task {
+                                do {
+                                    try await service.scheduleWeighInWeeklyReminder()
+                                } catch {
+                                    weighInError = "Failed to update day: \(error.localizedDescription)"
+                                }
+                            }
                         }
                     )
                 ) {
@@ -117,6 +146,7 @@ struct NotificationSettingsView: View {
                         Text(option.label).tag(option.value)
                     }
                 }
+                .accessibilityIdentifier("weigh-in-weekly-day-picker")
 
                 DatePicker(
                     "Time",
@@ -126,16 +156,30 @@ struct NotificationSettingsView: View {
                             guard let service = notificationService else { return }
                             service.weighInWeeklyTime = newValue
                             service.saveState()
-                            Task { try? await service.scheduleWeighInWeeklyReminder() }
+                            Task {
+                                do {
+                                    try await service.scheduleWeighInWeeklyReminder()
+                                } catch {
+                                    weighInError = "Failed to update time: \(error.localizedDescription)"
+                                }
+                            }
                         }
                     ),
                     displayedComponents: .hourAndMinute
                 )
+                .accessibilityIdentifier("weigh-in-weekly-time-picker")
             }
         } header: {
             Text("Weigh-in Reminders")
         } footer: {
             Text("Get reminded to log your weight regularly.")
+        }
+        .alert("Notification Error", isPresented: .constant(weighInError != nil)) {
+            Button("OK") { weighInError = nil }
+        } message: {
+            if let weighInError {
+                Text(weighInError)
+            }
         }
     }
 
@@ -143,160 +187,122 @@ struct NotificationSettingsView: View {
 
     private var foodLoggingSection: some View {
         Section {
-            // Breakfast reminder
-            Toggle(
-                "Breakfast",
-                isOn: Binding(
-                    get: { notificationService?.breakfastReminderEnabled ?? false },
-                    set: { newValue in
-                        guard let service = notificationService else { return }
-                        service.breakfastReminderEnabled = newValue
+            if let service = notificationService {
+                // Breakfast reminder
+                ReminderToggleRow(
+                    label: "Breakfast",
+                    toggleIdentifier: "breakfast-reminder-toggle",
+                    timePickerIdentifier: "breakfast-time-picker",
+                    isEnabled: Binding(
+                        get: { service.breakfastReminderEnabled },
+                        set: { service.breakfastReminderEnabled = $0 }
+                    ),
+                    time: Binding(
+                        get: { service.breakfastReminderTime },
+                        set: { service.breakfastReminderTime = $0 }
+                    ),
+                    onToggle: { _ in
                         service.saveState()
-                        Task { try? await service.refreshFoodLoggingReminders() }
+                        try await service.refreshFoodLoggingReminders()
+                    },
+                    onTimeChange: { _ in
+                        service.saveState()
+                        try await service.refreshFoodLoggingReminders()
                     }
                 )
-            )
-            .accessibilityIdentifier("breakfast-reminder-toggle")
 
-            if notificationService?.breakfastReminderEnabled == true {
-                DatePicker(
-                    "Time",
-                    selection: Binding(
-                        get: { notificationService?.breakfastReminderTime ?? Date() },
-                        set: { newValue in
-                            guard let service = notificationService else { return }
-                            service.breakfastReminderTime = newValue
-                            service.saveState()
-                            Task { try? await service.refreshFoodLoggingReminders() }
-                        }
+                // Lunch reminder
+                ReminderToggleRow(
+                    label: "Lunch",
+                    toggleIdentifier: "lunch-reminder-toggle",
+                    timePickerIdentifier: "lunch-time-picker",
+                    isEnabled: Binding(
+                        get: { service.lunchReminderEnabled },
+                        set: { service.lunchReminderEnabled = $0 }
                     ),
-                    displayedComponents: .hourAndMinute
-                )
-            }
-
-            // Lunch reminder
-            Toggle(
-                "Lunch",
-                isOn: Binding(
-                    get: { notificationService?.lunchReminderEnabled ?? false },
-                    set: { newValue in
-                        guard let service = notificationService else { return }
-                        service.lunchReminderEnabled = newValue
+                    time: Binding(
+                        get: { service.lunchReminderTime },
+                        set: { service.lunchReminderTime = $0 }
+                    ),
+                    onToggle: { _ in
                         service.saveState()
-                        Task { try? await service.refreshFoodLoggingReminders() }
+                        try await service.refreshFoodLoggingReminders()
+                    },
+                    onTimeChange: { _ in
+                        service.saveState()
+                        try await service.refreshFoodLoggingReminders()
                     }
                 )
-            )
-            .accessibilityIdentifier("lunch-reminder-toggle")
 
-            if notificationService?.lunchReminderEnabled == true {
-                DatePicker(
-                    "Time",
-                    selection: Binding(
-                        get: { notificationService?.lunchReminderTime ?? Date() },
-                        set: { newValue in
-                            guard let service = notificationService else { return }
-                            service.lunchReminderTime = newValue
-                            service.saveState()
-                            Task { try? await service.refreshFoodLoggingReminders() }
-                        }
+                // Snack reminder
+                ReminderToggleRow(
+                    label: "Snack",
+                    toggleIdentifier: "snack-reminder-toggle",
+                    timePickerIdentifier: "snack-time-picker",
+                    isEnabled: Binding(
+                        get: { service.snackReminderEnabled },
+                        set: { service.snackReminderEnabled = $0 }
                     ),
-                    displayedComponents: .hourAndMinute
-                )
-            }
-
-            // Snack reminder
-            Toggle(
-                "Snack",
-                isOn: Binding(
-                    get: { notificationService?.snackReminderEnabled ?? false },
-                    set: { newValue in
-                        guard let service = notificationService else { return }
-                        service.snackReminderEnabled = newValue
+                    time: Binding(
+                        get: { service.snackReminderTime },
+                        set: { service.snackReminderTime = $0 }
+                    ),
+                    onToggle: { _ in
                         service.saveState()
-                        Task { try? await service.refreshFoodLoggingReminders() }
+                        try await service.refreshFoodLoggingReminders()
+                    },
+                    onTimeChange: { _ in
+                        service.saveState()
+                        try await service.refreshFoodLoggingReminders()
                     }
                 )
-            )
-            .accessibilityIdentifier("snack-reminder-toggle")
 
-            if notificationService?.snackReminderEnabled == true {
-                DatePicker(
-                    "Time",
-                    selection: Binding(
-                        get: { notificationService?.snackReminderTime ?? Date() },
-                        set: { newValue in
-                            guard let service = notificationService else { return }
-                            service.snackReminderTime = newValue
-                            service.saveState()
-                            Task { try? await service.refreshFoodLoggingReminders() }
-                        }
+                // Dinner reminder
+                ReminderToggleRow(
+                    label: "Dinner",
+                    toggleIdentifier: "dinner-reminder-toggle",
+                    timePickerIdentifier: "dinner-time-picker",
+                    isEnabled: Binding(
+                        get: { service.dinnerReminderEnabled },
+                        set: { service.dinnerReminderEnabled = $0 }
                     ),
-                    displayedComponents: .hourAndMinute
-                )
-            }
-
-            // Dinner reminder
-            Toggle(
-                "Dinner",
-                isOn: Binding(
-                    get: { notificationService?.dinnerReminderEnabled ?? false },
-                    set: { newValue in
-                        guard let service = notificationService else { return }
-                        service.dinnerReminderEnabled = newValue
+                    time: Binding(
+                        get: { service.dinnerReminderTime },
+                        set: { service.dinnerReminderTime = $0 }
+                    ),
+                    onToggle: { _ in
                         service.saveState()
-                        Task { try? await service.refreshFoodLoggingReminders() }
+                        try await service.refreshFoodLoggingReminders()
+                    },
+                    onTimeChange: { _ in
+                        service.saveState()
+                        try await service.refreshFoodLoggingReminders()
                     }
                 )
-            )
-            .accessibilityIdentifier("dinner-reminder-toggle")
 
-            if notificationService?.dinnerReminderEnabled == true {
-                DatePicker(
-                    "Time",
-                    selection: Binding(
-                        get: { notificationService?.dinnerReminderTime ?? Date() },
-                        set: { newValue in
-                            guard let service = notificationService else { return }
-                            service.dinnerReminderTime = newValue
-                            service.saveState()
-                            Task { try? await service.refreshFoodLoggingReminders() }
-                        }
+                Divider()
+
+                // End of day reminder
+                ReminderToggleRow(
+                    label: "End of Day",
+                    toggleIdentifier: "end-of-day-reminder-toggle",
+                    timePickerIdentifier: "end-of-day-time-picker",
+                    isEnabled: Binding(
+                        get: { service.endOfDayReminderEnabled },
+                        set: { service.endOfDayReminderEnabled = $0 }
                     ),
-                    displayedComponents: .hourAndMinute
-                )
-            }
-
-            Divider()
-
-            // End of day reminder
-            Toggle(
-                "End of Day",
-                isOn: Binding(
-                    get: { notificationService?.endOfDayReminderEnabled ?? false },
-                    set: { newValue in
-                        guard let service = notificationService else { return }
-                        service.endOfDayReminderEnabled = newValue
+                    time: Binding(
+                        get: { service.endOfDayReminderTime },
+                        set: { service.endOfDayReminderTime = $0 }
+                    ),
+                    onToggle: { _ in
                         service.saveState()
-                        Task { try? await service.refreshFoodLoggingReminders() }
+                        try await service.refreshFoodLoggingReminders()
+                    },
+                    onTimeChange: { _ in
+                        service.saveState()
+                        try await service.refreshFoodLoggingReminders()
                     }
-                )
-            )
-            .accessibilityIdentifier("end-of-day-reminder-toggle")
-
-            if notificationService?.endOfDayReminderEnabled == true {
-                DatePicker(
-                    "Time",
-                    selection: Binding(
-                        get: { notificationService?.endOfDayReminderTime ?? Date() },
-                        set: { newValue in
-                            guard let service = notificationService else { return }
-                            service.endOfDayReminderTime = newValue
-                            service.saveState()
-                            Task { try? await service.refreshFoodLoggingReminders() }
-                        }
-                    ),
-                    displayedComponents: .hourAndMinute
                 )
             }
         } header: {
@@ -320,19 +326,28 @@ struct NotificationSettingsView: View {
                     get: { notificationService?.notificationsEnabled ?? false },
                     set: { newValue in
                         guard let service = notificationService else { return }
-                        service.notificationsEnabled = newValue
-                        service.saveState()
                         Task {
-                            if newValue {
-                                try? await service.enable()
-                            } else {
-                                await service.disable()
+                            do {
+                                if newValue {
+                                    try await service.enable()
+                                } else {
+                                    await service.disable()
+                                }
+                            } catch {
+                                medicationError = "Failed to update reminder: \(error.localizedDescription)"
                             }
                         }
                     }
                 )
             )
             .accessibilityIdentifier("dose-reminder-toggle")
+            .alert("Notification Error", isPresented: .constant(medicationError != nil)) {
+                Button("OK") { medicationError = nil }
+            } message: {
+                if let medicationError {
+                    Text(medicationError)
+                }
+            }
 
             if notificationService?.notificationsEnabled == true,
                 let service = notificationService
@@ -343,7 +358,13 @@ struct NotificationSettingsView: View {
                         set: { newValue in
                             service.reminderMinutesBefore = newValue
                             service.saveState()
-                            Task { try? await service.updateReminderTiming(newValue) }
+                            Task {
+                                do {
+                                    try await service.updateReminderTiming(newValue)
+                                } catch {
+                                    medicationError = "Failed to update timing: \(error.localizedDescription)"
+                                }
+                            }
                         }
                     ))
             }

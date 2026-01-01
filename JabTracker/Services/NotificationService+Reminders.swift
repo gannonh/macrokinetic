@@ -8,6 +8,19 @@ extension NotificationService {
         category: "NotificationReminders"
     )
 
+    // MARK: - Authorization Check
+
+    /**
+     * Check if notifications are authorized before scheduling.
+     *
+     * Throws an error if authorization is not granted, preventing silent failures.
+     */
+    private func checkAuthorizationBeforeScheduling() throws {
+        guard authorizationStatus == .authorized else {
+            throw NotificationServiceError.authorizationDenied
+        }
+    }
+
     // MARK: - Weigh-in Reminders
 
     /**
@@ -21,6 +34,8 @@ extension NotificationService {
             cancelWeighInDailyReminder()
             return
         }
+
+        try checkAuthorizationBeforeScheduling()
 
         let content = UNMutableNotificationContent()
         content.title = "Time to weigh in"
@@ -60,6 +75,8 @@ extension NotificationService {
             cancelWeighInWeeklyReminder()
             return
         }
+
+        try checkAuthorizationBeforeScheduling()
 
         let content = UNMutableNotificationContent()
         content.title = "Weekly weigh-in"
@@ -105,6 +122,8 @@ extension NotificationService {
             notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
             return
         }
+
+        try checkAuthorizationBeforeScheduling()
 
         let content = UNMutableNotificationContent()
         content.title = "Log your \(meal.lowercased())"
@@ -158,6 +177,8 @@ extension NotificationService {
 
         // End of day reminder has different copy
         if endOfDayReminderEnabled {
+            try checkAuthorizationBeforeScheduling()
+
             let content = UNMutableNotificationContent()
             content.title = "Log your meals"
             content.body = "Take a moment to log everything you ate today"
