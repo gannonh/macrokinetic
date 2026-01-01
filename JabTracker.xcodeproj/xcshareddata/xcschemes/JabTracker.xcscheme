@@ -105,6 +105,26 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--seed-check-in-good"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-check-in-insufficient"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-check-in-minimum"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-check-in-ready"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-collaborative"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--seed-test-1y"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -153,7 +173,27 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-check-in-good"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-check-in-insufficient"
             isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-check-in-minimum"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-check-in-ready"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-collaborative"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y"

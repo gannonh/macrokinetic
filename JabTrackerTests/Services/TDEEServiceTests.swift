@@ -611,4 +611,575 @@ struct TDEEServiceTests {
         // Verify calorie target is less than TDEE (for weight loss)
         #expect(goal.dailyCalorieTarget < goal.initialEstimatedTDEE!)
     }
+
+    // MARK: - Data Quality Assessment Tests
+
+    // MARK: Service Configuration
+
+    @Test("TDEEService has correct default thresholds")
+    @MainActor
+    func testServiceDefaultThresholds() throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let service = TDEEService(context: context)
+
+        // Verify absolute minimum thresholds
+        #expect(service.absoluteMinimumWeightEntries == 3)
+        #expect(service.absoluteMinimumFoodConsistency == 0.5)
+        #expect(service.absoluteMinimumDaySpan == 7)
+
+        // Verify optimal thresholds
+        #expect(service.optimalWeightEntries == 14)
+        #expect(service.optimalFoodConsistency == 0.75)
+        #expect(service.lookbackDays == 28)
+    }
+
+    // MARK: Data Quality Tier Constants
+
+    @Test("DataQuality confidence ceilings are correct")
+    func testDataQualityConfidenceCeilings() {
+        #expect(DataQuality.insufficient.confidenceCeiling == 0.0)
+        #expect(DataQuality.minimum.confidenceCeiling == 0.5)
+        #expect(DataQuality.good.confidenceCeiling == 0.7)
+        #expect(DataQuality.excellent.confidenceCeiling == 1.0)
+    }
+
+    @Test("DataQuality allowsCheckIn is correct")
+    func testDataQualityAllowsCheckIn() {
+        #expect(DataQuality.insufficient.allowsCheckIn == false)
+        #expect(DataQuality.minimum.allowsCheckIn == true)
+        #expect(DataQuality.good.allowsCheckIn == true)
+        #expect(DataQuality.excellent.allowsCheckIn == true)
+    }
+
+    // MARK: Day Span Calculation
+
+    @Test("Calendar.dateComponents calculates exact day differences correctly")
+    func testCalendarDateComponentsDayCalculation() {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Test 8-day span
+        let day8Ago = calendar.date(byAdding: .day, value: -8, to: now)!
+        #expect(calendar.dateComponents([.day], from: day8Ago, to: now).day == 8)
+
+        // Test 7-day span (threshold)
+        let day7Ago = calendar.date(byAdding: .day, value: -7, to: now)!
+        #expect(calendar.dateComponents([.day], from: day7Ago, to: now).day == 7)
+
+        // Test 6-day span (below threshold)
+        let day6Ago = calendar.date(byAdding: .day, value: -6, to: now)!
+        #expect(calendar.dateComponents([.day], from: day6Ago, to: now).day == 6)
+
+        // Test 0-day span (same day)
+        #expect(calendar.dateComponents([.day], from: now, to: now).day == 0)
+    }
+
+    @Test("assessDataQuality returns daySpan=1 for single weight entry")
+    @MainActor
+    func testSingleWeightEntryDaySpan() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Single weight entry
+        let entry = WeightEntry(timestamp: Date(), weightKg: 80.0)
+        context.insert(entry)
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        // Single entry should give daySpan of 1 (from max(1, 0))
+        #expect(assessment.daySpan == 1)
+        #expect(assessment.weightEntryCount == 1)
+    }
+
+    @Test("assessDataQuality calculates correct daySpan for entries at [0, 3, 5, 8]")
+    @MainActor
+    func testDaySpanCalculationMinimumTierPattern() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Weight entries at days [0, 3, 5, 8]
+        for dayOffset in [0, 3, 5, 8] {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.daySpan == 8)
+        #expect(assessment.weightEntryCount == 4)
+    }
+
+    // MARK: Food Consistency Calculation
+
+    @Test("assessDataQuality calculates foodConsistency as uniqueDays/daySpan")
+    @MainActor
+    func testFoodConsistencyCalculation() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 10 days of weight entries (daySpan = 10)
+        for day in 0..<10 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // 7 days of food entries (food consistency = 7/10 = 70%)
+        for day in 0..<7 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test",
+                    mealSection: .breakfast,
+                    loggedAt: date,
+                    servingGrams: 100.0,
+                    caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0,
+                    carbsPer100g: 50.0,
+                    fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.daySpan == 9)  // Day 0 to day 9 = 9 days span
+        #expect(assessment.foodConsistency > 0.7)  // 7/9 ≈ 77.8%
+    }
+
+    @Test("assessDataQuality returns 0 foodConsistency when no food entries")
+    @MainActor
+    func testNoFoodEntriesConsistency() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Weight entries but no food
+        for day in 0..<10 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.foodConsistency == 0.0)
+    }
+
+    // MARK: INSUFFICIENT Tier Tests
+
+    @Test("assessDataQuality returns INSUFFICIENT when weight count below threshold")
+    @MainActor
+    func testInsufficientWeightCount() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Only 2 weight entries (threshold is 3)
+        for day in [0, 7] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // Plenty of food entries
+        for day in 0..<7 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .insufficient)
+        #expect(assessment.weightEntryCount == 2)
+    }
+
+    @Test("assessDataQuality returns INSUFFICIENT when food consistency below threshold")
+    @MainActor
+    func testInsufficientFoodConsistency() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 10 weight entries spanning 10 days
+        for day in 0..<10 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // Only 4 food entries (4/9 = 44% < 50%)
+        for day in 0..<4 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .insufficient)
+        #expect(assessment.foodConsistency < 0.5)
+    }
+
+    @Test("assessDataQuality returns INSUFFICIENT when day span below threshold")
+    @MainActor
+    func testInsufficientDaySpan() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 5 weight entries but only spanning 6 days (threshold is 7)
+        for day in [0, 1, 3, 4, 6] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // Food on all 6 days
+        for day in 0..<7 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .insufficient)
+        #expect(assessment.daySpan == 6)
+    }
+
+    // MARK: MINIMUM Tier Tests
+
+    @Test("assessDataQuality returns MINIMUM for data just meeting thresholds")
+    @MainActor
+    func testMinimumTierJustMeetingThresholds() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Exactly 3 weight entries spanning exactly 7 days
+        for day in [0, 3, 7] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // 4 food days out of 7 = 57% (just above 50%)
+        for day in [0, 2, 4, 6] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .minimum)
+        #expect(assessment.weightEntryCount >= 3)
+        #expect(assessment.daySpan >= 7)
+        #expect(assessment.foodConsistency >= 0.5)
+    }
+
+    // MARK: GOOD Tier Tests
+
+    @Test("assessDataQuality returns GOOD when weight count >= 7")
+    @MainActor
+    func testGoodTierByWeightCount() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 8 weight entries spanning 8 days
+        for day in 0..<8 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // 4 food days (57%, below 60% but doesn't matter for GOOD)
+        for day in [0, 2, 4, 6] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .good)
+        #expect(assessment.weightEntryCount >= 7)
+    }
+
+    @Test("assessDataQuality returns GOOD when food consistency >= 60%")
+    @MainActor
+    func testGoodTierByFoodConsistency() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 4 weight entries (below 7 threshold)
+        for day in [0, 3, 5, 8] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // 5 food days out of 8 = 62.5% (above 60%)
+        for day in 0..<5 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .good)
+        #expect(assessment.foodConsistency >= 0.6)
+    }
+
+    // MARK: EXCELLENT Tier Tests
+
+    @Test("assessDataQuality returns EXCELLENT for optimal data")
+    @MainActor
+    func testExcellentTier() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 21 weight entries spanning 21 days (>= 14 entries, >= 14 day span)
+        for day in 0..<21 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // 16 food days out of 20 = 80% (>= 75%)
+        for day in 0..<16 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .excellent)
+        #expect(assessment.weightEntryCount >= 14)
+        #expect(assessment.daySpan >= 14)
+        #expect(assessment.foodConsistency >= 0.75)
+    }
+
+    // MARK: Improvement Tips Tests
+
+    @Test("INSUFFICIENT tier generates correct improvement tips")
+    @MainActor
+    func testInsufficientTierImprovementTips() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 2 weight entries spanning 5 days
+        for day in [0, 5] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // 2 food days out of 5 = 40%
+        for day in [0, 2] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 400.0,
+                    proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .insufficient)
+        #expect(assessment.improvementTips.count >= 1)
+
+        // Should include tip about weight entries (need 1 more)
+        let hasWeightTip = assessment.improvementTips.contains { $0.contains("weight") }
+        #expect(hasWeightTip)
+
+        // Should include tip about day span (need 2 more days: 7 - 5 = 2)
+        let hasDaysTip = assessment.improvementTips.contains { $0.contains("day") }
+        #expect(hasDaysTip)
+    }
+
+    // MARK: Adaptive TDEE Confidence Ceiling Tests
+
+    @Test("calculateAdaptiveTDEE caps confidence at MINIMUM tier ceiling")
+    @MainActor
+    func testAdaptiveTDEEMinimumConfidenceCeiling() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+        goal.initialEstimatedTDEE = 2500.0
+
+        // Create MINIMUM tier data
+        for day in [0, 3, 7] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0 - Double(day) * 0.05))
+        }
+
+        // 4 food days (57%)
+        for day in [0, 2, 4, 6] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(
+                FoodEntry(
+                    foodName: "Test", mealSection: .breakfast, loggedAt: date,
+                    servingGrams: 100.0, caloriesPer100g: 2000.0,
+                    proteinPer100g: 50.0, carbsPer100g: 200.0, fatPer100g: 80.0
+                ))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let result = try await service.calculateAdaptiveTDEE(goal: goal)
+
+        // Confidence should be capped at 0.5 for MINIMUM tier
+        #expect(result.confidence <= DataQuality.minimum.confidenceCeiling)
+        #expect(result.dataQuality.quality == .minimum)
+    }
+
+    @Test("calculateAdaptiveTDEE throws for INSUFFICIENT data")
+    @MainActor
+    func testAdaptiveTDEEThrowsForInsufficientData() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        let user = createTestUser(in: context)
+        let goal = createTestGoal(for: user, in: context)
+        goal.initialEstimatedTDEE = 2500.0
+
+        // Only 2 weight entries
+        for day in [0, 3] {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+
+        await #expect(throws: TDEEServiceError.self) {
+            _ = try await service.calculateAdaptiveTDEE(goal: goal)
+        }
+    }
+
+    // MARK: Edge Cases
+
+    @Test("assessDataQuality handles empty database gracefully")
+    @MainActor
+    func testEmptyDatabaseAssessment() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        #expect(assessment.quality == .insufficient)
+        #expect(assessment.weightEntryCount == 0)
+        #expect(assessment.daySpan == 0)
+        #expect(assessment.foodConsistency == 0.0)
+    }
+
+    @Test("assessDataQuality handles multiple food entries on same day correctly")
+    @MainActor
+    func testMultipleFoodEntriesSameDay() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 10 weight entries
+        for day in 0..<10 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            context.insert(WeightEntry(timestamp: date, weightKg: 80.0))
+        }
+
+        // 3 meals per day for 7 days = 21 entries but only 7 unique days
+        for day in 0..<7 {
+            let date = calendar.date(byAdding: .day, value: -day, to: now)!
+            for meal in [MealSection.breakfast, .lunch, .dinner] {
+                context.insert(
+                    FoodEntry(
+                        foodName: "Test", mealSection: meal, loggedAt: date,
+                        servingGrams: 100.0, caloriesPer100g: 400.0,
+                        proteinPer100g: 25.0, carbsPer100g: 50.0, fatPer100g: 15.0
+                    ))
+            }
+        }
+        try context.save()
+
+        let service = TDEEService(context: context)
+        let assessment = await service.assessDataQuality()
+
+        // Should count unique days, not total entries
+        // 7 unique days / 9 day span ≈ 77.8%
+        #expect(assessment.foodConsistency > 0.7)
+        #expect(assessment.foodConsistency < 1.0)
+    }
 }

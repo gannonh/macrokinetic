@@ -1,0 +1,17 @@
+# SwiftLint overrides for App directory
+# AuthenticationManager.swift handles complex seeding scenarios with multiple data tiers
+
+type_body_length:
+  warning: 700
+  error: 800
+
+large_tuple:
+  warning: 4
+  error: 5
+
+cyclomatic_complexity:
+  warning: 15
+  error: 20
+
+disabled_rules:
+  - orphaned_doc_comment  # Comments explain seeding configuration

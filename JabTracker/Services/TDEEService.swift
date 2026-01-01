@@ -10,6 +10,83 @@ import Foundation
 import OSLog
 import SwiftData
 
+// MARK: - Data Quality Types
+
+/// Data quality tier for progressive accuracy
+enum DataQuality: String, Codable, CaseIterable {
+    case insufficient
+    case minimum
+    case good
+    case excellent
+
+    var displayName: String {
+        switch self {
+        case .insufficient: return "Insufficient"
+        case .minimum: return "Limited"
+        case .good: return "Good"
+        case .excellent: return "Excellent"
+        }
+    }
+
+    /// Maximum confidence score for this tier
+    var confidenceCeiling: Double {
+        switch self {
+        case .insufficient: return 0.0
+        case .minimum: return 0.5
+        case .good: return 0.7
+        case .excellent: return 1.0
+        }
+    }
+
+    /// Whether check-in is available at this tier
+    var allowsCheckIn: Bool {
+        self != .insufficient
+    }
+
+    /// Color name for UI indicator
+    var indicatorColor: String {
+        switch self {
+        case .insufficient: return "gray"
+        case .minimum: return "yellow"
+        case .good: return "blue"
+        case .excellent: return "green"
+        }
+    }
+
+    /// SF Symbol for UI
+    var iconName: String {
+        switch self {
+        case .insufficient: return "exclamationmark.circle"
+        case .minimum: return "exclamationmark.triangle"
+        case .good: return "checkmark.circle"
+        case .excellent: return "checkmark.seal.fill"
+        }
+    }
+}
+
+/// Assessment of current data quality with improvement tips
+struct DataQualityAssessment {
+    let quality: DataQuality
+    let weightEntryCount: Int
+    let foodConsistency: Double
+    let daySpan: Int
+    let improvementTips: [String]
+
+    /// What the user needs to reach the next tier
+    var nextTierRequirements: String? {
+        switch quality {
+        case .insufficient:
+            return "Log weight 3+ times and track meals on 50%+ of days"
+        case .minimum:
+            return "Log weight daily and track meals on 60%+ of days"
+        case .good:
+            return "Continue for 2 more weeks with 75%+ meal tracking"
+        case .excellent:
+            return nil  // Already at max
+        }
+    }
+}
+
 // MARK: - Types
 
 /// Result of adaptive TDEE calculation
@@ -20,6 +97,7 @@ struct AdaptiveTDEEResult {
     let averageDailyIntake: Double
     let daysWithData: Int
     let hasMetabolicAdaptation: Bool
+    let dataQuality: DataQualityAssessment
 
     var isHighConfidence: Bool { confidence >= 0.7 }
 }
@@ -29,8 +107,7 @@ enum TDEEServiceError: LocalizedError {
     case missingUserData(String)
     case invalidUserData(String)
     case noWeightData
-    case insufficientWeightData(required: Int, actual: Int)
-    case insufficientFoodData(consistency: Double)
+    case insufficientData(assessment: DataQualityAssessment)
     case cannotDetermineWeightTrend
     case calculationFailed
     case dateCalculationFailed
@@ -43,10 +120,8 @@ enum TDEEServiceError: LocalizedError {
             return "Please check your \(field) value in Settings."
         case .noWeightData:
             return "Please log your weight to calculate TDEE."
-        case .insufficientWeightData(let required, let actual):
-            return "Need at least \(required) days of weight data. You have \(actual) days."
-        case .insufficientFoodData(let consistency):
-            return "Need to log food on at least 70% of days. Current: \(Int(consistency * 100))%."
+        case .insufficientData(let assessment):
+            return assessment.nextTierRequirements ?? "Need more tracking data."
         case .cannotDetermineWeightTrend:
             return "Cannot determine weight trend from available data."
         case .calculationFailed:
@@ -54,6 +129,14 @@ enum TDEEServiceError: LocalizedError {
         case .dateCalculationFailed:
             return "Unable to calculate date range. Please try again."
         }
+    }
+
+    /// Get the data quality assessment if this is an insufficient data error
+    var dataQualityAssessment: DataQualityAssessment? {
+        if case .insufficientData(let assessment) = self {
+            return assessment
+        }
+        return nil
     }
 }
 
@@ -78,8 +161,14 @@ final class TDEEService {
 
     // Configuration (immutable after initialization)
     let ewmaAlpha: Double
-    let minimumDaysForAdaptive: Int
-    let minimumConsistencyForAdaptive: Double
+
+    // Tiered thresholds for progressive accuracy
+    let absoluteMinimumWeightEntries: Int
+    let absoluteMinimumFoodConsistency: Double
+    let absoluteMinimumDaySpan: Int
+    let optimalWeightEntries: Int
+    let optimalFoodConsistency: Double
+    let lookbackDays: Int
 
     // MARK: - Initialization
 
@@ -88,15 +177,23 @@ final class TDEEService {
         engine: TDEECalculationEngine = TDEECalculationEngine(),
         metricsService: MetricsService? = nil,
         ewmaAlpha: Double = 0.2,
-        minimumDaysForAdaptive: Int = 14,
-        minimumConsistencyForAdaptive: Double = 0.7
+        absoluteMinimumWeightEntries: Int = 3,
+        absoluteMinimumFoodConsistency: Double = 0.5,
+        absoluteMinimumDaySpan: Int = 7,
+        optimalWeightEntries: Int = 14,
+        optimalFoodConsistency: Double = 0.75,
+        lookbackDays: Int = 28
     ) {
         self.context = context
         self.engine = engine
         self.metricsService = metricsService ?? MetricsService(context: context)
         self.ewmaAlpha = ewmaAlpha
-        self.minimumDaysForAdaptive = minimumDaysForAdaptive
-        self.minimumConsistencyForAdaptive = minimumConsistencyForAdaptive
+        self.absoluteMinimumWeightEntries = absoluteMinimumWeightEntries
+        self.absoluteMinimumFoodConsistency = absoluteMinimumFoodConsistency
+        self.absoluteMinimumDaySpan = absoluteMinimumDaySpan
+        self.optimalWeightEntries = optimalWeightEntries
+        self.optimalFoodConsistency = optimalFoodConsistency
+        self.lookbackDays = lookbackDays
     }
 
     // MARK: - Initial TDEE
@@ -166,41 +263,128 @@ final class TDEEService {
 
 extension TDEEService {
 
-    /// Calculate adaptive TDEE from historical data
+    /// Assess data quality for check-in without attempting full calculation
+    /// - Parameter lookbackDays: Number of days to analyze (default uses service's lookbackDays)
+    /// - Returns: DataQualityAssessment with tier and improvement tips
+    func assessDataQuality(lookbackDays: Int? = nil) async -> DataQualityAssessment {
+        let days = lookbackDays ?? self.lookbackDays
+        guard let (startDate, endDate) = try? getDateRange(lookbackDays: days) else {
+            return createInsufficientAssessment(weightCount: 0, foodConsistency: 0, daySpan: 0)
+        }
+
+        // Get raw data counts
+        let weightEntries = (try? await metricsService.getWeightEntries(from: startDate, to: endDate)) ?? []
+        let foodEntries = (try? await getFoodEntries(from: startDate, to: endDate)) ?? []
+
+        let weightCount = weightEntries.count
+        let uniqueDaysWithFood = Set(foodEntries.map { Calendar.current.startOfDay(for: $0.loggedAt) }).count
+
+        // Calculate actual day span from weight entries
+        let daySpan: Int
+        if let first = weightEntries.min(by: { $0.timestamp < $1.timestamp }),
+            let last = weightEntries.max(by: { $0.timestamp < $1.timestamp })
+        {
+            daySpan = max(
+                1, Calendar.current.dateComponents([.day], from: first.timestamp, to: last.timestamp).day ?? 0)
+        } else {
+            daySpan = 0
+        }
+
+        // Calculate food consistency based on actual tracking span, not full lookback window
+        // This ensures users with shorter data spans are fairly assessed
+        let foodConsistency = daySpan > 0 ? Double(uniqueDaysWithFood) / Double(daySpan) : 0
+
+        return createDataQualityAssessment(
+            weightCount: weightCount,
+            foodConsistency: foodConsistency,
+            daySpan: daySpan
+        )
+    }
+
+    /// Calculate adaptive TDEE from historical data with progressive accuracy
     /// - Parameters:
     ///   - goal: NutritionGoal with initial TDEE estimate
-    ///   - lookbackDays: Number of days to analyze (default 28)
-    /// - Returns: AdaptiveTDEEResult with calculated values
-    /// - Throws: TDEEServiceError if insufficient data
+    ///   - lookbackDays: Number of days to analyze (default uses service's lookbackDays)
+    /// - Returns: AdaptiveTDEEResult with calculated values and data quality
+    /// - Throws: TDEEServiceError only for truly unrecoverable errors (not data thresholds)
     func calculateAdaptiveTDEE(
         goal: NutritionGoal,
-        lookbackDays: Int = 28
+        lookbackDays: Int? = nil
     ) async throws -> AdaptiveTDEEResult {
-        let (startDate, endDate) = try getDateRange(lookbackDays: lookbackDays)
+        let days = lookbackDays ?? self.lookbackDays
+        let (startDate, endDate) = try getDateRange(lookbackDays: days)
 
-        // Get and validate weight data
-        let (smoothedWeights, changeRate) = try await getWeightTrendData(
-            from: startDate, to: endDate
+        // Get weight data (without throwing for threshold)
+        let weightEntries = try await metricsService.getWeightEntries(from: startDate, to: endDate)
+
+        // Get food data
+        let foodEntries = try await getFoodEntries(from: startDate, to: endDate)
+        let uniqueDaysWithFood = Set(foodEntries.map { Calendar.current.startOfDay(for: $0.loggedAt) }).count
+
+        // Calculate day span first (needed for food consistency)
+        let daySpan: Int
+        if let first = weightEntries.min(by: { $0.timestamp < $1.timestamp }),
+            let last = weightEntries.max(by: { $0.timestamp < $1.timestamp })
+        {
+            daySpan = max(
+                1, Calendar.current.dateComponents([.day], from: first.timestamp, to: last.timestamp).day ?? 0)
+        } else {
+            daySpan = 0
+        }
+
+        // Calculate food consistency based on actual tracking span, not full lookback window
+        let foodConsistency = daySpan > 0 ? Double(uniqueDaysWithFood) / Double(daySpan) : 0
+
+        // Assess data quality
+        let dataQuality = createDataQualityAssessment(
+            weightCount: weightEntries.count,
+            foodConsistency: foodConsistency,
+            daySpan: daySpan
         )
 
-        // Get and validate food data
-        let (averageDailyIntake, uniqueDaysWithFood) = try await getFoodIntakeData(
-            from: startDate, to: endDate, lookbackDays: lookbackDays
-        )
+        // If insufficient, throw with helpful message
+        guard dataQuality.quality != .insufficient else {
+            throw TDEEServiceError.insufficientData(assessment: dataQuality)
+        }
 
-        // Calculate adaptive TDEE
-        let tdee = try calculateTDEEFromData(
-            smoothedWeights: smoothedWeights,
+        // Calculate weight trend (may still throw if data is corrupted)
+        let weights = weightEntries.sorted { $0.timestamp < $1.timestamp }.map { ($0.timestamp, $0.weightKg) }
+        let smoothedWeights = try engine.calculateEWMA(weights: weights, alpha: ewmaAlpha)
+
+        let changeRate: Double
+        do {
+            changeRate = try engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
+        } catch {
+            // If we can't determine trend, use 0 (maintenance assumption)
+            Self.logger.warning("Could not determine weight trend, assuming maintenance")
+            changeRate = 0
+        }
+
+        // Calculate average intake
+        let totalCalories = foodEntries.reduce(0.0) { $0 + $1.calories }
+        let averageDailyIntake = uniqueDaysWithFood > 0 ? totalCalories / Double(uniqueDaysWithFood) : 0
+
+        // Calculate TDEE
+        guard let firstWeight = smoothedWeights.first?.smoothedWeight,
+            let lastWeight = smoothedWeights.last?.smoothedWeight
+        else {
+            throw TDEEServiceError.cannotDetermineWeightTrend
+        }
+
+        let weightChangeKg = lastWeight - firstWeight
+        let tdee = try engine.calculateAdaptiveTDEE(
             averageDailyIntake: averageDailyIntake,
-            lookbackDays: lookbackDays
+            weightChangeKg: weightChangeKg,
+            durationDays: days
         )
 
-        // Calculate confidence and adaptation
-        let confidence = engine.calculateConfidenceScore(
-            durationDays: lookbackDays,
+        // Calculate raw confidence, then cap by tier
+        let rawConfidence = engine.calculateConfidenceScore(
+            durationDays: days,
             daysWithData: uniqueDaysWithFood,
             weightChangeRateKgPerWeek: changeRate
         )
+        let confidence = min(rawConfidence, dataQuality.quality.confidenceCeiling)
 
         let expectedTDEE = goal.initialEstimatedTDEE ?? tdee
         let hasMetabolicAdaptation = engine.detectMetabolicAdaptation(
@@ -209,7 +393,10 @@ extension TDEEService {
         )
 
         Self.logger.debug(
-            "Adaptive TDEE: \(Int(tdee)) kcal, confidence: \(Int(confidence * 100))%"
+            """
+            Adaptive TDEE: \(Int(tdee)) kcal, confidence: \(Int(confidence * 100))%, \
+            quality: \(dataQuality.quality.displayName)
+            """
         )
 
         return AdaptiveTDEEResult(
@@ -218,7 +405,8 @@ extension TDEEService {
             weightChangeRateKgPerWeek: changeRate,
             averageDailyIntake: averageDailyIntake,
             daysWithData: uniqueDaysWithFood,
-            hasMetabolicAdaptation: hasMetabolicAdaptation
+            hasMetabolicAdaptation: hasMetabolicAdaptation,
+            dataQuality: dataQuality
         )
     }
 
@@ -274,90 +462,133 @@ extension TDEEService {
         return (startDate, endDate)
     }
 
-    private func getWeightTrendData(
-        from startDate: Date,
-        to endDate: Date
-    ) async throws -> (smoothed: [(date: Date, smoothedWeight: Double)], changeRate: Double) {
-        let weightEntries = try await metricsService.getWeightEntries(from: startDate, to: endDate)
+    // MARK: - Data Quality Assessment
 
-        guard weightEntries.count >= minimumDaysForAdaptive else {
-            throw TDEEServiceError.insufficientWeightData(
-                required: minimumDaysForAdaptive,
-                actual: weightEntries.count
-            )
-        }
+    /// Determine data quality tier based on thresholds
+    private func createDataQualityAssessment(
+        weightCount: Int,
+        foodConsistency: Double,
+        daySpan: Int
+    ) -> DataQualityAssessment {
+        let quality = determineDataQualityTier(
+            weightCount: weightCount,
+            foodConsistency: foodConsistency,
+            daySpan: daySpan
+        )
 
-        let weights =
-            weightEntries
-            .sorted { $0.timestamp < $1.timestamp }
-            .map { ($0.timestamp, $0.weightKg) }
+        let tips = generateImprovementTips(
+            quality: quality,
+            weightCount: weightCount,
+            foodConsistency: foodConsistency,
+            daySpan: daySpan
+        )
 
-        let smoothedWeights = try engine.calculateEWMA(weights: weights, alpha: ewmaAlpha)
-
-        let changeRate: Double
-        do {
-            changeRate = try engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
-        } catch let underlyingError {
-            Self.logger.error("Weight trend calculation failed: \(underlyingError.localizedDescription)")
-            throw TDEEServiceError.cannotDetermineWeightTrend
-        }
-
-        return (smoothedWeights, changeRate)
+        return DataQualityAssessment(
+            quality: quality,
+            weightEntryCount: weightCount,
+            foodConsistency: foodConsistency,
+            daySpan: daySpan,
+            improvementTips: tips
+        )
     }
 
-    private func getFoodIntakeData(
-        from startDate: Date,
-        to endDate: Date,
-        lookbackDays: Int
-    ) async throws -> (averageIntake: Double, daysWithData: Int) {
-        let foodEntries = try await getFoodEntries(from: startDate, to: endDate)
+    /// Convenience for creating insufficient assessment
+    private func createInsufficientAssessment(
+        weightCount: Int,
+        foodConsistency: Double,
+        daySpan: Int
+    ) -> DataQualityAssessment {
+        let tips = generateImprovementTips(
+            quality: .insufficient,
+            weightCount: weightCount,
+            foodConsistency: foodConsistency,
+            daySpan: daySpan
+        )
 
-        let uniqueDaysWithFood = Set(
-            foodEntries.map {
-                Calendar.current.startOfDay(for: $0.loggedAt)
-            }
-        ).count
-
-        let consistency = Double(uniqueDaysWithFood) / Double(lookbackDays)
-        guard consistency >= minimumConsistencyForAdaptive else {
-            throw TDEEServiceError.insufficientFoodData(consistency: consistency)
-        }
-
-        let totalCalories = foodEntries.reduce(0.0) { $0 + $1.calories }
-        // Calculate average based on days with data, not total lookback days
-        // This gives accurate per-day intake for TDEE calculation
-        let averageDailyIntake =
-            uniqueDaysWithFood > 0
-            ? totalCalories / Double(uniqueDaysWithFood)
-            : 0.0
-
-        return (averageDailyIntake, uniqueDaysWithFood)
+        return DataQualityAssessment(
+            quality: .insufficient,
+            weightEntryCount: weightCount,
+            foodConsistency: foodConsistency,
+            daySpan: daySpan,
+            improvementTips: tips
+        )
     }
 
-    private func calculateTDEEFromData(
-        smoothedWeights: [(date: Date, smoothedWeight: Double)],
-        averageDailyIntake: Double,
-        lookbackDays: Int
-    ) throws -> Double {
-        guard let firstWeight = smoothedWeights.first?.smoothedWeight,
-            let lastWeight = smoothedWeights.last?.smoothedWeight
+    /// Determine which quality tier the data falls into
+    private func determineDataQualityTier(
+        weightCount: Int,
+        foodConsistency: Double,
+        daySpan: Int
+    ) -> DataQuality {
+        // Must meet ALL minimum thresholds to proceed
+        guard weightCount >= absoluteMinimumWeightEntries,
+            foodConsistency >= absoluteMinimumFoodConsistency,
+            daySpan >= absoluteMinimumDaySpan
         else {
-            throw TDEEServiceError.cannotDetermineWeightTrend
+            return .insufficient
         }
 
-        let weightChangeKg = lastWeight - firstWeight
-
-        do {
-            return try engine.calculateAdaptiveTDEE(
-                averageDailyIntake: averageDailyIntake,
-                weightChangeKg: weightChangeKg,
-                durationDays: lookbackDays
-            )
-        } catch let underlyingError {
-            Self.logger.error("Adaptive TDEE calculation failed: \(underlyingError.localizedDescription)")
-            throw TDEEServiceError.calculationFailed
+        // Excellent: optimal weight + optimal food + 14+ days
+        if weightCount >= optimalWeightEntries && foodConsistency >= optimalFoodConsistency && daySpan >= 14 {
+            return .excellent
         }
+
+        // Good: 7+ weights OR 60%+ food consistency
+        if weightCount >= 7 || foodConsistency >= 0.6 {
+            return .good
+        }
+
+        // Minimum: meets absolute minimums but not good
+        return .minimum
     }
+
+    /// Generate improvement tips based on current state
+    private func generateImprovementTips(
+        quality: DataQuality,
+        weightCount: Int,
+        foodConsistency: Double,
+        daySpan: Int
+    ) -> [String] {
+        var tips: [String] = []
+
+        switch quality {
+        case .insufficient:
+            if weightCount < absoluteMinimumWeightEntries {
+                let needed = absoluteMinimumWeightEntries - weightCount
+                tips.append("Log your weight \(needed) more time\(needed == 1 ? "" : "s")")
+            }
+            if foodConsistency < absoluteMinimumFoodConsistency {
+                let percentNeeded = Int((absoluteMinimumFoodConsistency - foodConsistency) * 100)
+                tips.append("Track meals \(percentNeeded)% more consistently")
+            }
+            if daySpan < absoluteMinimumDaySpan {
+                let daysNeeded = absoluteMinimumDaySpan - daySpan
+                tips.append("Continue tracking for \(daysNeeded) more day\(daysNeeded == 1 ? "" : "s")")
+            }
+
+        case .minimum:
+            tips.append("Log weight daily for better accuracy")
+            if foodConsistency < 0.6 {
+                tips.append("Track meals on more days to improve results")
+            }
+
+        case .good:
+            if weightCount < optimalWeightEntries {
+                tips.append("Keep tracking - \(optimalWeightEntries - weightCount) more days for best accuracy")
+            }
+            if foodConsistency < optimalFoodConsistency {
+                let percentNeeded = Int((optimalFoodConsistency - foodConsistency) * 100)
+                tips.append("Increase meal tracking by \(percentNeeded)% for optimal results")
+            }
+
+        case .excellent:
+            tips.append("Great job! Your data quality is excellent")
+        }
+
+        return tips
+    }
+
+    // MARK: - Data Fetching
 
     /// Get food entries for a date range
     private func getFoodEntries(from startDate: Date, to endDate: Date) async throws -> [FoodEntry] {

@@ -34,6 +34,8 @@ struct StrategyView: View {
     @State private var recalculationError: String?
     @State private var showingProgramOptimization = false
     @State private var checkInError: String?
+    @State private var dataQualityAssessment: DataQualityAssessment?
+    @State private var isLoadingDataQuality = false
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -195,8 +197,9 @@ struct StrategyView: View {
                         applyOptimization(result, to: goal)
                         showingProgramOptimization = false
                     },
-                    onModify: { _ in
-                        // Dismiss optimization, chain to program edit
+                    onModify: { result in
+                        // Apply optimization first so new TDEE is saved, then let user modify settings
+                        applyOptimization(result, to: goal)
                         showingProgramOptimization = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + SheetConstants.chainedSheetDelay) {
                             if let program = goal.program {
@@ -264,6 +267,10 @@ struct StrategyView: View {
             let isCheckInDue = checkInService.isCheckInDue(for: goal)
             let progress = max(0, min(1, Double(7 - daysUntil) / 7.0))
 
+            // Check if data quality allows check-in
+            let canCheckIn = dataQualityAssessment?.quality.allowsCheckIn ?? true
+
+            // Main countdown card content
             let cardContent = HStack(spacing: 16) {
                 // Countdown ring
                 ZStack {
@@ -274,16 +281,22 @@ struct StrategyView: View {
                     Circle()
                         .trim(from: 0, to: isCheckInDue ? 1.0 : progress)
                         .stroke(
-                            isCheckInDue ? Color.green : Color.blue,
+                            checkInRingColor(isCheckInDue: isCheckInDue, canCheckIn: canCheckIn),
                             style: StrokeStyle(lineWidth: 6, lineCap: .round)
                         )
                         .frame(width: 64, height: 64)
                         .rotationEffect(.degrees(-90))
 
                     if isCheckInDue {
-                        Image(systemName: "checkmark")
-                            .font(.title2.bold())
-                            .foregroundColor(.green)
+                        if canCheckIn {
+                            Image(systemName: "checkmark")
+                                .font(.title2.bold())
+                                .foregroundColor(.green)
+                        } else {
+                            Image(systemName: "lock.fill")
+                                .font(.title2.bold())
+                                .foregroundColor(.secondary)
+                        }
                     } else {
                         VStack(spacing: 0) {
                             Text("\(daysUntil)")
@@ -297,12 +310,21 @@ struct StrategyView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     if isCheckInDue {
-                        Text("Check-In Ready")
-                            .font(.headline)
-                            .foregroundColor(.green)
-                        Text("Tap to optimize your program")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        if canCheckIn {
+                            Text("Check-In Ready")
+                                .font(.headline)
+                                .foregroundColor(.green)
+                            Text("Tap to optimize your program")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Weekly Check-In")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            Text("More data needed")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
                     } else {
                         Text("Next Check-In")
                             .font(.headline)
@@ -315,7 +337,7 @@ struct StrategyView: View {
 
                 Spacer()
 
-                if isCheckInDue {
+                if isCheckInDue && canCheckIn {
                     Image(systemName: "chevron.right")
                         .foregroundColor(.secondary)
                 }
@@ -326,7 +348,8 @@ struct StrategyView: View {
                     .fill(Color(.systemBackground))
             )
 
-            if isCheckInDue {
+            // Render card (tappable if check-in is available)
+            if isCheckInDue && canCheckIn {
                 Button {
                     showingProgramOptimization = true
                 } label: {
@@ -338,6 +361,86 @@ struct StrategyView: View {
             } else {
                 cardContent
                     .accessibilityIdentifier("check-in-countdown-card")
+            }
+
+            // Show improvement tips when check-in is due but data is insufficient
+            if isCheckInDue, !canCheckIn, let assessment = dataQualityAssessment {
+                improvementTipsCard(assessment: assessment)
+                    .onAppear {
+                        loadDataQuality()
+                    }
+            } else {
+                // Invisible view to attach modifiers when tips aren't shown
+                Color.clear
+                    .frame(height: 0)
+                    .onAppear {
+                        if isCheckInDue {
+                            loadDataQuality()
+                        }
+                    }
+                    .onChange(of: isCheckInDue) { _, newValue in
+                        if newValue {
+                            loadDataQuality()
+                        }
+                    }
+            }
+        }
+    }
+
+    /// Color for the check-in ring based on state
+    private func checkInRingColor(isCheckInDue: Bool, canCheckIn: Bool) -> Color {
+        if isCheckInDue {
+            return canCheckIn ? .green : .gray
+        }
+        return .blue
+    }
+
+    /// Card showing what users need to do to enable check-in
+    private func improvementTipsCard(assessment: DataQualityAssessment) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundColor(.blue)
+                Text("To Enable Check-In")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(assessment.improvementTips, id: \.self) { tip in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "circle.fill")
+                            .font(.system(size: 6))
+                            .foregroundColor(.blue)
+                            .padding(.top, 6)
+                        Text(tip)
+                            .font(.subheadline)
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+        )
+        .accessibilityIdentifier("improvement-tips-card")
+    }
+
+    /// Load data quality assessment asynchronously
+    private func loadDataQuality() {
+        guard !isLoadingDataQuality else { return }
+        isLoadingDataQuality = true
+
+        Task {
+            let service = WeeklyCheckInService(context: modelContext)
+            let assessment = await service.assessDataQuality()
+
+            await MainActor.run {
+                dataQualityAssessment = assessment
+                isLoadingDataQuality = false
             }
         }
     }

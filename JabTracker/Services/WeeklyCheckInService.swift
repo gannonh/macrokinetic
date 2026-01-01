@@ -22,6 +22,9 @@ struct ProgramOptimizationResult {
     let proposedTDEE: Double?  // nil if insufficient data
     let tdeeConfidence: Double  // 0-1 from adaptive calculation
 
+    // Data quality for progressive accuracy
+    let dataQuality: DataQualityAssessment
+
     // Weight analysis
     let actualWeightChangeKg: Double?
     let goalWeightChangeKg: Double  // From goal pace
@@ -38,6 +41,11 @@ struct ProgramOptimizationResult {
     /// Whether there are actionable changes to apply
     var hasChanges: Bool {
         proposedTDEE != nil && proposedTDEE != currentTDEE
+    }
+
+    /// Whether the result has high enough confidence for strong recommendations
+    var isHighConfidence: Bool {
+        dataQuality.quality == .excellent || dataQuality.quality == .good
     }
 }
 
@@ -85,9 +93,6 @@ final class WeeklyCheckInService {
 
     /// Minimum days since last check-in before a new one is due
     private let checkInIntervalDays = 7
-
-    /// Minimum confidence threshold to recommend changes
-    private let minimumConfidenceForChanges = 0.7
 
     /// Tolerance for being "on track" (kg/week difference from goal)
     private let onTrackToleranceKgPerWeek = 0.1
@@ -165,12 +170,27 @@ final class WeeklyCheckInService {
         return daysUntilDay
     }
 
+    // MARK: - Data Quality Check
+
+    /// Check data quality before attempting check-in
+    /// - Returns: DataQualityAssessment for UI display
+    func assessDataQuality() async -> DataQualityAssessment {
+        await tdeeService.assessDataQuality()
+    }
+
+    /// Check if there's enough data to perform a check-in
+    /// - Returns: True if data quality is at least minimum
+    func canPerformCheckIn() async -> Bool {
+        let assessment = await assessDataQuality()
+        return assessment.quality.allowsCheckIn
+    }
+
     // MARK: - Generate Optimization
 
     /// Generate optimized program based on real user data.
     ///
     /// Uses adaptive TDEE calculation from weight trends + food logs.
-    /// Returns unchanged if insufficient data or already on track.
+    /// Returns with data quality tier - always provides results if minimum data exists.
     ///
     /// - Parameter goal: The nutrition goal to optimize
     /// - Returns: ProgramOptimizationResult with analysis and recommendations
@@ -178,14 +198,22 @@ final class WeeklyCheckInService {
         let calendar = Calendar.current
         let endDate = Date()
         guard let startDate = calendar.date(byAdding: .day, value: -28, to: endDate) else {
-            return createInsufficientDataResult(goal: goal, reason: "Unable to calculate date range")
+            let emptyAssessment = DataQualityAssessment(
+                quality: .insufficient,
+                weightEntryCount: 0,
+                foodConsistency: 0,
+                daySpan: 0,
+                improvementTips: ["Unable to calculate date range"]
+            )
+            return createInsufficientDataResult(goal: goal, dataQuality: emptyAssessment)
         }
 
         let currentTDEE = goal.lastCalculatedTDEE ?? goal.initialEstimatedTDEE ?? 2000
 
         // Try to get adaptive TDEE
         do {
-            let adaptiveResult = try await tdeeService.calculateAdaptiveTDEE(goal: goal, lookbackDays: 28)
+            let adaptiveResult = try await tdeeService.calculateAdaptiveTDEE(goal: goal)
+            let dataQuality = adaptiveResult.dataQuality
 
             // Calculate weight change
             let actualWeightChangeKg = try await calculateActualWeightChange(from: startDate, to: endDate)
@@ -196,14 +224,11 @@ final class WeeklyCheckInService {
             let weeklyGoal = goal.weeklyWeightChangePaceKg
             let isOnTrack = abs(weeklyActual - weeklyGoal) <= onTrackToleranceKgPerWeek
 
-            // Decide on changes
-            if adaptiveResult.confidence < minimumConfidenceForChanges {
-                let confidence = Int(adaptiveResult.confidence * 100)
-                return createInsufficientDataResult(
-                    goal: goal,
-                    reason: "Not enough consistent data to recommend changes (confidence: \(confidence)%)"
-                )
-            }
+            // Generate descriptions based on data quality
+            let qualityPrefix =
+                dataQuality.quality == .minimum
+                ? "Based on limited data: "
+                : ""
 
             if isOnTrack {
                 return ProgramOptimizationResult(
@@ -212,13 +237,14 @@ final class WeeklyCheckInService {
                     currentTDEE: currentTDEE,
                     proposedTDEE: nil,
                     tdeeConfidence: adaptiveResult.confidence,
+                    dataQuality: dataQuality,
                     actualWeightChangeKg: actualWeightChangeKg,
                     goalWeightChangeKg: goalWeightChangeKg,
                     isOnTrack: true,
                     proposedDailyCalories: nil,
                     proposedWeeklyMacros: nil,
-                    changeDescription: "You're on track! Your weight is changing at the expected pace.",
-                    whatNextDescription: "Keep doing what you're doing. We'll check in again next week."
+                    changeDescription: "\(qualityPrefix)You're on track! Your weight is changing at the expected pace.",
+                    whatNextDescription: generateWhatNextDescription(dataQuality: dataQuality, isOnTrack: true)
                 )
             }
 
@@ -235,13 +261,15 @@ final class WeeklyCheckInService {
                 weightKg: goal.startingWeightKg
             )
 
-            let changeDescription = generateChangeDescription(
-                currentTDEE: currentTDEE,
-                proposedTDEE: adaptiveResult.tdee,
-                isOnTrack: isOnTrack,
-                actualWeightChangeKg: actualWeightChangeKg,
-                goalWeightChangeKg: goalWeightChangeKg
-            )
+            let changeDescription =
+                qualityPrefix
+                + generateChangeDescription(
+                    currentTDEE: currentTDEE,
+                    proposedTDEE: adaptiveResult.tdee,
+                    isOnTrack: isOnTrack,
+                    actualWeightChangeKg: actualWeightChangeKg,
+                    goalWeightChangeKg: goalWeightChangeKg
+                )
 
             return ProgramOptimizationResult(
                 periodStart: startDate,
@@ -249,18 +277,44 @@ final class WeeklyCheckInService {
                 currentTDEE: currentTDEE,
                 proposedTDEE: adaptiveResult.tdee,
                 tdeeConfidence: adaptiveResult.confidence,
+                dataQuality: dataQuality,
                 actualWeightChangeKg: actualWeightChangeKg,
                 goalWeightChangeKg: goalWeightChangeKg,
                 isOnTrack: isOnTrack,
                 proposedDailyCalories: proposedCalories,
                 proposedWeeklyMacros: proposedMacros,
                 changeDescription: changeDescription,
-                whatNextDescription: "Accept these changes to adjust your targets, or decline to keep current values."
+                whatNextDescription: generateWhatNextDescription(dataQuality: dataQuality, isOnTrack: false)
             )
+        } catch let error as TDEEServiceError {
+            // Handle insufficient data with quality assessment
+            if let assessment = error.dataQualityAssessment {
+                Self.logger.info("Check-in blocked due to insufficient data: \(assessment.quality.displayName)")
+                return createInsufficientDataResult(goal: goal, dataQuality: assessment)
+            }
+            Self.logger.warning("Adaptive TDEE calculation failed: \(error.localizedDescription)")
+            let fallbackAssessment = await tdeeService.assessDataQuality()
+            return createInsufficientDataResult(goal: goal, dataQuality: fallbackAssessment)
         } catch {
             Self.logger.warning("Adaptive TDEE calculation failed: \(error.localizedDescription)")
-            return createInsufficientDataResult(goal: goal, reason: "Not enough data: \(error.localizedDescription)")
+            let fallbackAssessment = await tdeeService.assessDataQuality()
+            return createInsufficientDataResult(goal: goal, dataQuality: fallbackAssessment)
         }
+    }
+
+    /// Generate "what's next" description based on data quality
+    private func generateWhatNextDescription(dataQuality: DataQualityAssessment, isOnTrack: Bool) -> String {
+        var description =
+            isOnTrack
+            ? "Keep doing what you're doing. "
+            : "Accept these changes to adjust your targets, or decline to keep current values. "
+
+        // Add improvement tip if not excellent
+        if let tip = dataQuality.improvementTips.first, dataQuality.quality != .excellent {
+            description += tip
+        }
+
+        return description
     }
 
     // MARK: - Apply Optimization
@@ -330,10 +384,21 @@ final class WeeklyCheckInService {
 
     // MARK: - Private Helpers
 
-    private func createInsufficientDataResult(goal: NutritionGoal, reason: String) -> ProgramOptimizationResult {
+    private func createInsufficientDataResult(
+        goal: NutritionGoal,
+        dataQuality: DataQualityAssessment
+    ) -> ProgramOptimizationResult {
         let currentTDEE = goal.lastCalculatedTDEE ?? goal.initialEstimatedTDEE ?? 2000
         let endDate = Date()
         let startDate = Calendar.current.date(byAdding: .day, value: -28, to: endDate) ?? endDate
+
+        // Build description from improvement tips
+        let changeDescription: String
+        if dataQuality.improvementTips.isEmpty {
+            changeDescription = "Not enough data to analyze your progress yet."
+        } else {
+            changeDescription = "To unlock check-in:\n• " + dataQuality.improvementTips.joined(separator: "\n• ")
+        }
 
         return ProgramOptimizationResult(
             periodStart: startDate,
@@ -341,13 +406,15 @@ final class WeeklyCheckInService {
             currentTDEE: currentTDEE,
             proposedTDEE: nil,
             tdeeConfidence: 0,
+            dataQuality: dataQuality,
             actualWeightChangeKg: nil,
             goalWeightChangeKg: goal.weeklyWeightChangePaceKg * 4,
             isOnTrack: false,
             proposedDailyCalories: nil,
             proposedWeeklyMacros: nil,
-            changeDescription: reason,
-            whatNextDescription: "Log your weight and food consistently to get personalized recommendations."
+            changeDescription: changeDescription,
+            whatNextDescription: dataQuality.nextTierRequirements
+                ?? "Log your weight and food consistently to get personalized recommendations."
         )
     }
 

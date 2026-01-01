@@ -1,6 +1,6 @@
 # TDEE & Calorie Algorithms
 
-**Last Updated:** 2025-12-31 (Progressive Accuracy Update)
+**Last Updated:** 2025-12-31T21:23:03Z (Food Consistency Fix)
 **Source Files:**
 - `JabTracker/Services/TDEECalculationEngine.swift`
 - `JabTracker/Services/TDEECalculationEngine+Adaptive.swift`
@@ -50,10 +50,10 @@ BMR = (10 × weight_kg) + (6.25 × height_cm) - (5 × age) + adjustment
 ```
 
 **Gender Adjustments:**
-| Gender | Adjustment |
-|--------|------------|
-| Male | +5 |
-| Female | -161 |
+| Gender  | Adjustment    |
+| ------- | ------------- |
+| Male    | +5            |
+| Female  | -161          |
 | Unknown | -78 (average) |
 
 **Example:**
@@ -72,12 +72,12 @@ BMR is multiplied by an activity factor to get TDEE:
 TDEE = BMR × Activity_Multiplier
 ```
 
-| Training Level | Multiplier | Description |
-|----------------|------------|-------------|
-| None | 1.2 | Sedentary - desk job, no exercise |
-| Lifting | 1.55 | Moderately active - resistance training |
-| Cardio | 1.55 | Moderately active - aerobic exercise |
-| Cardio & Lifting | 1.725 | Very active - combined training |
+| Training Level   | Multiplier | Description                             |
+| ---------------- | ---------- | --------------------------------------- |
+| None             | 1.2        | Sedentary - desk job, no exercise       |
+| Lifting          | 1.55       | Moderately active - resistance training |
+| Cardio           | 1.55       | Moderately active - aerobic exercise    |
+| Cardio & Lifting | 1.725      | Very active - combined training         |
 
 **Valid multiplier range:** 1.0 - 2.5 (values outside this are clamped)
 
@@ -90,11 +90,11 @@ TDEE = 1798.75 × 1.55 = 2788 kcal/day
 
 ### Input Validation Ranges
 
-| Parameter | Valid Range | Unit |
-|-----------|-------------|------|
-| Weight | 20 - 500 | kg |
-| Height | 100 - 250 | cm |
-| Age | 10 - 120 | years |
+| Parameter | Valid Range | Unit  |
+| --------- | ----------- | ----- |
+| Weight    | 20 - 500    | kg    |
+| Height    | 100 - 250   | cm    |
+| Age       | 10 - 120    | years |
 
 ---
 
@@ -196,11 +196,11 @@ Confidence = (Duration_Factor × 0.3) + (Consistency_Factor × 0.5) + (Trend_Cla
 
 **Components:**
 
-| Factor | Weight | Calculation | Max at |
-|--------|--------|-------------|--------|
-| Duration | 30% | days / 28 | 28 days |
-| Consistency | 50% | days_with_food / total_days | 100% |
-| Trend Clarity | 20% | \|rate\| / 0.5 | 0.5 kg/week |
+| Factor        | Weight | Calculation                 | Max at      |
+| ------------- | ------ | --------------------------- | ----------- |
+| Duration      | 30%    | days / 28                   | 28 days     |
+| Consistency   | 50%    | days_with_food / total_days | 100%        |
+| Trend Clarity | 20%    | \|rate\| / 0.5              | 0.5 kg/week |
 
 **Examples:**
 
@@ -262,10 +262,10 @@ Target = 2500 + (0.25 × 1100) = 2500 + 275 = 2775 kcal/day
 
 Calorie target is never set below the safety floor:
 
-| Floor Type | Minimum | Use Case |
-|------------|---------|----------|
-| Standard | 1538 kcal | Recommended default |
-| Low | 1025 kcal | With medical supervision |
+| Floor Type | Minimum   | Use Case                 |
+| ---------- | --------- | ------------------------ |
+| Standard   | 1538 kcal | Recommended default      |
+| Low        | 1025 kcal | With medical supervision |
 
 ```
 Final_Target = max(Calculated_Target, Calorie_Floor)
@@ -285,12 +285,12 @@ Protein is calculated based on body weight:
 Protein (g) = Weight_kg × Grams_per_kg
 ```
 
-| Protein Level | g/kg | Description |
-|---------------|------|-------------|
-| Low | 1.2 | Minimal activity |
-| Moderate | 1.6 | Regular activity |
-| High | 2.0 | Strength training |
-| Extra High | 2.4 | Intensive training |
+| Protein Level | g/kg | Description        |
+| ------------- | ---- | ------------------ |
+| Low           | 1.2  | Minimal activity   |
+| Moderate      | 1.6  | Regular activity   |
+| High          | 2.0  | Strength training  |
+| Extra High    | 2.4  | Intensive training |
 
 ### Fat & Carb Distribution
 
@@ -309,12 +309,12 @@ Carb_g = Carb_Calories / 4
 
 ### Diet Preference Percentages
 
-| Diet | Protein | Carbs | Fat |
-|------|---------|-------|-----|
-| Balanced | 30% | 40% | 30% |
-| Low Fat | 30% | 50% | 20% |
-| Low Carb | 30% | 20% | 50% |
-| Keto | 25% | 5% | 70% |
+| Diet     | Protein | Carbs | Fat |
+| -------- | ------- | ----- | --- |
+| Balanced | 30%     | 40%   | 30% |
+| Low Fat  | 30%     | 50%   | 20% |
+| Low Carb | 30%     | 20%   | 50% |
+| Keto     | 25%     | 5%    | 70% |
 
 **Note:** Protein percentage in diet preference is used only for ratio calculation. Actual protein is determined by ProteinLevel × body weight.
 
@@ -352,21 +352,21 @@ Final Macros:
 
 ### TDEEService Configuration
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `ewmaAlpha` | 0.2 | EWMA smoothing factor |
-| `absoluteMinimumWeightEntries` | 3 | Hard minimum to attempt calculation |
-| `absoluteMinimumFoodConsistency` | 0.5 (50%) | Hard minimum food logging |
-| `optimalWeightEntries` | 14 | Optimal for high confidence |
-| `optimalFoodConsistency` | 0.7 (70%) | Optimal food logging |
-| `lookbackDays` | 28 | Analysis window |
+| Parameter                        | Default   | Description                         |
+| -------------------------------- | --------- | ----------------------------------- |
+| `ewmaAlpha`                      | 0.2       | EWMA smoothing factor               |
+| `absoluteMinimumWeightEntries`   | 3         | Hard minimum to attempt calculation |
+| `absoluteMinimumFoodConsistency` | 0.5 (50%) | Hard minimum food logging           |
+| `optimalWeightEntries`           | 14        | Optimal for high confidence         |
+| `optimalFoodConsistency`         | 0.7 (70%) | Optimal food logging                |
+| `lookbackDays`                   | 28        | Analysis window                     |
 
 ### WeeklyCheckInService Configuration
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `checkInIntervalDays` | 7 | Days between check-ins |
-| `onTrackToleranceKgPerWeek` | 0.1 | Tolerance for "on track" determination |
+| Parameter                   | Value | Description                            |
+| --------------------------- | ----- | -------------------------------------- |
+| `checkInIntervalDays`       | 7     | Days between check-ins                 |
+| `onTrackToleranceKgPerWeek` | 0.1   | Tolerance for "on track" determination |
 
 ### On-Track Detection
 
@@ -383,21 +383,40 @@ The system uses tiered data quality levels instead of hard pass/fail thresholds.
 
 ### Data Quality Levels
 
-| Level | Weight Entries | Food Consistency | Time Span | Confidence Range |
-|-------|----------------|------------------|-----------|------------------|
-| **Insufficient** | < 3 | < 50% | < 7 days | N/A (blocked) |
-| **Minimum** | 3-6 | 50-59% | 7+ days | 0.3 - 0.5 |
-| **Good** | 7-13 | 60-74% | 7+ days | 0.5 - 0.7 |
-| **Excellent** | 14+ | 75%+ | 14+ days | 0.7 - 1.0 |
+| Level            | Weight Entries | Food Consistency | Time Span | Confidence Range |
+| ---------------- | -------------- | ---------------- | --------- | ---------------- |
+| **Insufficient** | < 3            | < 50%            | < 7 days  | N/A (blocked)    |
+| **Minimum**      | 3-6            | 50-59%           | 7+ days   | 0.3 - 0.5        |
+| **Good**         | 7-13           | 60-74%           | 7+ days   | 0.5 - 0.7        |
+| **Excellent**    | 14+            | 75%+             | 14+ days  | 0.7 - 1.0        |
 
 ### Tier Behavior
 
-| Level | Check-In Available | Recommendations | UI Indicator |
-|-------|-------------------|-----------------|--------------|
-| **Insufficient** | No | None | "Keep tracking" message with requirements |
-| **Minimum** | Yes | With strong caveats | Yellow/caution indicator |
-| **Good** | Yes | Standard recommendations | Blue/normal indicator |
-| **Excellent** | Yes | High confidence recommendations | Green/confident indicator |
+| Level            | Check-In Available | Recommendations                 | UI Indicator                              |
+| ---------------- | ------------------ | ------------------------------- | ----------------------------------------- |
+| **Insufficient** | No                 | None                            | "Keep tracking" message with requirements |
+| **Minimum**      | Yes                | With strong caveats             | Yellow/caution indicator                  |
+| **Good**         | Yes                | Standard recommendations        | Blue/normal indicator                     |
+| **Excellent**    | Yes                | High confidence recommendations | Green/confident indicator                 |
+
+### How Food Consistency Is Calculated
+
+**Important:** Food consistency is calculated as percentage of the *actual data span*, NOT the full lookback window:
+
+```
+foodConsistency = uniqueDaysWithFood / daySpan
+```
+
+Where:
+- `uniqueDaysWithFood`: Number of distinct days with at least one food entry
+- `daySpan`: Number of days between first and last weight entry
+
+**Example:**
+- User has 10 weight entries spanning 10 days (daySpan = 10)
+- User logged food on 7 of those 10 days
+- Food consistency = 7/10 = 70% → GOOD tier
+
+This ensures users with shorter tracking periods are fairly assessed based on their actual behavior, not penalized for having a shorter history.
 
 ### Improvement Tips by Tier
 
@@ -431,10 +450,10 @@ A check-in is due when ALL conditions are met:
 
 Check-in button state depends on data quality:
 
-| Data Quality | Button State | Card Appearance |
-|--------------|--------------|-----------------|
-| Insufficient | Disabled | Shows "X days until check-in" OR "Need more data" |
-| Minimum+ | Enabled | Shows green checkmark, tappable |
+| Data Quality | Button State | Card Appearance                                   |
+| ------------ | ------------ | ------------------------------------------------- |
+| Insufficient | Disabled     | Shows "X days until check-in" OR "Need more data" |
+| Minimum+     | Enabled      | Shows green checkmark, tappable                   |
 
 ### Optimization Flow (Updated)
 
@@ -465,19 +484,19 @@ Check-in button state depends on data quality:
 
 ### Absolute Minimums (Check-In Blocked Below These)
 
-| Requirement | Minimum | Rationale |
-|-------------|---------|-----------|
-| Weight entries | ≥ 3 | Need start, middle, end for trend |
-| Time span | ≥ 7 days | One full week for weekly rate |
-| Food logging | ≥ 50% of days | Basic intake estimation |
+| Requirement    | Minimum       | Rationale                         |
+| -------------- | ------------- | --------------------------------- |
+| Weight entries | ≥ 3           | Need start, middle, end for trend |
+| Time span      | ≥ 7 days      | One full week for weekly rate     |
+| Food logging   | ≥ 50% of days | Basic intake estimation           |
 
 ### Progressive Thresholds
 
 | Data Quality | Weight | Food | Span | Confidence |
-|--------------|--------|------|------|------------|
-| Minimum | 3+ | 50%+ | 7d+ | ~40% |
-| Good | 7+ | 60%+ | 7d+ | ~60% |
-| Excellent | 14+ | 75%+ | 14d+ | ~85% |
+| ------------ | ------ | ---- | ---- | ---------- |
+| Minimum      | 3+     | 50%+ | 7d+  | ~40%       |
+| Good         | 7+     | 60%+ | 7d+  | ~60%       |
+| Excellent    | 14+    | 75%+ | 14d+ | ~85%       |
 
 ### Confidence Calculation (Updated)
 
@@ -507,6 +526,74 @@ Adaptation_Detected = (Expected_TDEE - Actual_TDEE) / Expected_TDEE > 0.15
 ```
 
 A >15% reduction from expected TDEE suggests metabolic adaptation (body slowing metabolism in response to caloric deficit).
+
+---
+
+## Test Seeding Scenarios
+
+The following launch arguments seed different data conditions for testing the progressive accuracy system.
+
+### Available Flags
+
+| Flag                           | Data Quality | Weight     | Food | Days | Purpose                |
+| ------------------------------ | ------------ | ---------- | ---- | ---- | ---------------------- |
+| `--seed-check-in-insufficient` | Insufficient | 2 entries  | 40%  | 5    | Test blocked state     |
+| `--seed-check-in-minimum`      | Minimum      | 4 entries  | 55%  | 7    | Test low confidence    |
+| `--seed-check-in-good`         | Good         | 10 entries | 65%  | 10   | Test medium confidence |
+| `--seed-check-in-ready`        | Excellent    | 21 entries | 75%  | 28   | Test high confidence   |
+
+### Scenario Details
+
+#### 1. Insufficient Data (`--seed-check-in-insufficient`)
+- **Weight:** 2 entries over 5 days
+- **Food:** 2 of 5 days logged (40%)
+- **Expected:** Check-in card disabled, shows "Need more data" message
+- **UI:** Displays specific requirements to unlock check-in
+
+#### 2. Minimum Data (`--seed-check-in-minimum`)
+- **Weight:** 4 entries over 7 days
+- **Food:** 4 of 7 days logged (~57%)
+- **Expected:** Check-in enabled with yellow/caution indicator
+- **UI:** Shows "Limited data - results may vary" caveat
+- **Confidence:** ~40%
+
+#### 3. Good Data (`--seed-check-in-good`)
+- **Weight:** 10 entries over 10 days
+- **Food:** 7 of 10 days logged (70%)
+- **Expected:** Check-in enabled with blue/normal indicator
+- **UI:** Standard recommendation view
+- **Confidence:** ~60%
+
+#### 4. Excellent Data (`--seed-check-in-ready`)
+- **Weight:** 21 entries over 28 days
+- **Food:** 21 of 28 days logged (75%)
+- **Expected:** Check-in enabled with green/confident indicator
+- **UI:** High confidence recommendations
+- **Confidence:** ~85%
+
+### Combining with Other Flags
+
+All check-in flags require:
+- `--reset-app-data: true` (clears existing data)
+- `--ui-testing: true` (bypasses auth)
+
+Example project.yml configuration:
+```yaml
+run:
+  commandLineArguments:
+    "--reset-app-data": true
+    "--ui-testing": true
+    "--seed-check-in-minimum": true  # Choose one
+```
+
+### Test Matrix
+
+| Scenario     | Card State | Tap Result  | Confidence | Recommendations |
+| ------------ | ---------- | ----------- | ---------- | --------------- |
+| Insufficient | Disabled   | N/A         | N/A        | None            |
+| Minimum      | Enabled    | Opens sheet | ~40%       | With caveats    |
+| Good         | Enabled    | Opens sheet | ~60%       | Standard        |
+| Excellent    | Enabled    | Opens sheet | ~85%       | High confidence |
 
 ---
 
