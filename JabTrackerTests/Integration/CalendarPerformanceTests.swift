@@ -377,7 +377,9 @@ struct CalendarPerformanceTests {
 
         // WHEN: Calculating statistics without schedule integration
         let monthStart = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
-        let monthEnd = Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: monthStart)!
+        // Use end of the last day of the month to include doses created during the day
+        let lastDayOfMonth = Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: monthStart)!
+        let monthEnd = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: lastDayOfMonth)!
 
         let statistics = AdherenceStatisticsCalculator.calculate(
             doses: [dose],

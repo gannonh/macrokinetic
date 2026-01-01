@@ -656,7 +656,8 @@ struct NutritionGoalTests {
         dayMacros[1] = sundayMacros  // Sunday
         dayMacros[2] = mondayMacros  // Monday
 
-        let weeklyMacros = WeeklyMacroDistribution(dayMacros: dayMacros)
+        // Use Monday macros as default for unconfigured days
+        let weeklyMacros = WeeklyMacroDistribution(dayMacros: dayMacros, defaultMacros: mondayMacros)
         _ = program.setWeeklyMacros(weeklyMacros)
 
         goal.program = program

@@ -13,6 +13,7 @@ import Testing
 
 // MARK: - Test Helpers
 
+@MainActor
 private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
     let schema = Schema([
         User.self,
@@ -30,6 +31,7 @@ private func createTestContext() -> (context: ModelContext, container: ModelCont
     return (container.mainContext, container)
 }
 
+@MainActor
 private func createTestGoal(
     in context: ModelContext,
     style: ProgramStyle = .coached,
@@ -88,12 +90,14 @@ struct IsCheckInDueTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Last check-in 3 days ago
-        let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let goal = createTestGoal(in: context, checkInDayOfWeek: 2, lastCheckInDate: threeDaysAgo)
+        // Use a fixed Monday date for consistent testing
+        let monday = createMondayDate()
+
+        // Last check-in 3 days before that Monday (less than 7 days)
+        let threeDaysBeforeMonday = Calendar.current.date(byAdding: .day, value: -3, to: monday)!
+        let goal = createTestGoal(in: context, checkInDayOfWeek: 2, lastCheckInDate: threeDaysBeforeMonday)
 
         let service = WeeklyCheckInService(context: context)
-        let monday = createMondayDate()
         let result = service.isCheckInDue(for: goal, on: monday)
 
         #expect(result == false)
@@ -153,7 +157,11 @@ struct GenerateOptimizationTests {
 
         #expect(result.hasChanges == false)
         #expect(result.proposedTDEE == nil)
-        #expect(result.changeDescription.contains("insufficient") || result.changeDescription.contains("Not enough"))
+        // Insufficient data results in one of these messages depending on whether improvement tips exist
+        #expect(
+            result.changeDescription.contains("insufficient") || result.changeDescription.contains("Not enough")
+                || result.changeDescription.contains("To unlock")
+        )
     }
 
     @Test("Calculates new TDEE from weight trend and food logs")
