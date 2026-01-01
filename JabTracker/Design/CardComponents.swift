@@ -13,7 +13,7 @@ struct CardStyle: ViewModifier {
         content
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(Color(.secondarySystemGroupedBackground))
+                    .fill(DesignTokens.Colors.cardBackground)
             )
     }
 }

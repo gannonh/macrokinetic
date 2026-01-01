@@ -16,6 +16,11 @@ enum DesignTokens {
         static let secondaryBackground = Color(.secondarySystemBackground)
         static let tertiaryBackground = Color(.tertiarySystemBackground)
 
+        // Grouped background colors - for cards on grouped backgrounds
+        // Use groupedBackground for page, cardBackground for cards on that page
+        static let groupedBackground = Color(.systemGroupedBackground)
+        static let cardBackground = Color(.secondarySystemGroupedBackground)
+
         static let primaryGradient = LinearGradient(
             colors: [Color.primaryBlue, Color.primaryPurple],
             startPoint: .topLeading,

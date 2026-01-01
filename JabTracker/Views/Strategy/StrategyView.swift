@@ -345,7 +345,7 @@ struct StrategyView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
+                    .fill(DesignTokens.Colors.cardBackground)
             )
 
             // Render card (tappable if check-in is available)
@@ -424,7 +424,7 @@ struct StrategyView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("improvement-tips-card")
     }
@@ -478,7 +478,7 @@ struct StrategyView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("check-in-settings-card")
     }
@@ -520,7 +520,7 @@ struct StrategyView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("current-program-card")
     }
@@ -682,7 +682,7 @@ struct StrategyView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("goal-summary-card")
     }
@@ -809,7 +809,7 @@ struct StrategyView: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
     }
 
