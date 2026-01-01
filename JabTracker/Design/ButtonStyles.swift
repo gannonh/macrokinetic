@@ -5,12 +5,12 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.body.weight(.semibold))
+            .font(.subheadline.weight(.semibold))
             .foregroundColor(.white)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                Capsule()
                     .fill(isEnabled ? Color.accentColor : Color.accentColor.opacity(0.5))
             )
             .opacity(configuration.isPressed ? 0.8 : 1.0)
@@ -23,12 +23,12 @@ struct SecondaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.body.weight(.semibold))
+            .font(.subheadline.weight(.semibold))
             .foregroundColor(isEnabled ? .accentColor : .accentColor.opacity(0.5))
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                Capsule()
                     .strokeBorder(
                         isEnabled ? Color.accentColor : Color.accentColor.opacity(0.5),
                         lineWidth: 1

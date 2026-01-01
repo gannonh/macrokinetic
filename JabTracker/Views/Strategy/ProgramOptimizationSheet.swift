@@ -357,16 +357,14 @@ struct ProgramOptimizationSheet: View {
     }
 
     private var coachedButtons: some View {
-        VStack(spacing: 12) {
-            // Secondary: Decline
-            SecondaryButton(title: "Decline and Silence") {
+        HStack(spacing: 12) {
+            SecondaryButton(title: "Decline") {
                 onDecline()
                 dismiss()
             }
             .accessibilityIdentifier("decline-button")
 
-            // Primary: Accept
-            PrimaryButton(title: "Accept Program Changes") {
+            PrimaryButton(title: "Accept") {
                 if let result = result {
                     onAccept(result)
                 }
@@ -377,26 +375,22 @@ struct ProgramOptimizationSheet: View {
     }
 
     private var collaborativeButtons: some View {
-        VStack(spacing: 12) {
-            // Secondary: Decline
+        HStack(spacing: 8) {
             SecondaryButton(title: "Decline") {
                 onDecline()
                 dismiss()
             }
             .accessibilityIdentifier("decline-button")
 
-            // Tertiary: Modify (styled as secondary but different action)
-            Button("Modify Program") {
+            Button("Modify") {
                 if let result = result {
                     onModify(result)
                 }
-                // Don't dismiss - onModify callback handles sheet chaining
             }
             .buttonStyle(SecondaryButtonStyle())
             .accessibilityIdentifier("modify-button")
 
-            // Primary: Accept
-            PrimaryButton(title: "Accept Changes") {
+            PrimaryButton(title: "Accept") {
                 if let result = result {
                     onAccept(result)
                 }

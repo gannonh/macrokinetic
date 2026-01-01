@@ -769,14 +769,6 @@ struct SingleWeekMacrosStepView: View {
             }
         }
         .focused($isInputFocused)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    isInputFocused = false
-                }
-            }
-        }
         .accessibilityIdentifier("single-week-macros-step")
     }
 
@@ -823,14 +815,6 @@ struct PerDayMacrosStepView: View {
             }
         }
         .focused($isInputFocused)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    isInputFocused = false
-                }
-            }
-        }
         .accessibilityIdentifier("per-day-macros-step")
     }
 
@@ -997,14 +981,6 @@ struct CollaborativeDistributionStepView: View {
             }
         }
         .focused($isCaloriesInputFocused)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    isCaloriesInputFocused = false
-                }
-            }
-        }
         .onAppear {
             // Initialize collaborative days if empty
             if viewModel.collaborativeDays.isEmpty {
