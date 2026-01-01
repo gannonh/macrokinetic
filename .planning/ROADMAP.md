@@ -140,7 +140,7 @@ Plans:
 
 Plans:
 - [x] 17-01: MoreView restructure, SecurityPrivacyView, SubscriptionSettingsView (mock)
-- [ ] 17-02: NotificationSettingsView with NotificationService extensions
+- [x] 17-02: NotificationSettingsView with NotificationService extensions
 - [ ] 17-03: CalorieExpenditureView (mock), inactive placeholders, E2E test stubs
 
 ## Progress

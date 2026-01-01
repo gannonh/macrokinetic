@@ -2,7 +2,7 @@
 # Allows longer files for complex service classes requiring comprehensive medical logic
 
 file_length:
-  warning: 650  # Increased for complex service classes with comprehensive medical logic
+  warning: 700  # Increased for NotificationService with weigh-in and food logging reminder properties
   error: 800
 
 type_body_length:

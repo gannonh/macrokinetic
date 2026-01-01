@@ -439,6 +439,7 @@
 		DEF2FB92EE89D468454C3B3B /* FoodDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BDBDBAC41A81D1296354AA /* FoodDayView.swift */; };
 		DF59CA22B1515D5F4988AE8A /* CalendarIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9636B2D1B47D1281AE836554 /* CalendarIntegrationUITests.swift */; };
 		DFB7994B61BCC620AE355FED /* ProgramOptimizationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24064E09ECD5DD99778A9CD8 /* ProgramOptimizationUITests.swift */; };
+		E078C7A5A66F2C0F527469D2 /* NotificationService+Reminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7555944AFEE8D8A52747A45 /* NotificationService+Reminders.swift */; };
 		E088FED3A16162FC141E9DAE /* FoodDetailSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CBAB921A65D85DEE6280F31 /* FoodDetailSheetTests.swift */; };
 		E0B2C20CA8D563D7FAB74F5A /* DoseHistoryViewModelUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4973FBCC6CDF5FB31FCF549 /* DoseHistoryViewModelUnitTests.swift */; };
 		E0B8A4E2309A4EC632D8B030 /* UserModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */; };
@@ -942,6 +943,7 @@
 		D58DAD4261D9C3F7E970A9BF /* NotificationServiceBackgroundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceBackgroundTests.swift; sourceTree = "<group>"; };
 		D648F0B29707CC8E563B4003 /* TDEECalculationEngine+Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TDEECalculationEngine+Validation.swift"; sourceTree = "<group>"; };
 		D72C377F30F091F203828A17 /* BiometricEnumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricEnumTests.swift; sourceTree = "<group>"; };
+		D7555944AFEE8D8A52747A45 /* NotificationService+Reminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationService+Reminders.swift"; sourceTree = "<group>"; };
 		D84DBE2037D1CC46F582F191 /* ScheduledDoseIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledDoseIndicator.swift; sourceTree = "<group>"; };
 		D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerTests.swift; sourceTree = "<group>"; };
 		D9B22BCA329135634E72DB80 /* ShortcutsSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsSheetTests.swift; sourceTree = "<group>"; };
@@ -1238,6 +1240,7 @@
 				4C5A600F8251B32730E8FEF6 /* NotificationService+Actions.swift */,
 				DAD2E3CF92A7E8DF47691E40 /* NotificationService+Background.swift */,
 				C72F6184D9089FB2230364FF /* NotificationService+Persistence.swift */,
+				D7555944AFEE8D8A52747A45 /* NotificationService+Reminders.swift */,
 				58BB7ECD86430AE48BB53713 /* OpenFoodFactsService.swift */,
 				FF9888C93311C51E0285B1EA /* PharmacokineticsEngine.swift */,
 				168103C1708F6586A7FCB8DC /* ProgressPhotoService.swift */,
@@ -2541,6 +2544,7 @@
 				9F00C194C960E72871401279 /* NotificationService+Actions.swift in Sources */,
 				A8AC730CDB45A860E75F71EE /* NotificationService+Background.swift in Sources */,
 				6FB54A409061792C3C183110 /* NotificationService+Persistence.swift in Sources */,
+				E078C7A5A66F2C0F527469D2 /* NotificationService+Reminders.swift in Sources */,
 				6DB40CC48F84ACCD4E1270FE /* NotificationService.swift in Sources */,
 				209A34651C5472B062F1B27D /* NotificationSettingsView.swift in Sources */,
 				D80D32EF16FEF4A7775C4835 /* NutritionGoal.swift in Sources */,
