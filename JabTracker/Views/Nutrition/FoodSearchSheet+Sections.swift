@@ -238,6 +238,7 @@ extension FoodSearchSheet {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(Int(viewModel.remainingCalories)) left")
                         .font(.caption.weight(.medium))
+                        .foregroundColor(DesignTokens.Colors.calories)
                     Text("Calories")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -249,6 +250,7 @@ extension FoodSearchSheet {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(Int(viewModel.remainingProtein))g left")
                         .font(.caption.weight(.medium))
+                        .foregroundColor(DesignTokens.Colors.protein)
                     Text("Protein")
                         .font(.caption2)
                         .foregroundColor(.secondary)

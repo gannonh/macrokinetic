@@ -27,8 +27,7 @@ struct FoodEntryCardView: View {
                     .lineLimit(2)
 
                 HStack(spacing: 8) {
-                    Text(macroText)
-                        .foregroundColor(.cyan)
+                    macroView
 
                     Text("•")
                         .foregroundColor(.secondary)
@@ -45,8 +44,9 @@ struct FoodEntryCardView: View {
             HStack(spacing: 2) {
                 Text("\(Int(entry.calories))")
                     .font(.headline)
+                    .foregroundColor(DesignTokens.Colors.calories)
                 Image(systemName: "flame.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.Colors.calories)
             }
         }
         .padding(.vertical, 12)
@@ -56,8 +56,15 @@ struct FoodEntryCardView: View {
 
     // MARK: - Computed Properties
 
-    private var macroText: String {
-        "\(Int(entry.protein))P  \(Int(entry.fat))F  \(Int(entry.carbs))C"
+    private var macroView: some View {
+        HStack(spacing: 4) {
+            Text("\(Int(entry.protein))P")
+                .foregroundColor(DesignTokens.Colors.protein)
+            Text("\(Int(entry.fat))F")
+                .foregroundColor(DesignTokens.Colors.fat)
+            Text("\(Int(entry.carbs))C")
+                .foregroundColor(DesignTokens.Colors.carbs)
+        }
     }
 
     private var servingText: String {

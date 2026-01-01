@@ -254,14 +254,17 @@ struct FoodLibraryContentView: View {
         HStack(spacing: 8) {
             Text("\(Int(food.caloriesPerServing)) cal")
                 .fontWeight(.medium)
+                .foregroundColor(DesignTokens.Colors.calories)
             Text("•")
                 .foregroundColor(.secondary)
             HStack(spacing: 4) {
                 Text("P:\(Int(food.proteinPerServing))")
+                    .foregroundColor(DesignTokens.Colors.protein)
                 Text("C:\(Int(food.carbsPerServing))")
+                    .foregroundColor(DesignTokens.Colors.carbs)
                 Text("F:\(Int(food.fatPerServing))")
+                    .foregroundColor(DesignTokens.Colors.fat)
             }
-            .foregroundColor(.secondary)
         }
         .font(DesignTokens.Typography.caption)
     }

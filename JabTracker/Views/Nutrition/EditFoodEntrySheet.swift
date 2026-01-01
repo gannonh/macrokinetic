@@ -117,10 +117,10 @@ struct EditFoodEntrySheet: View {
                 // Macro preview section
                 Section("Nutrition") {
                     HStack {
-                        macroColumn(value: scaledCalories, label: "Cal", color: .orange)
-                        macroColumn(value: scaledProtein, label: "Protein", color: .blue)
-                        macroColumn(value: scaledCarbs, label: "Carbs", color: .green)
-                        macroColumn(value: scaledFat, label: "Fat", color: .purple)
+                        macroColumn(value: scaledCalories, label: "Cal", color: DesignTokens.Colors.calories)
+                        macroColumn(value: scaledProtein, label: "Protein", color: DesignTokens.Colors.protein)
+                        macroColumn(value: scaledCarbs, label: "Carbs", color: DesignTokens.Colors.carbs)
+                        macroColumn(value: scaledFat, label: "Fat", color: DesignTokens.Colors.fat)
                     }
                 }
 

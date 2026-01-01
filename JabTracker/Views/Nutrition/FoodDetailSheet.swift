@@ -262,6 +262,7 @@ struct FoodDetailSheet: View {
             VStack(spacing: 4) {
                 Text("\(Int(scaledCalories))")
                     .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundColor(DesignTokens.Colors.calories)
                 Text("Calories")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -269,9 +270,24 @@ struct FoodDetailSheet: View {
 
             // Macro row with percentages
             HStack(spacing: 24) {
-                macroItem(value: scaledProtein, label: "Protein", percentage: Int(proteinImpact * 100), color: .blue)
-                macroItem(value: scaledFat, label: "Fat", percentage: Int(fatImpact * 100), color: .purple)
-                macroItem(value: scaledCarbs, label: "Carbs", percentage: Int(carbImpact * 100), color: .green)
+                macroItem(
+                    value: scaledProtein,
+                    label: "Protein",
+                    percentage: Int(proteinImpact * 100),
+                    color: DesignTokens.Colors.protein
+                )
+                macroItem(
+                    value: scaledFat,
+                    label: "Fat",
+                    percentage: Int(fatImpact * 100),
+                    color: DesignTokens.Colors.fat
+                )
+                macroItem(
+                    value: scaledCarbs,
+                    label: "Carbs",
+                    percentage: Int(carbImpact * 100),
+                    color: DesignTokens.Colors.carbs
+                )
             }
         }
         .padding()

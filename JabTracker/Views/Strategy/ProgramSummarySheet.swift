@@ -107,7 +107,7 @@ struct ProgramSummarySheet: View {
                 title: "Protein",
                 value: program.protein.displayName,
                 icon: "p.circle.fill",
-                color: .red
+                color: DesignTokens.Colors.protein
             )
         }
     }

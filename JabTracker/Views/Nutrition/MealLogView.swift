@@ -242,11 +242,11 @@ struct FoodEntryRow: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(Int(entry.calories)) cal")
                     .font(DesignTokens.Typography.body)
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.Colors.calories)
 
                 Text("\(Int(entry.protein))g protein")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignTokens.Colors.protein)
             }
         }
         .padding(.vertical, 4)

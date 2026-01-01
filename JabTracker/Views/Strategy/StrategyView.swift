@@ -546,32 +546,32 @@ struct StrategyView: View {
             }
             .padding(.bottom, 4)
 
-            // Calorie row (blue)
+            // Calorie row
             weeklyMacroRow(
                 values: dayMacros.map { Int($0.calories) },
                 unit: "",
-                color: .blue
+                color: DesignTokens.Colors.calories
             )
 
-            // Protein row (orange)
+            // Protein row
             weeklyMacroRow(
                 values: dayMacros.map { Int($0.proteinGrams) },
                 unit: " P",
-                color: .orange
+                color: DesignTokens.Colors.protein
             )
 
-            // Fat row (yellow)
+            // Fat row
             weeklyMacroRow(
                 values: dayMacros.map { Int($0.fatGrams) },
                 unit: " F",
-                color: .yellow
+                color: DesignTokens.Colors.fat
             )
 
-            // Carbs row (green)
+            // Carbs row
             weeklyMacroRow(
                 values: dayMacros.map { Int($0.carbsGrams) },
                 unit: " C",
-                color: .green
+                color: DesignTokens.Colors.carbs
             )
         }
     }

@@ -338,17 +338,23 @@ struct FoodLogView: View {
 
             if totals.calories > 0 {
                 HStack(spacing: 8) {
-                    Text("\(Int(totals.protein))P \(Int(totals.fat))F \(Int(totals.carbs))C")
-                        .font(.caption)
-                        .foregroundColor(.cyan)
+                    HStack(spacing: 4) {
+                        Text("\(Int(totals.protein))P")
+                            .foregroundColor(DesignTokens.Colors.protein)
+                        Text("\(Int(totals.fat))F")
+                            .foregroundColor(DesignTokens.Colors.fat)
+                        Text("\(Int(totals.carbs))C")
+                            .foregroundColor(DesignTokens.Colors.carbs)
+                    }
+                    .font(.caption)
 
                     HStack(spacing: 2) {
                         Text("\(Int(totals.calories))")
                             .font(.subheadline.weight(.medium))
                         Image(systemName: "flame.fill")
                             .font(.caption)
-                            .foregroundColor(.orange)
                     }
+                    .foregroundColor(DesignTokens.Colors.calories)
                 }
             }
         }

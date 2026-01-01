@@ -103,28 +103,28 @@ struct NutritionSummaryCard: View {
                 label: "Calories",
                 consumed: totals.calories,
                 goal: targets.calories,
-                defaultColor: .orange,
+                color: DesignTokens.Colors.calories,
                 unit: "kcal"
             )
             macroRing(
                 label: "Protein",
                 consumed: totals.protein,
                 goal: targets.proteinGrams,
-                defaultColor: .red,
+                color: DesignTokens.Colors.protein,
                 unit: "g"
             )
             macroRing(
                 label: "Carbs",
                 consumed: totals.carbs,
                 goal: targets.carbsGrams,
-                defaultColor: .blue,
+                color: DesignTokens.Colors.carbs,
                 unit: "g"
             )
             macroRing(
                 label: "Fat",
                 consumed: totals.fat,
                 goal: targets.fatGrams,
-                defaultColor: .yellow,
+                color: DesignTokens.Colors.fat,
                 unit: "g"
             )
         }
@@ -138,18 +138,19 @@ struct NutritionSummaryCard: View {
         label: String,
         consumed: Double,
         goal: Double,
-        defaultColor: Color,
+        color: Color,
         unit: String
     ) -> some View {
         let progress = progressPercentage(consumed: consumed, goal: goal)
-        let color = progressColor(for: progress, defaultColor: defaultColor)
+        let ringColor = progressColor(for: progress, baseColor: color)
+        let isOver = consumed > goal && goal > 0
 
         VStack(spacing: 4) {
             CircularProgressRing(
                 progress: progress,
                 label: label,
                 valueText: "\(Int(consumed.rounded()))",
-                color: color,
+                color: ringColor,
                 lineWidth: Constants.ringLineWidth,
                 size: Constants.ringSize
             )
@@ -162,7 +163,7 @@ struct NutritionSummaryCard: View {
             // Remaining/over text
             Text(remainingText(consumed: consumed, goal: goal))
                 .font(.caption2)
-                .foregroundColor(color == .red ? .red : .secondary)
+                .foregroundColor(isOver ? color : .secondary)
                 .accessibilityIdentifier("macro-remaining-\(label.lowercased())")
         }
     }
@@ -174,13 +175,11 @@ struct NutritionSummaryCard: View {
         return consumed / goal
     }
 
-    private func progressColor(for progress: Double, defaultColor: Color) -> Color {
-        if progress > 1.0 {
-            return .red
-        } else if progress >= Constants.nearGoalThreshold {
-            return defaultColor
+    private func progressColor(for progress: Double, baseColor: Color) -> Color {
+        if progress >= Constants.nearGoalThreshold {
+            return baseColor
         } else {
-            return defaultColor.opacity(Constants.lowProgressOpacity)
+            return baseColor.opacity(Constants.lowProgressOpacity)
         }
     }
 

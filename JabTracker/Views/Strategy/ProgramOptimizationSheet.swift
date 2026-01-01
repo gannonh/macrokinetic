@@ -229,19 +229,19 @@ struct ProgramOptimizationSheet: View {
             }
             .padding(.bottom, 8)
 
-            // Calorie row (blue pill style)
+            // Calorie row (teal pill style)
             macroRow(
                 values: dayMacros.map { Int($0.calories) },
                 unit: "",
-                color: .blue,
+                color: DesignTokens.Colors.calories,
                 isPill: true
             )
 
-            // Protein row (orange)
+            // Protein row (indigo)
             macroRow(
                 values: dayMacros.map { Int($0.proteinGrams) },
                 unit: " P",
-                color: .orange,
+                color: DesignTokens.Colors.protein,
                 isPill: false
             )
 
@@ -249,15 +249,15 @@ struct ProgramOptimizationSheet: View {
             macroRow(
                 values: dayMacros.map { Int($0.fatGrams) },
                 unit: " F",
-                color: .yellow,
+                color: DesignTokens.Colors.fat,
                 isPill: false
             )
 
-            // Carbs row (green)
+            // Carbs row (orange)
             macroRow(
                 values: dayMacros.map { Int($0.carbsGrams) },
                 unit: " C",
-                color: .green,
+                color: DesignTokens.Colors.carbs,
                 isPill: false
             )
         }

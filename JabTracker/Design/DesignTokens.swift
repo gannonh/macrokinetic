@@ -20,6 +20,13 @@ enum DesignTokens {
             colors: [Color.primaryBlue, Color.primaryPurple],
             startPoint: .topLeading,
             endPoint: .bottomTrailing)
+
+        // Macro colors - Apple semantic system colors
+        // Avoiding red/green which indicate over/under elsewhere
+        static let calories = Color(.systemTeal)
+        static let protein = Color(.systemIndigo)
+        static let fat = Color(.systemYellow)
+        static let carbs = Color(.systemOrange)
     }
 
     enum Typography {

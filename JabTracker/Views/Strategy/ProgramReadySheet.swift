@@ -97,39 +97,39 @@ struct ProgramReadySheet: View {
             }
             .padding(.bottom, 8)
 
-            // Calorie row (blue pill style) with per-day values
+            // Calorie row (pill style) with per-day values
             macroRow(
                 label: "Cals",
                 values: dayMacros.map { Int($0.calories) },
                 unit: "",
-                color: .blue,
+                color: DesignTokens.Colors.calories,
                 isPill: true
             )
 
-            // Protein row (orange)
+            // Protein row
             macroRow(
                 label: "P",
                 values: dayMacros.map { Int($0.proteinGrams) },
                 unit: "g",
-                color: .orange,
+                color: DesignTokens.Colors.protein,
                 isPill: false
             )
 
-            // Fat row (yellow)
+            // Fat row
             macroRow(
                 label: "F",
                 values: dayMacros.map { Int($0.fatGrams) },
                 unit: "g",
-                color: .yellow,
+                color: DesignTokens.Colors.fat,
                 isPill: false
             )
 
-            // Carbs row (green)
+            // Carbs row
             macroRow(
                 label: "C",
                 values: dayMacros.map { Int($0.carbsGrams) },
                 unit: "g",
-                color: .green,
+                color: DesignTokens.Colors.carbs,
                 isPill: false
             )
         }
