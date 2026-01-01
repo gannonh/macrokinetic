@@ -112,7 +112,7 @@ Multi-step ProgramOptimizationSheet for weekly check-ins with intro screen, calc
 
 Test Collaborative-specific UI by combining `--seed-collaborative` with any tier flag.
 
-### Scenario 5: Collaborative + GOOD Data
+### ✅ SScenario 5: Collaborative + GOOD Data
 **Flags:** `--seed-check-in-good` + `--seed-collaborative`
 
 1. Navigate to Strategy tab, tap check-in card
@@ -126,7 +126,7 @@ Test Collaborative-specific UI by combining `--seed-collaborative` with any tier
 5. **Test "Modify":** Should apply new targets, then open Program Wizard with updated baseline
 6. **Test "Keep Current":** Should dismiss without applying changes
 
-### Scenario 6: Collaborative + EXCELLENT Data
+### ✅ Scenario 6: Collaborative + EXCELLENT Data
 **Flags:** `--seed-check-in-ready` + `--seed-collaborative`
 
 - Same button layout as Scenario 5
