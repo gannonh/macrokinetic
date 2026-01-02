@@ -308,9 +308,7 @@ final class ProgramWizardViewModel {
         case .profileCompletion:
             return isProfileDataComplete
         case .dietPreference:
-            let result = dietPreference != nil
-            print("DEBUG canContinue dietPreference: \(result)")
-            return result
+            return dietPreference != nil
         case .calorieFloor:
             return calorieFloorType != nil
         case .training:
@@ -410,18 +408,13 @@ final class ProgramWizardViewModel {
     // MARK: - Navigation
 
     func advance() {
-        print("DEBUG advance() - currentStep: \(currentStep), availableSteps: \(availableSteps.map { $0.rawValue })")
         guard let currentIndex = availableSteps.firstIndex(of: currentStep) else {
-            print("DEBUG advance() - currentStep NOT FOUND in availableSteps!")
             return
         }
         guard currentIndex + 1 < availableSteps.count else {
-            print("DEBUG advance() - already at last step")
             return
         }
-        let nextStep = availableSteps[currentIndex + 1]
-        print("DEBUG advance() - moving from \(currentStep.rawValue) to \(nextStep.rawValue)")
-        currentStep = nextStep
+        currentStep = availableSteps[currentIndex + 1]
     }
 
     func goBack() {
@@ -537,13 +530,11 @@ final class ProgramWizardViewModel {
         // Start at the first available step for this program style
         // (different styles have different step sequences)
         currentStep = availableSteps.first ?? .confirmation
-        print("DEBUG configureForEdit - style: \(program.style.rawValue), step: \(currentStep.rawValue)")
     }
 
     /// Load collaborative config from saved program's weeklyMacros (single source of truth)
     private func loadCollaborativeConfig(from program: NutritionProgram) {
         guard let weeklyMacros = program.weeklyMacros else {
-            print("DEBUG loadCollabConfig - no weeklyMacros found")
             return
         }
 
@@ -568,7 +559,6 @@ final class ProgramWizardViewModel {
         }
 
         weeklyCalorieBudget = collaborativeDays.values.reduce(0) { $0 + $1.calories }
-        print("DEBUG loadCollabConfig - loaded \(collaborativeDays.count) days from weeklyMacros")
     }
 
     /// Load manual per-day macros from saved weekly macros
@@ -916,7 +906,6 @@ struct ProgramWizard: View {
                         .accessibilityIdentifier("program-wizard-save-button")
                     } else {
                         PrimaryButton(title: "Continue") {
-                            print("DEBUG Continue tapped - step: \(viewModel.currentStep.rawValue)")
                             Task {
                                 await handleContinue()
                             }
@@ -1047,8 +1036,6 @@ struct ProgramWizard: View {
     // MARK: - Actions
 
     private func handleContinue() async {
-        print("DEBUG handleContinue() called - currentStep: \(viewModel.currentStep.rawValue)")
-
         // Save profile data when leaving profileCompletion step
         if viewModel.currentStep == .profileCompletion {
             guard let user = goal.user else {
@@ -1083,11 +1070,9 @@ struct ProgramWizard: View {
             }
         }
 
-        print("DEBUG handleContinue() - about to call advance()")
         withAnimation(.spring()) {
             viewModel.advance()
         }
-        print("DEBUG handleContinue() - advance() completed, currentStep is now: \(viewModel.currentStep.rawValue)")
     }
 
     private func saveProgram() async {

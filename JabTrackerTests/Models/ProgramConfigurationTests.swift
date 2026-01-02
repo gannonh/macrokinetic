@@ -583,4 +583,326 @@ struct ProgramConfigurationTests {
         #expect(dist1 == dist2)
         #expect(dist1 != dist3)
     }
+
+    // MARK: - GoalType Icon Tests
+
+    @Test("GoalType has icon for all cases")
+    func goalTypeIcon() {
+        #expect(GoalType.weightLoss.icon == "arrow.down.circle")
+        #expect(GoalType.maintenance.icon == "equal.circle")
+        #expect(GoalType.muscleGain.icon == "arrow.up.circle")
+
+        // All cases have non-empty icons
+        for goalType in GoalType.allCases {
+            #expect(!goalType.icon.isEmpty, "\(goalType) should have non-empty icon")
+        }
+    }
+
+    // MARK: - ProgramStyle Icon Tests
+
+    @Test("ProgramStyle has icon for all cases")
+    func programStyleIcon() {
+        #expect(ProgramStyle.coached.icon == "sparkles")
+        #expect(ProgramStyle.collaborative.icon == "person.2")
+        #expect(ProgramStyle.manual.icon == "slider.horizontal.3")
+
+        // All cases have non-empty icons
+        for style in ProgramStyle.allCases {
+            #expect(!style.icon.isEmpty, "\(style) should have non-empty icon")
+        }
+    }
+
+    // MARK: - DietPreference Icon Tests
+
+    @Test("DietPreference has icon for all cases")
+    func dietPreferenceIcon() {
+        #expect(DietPreference.balanced.icon == "circle.grid.3x3")
+        #expect(DietPreference.lowFat.icon == "heart.circle")
+        #expect(DietPreference.lowCarb.icon == "leaf")
+        #expect(DietPreference.keto.icon == "flame")
+
+        // All cases have non-empty icons
+        for preference in DietPreference.allCases {
+            #expect(!preference.icon.isEmpty, "\(preference) should have non-empty icon")
+        }
+    }
+
+    // MARK: - CalorieFloorType Icon Tests
+
+    @Test("CalorieFloorType has icon for all cases")
+    func calorieFloorTypeIcon() {
+        #expect(CalorieFloorType.standard.icon == "checkmark.shield")
+        #expect(CalorieFloorType.low.icon == "exclamationmark.triangle")
+
+        // All cases have non-empty icons
+        for floorType in CalorieFloorType.allCases {
+            #expect(!floorType.icon.isEmpty, "\(floorType) should have non-empty icon")
+        }
+    }
+
+    // MARK: - WeeklyDistributionMode Icon Tests
+
+    @Test("WeeklyDistributionMode has icon for all cases")
+    func weeklyDistributionModeIcon() {
+        #expect(WeeklyDistributionMode.even.icon == "equal.square")
+        #expect(WeeklyDistributionMode.shifted.icon == "calendar.badge.clock")
+
+        // All cases have non-empty icons
+        for mode in WeeklyDistributionMode.allCases {
+            #expect(!mode.icon.isEmpty, "\(mode) should have non-empty icon")
+        }
+    }
+
+    // MARK: - ProteinLevel Icon Tests
+
+    @Test("ProteinLevel has icon for all cases")
+    func proteinLevelIcon() {
+        #expect(ProteinLevel.low.icon == "1.circle")
+        #expect(ProteinLevel.moderate.icon == "2.circle")
+        #expect(ProteinLevel.high.icon == "3.circle")
+        #expect(ProteinLevel.extraHigh.icon == "4.circle")
+
+        // All cases have non-empty icons
+        for level in ProteinLevel.allCases {
+            #expect(!level.icon.isEmpty, "\(level) should have non-empty icon")
+        }
+    }
+
+    // MARK: - TrainingLevel Tests
+
+    @Test("TrainingLevel has 4 cases")
+    func trainingLevelHasFourCases() {
+        #expect(TrainingLevel.allCases.count == 4)
+        #expect(TrainingLevel.allCases.contains(.none))
+        #expect(TrainingLevel.allCases.contains(.lifting))
+        #expect(TrainingLevel.allCases.contains(.cardio))
+        #expect(TrainingLevel.allCases.contains(.cardioAndLifting))
+    }
+
+    @Test("TrainingLevel has displayName for all cases")
+    func trainingLevelDisplayName() {
+        #expect(TrainingLevel.none.displayName == "None or Relaxed Activity")
+        #expect(TrainingLevel.lifting.displayName == "Lifting")
+        #expect(TrainingLevel.cardio.displayName == "Cardio")
+        #expect(TrainingLevel.cardioAndLifting.displayName == "Cardio & Lifting")
+
+        // All cases have non-empty display names
+        for level in TrainingLevel.allCases {
+            #expect(!level.displayName.isEmpty, "\(level) should have non-empty displayName")
+        }
+    }
+
+    @Test("TrainingLevel has description for all cases")
+    func trainingLevelDescription() {
+        // Verify all cases have non-empty descriptions
+        for level in TrainingLevel.allCases {
+            #expect(!level.description.isEmpty, "\(level) should have non-empty description")
+        }
+
+        // Verify specific descriptions contain expected keywords
+        #expect(
+            TrainingLevel.none.description.contains("structured") || TrainingLevel.none.description.contains("light"),
+            "none description should mention structured or light"
+        )
+        #expect(
+            TrainingLevel.lifting.description.contains("weight")
+                || TrainingLevel.lifting.description.contains("strength"),
+            "lifting description should mention weight or strength"
+        )
+        #expect(
+            TrainingLevel.cardio.description.contains("aerobic")
+                || TrainingLevel.cardio.description.contains("Running"),
+            "cardio description should mention aerobic or Running"
+        )
+        #expect(
+            TrainingLevel.cardioAndLifting.description.contains("Combined")
+                || TrainingLevel.cardioAndLifting.description.contains("strength"),
+            "cardioAndLifting description should mention Combined or strength"
+        )
+    }
+
+    @Test("TrainingLevel has icon for all cases")
+    func trainingLevelIcon() {
+        #expect(TrainingLevel.none.icon == "figure.walk")
+        #expect(TrainingLevel.lifting.icon == "dumbbell")
+        #expect(TrainingLevel.cardio.icon == "figure.run")
+        #expect(TrainingLevel.cardioAndLifting.icon == "figure.strengthtraining.functional")
+
+        // All cases have non-empty icons
+        for level in TrainingLevel.allCases {
+            #expect(!level.icon.isEmpty, "\(level) should have non-empty icon")
+        }
+    }
+
+    @Test("TrainingLevel tdeeMultiplier returns correct values")
+    func trainingLevelTdeeMultiplier() {
+        #expect(TrainingLevel.none.tdeeMultiplier == 1.2)
+        #expect(TrainingLevel.lifting.tdeeMultiplier == 1.55)
+        #expect(TrainingLevel.cardio.tdeeMultiplier == 1.55)
+        #expect(TrainingLevel.cardioAndLifting.tdeeMultiplier == 1.725)
+    }
+
+    @Test("TrainingLevel is Codable")
+    func trainingLevelCodable() throws {
+        for level in TrainingLevel.allCases {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(level)
+
+            let decoder = JSONDecoder()
+            let decoded = try decoder.decode(TrainingLevel.self, from: data)
+
+            #expect(decoded == level, "\(level) should round-trip through Codable")
+        }
+    }
+
+    @Test("TrainingLevel rawValue matches expected strings")
+    func trainingLevelRawValue() {
+        #expect(TrainingLevel.none.rawValue == "none")
+        #expect(TrainingLevel.lifting.rawValue == "lifting")
+        #expect(TrainingLevel.cardio.rawValue == "cardio")
+        #expect(TrainingLevel.cardioAndLifting.rawValue == "cardio_and_lifting")
+    }
+
+    // MARK: - DailyMacros isLocked Tests
+
+    @Test("DailyMacros isLocked defaults to false")
+    func dailyMacrosIsLockedDefault() {
+        let macros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
+        #expect(macros.isLocked == false)
+    }
+
+    @Test("DailyMacros isLocked can be set to true")
+    func dailyMacrosIsLockedTrue() {
+        let macros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200, isLocked: true)
+        #expect(macros.isLocked == true)
+    }
+
+    @Test("DailyMacros.zero has isLocked false")
+    func dailyMacrosZeroIsLocked() {
+        let zero = DailyMacros.zero
+        #expect(zero.isLocked == false)
+    }
+
+    // MARK: - WeeklyCalorieDistribution Codable/Equatable Tests
+
+    @Test("WeeklyCalorieDistribution is Codable")
+    func weeklyCalorieDistributionCodable() throws {
+        let distribution = WeeklyCalorieDistribution(dayMultipliers: [
+            1: 1.2,
+            7: 1.2,
+            2: 0.92,
+            3: 0.92,
+            4: 0.92,
+            5: 0.92,
+            6: 0.92,
+        ])
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(distribution)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WeeklyCalorieDistribution.self, from: data)
+
+        #expect(decoded == distribution)
+        #expect(decoded.dayMultipliers[1] == 1.2)
+        #expect(decoded.dayMultipliers[7] == 1.2)
+    }
+
+    @Test("WeeklyCalorieDistribution.even is Codable")
+    func weeklyCalorieDistributionEvenCodable() throws {
+        let distribution = WeeklyCalorieDistribution.even
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(distribution)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WeeklyCalorieDistribution.self, from: data)
+
+        #expect(decoded == distribution)
+        #expect(decoded.dayMultipliers.isEmpty)
+    }
+
+    @Test("WeeklyCalorieDistribution is Equatable")
+    func weeklyCalorieDistributionEquatable() {
+        let dist1 = WeeklyCalorieDistribution(dayMultipliers: [1: 1.2, 7: 1.2])
+        let dist2 = WeeklyCalorieDistribution(dayMultipliers: [1: 1.2, 7: 1.2])
+        let dist3 = WeeklyCalorieDistribution(dayMultipliers: [1: 1.5, 7: 1.5])
+        let dist4 = WeeklyCalorieDistribution.even
+
+        #expect(dist1 == dist2)
+        #expect(dist1 != dist3)
+        #expect(dist1 != dist4)
+        #expect(WeeklyCalorieDistribution.even == WeeklyCalorieDistribution.even)
+    }
+
+    // MARK: - ProgramConfiguration with TrainingLevel Tests
+
+    @Test("ProgramConfiguration includes trainingLevel")
+    func programConfigurationWithTrainingLevel() throws {
+        let config = ProgramConfiguration(
+            programStyle: .coached,
+            dietPreference: .balanced,
+            calorieFloorType: .standard,
+            trainingLevel: .cardioAndLifting,
+            weeklyDistributionMode: .even,
+            proteinLevel: .high
+        )
+
+        #expect(config.trainingLevel == .cardioAndLifting)
+
+        // Verify Codable roundtrip preserves trainingLevel
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(config)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(ProgramConfiguration.self, from: data)
+
+        #expect(decoded.trainingLevel == .cardioAndLifting)
+    }
+
+    @Test("ProgramConfiguration trainingLevel defaults to none")
+    func programConfigurationTrainingLevelDefault() {
+        let config = ProgramConfiguration(
+            programStyle: .coached,
+            dietPreference: .balanced,
+            calorieFloorType: .standard,
+            weeklyDistributionMode: .even,
+            proteinLevel: .moderate
+        )
+
+        #expect(config.trainingLevel == .none)
+    }
+
+    // MARK: - WeeklyConstants Tests
+
+    @Test("WeeklyConstants validWeekdayRange is correct")
+    func weeklyConstantsValidWeekdayRange() {
+        #expect(WeeklyConstants.validWeekdayRange == 1...7)
+        #expect(WeeklyConstants.validWeekdayRange.contains(1))
+        #expect(WeeklyConstants.validWeekdayRange.contains(7))
+        #expect(!WeeklyConstants.validWeekdayRange.contains(0))
+        #expect(!WeeklyConstants.validWeekdayRange.contains(8))
+    }
+
+    // MARK: - MacroPercentages Edge Cases
+
+    @Test("MacroPercentages with zero values can be valid")
+    func macroPercentagesZeroValues() {
+        // All zeros is invalid (doesn't sum to 100)
+        let allZero = MacroPercentages(protein: 0, carbs: 0, fat: 0)
+        #expect(allZero.isValid == false)
+        #expect(allZero.total == 0)
+
+        // One zero is valid if others sum to 100
+        let oneZero = MacroPercentages(protein: 50, carbs: 50, fat: 0)
+        #expect(oneZero.isValid == true)
+        #expect(oneZero.total == 100)
+    }
+
+    @Test("MacroPercentages with floating point precision is valid")
+    func macroPercentagesFloatingPoint() {
+        // Using values that sum to exactly 100 with floating point
+        let precise = MacroPercentages(protein: 33.333, carbs: 33.334, fat: 33.333)
+        #expect(precise.isValid == true)
+    }
 }

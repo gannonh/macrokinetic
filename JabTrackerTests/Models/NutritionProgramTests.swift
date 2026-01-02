@@ -644,7 +644,7 @@ struct NutritionProgramTests {
 
         let defaultMacros = DailyMacros(calories: 2000, proteinGrams: 150, fatGrams: 80, carbsGrams: 200)
         let distribution = WeeklyMacroDistribution.even(macros: defaultMacros)
-        program.setWeeklyMacros(distribution)
+        _ = program.setWeeklyMacros(distribution)
 
         try context.save()
 
@@ -684,7 +684,7 @@ struct NutritionProgramTests {
             dayMacros: [1: sundayMacros],  // Sunday has higher macros
             defaultMacros: defaultMacros
         )
-        program.setWeeklyMacros(distribution)
+        _ = program.setWeeklyMacros(distribution)
 
         try context.save()
 
@@ -766,5 +766,529 @@ struct NutritionProgramTests {
 
         // Then
         #expect(program.macrosForDay(1, goal: nil) == nil)
+    }
+
+    // MARK: - CalorieFloor Accessor Tests
+
+    @Test("CalorieFloor accessor converts to/from CalorieFloorType enum")
+    @MainActor
+    func testCalorieFloorAccessor() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // Then - default is standard
+        #expect(program.calorieFloor == .standard)
+
+        // When - change to low
+        program.calorieFloor = .low
+        #expect(program.calorieFloorTypeRaw == "low")
+        #expect(program.calorieFloor == .low)
+
+        // When - change back to standard
+        program.calorieFloor = .standard
+        #expect(program.calorieFloorTypeRaw == "standard")
+        #expect(program.calorieFloor == .standard)
+    }
+
+    @Test("CalorieFloor with invalid raw value defaults to standard")
+    @MainActor
+    func testCalorieFloorInvalidRawValue() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        // When
+        let program = NutritionProgram()
+        program.calorieFloorTypeRaw = "invalid_floor"
+        context.insert(program)
+
+        // Then
+        #expect(program.calorieFloor == .standard)
+    }
+
+    // MARK: - Protein Accessor Tests
+
+    @Test("Protein accessor converts to/from ProteinLevel enum")
+    @MainActor
+    func testProteinAccessor() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // Then - default is moderate
+        #expect(program.protein == .moderate)
+
+        // When - change to high
+        program.protein = .high
+        #expect(program.proteinLevelRaw == "high")
+        #expect(program.protein == .high)
+
+        // When - change to extraHigh
+        program.protein = .extraHigh
+        #expect(program.proteinLevelRaw == "extra_high")
+        #expect(program.protein == .extraHigh)
+
+        // When - change to low
+        program.protein = .low
+        #expect(program.proteinLevelRaw == "low")
+        #expect(program.protein == .low)
+    }
+
+    @Test("Protein with invalid raw value defaults to moderate")
+    @MainActor
+    func testProteinInvalidRawValue() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        // When
+        let program = NutritionProgram()
+        program.proteinLevelRaw = "invalid_protein"
+        context.insert(program)
+
+        // Then
+        #expect(program.protein == .moderate)
+    }
+
+    // MARK: - Training Accessor Tests
+
+    @Test("Training accessor converts to/from TrainingLevel enum")
+    @MainActor
+    func testTrainingAccessor() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // Then - default is none
+        #expect(program.training == .none)
+
+        // When - change to lifting
+        program.training = .lifting
+        #expect(program.trainingLevelRaw == "lifting")
+        #expect(program.training == .lifting)
+
+        // When - change to cardio
+        program.training = .cardio
+        #expect(program.trainingLevelRaw == "cardio")
+        #expect(program.training == .cardio)
+
+        // When - change to cardioAndLifting
+        program.training = .cardioAndLifting
+        #expect(program.trainingLevelRaw == "cardio_and_lifting")
+        #expect(program.training == .cardioAndLifting)
+
+        // When - change back to none
+        program.training = .none
+        #expect(program.trainingLevelRaw == "none")
+        #expect(program.training == .none)
+    }
+
+    @Test("Training with invalid raw value defaults to none")
+    @MainActor
+    func testTrainingInvalidRawValue() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        // When
+        let program = NutritionProgram()
+        program.trainingLevelRaw = "invalid_training"
+        context.insert(program)
+
+        // Then
+        #expect(program.training == .none)
+    }
+
+    // MARK: - DistributionMode Accessor Tests
+
+    @Test("DistributionMode accessor converts to/from WeeklyDistributionMode enum")
+    @MainActor
+    func testDistributionModeAccessor() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // Then - default is even
+        #expect(program.distributionMode == .even)
+
+        // When - change to shifted
+        program.distributionMode = .shifted
+        #expect(program.weeklyDistributionModeRaw == "shifted")
+        #expect(program.distributionMode == .shifted)
+
+        // When - change back to even
+        program.distributionMode = .even
+        #expect(program.weeklyDistributionModeRaw == "even")
+        #expect(program.distributionMode == .even)
+    }
+
+    @Test("DistributionMode with invalid raw value defaults to even")
+    @MainActor
+    func testDistributionModeInvalidRawValue() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        // When
+        let program = NutritionProgram()
+        program.weeklyDistributionModeRaw = "invalid_mode"
+        context.insert(program)
+
+        // Then
+        #expect(program.distributionMode == .even)
+    }
+
+    // MARK: - Configuration Edge Cases
+
+    @Test("Configuration returns nil for empty configurationData")
+    @MainActor
+    func testConfigurationNilForEmptyData() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When - explicitly set empty data
+        program.configurationData = Data()
+
+        // Then
+        #expect(program.configuration == nil)
+    }
+
+    @Test("Configuration returns nil for invalid JSON data")
+    @MainActor
+    func testConfigurationNilForInvalidData() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When - set invalid JSON data
+        program.configurationData = "not valid json".data(using: .utf8)!
+
+        // Then
+        #expect(program.configuration == nil)
+    }
+
+    // MARK: - WeeklyDistribution Edge Cases
+
+    @Test("WeeklyDistribution returns nil for invalid JSON data")
+    @MainActor
+    func testWeeklyDistributionNilForInvalidData() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When - set invalid JSON data
+        program.weeklyDistributionData = "not valid json".data(using: .utf8)!
+
+        // Then
+        #expect(program.weeklyDistribution == nil)
+    }
+
+    // MARK: - WeeklyMacros Edge Cases
+
+    @Test("WeeklyMacros returns nil for invalid JSON data")
+    @MainActor
+    func testWeeklyMacrosNilForInvalidData() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When - set invalid JSON data
+        program.weeklyMacroDistributionData = "not valid json".data(using: .utf8)!
+
+        // Then
+        #expect(program.weeklyMacros == nil)
+    }
+
+    // MARK: - Collaborative Config Tests
+
+    @Test("setCollaborativeConfig saves configuration successfully")
+    @MainActor
+    func testSetCollaborativeConfigSuccess() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        let dayConfigs: [Int: CollaborativeDayConfigStorage] = [
+            1: CollaborativeDayConfigStorage(
+                calories: 2400, proteinGramsPerLb: 0.8, carbFatRatio: 0.5, isLocked: false),
+            2: CollaborativeDayConfigStorage(calories: 1800, proteinGramsPerLb: 0.8, carbFatRatio: 0.5, isLocked: true),
+        ]
+
+        // When
+        let result = program.setCollaborativeConfig(dayConfigs, weeklyBudget: 14000)
+
+        // Then
+        #expect(result == true)
+        #expect(program.collaborativeConfigData != nil)
+    }
+
+    @Test("collaborativeConfig returns saved configuration")
+    @MainActor
+    func testCollaborativeConfigReturnsValues() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        let dayConfigs: [Int: CollaborativeDayConfigStorage] = [
+            1: CollaborativeDayConfigStorage(
+                calories: 2400, proteinGramsPerLb: 0.8, carbFatRatio: 0.5, isLocked: false),
+            7: CollaborativeDayConfigStorage(calories: 2200, proteinGramsPerLb: 0.9, carbFatRatio: 0.6, isLocked: true),
+        ]
+        program.setCollaborativeConfig(dayConfigs, weeklyBudget: 14700)
+
+        // When
+        let config = program.collaborativeConfig
+
+        // Then
+        #expect(config != nil)
+        #expect(config?.weeklyCalorieBudget == 14700)
+        #expect(config?.dayConfigs[1]?.calories == 2400)
+        #expect(config?.dayConfigs[1]?.proteinGramsPerLb == 0.8)
+        #expect(config?.dayConfigs[1]?.isLocked == false)
+        #expect(config?.dayConfigs[7]?.calories == 2200)
+        #expect(config?.dayConfigs[7]?.isLocked == true)
+    }
+
+    @Test("collaborativeConfig returns nil when not set")
+    @MainActor
+    func testCollaborativeConfigNilWhenNotSet() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // Then
+        #expect(program.collaborativeConfig == nil)
+    }
+
+    @Test("collaborativeConfig returns nil for invalid JSON data")
+    @MainActor
+    func testCollaborativeConfigNilForInvalidData() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When - set invalid JSON data
+        program.collaborativeConfigData = "not valid json".data(using: .utf8)!
+
+        // Then
+        #expect(program.collaborativeConfig == nil)
+    }
+
+    // MARK: - CalorieTargetForDay Shifted Without Distribution
+
+    @Test("calorieTargetForDay returns base calories for shifted mode without stored distribution")
+    @MainActor
+    func testCalorieTargetForDayShiftedNoDistribution() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let goal = NutritionGoal()
+        goal.dailyCalorieTarget = 2000.0
+        context.insert(goal)
+
+        let program = NutritionProgram()
+        program.distributionMode = .shifted
+        // Don't set weeklyDistributionData - force the fallback path
+        context.insert(program)
+        program.goal = goal
+
+        try context.save()
+
+        // Then - should return base calories as fallback
+        #expect(program.calorieTargetForDay(1) == 2000.0)
+        #expect(program.calorieTargetForDay(4) == 2000.0)
+    }
+
+    // MARK: - Initialization with TrainingLevel
+
+    @Test("Initialization with custom training level")
+    @MainActor
+    func testInitializationWithTrainingLevel() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        // When
+        let program = NutritionProgram(
+            style: .coached,
+            diet: .balanced,
+            calorieFloor: .standard,
+            trainingLevel: .cardioAndLifting,
+            distributionMode: .even,
+            proteinLevel: .high
+        )
+        context.insert(program)
+        try context.save()
+
+        // Then
+        #expect(program.training == .cardioAndLifting)
+        #expect(program.trainingLevelRaw == "cardio_and_lifting")
+
+        // Configuration should also include training level
+        let config = program.configuration
+        #expect(config?.trainingLevel == .cardioAndLifting)
+    }
+
+    // MARK: - Configuration Updates on Property Changes
+
+    @Test("Configuration updates when calorieFloor changes")
+    @MainActor
+    func testConfigurationUpdatesOnCalorieFloorChange() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When
+        program.calorieFloor = .low
+
+        // Then
+        let decoded = program.configuration
+        #expect(decoded?.calorieFloorType == .low)
+    }
+
+    @Test("Configuration updates when protein changes")
+    @MainActor
+    func testConfigurationUpdatesOnProteinChange() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When
+        program.protein = .extraHigh
+
+        // Then
+        let decoded = program.configuration
+        #expect(decoded?.proteinLevel == .extraHigh)
+    }
+
+    @Test("Configuration updates when training changes")
+    @MainActor
+    func testConfigurationUpdatesOnTrainingChange() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When
+        program.training = .lifting
+
+        // Then
+        let decoded = program.configuration
+        #expect(decoded?.trainingLevel == .lifting)
+    }
+
+    @Test("Configuration updates when distributionMode changes")
+    @MainActor
+    func testConfigurationUpdatesOnDistributionModeChange() throws {
+        // Given
+        let (context, container) = createTestContext()
+        _ = container
+
+        let program = NutritionProgram()
+        context.insert(program)
+
+        // When
+        program.distributionMode = .shifted
+
+        // Then
+        let decoded = program.configuration
+        #expect(decoded?.weeklyDistributionMode == .shifted)
+    }
+
+    // MARK: - CollaborativeDayConfigStorage Tests
+
+    @Test("CollaborativeDayConfigStorage is Codable")
+    func testCollaborativeDayConfigStorageCodable() throws {
+        // Given
+        let config = CollaborativeDayConfigStorage(
+            calories: 2000,
+            proteinGramsPerLb: 0.8,
+            carbFatRatio: 0.5,
+            isLocked: true
+        )
+
+        // When
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(config)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(CollaborativeDayConfigStorage.self, from: data)
+
+        // Then
+        #expect(decoded.calories == 2000)
+        #expect(decoded.proteinGramsPerLb == 0.8)
+        #expect(decoded.carbFatRatio == 0.5)
+        #expect(decoded.isLocked == true)
+    }
+
+    @Test("CollaborativeConfigStorage is Codable")
+    func testCollaborativeConfigStorageCodable() throws {
+        // Given
+        let dayConfigs: [Int: CollaborativeDayConfigStorage] = [
+            1: CollaborativeDayConfigStorage(
+                calories: 2400, proteinGramsPerLb: 0.8, carbFatRatio: 0.5, isLocked: false),
+            7: CollaborativeDayConfigStorage(calories: 2200, proteinGramsPerLb: 0.9, carbFatRatio: 0.6, isLocked: true),
+        ]
+        let storage = CollaborativeConfigStorage(dayConfigs: dayConfigs, weeklyCalorieBudget: 14000)
+
+        // When
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(storage)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(CollaborativeConfigStorage.self, from: data)
+
+        // Then
+        #expect(decoded.weeklyCalorieBudget == 14000)
+        #expect(decoded.dayConfigs.count == 2)
+        #expect(decoded.dayConfigs[1]?.calories == 2400)
+        #expect(decoded.dayConfigs[7]?.isLocked == true)
     }
 }
