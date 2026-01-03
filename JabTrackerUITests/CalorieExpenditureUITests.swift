@@ -8,6 +8,219 @@ final class CalorieExpenditureUITests: XCTestCase {
         app = TestUtilities.launchAppWithTestMode(resetData: true)
     }
 
+    // MARK: - Feature Validation Tests
+
+    /// Test that enabling Add Burned Calories increases available calories
+    /// This validates the actual feature behavior, not just UI toggles
+    ///
+    /// Test flow:
+    /// 1. Launch with Health Sync enabled and mock active energy (250 kcal)
+    /// 2. Enable Add Burned Calories toggle
+    /// 3. Navigate to Food Log and verify:
+    ///    - Flame icon appears (burned-calories-indicator)
+    ///    - Calorie target is increased by burned amount
+    func testBurnedCaloriesIncreasesAvailableCalories() throws {
+        // Launch app with calorie expenditure test user (healthSyncEnabled = true)
+        // and mock active energy of 250 kcal
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing",
+            "--reset-app-data",
+            "--seed-calorie-user",
+            "--mock-active-energy=250",
+        ]
+        app.launch()
+
+        // Navigate to Calorie Expenditure settings and enable the feature
+        navigateToCalorieExpenditureView()
+
+        let navBar = app.navigationBars["Calorie Expenditure"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 5), "Calorie Expenditure view should appear")
+
+        // Enable Add Burned Calories toggle
+        let burnedToggle = app.switches["add-burned-calories-toggle"]
+        XCTAssertTrue(burnedToggle.waitForExistence(timeout: 5), "Add burned calories toggle should exist")
+        XCTAssertTrue(burnedToggle.isEnabled, "Toggle should be enabled when Health Sync is on")
+
+        // Turn on if it's off
+        if burnedToggle.value as? String == "0" {
+            burnedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        }
+        XCTAssertEqual(burnedToggle.value as? String, "1", "Add burned calories should be enabled")
+
+        // Navigate back and go to Dashboard tab
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        XCTAssertTrue(backButton.waitForExistence(timeout: 3), "Back button should exist")
+        backButton.tap()
+
+        // Navigate to Dashboard tab to see NutritionSummaryCard
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
+
+        // Wait for dashboard to load and give time for energy observation to start
+        let dashboardView = app.otherElements["dashboard-view"]
+        XCTAssertTrue(dashboardView.waitForExistence(timeout: 5), "Dashboard view should appear")
+
+        // Wait for nutrition card to load
+        let nutritionCard = app.otherElements["nutrition-rings-card"]
+        XCTAssertTrue(nutritionCard.waitForExistence(timeout: 10), "Nutrition summary card should appear")
+
+        // Verify flame icon appears (indicates burned calories are being added)
+        let flameIcon = app.images["burned-calories-indicator"]
+        XCTAssertTrue(
+            flameIcon.waitForExistence(timeout: 5),
+            "Flame icon should appear when burned calories > 0 and feature is enabled"
+        )
+
+        // Verify the remaining calories label exists
+        // With 2000 base + 250 burned = 2250 total target
+        // "macro-remaining-calories" shows remaining (e.g., "2250 left" if nothing consumed)
+        let remainingLabel = app.staticTexts["macro-remaining-calories"]
+        XCTAssertTrue(remainingLabel.waitForExistence(timeout: 5), "Remaining calories label should exist")
+
+        // The label text should indicate the adjusted target
+        // With mock 250 burned and 2000 base, target is 2250
+        let labelText = remainingLabel.label
+        XCTAssertTrue(
+            labelText.contains("2250") || labelText.contains("2,250"),
+            "Remaining calories should reflect adjusted target (2000 base + 250 burned = 2250). Got: \(labelText)"
+        )
+    }
+
+    /// Test that disabling Add Burned Calories removes the adjustment
+    /// Verifies the feature properly turns off
+    func testDisablingBurnedCaloriesResetsTarget() throws {
+        // Launch app with calorie expenditure test user and mock active energy
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing",
+            "--reset-app-data",
+            "--seed-calorie-user",
+            "--mock-active-energy=300",
+        ]
+        app.launch()
+
+        // First enable the feature
+        navigateToCalorieExpenditureView()
+
+        let burnedToggle = app.switches["add-burned-calories-toggle"]
+        XCTAssertTrue(burnedToggle.waitForExistence(timeout: 5), "Toggle should exist")
+
+        // Enable if off
+        if burnedToggle.value as? String == "0" {
+            burnedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        }
+
+        // Now disable the feature
+        burnedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        XCTAssertEqual(burnedToggle.value as? String, "0", "Toggle should be off")
+
+        // Navigate to Dashboard
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        backButton.tap()
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
+
+        // Wait for dashboard to load
+        let dashboardView = app.otherElements["dashboard-view"]
+        XCTAssertTrue(dashboardView.waitForExistence(timeout: 5), "Dashboard view should appear")
+
+        // Wait for nutrition card
+        let nutritionCard = app.otherElements["nutrition-rings-card"]
+        XCTAssertTrue(nutritionCard.waitForExistence(timeout: 10), "Nutrition card should appear")
+
+        // Flame icon should NOT appear when feature is disabled
+        let flameIcon = app.images["burned-calories-indicator"]
+        let flameExists = flameIcon.waitForExistence(timeout: 2)
+        XCTAssertFalse(flameExists, "Flame icon should NOT appear when feature is disabled")
+
+        // Remaining calories should show base target (2000)
+        let remainingLabel = app.staticTexts["macro-remaining-calories"]
+        XCTAssertTrue(remainingLabel.waitForExistence(timeout: 5), "Remaining label should exist")
+
+        let labelText = remainingLabel.label
+        XCTAssertTrue(
+            labelText.contains("2000") || labelText.contains("2,000"),
+            "Remaining should show base target (2000) when feature disabled. Got: \(labelText)"
+        )
+    }
+
+    /// Test that burned calories feature requires Health Sync to be enabled
+    /// When Health Sync is off, the toggle should be disabled
+    func testBurnedCaloriesRequiresHealthSync() throws {
+        // Launch with standard test mode (no --seed-calorie-user, so healthSyncEnabled = false)
+        app = TestUtilities.launchAppWithTestMode(resetData: true)
+
+        navigateToCalorieExpenditureView()
+
+        let burnedToggle = app.switches["add-burned-calories-toggle"]
+        XCTAssertTrue(burnedToggle.waitForExistence(timeout: 5), "Toggle should exist")
+
+        // Toggle should be disabled when Health Sync is not enabled
+        XCTAssertFalse(
+            burnedToggle.isEnabled,
+            "Add burned calories toggle should be DISABLED when Health Sync is off"
+        )
+
+        // Predictive activity toggle should also be disabled
+        let predictiveToggle = app.switches["predictive-activity-toggle"]
+        XCTAssertTrue(predictiveToggle.waitForExistence(timeout: 5), "Predictive toggle should exist")
+        XCTAssertFalse(
+            predictiveToggle.isEnabled,
+            "Predictive activity toggle should be DISABLED when Health Sync is off"
+        )
+
+        // But rollover toggle should be enabled (no HealthKit requirement)
+        let rolloverToggle = app.switches["rollover-calories-toggle"]
+        XCTAssertTrue(rolloverToggle.waitForExistence(timeout: 5), "Rollover toggle should exist")
+        XCTAssertTrue(
+            rolloverToggle.isEnabled,
+            "Rollover calories toggle should be ENABLED (no HealthKit requirement)"
+        )
+    }
+
+    /// Test that flame icon does not appear when no activity is burned
+    func testNoFlameIconWhenZeroBurned() throws {
+        // Launch with Health Sync enabled but NO mock active energy (defaults to 0)
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing",
+            "--reset-app-data",
+            "--seed-calorie-user",
+            // Note: No --mock-active-energy, so burned = 0
+        ]
+        app.launch()
+
+        // Enable the feature
+        navigateToCalorieExpenditureView()
+
+        let burnedToggle = app.switches["add-burned-calories-toggle"]
+        XCTAssertTrue(burnedToggle.waitForExistence(timeout: 5), "Toggle should exist")
+
+        if burnedToggle.value as? String == "0" {
+            burnedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        }
+
+        // Navigate to Dashboard
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        backButton.tap()
+        TestUtilities.navigateToTab(app, tabName: "Dashboard")
+
+        // Wait for dashboard to load
+        let dashboardView = app.otherElements["dashboard-view"]
+        XCTAssertTrue(dashboardView.waitForExistence(timeout: 5), "Dashboard view should appear")
+
+        // Wait for nutrition card
+        let nutritionCard = app.otherElements["nutrition-rings-card"]
+        XCTAssertTrue(nutritionCard.waitForExistence(timeout: 10), "Nutrition card should appear")
+
+        // Flame icon should NOT appear when burned = 0
+        let flameIcon = app.images["burned-calories-indicator"]
+        let flameExists = flameIcon.waitForExistence(timeout: 2)
+        XCTAssertFalse(
+            flameExists,
+            "Flame icon should NOT appear when burned calories = 0"
+        )
+    }
+
     // MARK: - Happy Path Tests
 
     // MARK: - Helper Methods
