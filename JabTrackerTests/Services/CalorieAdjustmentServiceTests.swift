@@ -98,4 +98,65 @@ final class CalorieAdjustmentServiceTests: XCTestCase {
         }
         XCTAssertEqual(callDate, normalizedDate, "Should request energy for the correct date")
     }
+
+    // MARK: - Adjustment Breakdown Tests
+
+    func testGetAdjustmentBreakdown_WhenBurnedDisabled_ReturnsZeroBurned() async {
+        // Given
+        user.addBurnedCaloriesEnabled = false
+        mockDataSource.todayEnergy = 500.0
+
+        // When
+        let breakdown = await service.getAdjustmentBreakdown(for: user, on: Date())
+
+        // Then
+        XCTAssertEqual(breakdown.burnedCalories, 0.0, "Burned should be 0 when disabled")
+        XCTAssertEqual(breakdown.rolloverCalories, 0.0, "Rollover should be 0 without provider")
+        XCTAssertEqual(breakdown.totalAdjustment, 0.0, "Total should be 0")
+    }
+
+    func testGetAdjustmentBreakdown_WhenBurnedEnabled_ReturnsBurned() async {
+        // Given
+        user.addBurnedCaloriesEnabled = true
+        mockDataSource.todayEnergy = 350.0
+
+        // When
+        let breakdown = await service.getAdjustmentBreakdown(for: user, on: Date())
+
+        // Then
+        XCTAssertEqual(breakdown.burnedCalories, 350.0, "Should return burned calories")
+        XCTAssertEqual(breakdown.rolloverCalories, 0.0, "Rollover should be 0 without provider")
+        XCTAssertEqual(breakdown.totalAdjustment, 350.0, "Total should equal burned")
+    }
+
+    func testGetAdjustmentBreakdown_WhenBurnedNil_ReturnsZeroBurned() async {
+        // Given
+        user.addBurnedCaloriesEnabled = true
+        mockDataSource.todayEnergy = nil
+
+        // When
+        let breakdown = await service.getAdjustmentBreakdown(for: user, on: Date())
+
+        // Then
+        XCTAssertEqual(breakdown.burnedCalories, 0.0, "Should return 0 when energy is nil")
+        XCTAssertEqual(breakdown.totalAdjustment, 0.0, "Total should be 0")
+    }
+
+    // MARK: - CalorieAdjustmentBreakdown Tests
+
+    func testCalorieAdjustmentBreakdown_TotalAdjustment() {
+        // Given
+        let breakdown = CalorieAdjustmentBreakdown(burnedCalories: 200, rolloverCalories: 150)
+
+        // Then
+        XCTAssertEqual(breakdown.totalAdjustment, 350.0, "Total should be sum of burned and rollover")
+    }
+
+    func testCalorieAdjustmentBreakdown_ZeroValues() {
+        // Given
+        let breakdown = CalorieAdjustmentBreakdown(burnedCalories: 0, rolloverCalories: 0)
+
+        // Then
+        XCTAssertEqual(breakdown.totalAdjustment, 0.0, "Total should be 0 when components are 0")
+    }
 }
