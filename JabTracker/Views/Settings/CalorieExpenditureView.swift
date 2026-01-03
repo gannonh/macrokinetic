@@ -9,6 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct CalorieExpenditureView: View {
+    @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
 
     private var user: User? {
@@ -79,6 +80,9 @@ struct CalorieExpenditureView: View {
         .navigationTitle("Calorie Expenditure")
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("calorie-expenditure-view")
+        .onChange(of: user?.addBurnedCaloriesEnabled) { _, _ in try? modelContext.save() }
+        .onChange(of: user?.predictiveActivityEnabled) { _, _ in try? modelContext.save() }
+        .onChange(of: user?.rolloverCaloriesEnabled) { _, _ in try? modelContext.save() }
     }
 }
 

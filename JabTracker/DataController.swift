@@ -102,6 +102,10 @@ class DataController: ObservableObject {
             || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
 
         _ = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+
+        // Override inMemory if specified in launch arguments (for E2E tests)
+        let inMemory = inMemory || ProcessInfo.processInfo.arguments.contains("-inMemory")
+
         let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
 
         // CloudKit enabled ONLY for CloudKit integration tests (not regular unit tests)
@@ -373,5 +377,38 @@ class DataController: ObservableObject {
         } catch {
             Self.logger.error("Failed to seed titration test data: \(error.localizedDescription)")
         }
+    }
+
+    /// Seed user for Calorie Expenditure E2E tests
+    @MainActor
+    func seedCalorieExpenditureUser() {
+        let context = container.mainContext
+
+        // Remove existing users to ensure clean state if needed, or just find existing
+        // For E2E, usually better to ensure specific state
+        let descriptor = FetchDescriptor<User>()
+        if let existingUsers = try? context.fetch(descriptor), let user = existingUsers.first {
+            user.healthSyncEnabled = true
+            user.dailyCalorieGoal = 2000
+            user.addBurnedCaloriesEnabled = false  // Start disabled to test toggle
+            try? context.save()
+            Self.logger.info("Updated existing user for Calorie Expenditure tests")
+            return
+        }
+
+        let user = User(
+            email: "e2e@example.com",
+            name: "E2E User",
+            weight: 70.0,
+            weightUnit: "lbs",
+            timezone: "UTC"
+        )
+        user.healthSyncEnabled = true
+        user.dailyCalorieGoal = 2000
+        user.addBurnedCaloriesEnabled = false
+
+        context.insert(user)
+        try? context.save()
+        Self.logger.info("Seeded new user for Calorie Expenditure tests")
     }
 }

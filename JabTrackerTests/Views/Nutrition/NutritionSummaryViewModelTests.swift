@@ -11,11 +11,11 @@ final class NutritionSummaryViewModelTests: XCTestCase {
     var mockDataSource: MockActiveEnergyDataSource!
     var mockStarter: MockEnergyObservationStarter!
     var mockStopper: MockEnergyObservationStopper!
+    var container: ModelContainer!
 
     override func setUp() async throws {
-        let schema = Schema([User.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-        let container = try ModelContainer(for: schema, configurations: [config])
+        container = try ModelContainer(for: User.self, configurations: config)
 
         user = User()
         container.mainContext.insert(user)
@@ -155,22 +155,6 @@ final class NutritionSummaryViewModelTests: XCTestCase {
 }
 
 // MARK: - Mocks
-
-class MockActiveEnergyDataSource: ActiveEnergyDataSource {
-    var todayEnergy: Double? = 0
-
-    func getTodayActiveEnergy() async -> Double? {
-        todayEnergy
-    }
-
-    func getActiveEnergyForDate(_ date: Date) async -> Double? {
-        0
-    }
-
-    func getActiveEnergyHistory(days: Int) async -> [Date: Double] {
-        [:]
-    }
-}
 
 class MockEnergyObservationStarter {
     var isStarted = false

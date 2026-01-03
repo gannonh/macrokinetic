@@ -571,6 +571,15 @@ extension MetricsService {
             }
         }
 
+        // Trigger immediate update to ensure UI reflects current state (real or mock)
+        Task {
+            if let energy = await getTodayActiveEnergy() {
+                await MainActor.run {
+                    activeEnergyHandler?(energy)
+                }
+            }
+        }
+
         healthKitLogger.info("Started active energy observation")
     }
 
@@ -621,12 +630,26 @@ extension MetricsService {
             return await dataSource.getActiveEnergyForDate(date)
         }
 
+        // Check for launch argument mock first
+        if let mockValue = mockActiveEnergy {
+            healthKitLogger.debug("Using mock active energy: \(mockValue)")
+            return mockValue
+        }
+
         guard isHealthKitAvailable else {
             healthKitLogger.info("HealthKit not available for active energy query")
             return nil
         }
 
         return await queryActiveEnergyForDate(date)
+    }
+
+    /// Helper to specificy mock energy via launch arguments
+    private static var mockActiveEnergy: Double? {
+        guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--mock-active-energy=") }) else {
+            return nil
+        }
+        return Double(arg.replacingOccurrences(of: "--mock-active-energy=", with: ""))
     }
 
     /// Get daily active energy totals for the past N days

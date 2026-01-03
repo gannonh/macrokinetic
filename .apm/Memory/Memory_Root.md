@@ -10,3 +10,12 @@
   * [Task 1.2 - Add Active Energy Query Methods](Phase_01_HealthKit_Active_Energy/Task_1_2_Add_Active_Energy_Query_Methods.md)
   * [Task 1.3 - Implement Real-time Energy Observation](Phase_01_HealthKit_Active_Energy/Task_1_3_Implement_Realtime_Energy_Observation.md)
   * [Task 1.4 - Add User Preference Properties](Phase_01_HealthKit_Active_Energy/Task_1_4_Add_User_Preference_Properties.md)
+
+## Phase 02 – Add Burned Calories Feature Summary
+* **Outcome:** Implemented "Add Burned Calories" feature allowing real-time adjustment of daily calorie targets based on HealthKit active energy. Created `CalorieAdjustmentService` for calculation logic, wired `CalorieExpenditureView` for user settings, and updated `NutritionSummaryCard` with real-time visual feedback. Validated with comprehensive unit tests and XCUITest E2E scenarios using launch argument mocking.
+* **Agents:** Agent_Logic, Agent_UI
+* **Task Logs:**
+  * [Task 2.1 - Create CalorieAdjustmentService](Phase_02_Add_Burned_Calories_Feature/Task_2_1_Create_CalorieAdjustmentService.md)
+  * [Task 2.2 - Wire CalorieExpenditureView](Phase_02_Add_Burned_Calories_Feature/Task_2_2_Wire_CalorieExpenditureView.md)
+  * [Task 2.3 - Update NutritionSummaryCard](Phase_02_Add_Burned_Calories_Feature/Task_2_3_Update_NutritionSummaryCard.md)
+  * [Task 2.4 - E2E Test Implementation](Phase_02_Add_Burned_Calories_Feature/Task_2_4_E2E_Test_Implementation.md)
