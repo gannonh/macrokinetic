@@ -77,6 +77,12 @@ final class User {
     // Health integration preferences
     var healthSyncEnabled: Bool = false  // Whether user has enabled Health app integration
 
+    // Active Energy Preferences
+    var addBurnedCaloriesEnabled: Bool = false
+    var rolloverCaloriesEnabled: Bool = false
+    var predictiveActivityEnabled: Bool = false
+    var predictedActivityBonus: Double = 0.0
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]?  // CloudKit requires optional relationships
 
@@ -113,7 +119,11 @@ final class User {
         enabledPhotoTypes: [String] = ["front"],
         cardioExperience: String = "intermediate",
         liftingExperience: String = "intermediate",
-        healthSyncEnabled: Bool = false
+        healthSyncEnabled: Bool = false,
+        addBurnedCaloriesEnabled: Bool = false,
+        rolloverCaloriesEnabled: Bool = false,
+        predictiveActivityEnabled: Bool = false,
+        predictedActivityBonus: Double = 0.0
     ) {
         self.email = email
         self.name = name
@@ -139,6 +149,10 @@ final class User {
         self.cardioExperience = cardioExperience
         self.liftingExperience = liftingExperience
         self.healthSyncEnabled = healthSyncEnabled
+        self.addBurnedCaloriesEnabled = addBurnedCaloriesEnabled
+        self.rolloverCaloriesEnabled = rolloverCaloriesEnabled
+        self.predictiveActivityEnabled = predictiveActivityEnabled
+        self.predictedActivityBonus = predictedActivityBonus
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
