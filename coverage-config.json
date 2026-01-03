@@ -84,7 +84,8 @@
           "Services/MetricsService.swift",
           "Services/ProgressPhotoService.swift",
           "Services/TDEEService.swift",
-          "Services/WeeklyCheckInService.swift"
+          "Services/WeeklyCheckInService.swift",
+          "Services/CalorieAdjustmentService.swift"
         ]
       },
       "framework_integration": {
@@ -120,7 +121,8 @@
           "ViewModels/CreateFoodViewModel.swift",
           "ViewModels/QuickAddViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
-          "Views/Dashboard/QuickDoseViewModel.swift"
+          "Views/Dashboard/QuickDoseViewModel.swift",
+          "Views/Nutrition/NutritionSummaryViewModel.swift"
         ]
       },
       "utilities": {

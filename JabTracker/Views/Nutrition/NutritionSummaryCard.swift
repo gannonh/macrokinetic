@@ -18,13 +18,20 @@ struct NutritionSummaryCard: View {
     /// Date to display targets for (default: today)
     var targetDate: Date = Date()
 
-    @State private var totals: DailyNutritionTotals = .zero
-    @State private var isLoading = true
-    @State private var loadError: Error?
+    @State private var viewModel: NutritionSummaryViewModel
 
     /// Get macro targets for the target date, considering per-day distribution
-    private var macroTargets: DailyMacros {
+    private var baseMacroTargets: DailyMacros {
         user.macroTargetsForDate(targetDate)
+    }
+
+    // MARK: - Initialization
+
+    init(user: User, mealLogService: MealLogService?, targetDate: Date = Date()) {
+        self.user = user
+        self.mealLogService = mealLogService
+        self.targetDate = targetDate
+        self._viewModel = State(initialValue: NutritionSummaryViewModel(mealLogService: mealLogService))
     }
 
     // MARK: - Constants
@@ -50,9 +57,9 @@ struct NutritionSummaryCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 headerSection
 
-                if isLoading {
+                if viewModel.isLoading {
                     loadingSection
-                } else if loadError != nil {
+                } else if viewModel.loadError != nil {
                     errorSection
                 } else {
                     macroRingsSection
@@ -61,7 +68,18 @@ struct NutritionSummaryCard: View {
         }
         .accessibilityIdentifier("nutrition-rings-card")
         .task(id: "\(mealLogService?.dataVersion.uuidString ?? "none")-\(targetDate.timeIntervalSince1970)") {
-            await loadTotals()
+            await viewModel.loadData(for: targetDate)
+            await viewModel.updateCalorieTarget(user: user, date: targetDate)
+            viewModel.startEnergyObservation(user: user, date: targetDate)
+        }
+        .onChange(of: user.addBurnedCaloriesEnabled) { _, _ in
+            viewModel.startEnergyObservation(user: user, date: targetDate)
+        }
+        .onChange(of: user.healthSyncEnabled) { _, _ in
+            viewModel.startEnergyObservation(user: user, date: targetDate)
+        }
+        .onDisappear {
+            viewModel.stopEnergyObservation()
         }
     }
 
@@ -96,33 +114,34 @@ struct NutritionSummaryCard: View {
     }
 
     private var macroRingsSection: some View {
-        let targets = macroTargets
+        let targets = baseMacroTargets
 
         return HStack(spacing: 16) {
             macroRing(
                 label: "Calories",
-                consumed: totals.calories,
-                goal: targets.calories,
+                consumed: viewModel.totals.calories,
+                goal: viewModel.adjustedCalorieTarget,  // Use adjusted target from ViewModel
                 color: DesignTokens.Colors.calories,
-                unit: "kcal"
+                unit: "kcal",
+                isCalories: true
             )
             macroRing(
                 label: "Protein",
-                consumed: totals.protein,
+                consumed: viewModel.totals.protein,
                 goal: targets.proteinGrams,
                 color: DesignTokens.Colors.protein,
                 unit: "g"
             )
             macroRing(
                 label: "Carbs",
-                consumed: totals.carbs,
+                consumed: viewModel.totals.carbs,
                 goal: targets.carbsGrams,
                 color: DesignTokens.Colors.carbs,
                 unit: "g"
             )
             macroRing(
                 label: "Fat",
-                consumed: totals.fat,
+                consumed: viewModel.totals.fat,
                 goal: targets.fatGrams,
                 color: DesignTokens.Colors.fat,
                 unit: "g"
@@ -139,7 +158,8 @@ struct NutritionSummaryCard: View {
         consumed: Double,
         goal: Double,
         color: Color,
-        unit: String
+        unit: String,
+        isCalories: Bool = false
     ) -> some View {
         let progress = progressPercentage(consumed: consumed, goal: goal)
         let ringColor = progressColor(for: progress, baseColor: color)
@@ -156,9 +176,19 @@ struct NutritionSummaryCard: View {
             )
 
             // Goal text below ring
-            Text("\(Int(goal.rounded())) \(unit)")
-                .font(.caption2)
-                .foregroundColor(.secondary)
+            HStack(spacing: 2) {
+                Text("\(Int(goal.rounded())) \(unit)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+
+                // Visual Indicator for Burned Calories
+                if isCalories && viewModel.activeEnergyBurned > 0 {
+                    Image(systemName: "flame.fill")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                        .accessibilityIdentifier("burned-calories-indicator")
+                }
+            }
 
             // Remaining/over text
             Text(remainingText(consumed: consumed, goal: goal))
@@ -193,23 +223,6 @@ struct NutritionSummaryCard: View {
         } else {
             return "+\(Int(abs(remaining).rounded())) over"
         }
-    }
-
-    @MainActor
-    private func loadTotals() async {
-        guard let service = mealLogService else {
-            isLoading = false
-            return
-        }
-
-        do {
-            totals = try await service.getDailyTotals(for: targetDate)
-            loadError = nil
-        } catch {
-            loadError = error
-            Self.logger.error("Failed to load daily nutrition totals: \(error.localizedDescription)")
-        }
-        isLoading = false
     }
 }
 
