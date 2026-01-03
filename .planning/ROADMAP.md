@@ -32,7 +32,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 **Plans:** TBD
 
 Plans:
-- [ ] 18-01: TBD (run /gsd:plan-phase 18 to break down)
+- [x] 18-01: Add Burned Calories E2E Tests (3 tasks)
 
 #### Phase 19: Rollover Calories
 
@@ -69,12 +69,12 @@ Plans:
 **Execution Order:**
 Phases execute in numeric order within each milestone.
 
-| Phase                              | Milestone | Plans Complete | Status      | Completed |
-| ---------------------------------- | --------- | -------------- | ----------- | --------- |
-| 18. Complete Add Burned Calories   | v0.4.0    | 0/?            | Not started | -         |
-| 19. Rollover Calories              | v0.4.0    | 0/?            | Not started | -         |
-| 20. Predictive Activity Adjustment | v0.4.0    | 0/?            | Not started | -         |
-| 21. Integration & Polish           | v0.4.0    | 0/?            | Not started | -         |
+| Phase                              | Milestone | Plans Complete | Status      | Completed  |
+| ---------------------------------- | --------- | -------------- | ----------- | ---------- |
+| 18. Complete Add Burned Calories   | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
+| 19. Rollover Calories              | v0.4.0    | 0/?            | Not started | -          |
+| 20. Predictive Activity Adjustment | v0.4.0    | 0/?            | Not started | -          |
+| 21. Integration & Polish           | v0.4.0    | 0/?            | Not started | -          |
 
 <details>
 <summary>✅ v0.3.0 Goals & Nutrition Programs (Phases 12-17) - SHIPPED 2026-01-02</summary>
