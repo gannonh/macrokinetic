@@ -28,9 +28,9 @@ Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: TBD
-PR: TBD
-Branch: TBD
+Issue: #326
+PR: #325
+Branch: feat/v0.4.0-calorie-expenditure-enhancements
 
 ## Performance Metrics
 
