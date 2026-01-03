@@ -193,6 +193,11 @@ struct FoodLogView: View {
                 startEnergyObservation()
             }
         }
+        .onChange(of: users.first?.rolloverCaloriesEnabled) { _, _ in
+            Task {
+                await updateCalorieTarget()
+            }
+        }
         .onDisappear {
             MetricsService.stopActiveEnergyObservation()
         }

@@ -52,6 +52,7 @@ final class RolloverCalorieProvider: CalorieAdjustmentProvider {
     func calculateAdjustment(for user: User, on date: Date) async -> Double {
         // Check feature flag
         guard user.rolloverCaloriesEnabled else {
+            Self.logger.debug("Rollover disabled for user")
             return 0.0
         }
 
@@ -63,11 +64,14 @@ final class RolloverCalorieProvider: CalorieAdjustmentProvider {
             return 0.0
         }
 
+        Self.logger.debug("Calculating rollover for date: \(date), yesterday: \(yesterday)")
+
         // Fetch yesterday's consumption
         let consumed: Double
         do {
             let totals = try await nutritionDataSource.getDailyTotals(for: yesterday)
             consumed = totals.calories
+            Self.logger.debug("Yesterday's consumed calories: \(consumed)")
         } catch {
             Self.logger.error("Failed to fetch yesterday's nutrition: \(error.localizedDescription)")
             return 0.0
@@ -75,16 +79,16 @@ final class RolloverCalorieProvider: CalorieAdjustmentProvider {
 
         // Get yesterday's base target (not adjusted to avoid recursion)
         let baseTarget = nutritionDataSource.getBaseCalorieTarget(for: user, on: yesterday)
+        Self.logger.debug("Yesterday's base target: \(baseTarget)")
 
         // Calculate unused calories
         let unused = baseTarget - consumed
+        Self.logger.debug("Unused calories: \(unused)")
 
         // Return capped rollover (0 to maxRollover)
         let rollover = min(max(unused, 0), Self.maxRollover)
-
-        if rollover > 0 {
-            Self.logger.info("Rollover: \(rollover) kcal (target: \(baseTarget), consumed: \(consumed))")
-        }
+        Self.logger.info(
+            "Rollover result: \(rollover) kcal (target: \(baseTarget), consumed: \(consumed), unused: \(unused))")
 
         return rollover
     }
