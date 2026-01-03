@@ -31,7 +31,11 @@ struct NutritionSummaryCard: View {
         self.user = user
         self.mealLogService = mealLogService
         self.targetDate = targetDate
-        self._viewModel = State(initialValue: NutritionSummaryViewModel(mealLogService: mealLogService))
+        self._viewModel = State(
+            initialValue: NutritionSummaryViewModel(
+                mealLogService: mealLogService,
+                calorieAdjustmentService: AppServices.shared.calorieAdjustmentService
+            ))
     }
 
     // MARK: - Constants

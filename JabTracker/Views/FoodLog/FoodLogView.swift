@@ -61,7 +61,6 @@ struct FoodLogView: View {
     // Burned calories support
     @State private var adjustedCalorieTarget: Double = 0
     @State private var activeEnergyBurned: Double = 0
-    private let calorieAdjustmentService = CalorieAdjustmentService()
 
     private let calendar = Calendar.current
 
@@ -201,9 +200,11 @@ struct FoodLogView: View {
 
     // MARK: - Calorie Adjustment
 
-    /// Update the adjusted calorie target based on burned calories
+    /// Update the adjusted calorie target based on burned calories and rollover
     private func updateCalorieTarget() async {
-        guard let user = users.first else {
+        guard let user = users.first,
+            let calorieAdjustmentService = AppServices.shared.calorieAdjustmentService
+        else {
             adjustedCalorieTarget = 0
             return
         }

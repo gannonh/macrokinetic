@@ -42,7 +42,7 @@ Plans:
 **Plans:** TBD
 
 Plans:
-- [ ] 19-01: TBD
+- [x] 19-01: Rollover Calories Implementation (4 tasks)
 
 #### Phase 20: Predictive Activity Adjustment
 
@@ -72,7 +72,7 @@ Phases execute in numeric order within each milestone.
 | Phase                              | Milestone | Plans Complete | Status      | Completed  |
 | ---------------------------------- | --------- | -------------- | ----------- | ---------- |
 | 18. Complete Add Burned Calories   | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
-| 19. Rollover Calories              | v0.4.0    | 0/?            | Not started | -          |
+| 19. Rollover Calories              | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
 | 20. Predictive Activity Adjustment | v0.4.0    | 0/?            | Not started | -          |
 | 21. Integration & Polish           | v0.4.0    | 0/?            | Not started | -          |
 

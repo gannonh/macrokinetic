@@ -85,7 +85,8 @@
           "Services/ProgressPhotoService.swift",
           "Services/TDEEService.swift",
           "Services/WeeklyCheckInService.swift",
-          "Services/CalorieAdjustmentService.swift"
+          "Services/CalorieAdjustmentService.swift",
+          "Services/CalorieAdjustmentService+Adjustments.swift"
         ]
       },
       "framework_integration": {
