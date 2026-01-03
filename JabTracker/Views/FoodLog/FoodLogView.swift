@@ -58,6 +58,11 @@ struct FoodLogView: View {
     @State private var editingEntry: FoodEntry?
     @State private var entriesGroupedByDate: [Date: Int] = [:]
 
+    // Burned calories support
+    @State private var adjustedCalorieTarget: Double = 0
+    @State private var activeEnergyBurned: Double = 0
+    private let calorieAdjustmentService = CalorieAdjustmentService()
+
     private let calendar = Calendar.current
 
     /// Get macro targets for the selected date, considering per-day distribution
@@ -171,9 +176,65 @@ struct FoodLogView: View {
         .accessibilityIdentifier("food-log-view")
         .task(id: selectedDate) {
             loadWeekEntries()
+            await updateCalorieTarget()
+            startEnergyObservation()
         }
         .onChange(of: allEntries.count) {
             loadWeekEntries()
+        }
+        .onChange(of: users.first?.addBurnedCaloriesEnabled) { _, _ in
+            Task {
+                await updateCalorieTarget()
+                startEnergyObservation()
+            }
+        }
+        .onChange(of: users.first?.healthSyncEnabled) { _, _ in
+            Task {
+                await updateCalorieTarget()
+                startEnergyObservation()
+            }
+        }
+        .onDisappear {
+            MetricsService.stopActiveEnergyObservation()
+        }
+    }
+
+    // MARK: - Calorie Adjustment
+
+    /// Update the adjusted calorie target based on burned calories
+    private func updateCalorieTarget() async {
+        guard let user = users.first else {
+            adjustedCalorieTarget = 0
+            return
+        }
+        let baseTargets = user.macroTargetsForDate(selectedDate)
+        adjustedCalorieTarget = await calorieAdjustmentService.getAdjustedCalorieTarget(
+            for: user,
+            on: selectedDate,
+            baseTarget: baseTargets.calories
+        )
+    }
+
+    /// Start observing active energy if feature is enabled
+    private func startEnergyObservation() {
+        // Stop any existing observation first
+        MetricsService.stopActiveEnergyObservation()
+
+        guard let user = users.first,
+            user.addBurnedCaloriesEnabled,
+            user.healthSyncEnabled,
+            calendar.isDateInToday(selectedDate)
+        else {
+            // Reset burned value when conditions aren't met
+            activeEnergyBurned = 0
+            return
+        }
+
+        MetricsService.startActiveEnergyObservation { energy in
+            self.activeEnergyBurned = energy
+            Task {
+                await self.updateCalorieTarget()
+            }
         }
     }
 
@@ -214,6 +275,8 @@ struct FoodLogView: View {
     private var dailySummaryCard: some View {
         let totals = calculateTotals()
         let targets = macroTargets
+        // Use adjusted calorie target (includes burned calories) if available
+        let calorieTarget = adjustedCalorieTarget > 0 ? adjustedCalorieTarget : targets.calories
 
         return VStack(spacing: 12) {
             Text(summaryTitle)
@@ -222,11 +285,10 @@ struct FoodLogView: View {
                 .accessibilityIdentifier("daily-summary-title")
 
             HStack(spacing: 20) {
-                macroColumn(
+                calorieColumn(
                     consumed: totals.calories,
-                    target: targets.calories,
-                    label: "Cal",
-                    color: .orange
+                    target: calorieTarget,
+                    showFlame: activeEnergyBurned > 0
                 )
                 macroColumn(
                     consumed: totals.protein,
@@ -250,6 +312,40 @@ struct FoodLogView: View {
         }
         .padding()
         .cardStyle()
+        .accessibilityIdentifier("food-log-daily-summary")
+    }
+
+    /// Calorie column with optional flame icon for burned calories
+    private func calorieColumn(consumed: Double, target: Double, showFlame: Bool) -> some View {
+        let remaining = target - consumed
+        let isOver = remaining < 0
+        let color = Color.orange
+
+        return VStack(spacing: 4) {
+            Text("\(Int(consumed.rounded()))")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(isOver ? .red : color)
+            Text("Cal")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            // Show remaining/over if target is set
+            if target > 0 {
+                HStack(spacing: 2) {
+                    Text(isOver ? "+\(Int(abs(remaining).rounded()))" : "\(Int(remaining.rounded())) left")
+                        .font(.caption2)
+                        .foregroundColor(isOver ? .red : .secondary)
+                    if showFlame {
+                        Image(systemName: "flame.fill")
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                            .accessibilityIdentifier("food-log-burned-indicator")
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityIdentifier("food-log-calorie-column")
     }
 
     private func macroColumn(consumed: Double, target: Double, label: String, color: Color) -> some View {
@@ -257,7 +353,7 @@ struct FoodLogView: View {
         let isOver = remaining < 0
 
         return VStack(spacing: 4) {
-            Text("\(Int(consumed))")
+            Text("\(Int(consumed.rounded()))")
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(isOver ? .red : color)
@@ -266,7 +362,7 @@ struct FoodLogView: View {
                 .foregroundColor(.secondary)
             // Show remaining/over if target is set
             if target > 0 {
-                Text(isOver ? "+\(Int(abs(remaining)))" : "\(Int(remaining)) left")
+                Text(isOver ? "+\(Int(abs(remaining).rounded()))" : "\(Int(remaining.rounded())) left")
                     .font(.caption2)
                     .foregroundColor(isOver ? .red : .secondary)
             }

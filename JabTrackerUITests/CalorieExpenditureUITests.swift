@@ -177,6 +177,60 @@ final class CalorieExpenditureUITests: XCTestCase {
         )
     }
 
+    /// Test that Food Log also shows adjusted calories (not just Dashboard)
+    /// This validates the bug fix where Food Log was showing base target instead of adjusted
+    func testFoodLogShowsAdjustedCalories() throws {
+        // Launch app with calorie expenditure test user and mock active energy
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing",
+            "--reset-app-data",
+            "--seed-calorie-user",
+            "--mock-active-energy=250",
+        ]
+        app.launch()
+
+        // Enable Add Burned Calories
+        navigateToCalorieExpenditureView()
+
+        let burnedToggle = app.switches["add-burned-calories-toggle"]
+        XCTAssertTrue(burnedToggle.waitForExistence(timeout: 5), "Toggle should exist")
+
+        if burnedToggle.value as? String == "0" {
+            burnedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        }
+
+        // Navigate to Food Log tab
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        backButton.tap()
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+
+        // Wait for Food Log to load
+        let foodLogView = app.otherElements["food-log-view"]
+        XCTAssertTrue(foodLogView.waitForExistence(timeout: 5), "Food Log view should appear")
+
+        // Wait for daily summary to load - identifier is on StaticText elements inside the card
+        let dailySummaryText = app.staticTexts["food-log-daily-summary"].firstMatch
+        XCTAssertTrue(dailySummaryText.waitForExistence(timeout: 10), "Daily summary should appear")
+
+        // Verify flame icon appears in Food Log (indicates burned calories working)
+        // The flame image has label "Flame" and inherits identifier from parent
+        let flameIcon = app.images.matching(NSPredicate(format: "label == 'Flame'")).firstMatch
+        XCTAssertTrue(
+            flameIcon.waitForExistence(timeout: 5),
+            "Flame icon should appear in Food Log when burned calories > 0"
+        )
+
+        // Verify the adjusted calorie target is displayed (2000 base + 250 burned = 2250)
+        let adjustedTarget = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS '2,250' OR label CONTAINS '2250'")
+        ).firstMatch
+        XCTAssertTrue(
+            adjustedTarget.waitForExistence(timeout: 5),
+            "Food Log should show adjusted target (2250 = 2000 base + 250 burned)"
+        )
+    }
+
     /// Test that flame icon does not appear when no activity is burned
     func testNoFlameIconWhenZeroBurned() throws {
         // Launch with Health Sync enabled but NO mock active energy (defaults to 0)
