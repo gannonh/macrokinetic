@@ -30,6 +30,9 @@ extension MetricsService {
     private static let bodyFatType = HKQuantityType(.bodyFatPercentage)
     private static let waistType = HKQuantityType(.waistCircumference)
 
+    // Quantity types (read-only)
+    private static let activeEnergyType = HKQuantityType(.activeEnergyBurned)
+
     // Characteristic types (read-only, needed for TDEE calculation)
     private static let biologicalSexType = HKCharacteristicType(.biologicalSex)
     private static let dateOfBirthType = HKCharacteristicType(.dateOfBirth)
@@ -37,6 +40,7 @@ extension MetricsService {
     // All types for authorization - includes characteristics for TDEE
     private static let allReadTypes: Set<HKObjectType> = [
         weightType, heightType, bodyFatType, waistType,
+        activeEnergyType,
         biologicalSexType, dateOfBirthType,
     ]
     private static let allWriteTypes: Set<HKSampleType> = [weightType, heightType, bodyFatType, waistType]
@@ -45,6 +49,19 @@ extension MetricsService {
     static var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
     }
+
+    #if DEBUG
+        /// Test accessor: Returns the set of HealthKit types requested for read authorization
+        /// Used to verify authorization configuration includes all required types
+        static var testableReadTypes: Set<HKObjectType> {
+            allReadTypes
+        }
+
+        /// Test accessor: Returns the active energy burned type for verification
+        static var testableActiveEnergyType: HKQuantityType {
+            activeEnergyType
+        }
+    #endif
 
     // MARK: - Authorization
 
