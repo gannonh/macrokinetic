@@ -16,18 +16,65 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 📋 **v0.4.0** - Next milestone (planned)
+- 🚧 **v0.4.0 Calorie Expenditure Enhancements** - Phases 18-21 (in progress)
 
 ## Phases
 
-_No active phases. See Completed Milestones for archived work._
+### 🚧 v0.4.0 Calorie Expenditure Enhancements (In Progress)
+
+**Milestone Goal:** Enhance calorie targets with real-time burned calories from HealthKit, rollover unused calories, and predictive activity adjustments based on historical trends.
+
+#### Phase 18: Complete Add Burned Calories
+
+**Goal:** Complete E2E tests for Add Burned Calories feature (HealthKit integration and service layer already done)
+**Depends on:** Previous milestone complete
+**Research:** Unlikely (E2E patterns established)
+**Plans:** TBD
+
+Plans:
+- [ ] 18-01: TBD (run /gsd:plan-phase 18 to break down)
+
+#### Phase 19: Rollover Calories
+
+**Goal:** Carry up to 200 unused calories from yesterday to today with CalorieAdjustmentService integration
+**Depends on:** Phase 18
+**Research:** Unlikely (internal calculation patterns)
+**Plans:** TBD
+
+Plans:
+- [ ] 19-01: TBD
+
+#### Phase 20: Predictive Activity Adjustment
+
+**Goal:** Apply 7-day activity average with goal-mode multipliers (0.8/1.0/1.2) during weekly check-in
+**Depends on:** Phase 19
+**Research:** Unlikely (existing WeeklyCheckInService integration)
+**Plans:** TBD
+
+Plans:
+- [ ] 20-01: TBD
+
+#### Phase 21: Integration & Polish
+
+**Goal:** Final integration testing, edge case handling, and UI polish for all calorie expenditure features
+**Depends on:** Phase 20
+**Research:** Unlikely (internal patterns)
+**Plans:** TBD
+
+Plans:
+- [ ] 21-01: TBD
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
 
-_No active milestone._
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 18. Complete Add Burned Calories | v0.4.0 | 0/? | Not started | - |
+| 19. Rollover Calories | v0.4.0 | 0/? | Not started | - |
+| 20. Predictive Activity Adjustment | v0.4.0 | 0/? | Not started | - |
+| 21. Integration & Polish | v0.4.0 | 0/? | Not started | - |
 
 <details>
 <summary>✅ v0.3.0 Goals & Nutrition Programs (Phases 12-17) - SHIPPED 2026-01-02</summary>
