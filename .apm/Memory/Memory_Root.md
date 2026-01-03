@@ -1,3 +1,3 @@
-# <Project Name> – APM Memory Root
+# MacroKinetic v0.4.0 Calorie Expenditure Enhancements – APM Memory Root
 **Memory Strategy:** Dynamic-MD
-**Project Overview:** [To be filled by Manager Agent before first phase execution]
+**Project Overview:** Implement 3 calorie expenditure features for MacroKinetic iOS app: (1) Add Burned Calories – read activeEnergyBurned from HealthKit and add to daily targets in real-time, (2) Rollover Calories – carry up to 200 unused calories from yesterday to today, (3) Predictive Activity Adjustment – apply 7-day activity average with goal-mode multipliers during weekly check-in. Implementation spans 4 phases across 17 tasks with 3 Implementation Agents (Agent_HealthKit, Agent_Logic, Agent_UI). Architecture: MVVM + Service Layer, @Observable, iOS 17+, SwiftData, CloudKit sync.
