@@ -26,7 +26,7 @@ struct FoodSearchSheet: View {
 
     // MARK: - Environment
 
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) var dismiss
 
     // MARK: - State
 
@@ -179,16 +179,7 @@ struct FoodSearchSheet: View {
                     contentSection
                 }
             }
-            .navigationTitle("Add Food")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .accessibilityIdentifier("food-search-cancel-button")
-                }
-            }
+            .navigationBarHidden(true)
         }
         .accessibilityIdentifier(Self.accessibilityIdentifierValue)
         .sheet(isPresented: $showingFoodDetail) {
@@ -266,14 +257,25 @@ struct FoodSearchSheet: View {
     // MARK: - Method Tabs Section
 
     private var methodTabsSection: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(SearchMethod.allCases) { method in
-                    methodTabButton(method)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(SearchMethod.allCases) { method in
+                        methodTabButton(method)
+                            .id(method)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+            .onAppear {
+                // Scroll to selected method tab on appear
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation {
+                        proxy.scrollTo(viewModel.selectedMethod, anchor: .center)
+                    }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
         .background(Color(.secondarySystemBackground))
     }

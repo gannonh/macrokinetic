@@ -228,7 +228,7 @@ struct DeeplinkHandlerTests {
         let urlString = "jab-tracker://dose/log?scheduledDoseId=\(scheduledDoseId.uuidString)"
         let url = try #require(URL(string: urlString))
 
-        var receivedNotification: Notification?
+        nonisolated(unsafe) var receivedNotification: Notification?
         let expectation = XCTestExpectation(description: "Notification received")
 
         let observer = NotificationCenter.default.addObserver(

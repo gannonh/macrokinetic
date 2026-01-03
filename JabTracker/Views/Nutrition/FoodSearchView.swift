@@ -243,16 +243,19 @@ struct FoodSearchResultRow: View {
                 HStack(spacing: 8) {
                     Text("\(Int(result.caloriesPerServing)) cal")
                         .fontWeight(.medium)
+                        .foregroundColor(DesignTokens.Colors.calories)
 
                     Text("•")
                         .foregroundColor(.secondary)
 
                     HStack(spacing: 4) {
                         Text("P:\(Int(result.proteinPerServing))")
+                            .foregroundColor(DesignTokens.Colors.protein)
                         Text("C:\(Int(result.carbsPerServing))")
+                            .foregroundColor(DesignTokens.Colors.carbs)
                         Text("F:\(Int(result.fatPerServing))")
+                            .foregroundColor(DesignTokens.Colors.fat)
                     }
-                    .foregroundColor(.secondary)
                 }
                 .font(DesignTokens.Typography.caption)
             }

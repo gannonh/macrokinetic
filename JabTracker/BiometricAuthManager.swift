@@ -18,8 +18,21 @@ enum BiometricAvailability {
     case unknown
 }
 
+/// Manages biometric authentication (Face ID, Touch ID, Optic ID) for app access.
+///
+/// **Usage Pattern:**
+/// - Use `BiometricAuthManager.shared` for app-wide biometric state in views
+/// - For testing, create a new instance directly: `BiometricAuthManager()`
+///
+/// The singleton pattern is intentional here because biometric state must be
+/// consistent across the app - there's only one Face ID/Touch ID sensor per device.
 @MainActor
 class BiometricAuthManager: ObservableObject {
+    /// Shared singleton instance for app-wide biometric state.
+    ///
+    /// Use this in production code. For testing, create a new instance directly.
+    static let shared = BiometricAuthManager()
+
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
         category: "BiometricAuthManager")
@@ -38,14 +51,7 @@ class BiometricAuthManager: ObservableObject {
             Self.logger.info(
                 "🔐 BiometricAuthManager: isBiometricEnabled did change to \(self.isBiometricEnabled, privacy: .public)"
             )
-            // In UI testing mode, just store in memory since UserDefaults can be unreliable
-            let isUITesting =
-                ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
-                || ProcessInfo.processInfo.arguments.contains("--ui-testing")
-
-            if !isUITesting {
-                UserDefaults.standard.set(self.isBiometricEnabled, forKey: "biometricAuthEnabled")
-            }
+            UserDefaults.standard.set(self.isBiometricEnabled, forKey: "biometricAuthEnabled")
         }
     }
 
@@ -53,20 +59,8 @@ class BiometricAuthManager: ObservableObject {
     @Published var isAvailable: Bool = false
 
     init() {
-        // Detect testing environments for predictable behavior
-        let isUITesting =
-            ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
-            || ProcessInfo.processInfo.arguments.contains("--ui-testing")
-        let isUnitTesting = NSClassFromString("XCTestCase") != nil
-
-        if isUITesting || isUnitTesting {
-            // In testing mode, always start with disabled state for predictable behavior
-            self.isBiometricEnabled = false
-        } else {
-            // In production, load from UserDefaults (defaults to false if key doesn't exist)
-            self.isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
-        }
-
+        // Always load from UserDefaults - the --reset-app-data flag handles clearing if needed
+        self.isBiometricEnabled = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
         self.checkBiometricAvailability()
     }
 
@@ -192,6 +186,17 @@ class BiometricAuthManager: ObservableObject {
 
     func setBiometricPreference(enabled: Bool) {
         self.isBiometricEnabled = enabled
+    }
+
+    /// Refresh the biometric enabled state from UserDefaults
+    ///
+    /// Call this when a view appears to ensure the state is in sync with UserDefaults,
+    /// especially after another view may have modified the preference.
+    func refreshFromUserDefaults() {
+        let storedValue = UserDefaults.standard.bool(forKey: "biometricAuthEnabled")
+        if storedValue != isBiometricEnabled {
+            isBiometricEnabled = storedValue
+        }
     }
 
     // Force objectWillChange for testing

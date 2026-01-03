@@ -8,8 +8,8 @@ line_length:
   error: 200
 
 file_length:
-  warning: 1000  # Comprehensive test suites need more space
-  error: 1200
+  warning: 1200  # Comprehensive test suites need more space
+  error: 1500  # Allow large test files for coverage
 
 type_body_length:
   warning: 800

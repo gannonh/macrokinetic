@@ -42,7 +42,7 @@ class DataController: ObservableObject {
             email: "preview@example.com",
             name: "Preview User",
             weight: 70.0,
-            weightUnit: "kg",
+            weightUnit: "lbs",
             timezone: "UTC")
 
         let sampleMedication = MedicationProfile(
@@ -73,20 +73,25 @@ class DataController: ObservableObject {
 
     let container: ModelContainer
 
+    /// All SwiftData model types registered with the app
+    private static let modelTypes: [any PersistentModel.Type] = [
+        User.self,
+        Dose.self,
+        MedicationProfile.self,
+        DoseTitration.self,
+        DoseSchedule.self,
+        ScheduledDose.self,
+        Food.self,
+        FoodEntry.self,
+        WeightEntry.self,
+        MetricsEntry.self,
+        ProgressPhoto.self,
+        NutritionGoal.self,
+        NutritionProgram.self,
+    ]
+
     init(inMemory: Bool = false) {
-        let schema = Schema([
-            User.self,
-            Dose.self,
-            MedicationProfile.self,
-            DoseTitration.self,
-            DoseSchedule.self,
-            ScheduledDose.self,
-            Food.self,
-            FoodEntry.self,
-            WeightEntry.self,
-            MetricsEntry.self,
-            ProgressPhoto.self,
-        ])
+        let schema = Schema(Self.modelTypes)
 
         // Configure CloudKit database for production vs in-memory/testing
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"

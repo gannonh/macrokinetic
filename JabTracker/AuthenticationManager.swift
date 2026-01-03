@@ -225,7 +225,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 email: "test@uitesting.com",
                 name: "UI Test User",
                 weight: 70.0,
-                weightUnit: "kg")
+                weightUnit: "lbs")
             context.insert(mockUser)
             isNewUser = true
             Self.logger.info("✅ AuthenticationManager: Creating new UI testing mock user")
@@ -238,14 +238,20 @@ class AuthenticationManager: NSObject, ObservableObject {
                 self.authenticationState = .authenticated
             }
 
-            // Mark onboarding as complete if bypass flag is set
-            if ProcessInfo.processInfo.arguments.contains("--bypass-onboarding") {
+            // Mark onboarding as complete for UI testing (unless --force-onboarding is set)
+            // This prevents issues with existing CloudKit users that have medication profiles
+            // but hasCompletedOnboarding=false
+            let shouldBypassOnboarding =
+                ProcessInfo.processInfo.arguments.contains("--bypass-onboarding")
+                || !ProcessInfo.processInfo.arguments.contains("--force-onboarding")
+
+            if shouldBypassOnboarding && !mockUser.hasCompletedOnboarding {
                 mockUser.hasCompletedOnboarding = true
                 mockUser.onboardingCompletedAt = Date()
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
                 try? context.save()
-                Self.logger.info("✅ AuthenticationManager: Marked onboarding as complete (bypass enabled)")
+                Self.logger.info("✅ AuthenticationManager: Marked onboarding as complete (UI testing mode)")
             }
 
             // Only seed test data on first launch
@@ -284,9 +290,40 @@ class AuthenticationManager: NSObject, ObservableObject {
                 daysOfHistory = 90
             } else if arguments.contains("--seed-test-1y") {
                 daysOfHistory = 365
-            } else {
+            }
+
+            // Check for check-in seeding flags (different data quality tiers)
+            let shouldSeedCheckInReady = arguments.contains("--seed-check-in-ready")
+            let shouldSeedCheckInGood = arguments.contains("--seed-check-in-good")
+            let shouldSeedCheckInMinimum = arguments.contains("--seed-check-in-minimum")
+            let shouldSeedCheckInInsufficient = arguments.contains("--seed-check-in-insufficient")
+
+            // Program style modifier (default: Coached, with flag: Collaborative)
+            let useCollaborative = arguments.contains("--seed-collaborative")
+            let programStyle: ProgramStyle = useCollaborative ? .collaborative : .coached
+
+            let hasCheckInSeeding =
+                shouldSeedCheckInReady || shouldSeedCheckInGood
+                || shouldSeedCheckInMinimum || shouldSeedCheckInInsufficient
+
+            // If neither flag is present, skip seeding
+            if daysOfHistory == 0 && !hasCheckInSeeding {
                 return  // No seeding requested
             }
+
+            // Seed check-in data based on requested tier (only one tier at a time)
+            if shouldSeedCheckInReady {
+                await seedCheckInReadyData(for: user, context: context, programStyle: programStyle)
+            } else if shouldSeedCheckInGood {
+                await seedCheckInGoodData(for: user, context: context, programStyle: programStyle)
+            } else if shouldSeedCheckInMinimum {
+                await seedCheckInMinimumData(for: user, context: context, programStyle: programStyle)
+            } else if shouldSeedCheckInInsufficient {
+                await seedCheckInInsufficientData(for: user, context: context, programStyle: programStyle)
+            }
+
+            // Skip dose seeding if only check-in-ready was requested
+            guard daysOfHistory > 0 else { return }
 
             Self.logger.info("🌱 Test data seeding requested for \(daysOfHistory) days")
 
@@ -369,6 +406,445 @@ class AuthenticationManager: NSObject, ObservableObject {
         #endif
     }
 
+    /// Seed nutrition goal and program with check-in ready state for UI testing
+    /// Creates a weight loss goal with specified program style, sets lastCheckInDate to 10 days ago
+    // swiftlint:disable:next function_body_length
+    private func seedCheckInReadyData(
+        for user: User,
+        context: ModelContext,
+        programStyle: ProgramStyle = .coached
+    ) async {
+        #if DEBUG || TEST
+            Self.logger.info("🎯 Seeding check-in ready data (\(programStyle.rawValue)) for UI testing")
+
+            await MainActor.run {
+                do {
+                    let calendar = Calendar.current
+
+                    // Set user biometrics for TDEE calculation
+                    user.heightCm = 175.0
+                    user.gender = "male"
+                    user.dateOfBirth = calendar.date(byAdding: .year, value: -30, to: Date())
+
+                    // Create weight loss goal
+                    let goal = NutritionGoal(
+                        goalType: .weightLoss,
+                        isActive: true,
+                        startingWeightKg: 90.0,
+                        targetWeightKg: 80.0,
+                        targetDate: calendar.date(byAdding: .month, value: 3, to: Date()) ?? Date(),
+                        weeklyWeightChangePaceKg: -0.5,
+                        dailyCalorieTarget: 2000.0,
+                        dailyProteinTargetGrams: 150.0,
+                        dailyCarbTargetGrams: 200.0,
+                        dailyFatTargetGrams: 65.0
+                    )
+
+                    // Set TDEE values
+                    goal.initialEstimatedTDEE = 2400.0
+                    goal.lastCalculatedTDEE = 2350.0
+                    goal.lastTDEECalculationDate = calendar.date(byAdding: .day, value: -7, to: Date())
+
+                    // Set check-in as due: today is check-in day + 10 days since last
+                    goal.lastCheckInDate = calendar.date(byAdding: .day, value: -10, to: Date())
+                    goal.checkInDayOfWeek = calendar.component(.weekday, from: Date())  // Today's weekday
+
+                    goal.user = user
+                    context.insert(goal)
+
+                    // Create program with specified style
+                    let program = NutritionProgram(
+                        style: programStyle,
+                        diet: .balanced,
+                        calorieFloor: .standard,
+                        trainingLevel: .lifting,
+                        distributionMode: .even,
+                        proteinLevel: .moderate
+                    )
+                    program.goal = goal
+                    context.insert(program)
+
+                    // Seed 28 days of weight history (matches TDEE lookback window)
+                    for dayOffset in 0..<28 {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        // Slight downward trend with noise
+                        let weightKg = 89.0 - (Double(14 - dayOffset) * 0.05) + Double.random(in: -0.3...0.3)
+                        let weightEntry = WeightEntry(timestamp: date, weightKg: weightKg)
+                        context.insert(weightEntry)
+                    }
+
+                    // Seed 21 days of food entries (75% of 28-day window > 70% threshold)
+                    for dayOffset in 0..<21 {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        // Create 3 meals per day with realistic macros (totaling ~2000 cal)
+                        let meals: [(MealSection, Double, Double, Double, Double)] = [
+                            (.breakfast, 400, 25, 50, 15),  // cal, protein, carbs, fat
+                            (.lunch, 700, 45, 60, 30),
+                            (.dinner, 800, 55, 70, 35),
+                        ]
+                        for (section, cal, protein, carbs, fat) in meals {
+                            let entry = FoodEntry(
+                                foodName: "Test \(section.rawValue)",
+                                mealSection: section,
+                                loggedAt: date,
+                                servingGrams: 100.0,
+                                caloriesPer100g: cal,
+                                proteinPer100g: protein,
+                                carbsPer100g: carbs,
+                                fatPer100g: fat
+                            )
+                            context.insert(entry)
+                        }
+                    }
+
+                    try context.save()
+
+                    Self.logger.info(
+                        """
+                        ✅ Check-in ready data seeded:
+                           - Goal: Weight loss (90kg → 80kg)
+                           - Program: Coached/Balanced
+                           - TDEE: 2350 kcal
+                           - Last check-in: 10 days ago (due for check-in)
+                           - Weight entries: 28 days
+                           - Food entries: 21 days (63 meals)
+                        """)
+                } catch {
+                    Self.logger.error("❌ Check-in ready data seeding failed: \(error)")
+                }
+            }
+        #endif
+    }
+
+    /// Seed check-in data with GOOD tier quality (10 weights, 65% food, 10 days)
+    /// - Allows check-in with good confidence (ceiling 0.7)
+    // swiftlint:disable:next function_body_length
+    private func seedCheckInGoodData(
+        for user: User,
+        context: ModelContext,
+        programStyle: ProgramStyle = .coached
+    ) async {
+        #if DEBUG || TEST
+            Self.logger.info("🎯 Seeding GOOD tier check-in data (\(programStyle.rawValue)) for UI testing")
+
+            await MainActor.run {
+                do {
+                    let calendar = Calendar.current
+
+                    // Set user biometrics for TDEE calculation
+                    user.heightCm = 175.0
+                    user.gender = "male"
+                    user.dateOfBirth = calendar.date(byAdding: .year, value: -30, to: Date())
+
+                    // Create weight loss goal
+                    let goal = NutritionGoal(
+                        goalType: .weightLoss,
+                        isActive: true,
+                        startingWeightKg: 90.0,
+                        targetWeightKg: 80.0,
+                        targetDate: calendar.date(byAdding: .month, value: 3, to: Date()) ?? Date(),
+                        weeklyWeightChangePaceKg: -0.5,
+                        dailyCalorieTarget: 2000.0,
+                        dailyProteinTargetGrams: 150.0,
+                        dailyCarbTargetGrams: 200.0,
+                        dailyFatTargetGrams: 65.0
+                    )
+
+                    // Set TDEE values
+                    goal.initialEstimatedTDEE = 2400.0
+                    goal.lastCalculatedTDEE = 2350.0
+                    goal.lastTDEECalculationDate = calendar.date(byAdding: .day, value: -7, to: Date())
+
+                    // Set check-in as due: today is check-in day + 10 days since last
+                    goal.lastCheckInDate = calendar.date(byAdding: .day, value: -10, to: Date())
+                    goal.checkInDayOfWeek = calendar.component(.weekday, from: Date())
+
+                    goal.user = user
+                    context.insert(goal)
+
+                    // Create program with specified style
+                    let program = NutritionProgram(
+                        style: programStyle,
+                        diet: .balanced,
+                        calorieFloor: .standard,
+                        trainingLevel: .lifting,
+                        distributionMode: .even,
+                        proteinLevel: .moderate
+                    )
+                    program.goal = goal
+                    context.insert(program)
+
+                    // Seed 10 weight entries across 10 days (just above minimum)
+                    for dayOffset in 0..<10 {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        let weightKg = 89.0 - (Double(5 - dayOffset) * 0.03) + Double.random(in: -0.2...0.2)
+                        let weightEntry = WeightEntry(timestamp: date, weightKg: weightKg)
+                        context.insert(weightEntry)
+                    }
+
+                    // Seed 7 days of food entries (65% of 10-day span, > 60% threshold)
+                    for dayOffset in 0..<7 {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        let meals: [(MealSection, Double, Double, Double, Double)] = [
+                            (.breakfast, 400, 25, 50, 15),
+                            (.lunch, 700, 45, 60, 30),
+                            (.dinner, 800, 55, 70, 35),
+                        ]
+                        for (section, cal, protein, carbs, fat) in meals {
+                            let entry = FoodEntry(
+                                foodName: "Test \(section.rawValue)",
+                                mealSection: section,
+                                loggedAt: date,
+                                servingGrams: 100.0,
+                                caloriesPer100g: cal,
+                                proteinPer100g: protein,
+                                carbsPer100g: carbs,
+                                fatPer100g: fat
+                            )
+                            context.insert(entry)
+                        }
+                    }
+
+                    try context.save()
+
+                    Self.logger.info(
+                        """
+                        ✅ GOOD tier check-in data seeded:
+                           - Goal: Weight loss (90kg → 80kg)
+                           - Program: Coached/Balanced
+                           - TDEE: 2350 kcal
+                           - Weight entries: 10 (tier threshold: 7+)
+                           - Food consistency: 65% (tier threshold: 60%+)
+                           - Day span: 10 days (tier threshold: 7+)
+                           - Data quality: GOOD (confidence ceiling: 0.7)
+                        """)
+                } catch {
+                    Self.logger.error("❌ GOOD tier check-in data seeding failed: \(error)")
+                }
+            }
+        #endif
+    }
+
+    /// Seed check-in data with MINIMUM tier quality (4 weights, 55% food, 7 days)
+    /// - Allows check-in with low confidence (ceiling 0.5)
+    // swiftlint:disable:next function_body_length
+    private func seedCheckInMinimumData(
+        for user: User,
+        context: ModelContext,
+        programStyle: ProgramStyle = .coached
+    ) async {
+        #if DEBUG || TEST
+            Self.logger.info("🎯 Seeding MINIMUM tier check-in data (\(programStyle.rawValue)) for UI testing")
+
+            await MainActor.run {
+                do {
+                    let calendar = Calendar.current
+
+                    // Set user biometrics for TDEE calculation
+                    user.heightCm = 175.0
+                    user.gender = "male"
+                    user.dateOfBirth = calendar.date(byAdding: .year, value: -30, to: Date())
+
+                    // Create weight loss goal
+                    let goal = NutritionGoal(
+                        goalType: .weightLoss,
+                        isActive: true,
+                        startingWeightKg: 90.0,
+                        targetWeightKg: 80.0,
+                        targetDate: calendar.date(byAdding: .month, value: 3, to: Date()) ?? Date(),
+                        weeklyWeightChangePaceKg: -0.5,
+                        dailyCalorieTarget: 2000.0,
+                        dailyProteinTargetGrams: 150.0,
+                        dailyCarbTargetGrams: 200.0,
+                        dailyFatTargetGrams: 65.0
+                    )
+
+                    // Set TDEE values
+                    goal.initialEstimatedTDEE = 2400.0
+                    goal.lastCalculatedTDEE = 2350.0
+                    goal.lastTDEECalculationDate = calendar.date(byAdding: .day, value: -7, to: Date())
+
+                    // Set check-in as due: today is check-in day + 10 days since last
+                    goal.lastCheckInDate = calendar.date(byAdding: .day, value: -10, to: Date())
+                    goal.checkInDayOfWeek = calendar.component(.weekday, from: Date())
+
+                    goal.user = user
+                    context.insert(goal)
+
+                    // Create program with specified style
+                    let program = NutritionProgram(
+                        style: programStyle,
+                        diet: .balanced,
+                        calorieFloor: .standard,
+                        trainingLevel: .lifting,
+                        distributionMode: .even,
+                        proteinLevel: .moderate
+                    )
+                    program.goal = goal
+                    context.insert(program)
+
+                    // Seed 4 weight entries spanning 8 days (safely above 7-day minimum)
+                    let weightDays = [0, 3, 5, 8]  // 4 entries, span = 8 days
+                    for dayOffset in weightDays {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        let weightKg = 89.5 - (Double(3 - dayOffset) * 0.02) + Double.random(in: -0.2...0.2)
+                        let weightEntry = WeightEntry(timestamp: date, weightKg: weightKg)
+                        context.insert(weightEntry)
+                    }
+
+                    // Seed 5 days of food entries (5/8 = 62.5%, above 50% threshold)
+                    for dayOffset in 0..<5 {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        let meals: [(MealSection, Double, Double, Double, Double)] = [
+                            (.breakfast, 400, 25, 50, 15),
+                            (.lunch, 700, 45, 60, 30),
+                            (.dinner, 800, 55, 70, 35),
+                        ]
+                        for (section, cal, protein, carbs, fat) in meals {
+                            let entry = FoodEntry(
+                                foodName: "Test \(section.rawValue)",
+                                mealSection: section,
+                                loggedAt: date,
+                                servingGrams: 100.0,
+                                caloriesPer100g: cal,
+                                proteinPer100g: protein,
+                                carbsPer100g: carbs,
+                                fatPer100g: fat
+                            )
+                            context.insert(entry)
+                        }
+                    }
+
+                    try context.save()
+
+                    Self.logger.info(
+                        """
+                        ✅ MINIMUM tier check-in data seeded:
+                           - Goal: Weight loss (90kg → 80kg)
+                           - Program: \(programStyle.rawValue)
+                           - TDEE: 2350 kcal
+                           - Weight entries: 4 (tier threshold: 3+)
+                           - Food consistency: 62.5% (tier threshold: 50%+)
+                           - Day span: 8 days (tier threshold: 7+)
+                           - Data quality: MINIMUM (confidence ceiling: 0.5)
+                        """)
+                } catch {
+                    Self.logger.error("❌ MINIMUM tier check-in data seeding failed: \(error)")
+                }
+            }
+        #endif
+    }
+
+    /// Seed check-in data with INSUFFICIENT tier quality (2 weights, 40% food, 5 days)
+    /// - Does NOT allow check-in (shows "not enough data" message)
+    // swiftlint:disable:next function_body_length
+    private func seedCheckInInsufficientData(
+        for user: User,
+        context: ModelContext,
+        programStyle: ProgramStyle = .coached
+    ) async {
+        #if DEBUG || TEST
+            Self.logger.info("🎯 Seeding INSUFFICIENT tier check-in data (\(programStyle.rawValue)) for UI testing")
+
+            await MainActor.run {
+                do {
+                    let calendar = Calendar.current
+
+                    // Set user biometrics for TDEE calculation
+                    user.heightCm = 175.0
+                    user.gender = "male"
+                    user.dateOfBirth = calendar.date(byAdding: .year, value: -30, to: Date())
+
+                    // Create weight loss goal
+                    let goal = NutritionGoal(
+                        goalType: .weightLoss,
+                        isActive: true,
+                        startingWeightKg: 90.0,
+                        targetWeightKg: 80.0,
+                        targetDate: calendar.date(byAdding: .month, value: 3, to: Date()) ?? Date(),
+                        weeklyWeightChangePaceKg: -0.5,
+                        dailyCalorieTarget: 2000.0,
+                        dailyProteinTargetGrams: 150.0,
+                        dailyCarbTargetGrams: 200.0,
+                        dailyFatTargetGrams: 65.0
+                    )
+
+                    // Set TDEE values
+                    goal.initialEstimatedTDEE = 2400.0
+                    goal.lastCalculatedTDEE = 2350.0
+                    goal.lastTDEECalculationDate = calendar.date(byAdding: .day, value: -3, to: Date())
+
+                    // Set check-in as due: today is check-in day + 10 days since last
+                    goal.lastCheckInDate = calendar.date(byAdding: .day, value: -10, to: Date())
+                    goal.checkInDayOfWeek = calendar.component(.weekday, from: Date())
+
+                    goal.user = user
+                    context.insert(goal)
+
+                    // Create program with specified style
+                    let program = NutritionProgram(
+                        style: programStyle,
+                        diet: .balanced,
+                        calorieFloor: .standard,
+                        trainingLevel: .lifting,
+                        distributionMode: .even,
+                        proteinLevel: .moderate
+                    )
+                    program.goal = goal
+                    context.insert(program)
+
+                    // Seed only 2 weight entries across 5 days (below minimum)
+                    let weightDays = [0, 4]  // Just 2 entries
+                    for dayOffset in weightDays {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        let weightKg = 89.7 + Double.random(in: -0.2...0.2)
+                        let weightEntry = WeightEntry(timestamp: date, weightKg: weightKg)
+                        context.insert(weightEntry)
+                    }
+
+                    // Seed only 2 days of food entries (40% of 5-day span, below 50% threshold)
+                    for dayOffset in 0..<2 {
+                        let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+                        let meals: [(MealSection, Double, Double, Double, Double)] = [
+                            (.breakfast, 400, 25, 50, 15),
+                            (.lunch, 700, 45, 60, 30),
+                            (.dinner, 800, 55, 70, 35),
+                        ]
+                        for (section, cal, protein, carbs, fat) in meals {
+                            let entry = FoodEntry(
+                                foodName: "Test \(section.rawValue)",
+                                mealSection: section,
+                                loggedAt: date,
+                                servingGrams: 100.0,
+                                caloriesPer100g: cal,
+                                proteinPer100g: protein,
+                                carbsPer100g: carbs,
+                                fatPer100g: fat
+                            )
+                            context.insert(entry)
+                        }
+                    }
+
+                    try context.save()
+
+                    Self.logger.info(
+                        """
+                        ✅ INSUFFICIENT tier check-in data seeded:
+                           - Goal: Weight loss (90kg → 80kg)
+                           - Program: Coached/Balanced
+                           - TDEE: 2350 kcal
+                           - Weight entries: 2 (tier threshold: 3+)
+                           - Food consistency: 40% (tier threshold: 50%+)
+                           - Day span: 5 days (tier threshold: 7+)
+                           - Data quality: INSUFFICIENT (check-in blocked)
+                        """)
+                } catch {
+                    Self.logger.error("❌ INSUFFICIENT tier check-in data seeding failed: \(error)")
+                }
+            }
+        #endif
+    }
+
     // MARK: - Private Helper Methods
 
     private func processAppleIDCredential(_ appleIDCredential: ASAuthorizationAppleIDCredential)
@@ -426,7 +902,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 email: "manual@uitesting.com",
                 name: "Manual UI Test User",
                 weight: 75.0,
-                weightUnit: "kg")
+                weightUnit: "lbs")
 
             context.insert(mockUser)
 

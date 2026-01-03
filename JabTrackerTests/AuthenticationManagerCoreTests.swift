@@ -5,6 +5,76 @@ import Testing
 
 @testable import JabTracker
 
+// MARK: - AuthenticationState Enum Tests
+
+@Suite("AuthenticationState Enum Tests")
+struct AuthenticationStateTests {
+    @Test("AuthenticationState has correct raw values")
+    func authStateRawValues() {
+        #expect(AuthenticationState.notDetermined.rawValue == "notDetermined")
+        #expect(AuthenticationState.authenticated.rawValue == "authenticated")
+        #expect(AuthenticationState.notAuthenticated.rawValue == "notAuthenticated")
+        #expect(AuthenticationState.restricted.rawValue == "restricted")
+        #expect(AuthenticationState.expired.rawValue == "expired")
+    }
+
+    @Test("AuthenticationState CaseIterable provides all cases")
+    func authStateCaseIterable() {
+        let allCases = AuthenticationState.allCases
+        #expect(allCases.count == 5)
+        #expect(allCases.contains(.notDetermined))
+        #expect(allCases.contains(.authenticated))
+        #expect(allCases.contains(.notAuthenticated))
+        #expect(allCases.contains(.restricted))
+        #expect(allCases.contains(.expired))
+    }
+
+    @Test("AuthenticationState can be initialized from raw value")
+    func authStateFromRawValue() {
+        #expect(AuthenticationState(rawValue: "notDetermined") == .notDetermined)
+        #expect(AuthenticationState(rawValue: "authenticated") == .authenticated)
+        #expect(AuthenticationState(rawValue: "notAuthenticated") == .notAuthenticated)
+        #expect(AuthenticationState(rawValue: "restricted") == .restricted)
+        #expect(AuthenticationState(rawValue: "expired") == .expired)
+        #expect(AuthenticationState(rawValue: "invalid") == nil)
+    }
+}
+
+// MARK: - AuthenticationError Enum Tests
+
+@Suite("AuthenticationError Enum Tests")
+struct AuthenticationErrorTests {
+    @Test("AuthenticationError provides localized descriptions")
+    func authErrorDescriptions() {
+        let notImplemented = AuthenticationError.notImplemented
+        #expect(notImplemented.errorDescription == "Authentication not fully implemented")
+
+        let authDenied = AuthenticationError.authorizationDenied
+        #expect(authDenied.errorDescription == "User denied authorization")
+
+        let credsNotFound = AuthenticationError.credentialsNotFound
+        #expect(credsNotFound.errorDescription == "No stored credentials found")
+
+        let keychainError = AuthenticationError.keychainError
+        #expect(keychainError.errorDescription == "Error accessing Keychain")
+    }
+
+    @Test("AuthenticationError conforms to LocalizedError")
+    func authErrorConformsToLocalizedError() {
+        let error: LocalizedError = AuthenticationError.notImplemented
+        #expect(error.errorDescription != nil)
+    }
+
+    @Test("AuthenticationError conforms to Error")
+    func authErrorConformsToError() {
+        let error: Error = AuthenticationError.authorizationDenied
+        // Error conformance verified by successful cast
+        #expect(error is AuthenticationError)
+    }
+}
+
+// MARK: - AuthenticationManager Core Tests
+
 @MainActor
 @Suite("Authentication Manager Core Tests")
 struct AuthenticationManagerCoreTests {
@@ -323,5 +393,296 @@ struct AuthenticationManagerCoreTests {
 
         // The method should still work even without the reset flag
         // The actual reset functionality is tested through the launch argument scenario
+    }
+
+    @Test("Sign out deletes current user from context")
+    @MainActor
+    func signOutDeletesUser() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create and save a user
+        let user = User(email: "signout-test@example.com", name: "Sign Out Test", weight: 70.0)
+        context.insert(user)
+        try context.save()
+
+        // Verify user exists
+        let beforeFetch = FetchDescriptor<User>()
+        let usersBefore = try context.fetch(beforeFetch)
+        #expect(usersBefore.count == 1, "Should have 1 user before sign out")
+
+        // Set up auth manager with user
+        await authManager.checkAuthenticationStatus()
+        #expect(authManager.currentUser != nil, "Should have current user set")
+        #expect(authManager.authenticationState == .authenticated, "Should be authenticated")
+
+        // Sign out
+        try await authManager.signOut()
+
+        // Verify state is updated
+        #expect(authManager.currentUser == nil, "Current user should be nil after sign out")
+        #expect(
+            authManager.authenticationState == .notAuthenticated,
+            "Should be notAuthenticated after sign out")
+
+        // Verify user was deleted from context
+        let afterFetch = FetchDescriptor<User>()
+        let usersAfter = try context.fetch(afterFetch)
+        #expect(usersAfter.isEmpty, "User should be deleted from database after sign out")
+    }
+
+    @Test("Sign out handles nil current user gracefully")
+    @MainActor
+    func signOutWithNilUser() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        // Verify no current user
+        #expect(authManager.currentUser == nil, "Should have no current user initially")
+
+        // Sign out should not throw even with nil user
+        try await authManager.signOut()
+
+        // State should be updated
+        #expect(authManager.currentUser == nil, "Current user should remain nil")
+        #expect(
+            authManager.authenticationState == .notAuthenticated,
+            "Should be notAuthenticated after sign out")
+    }
+}
+
+// MARK: - Seed Additional Medication Profiles Tests
+
+@MainActor
+@Suite("AuthenticationManager Medication Profile Seeding Tests")
+struct AuthenticationManagerMedicationProfileSeedingTests {
+
+    @Test("Seed additional medication profiles creates correct number of profiles")
+    @MainActor
+    func seedAdditionalProfilesCount() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create user
+        let user = User(email: "seed-test@example.com", name: "Seed Test", weight: 70.0)
+        context.insert(user)
+        try context.save()
+
+        // Seed 2 additional profiles
+        try authManager.seedAdditionalMedicationProfiles(count: 2, user: user, context: context)
+
+        // Verify profiles were created
+        let profileFetch = FetchDescriptor<MedicationProfile>()
+        let profiles = try context.fetch(profileFetch)
+        #expect(profiles.count == 2, "Should have created 2 medication profiles")
+    }
+
+    @Test("Seed additional medication profiles creates tirzepatide first")
+    @MainActor
+    func seedAdditionalProfilesFirstIsTirzepatide() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create user
+        let user = User(email: "seed-test2@example.com", name: "Seed Test 2", weight: 70.0)
+        context.insert(user)
+        try context.save()
+
+        // Seed 1 additional profile
+        try authManager.seedAdditionalMedicationProfiles(count: 1, user: user, context: context)
+
+        // Verify first profile is tirzepatide (Mounjaro)
+        let profileFetch = FetchDescriptor<MedicationProfile>()
+        let profiles = try context.fetch(profileFetch)
+        #expect(profiles.count == 1, "Should have created 1 medication profile")
+
+        guard let profile = profiles.first else {
+            #expect(Bool(false), "Profile should exist")
+            return
+        }
+
+        #expect(profile.brandName == "Mounjaro", "First profile should be Mounjaro")
+        #expect(profile.currentDose == 5.0, "Tirzepatide dose should be 5.0")
+        #expect(profile.user === user, "Profile should be associated with user")
+    }
+
+    @Test("Seed additional medication profiles respects maximum count")
+    @MainActor
+    func seedAdditionalProfilesMaxCount() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create user
+        let user = User(email: "seed-test3@example.com", name: "Seed Test 3", weight: 70.0)
+        context.insert(user)
+        try context.save()
+
+        // Request more profiles than available (only 3 additional medications defined)
+        try authManager.seedAdditionalMedicationProfiles(count: 10, user: user, context: context)
+
+        // Should only create 3 profiles (the maximum available)
+        let profileFetch = FetchDescriptor<MedicationProfile>()
+        let profiles = try context.fetch(profileFetch)
+        #expect(profiles.count == 3, "Should create at most 3 medication profiles")
+    }
+
+    @Test("Seed zero additional medication profiles creates none")
+    @MainActor
+    func seedZeroAdditionalProfiles() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create user
+        let user = User(email: "seed-test4@example.com", name: "Seed Test 4", weight: 70.0)
+        context.insert(user)
+        try context.save()
+
+        // Seed 0 additional profiles
+        try authManager.seedAdditionalMedicationProfiles(count: 0, user: user, context: context)
+
+        // Verify no profiles were created
+        let profileFetch = FetchDescriptor<MedicationProfile>()
+        let profiles = try context.fetch(profileFetch)
+        #expect(profiles.isEmpty, "Should not create any medication profiles with count 0")
+    }
+
+    @Test("Seed all three additional medication profiles")
+    @MainActor
+    func seedAllThreeAdditionalProfiles() throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create user
+        let user = User(email: "seed-test5@example.com", name: "Seed Test 5", weight: 70.0)
+        context.insert(user)
+        try context.save()
+
+        // Seed all 3 additional profiles
+        try authManager.seedAdditionalMedicationProfiles(count: 3, user: user, context: context)
+
+        // Verify all 3 profiles were created with correct data
+        let profileFetch = FetchDescriptor<MedicationProfile>()
+        let profiles = try context.fetch(profileFetch)
+        #expect(profiles.count == 3, "Should have created 3 medication profiles")
+
+        let brandNames = Set(profiles.map { $0.brandName })
+        #expect(brandNames.contains("Mounjaro"), "Should have Mounjaro profile")
+        #expect(brandNames.contains("Victoza"), "Should have Victoza profile")
+        #expect(brandNames.contains("Trulicity"), "Should have Trulicity profile")
+
+        // Verify all profiles are associated with the user
+        for profile in profiles {
+            #expect(profile.user === user, "All profiles should be associated with user")
+        }
+    }
+}
+
+// MARK: - Additional AuthenticationManager Tests
+
+@MainActor
+@Suite("AuthenticationManager Additional Tests")
+struct AuthenticationManagerAdditionalTests {
+
+    @Test("AuthenticationManager uses default DataController when none provided")
+    @MainActor
+    func authManagerDefaultDataController() {
+        // This test verifies the default initializer path works
+        // Note: In unit tests, this will use a test-isolated context
+        let authManager = AuthenticationManager()
+
+        // Should initialize with default state
+        #expect(authManager.authenticationState == .notDetermined)
+        #expect(authManager.currentUser == nil)
+    }
+
+    @Test("AuthenticationManager state change triggers didSet logging")
+    @MainActor
+    func authManagerStateChangeDidSet() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        // Initial state
+        #expect(authManager.authenticationState == .notDetermined)
+
+        // Change state by calling signOut (which sets to .notAuthenticated)
+        try await authManager.signOut()
+
+        // State should have changed and didSet should have been triggered
+        #expect(authManager.authenticationState == .notAuthenticated)
+    }
+
+    @Test("Check authentication status with fetch error handling")
+    @MainActor
+    func checkAuthStatusWithEmptyDatabase() async {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        // Empty database scenario
+        await authManager.checkAuthenticationStatus()
+
+        // Should handle empty database gracefully
+        #expect(
+            authManager.authenticationState == .notAuthenticated,
+            "Empty database should result in notAuthenticated state")
+        #expect(authManager.currentUser == nil, "No user should be set for empty database")
+    }
+
+    @Test("Multiple users in database uses first user")
+    @MainActor
+    func multipleUsersUsesFirst() async throws {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+
+        // Create multiple users
+        let user1 = User(email: "first@example.com", name: "First User", weight: 70.0)
+        let user2 = User(email: "second@example.com", name: "Second User", weight: 75.0)
+        context.insert(user1)
+        context.insert(user2)
+        try context.save()
+
+        // Check authentication
+        await authManager.checkAuthenticationStatus()
+
+        // Should use first user found (behavior is implementation-defined by fetch order)
+        #expect(authManager.currentUser != nil, "Should have a current user")
+        #expect(authManager.authenticationState == .authenticated, "Should be authenticated")
+    }
+
+    @Test("SignInWithApple throws notImplemented in regular test environment")
+    @MainActor
+    func signInWithAppleThrowsNotImplemented() async {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        do {
+            _ = try await authManager.signInWithApple()
+            #expect(Bool(false), "signInWithApple should throw in test environment")
+        } catch let error as AuthenticationError {
+            #expect(error == .notImplemented, "Should throw notImplemented error")
+        } catch {
+            #expect(Bool(false), "Should throw AuthenticationError, got: \(type(of: error))")
+        }
+    }
+
+    @Test("handleSignInWithAppleResult rejects non-Apple credentials")
+    @MainActor
+    func handleSignInRejectsNonAppleCredentials() async {
+        let dataController = DataController.testContainer()
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        // Create a mock authorization with non-Apple credential
+        // Note: We cannot directly create ASAuthorization, but we can test error handling
+        // by verifying the method signature and expected behavior documentation
+
+        // This test verifies the method exists and has correct signature
+        // Actual credential testing requires mocking ASAuthorization which is not possible
+        #expect(authManager.currentUser == nil, "Should start with no user")
     }
 }

@@ -28,10 +28,7 @@ final class AppServices: ObservableObject {
     /// Custom food service for user-created food CRUD operations
     @Published private(set) var customFoodService: CustomFoodService?
 
-    /// Weight service for weight tracking and HealthKit sync
-    @Published private(set) var weightService: WeightService?
-
-    /// Metrics service for body measurements and HealthKit sync
+    /// Metrics service for ALL body metrics (weight, height, body fat, circumferences) and HealthKit sync
     @Published private(set) var metricsService: MetricsService?
 
     /// Progress photo service for photo tracking
@@ -73,11 +70,7 @@ final class AppServices: ObservableObject {
         let mealLogService = MealLogService(context: modelContext)
         self.mealLogService = mealLogService
 
-        // Create WeightService for weight tracking
-        let weightService = WeightService(context: modelContext)
-        self.weightService = weightService
-
-        // Create MetricsService for body measurements
+        // Create MetricsService for ALL body metrics (weight, height, body fat, circumferences)
         let metricsService = MetricsService(context: modelContext)
         self.metricsService = metricsService
 
@@ -93,7 +86,6 @@ final class AppServices: ObservableObject {
         foodService = nil
         mealLogService = nil
         customFoodService = nil
-        weightService = nil
         metricsService = nil
         progressPhotoService = nil
     }

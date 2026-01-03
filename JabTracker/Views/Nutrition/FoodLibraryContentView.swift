@@ -193,65 +193,7 @@ struct FoodLibraryContentView: View {
         Button {
             onFoodSelected(food)
         } label: {
-            HStack(spacing: 12) {
-                // Icon (custom foods use star)
-                Image(systemName: "star.fill")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.blue)
-                    .frame(width: 24, height: 24)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    // Name and brand
-                    if !food.brand.isEmpty {
-                        Text(food.name)
-                            .font(DesignTokens.Typography.body)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                        Text(food.brand)
-                            .font(DesignTokens.Typography.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    } else {
-                        Text(food.name)
-                            .font(DesignTokens.Typography.body)
-                            .foregroundColor(.primary)
-                            .lineLimit(2)
-                    }
-
-                    // Macros: Calories • P/C/F (for default serving)
-                    HStack(spacing: 8) {
-                        Text("\(Int(food.caloriesPerServing)) cal")
-                            .fontWeight(.medium)
-
-                        Text("•")
-                            .foregroundColor(.secondary)
-
-                        HStack(spacing: 4) {
-                            Text("P:\(Int(food.proteinPerServing))")
-                            Text("C:\(Int(food.carbsPerServing))")
-                            Text("F:\(Int(food.fatPerServing))")
-                        }
-                        .foregroundColor(.secondary)
-                    }
-                    .font(DesignTokens.Typography.caption)
-
-                    // Serving info
-                    if !food.servingDescription.isEmpty {
-                        Text(food.servingDescription)
-                            .font(DesignTokens.Typography.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    } else {
-                        Text("\(Int(food.servingSize))\(food.servingUnit)")
-                            .font(DesignTokens.Typography.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
-            }
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
+            foodRowContent(food)
         }
         .buttonStyle(.plain)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -267,6 +209,77 @@ struct FoodLibraryContentView: View {
             }
             .tint(.blue)
             .accessibilityIdentifier("edit-food-library-button")
+        }
+    }
+
+    private func foodRowContent(_ food: Food) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "star.fill")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.blue)
+                .frame(width: 24, height: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                foodNameBrand(food)
+                foodMacrosRow(food)
+                foodServingInfo(food)
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private func foodNameBrand(_ food: Food) -> some View {
+        if !food.brand.isEmpty {
+            Text(food.name)
+                .font(DesignTokens.Typography.body)
+                .foregroundColor(.primary)
+                .lineLimit(1)
+            Text(food.brand)
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+        } else {
+            Text(food.name)
+                .font(DesignTokens.Typography.body)
+                .foregroundColor(.primary)
+                .lineLimit(2)
+        }
+    }
+
+    private func foodMacrosRow(_ food: Food) -> some View {
+        HStack(spacing: 8) {
+            Text("\(Int(food.caloriesPerServing)) cal")
+                .fontWeight(.medium)
+                .foregroundColor(DesignTokens.Colors.calories)
+            Text("•")
+                .foregroundColor(.secondary)
+            HStack(spacing: 4) {
+                Text("P:\(Int(food.proteinPerServing))")
+                    .foregroundColor(DesignTokens.Colors.protein)
+                Text("C:\(Int(food.carbsPerServing))")
+                    .foregroundColor(DesignTokens.Colors.carbs)
+                Text("F:\(Int(food.fatPerServing))")
+                    .foregroundColor(DesignTokens.Colors.fat)
+            }
+        }
+        .font(DesignTokens.Typography.caption)
+    }
+
+    @ViewBuilder
+    private func foodServingInfo(_ food: Food) -> some View {
+        if !food.servingDescription.isEmpty {
+            Text(food.servingDescription)
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+        } else {
+            Text("\(Int(food.servingSize))\(food.servingUnit)")
+                .font(DesignTokens.Typography.caption)
+                .foregroundColor(.secondary)
         }
     }
 

@@ -1,0 +1,283 @@
+//
+//  ProgramStyleUITests.swift
+//  JabTrackerUITests
+//
+//  E2E test stubs for program style flows (Coached, Collaborative, Manual).
+//  Tests verify wizard navigation, per-day macro display, and data persistence.
+//
+
+import XCTest
+
+final class ProgramStyleUITests: XCTestCase {
+    var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = TestUtilities.launchAppWithTestMode(resetData: true)
+    }
+
+    // MARK: - Smoke Test
+
+    /// Smoke test: Verify FoodLog displays and responds to date changes
+    /// This is a basic sanity check that the per-day macro display infrastructure works
+    func testSmokeTest_FoodLogLoadsAndRespondsToDateChanges() throws {
+        // Navigate to Food Log tab
+        let foodLogTab = app.tabBars.buttons["Food Log"]
+        XCTAssertTrue(foodLogTab.waitForExistence(timeout: 5), "Food Log tab should exist")
+        foodLogTab.tap()
+
+        // Verify Food Log view loaded
+        let foodLogView = app.otherElements["food-log-view"]
+        XCTAssertTrue(foodLogView.waitForExistence(timeout: 5), "Food Log view should load")
+
+        // Verify daily summary title exists
+        let summaryTitle = app.staticTexts["daily-summary-title"]
+        XCTAssertTrue(summaryTitle.waitForExistence(timeout: 3), "Daily summary title should exist")
+    }
+
+    // MARK: - Coached Mode
+
+    /// Coached mode shows full wizard with TDEE calculation
+    /// Acceptance: Diet, calorie floor, training, distribution, protein steps appear
+    func testCoachedModeShowsFullWizard() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Navigate to Strategy tab
+        // 2. Tap "Create Program" or similar entry point
+        // 3. Select Coached style
+        // 4. Verify all Coached-specific steps appear:
+        //    - Diet preference
+        //    - Calorie floor
+        //    - Training level
+        //    - Weekly distribution
+        //    - Protein level
+        // 5. Complete wizard and verify ProgramReadySheet appears
+    }
+
+    /// Coached mode calculates TDEE and shows ProgramReadySheet
+    /// Acceptance: Calculated targets appear in macro grid
+    func testCoachedModeCalculatesTDEE() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Complete Coached wizard flow
+        // 2. Verify ProgramReadySheet shows:
+        //    - Weekly macro grid with calculated values
+        //    - TDEE explanation section
+        //    - Non-zero calorie/protein/fat/carb values
+    }
+
+    // MARK: - Collaborative Mode
+
+    /// Collaborative mode shows macro customization step
+    /// Acceptance: Protein g/lb slider and carb/fat ratio slider appear
+    func testCollaborativeModeShowsMacroCustomization() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Navigate to Strategy tab
+        // 2. Start program wizard
+        // 3. Select Collaborative style
+        // 4. Navigate to macroCustomization step
+        // 5. Verify sliders exist:
+        //    - Protein g/lb slider (proteinGramsPerLb)
+        //    - Carb/fat ratio slider (carbFatRatio)
+    }
+
+    /// Collaborative mode skips diet/protein level steps
+    /// Acceptance: Only programStyle, training, distribution, macroCustomization, confirmation steps
+    func testCollaborativeModeSkipsCoachedSteps() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Select Collaborative style
+        // 2. Verify these steps do NOT appear:
+        //    - Diet preference
+        //    - Calorie floor
+        //    - Protein level
+        // 3. Verify these steps DO appear:
+        //    - Training level
+        //    - Weekly distribution
+        //    - Macro customization
+        //    - Confirmation
+    }
+
+    /// Collaborative mode saves custom macro ratios
+    /// Acceptance: ProgramReadySheet shows calculated values from sliders
+    func testCollaborativeModeSavesMacroRatios() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Complete Collaborative wizard with specific slider values
+        // 2. Save program
+        // 3. Verify ProgramReadySheet shows macros calculated from:
+        //    - proteinGramsPerLb * body weight
+        //    - carbFatRatio applied to remaining calories
+    }
+
+    // MARK: - Manual Mode
+
+    /// Manual mode shows target mode selection
+    /// Acceptance: "Same All Week" and "Different Per Day" options appear
+    func testManualModeShowsTargetModeSelection() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Navigate to Strategy tab
+        // 2. Start program wizard
+        // 3. Select Manual style
+        // 4. Verify target mode step appears with two options:
+        //    - "Same All Week" / useSameTargetsAllWeek = true
+        //    - "Different Per Day" / useSameTargetsAllWeek = false
+    }
+
+    /// Manual mode "Same All Week" skips per-day editing
+    /// Acceptance: Goes directly to confirmation after target mode
+    func testManualModeSameAllWeekSkipsPerDayEditing() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Select Manual style
+        // 2. Choose "Same All Week"
+        // 3. Verify singleWeekMacros step appears (single entry form)
+        // 4. Verify perDayMacros step does NOT appear
+        // 5. Continue to confirmation
+    }
+
+    /// Manual mode "Different Per Day" shows per-day editing
+    /// Acceptance: Day-by-day macro entry fields appear
+    func testManualModeDifferentPerDayShowsEditing() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Select Manual style
+        // 2. Choose "Different Per Day"
+        // 3. Verify perDayMacros step appears with:
+        //    - 7 day sections (Mon-Sun)
+        //    - Calorie/protein/fat/carb fields for each day
+        // 4. Verify singleWeekMacros step does NOT appear
+    }
+
+    /// Manual mode per-day values display in ProgramReadySheet
+    /// Acceptance: Different values shown for different days
+    func testManualModePerDayValuesDisplayInReadySheet() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Complete Manual wizard with different per-day values
+        // 2. Verify ProgramReadySheet weekly grid shows:
+        //    - Different calorie values per day
+        //    - Different macro values per day
+        // 3. Verify values match what was entered
+    }
+
+    // MARK: - Coached/Shifted Distribution
+    // See mocks: mocks/goal-program/Coached-Shift/
+
+    /// Shifted distribution shows day selection step
+    /// Acceptance: After selecting "Shift Calories", day selection checkboxes appear
+    func testShiftedDistributionShowsDaySelection() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Start Coached wizard
+        // 2. Reach weekly distribution step
+        // 3. Select "Shifted" distribution mode
+        // 4. Verify shiftedDaySelection step appears with:
+        //    - Day checkboxes (Mon-Sun)
+        //    - Ability to select multiple "high calorie" days
+    }
+
+    /// Shifted distribution saves high calorie days
+    /// Acceptance: WeeklyCalorieDistribution stored with higher multipliers for selected days
+    func testShiftedDistributionSavesHighCalorieDays() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Complete Coached wizard with Shifted distribution
+        // 2. Select Mon, Wed, Fri as high calorie days
+        // 3. Save program
+        // 4. Verify program stores WeeklyCalorieDistribution
+        // 5. Verify selected days have ~1.1x multiplier
+        // 6. Verify non-selected days have reduced multiplier
+    }
+
+    /// Shifted distribution displays in ProgramReadySheet
+    /// Acceptance: Different calorie values shown for high vs low days (e.g., 1468 vs 1398)
+    func testShiftedDistributionDisplaysInReadySheet() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // See mock: mocks/goal-program/Coached-Shift/IMG_2103.PNG
+        // 1. Complete Coached wizard with Shifted distribution
+        // 2. Select 3 high calorie days
+        // 3. Verify ProgramReadySheet weekly grid shows:
+        //    - Higher calories on selected days (~1468)
+        //    - Lower calories on other days (~1398)
+        //    - Total weekly average matches base target
+    }
+
+    // MARK: - Dashboard/Food Log Integration
+
+    /// Dashboard shows per-day targets from goal/program
+    /// Acceptance: Macro targets update based on current day and program config
+    func testDashboardShowsPerDayTargets() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Create program with per-day variation
+        // 2. Navigate to Dashboard
+        // 3. Verify NutritionSummaryCard shows:
+        //    - Targets from active goal's macroTargetsForDate()
+        //    - Different targets on different days (if Shifted)
+    }
+
+    /// Food Log shows per-day targets for selected date
+    /// Acceptance: Changing selected date updates macro targets
+    func testFoodLogShowsPerDayTargetsForSelectedDate() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Create program with per-day variation
+        // 2. Navigate to Food Log
+        // 3. Select different dates in week calendar
+        // 4. Verify daily summary card shows:
+        //    - Different targets for different dates
+        //    - "X left" calculations based on correct target
+    }
+
+    // MARK: - Edit Mode - Single Source of Truth
+
+    /// Edit Program loads values from single source (weeklyMacroDistribution)
+    /// Acceptance: Edit wizard shows same values as Strategy view
+    func testEditProgramLoadsFromSingleSource() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // CRITICAL: Verify single source of truth pattern
+        // 1. Create Collaborative program with custom day values
+        // 2. Navigate to Strategy view
+        // 3. Note values displayed in weekly grid
+        // 4. Tap "Edit Program"
+        // 5. Verify Edit wizard shows EXACT same values
+        // 6. Cancel edit
+        // 7. Verify Strategy view unchanged
+    }
+
+    /// Edit Collaborative loads locked states correctly
+    /// Acceptance: Locked days show lock icon filled, unlocked days show empty lock
+    func testEditCollaborativeLoadsLockStates() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // CRITICAL: isLocked state must persist in weeklyMacroDistribution
+        // 1. Create Collaborative program with M/S locked
+        // 2. Navigate to Strategy → Edit Program
+        // 3. Verify Monday shows:
+        //    - Custom calories
+        //    - Lock icon filled (isLocked = true)
+        // 4. Verify Saturday shows:
+        //    - Custom calories
+        //    - Lock icon filled (isLocked = true)
+        // 5. Verify other days show:
+        //    - Default calories
+        //    - Lock icon empty (isLocked = false)
+    }
+
+    /// Edit Coached Even → Shifted clears old distribution data
+    /// Acceptance: Old even values replaced with shifted distribution
+    func testEditCoachedEvenToShiftedClearsOldData() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // 1. Create Coached Even program (same values all days)
+        // 2. Navigate to Strategy → Edit Program
+        // 3. Continue to Weekly Distribution step
+        // 4. Switch from "Even" to "Shifted"
+        // 5. Configure shifted distribution
+        // 6. Save program
+        // 7. Verify Strategy view shows varied daily values
+        // 8. Verify old even distribution data is cleared
+    }
+
+    /// Edit Coached Shifted → Even clears distribution multipliers
+    /// Acceptance: Old shifted multipliers cleared, even values across all days
+    func testEditCoachedShiftedToEvenClearsMultipliers() throws {
+        throw XCTSkip("Stub - implement after manual smoke test")
+        // CRITICAL: Switching Shifted → Even must redistribute evenly
+        // 1. Create Coached Shifted program (varied per day)
+        // 2. Navigate to Strategy → Edit Program
+        // 3. Continue to Weekly Distribution step
+        // 4. Switch from "Shifted" to "Even"
+        // 5. Save program
+        // 6. Verify Strategy view shows IDENTICAL values all 7 days
+        // 7. Verify weeklyDistributionData is cleared
+    }
+}

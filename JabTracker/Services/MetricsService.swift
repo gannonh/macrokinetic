@@ -2,7 +2,8 @@
 //  MetricsService.swift
 //  JabTracker
 //
-//  CRUD operations and queries for body metrics tracking.
+//  Unified service for ALL body metrics: weight, height, body fat, circumferences.
+//  Handles CRUD operations, date-based queries, and HealthKit sync.
 //
 
 import Foundation
@@ -12,6 +13,7 @@ import SwiftData
 /// Errors for metrics service operations
 enum MetricsServiceError: LocalizedError {
     case invalidMeasurement(String)
+    case invalidWeight(String)
     case noEntriesFound
     case contextError(Error)
 
@@ -19,21 +21,24 @@ enum MetricsServiceError: LocalizedError {
         switch self {
         case .invalidMeasurement(let message):
             return "Invalid measurement: \(message)"
+        case .invalidWeight(let message):
+            return "Invalid weight: \(message)"
         case .noEntriesFound:
-            return "No metrics entries found"
+            return "No entries found"
         case .contextError(let error):
             return "Database error: \(error.localizedDescription)"
         }
     }
 }
 
-/// Service for managing body metrics log entries
-/// Provides CRUD operations and date-based queries
+/// Unified service for managing ALL body metrics
+/// Handles weight, height, body fat, and circumference measurements
+/// Provides CRUD operations, date-based queries, and HealthKit sync
 @MainActor
 final class MetricsService {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "MetricsService")
 
-    private let context: ModelContext
+    let context: ModelContext
 
     /// Initialize with model context
     init(context: ModelContext) {
@@ -41,6 +46,28 @@ final class MetricsService {
     }
 
     // MARK: - Validation Helpers
+
+    /// Validate weight is within acceptable range
+    /// - Parameter weightKg: Weight in kilograms
+    /// - Throws: MetricsServiceError.invalidWeight if out of range
+    private func validateWeight(_ weightKg: Double) throws {
+        guard weightKg >= WeightEntry.minWeightKg && weightKg <= WeightEntry.maxWeightKg else {
+            throw MetricsServiceError.invalidWeight(
+                "Weight must be between \(Int(WeightEntry.minWeightKg)) kg and \(Int(WeightEntry.maxWeightKg)) kg"
+            )
+        }
+    }
+
+    /// Validate body fat percentage is within acceptable range
+    /// - Parameter bodyFat: Body fat percentage (0-100)
+    /// - Throws: MetricsServiceError.invalidWeight if out of range
+    private func validateBodyFat(_ bodyFat: Double) throws {
+        guard bodyFat >= 0 && bodyFat <= 100 else {
+            throw MetricsServiceError.invalidWeight(
+                "Body fat percentage must be between 0% and 100%"
+            )
+        }
+    }
 
     /// Validate circumference measurement is within acceptable range
     /// - Parameter cm: Circumference in centimeters
@@ -52,6 +79,175 @@ final class MetricsService {
             throw MetricsServiceError.invalidMeasurement(
                 "Circumference must be between \(minCm) cm and \(maxCm) cm"
             )
+        }
+    }
+
+    // MARK: - Weight CRUD
+
+    /// Log a new weight entry and update User.weight
+    /// - Parameters:
+    ///   - weightKg: Weight in kilograms
+    ///   - bodyFat: Optional body fat percentage (0-100)
+    ///   - user: The user to update
+    ///   - timestamp: When the measurement was taken
+    ///   - notes: Optional notes
+    /// - Returns: The created WeightEntry
+    /// - Throws: MetricsServiceError if validation fails
+    func logWeight(
+        weightKg: Double,
+        bodyFat: Double? = nil,
+        for user: User,
+        timestamp: Date = Date(),
+        notes: String? = nil
+    ) async throws -> WeightEntry {
+        Self.logger.debug(
+            "logWeight: \(weightKg) kg, unit=\(user.weightUnit), healthSync=\(user.healthSyncEnabled)"
+        )
+
+        // Validate weight range
+        try validateWeight(weightKg)
+
+        // Validate body fat if provided
+        if let bodyFat = bodyFat {
+            try validateBodyFat(bodyFat)
+        }
+
+        let entry = WeightEntry(
+            timestamp: timestamp,
+            weightKg: weightKg,
+            bodyFatPercentage: bodyFat,
+            source: "manual",
+            notes: notes
+        )
+
+        context.insert(entry)
+
+        // Update User.weight to latest (in user's preferred unit)
+        if user.weightUnit == "lbs" {
+            user.weight = weightKg * WeightEntry.kgToLbsConversion
+        } else {
+            user.weight = weightKg
+        }
+        user.updatedAt = Date()
+
+        do {
+            try context.save()
+            Self.logger.info("Logged weight entry: \(weightKg) kg at \(timestamp)")
+
+            // Sync to HealthKit if enabled
+            if user.healthSyncEnabled {
+                await syncWeightToHealthKit(entry)
+            }
+
+            return entry
+        } catch {
+            throw MetricsServiceError.contextError(error)
+        }
+    }
+
+    /// Get the most recent weight entry
+    /// - Returns: The latest WeightEntry or nil if none exist
+    func getLatestWeightEntry() async throws -> WeightEntry? {
+        var descriptor = FetchDescriptor<WeightEntry>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+
+        do {
+            let entries = try context.fetch(descriptor)
+            return entries.first
+        } catch {
+            throw MetricsServiceError.contextError(error)
+        }
+    }
+
+    /// Get weight entries within a date range
+    /// - Parameters:
+    ///   - startDate: Start of date range (inclusive)
+    ///   - endDate: End of date range (inclusive)
+    /// - Returns: Array of WeightEntry sorted by timestamp descending
+    func getWeightEntries(from startDate: Date, to endDate: Date) async throws -> [WeightEntry] {
+        let descriptor = FetchDescriptor<WeightEntry>(
+            predicate: #Predicate { entry in
+                entry.timestamp >= startDate && entry.timestamp <= endDate
+            },
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+
+        do {
+            return try context.fetch(descriptor)
+        } catch {
+            throw MetricsServiceError.contextError(error)
+        }
+    }
+
+    /// Get all weight entries
+    /// - Parameter limit: Maximum number of entries to return (nil for all)
+    /// - Returns: Array of WeightEntry sorted by timestamp descending
+    func getAllWeightEntries(limit: Int? = nil) async throws -> [WeightEntry] {
+        var descriptor = FetchDescriptor<WeightEntry>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+
+        if let limit = limit {
+            descriptor.fetchLimit = limit
+        }
+
+        do {
+            return try context.fetch(descriptor)
+        } catch {
+            throw MetricsServiceError.contextError(error)
+        }
+    }
+
+    /// Update an existing weight entry
+    /// - Parameters:
+    ///   - entry: Entry to update
+    ///   - weightKg: New weight in kg (optional)
+    ///   - bodyFat: New body fat percentage (optional, use inner nil to clear)
+    ///   - notes: New notes (optional, use inner nil to clear)
+    /// - Throws: MetricsServiceError if validation fails
+    func updateWeightEntry(
+        _ entry: WeightEntry,
+        weightKg: Double? = nil,
+        bodyFat: Double?? = nil,
+        notes: String?? = nil
+    ) async throws {
+        if let weightKg = weightKg {
+            try validateWeight(weightKg)
+            entry.weightKg = weightKg
+        }
+
+        if let bodyFat = bodyFat {
+            if let fat = bodyFat {
+                try validateBodyFat(fat)
+            }
+            entry.bodyFatPercentage = bodyFat
+        }
+
+        if let notes = notes {
+            entry.notes = notes
+        }
+
+        do {
+            try context.save()
+            Self.logger.info("Updated weight entry: \(entry.weightKg) kg")
+        } catch {
+            throw MetricsServiceError.contextError(error)
+        }
+    }
+
+    /// Delete a weight entry
+    /// - Parameter entry: Entry to delete
+    func deleteWeightEntry(_ entry: WeightEntry) async throws {
+        let weight = entry.weightKg
+        context.delete(entry)
+
+        do {
+            try context.save()
+            Self.logger.info("Deleted weight entry: \(weight) kg")
+        } catch {
+            throw MetricsServiceError.contextError(error)
         }
     }
 

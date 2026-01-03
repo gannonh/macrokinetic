@@ -1,0 +1,16 @@
+# SwiftLint overrides for Strategy views
+# StrategyView.swift contains multiple card components, sheet orchestration,
+# weekly macro grid, check-in countdown card with data quality handling,
+# and program optimization flow
+
+type_body_length:
+  warning: 700
+  error: 750
+
+file_length:
+  warning: 850
+  error: 950
+
+function_body_length:
+  warning: 100
+  error: 120

@@ -1,29 +1,30 @@
 # MacroKinetic
 
-## Current State (Updated: 2025-12-27)
+## Current State (Updated: 2026-01-02)
 
-**Shipped:** v0.2.0 Enhanced Tracking (2025-12-27)
+**Shipped:** v0.3.0 Goals & Nutrition Programs (2026-01-02)
 **Status:** Development / TestFlight
-**Codebase:** ~120,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+**Codebase:** ~57,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.2.0 Delivered:**
-- Week calendar navigation in Food Log with day selection
-- Tap-to-edit food entries with FoodDetailSheet
-- Dedicated Food Library screen with Foods tab and sort options
-- Quick Add macro entry without food lookup
-- Weight and body fat tracking with HealthKit sync
-- Body metrics with configurable visibility and progress photos
-- Feature settings for metrics visibility and units of measure
+**v0.3.0 Delivered:**
+- NutritionGoal and NutritionProgram data models with User integration
+- Separate Goal and Program wizards with Strategy view entry points
+- Three program styles: Coached (auto-calculated), Collaborative (per-day editing), Manual (user-defined)
+- Adaptive TDEE engine with Mifflin-St Jeor BMR and EWMA weight smoothing
+- HealthKit biometrics integration for height, weight, sex, DOB
+- Daily progress rings for NutritionSummaryCard with color thresholds
+- Weekly check-ins with ProgramOptimizationSheet for goal/program adjustments
+- More tab refinements with Security & Privacy, Notifications, and placeholder screens
 
 ## Next Milestone Goals
 
-**Vision:** See PRD for planned features - Macro Goals, Protein Alerts, Analytics, or Subscription
+**Vision:** See PRD for planned features - Protein Alerts, Analytics, or Subscription
 
 **Candidates:**
-- Macro Goals & Daily Tracking - Goal configuration UI with progress rings
 - Protein Preservation Alerts - Minimum protein thresholds and notifications
 - Analytics Dashboard - Weight trends, nutrition insights, medication correlation
 - Subscription Management - StoreKit 2 integration and paywall
+- Recipe Builder - Combine foods into calculated recipes
 
 ## Vision
 
@@ -40,7 +41,7 @@ Weight management apps either focus purely on calorie counting (ignoring medicat
 How we know this worked:
 
 - [x] Custom food creation and barcode scanning for personalized entries
-- [ ] Complete nutrition tracking with macro goals and progress tracking
+- [x] Complete nutrition tracking with macro goals and progress tracking
 - [ ] GLP-1 medication tracking with pharmacokinetics modeling
 - [ ] Medication-nutrition correlation insights
 - [x] CloudKit sync across all user devices

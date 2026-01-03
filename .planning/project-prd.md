@@ -1,6 +1,6 @@
 ---
 created: 2024-01-15T00:00:00Z
-updated: 2025-12-26T18:01:49Z
+updated: 2026-01-01T19:24:06Z
 ---
 
 # MacroKinetic Product Requirements Document
@@ -579,23 +579,28 @@ Calendar navigation, food library management, quick macro entry, weight tracking
 
 ---
 
-### 📋 Nutrition Goals & Daily Tracking
+### ✅ Nutrition Goals & Daily Tracking (v0.3.0)
 
-Set personalized weight and macro goals, then track daily progress with visual indicators showing intake vs. targets.
+Issue: [#321](https://github.com/gannonh/jab-tracker-ios/issues/321)
+Completed: 2026-01-01
+
+Set personalized weight and macro goals with program styles (Coached/Collaborative/Manual), adaptive TDEE engine, daily progress tracking with visual indicators, and weekly check-ins for program optimization.
 
 #### Requirements
 
-- [ ] Goal configuration wizard (weight goal, pace, calorie/macro targets)
-- [ ] Strategy/program selection (e.g., keto, balanced)
-- [ ] Weight goal with target date and weekly pace selection
-- [ ] Dynamic TDEE algorithm for calorie target (calorie targets adjust with weight changes)
-- [ ] Daily calorie, protein, carb, and fat goals
-- [ ] Progress rings/bars for each macro
-- [ ] Remaining vs consumed display
-- [ ] Color coding for under/over targets
-- [ ] Daily summary on dashboard
-- [ ] Edit goals from settings
-- [ ] Weekly Check-ins for goal/strategy adjustments
+- [x] Goal configuration wizard (weight loss/gain/maintenance, target weight, weekly pace)
+- [x] Program configuration wizard (Coached/Collaborative/Manual styles)
+- [x] Diet preference selection (Balanced, High Protein, Low Carb, Low Fat, Keto)
+- [x] Adaptive TDEE engine with EWMA smoothing and confidence scoring
+- [x] HealthKit integration for height, sex, DOB, weight
+- [x] Daily calorie, protein, carb, and fat targets with per-day customization
+- [x] Weekly macro distribution (Even or Shifted for Coached; per-day for Collaborative/Manual)
+- [x] Progress rings for each macro with color thresholds (green/yellow/red)
+- [x] Remaining vs consumed display on dashboard
+- [x] Color coding for under/on-track/over targets
+- [x] Strategy view with weekly macro grid and goal summary
+- [x] Edit goals and programs from Strategy view
+- [x] Weekly check-ins with countdown timer and optimization flow
 
 #### User Stories
 
@@ -604,7 +609,12 @@ Set personalized weight and macro goals, then track daily progress with visual i
 - **As a user**, I want to set a weight goal, so that the app calculates my daily calorie target.
 - **As a user**, I want to choose my weight loss pace, so that I balance speed with sustainability.
 - **As a user**, I want to select a nutrition strategy, so that my macro targets align with my diet.
-- **As a user**, I want my calorie target to adjust, based on actual weight changes, not just a generic forumula
+- **As a user**, I want my calorie target to adjust based on actual weight changes via adaptive TDEE.
+
+##### Program Styles
+- **As a user**, I want Coached mode, so that all my targets are calculated automatically.
+- **As a user**, I want Collaborative mode, so that I can customize per-day targets while keeping TDEE guidance.
+- **As a user**, I want Manual mode, so that I can enter my own calorie and macro targets.
 
 ##### Daily Tracking
 - **As a user**, I want to see progress rings, so that I visualize my daily intake at a glance.
@@ -612,21 +622,57 @@ Set personalized weight and macro goals, then track daily progress with visual i
 - **As a user**, I want to see remaining macros, so that I plan my next meal.
 
 ##### Adjustments
-- **As a user**, I want to adjust goals later, so that I can adapt as my needs change.
+- **As a user**, I want weekly check-ins, so that I can review progress and adjust my program.
+- **As a user**, I want to edit goals and programs, so that I can adapt as my needs change.
 
 #### Key Design Decisions
 
-1. **Goal-driven calculations** - Calorie/macro targets derived from weight goal and pace.
-2. **Visual progress rings** - Circular progress for each macro on dashboard.
-3. **Color semantics** - Green (on track), Yellow (approaching limit), Red (over).
+1. **Three program styles** - Coached (fully automated), Collaborative (guided + customization), Manual (full control).
+2. **Adaptive TDEE** - Learns from weight history using EWMA smoothing with 70% confidence threshold.
+3. **Per-day macro distribution** - Supports even, shifted (Coached), and fully custom (Collaborative/Manual) patterns.
+4. **Visual progress rings** - 70pt circular rings with 6pt stroke for compact dashboard display.
+5. **Color semantics** - Green (<95%), Yellow (95-110%), Red (>110% of target).
+6. **Weekly check-ins** - 7-day minimum between check-ins with countdown display.
 
 #### Acceptance Criteria
 
-- [ ] Goal wizard completes setup in under 2 minutes
-- [ ] Calorie goal calculated from weight goal and pace
-- [ ] Progress rings update in real-time as food is logged
-- [ ] Color coding reflects target status
-- [ ] Goals editable from settings
+- [x] Goal wizard completes setup in under 2 minutes
+- [x] Calorie goal calculated from weight goal, pace, and TDEE
+- [x] Progress rings update in real-time as food is logged
+- [x] Color coding reflects target status (green/yellow/red)
+- [x] Goals and programs editable from Strategy view
+- [x] Per-day targets display correctly in weekly macro grid
+- [x] Weekly check-in countdown visible in Strategy view
+
+#### Delivered Components
+
+**Data Models:**
+- NutritionGoal, NutritionProgram SwiftData models
+- WeeklyMacroDistribution, DailyMacros value types
+- ProgramStyle, DietPreference, CalorieFloor, TrainingLevel enums
+
+**Services:**
+- TDEECalculationEngine (BMR, activity multipliers)
+- TDEEService (adaptive TDEE with confidence scoring)
+- WeeklyCheckInService (summary generation, adherence)
+
+**Views:**
+- GoalWizardView (goal type, target weight, weekly rate)
+- ProgramWizardView (style, diet pref, calorie floor, training, distribution, protein level)
+- StrategyView (goal summary, weekly grid, action buttons, check-in countdown)
+- ProgramReadySheet (calculated targets display)
+- ProgramOptimizationSheet (weekly check-in flow)
+- NutritionSummaryCard progress rings
+
+**More Tab Refinements:**
+- SecurityPrivacyView (Face ID, Health, iCloud status)
+- NotificationSettingsView (weigh-in, food logging, medication reminders)
+- SubscriptionSettingsView (mock)
+- CalorieExpenditureView (mock)
+
+**Deferred:**
+- Metabolic adaptation modeling (future TDEE refinement)
+- Weight trend smoothing visualization
 
 ---
 
@@ -816,72 +862,11 @@ AI-powered food recognition from photos with portion estimation and macro calcul
 
 ---
 
-### 📋 Unified Dashboard
+### 📋 Dashboard
 
-Combined dashboard showing medication concentration, nutrition summary, and health metrics.
+Unified dashboard with nutrition tracking, energy balance, body metrics, and weight analytics.
 
-#### Requirements
-
-- [ ] Concentration card (medication users)
-- [ ] Today's nutrition summary
-- [ ] Prominent protein progress ring
-- [ ] Appetite/food noise indicator
-- [ ] Weight trend from HealthKit
-
-#### User Stories
-
-##### Overview
-- **As a user**, I want one dashboard, so that I see all my health data together.
-- **As a user**, I want protein prominently displayed, so that I prioritize it.
-
-##### Context
-- **As a medication user**, I want concentration shown, so that I understand my current level.
-- **As a user**, I want weight trend visible, so that I see my progress.
-
-#### Key Design Decisions
-
-1. **Modular cards** - Show relevant cards based on user type.
-2. **Protein prominence** - Larger ring than other macros.
-3. **Medication-optional** - Works for nutrition-only users.
-
-#### Acceptance Criteria
-
-- [ ] Dashboard shows relevant cards for user type
-- [ ] Protein ring prominent
-- [ ] Weight trend displayed
-- [ ] Cards update in real-time
-
----
-
-### 📋 Combined Calendar View
-
-Unified calendar showing doses, meals, protein status, and weight data points.
-
-#### Requirements
-
-- [ ] Dose markers (existing)
-- [ ] Meal indicators (breakfast/lunch/dinner icons)
-- [ ] Protein status dots (green/yellow/red)
-- [ ] Weight data points
-
-#### User Stories
-
-##### Visualization
-- **As a user**, I want to see all data on one calendar, so that I understand daily patterns.
-- **As a user**, I want protein status visible, so that I identify low-protein days.
-
-#### Key Design Decisions
-
-1. **Layered indicators** - Multiple data types on same day cell.
-2. **Color coding** - Consistent colors across app.
-3. **Tap for details** - Day view shows full breakdown.
-
-#### Acceptance Criteria
-
-- [ ] Dose markers shown
-- [ ] Meal indicators visible
-- [ ] Protein status color-coded
-- [ ] Weight data points displayed
+@.planning/project-prd+dashboard.md
 
 ---
 
@@ -1075,6 +1060,7 @@ StoreKit 2 integration for subscription tiers with paywall UI and purchase resto
 
 ## Update History
 
+- 2026-01-01: Added Goals & Nutrition Programs (v0.3.0) - goal/program wizards, 3 program styles (Coached/Collaborative/Manual), adaptive TDEE engine, progress rings, weekly check-ins, More tab refinements
 - 2025-12-26: Added Enhanced Daily Tracking (v0.2.0) - calendar navigation, food library, quick add, weight tracking, body metrics, progress photos, feature settings
 - 2025-12-24: Added Custom Foods (Food Library) feature - completed with barcode scanning
 - 2025-12-20: Consolidated from macro-integration.md and project-prd.md into single sequenced PRD

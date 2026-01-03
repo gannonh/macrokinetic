@@ -9,12 +9,6 @@ import SwiftData
 import SwiftUI
 import os
 
-/// Logger for FoodLogView
-private let logger = Logger(
-    subsystem: "com.gannonhall.JabTracker",
-    category: "FoodLogView"
-)
-
 /// Daily macro totals for the summary card
 private struct DailyTotals {
     let calories: Double
@@ -48,7 +42,13 @@ private struct MealTotals {
 }
 
 struct FoodLogView: View {
+    // MARK: - Properties
+
+    // Week calendar state - bound to parent for tab bar + button
+    @Binding var selectedDate: Date
+
     @Environment(\.modelContext) private var modelContext
+
     @Query private var users: [User]
     @Query(sort: \FoodEntry.loggedAt, order: .forward) private var allEntries: [FoodEntry]
 
@@ -56,20 +56,32 @@ struct FoodLogView: View {
     @State private var entryToDelete: FoodEntry?
     @State private var showingDeleteConfirmation = false
     @State private var editingEntry: FoodEntry?
-
-    // Week calendar state - bound to parent for tab bar + button
-    @Binding var selectedDate: Date
     @State private var entriesGroupedByDate: [Date: Int] = [:]
 
     private let calendar = Calendar.current
 
-    // MARK: - Static Formatters (cached for performance)
+    /// Get macro targets for the selected date, considering per-day distribution
+    private var macroTargets: DailyMacros {
+        guard let user = users.first else {
+            return .zero
+        }
+        return user.macroTargetsForDate(selectedDate)
+    }
+
+    // MARK: - Static Properties
 
     private static let summaryDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMM d"
         return formatter
     }()
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "FoodLogView"
+    )
+
+    // MARK: - Initialization
 
     init(selectedDate: Binding<Date>) {
         self._selectedDate = selectedDate
@@ -89,23 +101,23 @@ struct FoodLogView: View {
                         selectedDate: $selectedDate,
                         entriesGroupedByDate: entriesGroupedByDate
                     )
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .cardListRow()
                 }
+                .listSectionSeparator(.hidden)
 
                 // Daily summary section
                 Section {
                     dailySummaryCard
-                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                        .listRowBackground(Color.clear)
+                        .cardListRow()
                 }
+                .listSectionSeparator(.hidden)
 
                 // Meal sections
                 ForEach(MealSection.allCases) { section in
                     mealSection(for: section)
                 }
             }
-            .listStyle(.insetGrouped)
+            .cardListStyle()
             .navigationTitle("Food Log")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -201,6 +213,7 @@ struct FoodLogView: View {
 
     private var dailySummaryCard: some View {
         let totals = calculateTotals()
+        let targets = macroTargets
 
         return VStack(spacing: 12) {
             Text(summaryTitle)
@@ -209,25 +222,54 @@ struct FoodLogView: View {
                 .accessibilityIdentifier("daily-summary-title")
 
             HStack(spacing: 20) {
-                macroColumn(value: totals.calories, label: "Cal", color: .orange)
-                macroColumn(value: totals.protein, label: "Protein", color: .blue)
-                macroColumn(value: totals.carbs, label: "Carbs", color: .green)
-                macroColumn(value: totals.fat, label: "Fat", color: .purple)
+                macroColumn(
+                    consumed: totals.calories,
+                    target: targets.calories,
+                    label: "Cal",
+                    color: .orange
+                )
+                macroColumn(
+                    consumed: totals.protein,
+                    target: targets.proteinGrams,
+                    label: "Protein",
+                    color: .blue
+                )
+                macroColumn(
+                    consumed: totals.carbs,
+                    target: targets.carbsGrams,
+                    label: "Carbs",
+                    color: .green
+                )
+                macroColumn(
+                    consumed: totals.fat,
+                    target: targets.fatGrams,
+                    label: "Fat",
+                    color: .purple
+                )
             }
         }
         .padding()
-        .cardStyle(cornerRadius: 12)
+        .cardStyle()
     }
 
-    private func macroColumn(value: Double, label: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text("\(Int(value))")
+    private func macroColumn(consumed: Double, target: Double, label: String, color: Color) -> some View {
+        let remaining = target - consumed
+        let isOver = remaining < 0
+
+        return VStack(spacing: 4) {
+            Text("\(Int(consumed))")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundColor(color)
+                .foregroundColor(isOver ? .red : color)
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
+            // Show remaining/over if target is set
+            if target > 0 {
+                Text(isOver ? "+\(Int(abs(remaining)))" : "\(Int(remaining)) left")
+                    .font(.caption2)
+                    .foregroundColor(isOver ? .red : .secondary)
+            }
         }
         .frame(maxWidth: .infinity)
     }
@@ -242,8 +284,7 @@ struct FoodLogView: View {
         Section {
             if entries.isEmpty {
                 EmptyMealRow()
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .cardListRow()
             } else {
                 ForEach(entries, id: \.id) { entry in
                     Button {
@@ -252,8 +293,7 @@ struct FoodLogView: View {
                         FoodEntryCardView(entry: entry)
                     }
                     .buttonStyle(.plain)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .cardListRow()
                     .accessibilityIdentifier("food-entry-row")
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button("Delete", role: .destructive) {
@@ -281,7 +321,9 @@ struct FoodLogView: View {
             }
         } header: {
             mealSectionHeader(section: section, totals: totals)
+                .padding(.horizontal)
         }
+        .listSectionSeparator(.hidden)
     }
 
     private func mealSectionHeader(section: MealSection, totals: MealTotals) -> some View {
@@ -296,17 +338,23 @@ struct FoodLogView: View {
 
             if totals.calories > 0 {
                 HStack(spacing: 8) {
-                    Text("\(Int(totals.protein))P \(Int(totals.fat))F \(Int(totals.carbs))C")
-                        .font(.caption)
-                        .foregroundColor(.cyan)
+                    HStack(spacing: 4) {
+                        Text("\(Int(totals.protein))P")
+                            .foregroundColor(DesignTokens.Colors.protein)
+                        Text("\(Int(totals.fat))F")
+                            .foregroundColor(DesignTokens.Colors.fat)
+                        Text("\(Int(totals.carbs))C")
+                            .foregroundColor(DesignTokens.Colors.carbs)
+                    }
+                    .font(.caption)
 
                     HStack(spacing: 2) {
                         Text("\(Int(totals.calories))")
                             .font(.subheadline.weight(.medium))
                         Image(systemName: "flame.fill")
                             .font(.caption)
-                            .foregroundColor(.orange)
                     }
+                    .foregroundColor(DesignTokens.Colors.calories)
                 }
             }
         }
@@ -330,7 +378,7 @@ struct FoodLogView: View {
             try await mealLogService.deleteEntry(entry)
             entryToDelete = nil
         } catch {
-            logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
+            Self.logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
         }
     }
 
@@ -359,7 +407,7 @@ struct FoodLogView: View {
                 loggedAt: selectedDate
             )
         } catch {
-            logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
+            Self.logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
         }
     }
 }

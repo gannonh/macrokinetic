@@ -2,61 +2,59 @@
 
 ## Project Summary
 
-**Building:** Enhanced daily tracking for MacroKinetic with calendar navigation, food library management, quick macro entry, weight tracking with HealthKit, and body metrics with progress photos.
+**Building:** Goals and nutrition programs for MacroKinetic with personalized weight/macro targets, program styles (Coached/Collaborative/Manual), diet preferences, adaptive TDEE, daily progress tracking, and weekly check-ins.
 
 **Core requirements:**
-- Week calendar navigation in Food Log with day selection updating macro summary
-- Tap food entry to open editable FoodDetailSheet
-- Dedicated Food Library screen with Foods tab, sort options, tap-to-add
-- Quick Add for macro-only food logging without food lookup
-- Weight and body fat tracking with HealthKit sync
-- Configurable body metrics with progress photo capture
-- Feature settings for body metrics visibility and units of measure
+- Goal configuration wizard with program style, diet preference, calorie floor, weekly distribution, protein level
+- Adaptive TDEE engine that learns from weight history
+- Daily tracking dashboard with progress rings, remaining/consumed, color coding
+- Weekly check-ins for weight trend review and goal/program adjustments
+- Edit goals from settings
 
 **Constraints:**
 - CloudKit sync required for cross-device access
 - Offline-first functionality
 - Follow existing MVVM architecture and @Observable patterns
 - iOS 17+ APIs only
-- HealthKit authorization required for weight sync
 
 ## Current Position
 
-Phase: Milestone complete
-Plan: All plans complete
-Status: v0.2.0 SHIPPED
-Last activity: 2025-12-27 - Milestone archived and tagged
+Phase: 17 of 17 (More Tab Refinements)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-01 - Completed 17-03-PLAN.md
 
-Progress: ██████████ 100% - SHIPPED
+Progress: ██████████ 100%
 
 ## GitHub Tracking
 
-Issue: #319
-PR: #320
-Branch: feat/319-v0.2.0-enhanced-tracking
+Issue: #321
+PR: #322
+Branch: feat/321-v0.3.0-goals-nutrition-programs
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: ~19 min
-- Total execution time: ~4.25 hours
+- Total plans completed: 0
+- Average duration: TBD
+- Total execution time: TBD
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 5 | 1 | ~1h | ~1h |
-| 6 | 1 | ~30m | ~30m |
-| 7 | 1 | ~10m | ~10m |
-| 8 | 1 | ~30m | ~30m |
-| 9 | 3/3 | ~15m | ~5m |
-| 10 | 2/2 | ~63m | ~32m |
-| 11 | 2/2 | ~19m | ~10m |
+| 12 | 2/2 | 14 min | 7 min |
+| 13 | 2/2 | 34 min | 17 min |
+| 14 | 3/3 | 28 min | 9 min |
+| 15 | 1/1 | 2 min | 2 min |
+| 15.1 | 3/3 | 15 min | 5 min |
+| 15.2 | 4/4 | 32 min | 8 min |
+| 16 | 2/2 | 19 min | 10 min |
+| 17 | 3/3 | 16 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-03, 10-01, 10-02, 11-01, 11-02
-- Trend: Milestone v0.2.0 complete
+- Last 5 plans: 16-02 (11 min), 17-01 (7 min), 17-02 (6 min), 17-03 (3 min)
+- Trend: Phase 17 complete
 
 *Updated after each plan completion*
 
@@ -66,25 +64,16 @@ Branch: feat/319-v0.2.0-enhanced-tracking
 
 | Phase | Decision | Rationale |
 |-------|----------|-----------|
-| 5 | Use @Binding for selectedDate | Enables tab bar + button to use same date as Food Log view |
-| 5 | Use onAppear for week init | Avoids SwiftUI @State initialization timing issues |
-| 5 | 44x44pt tap targets | Ensures reliable button taps per Apple HIG |
-| 6 | Use Button wrapper for tap-to-edit | Better VoiceOver accessibility than onTapGesture |
-| 6 | E2E tests create own data | More reliable than depending on seeded data |
-| 7 | LibraryTab enum with isEnabled | Enables future Recipes/Favorites expansion |
-| 7 | Safe unwrap customFoodService | Error state fallback better than force unwrap |
-| 8 | Store macros as per-100g with servingGrams=100 | Consistent with FoodEntry model |
-| 8 | Use MealSection.from(date:) for meal section | Respects user's selected date in Food Log |
-| 9 | Store weight in kg internally | Metric-first pattern, convert to lbs for display |
-| 9 | Body fat as 0-100 percentage | Converts to 0-1 ratio for HealthKit compatibility |
-| 9 | Weight validation 20-500 kg | Covers reasonable human weight range |
-| 10 | Store measurements in cm internally | Metric-first pattern, convert to inches for display |
-| 10 | HealthKit sync waist only | Apple Health only supports waistCircumference type |
-| 10 | PhotoType as String for CloudKit | Raw value storage for CloudKit compatibility |
-| 10 | "AI" placeholder in top row shortcuts | Reserved for future CV macro entry, "Progress Photos" in list |
-| 10 | Camera + Library buttons shown upfront | Faster UX than action sheet for photo selection |
-| 11 | Default enabledBodyMetrics to ["waist"] | Most common use case, users opt-in to additional metrics |
-| 11 | Default enabledPhotoTypes to ["front"] | Minimal default, users enable additional photo types as needed |
+| 12-01 | MacroPercentages struct instead of tuple | SwiftLint large_tuple compliance, cleaner API with named properties |
+| 13-01 | Extended file_length SwiftLint rule for Nutrition views | Wizard contains 7 inline step views per architecture decision |
+| 13-02 | Separate Goal and Program into distinct wizards | Mock review revealed incorrect domain coupling; Goal = type + target weight + rate, Program = style + diet prefs |
+| 14-01 | Empty string default for gender with case-insensitive matching | CloudKit compatibility; unknown gender averages male/female BMR formulas |
+| 15-01 | Ring size 70pt with 6pt line width, consumed inside ring | Compact display fits 4 rings on iPhone SE, uses existing CircularProgressRing |
+| 15.1-02 | DispatchQueue 0.35s delay for sheet chaining | Minimal code change vs fullScreenCover(item:); ensures GoalWizard dismissal animation completes before ProgramWizard presents |
+| 15.2-01 | WeeklyConstants enum for shared validWeekdayRange | DRY principle; both WeeklyMacroDistribution and WeeklyCalorieDistribution use same constant |
+| 15.2-03 | Use defaults for missing optional fields in save() | Collaborative/Manual modes don't require all Coached fields; validation relaxed per program style |
+| 15.2-04 | CollaborativeDayConfig struct for per-day state | Holds calories, proteinGramsPerLb, carbFatRatio, isLocked; auto-adjust distributes delta to unlocked days |
+| 16-01 | Default check-in day to Monday (weekday=2) | Common weekly planning pattern; 7-day minimum between check-ins; 70% confidence threshold for TDEE changes |
 
 ### Deferred Issues
 
@@ -92,7 +81,8 @@ None yet.
 
 ### Roadmap Evolution
 
-- Phase 11 added: Feature Settings (Body Metrics Visibility + Units of Measure)
+- Milestone v0.3.0 created: Goals & Nutrition Programs, 6 phases (Phase 12-17)
+- Phase 15.1 inserted after Phase 15: Initial TDEE Integration (URGENT) - Wire up TDEEService to goal creation, collect biometrics, calculate initial calorie/macro targets. Required before Phase 16 (Weekly Check-ins) which depends on TDEE working.
 
 ### Blockers/Concerns Carried Forward
 
@@ -100,13 +90,28 @@ None yet.
 
 ## Project Alignment
 
-Last checked: 2025-12-24
+Last checked: 2025-12-27
 Status: ✓ Aligned
 Assessment: New milestone - baseline alignment.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2025-12-27T17:19:09Z
-Stopped at: Pre-merge complete - CI checks passed, CodeRabbit review processed, ready for /gsd:complete-milestone
+Last session: 2026-01-01T17:40:18Z
+Stopped at: Completed 17-03-PLAN.md
 Resume file: None
+
+### Recent Fixes (2025-12-30)
+- Fixed Collaborative TDEE showing wrong calories (1564 vs 2166) - training level default changed from `.none` to `.lifting`
+- Added integer formatter for calorie TextField (was showing decimals)
+- Updated Collaborative Weekly Distribution UI with color-coded macro rows (P/F/C)
+- Made CollaborativeDistributionStepView compact to fit above the fold:
+  - Reduced header, card, and slider spacing
+  - Added compactCardBackground modifier with tighter padding
+  - Shrunk weekly grid with smaller fonts and row heights
+  - Made day selector circles smaller (36px vs 40px)
+  - Shortened helper text
+- Fixed Edit Goal flow - ProgramSummarySheet/ProgramReadySheet now use @Query goal for loaded relationships
+- Added recalculateProgramTargets() to update calorie/macro targets when "Looks Good" clicked after goal edit
+- Show ProgramReadySheet for ALL new programs (not just Coached)
+- Added Goal Summary card to Strategy view with target weight and weekly rate display

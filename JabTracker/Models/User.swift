@@ -39,9 +39,11 @@ final class User {
     var email: String?  // Optional - genuinely no email vs empty string ambiguity resolved
     var name: String?  // Optional - Apple might not provide
     var dateOfBirth: Date?  // Optional - user may choose not to provide
+    var heightCm: Double?  // Optional - user may choose not to provide (for TDEE calculation)
+    var gender: String = ""  // Empty string default for CloudKit compatibility
     var weight: Double = 70.0  // Required with default for medical app
-    var weightUnit: String = "kg"  // Required with default
-    var measurementUnit: String = "cm"  // Required with default: cm or in
+    var weightUnit: String = "lbs"  // Required with default (US units)
+    var measurementUnit: String = "in"  // Required with default (US units)
     var timezone: String = TimeZone.current.identifier  // Required with default
     var appleUserId: String?  // For Sign in with Apple linking
     var createdAt: Date = Date()  // Required - auto-generated
@@ -68,11 +70,21 @@ final class User {
     var enabledBodyMetrics: [String] = ["waist"]
     var enabledPhotoTypes: [String] = ["front"]
 
+    // Training experience levels (for TDEE calculations)
+    var cardioExperience: String = "intermediate"  // beginner, intermediate, advanced
+    var liftingExperience: String = "intermediate"  // beginner, intermediate, advanced
+
+    // Health integration preferences
+    var healthSyncEnabled: Bool = false  // Whether user has enabled Health app integration
+
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)
     var doses: [Dose]?  // CloudKit requires optional relationships
 
     @Relationship(deleteRule: .cascade, inverse: \MedicationProfile.user)
     var medicationProfiles: [MedicationProfile]?  // CloudKit requires optional relationships
+
+    @Relationship(deleteRule: .cascade, inverse: \NutritionGoal.user)
+    var nutritionGoals: [NutritionGoal]?  // CloudKit requires optional relationships
 
     // Note: FoodEntry does not have a User relationship - entries are queried by date
     // This avoids schema complexity while nutrition is user-scoped by app context
@@ -81,9 +93,11 @@ final class User {
         email: String? = nil,
         name: String? = nil,
         dateOfBirth: Date? = nil,
+        heightCm: Double? = nil,
+        gender: String = "",
         weight: Double = 70.0,
-        weightUnit: String = "kg",
-        measurementUnit: String = "cm",
+        weightUnit: String = "lbs",
+        measurementUnit: String = "in",
         timezone: String = TimeZone.current.identifier,
         appleUserId: String? = nil,
         hasCompletedOnboarding: Bool = false,
@@ -96,11 +110,16 @@ final class User {
         dailyCarbGoal: Double = 200.0,
         dailyFatGoal: Double = 65.0,
         enabledBodyMetrics: [String] = ["waist"],
-        enabledPhotoTypes: [String] = ["front"]
+        enabledPhotoTypes: [String] = ["front"],
+        cardioExperience: String = "intermediate",
+        liftingExperience: String = "intermediate",
+        healthSyncEnabled: Bool = false
     ) {
         self.email = email
         self.name = name
         self.dateOfBirth = dateOfBirth
+        self.heightCm = heightCm
+        self.gender = gender
         self.weight = weight
         self.weightUnit = weightUnit
         self.measurementUnit = measurementUnit
@@ -117,6 +136,9 @@ final class User {
         self.dailyFatGoal = dailyFatGoal
         self.enabledBodyMetrics = enabledBodyMetrics
         self.enabledPhotoTypes = enabledPhotoTypes
+        self.cardioExperience = cardioExperience
+        self.liftingExperience = liftingExperience
+        self.healthSyncEnabled = healthSyncEnabled
         self.createdAt = Date()
         self.updatedAt = Date()
         // Don't initialize optional relationship - let SwiftData handle it
@@ -126,9 +148,39 @@ final class User {
 // MARK: - Computed Properties
 
 extension User {
+    /// Calculated age from dateOfBirth
+    /// Returns nil if dateOfBirth is not set or if birth date is in the future
+    var age: Int? {
+        guard let dateOfBirth else { return nil }
+        // Guard against future birth dates (data corruption protection)
+        guard dateOfBirth <= Date() else { return nil }
+        return Calendar.current.dateComponents([.year], from: dateOfBirth, to: Date()).year
+    }
+
     /// Formatted weight display for UI presentation
     var weightDisplay: String {
         String(format: "%.1f %@", self.weight, self.weightUnit)
+    }
+
+    /// The user's currently active nutrition goal, if any
+    var activeNutritionGoal: NutritionGoal? {
+        nutritionGoals?.first(where: { $0.isActive })
+    }
+
+    /// Get macro targets for a specific date, using active goal or legacy user preferences
+    /// - Parameter date: The date to get targets for (affects per-day distribution)
+    /// - Returns: DailyMacros for the specified date
+    func macroTargetsForDate(_ date: Date) -> DailyMacros {
+        if let goal = activeNutritionGoal {
+            return goal.macroTargetsForDate(date)
+        }
+        // Fall back to user's direct macro goals (legacy support)
+        return DailyMacros(
+            calories: dailyCalorieGoal,
+            proteinGrams: dailyProteinGoal,
+            fatGrams: dailyFatGoal,
+            carbsGrams: dailyCarbGoal
+        )
     }
 
     /// CloudKit-compatible email field - returns empty string if email is nil

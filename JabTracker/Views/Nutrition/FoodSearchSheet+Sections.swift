@@ -197,7 +197,20 @@ extension FoodSearchSheet {
     // MARK: - Header Section
 
     var headerSection: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Close button
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.body.weight(.medium))
+                    .foregroundColor(.primary)
+                    .frame(width: 32, height: 32)
+                    .background(Color(.tertiarySystemFill))
+                    .clipShape(Circle())
+            }
+            .accessibilityIdentifier("food-search-cancel-button")
+
             // Time picker button
             Button {
                 showingTimePicker = true
@@ -225,6 +238,7 @@ extension FoodSearchSheet {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(Int(viewModel.remainingCalories)) left")
                         .font(.caption.weight(.medium))
+                        .foregroundColor(DesignTokens.Colors.calories)
                     Text("Calories")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -236,6 +250,7 @@ extension FoodSearchSheet {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(Int(viewModel.remainingProtein))g left")
                         .font(.caption.weight(.medium))
+                        .foregroundColor(DesignTokens.Colors.protein)
                     Text("Protein")
                         .font(.caption2)
                         .foregroundColor(.secondary)

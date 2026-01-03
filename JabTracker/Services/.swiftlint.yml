@@ -2,12 +2,16 @@
 # Allows longer files for complex service classes requiring comprehensive medical logic
 
 file_length:
-  warning: 650  # Increased for complex service classes with comprehensive medical logic
+  warning: 700  # Increased for NotificationService with weigh-in and food logging reminder properties
   error: 800
 
 type_body_length:
   warning: 450  # Increased for service classes with extensive method collections
   error: 600
+
+function_body_length:
+  warning: 75  # WeeklyCheckInService.generateOptimization requires comprehensive result building
+  error: 100
 
 function_parameter_count:
   warning: 8  # MealLogService.logQuickAdd requires 6+ params for macro-only logging

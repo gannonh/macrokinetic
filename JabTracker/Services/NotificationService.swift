@@ -50,6 +50,55 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Minutes before scheduled dose time to send reminder notification
     public var reminderMinutesBefore: Int = 60
 
+    // MARK: - Weigh-in Reminders
+
+    /// Indicates if daily weigh-in reminders are enabled
+    public var weighInDailyEnabled: Bool = false
+
+    /// Time of day for daily weigh-in reminder
+    public var weighInDailyTime: Date = Calendar.current.date(from: DateComponents(hour: 7, minute: 0)) ?? Date()
+
+    /// Indicates if weekly weigh-in reminders are enabled
+    public var weighInWeeklyEnabled: Bool = false
+
+    /// Day of week for weekly weigh-in reminder (1 = Sunday, 2 = Monday, etc.)
+    public var weighInWeeklyDay: Int = 2
+
+    /// Time of day for weekly weigh-in reminder
+    public var weighInWeeklyTime: Date = Calendar.current.date(from: DateComponents(hour: 7, minute: 0)) ?? Date()
+
+    // MARK: - Food Logging Reminders
+
+    /// Indicates if breakfast reminder is enabled
+    public var breakfastReminderEnabled: Bool = false
+
+    /// Time of day for breakfast reminder
+    public var breakfastReminderTime: Date = Calendar.current.date(from: DateComponents(hour: 8, minute: 0)) ?? Date()
+
+    /// Indicates if lunch reminder is enabled
+    public var lunchReminderEnabled: Bool = false
+
+    /// Time of day for lunch reminder
+    public var lunchReminderTime: Date = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
+
+    /// Indicates if snack reminder is enabled
+    public var snackReminderEnabled: Bool = false
+
+    /// Time of day for snack reminder
+    public var snackReminderTime: Date = Calendar.current.date(from: DateComponents(hour: 15, minute: 0)) ?? Date()
+
+    /// Indicates if dinner reminder is enabled
+    public var dinnerReminderEnabled: Bool = false
+
+    /// Time of day for dinner reminder
+    public var dinnerReminderTime: Date = Calendar.current.date(from: DateComponents(hour: 18, minute: 0)) ?? Date()
+
+    /// Indicates if end of day reminder is enabled
+    public var endOfDayReminderEnabled: Bool = false
+
+    /// Time of day for end of day reminder
+    public var endOfDayReminderTime: Date = Calendar.current.date(from: DateComponents(hour: 21, minute: 0)) ?? Date()
+
     /// Logger for notification service operations
     internal let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
 
@@ -222,10 +271,28 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             options: []
         )
 
+        // Weigh-in Reminder Category
+        let weighInCategory = UNNotificationCategory(
+            identifier: "WEIGH_IN_REMINDER",
+            actions: [],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        // Food Log Reminder Category
+        let foodLogCategory = UNNotificationCategory(
+            identifier: "FOOD_LOG_REMINDER",
+            actions: [],
+            intentIdentifiers: [],
+            options: []
+        )
+
         notificationCenter.setNotificationCategories([
             doseReminderCategory,
             missedDoseCategory,
             titrationCategory,
+            weighInCategory,
+            foodLogCategory,
         ])
 
         logger.info("Notification categories registered successfully")

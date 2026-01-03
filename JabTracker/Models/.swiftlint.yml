@@ -1,0 +1,6 @@
+# SwiftLint overrides for Models
+# NutritionProgram init requires 6 parameters due to program configuration options
+
+function_parameter_count:
+  warning: 6
+  error: 8
