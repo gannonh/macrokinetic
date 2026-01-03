@@ -80,9 +80,10 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-03T19:05:22Z
-Stopped at: Completed 18-01-PLAN.md (Phase 18 complete)
+Last session: 2026-01-03T15:40:00Z
+Stopped at: Completed 19-01-PLAN.md with bug fix (Phase 19 complete)
 Resume file: None
+Bug fixed: FoodLogView wasn't refreshing when rolloverCaloriesEnabled toggled - added onChange handler
 
 ### Existing Work (from APM workflow)
 
