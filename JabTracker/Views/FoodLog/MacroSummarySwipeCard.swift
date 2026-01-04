@@ -79,6 +79,7 @@ struct MacroSummarySwipeCard: View {
         }
         .padding()
         .cardStyle()
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("macro-summary-card")
         .sheet(isPresented: $showingAdjustmentsSheet) {
             if let breakdown = adjustmentBreakdown {

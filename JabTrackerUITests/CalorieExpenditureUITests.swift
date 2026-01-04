@@ -209,9 +209,9 @@ final class CalorieExpenditureUITests: XCTestCase {
         let foodLogView = app.otherElements["food-log-view"]
         XCTAssertTrue(foodLogView.waitForExistence(timeout: 5), "Food Log view should appear")
 
-        // Wait for daily summary to load - identifier is on StaticText elements inside the card
-        let dailySummaryText = app.staticTexts["food-log-daily-summary"].firstMatch
-        XCTAssertTrue(dailySummaryText.waitForExistence(timeout: 10), "Daily summary should appear")
+        // Wait for macro summary card to load
+        let macroSummaryCard = app.otherElements["macro-summary-card"]
+        XCTAssertTrue(macroSummaryCard.waitForExistence(timeout: 10), "Macro summary card should appear")
 
         // Verify flame icon appears in Food Log (indicates burned calories working)
         // The flame image has label "Flame" and inherits identifier from parent
@@ -556,9 +556,9 @@ final class CalorieExpenditureUITests: XCTestCase {
         XCTAssertTrue(backButton.waitForExistence(timeout: 3), "Back button should exist")
         backButton.tap()
 
-        // Verify we're back at More view by checking navigation bar
-        let moreNavBar = app.navigationBars["More"]
-        XCTAssertTrue(moreNavBar.waitForExistence(timeout: 5), "Should return to More view")
+        // Verify we're back at More view by checking the more-view identifier
+        let moreView = app.otherElements["more-view"]
+        XCTAssertTrue(moreView.waitForExistence(timeout: 5), "Should return to More view")
 
         // Navigate back to CalorieExpenditureView - scroll and find the row again
         app.swipeUp()
