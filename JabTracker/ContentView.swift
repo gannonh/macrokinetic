@@ -281,14 +281,7 @@ struct DashboardView: View {
 
     init(doseService: DoseService) {
         self.doseService = doseService
-
-        // Make inline title transparent so it doesn't appear when scrolled
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.clear]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        DesignTokens.Typography.configurePageTitleAppearance()
     }
 
     var body: some View {

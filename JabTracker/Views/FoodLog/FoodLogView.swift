@@ -340,17 +340,20 @@ struct FoodLogView: View {
 
     private func mealSectionHeader(section: MealSection, totals: MealTotals) -> some View {
         HStack {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Image(systemName: section.icon)
+                    .font(.caption)
                 Text(section.displayName)
-                    .font(.headline)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
             }
+            .foregroundColor(.secondary)
 
             Spacer()
 
             if totals.calories > 0 {
-                HStack(spacing: 8) {
-                    HStack(spacing: 4) {
+                HStack(spacing: 6) {
+                    HStack(spacing: 3) {
                         Text("\(Int(totals.protein))P")
                             .foregroundColor(DesignTokens.Colors.protein)
                         Text("\(Int(totals.fat))F")
@@ -358,13 +361,14 @@ struct FoodLogView: View {
                         Text("\(Int(totals.carbs))C")
                             .foregroundColor(DesignTokens.Colors.carbs)
                     }
-                    .font(.caption)
+                    .font(.caption2)
 
                     HStack(spacing: 2) {
                         Text("\(Int(totals.calories))")
-                            .font(.subheadline.weight(.medium))
-                        Image(systemName: "flame.fill")
                             .font(.caption)
+                            .fontWeight(.medium)
+                        Image(systemName: "flame.fill")
+                            .font(.caption2)
                     }
                     .foregroundColor(DesignTokens.Colors.calories)
                 }
@@ -430,11 +434,11 @@ struct FoodLogView: View {
 private struct EmptyMealRow: View {
     var body: some View {
         Text("No items logged")
-            .font(.subheadline)
+            .font(.caption)
             .foregroundColor(.secondary)
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
             .cardStyle()
     }
 }

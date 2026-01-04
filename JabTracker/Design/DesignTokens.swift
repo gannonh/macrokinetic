@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum DesignTokens {
     // MARK: - Corner Radii
@@ -54,6 +55,25 @@ enum DesignTokens {
         static let headline = Font.system(.headline, design: .default).bold()
         static let body = Font.system(.body, design: .default)
         static let caption = Font.system(.caption, design: .default)
+
+        /// Page title font size for main navigation views (smaller than default largeTitle)
+        static let pageTitleSize: CGFloat = 24
+
+        /// Configure navigation bar appearance with smaller page titles
+        /// Call this in init() of main views that use large title display mode
+        static func configurePageTitleAppearance() {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithTransparentBackground()
+            // Hide inline title when scrolled
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.clear]
+            // Smaller large title
+            appearance.largeTitleTextAttributes = [
+                .foregroundColor: UIColor.label,
+                .font: UIFont.systemFont(ofSize: pageTitleSize, weight: .bold),
+            ]
+            UINavigationBar.appearance().standardAppearance = appearance
+            UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        }
     }
 
     enum ButtonStyles {

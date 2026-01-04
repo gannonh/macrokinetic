@@ -12,21 +12,22 @@ struct FoodEntryCardView: View {
     let entry: FoodEntry
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             // Food emoji
             Text(FoodEmoji.emoji(for: entry.foodName, brand: entry.foodBrand))
-                .font(.system(size: 40))
-                .frame(width: 50, height: 50)
+                .font(.system(size: 28))
+                .frame(width: 36, height: 36)
                 .background(Color(.tertiarySystemBackground))
-                .cornerRadius(10)
+                .cornerRadius(8)
 
             // Food info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(entry.foodName)
-                    .font(.headline)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
                     .lineLimit(2)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     macroView
 
                     Text("•")
@@ -35,7 +36,7 @@ struct FoodEntryCardView: View {
                     Text(servingText)
                         .foregroundColor(.secondary)
                 }
-                .font(.subheadline)
+                .font(.caption)
             }
 
             Spacer()
@@ -43,14 +44,16 @@ struct FoodEntryCardView: View {
             // Calories with flame
             HStack(spacing: 2) {
                 Text("\(Int(entry.calories))")
-                    .font(.headline)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
                     .foregroundColor(DesignTokens.Colors.calories)
                 Image(systemName: "flame.fill")
+                    .font(.caption)
                     .foregroundColor(DesignTokens.Colors.calories)
             }
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
         .cardStyle()
     }
 
