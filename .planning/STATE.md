@@ -26,9 +26,9 @@ Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: TBD
-PR: TBD
-Branch: TBD
+Issue: #327
+PR: #328
+Branch: feat/v0.5.0-navigation-refinement
 
 ## Performance Metrics
 
