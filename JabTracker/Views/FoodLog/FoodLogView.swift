@@ -10,7 +10,7 @@ import SwiftUI
 import os
 
 /// Daily macro totals for the summary card
-private struct DailyTotals {
+struct DailyTotals {
     let calories: Double
     let protein: Double
     let carbs: Double
@@ -75,12 +75,6 @@ struct FoodLogView: View {
 
     // MARK: - Static Properties
 
-    private static let summaryDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMM d"
-        return formatter
-    }()
-
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "FoodLogView"
@@ -110,22 +104,23 @@ struct FoodLogView: View {
                 }
                 .listSectionSeparator(.hidden)
 
-                // Calorie adjustment breakdown (only for today when adjustments exist)
-                if let breakdown = adjustmentBreakdown {
-                    Section {
-                        CalorieAdjustmentBreakdownView(
-                            breakdown: breakdown,
-                            baseTarget: macroTargets.calories
-                        )
-                        .cardListRow()
-                    }
-                    .listSectionSeparator(.hidden)
-                }
-
-                // Daily summary section
+                // Compact swipeable macro summary
                 Section {
-                    dailySummaryCard
-                        .cardListRow()
+                    MacroSummarySwipeCard(
+                        consumedCalories: calculateTotals().calories,
+                        consumedProtein: calculateTotals().protein,
+                        consumedCarbs: calculateTotals().carbs,
+                        consumedFat: calculateTotals().fat,
+                        targetCalories: macroTargets.calories,
+                        targetProtein: macroTargets.proteinGrams,
+                        targetCarbs: macroTargets.carbsGrams,
+                        targetFat: macroTargets.fatGrams,
+                        adjustedCalorieTarget: adjustedCalorieTarget > 0
+                            ? adjustedCalorieTarget
+                            : macroTargets.calories,
+                        adjustmentBreakdown: adjustmentBreakdown
+                    )
+                    .cardListRow()
                 }
                 .listSectionSeparator(.hidden)
 
@@ -289,115 +284,6 @@ struct FoodLogView: View {
         }
 
         entriesGroupedByDate = counts
-    }
-
-    // MARK: - Daily Summary
-
-    /// Title for daily summary - "Today" or formatted date
-    private var summaryTitle: String {
-        if calendar.isDateInToday(selectedDate) {
-            return "Today"
-        } else {
-            return Self.summaryDateFormatter.string(from: selectedDate)
-        }
-    }
-
-    private var dailySummaryCard: some View {
-        let totals = calculateTotals()
-        let targets = macroTargets
-        // Use adjusted calorie target (includes burned calories) if available
-        let calorieTarget = adjustedCalorieTarget > 0 ? adjustedCalorieTarget : targets.calories
-
-        return VStack(spacing: 12) {
-            Text(summaryTitle)
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityIdentifier("daily-summary-title")
-
-            HStack(spacing: 20) {
-                calorieColumn(
-                    consumed: totals.calories,
-                    target: calorieTarget,
-                    showFlame: activeEnergyBurned > 0
-                )
-                macroColumn(
-                    consumed: totals.protein,
-                    target: targets.proteinGrams,
-                    label: "Protein",
-                    color: .blue
-                )
-                macroColumn(
-                    consumed: totals.carbs,
-                    target: targets.carbsGrams,
-                    label: "Carbs",
-                    color: .green
-                )
-                macroColumn(
-                    consumed: totals.fat,
-                    target: targets.fatGrams,
-                    label: "Fat",
-                    color: .purple
-                )
-            }
-        }
-        .padding()
-        .cardStyle()
-        .accessibilityIdentifier("food-log-daily-summary")
-    }
-
-    /// Calorie column with optional flame icon for burned calories
-    private func calorieColumn(consumed: Double, target: Double, showFlame: Bool) -> some View {
-        let remaining = target - consumed
-        let isOver = remaining < 0
-        let color = Color.orange
-
-        return VStack(spacing: 4) {
-            Text("\(Int(consumed.rounded()))")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(isOver ? .red : color)
-            Text("Cal")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            // Show remaining/over if target is set
-            if target > 0 {
-                HStack(spacing: 2) {
-                    Text(isOver ? "+\(Int(abs(remaining).rounded()))" : "\(Int(remaining.rounded())) left")
-                        .font(.caption2)
-                        .foregroundColor(isOver ? .red : .secondary)
-                    if showFlame {
-                        Image(systemName: "flame.fill")
-                            .font(.caption2)
-                            .foregroundColor(.orange)
-                            .accessibilityIdentifier("food-log-burned-indicator")
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .accessibilityIdentifier("food-log-calorie-column")
-    }
-
-    private func macroColumn(consumed: Double, target: Double, label: String, color: Color) -> some View {
-        let remaining = target - consumed
-        let isOver = remaining < 0
-
-        return VStack(spacing: 4) {
-            Text("\(Int(consumed.rounded()))")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(isOver ? .red : color)
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            // Show remaining/over if target is set
-            if target > 0 {
-                Text(isOver ? "+\(Int(abs(remaining).rounded()))" : "\(Int(remaining.rounded())) left")
-                    .font(.caption2)
-                    .foregroundColor(isOver ? .red : .secondary)
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Meal Sections
