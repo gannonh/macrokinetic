@@ -786,7 +786,7 @@ Proactive protein monitoring to prevent muscle loss during weight loss, with ale
 
 ---
 
-### 📋 HealthKit Integration
+### ✅ HealthKit Integration
 
 Sync weight, body fat, steps, and active calories from Apple Health for comprehensive tracking.
 
@@ -865,7 +865,7 @@ Analyze relationships between GLP-1 medication levels and eating patterns to pro
 
 ---
 
-### 📋 Barcode Scanning
+### ✅ Barcode Scanning
 
 Note: Basic barcode scanning already implemented in Custom Foods feature. This extends functionality.
 
