@@ -11,9 +11,17 @@ import Foundation
 struct CalorieAdjustmentBreakdown {
     let burnedCalories: Double
     let rolloverCalories: Double
+    let predictiveCalories: Double
 
     var totalAdjustment: Double {
-        burnedCalories + rolloverCalories
+        burnedCalories + rolloverCalories + predictiveCalories
+    }
+
+    /// Convenience initializer for backward compatibility (default predictiveCalories to 0)
+    init(burnedCalories: Double, rolloverCalories: Double, predictiveCalories: Double = 0.0) {
+        self.burnedCalories = burnedCalories
+        self.rolloverCalories = rolloverCalories
+        self.predictiveCalories = predictiveCalories
     }
 }
 
@@ -23,6 +31,7 @@ final class CalorieAdjustmentService {
 
     private let activeEnergyDataSource: ActiveEnergyDataSource
     private var rolloverProvider: RolloverCalorieProvider?
+    private var predictiveProvider: PredictiveActivityProvider?
 
     /// Initialize with a data source
     /// - Parameter activeEnergyDataSource: Source for active energy data. Defaults to HealthKit-backed implementation.
@@ -38,8 +47,17 @@ final class CalorieAdjustmentService {
         self.rolloverProvider = RolloverCalorieProvider(nutritionDataSource: dataSource)
     }
 
+    /// Configure predictive activity provider with ActiveEnergyDataSource
+    /// Must be called before predictive calculations will work
+    /// - Parameter activeEnergyDataSource: Source for activity history data
+    func configurePredictiveProvider(activeEnergyDataSource: ActiveEnergyDataSource) {
+        self.predictiveProvider = PredictiveActivityProvider(
+            activeEnergyDataSource: activeEnergyDataSource
+        )
+    }
+
     /// Calculate the adjusted daily calorie target for a user
-    /// Includes burned calories and rollover adjustments based on user preferences
+    /// Includes burned calories, rollover, and predictive adjustments based on user preferences
     /// - Parameters:
     ///   - user: The user to calculate for
     ///   - date: The date to calculate for
@@ -60,6 +78,12 @@ final class CalorieAdjustmentService {
             adjusted += rollover
         }
 
+        // Add predictive if enabled and provider configured
+        if let provider = predictiveProvider {
+            let predictive = await provider.calculateAdjustment(for: user, on: date)
+            adjusted += predictive
+        }
+
         return adjusted
     }
 
@@ -67,10 +91,11 @@ final class CalorieAdjustmentService {
     /// - Parameters:
     ///   - user: The user to calculate for
     ///   - date: The date to calculate for
-    /// - Returns: Breakdown of burned and rollover calories
+    /// - Returns: Breakdown of burned, rollover, and predictive calories
     func getAdjustmentBreakdown(for user: User, on date: Date) async -> CalorieAdjustmentBreakdown {
         var burnedCalories = 0.0
         var rolloverCalories = 0.0
+        var predictiveCalories = 0.0
 
         // Get burned calories if enabled
         if user.addBurnedCaloriesEnabled {
@@ -82,9 +107,15 @@ final class CalorieAdjustmentService {
             rolloverCalories = await provider.calculateAdjustment(for: user, on: date)
         }
 
+        // Get predictive if enabled and provider configured
+        if let provider = predictiveProvider {
+            predictiveCalories = await provider.calculateAdjustment(for: user, on: date)
+        }
+
         return CalorieAdjustmentBreakdown(
             burnedCalories: burnedCalories,
-            rolloverCalories: rolloverCalories
+            rolloverCalories: rolloverCalories,
+            predictiveCalories: predictiveCalories
         )
     }
 
@@ -100,7 +131,7 @@ final class CalorieAdjustmentService {
 }
 
 /// Default implementation that routes requests to MetricsService static methods
-private struct HealthKitActiveEnergyDataSource: ActiveEnergyDataSource {
+struct HealthKitActiveEnergyDataSource: ActiveEnergyDataSource {
     func getTodayActiveEnergy() async -> Double? {
         await MetricsService.getTodayActiveEnergy(dataSource: nil)
     }

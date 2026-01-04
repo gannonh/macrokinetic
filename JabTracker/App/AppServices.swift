@@ -73,9 +73,12 @@ final class AppServices: ObservableObject {
         let mealLogService = MealLogService(context: modelContext)
         self.mealLogService = mealLogService
 
-        // Create CalorieAdjustmentService and configure rollover provider
+        // Create CalorieAdjustmentService and configure providers
         let calorieAdjustmentService = CalorieAdjustmentService()
         calorieAdjustmentService.configureRolloverProvider(mealLogService: mealLogService)
+        calorieAdjustmentService.configurePredictiveProvider(
+            activeEnergyDataSource: HealthKitActiveEnergyDataSource()
+        )
         self.calorieAdjustmentService = calorieAdjustmentService
 
         // Create MetricsService for ALL body metrics (weight, height, body fat, circumferences)

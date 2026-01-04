@@ -52,7 +52,7 @@ Plans:
 **Plans:** TBD
 
 Plans:
-- [ ] 20-01: TBD
+- [x] 20-01: Predictive Activity Provider (3 tasks)
 
 #### Phase 21: Integration & Polish
 
@@ -73,7 +73,7 @@ Phases execute in numeric order within each milestone.
 | ---------------------------------- | --------- | -------------- | ----------- | ---------- |
 | 18. Complete Add Burned Calories   | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
 | 19. Rollover Calories              | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
-| 20. Predictive Activity Adjustment | v0.4.0    | 0/?            | Not started | -          |
+| 20. Predictive Activity Adjustment | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
 | 21. Integration & Polish           | v0.4.0    | 0/?            | Not started | -          |
 
 <details>

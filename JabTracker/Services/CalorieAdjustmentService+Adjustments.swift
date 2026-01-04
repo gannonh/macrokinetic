@@ -94,6 +94,69 @@ final class RolloverCalorieProvider: CalorieAdjustmentProvider {
     }
 }
 
+// MARK: - Predictive Activity Provider
+
+/// Provides predictive calorie adjustment based on 7-day activity average
+/// Applies goal-type multipliers: weightLoss=0.8, maintenance=1.0, muscleGain=1.2
+@MainActor
+final class PredictiveActivityProvider: CalorieAdjustmentProvider {
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "PredictiveActivityProvider"
+    )
+
+    private let activeEnergyDataSource: ActiveEnergyDataSource
+
+    init(activeEnergyDataSource: ActiveEnergyDataSource) {
+        self.activeEnergyDataSource = activeEnergyDataSource
+    }
+
+    func calculateAdjustment(for user: User, on date: Date) async -> Double {
+        // Check feature flag
+        guard user.predictiveActivityEnabled else {
+            Self.logger.debug("Predictive activity disabled for user")
+            return 0.0
+        }
+
+        // Get 7-day history
+        let history = await activeEnergyDataSource.getActiveEnergyHistory(days: 7)
+        guard !history.isEmpty else {
+            Self.logger.debug("No activity history available")
+            return 0.0
+        }
+
+        // Calculate average
+        let total = history.values.reduce(0, +)
+        let average = total / Double(history.count)
+        Self.logger.debug("7-day activity average: \(average) kcal from \(history.count) days")
+
+        // Apply goal-type multiplier
+        let multiplier = getGoalMultiplier(for: user)
+        let adjustment = average * multiplier
+
+        Self.logger.info(
+            "Predictive adjustment: \(adjustment) kcal (avg: \(average), multiplier: \(multiplier))")
+
+        return adjustment
+    }
+
+    private func getGoalMultiplier(for user: User) -> Double {
+        guard let goal = user.activeNutritionGoal else {
+            Self.logger.debug("No active goal, using maintenance multiplier (1.0)")
+            return 1.0
+        }
+
+        switch goal.goalType {
+        case .weightLoss:
+            return 0.8
+        case .maintenance:
+            return 1.0
+        case .muscleGain:
+            return 1.2
+        }
+    }
+}
+
 // MARK: - Default Implementation
 
 /// Default implementation bridging to MealLogService
