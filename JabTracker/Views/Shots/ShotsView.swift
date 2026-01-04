@@ -55,6 +55,9 @@ struct ShotsView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
+                    // Custom page header
+                    PageHeader(title: "Shots")
+
                     // Main section picker
                     Picker("Section", selection: $selectedSection) {
                         ForEach(ShotsSection.allCases, id: \.self) { section in
@@ -80,8 +83,7 @@ struct ShotsView: View {
             }
             .background(Color(.systemGroupedBackground))
             .accessibilityIdentifier("shots-scroll-view")
-            .navigationTitle("Shots")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 loadData()
                 if selectedSection == .concentration {

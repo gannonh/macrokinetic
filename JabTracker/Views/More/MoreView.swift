@@ -19,6 +19,14 @@ struct MoreView: View {
     var body: some View {
         NavigationStack {
             List {
+                // Custom page header
+                Section {
+                    PageHeader(title: "More")
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                .listSectionSeparator(.hidden)
+
                 // Overflow Menu - items not in top-level tabs
                 Section {
                     NavigationLink(destination: StrategyView()) {
@@ -120,8 +128,7 @@ struct MoreView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("More")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingFoodLibrary) {
                 if let user = currentUser {
                     FoodSearchSheet(
