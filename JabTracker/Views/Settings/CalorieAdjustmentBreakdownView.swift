@@ -16,8 +16,7 @@ struct CalorieAdjustmentBreakdownView: View {
         if breakdown.totalAdjustment > 0 {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Today's Calorie Adjustments")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .font(DesignTokens.Typography.headline)
 
                 // Base target row
                 HStack {
@@ -25,7 +24,7 @@ struct CalorieAdjustmentBreakdownView: View {
                     Spacer()
                     Text("\(Int(baseTarget)) kcal")
                 }
-                .font(DesignTokens.Typography.body)
+                .font(DesignTokens.Typography.caption)
                 .foregroundColor(.secondary)
 
                 // Burned calories row (if > 0)
@@ -37,7 +36,7 @@ struct CalorieAdjustmentBreakdownView: View {
                         Text("+\(Int(breakdown.burnedCalories)) kcal")
                             .foregroundColor(.green)
                     }
-                    .font(DesignTokens.Typography.body)
+                    .font(DesignTokens.Typography.caption)
                 }
 
                 // Rollover row (if > 0)
@@ -49,7 +48,7 @@ struct CalorieAdjustmentBreakdownView: View {
                         Text("+\(Int(breakdown.rolloverCalories)) kcal")
                             .foregroundColor(.green)
                     }
-                    .font(DesignTokens.Typography.body)
+                    .font(DesignTokens.Typography.caption)
                 }
 
                 // Predictive row (if > 0)
@@ -61,7 +60,7 @@ struct CalorieAdjustmentBreakdownView: View {
                         Text("+\(Int(breakdown.predictiveCalories)) kcal")
                             .foregroundColor(.green)
                     }
-                    .font(DesignTokens.Typography.body)
+                    .font(DesignTokens.Typography.caption)
                 }
 
                 Divider()
