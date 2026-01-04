@@ -17,16 +17,54 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 📋 **v0.5.0** - TBD (planned)
+- 🚧 **v0.5.0 Navigation Refinement** - Phases 22-24 (in progress)
 
 ## Phases
 
-_No active phases. See Completed Milestones for historical records._
+### 🚧 v0.5.0 Navigation Refinement (In Progress)
+
+**Milestone Goal:** Streamline navigation by consolidating GLP-1 features under More, promoting Strategy to a top-level tab, and modernizing the Add button.
+
+#### Phase 22: GLP-1 Programs Consolidation
+
+**Goal**: Merge Shots tab and Medication Profiles into unified "GLP-1 Programs" section under More tab
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (internal UI patterns, existing views)
+**Plans**: TBD
+
+Plans:
+- [ ] 22-01: TBD (run /gsd:plan-phase 22 to break down)
+
+#### Phase 23: Strategy Tab Promotion
+
+**Goal**: Replace Shots tab with Strategy in tab bar, uplevel Goals & Strategy to Dashboard-style prominence
+**Depends on**: Phase 22
+**Research**: Unlikely (internal patterns, following Dashboard precedent)
+**Plans**: TBD
+
+Plans:
+- [ ] 23-01: TBD (run /gsd:plan-phase 23 to break down)
+
+#### Phase 24: Add Button Redesign
+
+**Goal**: Icon-only, larger Add button with no text label, same ShortcutsSheet behavior
+**Depends on**: Phase 23
+**Research**: Unlikely (simple styling change)
+**Plans**: TBD
+
+Plans:
+- [ ] 24-01: TBD (run /gsd:plan-phase 24 to break down)
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
+
+| Phase                             | Plans Complete | Status      | Completed |
+| --------------------------------- | -------------- | ----------- | --------- |
+| 22. GLP-1 Programs Consolidation  | 0/?            | Not started | -         |
+| 23. Strategy Tab Promotion        | 0/?            | Not started | -         |
+| 24. Add Button Redesign           | 0/?            | Not started | -         |
 
 <details>
 <summary>✅ v0.4.0 Calorie Expenditure Enhancements (Phases 18-21) - SHIPPED 2026-01-04</summary>
