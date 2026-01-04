@@ -1,6 +1,12 @@
+---
+name: External Integrations
+created: 2025-12-22
+last_modified: 2026-01-04
+---
+
 # External Integrations
 
-**Analysis Date:** 2025-12-22
+**Analysis Date:** 2026-01-04
 
 ## APIs & External Services
 
@@ -99,15 +105,15 @@
 
 ## Data Sources Summary
 
-| Source | Type | Format | Coverage |
-|--------|------|--------|----------|
-| USDA FoodData Central Foundation | Bundled | SQLite | ~7,000 foods |
-| USDA SR Legacy | Bundled | SQLite | ~8,000 foods |
-| Open Food Facts dump | Bundled | SQLite | ~1.7M branded products |
-| Open Food Facts API | Remote | REST JSON | Fallback search |
-| CloudKit | Cloud sync | SwiftData | User data |
+| Source                           | Type       | Format    | Coverage               |
+| -------------------------------- | ---------- | --------- | ---------------------- |
+| USDA FoodData Central Foundation | Bundled    | SQLite    | ~7,000 foods           |
+| USDA SR Legacy                   | Bundled    | SQLite    | ~8,000 foods           |
+| Open Food Facts dump             | Bundled    | SQLite    | ~1.7M branded products |
+| Open Food Facts API              | Remote     | REST JSON | Fallback search        |
+| CloudKit                         | Cloud sync | SwiftData | User data              |
 
 ---
 
-*Integration audit: 2025-12-22*
+*Integration audit: 2026-01-04*
 *Update when adding/removing external services*

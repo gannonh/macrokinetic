@@ -1,6 +1,10 @@
-# Architecture
+---
+name: Architecture
+created: 2025-12-22
+last_modified: 2026-01-04
+---
 
-**Analysis Date:** 2025-12-22
+# Architecture
 
 ## Pattern Overview
 
@@ -31,14 +35,14 @@
 
 **Service Layer:**
 - Purpose: Business logic, persistence, external integrations
-- Contains: `*Service.swift`, `*Manager.swift` (28 files)
+- Contains: `*Service.swift`, `*Manager.swift`, `*Engine.swift` (28+ files)
 - Location: `JabTracker/Services/*.swift`
 - Depends on: Models, ModelContext, external APIs
 - Used by: ViewModels, other Services
 
 **Data Layer (Models):**
 - Purpose: SwiftData entities, domain types
-- Contains: `@Model` classes, enums, supporting types
+- Contains: `@Model` classes, enums, supporting types (39 files)
 - Location: `JabTracker/Models/*.swift`
 - Depends on: Nothing (pure data)
 - Used by: All layers
@@ -149,5 +153,5 @@
 
 ---
 
-*Architecture analysis: 2025-12-22*
+*Architecture analysis: 2026-01-04*
 *Update when major patterns change*

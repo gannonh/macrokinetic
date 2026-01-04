@@ -1,6 +1,10 @@
-# Codebase Structure
+---
+name: Codebase Structure
+created: 2025-12-22
+last_modified: 2026-01-04
+---
 
-**Analysis Date:** 2025-12-22
+# Codebase Structure
 
 ## Directory Layout
 
@@ -42,7 +46,7 @@ jab-tracker-ios/
 - Pattern: Base service + extensions (e.g., `ScheduleService+Projection.swift`)
 
 **JabTracker/Views/**
-- Purpose: SwiftUI presentation layer
+- Purpose: SwiftUI presentation layer (23 feature subdirectories)
 - Contains: View files organized by feature
 - Subdirectories:
   - `Analytics/` - Charts, trends, insights
@@ -55,6 +59,10 @@ jab-tracker-ios/
   - `Settings/` - Profile, medications, preferences
   - `Shortcuts/` - Quick action buttons
   - `Shots/` - Combined analytics/history tab
+  - `Strategy/` - GLP-1 program guidance
+  - `Metrics/` - Body metrics tracking
+  - `Photos/` - Progress photos
+  - `Weight/` - Weight tracking views
   - `Components/` - Reusable UI components
   - `MedicationProfile/` - Medication setup
 
@@ -172,5 +180,5 @@ jab-tracker-ios/
 
 ---
 
-*Structure analysis: 2025-12-22*
+*Structure analysis: 2026-01-04*
 *Update when directory structure changes*
