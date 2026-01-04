@@ -108,10 +108,8 @@ private struct AdjustmentsSheet: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // Header
+            // Close button
             HStack {
-                Text("Today's Target")
-                    .font(.headline)
                 Spacer()
                 Button {
                     dismiss()
