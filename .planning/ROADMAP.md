@@ -62,7 +62,7 @@ Plans:
 **Plans:** TBD
 
 Plans:
-- [ ] 21-01: TBD
+- [x] 21-01: UI Polish (2 tasks)
 
 ## Progress
 
@@ -74,7 +74,7 @@ Phases execute in numeric order within each milestone.
 | 18. Complete Add Burned Calories   | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
 | 19. Rollover Calories              | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
 | 20. Predictive Activity Adjustment | v0.4.0    | 1/1            | Complete    | 2026-01-03 |
-| 21. Integration & Polish           | v0.4.0    | 0/?            | Not started | -          |
+| 21. Integration & Polish           | v0.4.0    | 1/1            | Complete    | 2026-01-04 |
 
 <details>
 <summary>✅ v0.3.0 Goals & Nutrition Programs (Phases 12-17) - SHIPPED 2026-01-02</summary>

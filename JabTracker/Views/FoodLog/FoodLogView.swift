@@ -61,6 +61,7 @@ struct FoodLogView: View {
     // Burned calories support
     @State private var adjustedCalorieTarget: Double = 0
     @State private var activeEnergyBurned: Double = 0
+    @State private var adjustmentBreakdown: CalorieAdjustmentBreakdown?
 
     private let calendar = Calendar.current
 
@@ -108,6 +109,18 @@ struct FoodLogView: View {
                     .cardListRow()
                 }
                 .listSectionSeparator(.hidden)
+
+                // Calorie adjustment breakdown (only for today when adjustments exist)
+                if let breakdown = adjustmentBreakdown {
+                    Section {
+                        CalorieAdjustmentBreakdownView(
+                            breakdown: breakdown,
+                            baseTarget: macroTargets.calories
+                        )
+                        .cardListRow()
+                    }
+                    .listSectionSeparator(.hidden)
+                }
 
                 // Daily summary section
                 Section {
@@ -211,6 +224,7 @@ struct FoodLogView: View {
             let calorieAdjustmentService = AppServices.shared.calorieAdjustmentService
         else {
             adjustedCalorieTarget = 0
+            adjustmentBreakdown = nil
             return
         }
         let baseTargets = user.macroTargetsForDate(selectedDate)
@@ -219,6 +233,16 @@ struct FoodLogView: View {
             on: selectedDate,
             baseTarget: baseTargets.calories
         )
+
+        // Fetch breakdown for display (only show for today)
+        if calendar.isDateInToday(selectedDate) {
+            adjustmentBreakdown = await calorieAdjustmentService.getAdjustmentBreakdown(
+                for: user,
+                on: selectedDate
+            )
+        } else {
+            adjustmentBreakdown = nil
+        }
     }
 
     /// Start observing active energy if feature is enabled

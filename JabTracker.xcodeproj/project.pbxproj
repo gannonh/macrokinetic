@@ -184,6 +184,7 @@
 		584617FE4721B93BEAF1B57F /* ProgressPhotoServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC5A4AC6357B513329A5A63 /* ProgressPhotoServiceTests.swift */; };
 		5855E27A00A3A30056894D8A /* CreateFoodViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91F4CAE1825175C865FD01C5 /* CreateFoodViewModel.swift */; };
 		58DCBA4F2D6BBF36722DF807 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07231EC776BF08698D0A862E /* OnboardingViewModel.swift */; };
+		5964F405F52184392BCC20C9 /* CalorieAdjustmentBreakdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F74CE25DF6F0EA164C6F6C /* CalorieAdjustmentBreakdownView.swift */; };
 		599FC4D4719F4818209156AD /* MedicationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572438AA8526D5758975FA16 /* MedicationManager.swift */; };
 		59C46F0D9192641266EA6AC7 /* OpenFoodFactsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3F7ACA06A23881AB3D1C1F5 /* OpenFoodFactsServiceTests.swift */; };
 		5AB9AC3D54C026D4475819C6 /* ScheduleService+Adherence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D76980882252A7F3B725758 /* ScheduleService+Adherence.swift */; };
@@ -839,6 +840,7 @@
 		8FF072B83B18BCC9CFC94449 /* SchedulePatternFilteringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulePatternFilteringTests.swift; sourceTree = "<group>"; };
 		905F601CB5113A06EF53A83C /* AccountViewUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewUITests.swift; sourceTree = "<group>"; };
 		90AE58551F5EF75CF11D8CFA /* ProgramConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramConfiguration.swift; sourceTree = "<group>"; };
+		90F74CE25DF6F0EA164C6F6C /* CalorieAdjustmentBreakdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalorieAdjustmentBreakdownView.swift; sourceTree = "<group>"; };
 		90FDE3A44246F897CD97994B /* TimeConstantsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeConstantsTests.swift; sourceTree = "<group>"; };
 		91F4CAE1825175C865FD01C5 /* CreateFoodViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFoodViewModel.swift; sourceTree = "<group>"; };
 		92209045E4347373E0C9BCAB /* Colors+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Colors+Extensions.swift"; sourceTree = "<group>"; };
@@ -1974,6 +1976,7 @@
 			children = (
 				7613BD589C85C12E4B154DB8 /* AccountView.swift */,
 				16A5AF00C7AD71DB0DEDA95D /* BodyMetricsVisibilityView.swift */,
+				90F74CE25DF6F0EA164C6F6C /* CalorieAdjustmentBreakdownView.swift */,
 				DAFE3C9A8F21C1CB06FA1E99 /* CalorieExpenditureView.swift */,
 				01069C8164CE28C019FF35F2 /* DoseScheduleEditView.swift */,
 				06D47A7945B5A392FA8CB11C /* GeneralSettingsView.swift */,
@@ -2493,6 +2496,7 @@
 				9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */,
 				F55D33FC517BE359F05C333C /* ButtonStyles.swift in Sources */,
 				1CB29176ACFA1192B30ADCF6 /* CalendarDayView.swift in Sources */,
+				5964F405F52184392BCC20C9 /* CalorieAdjustmentBreakdownView.swift in Sources */,
 				8FCB6CB2B3195C5260AE4AB7 /* CalorieAdjustmentService+Adjustments.swift in Sources */,
 				FC6D06A161C76DA714ABB3A2 /* CalorieAdjustmentService.swift in Sources */,
 				6D84C0A87F55AE8AD221DE46 /* CalorieExpenditureView.swift in Sources */,

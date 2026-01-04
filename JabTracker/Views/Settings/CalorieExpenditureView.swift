@@ -16,6 +16,18 @@ struct CalorieExpenditureView: View {
         users.first
     }
 
+    /// Returns descriptive text for the goal-based activity multiplier
+    private func goalMultiplierText(for goalType: GoalType) -> String {
+        switch goalType {
+        case .weightLoss:
+            return "Currently: 80% of activity (weight loss)"
+        case .maintenance:
+            return "Currently: 100% of activity (maintenance)"
+        case .muscleGain:
+            return "Currently: 120% of activity (muscle gain)"
+        }
+    }
+
     var body: some View {
         List {
             if let user = user {
@@ -52,8 +64,14 @@ struct CalorieExpenditureView: View {
                             .font(DesignTokens.Typography.caption)
                             .foregroundColor(.red)
                     } else {
-                        Text("Adjust daily calorie targets based on activity trends")
-                            .font(DesignTokens.Typography.caption)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Adjust daily calorie targets based on activity trends")
+                            if let goal = user.activeNutritionGoal {
+                                Text(goalMultiplierText(for: goal.goalType))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .font(DesignTokens.Typography.caption)
                     }
                 }
 
