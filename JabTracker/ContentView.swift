@@ -286,23 +286,26 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    // Custom page header
+                VStack(alignment: .leading, spacing: 0) {
+                    // Custom page header (handles its own padding)
                     PageHeader(title: "Dashboard")
 
-                    if let currentUser = users.first {
-                        self.concentrationSection(for: currentUser)
+                    // Content with standard padding
+                    LazyVStack(alignment: .leading, spacing: 16) {
+                        if let currentUser = users.first {
+                            self.concentrationSection(for: currentUser)
 
-                        // Nutrition summary card
-                        NutritionSummaryCard(
-                            user: currentUser,
-                            mealLogService: AppServices.shared.mealLogService
-                        )
-                    } else {
-                        self.noUserSection
+                            // Nutrition summary card
+                            NutritionSummaryCard(
+                                user: currentUser,
+                                mealLogService: AppServices.shared.mealLogService
+                            )
+                        } else {
+                            self.noUserSection
+                        }
                     }
+                    .padding()
                 }
-                .padding()
             }
             .accessibilityIdentifier("dashboard-scroll-view")
             .background(Color(.systemGroupedBackground))
