@@ -1,6 +1,6 @@
 # TDEE & Calorie Algorithms
 
-**Last Updated:** 2025-12-31T21:23:03Z (Food Consistency Fix)
+**Last Updated:** 2026-01-04T15:09:08Z (Calorie Expenditure Adjustments)
 **Source Files:**
 - `JabTracker/Services/TDEECalculationEngine.swift`
 - `JabTracker/Services/TDEECalculationEngine+Adaptive.swift`
@@ -8,6 +8,8 @@
 - `JabTracker/Services/TDEECalculationEngine+Validation.swift`
 - `JabTracker/Services/TDEEService.swift`
 - `JabTracker/Services/WeeklyCheckInService.swift`
+- `JabTracker/Services/CalorieAdjustmentService.swift`
+- `JabTracker/Services/CalorieAdjustmentService+Adjustments.swift`
 
 ---
 
@@ -19,10 +21,11 @@
 4. [Weight Smoothing (EWMA)](#weight-smoothing-ewma)
 5. [Confidence Scoring](#confidence-scoring)
 6. [Calorie Target Derivation](#calorie-target-derivation)
-7. [Macro Calculations](#macro-calculations)
-8. [Thresholds & Configuration](#thresholds--configuration)
-9. [Weekly Check-In Logic](#weekly-check-in-logic)
-10. [Data Requirements Summary](#data-requirements-summary)
+7. [Calorie Expenditure Adjustments](#calorie-expenditure-adjustments)
+8. [Macro Calculations](#macro-calculations)
+9. [Thresholds & Configuration](#thresholds--configuration)
+10. [Weekly Check-In Logic](#weekly-check-in-logic)
+11. [Data Requirements Summary](#data-requirements-summary)
 
 ---
 
@@ -269,6 +272,202 @@ Calorie target is never set below the safety floor:
 
 ```
 Final_Target = max(Calculated_Target, Calorie_Floor)
+```
+
+---
+
+## Calorie Expenditure Adjustments
+
+The app provides three optional adjustments that modify the daily calorie target based on activity and eating patterns. These are configured in **More > Calorie Expenditure**.
+
+### Adjustment Types
+
+| Adjustment | Source | Description |
+|------------|--------|-------------|
+| **Burned Calories** | HealthKit (today) | Adds today's active energy burned to target |
+| **Predictive Activity** | HealthKit (7-day avg) | Adds historical activity average to target |
+| **Rollover Calories** | Food Log (yesterday) | Adds unused calories from yesterday (max 200) |
+
+### Adjusted Target Formula
+
+```
+Adjusted_Target = Base_Target + Burned + Predictive + Rollover
+```
+
+Where each adjustment is 0 if disabled.
+
+---
+
+### Burned Calories (Add Burned Calories)
+
+Adds today's cumulative active energy from HealthKit to the daily calorie target.
+
+**Requirements:**
+- Health Sync enabled
+- HealthKit active energy permission granted
+
+**Formula:**
+```
+Burned_Adjustment = Today_Active_Energy_kcal
+```
+
+**Example:**
+```
+Base target: 2000 kcal
+Today's active energy: 350 kcal
+Adjusted target: 2000 + 350 = 2350 kcal
+```
+
+**Source:** `MetricsService.getTodayActiveEnergy()` via HealthKit
+
+---
+
+### Predictive Activity Adjustment
+
+Adds a goal-adjusted 7-day average of activity to the daily calorie target. Uses historical data (not including today) to predict expected activity.
+
+**Requirements:**
+- Health Sync enabled
+- HealthKit active energy permission granted
+- At least 1 day of activity history in the past 7 days
+- **Burned Calories must be OFF** (mutually exclusive)
+
+**Formula:**
+```
+Seven_Day_Average = Sum(Past_7_Days_Active_Energy) / Days_With_Data
+Predictive_Adjustment = Seven_Day_Average × Goal_Multiplier
+```
+
+**Goal-Type Multipliers:**
+
+| Goal Type | Multiplier | Rationale |
+|-----------|------------|-----------|
+| Weight Loss | 0.8 (80%) | Conservative - maintain deficit |
+| Maintenance | 1.0 (100%) | Neutral - replace what you burn |
+| Muscle Gain | 1.2 (120%) | Aggressive - support muscle growth |
+
+**Example (Weight Loss Goal):**
+```
+7-day average activity: 400 kcal
+Goal type: Weight Loss (0.8 multiplier)
+Predictive adjustment: 400 × 0.8 = 320 kcal
+
+Base target: 2000 kcal
+Adjusted target: 2000 + 320 = 2320 kcal
+```
+
+**Example (Muscle Gain Goal):**
+```
+7-day average activity: 400 kcal
+Goal type: Muscle Gain (1.2 multiplier)
+Predictive adjustment: 400 × 1.2 = 480 kcal
+
+Base target: 2800 kcal
+Adjusted target: 2800 + 480 = 3280 kcal
+```
+
+**Source:** `PredictiveActivityProvider` in `CalorieAdjustmentService+Adjustments.swift`
+
+---
+
+### Rollover Calories
+
+Adds unused calories from yesterday to today's target, up to a maximum of 200 kcal.
+
+**Requirements:**
+- Food entries logged for yesterday
+
+**Formula:**
+```
+Yesterday_Unused = Yesterday_Base_Target - Yesterday_Consumed
+Rollover_Adjustment = min(max(Yesterday_Unused, 0), 200)
+```
+
+**Notes:**
+- Only positive unused calories roll over (no penalty for overeating)
+- Capped at 200 kcal to prevent large swings
+- Uses base target (not adjusted) to prevent compounding
+
+**Example:**
+```
+Yesterday's base target: 2000 kcal
+Yesterday's consumed: 1850 kcal
+Yesterday's unused: 2000 - 1850 = 150 kcal
+
+Rollover adjustment: min(max(150, 0), 200) = 150 kcal
+Today's adjusted target: 2000 + 150 = 2150 kcal
+```
+
+**Example (Overeating - No Rollover):**
+```
+Yesterday's base target: 2000 kcal
+Yesterday's consumed: 2200 kcal
+Yesterday's unused: 2000 - 2200 = -200 kcal
+
+Rollover adjustment: min(max(-200, 0), 200) = 0 kcal
+```
+
+**Source:** `RolloverCalorieProvider` in `CalorieAdjustmentService+Adjustments.swift`
+
+---
+
+### Mutual Exclusivity: Burned vs Predictive
+
+**Burned Calories and Predictive Activity cannot be enabled simultaneously.**
+
+| If You Enable... | Then... | Reason |
+|------------------|---------|--------|
+| Burned Calories | Predictive turns OFF | Avoids double-counting today's activity |
+| Predictive Activity | Burned turns OFF | Avoids double-counting today's activity |
+
+**Why?**
+- Burned adds today's actual active energy
+- Predictive uses a 7-day average which may include today's data
+- Enabling both would over-credit activity calories
+
+**UI Behavior:**
+- Toggling one ON automatically toggles the other OFF
+- Footer text explains: "Cannot be used with [other option]"
+
+**Source:** `CalorieExpenditureView.swift` custom bindings
+
+---
+
+### Adjustment Display (CalorieAdjustmentBreakdownView)
+
+When adjustments are active, a breakdown card appears in the Food Log showing:
+
+| Component | Color | Description |
+|-----------|-------|-------------|
+| Burned | Orange | Today's HealthKit active energy |
+| Rollover | Blue | Yesterday's unused calories |
+| Predictive | Purple | 7-day activity average (goal-adjusted) |
+| Total | Green | Sum of all adjustments |
+
+**Display Conditions:**
+- Only shown for today's date
+- Only shown when total adjustments > 0
+- Hidden when all adjustments are 0 or disabled
+
+**Source:** `CalorieAdjustmentBreakdownView.swift`
+
+---
+
+### Test Seeding for Calorie Expenditure
+
+| Flag | Description |
+|------|-------------|
+| `--seed-calorie-user` | Creates user with Health Sync enabled, 2000 kcal goal |
+| `--mock-active-energy=350` | Mocks HealthKit to return 350 kcal burned |
+
+**Example project.yml configuration:**
+```yaml
+run:
+  commandLineArguments:
+    "--reset-app-data": true
+    "--ui-testing": true
+    "--seed-calorie-user": true
+    "--mock-active-energy=350": true
 ```
 
 ---
