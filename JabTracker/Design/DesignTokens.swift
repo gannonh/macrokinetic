@@ -50,6 +50,36 @@ enum DesignTokens {
         static let carbs = Color(.systemOrange)
     }
 
+    // MARK: - Spacing
+
+    enum Spacing {
+        /// Top padding for custom page headers (space below status bar)
+        static let pageHeaderTopPadding: CGFloat = 8
+        /// Horizontal padding for custom page headers
+        static let pageHeaderHorizontalPadding: CGFloat = 19
+    }
+
+    // MARK: - Header Button Style
+
+    enum HeaderButton {
+        /// Icon size for header action buttons
+        static let iconSize: CGFloat = 14
+        /// Icon weight for header action buttons
+        static let iconWeight: Font.Weight = .semibold
+        /// Icon color for header action buttons
+        static let iconColor = Color(.secondaryLabel)
+        /// Button size (circular background)
+        static let buttonSize: CGFloat = 28
+        /// Button background color (visible in both light and dark modes)
+        static let backgroundColor = Color(.tertiarySystemBackground)
+        /// Shadow radius (diffuse)
+        static let shadowRadius: CGFloat = 4
+        /// Shadow y offset
+        static let shadowOffsetY: CGFloat = 2
+        /// Shadow opacity
+        static let shadowOpacity: CGFloat = 0.12
+    }
+
     enum Typography {
         static let largeTitle = Font.system(.largeTitle, design: .rounded)
         static let headline = Font.system(.headline, design: .default).bold()

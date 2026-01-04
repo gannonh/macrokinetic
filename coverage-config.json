@@ -173,6 +173,7 @@
       "Design/DesignTokens.swift",
       "Design/ErrorAlertModifier.swift",
       "Design/MacroProgressBar.swift",
+      "Design/PageHeader.swift",
       "JabTrackerApp.swift",
       "Models/SubscriptionProducts.swift",
       "Onboarding/Components/ConcentrationCurvePreview.swift",

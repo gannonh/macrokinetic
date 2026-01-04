@@ -94,6 +94,39 @@ struct FoodLogView: View {
     var body: some View {
         NavigationStack {
             List {
+                // Custom page header
+                Section {
+                    PageHeader(title: "Food Log") {
+                        Button {
+                            showingAddFood = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(
+                                    .system(
+                                        size: DesignTokens.HeaderButton.iconSize,
+                                        weight: DesignTokens.HeaderButton.iconWeight
+                                    )
+                                )
+                                .foregroundColor(DesignTokens.HeaderButton.iconColor)
+                                .frame(
+                                    width: DesignTokens.HeaderButton.buttonSize,
+                                    height: DesignTokens.HeaderButton.buttonSize
+                                )
+                                .background(DesignTokens.HeaderButton.backgroundColor)
+                                .clipShape(Circle())
+                                .shadow(
+                                    color: .black.opacity(DesignTokens.HeaderButton.shadowOpacity),
+                                    radius: DesignTokens.HeaderButton.shadowRadius,
+                                    y: DesignTokens.HeaderButton.shadowOffsetY
+                                )
+                        }
+                        .accessibilityIdentifier("add-food-button")
+                    }
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                .listSectionSeparator(.hidden)
+
                 // Week calendar navigation
                 Section {
                     WeekCalendarStrip(
@@ -130,18 +163,7 @@ struct FoodLogView: View {
                 }
             }
             .cardListStyle()
-            .navigationTitle("Food Log")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddFood = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityIdentifier("add-food-button")
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingAddFood) {
                 if let currentUser = users.first {
                     FoodSearchSheet(
