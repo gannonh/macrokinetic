@@ -81,6 +81,9 @@ final class User {
     var addBurnedCaloriesEnabled: Bool = false
     var rolloverCaloriesEnabled: Bool = false
     var predictiveActivityEnabled: Bool = false
+    // NOTE: predictedActivityBonus is persisted but not actively used.
+    // PredictiveActivityProvider calculates the bonus dynamically from 7-day history.
+    // Retained for schema stability and potential future caching optimization.
     var predictedActivityBonus: Double = 0.0
 
     @Relationship(deleteRule: .cascade, inverse: \Dose.user)

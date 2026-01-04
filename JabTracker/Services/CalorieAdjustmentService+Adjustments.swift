@@ -119,7 +119,7 @@ final class PredictiveActivityProvider: CalorieAdjustmentProvider {
         }
 
         // Skip predictive when burned calories is enabled to avoid double-counting
-        // (Burned adds today's actual; predictive uses 7-day avg which may include today)
+        // (Burned adds today's actual energy; predictive uses 7-day historical avg ending yesterday)
         guard !user.addBurnedCaloriesEnabled else {
             Self.logger.debug("Skipping predictive - burned calories enabled (avoids double-counting)")
             return 0.0
@@ -136,7 +136,7 @@ final class PredictiveActivityProvider: CalorieAdjustmentProvider {
 
         let history = await getHistoryWindow(ending: endDate, days: 7)
         guard !history.isEmpty else {
-            Self.logger.debug("No activity history available")
+            Self.logger.info("Predictive activity: No history available - need 7+ days of data")
             return 0.0
         }
 
@@ -180,7 +180,8 @@ final class PredictiveActivityProvider: CalorieAdjustmentProvider {
         let calendar = Calendar.current
         let endDay = calendar.startOfDay(for: endDate)
 
-        // Get full history from data source
+        // Fetch extra days beyond the window to ensure coverage despite potential gaps
+        // (e.g., missing data on some days due to no workout recorded)
         let fullHistory = await activeEnergyDataSource.getActiveEnergyHistory(days: days + 7)
 
         // Filter to only dates within our window

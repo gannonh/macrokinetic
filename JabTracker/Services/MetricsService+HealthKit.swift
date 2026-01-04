@@ -644,7 +644,7 @@ extension MetricsService {
         return await queryActiveEnergyForDate(date)
     }
 
-    /// Helper to specificy mock energy via launch arguments
+    /// Helper to specify mock energy via launch arguments
     private static var mockActiveEnergy: Double? {
         guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--mock-active-energy=") }) else {
             return nil

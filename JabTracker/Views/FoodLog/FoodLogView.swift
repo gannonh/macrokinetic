@@ -106,11 +106,12 @@ struct FoodLogView: View {
 
                 // Compact swipeable macro summary
                 Section {
+                    let totals = calculateTotals()
                     MacroSummarySwipeCard(
-                        consumedCalories: calculateTotals().calories,
-                        consumedProtein: calculateTotals().protein,
-                        consumedCarbs: calculateTotals().carbs,
-                        consumedFat: calculateTotals().fat,
+                        consumedCalories: totals.calories,
+                        consumedProtein: totals.protein,
+                        consumedCarbs: totals.carbs,
+                        consumedFat: totals.fat,
                         targetCalories: macroTargets.calories,
                         targetProtein: macroTargets.proteinGrams,
                         targetCarbs: macroTargets.carbsGrams,
@@ -234,10 +235,14 @@ struct FoodLogView: View {
 
     /// Update the adjusted calorie target based on burned calories and rollover
     private func updateCalorieTarget() async {
-        guard let user = users.first,
-            let calorieAdjustmentService = AppServices.shared.calorieAdjustmentService
-        else {
+        guard let user = users.first else {
             adjustedCalorieTarget = 0
+            adjustmentBreakdown = nil
+            return
+        }
+        guard let calorieAdjustmentService = AppServices.shared.calorieAdjustmentService else {
+            Self.logger.warning("CalorieAdjustmentService unavailable - using base target")
+            adjustedCalorieTarget = macroTargets.calories
             adjustmentBreakdown = nil
             return
         }

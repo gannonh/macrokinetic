@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 
 /// Breakdown of calorie adjustments for UI display
 struct CalorieAdjustmentBreakdown {
@@ -28,6 +29,11 @@ struct CalorieAdjustmentBreakdown {
 /// Service responsible for calculating daily calorie targets with optional activity adjustments
 @MainActor
 final class CalorieAdjustmentService {
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "CalorieAdjustmentService"
+    )
 
     private let activeEnergyDataSource: ActiveEnergyDataSource
     private var rolloverProvider: RolloverCalorieProvider?
@@ -69,6 +75,9 @@ final class CalorieAdjustmentService {
         // Add burned calories if enabled
         if user.addBurnedCaloriesEnabled {
             let activeEnergy = await getActiveEnergy(for: date)
+            if activeEnergy == nil {
+                Self.logger.warning("Active energy unavailable for \(date) - check HealthKit authorization")
+            }
             adjusted += activeEnergy ?? 0.0
         }
 
@@ -99,7 +108,11 @@ final class CalorieAdjustmentService {
 
         // Get burned calories if enabled
         if user.addBurnedCaloriesEnabled {
-            burnedCalories = await getActiveEnergy(for: date) ?? 0.0
+            let activeEnergy = await getActiveEnergy(for: date)
+            if activeEnergy == nil {
+                Self.logger.warning("Active energy unavailable for breakdown on \(date)")
+            }
+            burnedCalories = activeEnergy ?? 0.0
         }
 
         // Get rollover if enabled and provider configured
