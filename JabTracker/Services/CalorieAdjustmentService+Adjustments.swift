@@ -118,8 +118,23 @@ final class PredictiveActivityProvider: CalorieAdjustmentProvider {
             return 0.0
         }
 
-        // Get 7-day history
-        let history = await activeEnergyDataSource.getActiveEnergyHistory(days: 7)
+        // Skip predictive when burned calories is enabled to avoid double-counting
+        // (Burned adds today's actual; predictive uses 7-day avg which may include today)
+        guard !user.addBurnedCaloriesEnabled else {
+            Self.logger.debug("Skipping predictive - burned calories enabled (avoids double-counting)")
+            return 0.0
+        }
+
+        // Get 7-day history ending the day before the specified date
+        // This prevents overlap when calculating for today with today's data
+        let calendar = Calendar.current
+        let startOfDate = calendar.startOfDay(for: date)
+        guard let endDate = calendar.date(byAdding: .day, value: -1, to: startOfDate) else {
+            Self.logger.error("Failed to calculate end date for history")
+            return 0.0
+        }
+
+        let history = await getHistoryWindow(ending: endDate, days: 7)
         guard !history.isEmpty else {
             Self.logger.debug("No activity history available")
             return 0.0
@@ -154,6 +169,31 @@ final class PredictiveActivityProvider: CalorieAdjustmentProvider {
         case .muscleGain:
             return 1.2
         }
+    }
+
+    /// Get activity history for a window of days ending on a specific date
+    /// - Parameters:
+    ///   - endDate: The last date to include in the window
+    ///   - days: Number of days to include
+    /// - Returns: Dictionary of date -> energy values for the window
+    private func getHistoryWindow(ending endDate: Date, days: Int) async -> [Date: Double] {
+        let calendar = Calendar.current
+        let endDay = calendar.startOfDay(for: endDate)
+
+        // Get full history from data source
+        let fullHistory = await activeEnergyDataSource.getActiveEnergyHistory(days: days + 7)
+
+        // Filter to only dates within our window
+        var windowHistory: [Date: Double] = [:]
+        for offset in 0..<days {
+            guard let targetDate = calendar.date(byAdding: .day, value: -offset, to: endDay) else { continue }
+            let targetDay = calendar.startOfDay(for: targetDate)
+            if let energy = fullHistory[targetDay] {
+                windowHistory[targetDay] = energy
+            }
+        }
+
+        return windowHistory
     }
 }
 
