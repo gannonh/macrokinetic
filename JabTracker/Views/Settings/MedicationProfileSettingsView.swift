@@ -97,7 +97,7 @@ struct MedicationProfileSettingsView: View {
                 }
             }
             .navigationTitle("Medication Profiles")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add", systemImage: "plus") {

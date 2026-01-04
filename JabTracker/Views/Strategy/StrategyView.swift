@@ -62,7 +62,7 @@ struct StrategyView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Strategy")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
         }
         // Edit Goal sheet - uses sheet(item:) to ensure goal is passed directly
         .sheet(item: $goalToEdit) { goal in
