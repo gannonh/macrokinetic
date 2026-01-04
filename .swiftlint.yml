@@ -51,9 +51,24 @@ cyclomatic_complexity:
   ignores_case_statements: false
 
 identifier_name:
-  min_length: 
+  min_length:
     warning: 2
     error: 1
   max_length:
     warning: 40
     error: 50
+
+# Custom rules to enforce design system consistency
+# NOTE: Set to warning until legacy violations are cleaned up (see GitHub issue)
+# Then change to error to block new violations
+custom_rules:
+  prefer_design_tokens_colors:
+    name: "Prefer DesignTokens.Colors"
+    regex: 'Color\(\s*\.(system(?!Image)|secondarySystem|tertiarySystem)'
+    message: "Use DesignTokens.Colors instead of raw system colors (e.g., DesignTokens.Colors.cardBackground instead of Color(.systemGray6))"
+    severity: warning
+  prefer_design_tokens_backgrounds:
+    name: "Prefer DesignTokens for Backgrounds"
+    regex: '\.background\s*\(\s*Color\s*\('
+    message: "Use DesignTokens.Colors for backgrounds (e.g., .background(DesignTokens.Colors.cardBackground))"
+    severity: warning

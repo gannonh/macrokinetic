@@ -77,7 +77,7 @@ struct CalorieAdjustmentBreakdownView: View {
                 .font(DesignTokens.Typography.body)
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(DesignTokens.Colors.cardBackground)
             .cornerRadius(DesignTokens.CornerRadius.card)
             .accessibilityIdentifier("calorie-adjustment-breakdown")
         }
