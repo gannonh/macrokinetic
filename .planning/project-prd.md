@@ -1,6 +1,6 @@
 ---
 created: 2024-01-15T00:00:00Z
-updated: 2026-01-01T19:24:06Z
+updated: 2026-01-04T18:32:48Z
 ---
 
 # MacroKinetic Product Requirements Document
@@ -668,11 +668,82 @@ Set personalized weight and macro goals with program styles (Coached/Collaborati
 - SecurityPrivacyView (Face ID, Health, iCloud status)
 - NotificationSettingsView (weigh-in, food logging, medication reminders)
 - SubscriptionSettingsView (mock)
-- CalorieExpenditureView (mock)
+- CalorieExpenditureView (placeholder - implemented in v0.4.0)
 
 **Deferred:**
 - Metabolic adaptation modeling (future TDEE refinement)
 - Weight trend smoothing visualization
+
+---
+
+### ✅ Calorie Expenditure Enhancements (v0.4.0)
+
+Issue: [#326](https://github.com/gannonh/jab-tracker-ios/issues/326)
+Completed: 2026-01-04
+
+Real-time burned calorie integration from HealthKit, rollover unused calories, and predictive activity adjustments based on historical trends to provide dynamic calorie targets.
+
+#### Requirements
+
+- [x] Add burned calories from HealthKit back to daily targets in real-time
+- [x] HKObserverQuery with background delivery for activeEnergyBurned
+- [x] Rollover up to 200 unused calories from yesterday to today
+- [x] Predictive activity adjustment based on 7-day historical average
+- [x] Goal-mode multipliers (0.8/1.0/1.2) for weight loss/maintenance/muscle gain
+- [x] Integration with CalorieAdjustmentService and NutritionSummaryViewModel
+- [x] Feature toggles in CalorieExpenditureView settings
+- [x] Flame icon indicator when burned calories active
+- [x] E2E tests for all calorie expenditure features
+
+#### User Stories
+
+##### Add Burned Calories
+- **As a user**, I want my burned calories added to my daily target, so that I can eat more on active days.
+- **As a user**, I want to see a flame icon when burned calories are active, so that I know the feature is working.
+
+##### Rollover Calories
+- **As a user**, I want unused calories from yesterday to carry over, so that I have flexibility in daily eating.
+- **As a user**, I want a cap on rollover, so that I don't accumulate too large a deficit.
+
+##### Predictive Activity
+- **As a user**, I want my target adjusted based on my typical activity level, so that I'm prepared for expected activity.
+- **As a user**, I want the prediction to match my goal type, so that I eat appropriately for weight loss vs muscle gain.
+
+#### Key Design Decisions
+
+1. **Real-time updates** - HKObserverQuery ensures burned calories update immediately.
+2. **200 kcal rollover cap** - Prevents excessive rollover accumulation while providing flexibility.
+3. **Mutual exclusivity** - Predictive activity skipped when burned calories enabled (avoids double-counting).
+4. **Goal multipliers** - Weight loss 0.8x, maintenance 1.0x, muscle gain 1.2x of 7-day average.
+5. **Feature toggles** - Each feature independently enabled via CalorieExpenditureView.
+
+#### Acceptance Criteria
+
+- [x] Burned calories from HealthKit added to daily target when enabled
+- [x] Flame icon appears on dashboard and food log when burned calories > 0
+- [x] Rollover capped at 200 kcal maximum
+- [x] Rollover only applies when yesterday had a deficit
+- [x] Predictive uses 7-day history with goal-mode multiplier
+- [x] All features toggle independently
+- [x] E2E tests pass for all scenarios
+
+#### Delivered Components
+
+**Services:**
+- CalorieAdjustmentService (orchestrates burned + rollover + predictive)
+- RolloverCalorieProvider (calculates yesterday's unused calories)
+- PredictiveActivityProvider (7-day average with goal multipliers)
+- HealthKitService active energy methods and observer query
+
+**Views:**
+- CalorieExpenditureView (feature toggles, Health Sync dependency)
+- NutritionSummaryCard flame icon indicator
+
+**Tests:**
+- CalorieExpenditureUITests (14 tests)
+- RolloverCaloriesUITests (8 tests)
+- PredictiveActivityUITests (6 tests)
+- Unit tests for all providers and services
 
 ---
 
