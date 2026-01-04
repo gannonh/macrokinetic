@@ -120,8 +120,11 @@ struct MoreView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("More")
-            .navigationBarTitleDisplayMode(.large)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                PageHeader(title: "More")
+                    .background(Color(.systemGroupedBackground))
+            }
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingFoodLibrary) {
                 if let user = currentUser {
                     FoodSearchSheet(

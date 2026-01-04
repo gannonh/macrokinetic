@@ -4,11 +4,26 @@
 //
 //  HealthKit integration for syncing body metrics data.
 //  Provides bidirectional sync for weight, height, body fat, and waist circumference.
+//  Also provides active energy query methods for calorie tracking.
 //
 
 import HealthKit
 import OSLog
 import SwiftData
+
+// MARK: - Active Energy Data Source Protocol
+
+/// Protocol for active energy data retrieval, enabling testability via dependency injection
+protocol ActiveEnergyDataSource: Sendable {
+    /// Get today's cumulative active energy burned in kilocalories
+    func getTodayActiveEnergy() async -> Double?
+
+    /// Get active energy burned for a specific date in kilocalories
+    func getActiveEnergyForDate(_ date: Date) async -> Double?
+
+    /// Get daily active energy totals for the past N days
+    func getActiveEnergyHistory(days: Int) async -> [Date: Double]
+}
 
 extension MetricsService {
     /// Shared HealthKit store for metrics operations
@@ -30,6 +45,9 @@ extension MetricsService {
     private static let bodyFatType = HKQuantityType(.bodyFatPercentage)
     private static let waistType = HKQuantityType(.waistCircumference)
 
+    // Quantity types (read-only)
+    private static let activeEnergyType = HKQuantityType(.activeEnergyBurned)
+
     // Characteristic types (read-only, needed for TDEE calculation)
     private static let biologicalSexType = HKCharacteristicType(.biologicalSex)
     private static let dateOfBirthType = HKCharacteristicType(.dateOfBirth)
@@ -37,6 +55,7 @@ extension MetricsService {
     // All types for authorization - includes characteristics for TDEE
     private static let allReadTypes: Set<HKObjectType> = [
         weightType, heightType, bodyFatType, waistType,
+        activeEnergyType,
         biologicalSexType, dateOfBirthType,
     ]
     private static let allWriteTypes: Set<HKSampleType> = [weightType, heightType, bodyFatType, waistType]
@@ -45,6 +64,19 @@ extension MetricsService {
     static var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
     }
+
+    #if DEBUG
+        /// Test accessor: Returns the set of HealthKit types requested for read authorization
+        /// Used to verify authorization configuration includes all required types
+        static var testableReadTypes: Set<HKObjectType> {
+            allReadTypes
+        }
+
+        /// Test accessor: Returns the active energy burned type for verification
+        static var testableActiveEnergyType: HKQuantityType {
+            activeEnergyType
+        }
+    #endif
 
     // MARK: - Authorization
 
@@ -466,6 +498,293 @@ extension MetricsService {
             Self.healthKitLogger.info("Synced metrics entry to HealthKit")
         } catch {
             Self.healthKitLogger.error("Failed to sync metrics to HealthKit: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Active Energy Observation
+
+    /// Stored reference to the active HKObserverQuery for energy observation
+    private static var activeEnergyObserverQuery: HKObserverQuery?
+
+    /// Handler closure stored for observation updates
+    private static var activeEnergyHandler: ((Double) -> Void)?
+
+    #if DEBUG
+        /// Test accessor: Check if an active energy observer query is currently running
+        static var isActiveEnergyObserverRunning: Bool {
+            activeEnergyObserverQuery != nil
+        }
+    #endif
+
+    /// Start observing real-time active energy updates from HealthKit
+    /// When HealthKit notifies of changes, fetches fresh cumulative total and invokes handler
+    /// - Parameter handler: Closure called with updated active energy value in kcal
+    static func startActiveEnergyObservation(handler: @escaping (Double) -> Void) {
+        guard isHealthKitAvailable else {
+            healthKitLogger.info("HealthKit not available, cannot start energy observation")
+            return
+        }
+
+        // Stop any existing observation first
+        stopActiveEnergyObservation()
+
+        // Store the handler for use in the query callback
+        activeEnergyHandler = handler
+
+        // Create observer query for active energy changes
+        let query = HKObserverQuery(
+            sampleType: activeEnergyType,
+            predicate: nil
+        ) { _, completionHandler, error in
+            if let error {
+                healthKitLogger.error("Active energy observer error: \(error.localizedDescription)")
+                completionHandler()
+                return
+            }
+
+            // Fetch fresh cumulative total and invoke handler
+            Task {
+                if let energy = await getTodayActiveEnergy() {
+                    await MainActor.run {
+                        activeEnergyHandler?(energy)
+                    }
+                }
+                completionHandler()
+            }
+        }
+
+        // Store the query reference
+        activeEnergyObserverQuery = query
+
+        // Execute the query
+        healthStore.execute(query)
+
+        // Enable background delivery for real-time updates
+        healthStore.enableBackgroundDelivery(
+            for: activeEnergyType,
+            frequency: .immediate
+        ) { success, error in
+            if success {
+                healthKitLogger.info("Background delivery enabled for active energy")
+            } else if let error {
+                healthKitLogger.error("Failed to enable background delivery: \(error.localizedDescription)")
+            }
+        }
+
+        // Trigger immediate update to ensure UI reflects current state (real or mock)
+        Task {
+            if let energy = await getTodayActiveEnergy() {
+                await MainActor.run {
+                    activeEnergyHandler?(energy)
+                }
+            }
+        }
+
+        healthKitLogger.info("Started active energy observation")
+    }
+
+    /// Stop observing active energy updates from HealthKit
+    /// Cleans up the observer query and clears stored references
+    static func stopActiveEnergyObservation() {
+        if let query = activeEnergyObserverQuery {
+            healthStore.stop(query)
+            healthKitLogger.info("Stopped active energy observation")
+        }
+
+        activeEnergyObserverQuery = nil
+        activeEnergyHandler = nil
+    }
+
+    // MARK: - Active Energy Query Methods
+
+    /// Get today's cumulative active energy burned in kilocalories
+    /// - Returns: Active energy in kcal, or nil if unavailable
+    static func getTodayActiveEnergy() async -> Double? {
+        await getTodayActiveEnergy(dataSource: nil)
+    }
+
+    /// Get today's cumulative active energy burned (testable version)
+    /// - Parameter dataSource: Optional mock data source for testing
+    /// - Returns: Active energy in kcal, or nil if unavailable
+    static func getTodayActiveEnergy(dataSource: ActiveEnergyDataSource?) async -> Double? {
+        if let dataSource {
+            return await dataSource.getTodayActiveEnergy()
+        }
+        return await getActiveEnergyForDate(Date(), dataSource: nil)
+    }
+
+    /// Get active energy burned for a specific date in kilocalories
+    /// - Parameter date: The date to query
+    /// - Returns: Active energy in kcal, or nil if unavailable
+    static func getActiveEnergyForDate(_ date: Date) async -> Double? {
+        await getActiveEnergyForDate(date, dataSource: nil)
+    }
+
+    /// Get active energy burned for a specific date (testable version)
+    /// - Parameters:
+    ///   - date: The date to query
+    ///   - dataSource: Optional mock data source for testing
+    /// - Returns: Active energy in kcal, or nil if unavailable
+    static func getActiveEnergyForDate(_ date: Date, dataSource: ActiveEnergyDataSource?) async -> Double? {
+        if let dataSource {
+            return await dataSource.getActiveEnergyForDate(date)
+        }
+
+        // Check for launch argument mock first
+        if let mockValue = mockActiveEnergy {
+            healthKitLogger.debug("Using mock active energy: \(mockValue)")
+            return mockValue
+        }
+
+        guard isHealthKitAvailable else {
+            healthKitLogger.info("HealthKit not available for active energy query")
+            return nil
+        }
+
+        return await queryActiveEnergyForDate(date)
+    }
+
+    /// Helper to specify mock energy via launch arguments
+    private static var mockActiveEnergy: Double? {
+        guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--mock-active-energy=") }) else {
+            return nil
+        }
+        return Double(arg.replacingOccurrences(of: "--mock-active-energy=", with: ""))
+    }
+
+    /// Get daily active energy totals for the past N days
+    /// - Parameter days: Number of days to retrieve (including today)
+    /// - Returns: Dictionary with date keys (normalized to midnight) and kcal values
+    static func getActiveEnergyHistory(days: Int) async -> [Date: Double] {
+        await getActiveEnergyHistory(days: days, dataSource: nil)
+    }
+
+    /// Get daily active energy totals for the past N days (testable version)
+    /// - Parameters:
+    ///   - days: Number of days to retrieve (including today)
+    ///   - dataSource: Optional mock data source for testing
+    /// - Returns: Dictionary with date keys (normalized to midnight) and kcal values
+    static func getActiveEnergyHistory(days: Int, dataSource: ActiveEnergyDataSource?) async -> [Date: Double] {
+        if let dataSource {
+            return await dataSource.getActiveEnergyHistory(days: days)
+        }
+
+        guard days > 0 else { return [:] }
+
+        guard isHealthKitAvailable else {
+            healthKitLogger.info("HealthKit not available for active energy history query")
+            return [:]
+        }
+
+        return await queryActiveEnergyHistory(days: days)
+    }
+
+    // MARK: - Private Active Energy Query Helpers
+
+    /// Query HealthKit for active energy on a specific date using HKStatisticsQuery
+    private static func queryActiveEnergyForDate(_ date: Date) async -> Double? {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return nil
+        }
+
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startOfDay,
+            end: endOfDay,
+            options: .strictStartDate
+        )
+
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsQuery(
+                quantityType: activeEnergyType,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum
+            ) { _, statistics, error in
+                if let error {
+                    healthKitLogger.error("Active energy query failed: \(error.localizedDescription)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                guard let sum = statistics?.sumQuantity() else {
+                    healthKitLogger.debug("No active energy data for \(startOfDay)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let kcal = sum.doubleValue(for: .kilocalorie())
+                healthKitLogger.debug("Active energy for \(startOfDay): \(kcal) kcal")
+                continuation.resume(returning: kcal)
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    /// Query HealthKit for active energy history using HKStatisticsCollectionQuery
+    private static func queryActiveEnergyHistory(days: Int) async -> [Date: Double] {
+        let calendar = Calendar.current
+        let endDate = calendar.startOfDay(for: Date())
+        guard let startDate = calendar.date(byAdding: .day, value: -(days - 1), to: endDate) else {
+            return [:]
+        }
+        guard let queryEndDate = calendar.date(byAdding: .day, value: 1, to: endDate) else {
+            return [:]
+        }
+
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startDate,
+            end: queryEndDate,
+            options: .strictStartDate
+        )
+
+        // Anchor at midnight, interval of 1 day
+        var anchorComponents = calendar.dateComponents([.day, .month, .year], from: startDate)
+        anchorComponents.hour = 0
+        anchorComponents.minute = 0
+        anchorComponents.second = 0
+        guard let anchorDate = calendar.date(from: anchorComponents) else {
+            return [:]
+        }
+
+        let interval = DateComponents(day: 1)
+
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsCollectionQuery(
+                quantityType: activeEnergyType,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum,
+                anchorDate: anchorDate,
+                intervalComponents: interval
+            )
+
+            query.initialResultsHandler = { _, results, error in
+                if let error {
+                    healthKitLogger.error("Active energy history query failed: \(error.localizedDescription)")
+                    continuation.resume(returning: [:])
+                    return
+                }
+
+                guard let results else {
+                    healthKitLogger.debug("No active energy history results")
+                    continuation.resume(returning: [:])
+                    return
+                }
+
+                var history: [Date: Double] = [:]
+                results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
+                    let date = statistics.startDate
+                    if let sum = statistics.sumQuantity() {
+                        let kcal = sum.doubleValue(for: .kilocalorie())
+                        history[date] = kcal
+                    }
+                }
+
+                healthKitLogger.debug("Retrieved active energy history for \(history.count) days")
+                continuation.resume(returning: history)
+            }
+
+            healthStore.execute(query)
         }
     }
 }

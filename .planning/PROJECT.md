@@ -1,20 +1,18 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-02)
+## Current State (Updated: 2026-01-04)
 
-**Shipped:** v0.3.0 Goals & Nutrition Programs (2026-01-02)
+**Shipped:** v0.4.0 Calorie Expenditure Enhancements (2026-01-04)
 **Status:** Development / TestFlight
-**Codebase:** ~57,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+**Codebase:** ~58,500 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.3.0 Delivered:**
-- NutritionGoal and NutritionProgram data models with User integration
-- Separate Goal and Program wizards with Strategy view entry points
-- Three program styles: Coached (auto-calculated), Collaborative (per-day editing), Manual (user-defined)
-- Adaptive TDEE engine with Mifflin-St Jeor BMR and EWMA weight smoothing
-- HealthKit biometrics integration for height, weight, sex, DOB
-- Daily progress rings for NutritionSummaryCard with color thresholds
-- Weekly check-ins with ProgramOptimizationSheet for goal/program adjustments
-- More tab refinements with Security & Privacy, Notifications, and placeholder screens
+**v0.4.0 Delivered:**
+- Real-time burned calories from HealthKit added back to daily calorie targets
+- Rollover calories feature carrying up to 200 unused calories to next day
+- Predictive activity adjustment using 7-day average with goal-type multipliers
+- CalorieAdjustmentService pipeline with extensible provider architecture
+- Calorie breakdown UI showing burned/rollover/predictive adjustments
+- Calorie Expenditure settings screen with toggle controls
 
 ## Next Milestone Goals
 

@@ -1,5 +1,63 @@
 # Project Milestones: MacroKinetic
 
+## v0.4.0 Calorie Expenditure Enhancements (Shipped: 2026-01-04)
+
+**Delivered:** Enhanced calorie targets with real-time burned calories from HealthKit, rollover unused calories to next day, and predictive activity adjustments based on 7-day historical trends with goal-type multipliers.
+
+**Phases completed:** 18-21 (4 plans total)
+
+**Key accomplishments:**
+
+- Real-time burned calories from HealthKit added back to daily calorie targets with flame indicator
+- Rollover calories feature carrying up to 200 unused calories from yesterday to today
+- Predictive activity adjustment using 7-day average with goal-type multipliers (0.8/1.0/1.2)
+- CalorieAdjustmentService pipeline with extensible provider architecture
+- Calorie breakdown UI showing burned/rollover/predictive adjustments in FoodLogView
+- 13 E2E tests for burned calories feature validation and toggle behavior
+
+**Stats:**
+
+- 85 files modified
+- +8,945 / -1,610 lines (net +7,335)
+- 4 phases, 4 plans, 56 min execution time
+- 2 days from start to ship (Jan 3-4, 2026)
+
+**Git range:** `feat(18-01)` → `feat(21-01)`
+
+**What's next:** Protein Preservation Alerts, Analytics Dashboard, or Recipe Builder
+
+---
+
+## v0.3.0 Goals & Nutrition Programs (Shipped: 2026-01-02)
+
+**Delivered:** Goal-based nutrition tracking with customizable programs, adaptive TDEE engine, weekly check-ins, and refined settings experience.
+
+**Phases completed:** 12-17 (20 plans total, including decimal phases 15.1 and 15.2)
+
+**Key accomplishments:**
+
+- NutritionGoal and NutritionProgram data models with User integration
+- Separate Goal and Program wizards with Strategy view entry points
+- Three program styles: Coached (auto-calculated), Collaborative (per-day editing), Manual (user-defined)
+- Adaptive TDEE engine with Mifflin-St Jeor BMR and EWMA weight smoothing
+- HealthKit biometrics integration for height, weight, sex, DOB
+- Daily progress rings for NutritionSummaryCard with color thresholds
+- Weekly check-ins with ProgramOptimizationSheet for goal/program adjustments
+- More tab refinements with Security & Privacy, Notifications, and placeholder screens
+
+**Stats:**
+
+- 160 files modified
+- +28,655 / -8,034 lines (net +20,621)
+- 8 phases (including 2 decimal phases), 20 plans
+- 7 days from start to ship (Dec 27, 2025 - Jan 2, 2026)
+
+**Git range:** `feat(12-01)` → `feat(17-03)`
+
+**What's next:** Calorie Expenditure Enhancements (v0.4.0)
+
+---
+
 ## v0.2.0 Enhanced Tracking (Shipped: 2025-12-27)
 
 **Delivered:** Enhanced daily tracking with week calendar navigation, food library management, quick macro entry, weight tracking with HealthKit sync, body metrics with progress photos, and feature settings for metrics visibility and units of measure.

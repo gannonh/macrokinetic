@@ -84,7 +84,9 @@
           "Services/MetricsService.swift",
           "Services/ProgressPhotoService.swift",
           "Services/TDEEService.swift",
-          "Services/WeeklyCheckInService.swift"
+          "Services/WeeklyCheckInService.swift",
+          "Services/CalorieAdjustmentService.swift",
+          "Services/CalorieAdjustmentService+Adjustments.swift"
         ]
       },
       "framework_integration": {
@@ -120,7 +122,8 @@
           "ViewModels/CreateFoodViewModel.swift",
           "ViewModels/QuickAddViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
-          "Views/Dashboard/QuickDoseViewModel.swift"
+          "Views/Dashboard/QuickDoseViewModel.swift",
+          "Views/Nutrition/NutritionSummaryViewModel.swift"
         ]
       },
       "utilities": {
@@ -169,6 +172,8 @@
       "Design/Colors+Extensions.swift",
       "Design/DesignTokens.swift",
       "Design/ErrorAlertModifier.swift",
+      "Design/MacroProgressBar.swift",
+      "Design/PageHeader.swift",
       "JabTrackerApp.swift",
       "Models/SubscriptionProducts.swift",
       "Onboarding/Components/ConcentrationCurvePreview.swift",
@@ -203,6 +208,8 @@
       "Views/AuthenticationView.swift",
       "Views/FoodLog/FoodDayView.swift",
       "Views/FoodLog/FoodLogView.swift",
+      "Views/FoodLog/MacroSummaryConsumedPage.swift",
+      "Views/FoodLog/MacroSummarySwipeCard.swift",
       "Views/FoodLog/WeekCalendarStrip.swift",
       "Views/More/MoreView.swift",
       "Views/Shots/ShotsView.swift",
@@ -288,6 +295,7 @@
       "Views/Photos/QuickPhotoSheet.swift",
       "Design/CircularProgressRing.swift",
       "Design/WeightPickerView.swift",
+      "Views/Settings/CalorieAdjustmentBreakdownView.swift",
       "Views/Settings/CalorieExpenditureView.swift",
       "Views/Settings/GeneralSettingsView.swift",
       "Views/Settings/NotificationSettingsView.swift",

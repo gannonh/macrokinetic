@@ -281,38 +281,35 @@ struct DashboardView: View {
 
     init(doseService: DoseService) {
         self.doseService = doseService
-
-        // Make inline title transparent so it doesn't appear when scrolled
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.clear]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    if let currentUser = users.first {
-                        self.concentrationSection(for: currentUser)
+                VStack(alignment: .leading, spacing: 0) {
+                    // Custom page header (handles its own padding)
+                    PageHeader(title: "Dashboard")
 
-                        // Nutrition summary card
-                        NutritionSummaryCard(
-                            user: currentUser,
-                            mealLogService: AppServices.shared.mealLogService
-                        )
-                    } else {
-                        self.noUserSection
+                    // Content with standard padding
+                    LazyVStack(alignment: .leading, spacing: 16) {
+                        if let currentUser = users.first {
+                            self.concentrationSection(for: currentUser)
+
+                            // Nutrition summary card
+                            NutritionSummaryCard(
+                                user: currentUser,
+                                mealLogService: AppServices.shared.mealLogService
+                            )
+                        } else {
+                            self.noUserSection
+                        }
                     }
+                    .padding()
                 }
-                .padding()
             }
             .accessibilityIdentifier("dashboard-scroll-view")
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Dashboard")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
         }
         .accessibilityIdentifier("dashboard-view")
     }

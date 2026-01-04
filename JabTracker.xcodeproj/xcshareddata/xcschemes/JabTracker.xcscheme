@@ -172,8 +172,12 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--reset-app-data"
+            argument = "--mock-active-energy=350"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--reset-app-data"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-check-in-good"
@@ -193,7 +197,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-collaborative"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y"

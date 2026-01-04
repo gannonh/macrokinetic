@@ -1,52 +1,31 @@
----
-task_ref: "Task 1.1 - Expand HealthKit Authorization"
-agent_assignment: "Agent_HealthKit"
-memory_log_path: ".apm/Memory/Phase_01_HealthKit_Active_Energy/Task_1_1_Expand_HealthKit_Authorization.md"
-execution_type: "single-step"
-dependency_context: false
-ad_hoc_delegation: false
----
+════════════════════════════════════════
+  CHECKPOINT: Verification Required
+  ════════════════════════════════════════
 
-# APM Task Assignment: Expand HealthKit Authorization
+  Phase 21-01: UI Polish
 
-## Task Reference
-Implementation Plan: **Task 1.1 - Expand HealthKit Authorization** assigned to **Agent_HealthKit**
+  I built:
+  - CalorieAdjustmentBreakdownView component showing burned/rollover/predictive breakdown
+  - Integrated into FoodLogView (displays only for today when adjustments exist)
+  - Goal multiplier text in CalorieExpenditureView settings footer
 
-## Objective
-Add activeEnergyBurned to HealthKit authorization request so the app can read the user's active energy data.
+  How to verify:
 
-## Detailed Instructions
-Complete all items in one response:
+  1. Food Log Breakdown Card:
+    - Open app → Food Log tab
+    - Enable calorie adjustments in More > Calorie Expenditure (e.g., Rollover, Burned, or Predictive)
+    - Return to Food Log (today's date)
+    - Verify breakdown card appears above daily summary with correct values
+  2. Goal Multiplier Text:
+    - Navigate to More > Calorie Expenditure
+    - Look at Predictive Activity toggle footer
+    - Verify it shows: "Currently: X% of activity (goal type)"
 
-1. **Locate MetricsService+HealthKit extension** – Find the existing HealthKit integration file (likely `MetricsService+HealthKit.swift` or similar) where authorization types are defined.
+  Expected:
+  - Breakdown card visible when adjustments > 0, hidden otherwise
+  - Correct colors: orange (burned), blue (rollover), purple (predictive), green (+values)
+  - Goal multiplier text matches active nutrition goal
 
-2. **Add activeEnergyBurned quantity type constant** – Add a new constant for the active energy type:
-   ```swift
-   private let activeEnergyType = HKQuantityType(.activeEnergyBurned)
-   ```
+  Type "approved" to continue, or describe any issues.
 
-Follow the existing naming pattern for other HealthKit quantity types in the file.
-
-Expand authorization read types – Add activeEnergyType to the allReadTypes set (or equivalent) used in the HealthKit authorization request. Only read permission is needed (no write).
-Write unit test – Create a unit test verifying that the authorization request includes activeEnergyBurned. Follow existing test patterns in the project. Run xcodegen generate if a new test file is created.
-Verify build and tests – Ensure the project builds successfully and all tests pass.
-Expected Output
-Deliverables: Updated MetricsService+HealthKit with expanded authorization types
-Success criteria:
-activeEnergyType constant added
-activeEnergyBurned included in authorization read types
-Unit test passing
-Project builds without errors
-File locations:
-Modified: MacroKinetic/Services/MetricsService+HealthKit.swift (or actual path)
-New/Modified: Test file for authorization verification
-Memory Logging
-Upon completion, you MUST log work in: 
-.apm/Memory/Phase_01_HealthKit_Active_Energy/Task_1_1_Expand_HealthKit_Authorization.md
- Follow .apm/guides/Memory_Log_Guide.md instructions.
-
-Reporting Protocol
-After logging, you MUST output a Final Task Report code block.
-
-Format: Use the exact template provided in your .apm/workflows/apm-3-initiate-implementation.md instructions.
-Perspective: Write it from the User's perspective so they can copy-paste it back to the Manager.
+  ════════════════════════════════════════

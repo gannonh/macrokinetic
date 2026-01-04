@@ -1,0 +1,10 @@
+# SwiftLint overrides for FoodLog views
+# FoodLogView.swift contains daily food logging with calorie adjustments, meal sections, and week calendar
+
+type_body_length:
+  warning: 450
+  error: 500
+
+file_length:
+  warning: 600
+  error: 650

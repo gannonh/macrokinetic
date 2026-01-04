@@ -54,34 +54,39 @@ struct ShotsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    // Main section picker
-                    Picker("Section", selection: $selectedSection) {
-                        ForEach(ShotsSection.allCases, id: \.self) { section in
-                            Text(section.rawValue).tag(section)
+                VStack(alignment: .leading, spacing: 0) {
+                    // Custom page header (handles its own padding)
+                    PageHeader(title: "Shots")
+
+                    // Content with standard padding
+                    LazyVStack(alignment: .leading, spacing: 16) {
+                        // Main section picker
+                        Picker("Section", selection: $selectedSection) {
+                            ForEach(ShotsSection.allCases, id: \.self) { section in
+                                Text(section.rawValue).tag(section)
+                            }
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .accessibilityIdentifier("shots-section-picker")
+
+                        // Sub-controls based on selected section
+                        sectionControls
+
+                        // Content based on selection
+                        if isLoadingData && selectedSection != .history {
+                            ProgressView("Loading...")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        } else {
+                            sectionContent
                         }
                     }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .accessibilityIdentifier("shots-section-picker")
-
-                    // Sub-controls based on selected section
-                    sectionControls
-
-                    // Content based on selection
-                    if isLoadingData && selectedSection != .history {
-                        ProgressView("Loading...")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    } else {
-                        sectionContent
-                    }
+                    .padding()
                 }
-                .padding()
             }
             .background(Color(.systemGroupedBackground))
             .accessibilityIdentifier("shots-scroll-view")
-            .navigationTitle("Shots")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 loadData()
                 if selectedSection == .concentration {

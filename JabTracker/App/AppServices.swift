@@ -34,6 +34,9 @@ final class AppServices: ObservableObject {
     /// Progress photo service for photo tracking
     @Published private(set) var progressPhotoService: ProgressPhotoService?
 
+    /// Calorie adjustment service for burned calories and rollover calculations
+    @Published private(set) var calorieAdjustmentService: CalorieAdjustmentService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -70,6 +73,14 @@ final class AppServices: ObservableObject {
         let mealLogService = MealLogService(context: modelContext)
         self.mealLogService = mealLogService
 
+        // Create CalorieAdjustmentService and configure providers
+        let calorieAdjustmentService = CalorieAdjustmentService()
+        calorieAdjustmentService.configureRolloverProvider(mealLogService: mealLogService)
+        calorieAdjustmentService.configurePredictiveProvider(
+            activeEnergyDataSource: HealthKitActiveEnergyDataSource()
+        )
+        self.calorieAdjustmentService = calorieAdjustmentService
+
         // Create MetricsService for ALL body metrics (weight, height, body fat, circumferences)
         let metricsService = MetricsService(context: modelContext)
         self.metricsService = metricsService
@@ -88,6 +99,7 @@ final class AppServices: ObservableObject {
         customFoodService = nil
         metricsService = nil
         progressPhotoService = nil
+        calorieAdjustmentService = nil
     }
 }
 

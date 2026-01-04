@@ -10,7 +10,7 @@ import SwiftUI
 import os
 
 /// Daily macro totals for the summary card
-private struct DailyTotals {
+struct DailyTotals {
     let calories: Double
     let protein: Double
     let carbs: Double
@@ -58,6 +58,11 @@ struct FoodLogView: View {
     @State private var editingEntry: FoodEntry?
     @State private var entriesGroupedByDate: [Date: Int] = [:]
 
+    // Burned calories support
+    @State private var adjustedCalorieTarget: Double = 0
+    @State private var activeEnergyBurned: Double = 0
+    @State private var adjustmentBreakdown: CalorieAdjustmentBreakdown?
+
     private let calendar = Calendar.current
 
     /// Get macro targets for the selected date, considering per-day distribution
@@ -69,12 +74,6 @@ struct FoodLogView: View {
     }
 
     // MARK: - Static Properties
-
-    private static let summaryDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMM d"
-        return formatter
-    }()
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -105,10 +104,24 @@ struct FoodLogView: View {
                 }
                 .listSectionSeparator(.hidden)
 
-                // Daily summary section
+                // Compact swipeable macro summary
                 Section {
-                    dailySummaryCard
-                        .cardListRow()
+                    let totals = calculateTotals()
+                    MacroSummarySwipeCard(
+                        consumedCalories: totals.calories,
+                        consumedProtein: totals.protein,
+                        consumedCarbs: totals.carbs,
+                        consumedFat: totals.fat,
+                        targetCalories: macroTargets.calories,
+                        targetProtein: macroTargets.proteinGrams,
+                        targetCarbs: macroTargets.carbsGrams,
+                        targetFat: macroTargets.fatGrams,
+                        adjustedCalorieTarget: adjustedCalorieTarget > 0
+                            ? adjustedCalorieTarget
+                            : macroTargets.calories,
+                        adjustmentBreakdown: adjustmentBreakdown
+                    )
+                    .cardListRow()
                 }
                 .listSectionSeparator(.hidden)
 
@@ -118,18 +131,37 @@ struct FoodLogView: View {
                 }
             }
             .cardListStyle()
-            .navigationTitle("Food Log")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+            .safeAreaInset(edge: .top, spacing: 0) {
+                PageHeader(title: "Food Log") {
                     Button {
                         showingAddFood = true
                     } label: {
                         Image(systemName: "plus")
+                            .font(
+                                .system(
+                                    size: DesignTokens.HeaderButton.iconSize,
+                                    weight: DesignTokens.HeaderButton.iconWeight
+                                )
+                            )
+                            .foregroundColor(DesignTokens.HeaderButton.iconColor)
+                            .frame(
+                                width: DesignTokens.HeaderButton.buttonSize,
+                                height: DesignTokens.HeaderButton.buttonSize
+                            )
+                            .background(DesignTokens.HeaderButton.backgroundColor)
+                            .clipShape(Circle())
+                            .shadow(
+                                color: .black.opacity(DesignTokens.HeaderButton.shadowOpacity),
+                                radius: DesignTokens.HeaderButton.shadowRadius,
+                                y: DesignTokens.HeaderButton.shadowOffsetY
+                            )
                     }
                     .accessibilityIdentifier("add-food-button")
                 }
+                .padding(.bottom, 14)
+                .background(DesignTokens.Colors.groupedBackground)
             }
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingAddFood) {
                 if let currentUser = users.first {
                     FoodSearchSheet(
@@ -171,9 +203,87 @@ struct FoodLogView: View {
         .accessibilityIdentifier("food-log-view")
         .task(id: selectedDate) {
             loadWeekEntries()
+            await updateCalorieTarget()
+            startEnergyObservation()
         }
         .onChange(of: allEntries.count) {
             loadWeekEntries()
+        }
+        .onChange(of: users.first?.addBurnedCaloriesEnabled) { _, _ in
+            Task {
+                await updateCalorieTarget()
+                startEnergyObservation()
+            }
+        }
+        .onChange(of: users.first?.healthSyncEnabled) { _, _ in
+            Task {
+                await updateCalorieTarget()
+                startEnergyObservation()
+            }
+        }
+        .onChange(of: users.first?.rolloverCaloriesEnabled) { _, _ in
+            Task {
+                await updateCalorieTarget()
+            }
+        }
+        .onDisappear {
+            MetricsService.stopActiveEnergyObservation()
+        }
+    }
+
+    // MARK: - Calorie Adjustment
+
+    /// Update the adjusted calorie target based on burned calories and rollover
+    private func updateCalorieTarget() async {
+        guard let user = users.first else {
+            adjustedCalorieTarget = 0
+            adjustmentBreakdown = nil
+            return
+        }
+        guard let calorieAdjustmentService = AppServices.shared.calorieAdjustmentService else {
+            Self.logger.warning("CalorieAdjustmentService unavailable - using base target")
+            adjustedCalorieTarget = macroTargets.calories
+            adjustmentBreakdown = nil
+            return
+        }
+        let baseTargets = user.macroTargetsForDate(selectedDate)
+        adjustedCalorieTarget = await calorieAdjustmentService.getAdjustedCalorieTarget(
+            for: user,
+            on: selectedDate,
+            baseTarget: baseTargets.calories
+        )
+
+        // Fetch breakdown for display (only show for today)
+        if calendar.isDateInToday(selectedDate) {
+            adjustmentBreakdown = await calorieAdjustmentService.getAdjustmentBreakdown(
+                for: user,
+                on: selectedDate
+            )
+        } else {
+            adjustmentBreakdown = nil
+        }
+    }
+
+    /// Start observing active energy if feature is enabled
+    private func startEnergyObservation() {
+        // Stop any existing observation first
+        MetricsService.stopActiveEnergyObservation()
+
+        guard let user = users.first,
+            user.addBurnedCaloriesEnabled,
+            user.healthSyncEnabled,
+            calendar.isDateInToday(selectedDate)
+        else {
+            // Reset burned value when conditions aren't met
+            activeEnergyBurned = 0
+            return
+        }
+
+        MetricsService.startActiveEnergyObservation { energy in
+            self.activeEnergyBurned = energy
+            Task {
+                await self.updateCalorieTarget()
+            }
         }
     }
 
@@ -198,80 +308,6 @@ struct FoodLogView: View {
         }
 
         entriesGroupedByDate = counts
-    }
-
-    // MARK: - Daily Summary
-
-    /// Title for daily summary - "Today" or formatted date
-    private var summaryTitle: String {
-        if calendar.isDateInToday(selectedDate) {
-            return "Today"
-        } else {
-            return Self.summaryDateFormatter.string(from: selectedDate)
-        }
-    }
-
-    private var dailySummaryCard: some View {
-        let totals = calculateTotals()
-        let targets = macroTargets
-
-        return VStack(spacing: 12) {
-            Text(summaryTitle)
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityIdentifier("daily-summary-title")
-
-            HStack(spacing: 20) {
-                macroColumn(
-                    consumed: totals.calories,
-                    target: targets.calories,
-                    label: "Cal",
-                    color: .orange
-                )
-                macroColumn(
-                    consumed: totals.protein,
-                    target: targets.proteinGrams,
-                    label: "Protein",
-                    color: .blue
-                )
-                macroColumn(
-                    consumed: totals.carbs,
-                    target: targets.carbsGrams,
-                    label: "Carbs",
-                    color: .green
-                )
-                macroColumn(
-                    consumed: totals.fat,
-                    target: targets.fatGrams,
-                    label: "Fat",
-                    color: .purple
-                )
-            }
-        }
-        .padding()
-        .cardStyle()
-    }
-
-    private func macroColumn(consumed: Double, target: Double, label: String, color: Color) -> some View {
-        let remaining = target - consumed
-        let isOver = remaining < 0
-
-        return VStack(spacing: 4) {
-            Text("\(Int(consumed))")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(isOver ? .red : color)
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            // Show remaining/over if target is set
-            if target > 0 {
-                Text(isOver ? "+\(Int(abs(remaining)))" : "\(Int(remaining)) left")
-                    .font(.caption2)
-                    .foregroundColor(isOver ? .red : .secondary)
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Meal Sections
@@ -328,17 +364,20 @@ struct FoodLogView: View {
 
     private func mealSectionHeader(section: MealSection, totals: MealTotals) -> some View {
         HStack {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Image(systemName: section.icon)
+                    .font(.caption)
                 Text(section.displayName)
-                    .font(.headline)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
             }
+            .foregroundColor(.secondary)
 
             Spacer()
 
             if totals.calories > 0 {
-                HStack(spacing: 8) {
-                    HStack(spacing: 4) {
+                HStack(spacing: 6) {
+                    HStack(spacing: 3) {
                         Text("\(Int(totals.protein))P")
                             .foregroundColor(DesignTokens.Colors.protein)
                         Text("\(Int(totals.fat))F")
@@ -346,13 +385,14 @@ struct FoodLogView: View {
                         Text("\(Int(totals.carbs))C")
                             .foregroundColor(DesignTokens.Colors.carbs)
                     }
-                    .font(.caption)
+                    .font(.caption2)
 
                     HStack(spacing: 2) {
                         Text("\(Int(totals.calories))")
-                            .font(.subheadline.weight(.medium))
-                        Image(systemName: "flame.fill")
                             .font(.caption)
+                            .fontWeight(.medium)
+                        Image(systemName: "flame.fill")
+                            .font(.caption2)
                     }
                     .foregroundColor(DesignTokens.Colors.calories)
                 }
@@ -418,11 +458,11 @@ struct FoodLogView: View {
 private struct EmptyMealRow: View {
     var body: some View {
         Text("No items logged")
-            .font(.subheadline)
+            .font(.caption)
             .foregroundColor(.secondary)
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
             .cardStyle()
     }
 }

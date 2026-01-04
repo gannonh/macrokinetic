@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum DesignTokens {
     // MARK: - Corner Radii
@@ -49,11 +50,60 @@ enum DesignTokens {
         static let carbs = Color(.systemOrange)
     }
 
+    // MARK: - Spacing
+
+    enum Spacing {
+        /// Top padding for custom page headers (space below status bar)
+        static let pageHeaderTopPadding: CGFloat = 8
+        /// Horizontal padding for custom page headers
+        static let pageHeaderHorizontalPadding: CGFloat = 19
+    }
+
+    // MARK: - Header Button Style
+
+    enum HeaderButton {
+        /// Icon size for header action buttons
+        static let iconSize: CGFloat = 14
+        /// Icon weight for header action buttons
+        static let iconWeight: Font.Weight = .semibold
+        /// Icon color for header action buttons
+        static let iconColor = Color(.secondaryLabel)
+        /// Button size (circular background)
+        static let buttonSize: CGFloat = 28
+        /// Button background color (visible in both light and dark modes)
+        static let backgroundColor = Color(.tertiarySystemBackground)
+        /// Shadow radius (diffuse)
+        static let shadowRadius: CGFloat = 4
+        /// Shadow y offset
+        static let shadowOffsetY: CGFloat = 2
+        /// Shadow opacity
+        static let shadowOpacity: CGFloat = 0.12
+    }
+
     enum Typography {
         static let largeTitle = Font.system(.largeTitle, design: .rounded)
         static let headline = Font.system(.headline, design: .default).bold()
         static let body = Font.system(.body, design: .default)
         static let caption = Font.system(.caption, design: .default)
+
+        /// Page title font size for main navigation views (smaller than default largeTitle)
+        static let pageTitleSize: CGFloat = 24
+
+        /// Configure navigation bar appearance with smaller page titles
+        /// Call this in init() of main views that use large title display mode
+        static func configurePageTitleAppearance() {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithTransparentBackground()
+            // Hide inline title when scrolled
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.clear]
+            // Smaller large title
+            appearance.largeTitleTextAttributes = [
+                .foregroundColor: UIColor.label,
+                .font: UIFont.systemFont(ofSize: pageTitleSize, weight: .bold),
+            ]
+            UINavigationBar.appearance().standardAppearance = appearance
+            UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        }
     }
 
     enum ButtonStyles {

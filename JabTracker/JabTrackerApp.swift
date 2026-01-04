@@ -77,6 +77,10 @@ struct JabTrackerApp: App {
                             self.dataController.seedTitrationTestData()
                         }
 
+                        if ProcessInfo.processInfo.arguments.contains("--seed-calorie-user") {
+                            self.dataController.seedCalorieExpenditureUser()
+                        }
+
                         // Handle deeplink from launch arguments (for UI testing)
                         if let deeplinkURLString = ProcessInfo.processInfo.arguments.first(where: {
                             $0.hasPrefix("--deeplink-url=")
