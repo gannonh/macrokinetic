@@ -164,6 +164,7 @@ private struct AdjustmentsSheet: View {
                         .fontWeight(.semibold)
                         .foregroundColor(DesignTokens.Colors.calories)
                 }
+                .font(.subheadline)
             }
 
             Spacer()
