@@ -10,6 +10,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Completed Milestones
 
+- ✅ [v0.5.0 Navigation Refinement](milestones/v0.5.0-ROADMAP.md) (Phases 22-24) - SHIPPED 2026-01-05
 - ✅ [v0.4.0 Calorie Expenditure Enhancements](milestones/v0.4.0-ROADMAP.md) (Phases 18-21) - SHIPPED 2026-01-04
 - ✅ [v0.3.0 Goals & Nutrition Programs](milestones/v0.3.0-ROADMAP.md) (Phases 12-17) - SHIPPED 2026-01-02
 - ✅ [v0.2.0 Enhanced Tracking](milestones/v0.2.0-ROADMAP.md) (Phases 5-11) - SHIPPED 2025-12-27
@@ -17,55 +18,27 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 🚧 **v0.5.0 Navigation Refinement** - Phases 22-24 (in progress)
+- 📋 **v0.6.0** - (planned)
 
 ## Phases
 
-### 🚧 v0.5.0 Navigation Refinement (In Progress)
-
-**Milestone Goal:** Streamline navigation by consolidating GLP-1 features under More, promoting Strategy to a top-level tab, and modernizing the Add button.
-
-#### Phase 22: GLP-1 Programs Consolidation
-
-**Goal**: Merge Shots tab and Medication Profiles into unified "GLP-1 Programs" section under More tab
-**Depends on**: Previous milestone complete
-**Research**: Unlikely (internal UI patterns, existing views)
-**Plans**: 2
-
-Plans:
-- [x] 22-01: Section Extraction & ShotsView Refactor (3 tasks) - Complete 2026-01-05
-- [x] 22-02: GLP1ProgramsView & Integration (3 tasks) - Complete 2026-01-05
-
-#### Phase 23: Strategy Tab Promotion
-
-**Goal**: Replace Shots tab with Strategy in tab bar, uplevel Goals & Strategy to Dashboard-style prominence
-**Depends on**: Phase 22
-**Research**: Unlikely (internal patterns, following Dashboard precedent)
-**Plans**: 1
-
-Plans:
-- [x] 23-01: Strategy Tab Promotion (3 tasks) - Complete 2026-01-05
-
-#### Phase 24: Add Button Redesign
-
-**Goal**: Icon-only, larger Add button with no text label, same ShortcutsSheet behavior
-**Depends on**: Phase 23
-**Research**: Unlikely (simple styling change)
-**Plans**: 1
-
-Plans:
-- [x] 24-01: Add Button Styling (2 tasks) - Complete 2026-01-05
+No active phases. See Completed Milestones above for history.
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
 
+<details>
+<summary>✅ v0.5.0 Navigation Refinement (Phases 22-24) - SHIPPED 2026-01-05</summary>
+
 | Phase                             | Plans Complete | Status      | Completed  |
 | --------------------------------- | -------------- | ----------- | ---------- |
 | 22. GLP-1 Programs Consolidation  | 2/2            | Complete    | 2026-01-05 |
 | 23. Strategy Tab Promotion        | 1/1            | Complete    | 2026-01-05 |
 | 24. Add Button Redesign           | 1/1            | Complete    | 2026-01-05 |
+
+</details>
 
 <details>
 <summary>✅ v0.4.0 Calorie Expenditure Enhancements (Phases 18-21) - SHIPPED 2026-01-04</summary>
