@@ -120,7 +120,7 @@ struct NutritionSummaryCard: View {
     private var macroRingsSection: some View {
         let targets = baseMacroTargets
 
-        return HStack(spacing: 16) {
+        return HStack(spacing: 0) {
             macroRing(
                 label: "Calories",
                 consumed: viewModel.totals.calories,
@@ -129,6 +129,7 @@ struct NutritionSummaryCard: View {
                 unit: "kcal",
                 isCalories: true
             )
+            Spacer(minLength: 0)
             macroRing(
                 label: "Protein",
                 consumed: viewModel.totals.protein,
@@ -136,6 +137,7 @@ struct NutritionSummaryCard: View {
                 color: DesignTokens.Colors.protein,
                 unit: "g"
             )
+            Spacer(minLength: 0)
             macroRing(
                 label: "Carbs",
                 consumed: viewModel.totals.carbs,
@@ -143,6 +145,7 @@ struct NutritionSummaryCard: View {
                 color: DesignTokens.Colors.carbs,
                 unit: "g"
             )
+            Spacer(minLength: 0)
             macroRing(
                 label: "Fat",
                 consumed: viewModel.totals.fat,
@@ -170,14 +173,21 @@ struct NutritionSummaryCard: View {
         let isOver = consumed > goal && goal > 0
 
         VStack(spacing: 4) {
+            // Macro name above ring
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
             CircularProgressRing(
                 progress: progress,
                 label: label,
                 valueText: "\(Int(consumed.rounded()))",
                 color: ringColor,
                 lineWidth: Constants.ringLineWidth,
-                size: Constants.ringSize
+                size: Constants.ringSize,
+                showLabel: false
             )
+            .padding(.vertical, 6)
 
             // Goal text below ring
             HStack(spacing: 2) {

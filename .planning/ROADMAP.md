@@ -10,6 +10,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Completed Milestones
 
+- ✅ [v0.5.0 Navigation Refinement](milestones/v0.5.0-ROADMAP.md) (Phases 22-24) - SHIPPED 2026-01-05
 - ✅ [v0.4.0 Calorie Expenditure Enhancements](milestones/v0.4.0-ROADMAP.md) (Phases 18-21) - SHIPPED 2026-01-04
 - ✅ [v0.3.0 Goals & Nutrition Programs](milestones/v0.3.0-ROADMAP.md) (Phases 12-17) - SHIPPED 2026-01-02
 - ✅ [v0.2.0 Enhanced Tracking](milestones/v0.2.0-ROADMAP.md) (Phases 5-11) - SHIPPED 2025-12-27
@@ -17,16 +18,27 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 📋 **v0.5.0** - TBD (planned)
+- 📋 **v0.6.0** - (planned)
 
 ## Phases
 
-_No active phases. See Completed Milestones for historical records._
+No active phases. See Completed Milestones above for history.
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
+
+<details>
+<summary>✅ v0.5.0 Navigation Refinement (Phases 22-24) - SHIPPED 2026-01-05</summary>
+
+| Phase                             | Plans Complete | Status      | Completed  |
+| --------------------------------- | -------------- | ----------- | ---------- |
+| 22. GLP-1 Programs Consolidation  | 2/2            | Complete    | 2026-01-05 |
+| 23. Strategy Tab Promotion        | 1/1            | Complete    | 2026-01-05 |
+| 24. Add Button Redesign           | 1/1            | Complete    | 2026-01-05 |
+
+</details>
 
 <details>
 <summary>✅ v0.4.0 Calorie Expenditure Enhancements (Phases 18-21) - SHIPPED 2026-01-04</summary>

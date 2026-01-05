@@ -1,5 +1,32 @@
 # Project Milestones: MacroKinetic
 
+## v0.5.0 Navigation Refinement (Shipped: 2026-01-05)
+
+**Delivered:** Streamlined navigation by consolidating GLP-1 features under More tab, promoting Strategy to a top-level tab with check-in badge, and modernizing the Add button with a floating 44pt icon-only design.
+
+**Phases completed:** 22-24 (4 plans total)
+
+**Key accomplishments:**
+
+- Extracted reusable section components (ConcentrationSection, AdherenceSection, HistorySection) from ShotsView with full TDD coverage (10 tests)
+- Created unified GLP1ProgramsView consolidating GLP-1 analytics and medication management under More tab
+- Promoted Strategy to top-level tab with target icon and weekly check-in badge indicator
+- Replaced Add tab item with floating 44pt icon-only button overlay for visual prominence
+- Standardized navigation bar styling (inline titles, circle buttons) across app
+
+**Stats:**
+
+- 52 files modified
+- +3,285 / -436 lines (net +2,849)
+- 3 phases, 4 plans, 80 min execution time
+- 2 days from start to ship (Jan 4-5, 2026)
+
+**Git range:** `feat(22-01)` → `feat(24-01)`
+
+**What's next:** Protein Preservation Alerts, Analytics Dashboard, Subscription Management, or Recipe Builder
+
+---
+
 ## v0.4.0 Calorie Expenditure Enhancements (Shipped: 2026-01-04)
 
 **Delivered:** Enhanced calorie targets with real-time burned calories from HealthKit, rollover unused calories to next day, and predictive activity adjustments based on 7-day historical trends with goal-type multipliers.

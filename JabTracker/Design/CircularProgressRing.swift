@@ -28,6 +28,9 @@ struct CircularProgressRing: View {
     /// Diameter of the ring (default: 60)
     var size: CGFloat = 60
 
+    /// Whether to show the label below the ring (default: true)
+    var showLabel: Bool = true
+
     /// Computed accessibility identifier based on label
     var accessibilityIdentifierValue: String {
         "progress-ring-\(label.lowercased())"
@@ -73,14 +76,16 @@ struct CircularProgressRing: View {
             }
             .frame(width: size, height: size)
 
-            // Label below
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            // Label below (optional)
+            if showLabel {
+                Text(label)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .accessibilityIdentifier(accessibilityIdentifierValue)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(valueText)")
+        .accessibilityLabel(showLabel ? "\(label): \(valueText)" : valueText)
         .accessibilityValue(String(format: "%.0f percent", progress * 100))
     }
 }

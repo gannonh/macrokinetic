@@ -12,7 +12,7 @@ enum Tab: String, CaseIterable, Identifiable {
     case dashboard
     case foodLog
     case add
-    case shots
+    case strategy
     case more
 
     var id: String { rawValue }
@@ -22,7 +22,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .dashboard: return "Dashboard"
         case .foodLog: return "Food Log"
         case .add: return "Add"
-        case .shots: return "Shots"
+        case .strategy: return "Strategy"
         case .more: return "More"
         }
     }
@@ -32,13 +32,13 @@ enum Tab: String, CaseIterable, Identifiable {
         case .dashboard: return "square.grid.2x2"
         case .foodLog: return "fork.knife"
         case .add: return "plus.circle.fill"
-        case .shots: return "syringe"
+        case .strategy: return "target"
         case .more: return "ellipsis.circle"
         }
     }
 
     /// Tabs visible in main tab bar
     static var mainTabs: [Tab] {
-        [.dashboard, .foodLog, .add, .shots, .more]
+        [.dashboard, .foodLog, .add, .strategy, .more]
     }
 }

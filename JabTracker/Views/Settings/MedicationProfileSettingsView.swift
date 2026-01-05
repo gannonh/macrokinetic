@@ -459,7 +459,7 @@ struct MedicationProfileDetailView: View {
     var body: some View {
         mainContent
             .navigationTitle(self.profile.brandName)
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Edit") {

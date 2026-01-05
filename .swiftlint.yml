@@ -59,8 +59,8 @@ identifier_name:
     error: 50
 
 # Custom rules to enforce design system consistency
-# NOTE: Set to warning until legacy violations are cleaned up (see GitHub issue)
-# Then change to error to block new violations
+# NOTE: Kept as warnings (not errors) to allow builds with legacy violations
+# Pre-commit hook uses --strict to block NEW violations in staged files
 custom_rules:
   prefer_design_tokens_colors:
     name: "Prefer DesignTokens.Colors"

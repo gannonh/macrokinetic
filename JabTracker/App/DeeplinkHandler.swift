@@ -6,6 +6,8 @@ private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "D
 /// Notification name for deeplink navigation requests
 extension Notification.Name {
     static let showQuickDoseSheet = Notification.Name("showQuickDoseSheet")
+    /// Posted when weekly check-in is completed (accept or decline)
+    static let checkInCompleted = Notification.Name("checkInCompleted")
 }
 
 /// Result of deeplink parsing

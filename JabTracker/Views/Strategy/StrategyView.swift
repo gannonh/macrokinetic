@@ -45,24 +45,29 @@ struct StrategyView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
-                    if let user = users.first {
-                        if let activeGoal = user.activeNutritionGoal {
-                            // Access program through goal's forward relationship
-                            currentProgramSection(goal: activeGoal, program: activeGoal.program)
-                            actionButtonsSection(user: user, activeGoal: activeGoal)
+                VStack(alignment: .leading, spacing: 0) {
+                    // Custom page header (handles its own padding)
+                    PageHeader(title: "Strategy")
+
+                    // Content with standard padding
+                    VStack(spacing: 24) {
+                        if let user = users.first {
+                            if let activeGoal = user.activeNutritionGoal {
+                                // Access program through goal's forward relationship
+                                currentProgramSection(goal: activeGoal, program: activeGoal.program)
+                                actionButtonsSection(user: user, activeGoal: activeGoal)
+                            } else {
+                                emptyStateSection(user: user)
+                            }
                         } else {
-                            emptyStateSection(user: user)
+                            noUserSection
                         }
-                    } else {
-                        noUserSection
                     }
+                    .padding()
                 }
-                .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Strategy")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
         }
         // Edit Goal sheet - uses sheet(item:) to ensure goal is passed directly
         .sheet(item: $goalToEdit) { goal in

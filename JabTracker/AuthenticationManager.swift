@@ -158,26 +158,32 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
 
     /// Deletes all SwiftData entities for a clean test state
+    /// Must delete ALL entity types from DataController.modelTypes to ensure complete reset
     private func deleteAllSwiftDataEntities(context: ModelContext) throws {
-        // Delete counts for logging
+        // Delete counts for logging - must match DataController.modelTypes
         let userCount = try deleteAll(User.self, from: context)
         let profileCount = try deleteAll(MedicationProfile.self, from: context)
         let doseCount = try deleteAll(Dose.self, from: context)
         let titrationCount = try deleteAll(DoseTitration.self, from: context)
+        let doseScheduleCount = try deleteAll(DoseSchedule.self, from: context)
+        let scheduledDoseCount = try deleteAll(ScheduledDose.self, from: context)
         let foodCount = try deleteAll(Food.self, from: context)
         let foodEntryCount = try deleteAll(FoodEntry.self, from: context)
         let weightEntryCount = try deleteAll(WeightEntry.self, from: context)
         let metricsEntryCount = try deleteAll(MetricsEntry.self, from: context)
         let progressPhotoCount = try deleteAll(ProgressPhoto.self, from: context)
+        let nutritionGoalCount = try deleteAll(NutritionGoal.self, from: context)
+        let nutritionProgramCount = try deleteAll(NutritionProgram.self, from: context)
 
         try context.save()
         Self.logger.info(
             """
             ✅ AuthenticationManager: App data reset successfully - \
             Deleted \(userCount) users, \(profileCount) profiles, \(doseCount) doses, \
-            \(titrationCount) titrations, \(foodCount) foods, \(foodEntryCount) food entries, \
-            \(weightEntryCount) weight entries, \(metricsEntryCount) metrics entries, \
-            \(progressPhotoCount) progress photos
+            \(titrationCount) titrations, \(doseScheduleCount) schedules, \(scheduledDoseCount) scheduled doses, \
+            \(foodCount) foods, \(foodEntryCount) food entries, \(weightEntryCount) weight entries, \
+            \(metricsEntryCount) metrics entries, \(progressPhotoCount) progress photos, \
+            \(nutritionGoalCount) goals, \(nutritionProgramCount) programs
             """)
     }
 

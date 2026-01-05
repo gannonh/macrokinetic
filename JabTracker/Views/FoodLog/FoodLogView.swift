@@ -150,12 +150,8 @@ struct FoodLogView: View {
                             )
                             .background(DesignTokens.HeaderButton.backgroundColor)
                             .clipShape(Circle())
-                            .shadow(
-                                color: .black.opacity(DesignTokens.HeaderButton.shadowOpacity),
-                                radius: DesignTokens.HeaderButton.shadowRadius,
-                                y: DesignTokens.HeaderButton.shadowOffsetY
-                            )
                     }
+                    .frame(minWidth: 44, minHeight: 44)  // Apple HIG touch target
                     .accessibilityIdentifier("add-food-button")
                 }
                 .padding(.bottom, 14)

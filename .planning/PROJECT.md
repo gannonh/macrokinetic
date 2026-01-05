@@ -1,18 +1,17 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-04)
+## Current State (Updated: 2026-01-05)
 
-**Shipped:** v0.4.0 Calorie Expenditure Enhancements (2026-01-04)
+**Shipped:** v0.5.0 Navigation Refinement (2026-01-05)
 **Status:** Development / TestFlight
-**Codebase:** ~58,500 lines Swift, SwiftUI/SwiftData, iOS 17+
+**Codebase:** ~59,400 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.4.0 Delivered:**
-- Real-time burned calories from HealthKit added back to daily calorie targets
-- Rollover calories feature carrying up to 200 unused calories to next day
-- Predictive activity adjustment using 7-day average with goal-type multipliers
-- CalorieAdjustmentService pipeline with extensible provider architecture
-- Calorie breakdown UI showing burned/rollover/predictive adjustments
-- Calorie Expenditure settings screen with toggle controls
+**v0.5.0 Delivered:**
+- Consolidated GLP-1 features (analytics + medications) into unified section under More tab
+- Promoted Strategy to top-level tab with target icon and check-in badge
+- Floating 44pt Add button overlay replacing tab item for visual prominence
+- Extracted reusable section components (ConcentrationSection, AdherenceSection, HistorySection) with TDD
+- Standardized navigation bar styling (inline titles, circle buttons) across app
 
 ## Next Milestone Goals
 

@@ -35,57 +35,50 @@ struct ShotsView: View {
         case history = "History"
     }
 
-    enum HistoryMode: String, CaseIterable {
-        case list = "List"
-        case calendar = "Calendar"
-
-        var systemImage: String {
-            switch self {
-            case .list: return "list.bullet"
-            case .calendar: return "calendar"
-            }
-        }
-    }
-
     init() {
         self._chartDatasetService = State(wrappedValue: ChartDatasetService())
     }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Custom page header (handles its own padding)
-                    PageHeader(title: "Shots")
+            VStack(spacing: 0) {
+                // Custom page header (handles its own padding)
+                PageHeader(title: "Shots")
 
-                    // Content with standard padding
-                    LazyVStack(alignment: .leading, spacing: 16) {
-                        // Main section picker
-                        Picker("Section", selection: $selectedSection) {
-                            ForEach(ShotsSection.allCases, id: \.self) { section in
-                                Text(section.rawValue).tag(section)
+                // Section picker (always visible, not scrolled)
+                Picker("Section", selection: $selectedSection) {
+                    ForEach(ShotsSection.allCases, id: \.self) { section in
+                        Text(section.rawValue).tag(section)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+                .accessibilityIdentifier("shots-section-picker")
+
+                // Sub-controls based on selected section
+                sectionControls
+
+                // Content - History gets full height, others get ScrollView
+                if selectedSection == .history {
+                    HistorySection(selectedMode: selectedHistoryMode)
+                } else {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 16) {
+                            if isLoadingData {
+                                ProgressView("Loading...")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            } else {
+                                sectionContent
                             }
                         }
-                        .pickerStyle(SegmentedPickerStyle())
-                        .accessibilityIdentifier("shots-section-picker")
-
-                        // Sub-controls based on selected section
-                        sectionControls
-
-                        // Content based on selection
-                        if isLoadingData && selectedSection != .history {
-                            ProgressView("Loading...")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        } else {
-                            sectionContent
-                        }
+                        .padding()
                     }
-                    .padding()
+                    .accessibilityIdentifier("shots-scroll-view")
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .accessibilityIdentifier("shots-scroll-view")
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 loadData()
@@ -134,88 +127,23 @@ struct ShotsView: View {
     private var sectionContent: some View {
         switch selectedSection {
         case .concentration:
-            concentrationContent
+            ConcentrationSection(
+                user: currentUser,
+                medicationProfiles: medicationProfiles,
+                viewModel: viewModel,
+                isLoadingData: isLoadingData
+            )
         case .adherence:
-            adherenceContent
+            AdherenceSection(
+                user: currentUser,
+                medicationProfiles: medicationProfiles,
+                viewModel: viewModel,
+                modelContext: modelContext,
+                analyticsService: analyticsService
+            )
         case .history:
-            historyContent
-        }
-    }
-
-    @ViewBuilder
-    private var concentrationContent: some View {
-        if currentUser != nil, !medicationProfiles.isEmpty {
-            if let dataset = viewModel.chartDataset {
-                ConcentrationTimelineChart(dataset: dataset)
-            } else if isLoadingData {
-                chartLoadingView()
-            } else {
-                noDataSection
-            }
-        } else {
-            noDataSection
-        }
-    }
-
-    @ViewBuilder
-    private var adherenceContent: some View {
-        if let user = currentUser, !medicationProfiles.isEmpty {
-            VStack(spacing: 16) {
-                AdherenceMetricsCard(adherenceRate: adherenceRate(for: user, context: modelContext))
-                    .accessibilityIdentifier("adherence-metrics-card")
-
-                DesignCard {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Dose Streaks")
-                            .font(DesignTokens.Typography.headline)
-                            .foregroundColor(.primary)
-
-                        StreakCounterView(
-                            currentStreak: user.currentStreak,
-                            bestStreak: user.longestStreak
-                        )
-                    }
-                }
-                .accessibilityIdentifier("streak-counters-card")
-
-                AdherenceProgressIndicator(
-                    currentAdherence: adherenceRate(for: user, context: modelContext),
-                    targetAdherence: 0.8,
-                    periodLabel: "This month"
-                )
-
-                AdherenceTrendChart(
-                    trendData: viewModel.generateTrendData(
-                        for: user,
-                        profiles: medicationProfiles,
-                        context: modelContext
-                    ),
-                    timePeriod: .weekly
-                )
-
-                MissedDosePatternView(
-                    missedDoses: viewModel.generateMissedDosePatterns(
-                        for: user,
-                        profiles: medicationProfiles,
-                        context: modelContext
-                    ),
-                    style: .calendar
-                )
-            }
-        } else {
-            noDataSection
-        }
-    }
-
-    @ViewBuilder
-    private var historyContent: some View {
-        switch selectedHistoryMode {
-        case .list:
-            DoseHistoryView()
-                .accessibilityIdentifier("dose-history-container")
-        case .calendar:
-            DoseCalendarView()
-                .accessibilityIdentifier("dose-calendar-container")
+            // History is handled directly in body to avoid ScrollView nesting
+            EmptyView()
         }
     }
 
@@ -272,47 +200,6 @@ struct ShotsView: View {
         }
     }
 
-    private func adherenceRate(for user: User, context: ModelContext) -> Double {
-        analyticsService.calculateOverallAdherence(user: user, context: context)
-    }
-
-    // MARK: - Empty States
-
-    private var noDataSection: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
-
-            Text("No Data Yet")
-                .font(.headline)
-                .foregroundColor(.primary)
-
-            Text("Start tracking doses to see your analytics")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .cardStyle(cornerRadius: 12)
-        .accessibilityIdentifier("no-shots-data")
-    }
-
-    @ViewBuilder
-    private func chartLoadingView() -> some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.2)
-
-            Text("Generating Concentration Chart...")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .frame(height: 300)
-        .frame(maxWidth: .infinity)
-        .cardStyle(cornerRadius: 12)
-        .accessibilityIdentifier("chart-loading")
-    }
 }
 
 #Preview {

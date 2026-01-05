@@ -1,6 +1,10 @@
-# Coding Conventions
+---
+name: Coding Conventions
+created: 2025-12-22
+last_modified: 2026-01-04
+---
 
-**Analysis Date:** 2025-12-22
+# Coding Conventions
 
 ## Naming Patterns
 
@@ -48,6 +52,10 @@ type_body_length: warning: 350, error: 400
 function_body_length: warning: 50, error: 80
 cyclomatic_complexity: warning: 10, error: 20
 ```
+
+**Design System Enforcement (Custom Rules):**
+- `prefer_design_tokens_colors`: Warn when using raw `Color(.system...)` instead of `DesignTokens.Colors`
+- `prefer_design_tokens_backgrounds`: Warn when using raw `Color()` for backgrounds instead of design tokens
 
 ## Import Organization
 
@@ -236,5 +244,5 @@ final class AppServices: ObservableObject {
 
 ---
 
-*Convention analysis: 2025-12-22*
+*Convention analysis: 2026-01-04*
 *Update when patterns change*

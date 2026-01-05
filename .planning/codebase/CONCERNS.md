@@ -1,6 +1,10 @@
-# Codebase Concerns
+---
+name: Codebase Concerns
+created: 2025-12-22
+last_modified: 2026-01-04
+---
 
-**Analysis Date:** 2025-12-22
+# Codebase Concerns
 
 ## Tech Debt
 
@@ -25,6 +29,25 @@
 - Impact: Maintenance burden, potential inconsistencies
 - Fix approach: Consolidate into FoodService, remove from ViewModel
 
+**Debug print statements in production code:**
+- Issue: Multiple `print()` statements instead of OSLog
+- Files:
+  - `JabTracker/Models/Dose.swift` - Emoji debugging prints
+  - `JabTracker/ViewModels/DoseHistoryViewModel.swift` - Debug printing
+  - `JabTracker/Views/Settings/Components/PauseScheduleSheet.swift` - Console debugging
+  - `JabTracker/Views/Settings/MedicationProfileSettingsView.swift` - Error printing
+  - `JabTracker/Views/Dashboard/QuickDoseButton.swift` - Print statements
+- Why: Quick debugging during development, not cleaned up
+- Impact: Console noise in production, inconsistent logging practices
+- Fix approach: Replace all `print()` calls with OSLog using existing logger instances
+
+**Scattered UserDefaults string keys:**
+- Issue: UserDefaults keys are string literals without centralized constants
+- Files: `JabTracker/AuthenticationManager.swift:195-198`, `JabTracker/BiometricAuthManager.swift:54,63`
+- Why: Keys added ad-hoc during feature development
+- Impact: Typos could cause silent failures, difficult to refactor
+- Fix approach: Create `UserDefaultsKeys` enum with all key constants
+
 ## Known Bugs
 
 **None critical identified during analysis.**
@@ -37,17 +60,17 @@ Minor issues:
 
 ## Security Considerations
 
-**URL construction without encoding:**
-- Risk: Barcode directly interpolated into URL path
-- File: `JabTracker/Services/OpenFoodFactsService.swift:88`
-- Current mitigation: Barcode trimmed of whitespace only
-- Recommendations: Use proper URL encoding for barcode parameter
+**URL construction - RESOLVED:**
+- ~~Risk: Barcode directly interpolated into URL path~~
+- File: `JabTracker/Services/OpenFoodFactsService.swift:88-92`
+- Status: Fixed - Uses `addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)`
+- Note: URL encoding is now properly implemented
 
 **No rate limiting on API calls:**
 - Risk: Excessive API calls if user types quickly in search
 - File: `JabTracker/Services/OpenFoodFactsService.swift`
-- Current mitigation: None
-- Recommendations: Add debounce/throttle to search, or implement at service level
+- Current mitigation: Debouncing exists in `FoodSearchSheet.swift` (200ms) at view level
+- Recommendations: Add service-level rate limiting for calls from other entry points
 
 ## Performance Bottlenecks
 
@@ -62,11 +85,11 @@ Minor issues:
 
 **Fatal errors in production paths:**
 - Files with `fatalError`:
-  - `JabTracker/DataController.swift:130` - ModelContainer creation failure
-  - `JabTracker/Views/Nutrition/FoodSearchSheet.swift:56` - Missing service injection
-  - `JabTracker/AuthenticationManager.swift:614` - No window for Sign in with Apple
+  - `JabTracker/DataController.swift:142` - ModelContainer creation failure
+  - `JabTracker/Views/Nutrition/FoodSearchSheet.swift:106` - Missing service injection
+  - `JabTracker/AuthenticationManager.swift:1089` - No window for Sign in with Apple (presentationAnchor)
 - Why fragile: App crashes immediately instead of graceful error handling
-- Common failures: Missing dependencies, unusual device states
+- Common failures: Missing dependencies, unusual device states, window management
 - Safe modification: Replace with error states or fallback behavior
 - Test coverage: Not tested (fatalError paths untestable)
 
@@ -130,22 +153,23 @@ Minor issues:
 ## Summary by Priority
 
 **Critical (must fix before release):**
-1. Replace `fatalError` in `DataController.swift:130` with graceful error handling
-2. Replace `fatalError` in `FoodSearchSheet.swift:56` with optional service pattern
-3. Replace `fatalError` in `AuthenticationManager.swift:614` with error state
+1. Replace `fatalError` in `DataController.swift:142` with graceful error handling
+2. Replace `fatalError` in `FoodSearchSheet.swift:106` with optional service pattern
+3. Replace `fatalError` in `AuthenticationManager.swift:1089` with error state
 
 **High Priority:**
 1. Implement BGTaskScheduler for background notification refresh
-2. Add URL encoding for barcode API calls
+2. Remove all `print()` statements - replace with OSLog
 3. Add error/crash reporting service
 
 **Medium Priority:**
 1. Complete split-dose UI (Phase 3 TODO)
 2. Consolidate food deduplication logic
-3. Add rate limiting to food search
+3. Add service-level rate limiting to food search
 4. Static regex compilation for performance
+5. Centralize UserDefaults keys in enum
 
 ---
 
-*Concerns audit: 2025-12-22*
+*Concerns audit: 2026-01-04*
 *Update as issues are fixed or new ones discovered*
