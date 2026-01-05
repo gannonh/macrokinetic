@@ -20,6 +20,9 @@ struct ContentView: View {
     @State private var activeShortcutSheet: ShortcutDestination?
     /// The currently selected date in FoodLogView, shared for tab bar + button
     @State private var selectedFoodLogDate = Date()
+    /// Cached badge state - updated on scene activation and tab changes
+    @State private var checkInBadgeVisible = false
+    @Environment(\.scenePhase) private var scenePhase
 
     // MARK: - Constants
 
@@ -30,6 +33,20 @@ struct ContentView: View {
     }
 
     private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ContentView")
+
+    /// Update the cached check-in badge state
+    /// Called on scene activation, tab changes, and check-in completion
+    private func updateCheckInBadge() {
+        guard let user = users.first,
+            let goal = user.activeNutritionGoal,
+            goal.program?.style != .manual
+        else {
+            checkInBadgeVisible = false
+            return
+        }
+        let service = WeeklyCheckInService(context: modelContext)
+        checkInBadgeVisible = service.isCheckInDue(for: goal)
+    }
 
     init() {
         let pkEngine = PharmacokineticsEngine()
@@ -58,11 +75,12 @@ struct ContentView: View {
                 }
                 .tag(Tab.add)
 
-            ShotsView()
+            StrategyView()
                 .tabItem {
-                    Label(Tab.shots.title, systemImage: Tab.shots.icon)
+                    Label(Tab.strategy.title, systemImage: Tab.strategy.icon)
                 }
-                .tag(Tab.shots)
+                .tag(Tab.strategy)
+                .badge(checkInBadgeVisible ? "!" : nil)
 
             MoreView()
                 .tabItem {
@@ -157,6 +175,19 @@ struct ContentView: View {
 
             // Initialize app services with ModelContext
             AppServices.shared.initialize(with: self.modelContext)
+
+            // Initial badge state
+            updateCheckInBadge()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Refresh badge when app becomes active (e.g., after completing check-in)
+            if newPhase == .active {
+                updateCheckInBadge()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .checkInCompleted)) { _ in
+            // Refresh badge immediately after check-in completion
+            updateCheckInBadge()
         }
         .onReceive(NotificationCenter.default.publisher(for: .showQuickDoseSheet)) { notification in
             // Handle deeplink navigation to QuickDoseSheet

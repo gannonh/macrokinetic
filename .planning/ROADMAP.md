@@ -41,10 +41,10 @@ Plans:
 **Goal**: Replace Shots tab with Strategy in tab bar, uplevel Goals & Strategy to Dashboard-style prominence
 **Depends on**: Phase 22
 **Research**: Unlikely (internal patterns, following Dashboard precedent)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 23-01: TBD (run /gsd:plan-phase 23 to break down)
+- [x] 23-01: Strategy Tab Promotion (3 tasks) - Complete 2026-01-05
 
 #### Phase 24: Add Button Redesign
 
@@ -64,7 +64,7 @@ Phases execute in numeric order within each milestone.
 | Phase                             | Plans Complete | Status      | Completed  |
 | --------------------------------- | -------------- | ----------- | ---------- |
 | 22. GLP-1 Programs Consolidation  | 2/2            | Complete    | 2026-01-05 |
-| 23. Strategy Tab Promotion        | 0/?            | Not started | -          |
+| 23. Strategy Tab Promotion        | 1/1            | Complete    | 2026-01-05 |
 | 24. Add Button Redesign           | 0/?            | Not started | -          |
 
 <details>

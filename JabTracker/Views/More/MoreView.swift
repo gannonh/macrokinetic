@@ -26,11 +26,6 @@ struct MoreView: View {
                     }
                     .accessibilityIdentifier("glp1-programs-row")
 
-                    NavigationLink(destination: StrategyView()) {
-                        Label("Goals & Strategy", systemImage: "target")
-                    }
-                    .accessibilityIdentifier("strategy-row")
-
                     Button {
                         showingFoodLibrary = true
                     } label: {

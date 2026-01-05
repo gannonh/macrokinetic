@@ -360,6 +360,9 @@ final class WeeklyCheckInService {
             let tdee = result.proposedTDEE ?? 0
             let calories = result.proposedDailyCalories ?? 0
             Self.logger.info("Applied optimization - TDEE: \(tdee), Calories: \(calories)")
+
+            // Notify ContentView to refresh badge
+            NotificationCenter.default.post(name: .checkInCompleted, object: nil)
         } catch {
             throw WeeklyCheckInServiceError.contextSaveError(error)
         }
@@ -377,6 +380,9 @@ final class WeeklyCheckInService {
         do {
             try context.save()
             Self.logger.info("Declined optimization - keeping current targets")
+
+            // Notify ContentView to refresh badge
+            NotificationCenter.default.post(name: .checkInCompleted, object: nil)
         } catch {
             throw WeeklyCheckInServiceError.contextSaveError(error)
         }
