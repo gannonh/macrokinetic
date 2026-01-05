@@ -1,30 +1,95 @@
+//
+//  OnboardingStep.swift
+//  JabTracker
+//
+//  Defines the steps in the v0.6.0 onboarding flow.
+//
+
 import Foundation
 
+/// Steps in the onboarding flow for new users.
+///
+/// The steps are organized into logical phases:
+/// - Phase 26: USP Showcase (welcome, uspShowcase)
+/// - Phase 27: Goal + Program (goalSetup, programSetup)
+/// - Phase 28: Permissions (healthKit, faceID, notifications)
+/// - Phase 29: Completion (completion)
 enum OnboardingStep: String, CaseIterable {
-    case welcome
-    case medicationSelection = "medication"
-    case doseSetup = "dose"
-    case scheduleSetup = "schedule"
-    case notifications
-    case healthKit = "health"
-    case subscription
+    // MARK: - Phase 26: USP Showcase
 
+    /// Welcome screen introducing the app
+    case welcome
+
+    /// Unique selling proposition showcase
+    case uspShowcase
+
+    // MARK: - Phase 27: Goal + Program
+
+    /// User goal selection
+    case goalSetup
+
+    /// GLP-1 program configuration
+    case programSetup
+
+    // MARK: - Phase 28: Permissions
+
+    /// HealthKit integration permission
+    case healthKit
+
+    /// Face ID/Touch ID biometric permission
+    case faceID
+
+    /// Push notification permission
+    case notifications
+
+    // MARK: - Phase 29: Completion
+
+    /// Onboarding complete, ready to start
+    case completion
+
+    // MARK: - Display Properties
+
+    /// Display title for the step
     var title: String {
         switch self {
         case .welcome:
             return "Welcome to JabTracker"
-        case .medicationSelection:
-            return "Select Your Medication"
-        case .doseSetup:
-            return "Set Up Your First Dose"
-        case .scheduleSetup:
-            return "Set Up Your Schedule"
-        case .notifications:
-            return "Enable Notifications"
+        case .uspShowcase:
+            return "Your GLP-1 Journey"
+        case .goalSetup:
+            return "Set Your Goals"
+        case .programSetup:
+            return "Choose Your Program"
         case .healthKit:
             return "Connect Health Data"
-        case .subscription:
-            return "JabTracker Premium"
+        case .faceID:
+            return "Secure Your Data"
+        case .notifications:
+            return "Stay On Track"
+        case .completion:
+            return "You're All Set!"
+        }
+    }
+
+    /// Display subtitle for the step
+    var subtitle: String {
+        switch self {
+        case .welcome:
+            return "Track your GLP-1 medication with confidence"
+        case .uspShowcase:
+            return "Discover how JabTracker helps you succeed"
+        case .goalSetup:
+            return "Tell us what you want to achieve"
+        case .programSetup:
+            return "Select the program that fits your needs"
+        case .healthKit:
+            return "Sync your health metrics automatically"
+        case .faceID:
+            return "Protect your sensitive health information"
+        case .notifications:
+            return "Get reminders when it's time for your dose"
+        case .completion:
+            return "Let's start your journey together"
         }
     }
 }

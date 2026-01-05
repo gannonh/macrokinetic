@@ -5,8 +5,9 @@ enum PermissionType {
     case healthKit
 }
 
+/// Legacy permissions request view (v0.5.x and earlier). Retained for reference only.
 struct PermissionsRequestView: View {
-    @ObservedObject var viewModel: OnboardingViewModel
+    @ObservedObject var viewModel: LegacyOnboardingViewModel
     let type: PermissionType
 
     var body: some View {

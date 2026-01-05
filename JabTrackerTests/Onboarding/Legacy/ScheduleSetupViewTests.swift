@@ -14,10 +14,10 @@ import Testing
 @MainActor
 struct ScheduleSetupViewTests {
     /// Create test environment for schedule setup tests
-    func createTestViewModel() -> OnboardingViewModel {
+    func createTestViewModel() -> LegacyOnboardingViewModel {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(
+        let viewModel = LegacyOnboardingViewModel(
             dataController: dataController,
             authManager: authManager
         )

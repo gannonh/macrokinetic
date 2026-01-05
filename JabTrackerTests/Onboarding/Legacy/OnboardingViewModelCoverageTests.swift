@@ -11,7 +11,7 @@ struct OnboardingViewModelCoverageTests {
     func directNavigationMethodExecution() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Test initial state
         #expect(viewModel.currentStep == .welcome, "Should start at welcome step")
@@ -43,7 +43,7 @@ struct OnboardingViewModelCoverageTests {
     func injectionSiteToggleFunctionality() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Initial state - Thigh is pre-selected
         #expect(viewModel.selectedSites.contains("Thigh"), "Thigh should be pre-selected")
@@ -75,29 +75,29 @@ struct OnboardingViewModelCoverageTests {
     func onboardingStepEnumTitleCoverage() throws {
         // Test all OnboardingStep title properties for coverage
         #expect(
-            OnboardingStep.welcome.title == "Welcome to JabTracker",
+            LegacyOnboardingStep.welcome.title == "Welcome to JabTracker",
             "Welcome step should have correct title")
         #expect(
-            OnboardingStep.medicationSelection.title == "Select Your Medication",
+            LegacyOnboardingStep.medicationSelection.title == "Select Your Medication",
             "Medication selection step should have correct title")
         #expect(
-            OnboardingStep.doseSetup.title == "Set Up Your First Dose",
+            LegacyOnboardingStep.doseSetup.title == "Set Up Your First Dose",
             "Dose setup step should have correct title")
         #expect(
-            OnboardingStep.scheduleSetup.title == "Set Up Your Schedule",
+            LegacyOnboardingStep.scheduleSetup.title == "Set Up Your Schedule",
             "Schedule setup step should have correct title")
         #expect(
-            OnboardingStep.notifications.title == "Enable Notifications",
+            LegacyOnboardingStep.notifications.title == "Enable Notifications",
             "Notifications step should have correct title")
         #expect(
-            OnboardingStep.healthKit.title == "Connect Health Data",
+            LegacyOnboardingStep.healthKit.title == "Connect Health Data",
             "HealthKit step should have correct title")
         #expect(
-            OnboardingStep.subscription.title == "JabTracker Premium",
+            LegacyOnboardingStep.subscription.title == "JabTracker Premium",
             "Subscription step should have correct title")
 
         // Test allCases
-        let allSteps = OnboardingStep.allCases
+        let allSteps = LegacyOnboardingStep.allCases
         #expect(allSteps.count == 7, "Should have 7 onboarding steps")
         #expect(allSteps.first == .welcome, "First step should be welcome")
         #expect(allSteps.last == .subscription, "Last step should be subscription")
@@ -125,12 +125,12 @@ struct OnboardingViewModelCoverageTests {
     func onboardingViewModelIsLastStepCoverage() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Test isLastStep for all steps
-        for step in OnboardingStep.allCases {
+        for step in LegacyOnboardingStep.allCases {
             viewModel.currentStep = step
-            let expectedIsLast = step == OnboardingStep.allCases.last
+            let expectedIsLast = step == LegacyOnboardingStep.allCases.last
             #expect(
                 viewModel.isLastStep == expectedIsLast,
                 "isLastStep should be \(expectedIsLast) for step \(step)")
@@ -164,7 +164,7 @@ struct OnboardingViewModelCoverageTests {
         let authManager = AuthenticationManager(dataController: dataController)
         authManager.currentUser = user
 
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Select medication for onboarding
         viewModel.selectMedication(.semaglutide)
@@ -198,10 +198,10 @@ struct OnboardingViewModelCoverageTests {
     func currentStepIndexReturnsCorrectIndex() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Test currentStepIndex for all steps to trigger implicit closure
-        for (expectedIndex, step) in OnboardingStep.allCases.enumerated() {
+        for (expectedIndex, step) in LegacyOnboardingStep.allCases.enumerated() {
             viewModel.currentStep = step
             let actualIndex = viewModel.currentStepIndex
             #expect(
@@ -215,7 +215,7 @@ struct OnboardingViewModelCoverageTests {
     func saveScheduleConfigurationValidatesReminderMinutes() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Navigate to schedule setup step
         viewModel.currentStep = .scheduleSetup
@@ -238,7 +238,7 @@ struct OnboardingViewModelCoverageTests {
     func saveScheduleConfigurationWithValidParameters() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Navigate to schedule setup step
         viewModel.currentStep = .scheduleSetup
@@ -263,7 +263,7 @@ struct OnboardingViewModelCoverageTests {
     func completeOnboardingWithMissingUser() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Don't set current user - authManager.currentUser will be nil
         viewModel.selectMedication(.semaglutide)
@@ -300,7 +300,7 @@ struct OnboardingViewModelCoverageTests {
         try context.save()
         authManager.currentUser = user
 
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Don't select medication - selectedMedication will be nil
         viewModel.selectedDose = 0.5
@@ -324,7 +324,7 @@ struct OnboardingViewModelCoverageTests {
     func requestHealthKitPermissionsGranted() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Use test hooks to simulate HealthKit availability and forced grant
         viewModel.testIsHealthDataAvailable = true
@@ -343,7 +343,7 @@ struct OnboardingViewModelCoverageTests {
     func requestHealthKitPermissionsDenied() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Use test hooks to simulate HealthKit availability but forced denial
         viewModel.testIsHealthDataAvailable = true
@@ -361,7 +361,7 @@ struct OnboardingViewModelCoverageTests {
     func requestHealthKitPermissionsUnavailable() async throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Use test hooks to simulate HealthKit being unavailable
         viewModel.testIsHealthDataAvailable = false
@@ -382,7 +382,7 @@ struct OnboardingViewModelCoverageTests {
     func selectMedicationSetsDailyPattern() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Select a daily medication (liraglutide)
         viewModel.selectMedication(.liraglutide)
@@ -398,7 +398,7 @@ struct OnboardingViewModelCoverageTests {
     func selectMedicationSetsWeeklyPattern() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Select a weekly medication (semaglutide)
         viewModel.selectMedication(.semaglutide)
@@ -413,7 +413,7 @@ struct OnboardingViewModelCoverageTests {
     func canProceedToNextFalseForEmptySites() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         viewModel.currentStep = .doseSetup
         viewModel.selectedDose = 1.0
@@ -428,7 +428,7 @@ struct OnboardingViewModelCoverageTests {
     func canProceedToNextFalseForZeroDose() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         viewModel.currentStep = .doseSetup
         viewModel.selectedDose = 0
@@ -442,7 +442,7 @@ struct OnboardingViewModelCoverageTests {
     func validateScheduleConfigurationForCustomPattern() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // Set custom pattern
         viewModel.schedulePattern = .custom
@@ -459,7 +459,7 @@ struct OnboardingViewModelCoverageTests {
     func saveScheduleConfigurationRestoresPatternOnFailure() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         viewModel.currentStep = .scheduleSetup
         viewModel.schedulePattern = .weekly
@@ -480,9 +480,9 @@ struct OnboardingViewModelCoverageTests {
     func totalStepsReturnsCorrectCount() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        #expect(viewModel.totalSteps == OnboardingStep.allCases.count)
+        #expect(viewModel.totalSteps == LegacyOnboardingStep.allCases.count)
         #expect(viewModel.totalSteps == 7)
     }
 
@@ -491,7 +491,7 @@ struct OnboardingViewModelCoverageTests {
     func progressUpdatesWhenStepChanges() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         // At welcome step, progress should be 0
         #expect(viewModel.currentStep == .welcome)
@@ -511,7 +511,7 @@ struct OnboardingViewModelCoverageTests {
     func areSplitDoseTimesValidForNonSplitPattern() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         viewModel.schedulePattern = .weekly
         #expect(viewModel.areSplitDoseTimesValid == true)
@@ -525,7 +525,7 @@ struct OnboardingViewModelCoverageTests {
     func areSplitDoseTimesValidForSplitPattern() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         viewModel.schedulePattern = .splitDose
 
@@ -550,7 +550,7 @@ struct OnboardingViewModelCoverageTests {
     func canProceedToNextMedicationSelectionRequiresMedication() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         viewModel.currentStep = .medicationSelection
         viewModel.selectedMedication = nil
@@ -566,7 +566,7 @@ struct OnboardingViewModelCoverageTests {
     func canProceedToNextNotificationsAlwaysTrue() throws {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        let viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
 
         viewModel.currentStep = .notifications
         #expect(viewModel.canProceedToNext == true)

@@ -21,11 +21,11 @@
 ## Current Position
 
 Phase: 25 of 29 (Onboarding Foundation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-01-05 - Milestone v0.6.0 created
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-05 - Completed 25-01-PLAN.md
 
-Progress: ░░░░░░░░░░ 0%
+Progress: █░░░░░░░░░ 10%
 
 ## GitHub Tracking
 
@@ -36,18 +36,18 @@ Branch: feat/v0.6.0-onboarding-redux
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 min
+- Total plans completed: 1
+- Average duration: 20 min
+- Total execution time: 20 min
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 25    | 0     | -     | -        |
+| Phase | Plans | Total  | Avg/Plan |
+|-------|-------|--------|----------|
+| 25    | 1     | 20 min | 20 min   |
 
 **Recent Trend:**
-None yet.
+25-01: 20 min (Archive & Core Foundation)
 
 *Updated after each plan completion*
 
@@ -63,6 +63,8 @@ None yet.
 | 22-02 | Inline navigation titles for GLP-1 views | Consistent with More tab sub-view patterns |
 | 22-02 | Custom medications list in GLP1ProgramsView | Needed swipe actions + empty state not available when embedding |
 | 24-01 | Floating overlay button instead of tab item | TabView ignores font size on tab items - overlay allows custom sizing |
+| 25-01 | Prefixed legacy types with "Legacy" | Avoid type conflicts while maintaining legacy code as reference |
+| 25-01 | Lazy ViewModel initialization in OnboardingView | Used @State with onAppear instead of init-time for @Observable + View lifecycle |
 
 ### Deferred Issues
 
@@ -87,6 +89,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-05T23:01:41Z
-Stopped at: Milestone v0.6.0 initialization
-Resume file: None
+Last session: 2026-01-05T23:38:42Z
+Stopped at: Completed 25-01-PLAN.md
+Resume file: .planning/phases/25-onboarding-foundation/25-02-PLAN.md

@@ -2,8 +2,9 @@ import OSLog
 import StoreKit
 import SwiftUI
 
+/// Legacy subscription view (v0.5.x and earlier). Retained for reference only.
 struct SubscriptionView: View {
-    @ObservedObject var viewModel: OnboardingViewModel
+    @ObservedObject var viewModel: LegacyOnboardingViewModel
     @StateObject private var subscriptionManager: SubscriptionManager
 
     // MARK: - Logger
@@ -16,7 +17,7 @@ struct SubscriptionView: View {
         ProcessInfo.processInfo.arguments.contains("--ui-testing")
     }
 
-    init(viewModel: OnboardingViewModel) {
+    init(viewModel: LegacyOnboardingViewModel) {
         self._viewModel = ObservedObject(initialValue: viewModel)
         let isTest =
             ProcessInfo.processInfo.arguments.contains("--ui-testing")
