@@ -274,14 +274,10 @@ final class NutritionDashboardUITests: XCTestCase {
             "Nutrition card should exist"
         )
 
-        // Navigate to Strategy view via More tab -> Goals & Strategy
-        let moreTab = seedApp.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5), "More tab should exist")
-        moreTab.tap()
-
-        let goalsStrategyRow = seedApp.buttons["goals-strategy-row"]
-        XCTAssertTrue(goalsStrategyRow.waitForExistence(timeout: 5), "Goals & Strategy row should exist")
-        goalsStrategyRow.tap()
+        // Navigate to Strategy view via Strategy tab (v0.5.0)
+        let strategyTab = seedApp.tabBars.buttons["Strategy"]
+        XCTAssertTrue(strategyTab.waitForExistence(timeout: 5), "Strategy tab should exist")
+        strategyTab.tap()
 
         let editProgramButton = seedApp.buttons["edit-program-button"]
         guard editProgramButton.waitForExistence(timeout: 5) else {
@@ -360,14 +356,10 @@ final class NutritionDashboardUITests: XCTestCase {
             return
         }
 
-        // Navigate to Strategy view via More tab -> Goals & Strategy
-        let moreTab = seedApp.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5), "More tab should exist")
-        moreTab.tap()
-
-        let goalsStrategyRow = seedApp.buttons["goals-strategy-row"]
-        XCTAssertTrue(goalsStrategyRow.waitForExistence(timeout: 5), "Goals & Strategy row should exist")
-        goalsStrategyRow.tap()
+        // Navigate to Strategy view via Strategy tab (v0.5.0)
+        let strategyTab = seedApp.tabBars.buttons["Strategy"]
+        XCTAssertTrue(strategyTab.waitForExistence(timeout: 5), "Strategy tab should exist")
+        strategyTab.tap()
 
         // Verify Strategy view has program card - use descendants for nested elements
         let programCard = seedApp.descendants(matching: .any)["current-program-card"].firstMatch

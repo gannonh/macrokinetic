@@ -49,15 +49,70 @@ final class MoreTabUITests: XCTestCase {
         XCTAssertTrue(expenditureView.waitForExistence(timeout: 5))
     }
 
-    // MARK: - Overflow Menu Tests
+    // MARK: - GLP-1 Programs Tests (v0.5.0)
 
-    func testNavigateToGoalsStrategy() throws {
+    func testNavigateToGLP1Programs() throws {
         TestUtilities.navigateToTab(app, tabName: "More")
 
-        app.cells["goals-strategy-row"].tap()
+        let moreView = app.otherElements["more-view"]
+        XCTAssertTrue(moreView.waitForExistence(timeout: 5), "More view should appear")
 
-        let strategyView = app.otherElements["strategy-view"]
-        XCTAssertTrue(strategyView.waitForExistence(timeout: 5))
+        // NavigationLink in List - try multiple query approaches
+        let glp1Row = app.descendants(matching: .any)["glp1-programs-row"].firstMatch
+        XCTAssertTrue(glp1Row.waitForExistence(timeout: 5), "GLP-1 Programs row should exist")
+        glp1Row.tap()
+
+        let glp1View = app.otherElements["glp1-programs-view"]
+        XCTAssertTrue(glp1View.waitForExistence(timeout: 5), "GLP-1 Programs view should appear")
+    }
+
+    func testGLP1ProgramsShowsAnalyticsByDefault() throws {
+        TestUtilities.navigateToTab(app, tabName: "More")
+
+        let moreView = app.otherElements["more-view"]
+        XCTAssertTrue(moreView.waitForExistence(timeout: 5))
+
+        let glp1Row = app.descendants(matching: .any)["glp1-programs-row"].firstMatch
+        XCTAssertTrue(glp1Row.waitForExistence(timeout: 5))
+        glp1Row.tap()
+
+        // Wait for view to load
+        let glp1View = app.otherElements["glp1-programs-view"]
+        XCTAssertTrue(glp1View.waitForExistence(timeout: 5))
+
+        // Analytics section should be selected by default
+        let sectionPicker = app.segmentedControls["glp1-section-picker"]
+        XCTAssertTrue(sectionPicker.waitForExistence(timeout: 3), "Section picker should exist")
+
+        // Analytics sub-picker should be visible (only shows when Analytics selected)
+        let analyticsPicker = app.segmentedControls["analytics-section-picker"]
+        XCTAssertTrue(analyticsPicker.waitForExistence(timeout: 3), "Analytics sub-picker should be visible")
+    }
+
+    func testGLP1ProgramsSwitchToMedications() throws {
+        TestUtilities.navigateToTab(app, tabName: "More")
+
+        let moreView = app.otherElements["more-view"]
+        XCTAssertTrue(moreView.waitForExistence(timeout: 5))
+
+        let glp1Row = app.descendants(matching: .any)["glp1-programs-row"].firstMatch
+        XCTAssertTrue(glp1Row.waitForExistence(timeout: 5))
+        glp1Row.tap()
+
+        let glp1View = app.otherElements["glp1-programs-view"]
+        XCTAssertTrue(glp1View.waitForExistence(timeout: 5))
+
+        // Tap Medications segment
+        let sectionPicker = app.segmentedControls["glp1-section-picker"]
+        XCTAssertTrue(sectionPicker.waitForExistence(timeout: 3))
+
+        let medicationsButton = sectionPicker.buttons["Medications"]
+        XCTAssertTrue(medicationsButton.exists, "Medications button should exist")
+        medicationsButton.tap()
+
+        // Analytics sub-picker should NOT be visible anymore
+        let analyticsPicker = app.segmentedControls["analytics-section-picker"]
+        XCTAssertFalse(analyticsPicker.exists, "Analytics sub-picker should hide when Medications selected")
     }
 
     func testNavigateToFoodLibrary() throws {

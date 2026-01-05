@@ -44,15 +44,10 @@ final class ProgramOptimizationUITests: XCTestCase {
     }
 
     private func navigateToStrategy(_ app: XCUIApplication) {
-        // Navigate to More tab first
-        let moreTab = app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.waitForExistence(timeout: 5), "More tab should exist")
-        moreTab.tap()
-
-        // Wait for More view to load and tap Goals & Strategy row
-        let goalsStrategyRow = app.buttons["goals-strategy-row"]
-        XCTAssertTrue(goalsStrategyRow.waitForExistence(timeout: 5), "Goals & Strategy row should exist")
-        goalsStrategyRow.tap()
+        // Strategy is now a top-level tab (v0.5.0)
+        let strategyTab = app.tabBars.buttons["Strategy"]
+        XCTAssertTrue(strategyTab.waitForExistence(timeout: 5), "Strategy tab should exist")
+        strategyTab.tap()
     }
 
     private func waitForAppLoad(_ app: XCUIApplication) -> Bool {

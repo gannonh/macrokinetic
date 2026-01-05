@@ -1,6 +1,6 @@
 ---
 created: 2024-01-15T00:00:00Z
-updated: 2026-01-04T18:32:48Z
+updated: 2026-01-05T21:08:43Z
 ---
 
 # MacroKinetic Product Requirements Document
@@ -747,6 +747,65 @@ Real-time burned calorie integration from HealthKit, rollover unused calories, a
 
 ---
 
+### ✅ Navigation Refinement (v0.5.0)
+
+Issue: [#327](https://github.com/gannonh/jab-tracker-ios/issues/327)
+Completed: 2026-01-05
+
+Streamlined navigation by consolidating GLP-1 features under More tab, promoting Strategy to a top-level tab, and modernizing the Add button design.
+
+#### Requirements
+
+- [x] Merge Shots tab and Medication Profiles into unified "GLP-1 Programs" section under More
+- [x] GLP-1 Programs view with Analytics/Medications segmented picker
+- [x] Analytics sub-sections: Concentration, Adherence, History
+- [x] Medications list with swipe actions (disable, delete, enable)
+- [x] Replace Shots tab in tab bar with Strategy tab
+- [x] Strategy tab directly loads StrategyView (Goals & Strategy)
+- [x] Icon-only, larger Add button with no text label
+- [x] Floating overlay button design (44x44, plus icon, blue tint)
+
+#### User Stories
+
+##### Navigation Consolidation
+- **As a user**, I want GLP-1 features in one place, so that I can access shots and medications together.
+- **As a user**, I want Strategy as a top-level tab, so that I can quickly access my goals and program.
+
+##### Add Button
+- **As a user**, I want a cleaner Add button, so that the tab bar looks more modern.
+- **As a user**, I want the same shortcuts behavior, so that my workflow isn't disrupted.
+
+#### Key Design Decisions
+
+1. **GLP-1 consolidation** - Unified "GLP-1 Programs" view replaces separate Shots tab and Medication Profiles.
+2. **Strategy promotion** - Strategy elevated from More sub-menu to top-level tab (Dashboard-style prominence).
+3. **Floating Add button** - Uses ZStack overlay instead of tab item to allow custom sizing.
+4. **Tab bar order** - Dashboard | Food Log | Add (center) | Strategy | More.
+
+#### Acceptance Criteria
+
+- [x] GLP-1 Programs accessible from More tab
+- [x] Analytics/Medications toggle works correctly
+- [x] Strategy tab appears in tab bar
+- [x] Shots tab no longer in tab bar
+- [x] Add button is icon-only and larger
+- [x] ShortcutsSheet behavior preserved
+
+#### Delivered Components
+
+**Views:**
+- GLP1ProgramsView (unified analytics + medications)
+- ConcentrationSection, AdherenceSection, HistorySection (extracted components)
+- Updated ContentView with Strategy tab and floating Add button
+- Updated MoreView with "GLP-1 Programs" row
+
+**Tests:**
+- GLP1ProgramsUITests (navigation, section switching, medications list)
+- StrategyTabUITests (tab existence, navigation, tab bar order)
+- AddButtonUITests (existence, shortcuts sheet, icon-only design)
+
+---
+
 ### 📋 Protein Preservation Alerts
 
 Proactive protein monitoring to prevent muscle loss during weight loss, with alerts and recommendations.
@@ -1131,6 +1190,7 @@ StoreKit 2 integration for subscription tiers with paywall UI and purchase resto
 
 ## Update History
 
+- 2026-01-05: Added Navigation Refinement (v0.5.0) - GLP-1 Programs consolidation, Strategy tab promotion, Add button redesign
 - 2026-01-01: Added Goals & Nutrition Programs (v0.3.0) - goal/program wizards, 3 program styles (Coached/Collaborative/Manual), adaptive TDEE engine, progress rings, weekly check-ins, More tab refinements
 - 2025-12-26: Added Enhanced Daily Tracking (v0.2.0) - calendar navigation, food library, quick add, weight tracking, body metrics, progress photos, feature settings
 - 2025-12-24: Added Custom Foods (Food Library) feature - completed with barcode scanning
