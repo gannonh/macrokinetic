@@ -29,9 +29,9 @@ Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: TBD
-PR: TBD
-Branch: TBD
+Issue: #329
+PR: #330
+Branch: feat/v0.6.0-onboarding-redux
 
 ## Performance Metrics
 
