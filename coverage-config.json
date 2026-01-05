@@ -213,6 +213,7 @@
       "Views/FoodLog/MacroSummaryConsumedPage.swift",
       "Views/FoodLog/MacroSummarySwipeCard.swift",
       "Views/FoodLog/WeekCalendarStrip.swift",
+      "Views/More/GLP1ProgramsView.swift",
       "Views/More/MoreView.swift",
       "Views/Shots/ShotsView.swift",
       "Models/Tab.swift",

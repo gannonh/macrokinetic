@@ -21,10 +21,15 @@ struct MoreView: View {
             List {
                 // Overflow Menu - items not in top-level tabs
                 Section {
+                    NavigationLink(destination: GLP1ProgramsView()) {
+                        Label("GLP-1 Programs", systemImage: "syringe.fill")
+                    }
+                    .accessibilityIdentifier("glp1-programs-row")
+
                     NavigationLink(destination: StrategyView()) {
                         Label("Goals & Strategy", systemImage: "target")
                     }
-                    .accessibilityIdentifier("goals-strategy-row")
+                    .accessibilityIdentifier("strategy-row")
 
                     Button {
                         showingFoodLibrary = true
@@ -33,16 +38,6 @@ struct MoreView: View {
                             .foregroundColor(.primary)
                     }
                     .accessibilityIdentifier("food-library-row")
-
-                    NavigationLink(
-                        destination: MedicationProfileSettingsView(
-                            medicationManager: MedicationManager(
-                                modelContext: DataController.shared.container.mainContext)
-                        )
-                    ) {
-                        Label("GLP-1 Medications", systemImage: "pills")
-                    }
-                    .accessibilityIdentifier("medications-row")
                 }
 
                 // Feature Settings Section
