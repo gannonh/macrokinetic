@@ -2,12 +2,15 @@
 
 ## Project Summary
 
-**Building:** Navigation refinement for MacroKinetic - consolidating GLP-1 features, promoting Strategy to top-level tab, and modernizing the Add button.
+**Building:** Complete onboarding rewrite for MacroKinetic — focused on core experience with USP showcase, simplified goal/program setup, and permission screens.
 
 **Core requirements:**
-- Merge Shots tab + Medication Profiles into unified "GLP-1 Programs" section under More
-- Replace Shots in tab bar with Strategy tab (Dashboard-style uplevel)
-- Icon-only, larger Add button with no text label
+- Complete rewrite of onboarding (stash current as reference)
+- USP/feature showcase screens (adaptive TDEE, precision tracking, calorie adjustments, GLP-1 support)
+- Simplified Goal + Program setup (streamlined for first-time users)
+- Individual permission screens: HealthKit, Face ID, Notifications
+- Retain Sign in with Apple as first step
+- Remove GLP-1 setup and StoreKit for now
 
 **Constraints:**
 - CloudKit sync required for cross-device access
@@ -17,39 +20,34 @@
 
 ## Current Position
 
-Phase: 24 of 24 (Add Button Redesign)
-Plan: 1 of 1 in current phase
-Status: Pre-merge complete - ready to merge
-Last activity: 2026-01-05 - Pre-merge review complete (CI, PR Review Toolkit, CodeRabbit)
+Phase: 25 of 29 (Onboarding Foundation)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-05 - Milestone v0.6.0 created
 
-Progress: ██████████ 100%
+Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: #327
-PR: #328
-Branch: feat/v0.5.0-navigation-refinement
+Issue: TBD
+PR: TBD
+Branch: TBD
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 20 min
-- Total execution time: 80 min
+- Total plans completed: 0
+- Average duration: -
+- Total execution time: 0 min
 
 **By Phase:**
 
-| Phase | Plans | Total  | Avg/Plan |
-|-------|-------|--------|----------|
-| 22    | 2     | 64 min | 32 min   |
-| 23    | 1     | 2 min  | 2 min    |
-| 24    | 1     | 14 min | 14 min   |
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 25    | 0     | -     | -        |
 
 **Recent Trend:**
-- 22-01: 19 min (Section Extraction)
-- 22-02: 45 min (GLP1ProgramsView Integration)
-- 23-01: 2 min (Strategy Tab Promotion)
-- 24-01: 14 min (Add Button Redesign)
+None yet.
 
 *Updated after each plan completion*
 
@@ -74,10 +72,11 @@ None yet.
 
 - Milestone v0.4.0 created: Calorie Expenditure Enhancements, 4 phases (Phase 18-21)
 - Milestone v0.5.0 created: Navigation Refinement, 3 phases (Phase 22-24)
+- Milestone v0.6.0 created: Onboarding Redux, 5 phases (Phase 25-29)
 
 ### Blockers/Concerns Carried Forward
 
-None yet.
+None.
 
 ## Project Alignment
 
@@ -88,6 +87,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-05T22:15:15Z
-Stopped at: Pre-merge complete - PR #328 ready to merge
+Last session: 2026-01-05T23:01:41Z
+Stopped at: Milestone v0.6.0 initialization
 Resume file: None
