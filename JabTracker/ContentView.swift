@@ -189,6 +189,10 @@ struct ContentView: View {
             // Refresh badge immediately after check-in completion
             updateCheckInBadge()
         }
+        .onChange(of: users) { _, _ in
+            // Refresh badge when user data loads or changes
+            updateCheckInBadge()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .showQuickDoseSheet)) { notification in
             // Handle deeplink navigation to QuickDoseSheet
             if let scheduledDoseId = notification.userInfo?["scheduledDoseId"] as? UUID {
