@@ -68,10 +68,15 @@ struct ContentView: View {
                 }
                 .tag(Tab.foodLog)
 
-            // Empty view for Add tab - sheet presentation handled by onChange
+            // Spacer tab - visual icon hidden, replaced by floating button overlay
             Color.clear
                 .tabItem {
-                    Label(Tab.add.title, systemImage: Tab.add.icon)
+                    Label {
+                        Text("")
+                    } icon: {
+                        // Invisible placeholder - actual button is overlay
+                        Color.clear
+                    }
                 }
                 .tag(Tab.add)
 
@@ -89,6 +94,25 @@ struct ContentView: View {
                 .tag(Tab.more)
         }
         .accessibilityIdentifier("main-tab-view")
+        // Floating Add button overlay - larger icon, no tab animation
+        .overlay(alignment: .bottom) {
+            Button {
+                logger.debug("Add button tapped via overlay")
+                if quickDoseViewModel.shouldShowTitrationDialog() {
+                    logger.debug("Pending titration found - showing titration dialog")
+                    pendingTitration = quickDoseViewModel.getPendingTitration()
+                    showingTitrationDialog = true
+                } else {
+                    logger.debug("No pending titration - showing shortcuts sheet")
+                    showingShortcuts = true
+                }
+            } label: {
+                Image(systemName: Tab.add.icon)
+                    .font(.system(size: 44, weight: .semibold))
+            }
+            .accessibilityIdentifier("add-button")
+            .offset(y: 8)
+        }
         .sheet(
             isPresented: self.$showingQuickDoseSheet,
             onDismiss: {

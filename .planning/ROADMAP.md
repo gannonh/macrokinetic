@@ -51,10 +51,10 @@ Plans:
 **Goal**: Icon-only, larger Add button with no text label, same ShortcutsSheet behavior
 **Depends on**: Phase 23
 **Research**: Unlikely (simple styling change)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 24-01: TBD (run /gsd:plan-phase 24 to break down)
+- [x] 24-01: Add Button Styling (2 tasks) - Complete 2026-01-05
 
 ## Progress
 
@@ -65,7 +65,7 @@ Phases execute in numeric order within each milestone.
 | --------------------------------- | -------------- | ----------- | ---------- |
 | 22. GLP-1 Programs Consolidation  | 2/2            | Complete    | 2026-01-05 |
 | 23. Strategy Tab Promotion        | 1/1            | Complete    | 2026-01-05 |
-| 24. Add Button Redesign           | 0/?            | Not started | -          |
+| 24. Add Button Redesign           | 1/1            | Complete    | 2026-01-05 |
 
 <details>
 <summary>✅ v0.4.0 Calorie Expenditure Enhancements (Phases 18-21) - SHIPPED 2026-01-04</summary>
