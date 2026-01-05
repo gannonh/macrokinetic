@@ -103,12 +103,13 @@ struct GLP1ProgramsView: View {
         }
         .accessibilityIdentifier("glp1-programs-view")
         .sheet(isPresented: $showingAddMedication) {
-            if let currentUser = authManager.currentUser {
+            // Use currentUser from loadData() for consistency with view state
+            if let user = currentUser {
                 AddMedicationProfileView(
                     medicationManager: MedicationManager(
                         modelContext: DataController.shared.container.mainContext
                     ),
-                    currentUser: currentUser
+                    currentUser: user
                 )
             }
         }

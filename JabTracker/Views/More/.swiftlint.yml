@@ -1,0 +1,11 @@
+# SwiftLint overrides for More views
+# GLP1ProgramsView.swift contains Analytics and Medications sections,
+# medication profile management, and multiple picker-based navigation
+
+type_body_length:
+  warning: 400
+  error: 450
+
+file_length:
+  warning: 550
+  error: 600

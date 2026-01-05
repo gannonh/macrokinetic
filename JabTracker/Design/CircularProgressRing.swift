@@ -85,7 +85,7 @@ struct CircularProgressRing: View {
         }
         .accessibilityIdentifier(accessibilityIdentifierValue)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(valueText)")
+        .accessibilityLabel(showLabel ? "\(label): \(valueText)" : valueText)
         .accessibilityValue(String(format: "%.0f percent", progress * 100))
     }
 }

@@ -137,12 +137,21 @@ struct FoodLogView: View {
                         showingAddFood = true
                     } label: {
                         Image(systemName: "plus")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .frame(width: 32, height: 32)
-                            .background(Color(.tertiarySystemFill))
+                            .font(
+                                .system(
+                                    size: DesignTokens.HeaderButton.iconSize,
+                                    weight: DesignTokens.HeaderButton.iconWeight
+                                )
+                            )
+                            .foregroundColor(DesignTokens.HeaderButton.iconColor)
+                            .frame(
+                                width: DesignTokens.HeaderButton.buttonSize,
+                                height: DesignTokens.HeaderButton.buttonSize
+                            )
+                            .background(DesignTokens.HeaderButton.backgroundColor)
                             .clipShape(Circle())
                     }
+                    .frame(minWidth: 44, minHeight: 44)  // Apple HIG touch target
                     .accessibilityIdentifier("add-food-button")
                 }
                 .padding(.bottom, 14)

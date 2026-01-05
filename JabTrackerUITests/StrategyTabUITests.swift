@@ -84,33 +84,30 @@ final class StrategyTabUITests: XCTestCase {
 
     // MARK: - Tab Bar Structure Tests
 
-    /// Verify tab bar has correct tabs in correct order: Dashboard, Food Log, Add, Strategy, More
+    /// Verify tab bar has correct labeled tabs and floating Add button
+    /// Note: Add button is now a floating overlay (icon-only), not a tab bar item
     func testTabBarHasCorrectTabs() throws {
         // GIVEN: App is launched
         let tabBar = app.tabBars.element
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should exist")
 
-        // THEN: All expected tabs should exist
+        // THEN: All labeled tabs should exist in tab bar
         let dashboardTab = tabBar.buttons["Dashboard"]
         let foodLogTab = tabBar.buttons["Food Log"]
-        let addTab = tabBar.buttons["Add"]
         let strategyTab = tabBar.buttons["Strategy"]
         let moreTab = tabBar.buttons["More"]
 
         XCTAssertTrue(dashboardTab.exists, "Dashboard tab should exist")
         XCTAssertTrue(foodLogTab.exists, "Food Log tab should exist")
-        XCTAssertTrue(addTab.exists, "Add tab should exist")
         XCTAssertTrue(strategyTab.exists, "Strategy tab should exist")
         XCTAssertTrue(moreTab.exists, "More tab should exist")
 
-        // Verify all 5 tabs are present
-        let allTabButtons = tabBar.buttons.allElementsBoundByIndex
-        // Filter to only visible tab buttons (exclude any hidden elements)
-        let visibleTabs = allTabButtons.filter { $0.isHittable || $0.exists }
-        XCTAssertEqual(visibleTabs.count, 5, "Tab bar should have exactly 5 tabs")
+        // Add button is a floating overlay, verify it exists outside tab bar
+        let addButton = app.buttons["add-button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5), "Add button should exist as floating overlay")
+        XCTAssertTrue(addButton.isHittable, "Add button should be tappable")
 
-        // Verify tab order by checking frame positions (left to right)
-        // Dashboard should be leftmost, More should be rightmost
+        // Verify tab order (left to right) for labeled tabs
         XCTAssertLessThan(
             dashboardTab.frame.midX,
             foodLogTab.frame.midX,
@@ -118,18 +115,26 @@ final class StrategyTabUITests: XCTestCase {
         )
         XCTAssertLessThan(
             foodLogTab.frame.midX,
-            addTab.frame.midX,
-            "Food Log tab should be left of Add tab"
-        )
-        XCTAssertLessThan(
-            addTab.frame.midX,
             strategyTab.frame.midX,
-            "Add tab should be left of Strategy tab"
+            "Food Log tab should be left of Strategy tab"
         )
         XCTAssertLessThan(
             strategyTab.frame.midX,
             moreTab.frame.midX,
             "Strategy tab should be left of More tab"
+        )
+
+        // Verify Add button is visually centered between Food Log and Strategy tabs
+        let addButtonCenterX = addButton.frame.midX
+        XCTAssertGreaterThan(
+            addButtonCenterX,
+            foodLogTab.frame.maxX,
+            "Add button should be positioned after Food Log tab"
+        )
+        XCTAssertLessThan(
+            addButtonCenterX,
+            strategyTab.frame.minX,
+            "Add button should be positioned before Strategy tab"
         )
     }
 
@@ -211,9 +216,11 @@ final class StrategyTabUITests: XCTestCase {
 // Tab Buttons (in tab bar):
 // - "Dashboard" - Dashboard tab
 // - "Food Log" - Food Log tab
-// - "Add" - Add tab (center button)
 // - "Strategy" - Strategy tab (replaced Shots)
 // - "More" - More tab
+//
+// Floating Button (NOT in tab bar):
+// - "add-button" - Floating Add button overlay (icon-only, larger size)
 //
 // Strategy View:
 // - "strategy-view" - Main Strategy view identifier
@@ -224,3 +231,4 @@ final class StrategyTabUITests: XCTestCase {
 //
 // Note: "Shots" tab no longer exists - replaced by "Strategy" in v0.5.0
 // Note: "Goals & Strategy" row removed from More - Strategy is now a top-level tab
+// Note: Add button is now a floating overlay, not a tab bar item (v0.5.0 Phase 24)

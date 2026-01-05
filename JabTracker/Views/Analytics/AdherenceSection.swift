@@ -35,8 +35,11 @@ struct AdherenceSection: View {
     var body: some View {
         Group {
             if let user = user, !medicationProfiles.isEmpty {
+                // Compute adherence once to avoid redundant calculations
+                let adherence = adherenceRate(for: user)
+
                 VStack(spacing: 16) {
-                    AdherenceMetricsCard(adherenceRate: adherenceRate(for: user))
+                    AdherenceMetricsCard(adherenceRate: adherence)
                         .accessibilityIdentifier("adherence-metrics-card")
 
                     DesignCard {
@@ -54,7 +57,7 @@ struct AdherenceSection: View {
                     .accessibilityIdentifier("streak-counters-card")
 
                     AdherenceProgressIndicator(
-                        currentAdherence: adherenceRate(for: user),
+                        currentAdherence: adherence,
                         targetAdherence: 0.8,
                         periodLabel: "This month"
                     )
