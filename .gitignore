@@ -41,3 +41,4 @@ scripts/off_data/
 JabTracker/Resources/usda_foods.sqlite
 mocks/
 .coverage/**/*
+.planning/adhoc/
