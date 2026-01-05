@@ -41,39 +41,44 @@ struct ShotsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Custom page header (handles its own padding)
-                    PageHeader(title: "Shots")
+            VStack(spacing: 0) {
+                // Custom page header (handles its own padding)
+                PageHeader(title: "Shots")
 
-                    // Content with standard padding
-                    LazyVStack(alignment: .leading, spacing: 16) {
-                        // Main section picker
-                        Picker("Section", selection: $selectedSection) {
-                            ForEach(ShotsSection.allCases, id: \.self) { section in
-                                Text(section.rawValue).tag(section)
+                // Section picker (always visible, not scrolled)
+                Picker("Section", selection: $selectedSection) {
+                    ForEach(ShotsSection.allCases, id: \.self) { section in
+                        Text(section.rawValue).tag(section)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+                .accessibilityIdentifier("shots-section-picker")
+
+                // Sub-controls based on selected section
+                sectionControls
+
+                // Content - History gets full height, others get ScrollView
+                if selectedSection == .history {
+                    HistorySection(selectedMode: selectedHistoryMode)
+                } else {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 16) {
+                            if isLoadingData {
+                                ProgressView("Loading...")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            } else {
+                                sectionContent
                             }
                         }
-                        .pickerStyle(SegmentedPickerStyle())
-                        .accessibilityIdentifier("shots-section-picker")
-
-                        // Sub-controls based on selected section
-                        sectionControls
-
-                        // Content based on selection
-                        if isLoadingData && selectedSection != .history {
-                            ProgressView("Loading...")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        } else {
-                            sectionContent
-                        }
+                        .padding()
                     }
-                    .padding()
+                    .accessibilityIdentifier("shots-scroll-view")
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .accessibilityIdentifier("shots-scroll-view")
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 loadData()
@@ -137,7 +142,8 @@ struct ShotsView: View {
                 analyticsService: analyticsService
             )
         case .history:
-            HistorySection(selectedMode: selectedHistoryMode)
+            // History is handled directly in body to avoid ScrollView nesting
+            EmptyView()
         }
     }
 

@@ -40,7 +40,10 @@ None - plan executed exactly as written.
 
 ## Issues Encountered
 
-None
+**List view not rendering in History section** (Found during smoketest, fixed)
+- Symptom: List mode showed only search bar, no dose entries; Calendar mode worked fine
+- Root cause: `DoseHistoryView` contains a `List` which doesn't size correctly when embedded in ShotsView's `ScrollView > VStack > LazyVStack` hierarchy
+- Fix: Restructured ShotsView to handle History section outside the ScrollView wrapper, giving it full height to manage its own scrolling
 
 ## Next Step
 

@@ -197,7 +197,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-30d"

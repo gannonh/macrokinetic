@@ -109,7 +109,7 @@ schemes:
         "--seed-test-7d": false
         "--seed-test-30d": false
         "--seed-test-90d": false
-        "--seed-test-1y": false
+        "--seed-test-1y": true
         "--test-titration-data": false
         "--seed-check-in-ready": true  # Seeds goal/program with check-in due (excellent tier)
         "--seed-check-in-good": false  # Seeds goal/program with good data tier
