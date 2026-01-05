@@ -111,7 +111,7 @@ struct AdherenceSection: View {
         }
         .padding()
         .cardStyle(cornerRadius: 12)
-        .accessibilityIdentifier("no-shots-data")
+        .accessibilityIdentifier("adherence-no-data")
     }
 }
 

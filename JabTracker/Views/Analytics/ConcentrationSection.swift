@@ -65,7 +65,7 @@ struct ConcentrationSection: View {
         }
         .padding()
         .cardStyle(cornerRadius: 12)
-        .accessibilityIdentifier("no-shots-data")
+        .accessibilityIdentifier("concentration-no-data")
     }
 
     /// View displayed while chart data is being generated
