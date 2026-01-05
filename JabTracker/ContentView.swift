@@ -352,6 +352,9 @@ struct DashboardView: View {
                     // Content with standard padding
                     LazyVStack(alignment: .leading, spacing: 16) {
                         if let currentUser = users.first {
+                            // Coming soon banner for early testers
+                            self.comingSoonCard
+
                             self.concentrationSection(for: currentUser)
 
                             // Nutrition summary card
@@ -367,7 +370,7 @@ struct DashboardView: View {
                 }
             }
             .accessibilityIdentifier("dashboard-scroll-view")
-            .background(Color(.systemGroupedBackground))
+            .background(DesignTokens.Colors.groupedBackground)
             .toolbar(.hidden, for: .navigationBar)
         }
         .accessibilityIdentifier("dashboard-view")
@@ -385,8 +388,6 @@ struct DashboardView: View {
                 medicationProfiles: medicationProfiles,
                 pkEngine: self.pkEngine,
                 doseService: self.doseService)
-        } else {
-            self.noMedicationSection
         }
     }
 
@@ -412,24 +413,20 @@ struct DashboardView: View {
         .accessibilityIdentifier("no-user-message")
     }
 
-    private var noMedicationSection: some View {
+    private var comingSoonCard: some View {
         DesignCard {
-            VStack(spacing: 16) {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.system(size: 48))
+            VStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 40))
                     .foregroundColor(.secondary)
 
-                Text("Add medication profiles")
+                Text("Dashboard Coming Soon")
                     .font(DesignTokens.Typography.headline)
-
-                Text("Set up your medications in Settings to view concentration tracking")
-                    .font(DesignTokens.Typography.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
             }
+            .frame(maxWidth: .infinity)
             .padding()
         }
-        .accessibilityIdentifier("no-medication-message")
+        .accessibilityIdentifier("coming-soon-card")
     }
 }
 
