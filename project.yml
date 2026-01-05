@@ -11,11 +11,20 @@ options:
       file: true
 settings:
   base:
-    ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: YES
-    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
-    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_VERSION: "5.9"
+    # Version numbering for TestFlight and App Store - 
+    # MARKETING_VERSION: User-facing version (e.g., 1.0.0, 1.1.0)
+    # CURRENT_PROJECT_VERSION: Build number -- increment with each upload (1, 2, 3...)
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "4"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.5"
+    TARGETED_DEVICE_FAMILY: "1"
+    SUPPORTS_MACCATALYST: false
+    SWIFT_EMIT_LOC_STRINGS: true
+    ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: true
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: true
+    ENABLE_USER_SCRIPT_SANDBOXING: true
     DEVELOPMENT_TEAM: ZBZKKWF95G
-    SWIFT_EMIT_LOC_STRINGS: YES
   
 targets:
   JabTracker:
@@ -34,13 +43,13 @@ targets:
       - path: JabTracker/Resources/usda_foods.sqlite
       - path: JabTrackerStoreKit.storekit
     settings:
-      CURRENT_PROJECT_VERSION: "1"
-      MARKETING_VERSION: "1.0"
-      TARGETED_DEVICE_FAMILY: 1
-      ENABLE_PREVIEWS: NO
+      PRODUCT_BUNDLE_IDENTIFIER: com.gannonhall.JabTracker
       CODE_SIGN_ENTITLEMENTS: JabTracker/JabTracker.entitlements
       CODE_SIGN_STYLE: Automatic
       INFOPLIST_FILE: JabTracker/Info.plist
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      ENABLE_PREVIEWS: true
+      SWIFT_EMIT_LOC_STRINGS: true
       
   JabTrackerTests:
     type: bundle.unit-test
@@ -95,17 +104,16 @@ schemes:
     run:
       commandLineArguments:
         "--force-onboarding": false # resets onboarding if true
-        "--reset-app-data": false # seeding only works if true
+        "--reset-app-data": true # seeding only works if true
         "--ui-testing": true # Enable to bypasses auth AND auto-complete onboarding 
-        "--mock-active-energy=350": true # Mocks active energy burned to 350 kcal
         "--seed-test-7d": false
         "--seed-test-30d": false
         "--seed-test-90d": false
         "--seed-test-1y": false
+        "--test-titration-data": false
         "--seed-check-in-ready": true  # Seeds goal/program with check-in due (excellent tier)
         "--seed-check-in-good": false  # Seeds goal/program with good data tier
         "--seed-check-in-minimum": false  # Seeds goal/program with minimum data tier
         "--seed-check-in-insufficient": false  # Seeds goal/program with insufficient data (check-in blocked)
-        "--seed-collaborative": false  # Use Collaborative program style (default: Coached)
-        "--test-titration-data": false
+        "--seed-collaborative": true  # Use Collaborative program style (default: Coached)
       storeKitConfiguration: JabTrackerStoreKit.storekit
