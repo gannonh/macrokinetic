@@ -30,10 +30,11 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 **Goal**: Merge Shots tab and Medication Profiles into unified "GLP-1 Programs" section under More tab
 **Depends on**: Previous milestone complete
 **Research**: Unlikely (internal UI patterns, existing views)
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] 22-01: TBD (run /gsd:plan-phase 22 to break down)
+- [x] 22-01: Section Extraction & ShotsView Refactor (3 tasks) - Complete 2026-01-05
+- [ ] 22-02: GLP1ProgramsView & Integration (3 tasks)
 
 #### Phase 23: Strategy Tab Promotion
 
@@ -62,7 +63,7 @@ Phases execute in numeric order within each milestone.
 
 | Phase                             | Plans Complete | Status      | Completed |
 | --------------------------------- | -------------- | ----------- | --------- |
-| 22. GLP-1 Programs Consolidation  | 0/?            | Not started | -         |
+| 22. GLP-1 Programs Consolidation  | 1/2            | In progress | -         |
 | 23. Strategy Tab Promotion        | 0/?            | Not started | -         |
 | 24. Add Button Redesign           | 0/?            | Not started | -         |
 

@@ -18,11 +18,11 @@
 ## Current Position
 
 Phase: 22 of 24 (GLP-1 Programs Consolidation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-01-04 - Milestone v0.5.0 created
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-05 - Completed 22-01-PLAN.md
 
-Progress: ░░░░░░░░░░ 0%
+Progress: █░░░░░░░░░ 17%
 
 ## GitHub Tracking
 
@@ -33,17 +33,18 @@ Branch: feat/v0.5.0-navigation-refinement
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 min
+- Total plans completed: 1
+- Average duration: 19 min
+- Total execution time: 19 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
+| 22    | 1     | 19 min | 19 min  |
 
 **Recent Trend:**
-- Milestone v0.5.0 started
+- 22-01: 19 min (Section Extraction)
 
 *Updated after each plan completion*
 
@@ -53,6 +54,8 @@ Branch: feat/v0.5.0-navigation-refinement
 
 | Phase | Decision | Rationale |
 |-------|----------|-----------|
+| 22-01 | Props-based section components | Maximum reusability for GLP1ProgramsView |
+| 22-01 | HistoryMode enum in HistorySection.swift | Co-locate with component that uses it |
 
 ### Deferred Issues
 
@@ -76,6 +79,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-04T21:39:01Z
-Stopped at: Milestone v0.5.0 initialization
+Last session: 2026-01-05T00:38:44Z
+Stopped at: Completed 22-01-PLAN.md
 Resume file: None
