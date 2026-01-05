@@ -18,11 +18,11 @@
 ## Current Position
 
 Phase: 22 of 24 (GLP-1 Programs Consolidation)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-05 - Completed 22-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-01-05 - Completed 22-02-PLAN.md
 
-Progress: █░░░░░░░░░ 17%
+Progress: ██░░░░░░░░ 33%
 
 ## GitHub Tracking
 
@@ -33,18 +33,19 @@ Branch: feat/v0.5.0-navigation-refinement
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 19 min
-- Total execution time: 19 min
+- Total plans completed: 2
+- Average duration: 32 min
+- Total execution time: 64 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 22    | 1     | 19 min | 19 min  |
+| 22    | 2     | 64 min | 32 min  |
 
 **Recent Trend:**
 - 22-01: 19 min (Section Extraction)
+- 22-02: 45 min (GLP1ProgramsView Integration)
 
 *Updated after each plan completion*
 
@@ -56,6 +57,9 @@ Branch: feat/v0.5.0-navigation-refinement
 |-------|----------|-----------|
 | 22-01 | Props-based section components | Maximum reusability for GLP1ProgramsView |
 | 22-01 | HistoryMode enum in HistorySection.swift | Co-locate with component that uses it |
+| 22-02 | Kept Goals & Strategy as separate More row | Phase 23 will promote it to top-level tab |
+| 22-02 | Inline navigation titles for GLP-1 views | Consistent with More tab sub-view patterns |
+| 22-02 | Custom medications list in GLP1ProgramsView | Needed swipe actions + empty state not available when embedding |
 
 ### Deferred Issues
 
@@ -79,6 +83,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-05T00:38:44Z
-Stopped at: Completed 22-01-PLAN.md
+Last session: 2026-01-05T17:33:03Z
+Stopped at: Completed 22-02-PLAN.md (Phase 22 complete)
 Resume file: None
