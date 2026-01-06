@@ -114,13 +114,11 @@ final class OnboardingViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        // Handle case where user might not exist (e.g., --force-onboarding testing)
+        // User is required to complete onboarding
         guard let user = authManager.currentUser else {
-            // Still mark as complete in UserDefaults for testing scenarios
-            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
-            UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
-            logger.info("Onboarding completed (no user - testing mode)")
-            return .success
+            errorMessage = "No user found to complete onboarding"
+            logger.error("Cannot complete onboarding: no current user")
+            return .failed(OnboardingError.userNotFound)
         }
 
         // Check if already completed
