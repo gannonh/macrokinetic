@@ -96,7 +96,7 @@ struct TargetWeightStepView: View {
                 Spacer()
                 Text(formattedCurrentWeight)
                     .font(.headline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(Color(.tertiaryLabel))
@@ -104,7 +104,7 @@ struct TargetWeightStepView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.05))
+                    .fill(DesignTokens.Colors.cardBackground)
             )
         }
         .buttonStyle(.plain)
@@ -157,7 +157,7 @@ struct TargetWeightStepView: View {
                 Spacer()
                 Text(String(format: weightFormat, viewModel.targetWeightDisplay, viewModel.weightUnitLabel))
                     .font(.headline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
             }
 
             Slider(
@@ -165,7 +165,7 @@ struct TargetWeightStepView: View {
                 in: targetWeightRangeDisplay,
                 step: viewModel.usesMetricWeight ? 0.5 : 1.0
             )
-            .tint(.blue)
+            .tint(DesignTokens.Colors.accent)
             .accessibilityIdentifier("goal-wizard-target-weight-slider")
 
             HStack {
@@ -181,7 +181,7 @@ struct TargetWeightStepView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
+                .fill(DesignTokens.Colors.cardBackground)
         )
     }
 
@@ -229,7 +229,7 @@ struct TargetWeightStepView: View {
                 Spacer()
                 Text(String(format: "%.1f %@/week", viewModel.weeklyRateDisplay, viewModel.weightUnitLabel))
                     .font(.headline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
             }
 
             Slider(
@@ -237,7 +237,7 @@ struct TargetWeightStepView: View {
                 in: minRate...maxRate,
                 step: stepRate
             )
-            .tint(.blue)
+            .tint(DesignTokens.Colors.accent)
             .accessibilityIdentifier("goal-wizard-rate-slider")
 
             HStack {
@@ -261,7 +261,7 @@ struct TargetWeightStepView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
+                .fill(DesignTokens.Colors.cardBackground)
         )
     }
 
@@ -269,7 +269,7 @@ struct TargetWeightStepView: View {
         VStack(spacing: 16) {
             HStack {
                 Image(systemName: "chart.line.uptrend.xyaxis")
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
                 Text("Projected Results")
                     .font(.headline)
                 Spacer()
@@ -300,7 +300,7 @@ struct TargetWeightStepView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.1))
+                .fill(DesignTokens.Colors.accent.opacity(0.1))
         )
     }
 
@@ -321,7 +321,7 @@ struct TargetWeightStepView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.green.opacity(0.1))
+                .fill(DesignTokens.Colors.success.opacity(0.1))
         )
     }
 
@@ -329,7 +329,7 @@ struct TargetWeightStepView: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.headline)
-                .foregroundColor(.blue)
+                .foregroundColor(DesignTokens.Colors.accent)
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -413,7 +413,7 @@ struct GoalSummaryStepView: View {
 
             HStack {
                 Image(systemName: "arrow.right.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
                 Text("Next: Build Your Program")
                     .font(.subheadline)
                     .fontWeight(.medium)

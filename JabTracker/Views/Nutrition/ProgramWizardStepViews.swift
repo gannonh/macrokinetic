@@ -46,7 +46,7 @@ struct CardBackgroundModifier: ViewModifier {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.05))
+                    .fill(DesignTokens.Colors.cardBackground)
             )
     }
 }
@@ -59,7 +59,7 @@ struct CompactCardBackgroundModifier: ViewModifier {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.gray.opacity(0.05))
+                    .fill(DesignTokens.Colors.cardBackground)
             )
     }
 }
@@ -135,7 +135,7 @@ struct ProfileCompletionStepView: View {
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(DesignTokens.Colors.accent.opacity(0.1))
                     )
 
                     // Height field
@@ -213,11 +213,11 @@ struct ProfileCompletionStepView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                .stroke(DesignTokens.Colors.inactive.opacity(0.3), lineWidth: 1)
         )
     }
 }
@@ -451,7 +451,7 @@ struct ProgramConfirmationStepView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.1))
+                .fill(DesignTokens.Colors.accent.opacity(0.1))
         )
     }
 

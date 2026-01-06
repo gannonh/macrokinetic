@@ -67,7 +67,7 @@ struct SelectionCard: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: DesignTokens.CornerRadius.large)
-                    .fill(isSelected ? DesignTokens.Colors.accent.opacity(0.1) : Color.gray.opacity(0.05))
+                    .fill(isSelected ? DesignTokens.Colors.cardBackgroundSelected : DesignTokens.Colors.cardBackground)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.CornerRadius.large)

@@ -73,3 +73,18 @@ custom_rules:
     regex: '\.background\s*\(\s*Color\s*\('
     message: "Use DesignTokens.Colors for backgrounds (e.g., .background(DesignTokens.Colors.cardBackground))"
     severity: warning
+  prefer_design_tokens_backgrounds_static:
+    name: "Prefer DesignTokens for Static Color Backgrounds"
+    regex: '\.background\s*\(\s*Color\.'
+    message: "Use DesignTokens.Colors for backgrounds (e.g., .background(DesignTokens.Colors.cardBackground))"
+    severity: warning
+  prefer_design_tokens_fill:
+    name: "Prefer DesignTokens for Fill"
+    regex: '\.fill\s*\(\s*Color\s*\('
+    message: "Use DesignTokens.Colors for fill (e.g., .fill(DesignTokens.Colors.cardBackground))"
+    severity: warning
+  prefer_design_tokens_fill_static:
+    name: "Prefer DesignTokens for Static Color Fill"
+    regex: '\.fill\s*\(\s*Color\.'
+    message: "Use DesignTokens.Colors for fill (e.g., .fill(DesignTokens.Colors.cardBackground))"
+    severity: warning

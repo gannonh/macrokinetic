@@ -64,16 +64,20 @@ struct OnboardingStepTests {
         // Given: The OnboardingStep enum
         let allSteps = OnboardingStep.allCases
 
-        // Then: Should have exactly 7 steps in the expected order
-        // HealthKit comes before goalProgram so weight data is available for goal setup
-        #expect(allSteps.count == 7)
+        // Then: Should have exactly 11 steps in the expected order
+        // Integrated goal/program steps instead of wizard sheets
+        #expect(allSteps.count == 11)
         #expect(allSteps[0] == .welcome)
         #expect(allSteps[1] == .uspShowcase)
         #expect(allSteps[2] == .healthKit)
-        #expect(allSteps[3] == .goalProgram)
-        #expect(allSteps[4] == .faceID)
-        #expect(allSteps[5] == .notifications)
-        #expect(allSteps[6] == .completion)
+        #expect(allSteps[3] == .goalType)
+        #expect(allSteps[4] == .targetWeight)
+        #expect(allSteps[5] == .profileCompletion)
+        #expect(allSteps[6] == .activityLevel)
+        #expect(allSteps[7] == .setupConfirmation)
+        #expect(allSteps[8] == .faceID)
+        #expect(allSteps[9] == .notifications)
+        #expect(allSteps[10] == .completion)
     }
 
     @Test("Each step has a title")
@@ -169,6 +173,11 @@ struct OnboardingViewModelNavigationTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
+        // Configure required state to proceed through goal/program steps
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.editSex = "male"
+        viewModel.trainingLevel = .lifting
+
         // Navigate to the last step
         while viewModel.currentStep != .completion {
             viewModel.moveToNextStep()
@@ -208,6 +217,11 @@ struct OnboardingViewModelProgressTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
+        // Configure required state to proceed through goal/program steps
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.editSex = "male"
+        viewModel.trainingLevel = .lifting
+
         // Navigate to the last step
         while viewModel.currentStep != .completion {
             viewModel.moveToNextStep()
@@ -228,8 +242,8 @@ struct OnboardingViewModelProgressTests {
         // When: At second step (index 1)
         viewModel.moveToNextStep()  // uspShowcase (index 1)
 
-        // Then: Progress = 1 / (7 - 1) = 1/6
-        let expectedProgress = 1.0 / 6.0
+        // Then: Progress = 1 / (11 - 1) = 1/10
+        let expectedProgress = 1.0 / 10.0
         #expect(abs(viewModel.progress - expectedProgress) < 0.001)
     }
 
@@ -241,8 +255,8 @@ struct OnboardingViewModelProgressTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Then: Total steps should be 7
-        #expect(viewModel.totalSteps == 7)
+        // Then: Total steps should be 11
+        #expect(viewModel.totalSteps == 11)
     }
 
     @Test("currentStepIndex returns correct index")
@@ -289,6 +303,11 @@ struct OnboardingViewModelStateTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
+        // Configure required state to proceed
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.editSex = "male"
+        viewModel.trainingLevel = .lifting
+
         // Navigate to the last step
         while viewModel.currentStep != .completion {
             viewModel.moveToNextStep()
@@ -298,69 +317,88 @@ struct OnboardingViewModelStateTests {
         #expect(viewModel.isLastStep == true)
     }
 
-    @Test("canProceedToNext is true for most steps except goalProgram")
+    @Test("canProceedToNext requires goal type selection at goalType step")
     @MainActor
-    func testCanProceedToNextBehavior() {
-        // Given: A ViewModel
+    func testCanProceedRequiresGoalType() {
+        // Given: A ViewModel at goalType step
         let dataController = DataController(inMemory: true)
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Then: canProceedToNext varies by step
-        // welcome -> true
-        #expect(viewModel.canProceedToNext == true)
-        viewModel.moveToNextStep()
+        // Navigate to goalType step
+        viewModel.moveToNextStep()  // uspShowcase
+        viewModel.moveToNextStep()  // healthKit
+        viewModel.moveToNextStep()  // goalType
+        #expect(viewModel.currentStep == .goalType)
 
-        // uspShowcase -> true
-        #expect(viewModel.canProceedToNext == true)
-        viewModel.moveToNextStep()
-
-        // healthKit -> true
-        #expect(viewModel.canProceedToNext == true)
-        viewModel.moveToNextStep()
-
-        // goalProgram -> false until wizards complete
-        #expect(viewModel.currentStep == .goalProgram)
+        // Then: Cannot proceed without goal type
         #expect(viewModel.canProceedToNext == false)
 
-        // After marking wizards complete -> true
-        viewModel.markGoalProgramComplete()
-        #expect(viewModel.canProceedToNext == true)
-        viewModel.moveToNextStep()
+        // When: Setting goal type
+        viewModel.goalViewModel.goalType = .weightLoss
 
-        // faceID -> true
-        #expect(viewModel.canProceedToNext == true)
-        viewModel.moveToNextStep()
-
-        // notifications -> true
-        #expect(viewModel.canProceedToNext == true)
-        viewModel.moveToNextStep()
-
-        // completion -> true
+        // Then: Can proceed
         #expect(viewModel.canProceedToNext == true)
     }
 
-    @Test("markGoalProgramComplete enables proceeding from goalProgram step")
+    @Test("canProceedToNext requires profile completion at profileCompletion step")
     @MainActor
-    func testMarkGoalProgramCompleteEnablesProceeding() {
-        // Given: A ViewModel at goalProgram step
+    func testCanProceedRequiresProfileCompletion() {
+        // Given: A ViewModel at profileCompletion step
         let dataController = DataController(inMemory: true)
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Navigate to goalProgram
+        // Configure goal type to proceed
+        viewModel.goalViewModel.goalType = .weightLoss
+
+        // Navigate to profileCompletion step
         viewModel.moveToNextStep()  // uspShowcase
         viewModel.moveToNextStep()  // healthKit
-        viewModel.moveToNextStep()  // goalProgram
-        #expect(viewModel.currentStep == .goalProgram)
+        viewModel.moveToNextStep()  // goalType
+        viewModel.moveToNextStep()  // targetWeight
+        viewModel.moveToNextStep()  // profileCompletion
+        #expect(viewModel.currentStep == .profileCompletion)
+
+        // Then: Cannot proceed without sex (editSex starts empty)
         #expect(viewModel.canProceedToNext == false)
 
-        // When: Marking goal/program complete
-        viewModel.markGoalProgramComplete()
+        // When: Setting sex
+        viewModel.editSex = "male"
 
-        // Then: Can proceed to next
+        // Then: Can proceed
         #expect(viewModel.canProceedToNext == true)
-        #expect(viewModel.goalProgramComplete == true)
+    }
+
+    @Test("canProceedToNext requires activity level at activityLevel step")
+    @MainActor
+    func testCanProceedRequiresActivityLevel() {
+        // Given: A ViewModel at activityLevel step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.editSex = "male"
+
+        // Navigate to activityLevel step
+        viewModel.moveToNextStep()  // uspShowcase
+        viewModel.moveToNextStep()  // healthKit
+        viewModel.moveToNextStep()  // goalType
+        viewModel.moveToNextStep()  // targetWeight
+        viewModel.moveToNextStep()  // profileCompletion
+        viewModel.moveToNextStep()  // activityLevel
+        #expect(viewModel.currentStep == .activityLevel)
+
+        // Then: Cannot proceed without activity level
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Setting activity level
+        viewModel.trainingLevel = .lifting
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
     }
 
     @Test("Initial isLoading is false")

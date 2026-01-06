@@ -69,7 +69,7 @@ Plans:
 
 #### Phase 29: Integration & Polish
 
-**Goal:** Final flow integration, transitions, welcome screen, testing
+**Goal:** Final flow integration, transitions, welcome screen, e2e tests
 **Depends on:** Phase 28
 **Research:** Unlikely (internal polish work)
 **Plans:** TBD
@@ -84,22 +84,22 @@ Phases execute in numeric order within each milestone.
 
 ### v0.6.0 Onboarding Redux (Phases 25-29)
 
-| Phase                                | Plans Complete | Status      | Completed  |
-| ------------------------------------ | -------------- | ----------- | ---------- |
-| 25. Onboarding Foundation            | 2/2            | Complete    | 2026-01-06 |
-| 26. USP Showcase Screens             | 1/1            | Complete    | 2026-01-06 |
-| 27. Simplified Goal & Program Setup  | 1/1            | Complete    | 2026-01-06 |
-| 28. Permission Setup Screens         | 0/?            | Not started | -          |
-| 29. Integration & Polish             | 0/?            | Not started | -          |
+| Phase                               | Plans Complete | Status      | Completed  |
+| ----------------------------------- | -------------- | ----------- | ---------- |
+| 25. Onboarding Foundation           | 2/2            | Complete    | 2026-01-06 |
+| 26. USP Showcase Screens            | 1/1            | Complete    | 2026-01-06 |
+| 27. Simplified Goal & Program Setup | 1/1            | Complete    | 2026-01-06 |
+| 28. Permission Setup Screens        | 0/?            | Not started | -          |
+| 29. Integration & Polish            | 0/?            | Not started | -          |
 
 <details>
 <summary>✅ v0.5.0 Navigation Refinement (Phases 22-24) - SHIPPED 2026-01-05</summary>
 
-| Phase                             | Plans Complete | Status      | Completed  |
-| --------------------------------- | -------------- | ----------- | ---------- |
-| 22. GLP-1 Programs Consolidation  | 2/2            | Complete    | 2026-01-05 |
-| 23. Strategy Tab Promotion        | 1/1            | Complete    | 2026-01-05 |
-| 24. Add Button Redesign           | 1/1            | Complete    | 2026-01-05 |
+| Phase                            | Plans Complete | Status   | Completed  |
+| -------------------------------- | -------------- | -------- | ---------- |
+| 22. GLP-1 Programs Consolidation | 2/2            | Complete | 2026-01-05 |
+| 23. Strategy Tab Promotion       | 1/1            | Complete | 2026-01-05 |
+| 24. Add Button Redesign          | 1/1            | Complete | 2026-01-05 |
 
 </details>
 

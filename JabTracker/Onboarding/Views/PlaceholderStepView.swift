@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Placeholder view for onboarding steps.
-/// Will be replaced with actual step implementations in Phases 26-29.
+/// Placeholder view for onboarding steps not yet implemented.
+/// Used for healthKit, faceID, notifications, and completion steps.
 struct PlaceholderStepView: View {
     let step: OnboardingStep
 
@@ -36,7 +36,7 @@ struct PlaceholderStepView: View {
         .padding()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(step.title). \(step.subtitle). Coming in Phase \(phaseNumber(for: step))")
-        .accessibilityIdentifier("onboarding-\(accessibilityIdentifier(for: step))-step")
+        .accessibilityIdentifier("onboarding-\(step.rawValue)-step")
     }
 
     private func iconName(for step: OnboardingStep) -> String {
@@ -47,8 +47,16 @@ struct PlaceholderStepView: View {
             return "star.fill"
         case .healthKit:
             return "heart.fill"
-        case .goalProgram:
+        case .goalType:
             return "target"
+        case .targetWeight:
+            return "scalemass"
+        case .profileCompletion:
+            return "person.crop.circle"
+        case .activityLevel:
+            return "figure.walk"
+        case .setupConfirmation:
+            return "checkmark.seal"
         case .faceID:
             return "faceid"
         case .notifications:
@@ -62,31 +70,12 @@ struct PlaceholderStepView: View {
         switch step {
         case .welcome, .uspShowcase:
             return 26
-        case .healthKit, .goalProgram:
+        case .healthKit, .goalType, .targetWeight, .profileCompletion, .activityLevel, .setupConfirmation:
             return 27
         case .faceID, .notifications:
             return 28
         case .completion:
             return 29
-        }
-    }
-
-    private func accessibilityIdentifier(for step: OnboardingStep) -> String {
-        switch step {
-        case .welcome:
-            return "welcome"
-        case .uspShowcase:
-            return "uspShowcase"
-        case .healthKit:
-            return "healthKit"
-        case .goalProgram:
-            return "goalProgram"
-        case .faceID:
-            return "faceID"
-        case .notifications:
-            return "notifications"
-        case .completion:
-            return "completion"
         }
     }
 }

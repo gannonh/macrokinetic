@@ -11,13 +11,12 @@ import Foundation
 ///
 /// The steps are organized into logical phases:
 /// - Phase 26: USP Showcase (welcome, uspShowcase)
-/// - Phase 27: Goal + Program (healthKit first for weight, then wizard sheets)
+/// - Phase 27: Goal + Program (integrated steps, not separate wizard sheets)
 /// - Phase 28: Permissions (faceID, notifications)
 /// - Phase 29: Completion (completion)
 ///
-/// Note: Goal and Program setup use existing GoalWizard and ProgramWizard
-/// presented as sheets after the healthKit step. This ensures HealthKit
-/// weight data is available before goal configuration.
+/// Goal and Program setup steps reuse existing step view components from
+/// GoalWizard and ProgramWizard for a seamless integrated experience.
 enum OnboardingStep: String, CaseIterable {
     // MARK: - Phase 26: USP Showcase
 
@@ -27,14 +26,29 @@ enum OnboardingStep: String, CaseIterable {
     /// Unique selling proposition showcase
     case uspShowcase
 
-    // MARK: - Phase 27: HealthKit + Goal/Program
+    // MARK: - Phase 27: HealthKit + Goal/Program Setup
 
     /// HealthKit integration permission (before goal setup to get weight)
     case healthKit
 
-    /// Goal and program setup using GoalWizard + ProgramWizard sheets
-    /// This step auto-presents the wizard sheets when reached
-    case goalProgram
+    /// Goal type selection (weight loss, maintain, muscle gain)
+    /// Reuses GoalTypeSelectionView component
+    case goalType
+
+    /// Target weight configuration (current weight, target, weekly rate)
+    /// Reuses TargetWeightStepView component
+    case targetWeight
+
+    /// Profile completion for TDEE calculation (height, sex, birthday)
+    /// Reuses ProfileCompletionStepView component
+    case profileCompletion
+
+    /// Activity/training level selection
+    /// Reuses TrainingLevelStepView component
+    case activityLevel
+
+    /// Combined goal and program summary/confirmation
+    case setupConfirmation
 
     // MARK: - Phase 28: Permissions
 
@@ -55,13 +69,21 @@ enum OnboardingStep: String, CaseIterable {
     var title: String {
         switch self {
         case .welcome:
-            return "Welcome to JabTracker"
+            return "Welcome to MacroKinetic"
         case .uspShowcase:
             return "Your GLP-1 Journey"
         case .healthKit:
             return "Connect Health Data"
-        case .goalProgram:
-            return "Set Your Goals"
+        case .goalType:
+            return "Choose Your Goal"
+        case .targetWeight:
+            return "Set Your Target"
+        case .profileCompletion:
+            return "Complete Your Profile"
+        case .activityLevel:
+            return "Activity Level"
+        case .setupConfirmation:
+            return "Your Personalized Plan"
         case .faceID:
             return "Secure Your Data"
         case .notifications:
@@ -77,11 +99,19 @@ enum OnboardingStep: String, CaseIterable {
         case .welcome:
             return "Track your GLP-1 medication with confidence"
         case .uspShowcase:
-            return "Discover how JabTracker helps you succeed"
+            return "Discover how MacroKinetic helps you succeed"
         case .healthKit:
             return "Sync your health metrics automatically"
-        case .goalProgram:
-            return "Configure your goal and program"
+        case .goalType:
+            return "What are you working toward?"
+        case .targetWeight:
+            return "Configure your target weight and pace"
+        case .profileCompletion:
+            return "We need a few details to calculate your targets"
+        case .activityLevel:
+            return "What's your typical activity level?"
+        case .setupConfirmation:
+            return "Review your customized nutrition targets"
         case .faceID:
             return "Protect your sensitive health information"
         case .notifications:

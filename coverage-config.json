@@ -183,6 +183,8 @@
       "Onboarding/OnboardingError.swift",
       "Onboarding/OnboardingStep.swift",
       "Onboarding/OnboardingView.swift",
+      "Onboarding/Views/CalculatingOverlayView.swift",
+      "Onboarding/Views/OnboardingStepViews.swift",
       "Onboarding/Views/PlaceholderStepView.swift",
       "Onboarding/Views/USPShowcaseStepView.swift",
       "Onboarding/Views/WelcomeStepView.swift",

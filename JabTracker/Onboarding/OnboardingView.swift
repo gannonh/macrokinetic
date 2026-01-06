@@ -3,15 +3,10 @@
 //  JabTracker
 //
 //  Main view for the v0.6.0 onboarding flow.
-//  Integrates existing GoalWizard and ProgramWizard for goal/program setup.
+//  Integrates goal and program configuration as native steps.
 //
 
 import SwiftUI
-
-/// Delay between chained sheet presentations (matches StrategyView pattern)
-private enum OnboardingSheetConstants {
-    static let chainedSheetDelay: TimeInterval = 0.35
-}
 
 /// Main onboarding view that orchestrates the onboarding flow.
 ///
@@ -23,17 +18,8 @@ struct OnboardingView: View {
     let authManager: AuthenticationManager
 
     @State private var viewModel: OnboardingViewModel?
-
-    // MARK: - Wizard Sheet State
-
-    /// Whether the GoalWizard sheet is presented
-    @State private var showingGoalWizard = false
-
-    /// Whether the ProgramWizard sheet is presented
-    @State private var showingProgramWizard = false
-
-    /// Goal created by GoalWizard, used to chain to ProgramWizard
-    @State private var createdGoal: NutritionGoal?
+    @State private var isCalculatingTargets = false
+    @State private var calculationError: String?
 
     // MARK: - Init (API compatibility with JabTrackerApp.swift)
 
@@ -69,12 +55,10 @@ struct OnboardingView: View {
                         )
                     )
 
-                    // Navigation buttons (hidden during goalProgram step - wizards have their own)
-                    if viewModel.currentStep != .goalProgram {
-                        navigationButtons(viewModel: viewModel)
-                    }
+                    // Navigation buttons
+                    navigationButtons(viewModel: viewModel)
                 }
-                .background(DesignTokens.Colors.background)
+                .background(DesignTokens.Colors.groupedBackground)
                 .navigationBarHidden(true)
                 .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
                     Button("OK") {
@@ -85,11 +69,20 @@ struct OnboardingView: View {
                         Text(errorMessage)
                     }
                 }
-                .sheet(isPresented: $showingGoalWizard) {
-                    goalWizardSheet(viewModel: viewModel)
+                .alert("Calculation Error", isPresented: .constant(calculationError != nil)) {
+                    Button("OK") {
+                        calculationError = nil
+                    }
+                } message: {
+                    if let error = calculationError {
+                        Text(error)
+                    }
                 }
-                .sheet(isPresented: $showingProgramWizard) {
-                    programWizardSheet(viewModel: viewModel)
+                .overlay {
+                    if isCalculatingTargets {
+                        CalculatingOverlayView()
+                            .transition(.opacity)
+                    }
                 }
             } else {
                 ProgressView("Loading...")
@@ -137,12 +130,14 @@ struct OnboardingView: View {
                 .disabled(viewModel.isLoading || !viewModel.canProceedToNext)
                 .accessibilityIdentifier("onboarding-complete-button")
             } else {
-                PrimaryButton(title: "Continue") {
-                    withAnimation(.spring()) {
-                        viewModel.moveToNextStep()
+                PrimaryButton(
+                    title: isCalculatingTargets ? "Calculating..." : "Continue"
+                ) {
+                    Task {
+                        await handleContinue(viewModel: viewModel)
                     }
                 }
-                .disabled(!viewModel.canProceedToNext)
+                .disabled(!viewModel.canProceedToNext || isCalculatingTargets)
                 .accessibilityIdentifier("onboarding-continue-button")
             }
 
@@ -156,6 +151,35 @@ struct OnboardingView: View {
         .padding(.bottom, 32)
     }
 
+    // MARK: - Continue Handler
+
+    private func handleContinue(viewModel: OnboardingViewModel) async {
+        // When leaving activityLevel step, calculate targets before showing confirmation
+        if viewModel.currentStep == .activityLevel {
+            isCalculatingTargets = true
+            do {
+                try await viewModel.calculateTargets()
+                isCalculatingTargets = false
+                withAnimation(.spring()) {
+                    viewModel.moveToNextStep()
+                }
+            } catch {
+                isCalculatingTargets = false
+                calculationError = "Failed to calculate your targets: \(error.localizedDescription)"
+            }
+            return
+        }
+
+        // Configure goal ViewModel when entering goalType step
+        if viewModel.currentStep == .healthKit {
+            await viewModel.configureGoalViewModel()
+        }
+
+        withAnimation(.spring()) {
+            viewModel.moveToNextStep()
+        }
+    }
+
     // MARK: - Step Content Routing
 
     @ViewBuilder
@@ -167,82 +191,27 @@ struct OnboardingView: View {
             USPShowcaseStepView()
         case .healthKit:
             PlaceholderStepView(step: step)
-        case .goalProgram:
-            goalProgramStepContent(viewModel: viewModel)
-        default:
+        case .goalType:
+            GoalTypeSelectionView(selection: Bindable(viewModel.goalViewModel).goalType)
+                .accessibilityIdentifier("onboarding-goalType-step")
+        case .targetWeight:
+            TargetWeightStepView(viewModel: viewModel.goalViewModel)
+                .accessibilityIdentifier("onboarding-targetWeight-step")
+        case .profileCompletion:
+            OnboardingProfileCompletionView(viewModel: viewModel)
+                .accessibilityIdentifier("onboarding-profileCompletion-step")
+        case .activityLevel:
+            TrainingLevelStepView(selection: Bindable(viewModel).trainingLevel)
+                .accessibilityIdentifier("onboarding-activityLevel-step")
+        case .setupConfirmation:
+            SetupConfirmationStepView(viewModel: viewModel)
+                .accessibilityIdentifier("onboarding-setupConfirmation-step")
+        case .faceID:
             PlaceholderStepView(step: step)
-        }
-    }
-
-    // MARK: - Goal/Program Step
-
-    /// Content for the goalProgram step - auto-presents GoalWizard
-    @ViewBuilder
-    private func goalProgramStepContent(viewModel: OnboardingViewModel) -> some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            // Show a loading/transition state while wizard sheets are presented
-            Image(systemName: "target")
-                .font(.system(size: 80))
-                .foregroundStyle(DesignTokens.Colors.accent.gradient)
-                .accessibilityHidden(true)
-
-            Text("Setting Up Your Goals")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text("Let's configure your nutrition goal and program.")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            Spacer()
-        }
-        .onAppear {
-            // Auto-present GoalWizard when this step is reached
-            if !showingGoalWizard && !showingProgramWizard && createdGoal == nil {
-                DispatchQueue.main.asyncAfter(
-                    deadline: .now() + OnboardingSheetConstants.chainedSheetDelay
-                ) {
-                    showingGoalWizard = true
-                }
-            }
-        }
-    }
-
-    // MARK: - Wizard Sheets
-
-    @ViewBuilder
-    private func goalWizardSheet(viewModel: OnboardingViewModel) -> some View {
-        if let user = authManager.currentUser {
-            GoalWizard(user: user, existingGoal: nil, showIntro: false) { goal in
-                createdGoal = goal
-                showingGoalWizard = false
-                // Chain to ProgramWizard after delay
-                DispatchQueue.main.asyncAfter(
-                    deadline: .now() + OnboardingSheetConstants.chainedSheetDelay
-                ) {
-                    showingProgramWizard = true
-                }
-            }
-            .interactiveDismissDisabled()  // Prevent dismissing during onboarding
-        }
-    }
-
-    @ViewBuilder
-    private func programWizardSheet(viewModel: OnboardingViewModel) -> some View {
-        if let goal = createdGoal {
-            ProgramWizard(goal: goal, existingProgram: nil) {
-                showingProgramWizard = false
-                // Mark goal/program setup complete and advance
-                viewModel.markGoalProgramComplete()
-                withAnimation(.spring()) {
-                    viewModel.moveToNextStep()
-                }
-            }
-            .interactiveDismissDisabled()  // Prevent dismissing during onboarding
+        case .notifications:
+            PlaceholderStepView(step: step)
+        case .completion:
+            PlaceholderStepView(step: step)
         }
     }
 

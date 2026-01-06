@@ -43,6 +43,9 @@ enum DesignTokens {
         static let groupedBackground = Color(.systemGroupedBackground)
         static let cardBackground = Color(.secondarySystemGroupedBackground)
 
+        /// Card background when selected - tinted with accent for selection state
+        static let cardBackgroundSelected = accent.opacity(0.15)
+
         /// Inactive/disabled state color - for progress indicators, deselected items
         static let inactive = Color(.systemGray4)
 
