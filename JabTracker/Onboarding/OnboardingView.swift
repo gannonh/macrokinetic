@@ -134,6 +134,10 @@ struct OnboardingView: View {
             WelcomeStepView()
         case .uspShowcase:
             USPShowcaseStepView()
+        case .goalSetup:
+            GoalSetupStepView(viewModel: viewModel)
+        case .programSetup:
+            ProgramSetupStepView(viewModel: viewModel)
         default:
             PlaceholderStepView(step: step)
         }

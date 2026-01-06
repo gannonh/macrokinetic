@@ -20,12 +20,12 @@
 
 ## Current Position
 
-Phase: 26 of 29 (USP Showcase Screens)
+Phase: 27 of 29 (Simplified Goal & Program Setup)
 Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-06 - Completed 26-01-PLAN.md
+Last activity: 2026-01-06 - Completed 27-01-PLAN.md
 
-Progress: ███░░░░░░░ 30%
+Progress: ████░░░░░░ 40%
 
 ## GitHub Tracking
 
@@ -36,9 +36,9 @@ Branch: feat/v0.6.0-onboarding-redux
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 51 min
-- Total execution time: 157 min
+- Total plans completed: 4
+- Average duration: 42 min
+- Total execution time: 169 min
 
 **By Phase:**
 
@@ -46,11 +46,12 @@ Branch: feat/v0.6.0-onboarding-redux
 |-------|-------|---------|----------|
 | 25    | 2     | 24 min  | 12 min   |
 | 26    | 1     | 133 min | 133 min  |
+| 27    | 1     | 12 min  | 12 min   |
 
 **Recent Trend:**
-25-01: 20 min (Archive & Core Foundation)
 25-02: 4 min (Placeholder Views & Verification)
 26-01: 133 min (USP Showcase Screens - extensive user feedback iteration)
+27-01: 12 min (Simplified Goal & Program Setup)
 
 *Updated after each plan completion*
 
@@ -71,6 +72,8 @@ Branch: feat/v0.6.0-onboarding-redux
 | 26-01 | Mint accent color (#00A693) | Brand identity, good contrast with white text in both modes |
 | 26-01 | Fullscreen onboarding instead of sheet | Avoid flash of ContentView before onboarding |
 | 26-01 | Standard SF font (not rounded) | User preference for standard system typography |
+| 27-01 | 2000 kcal baseline with 150g/200g/67g macros | Simple starting point for all goal types |
+| 27-01 | Smart defaults for target weight | -10kg for loss, +5kg for gain, 0 for maintain |
 
 ### Deferred Issues
 
@@ -95,6 +98,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-06T17:22:45Z
-Stopped at: Completed 26-01-PLAN.md (Phase 26 complete)
-Resume file: None (ready for Phase 27 planning)
+Last session: 2026-01-06T19:52:44Z
+Stopped at: Completed 27-01-PLAN.md (Phase 27 complete)
+Resume file: None (ready for Phase 28 planning)

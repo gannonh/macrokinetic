@@ -15,7 +15,7 @@ struct GoalTypeSelectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            GoalStepHeader(
+            StepHeader(
                 title: GoalWizardStep.goalType.title,
                 subtitle: GoalWizardStep.goalType.subtitle
             )
@@ -23,7 +23,7 @@ struct GoalTypeSelectionView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     ForEach(GoalType.allCases, id: \.self) { goalType in
-                        GoalSelectionCard(
+                        SelectionCard(
                             title: goalType.displayName,
                             description: goalType.description,
                             icon: goalType.icon,
@@ -55,7 +55,7 @@ struct TargetWeightStepView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            GoalStepHeader(
+            StepHeader(
                 title: GoalWizardStep.targetWeight.title,
                 subtitle: GoalWizardStep.targetWeight.subtitle
             )
@@ -353,26 +353,26 @@ struct GoalSummaryStepView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            GoalStepHeader(
+            StepHeader(
                 title: GoalWizardStep.summary.title,
                 subtitle: GoalWizardStep.summary.subtitle
             )
 
             ScrollView {
                 VStack(spacing: 16) {
-                    GoalSummaryRow(label: "Goal Type", value: viewModel.goalType?.displayName ?? "—")
-                    GoalSummaryRow(
+                    SummaryRow(label: "Goal Type", value: viewModel.goalType?.displayName ?? "—")
+                    SummaryRow(
                         label: "Current Weight",
                         value: String(format: weightFormat, viewModel.currentWeightDisplay, viewModel.weightUnitLabel)
                     )
 
                     if viewModel.goalType != .maintenance {
-                        GoalSummaryRow(
+                        SummaryRow(
                             label: "Target Weight",
                             value: String(
                                 format: weightFormat, viewModel.targetWeightDisplay, viewModel.weightUnitLabel)
                         )
-                        GoalSummaryRow(
+                        SummaryRow(
                             label: "Weekly Rate",
                             value: String(
                                 format: "%.1f %@/week",
@@ -380,7 +380,7 @@ struct GoalSummaryStepView: View {
                                 viewModel.weightUnitLabel
                             )
                         )
-                        GoalSummaryRow(
+                        SummaryRow(
                             label: "Total Change",
                             value: String(
                                 format: changeFormat,
@@ -389,10 +389,10 @@ struct GoalSummaryStepView: View {
                                 viewModel.weightUnitLabel
                             )
                         )
-                        GoalSummaryRow(label: "Duration", value: viewModel.durationDisplay)
+                        SummaryRow(label: "Duration", value: viewModel.durationDisplay)
 
                         if let endDate = viewModel.projectedEndDate {
-                            GoalSummaryRow(
+                            SummaryRow(
                                 label: "Target Date",
                                 value: endDate.formatted(.dateTime.month().day().year())
                             )
@@ -427,126 +427,5 @@ struct GoalSummaryStepView: View {
     }
 }
 
-// MARK: - Reusable Step Header
-
-struct GoalStepHeader: View {
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 24)
-    }
-}
-
-// MARK: - Selection Card
-
-/// Selection card for wizard options
-struct GoalSelectionCard: View {
-    let title: String
-    let description: String
-    var icon: String?
-    var detail: String?
-    let isSelected: Bool
-    var showWarning: Bool = false
-    let onSelect: () -> Void
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 16) {
-                if let icon {
-                    Image(systemName: icon)
-                        .font(.title2)
-                        .foregroundColor(isSelected ? .blue : .secondary)
-                        .frame(width: 32)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(title)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-
-                        if showWarning {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                                .font(.caption)
-                        }
-                    }
-
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if let detail {
-                        Text(detail)
-                            .font(.caption2)
-                            .foregroundColor(.blue)
-                            .padding(.top, 2)
-                    }
-                }
-
-                Spacer()
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
-                        .font(.title2)
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.gray.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title)
-        .accessibilityHint(description)
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
-    }
-}
-
-// MARK: - Summary Row
-
-struct GoalSummaryRow: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.05))
-        )
-    }
-}
+// Note: StepHeader, SelectionCard, and SummaryRow are now shared components
+// located in JabTracker/Design/ for reuse across wizards and onboarding

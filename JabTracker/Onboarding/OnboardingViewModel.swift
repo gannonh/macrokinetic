@@ -39,10 +39,23 @@ final class OnboardingViewModel {
     /// Error message for display in UI
     var errorMessage: String?
 
+    // MARK: - Goal/Program Selection State (Phase 27)
+
+    /// Selected goal type from goalSetup step
+    var selectedGoalType: GoalType?
+
+    /// Selected program style from programSetup step
+    var selectedProgramStyle: ProgramStyle?
+
+    /// User's starting weight in kg for smart defaults calculation
+    /// Loaded from User profile or defaults to 70kg
+    var startingWeightKg: Double = 70.0
+
     // MARK: - Private Properties
 
     private let dataController: DataController
     private let authManager: AuthenticationManager
+    private let goalProgramService = GoalProgramService()
     private let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "OnboardingViewModel"
@@ -66,9 +79,17 @@ final class OnboardingViewModel {
     }
 
     /// Whether the user can proceed to the next step.
-    /// Always true for placeholder steps.
+    /// Validates required selections for goal and program steps.
     var canProceedToNext: Bool {
-        true
+        switch currentStep {
+        case .goalSetup:
+            return selectedGoalType != nil
+        case .programSetup:
+            return selectedProgramStyle != nil
+        default:
+            // Other steps (welcome, uspShowcase, permissions, completion) can proceed immediately
+            return true
+        }
     }
 
     // MARK: - Initialization
@@ -143,8 +164,31 @@ final class OnboardingViewModel {
 
     // MARK: - Private Methods
 
-    /// Finalizes onboarding by marking user as complete and persisting to UserDefaults
+    /// Finalizes onboarding by creating goal/program and marking user as complete
     private func finalizeOnboarding(for user: User, in context: ModelContext) throws {
+        // Create goal and program if user made selections
+        if let goalType = selectedGoalType, let programStyle = selectedProgramStyle {
+            // Use user's weight if available, otherwise use default
+            // User.weight is stored in the user's preferred unit, convert to kg if needed
+            let weightInKg: Double
+            if user.weight > 0 {
+                weightInKg = user.prefersMetricWeight ? user.weight : user.weight / 2.20462
+            } else {
+                weightInKg = startingWeightKg
+            }
+
+            let (goal, program) = try goalProgramService.createGoalAndProgram(
+                for: user,
+                goalType: goalType,
+                programStyle: programStyle,
+                startingWeightKg: weightInKg,
+                in: context
+            )
+            logger.info("Created goal: \(goal.goalType.displayName), program: \(program.style.displayName)")
+        } else {
+            logger.debug("No goal/program selections - skipping creation")
+        }
+
         user.hasCompletedOnboarding = true
         user.onboardingCompletedAt = Date()
         user.updatedAt = Date()

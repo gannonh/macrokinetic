@@ -86,7 +86,8 @@
           "Services/TDEEService.swift",
           "Services/WeeklyCheckInService.swift",
           "Services/CalorieAdjustmentService.swift",
-          "Services/CalorieAdjustmentService+Adjustments.swift"
+          "Services/CalorieAdjustmentService+Adjustments.swift",
+          "Services/GoalProgramService.swift"
         ]
       },
       "framework_integration": {
@@ -174,6 +175,9 @@
       "Design/ErrorAlertModifier.swift",
       "Design/MacroProgressBar.swift",
       "Design/PageHeader.swift",
+      "Design/SelectionCard.swift",
+      "Design/StepHeader.swift",
+      "Design/SummaryRow.swift",
       "JabTrackerApp.swift",
       "Models/SubscriptionProducts.swift",
       "Onboarding/Components/OnboardingProgressIndicator.swift",
@@ -183,6 +187,8 @@
       "Onboarding/Views/PlaceholderStepView.swift",
       "Onboarding/Views/USPShowcaseStepView.swift",
       "Onboarding/Views/WelcomeStepView.swift",
+      "Onboarding/Views/GoalSetupStepView.swift",
+      "Onboarding/Views/ProgramSetupStepView.swift",
       "Onboarding/Legacy/Components/ConcentrationCurvePreview.swift",
       "Onboarding/Legacy/Components/ConcentrationLabel.swift",
       "Onboarding/Legacy/Components/ReminderPreferencesView.swift",
