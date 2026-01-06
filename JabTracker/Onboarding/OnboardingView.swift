@@ -123,21 +123,21 @@ struct OnboardingView: View {
     private func stepContent(for step: OnboardingStep, viewModel: OnboardingViewModel) -> some View {
         switch step {
         case .welcome:
-            PlaceholderStepView(step: .welcome)
+            WelcomeStepView()
         case .uspShowcase:
-            PlaceholderStepView(step: .uspShowcase)
+            USPShowcaseStepView()
         case .goalSetup:
-            PlaceholderStepView(step: .goalSetup)
+            GoalSetupStepView()
         case .programSetup:
-            PlaceholderStepView(step: .programSetup)
+            ProgramSetupStepView()
         case .healthKit:
-            PlaceholderStepView(step: .healthKit)
+            HealthKitStepView()
         case .faceID:
-            PlaceholderStepView(step: .faceID)
+            FaceIDStepView()
         case .notifications:
-            PlaceholderStepView(step: .notifications)
+            NotificationsStepView()
         case .completion:
-            PlaceholderStepView(step: .completion)
+            CompletionStepView()
         }
     }
 
@@ -157,81 +157,6 @@ struct OnboardingView: View {
         case .failed:
             // Error message already set by viewModel
             break
-        }
-    }
-}
-
-// MARK: - Placeholder Step View
-
-/// Placeholder view for onboarding steps.
-/// Will be replaced with actual step views in Phases 26-29.
-private struct PlaceholderStepView: View {
-    let step: OnboardingStep
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
-
-            Image(systemName: iconName(for: step))
-                .font(.system(size: 64))
-                .foregroundColor(DesignTokens.Colors.primary)
-                .accessibilityHidden(true)
-
-            Text(step.title)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-
-            Text(step.subtitle)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            Text("Coming in Phase \(phaseNumber(for: step))")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .padding(.top, 8)
-
-            Spacer()
-            Spacer()
-        }
-        .padding()
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("placeholder-step-\(step.rawValue)")
-    }
-
-    private func iconName(for step: OnboardingStep) -> String {
-        switch step {
-        case .welcome:
-            return "hand.wave"
-        case .uspShowcase:
-            return "star.fill"
-        case .goalSetup:
-            return "target"
-        case .programSetup:
-            return "list.bullet.clipboard"
-        case .healthKit:
-            return "heart.fill"
-        case .faceID:
-            return "faceid"
-        case .notifications:
-            return "bell.fill"
-        case .completion:
-            return "checkmark.circle.fill"
-        }
-    }
-
-    private func phaseNumber(for step: OnboardingStep) -> Int {
-        switch step {
-        case .welcome, .uspShowcase:
-            return 26
-        case .goalSetup, .programSetup:
-            return 27
-        case .healthKit, .faceID, .notifications:
-            return 28
-        case .completion:
-            return 29
         }
     }
 }

@@ -35,7 +35,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 Plans:
 - [x] 25-01: Archive & Core Foundation
-- [ ] 25-02: Placeholder Views & Verification
+- [x] 25-02: Placeholder Views & Verification
 
 #### Phase 26: USP Showcase Screens
 
@@ -84,9 +84,9 @@ Phases execute in numeric order within each milestone.
 
 ### v0.6.0 Onboarding Redux (Phases 25-29)
 
-| Phase                                | Plans Complete | Status      | Completed |
-| ------------------------------------ | -------------- | ----------- | --------- |
-| 25. Onboarding Foundation            | 1/2            | In progress | -         |
+| Phase                                | Plans Complete | Status      | Completed  |
+| ------------------------------------ | -------------- | ----------- | ---------- |
+| 25. Onboarding Foundation            | 2/2            | Complete    | 2026-01-06 |
 | 26. USP Showcase Screens             | 0/?            | Not started | -         |
 | 27. Simplified Goal & Program Setup  | 0/?            | Not started | -         |
 | 28. Permission Setup Screens         | 0/?            | Not started | -         |
