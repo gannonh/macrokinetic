@@ -207,6 +207,7 @@
 		5FDA16004A5F0176DC8D1378 /* MedicationSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EBDAF9DFA276ECE73657CF /* MedicationSelectionView.swift */; };
 		601DCD3047F7FA8E72DFAED0 /* TitrationErrorMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACB93A7DDF57479EA893C6B /* TitrationErrorMessages.swift */; };
 		6042E2021F4760B537E1D145 /* TDEECalculationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4F9DE24D47AFC2BCA78F57 /* TDEECalculationEngine.swift */; };
+		609783B1CD5967B1156840A5 /* WelcomeStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539D714FC6E7650F7CC895B7 /* WelcomeStepView.swift */; };
 		60D34BE68D5EE414AEF38A40 /* QuickDoseEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E3F259EFE01B789A8B8399 /* QuickDoseEntry.swift */; };
 		60FD14887C143C84246ACF94 /* UserAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777443E8D9A33680C4ECAB15 /* UserAnalyticsTests.swift */; };
 		6178053060910F86379782CA /* ScheduleService+Projection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3443A4B8538123D7A62D22 /* ScheduleService+Projection.swift */; };
@@ -499,6 +500,7 @@
 		F03D98EBAB3A375CA80C21A6 /* TestDataSeeding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F09C8437E50CB42D0FAD5DD /* TestDataSeeding.swift */; };
 		F05249E24C3261BE478DCCF8 /* TimeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CB2F7DCF4EA7BE8AA6E48 /* TimeConstants.swift */; };
 		F18BDD8D1BB2196D7A434C66 /* ChartDataProcessorPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2ED4AAA3944C2586938158 /* ChartDataProcessorPerformanceTests.swift */; };
+		F203E5DD4ABC13D29C5546C2 /* USPShowcaseStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AF345202BFA0B973607A7A /* USPShowcaseStepView.swift */; };
 		F22FA132A2BE96CB1ED19512 /* NotificationAuthorizationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA3963F2E50CFED0EE8C417 /* NotificationAuthorizationStatusTests.swift */; };
 		F266F88AC7BAF42753893D50 /* TimePeriodSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D6AB2068AF529780ED70E6 /* TimePeriodSelector.swift */; };
 		F350A8F381CF226018F614CE /* MedicationProfileCalculatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7960D0186DBE4671EC6B18AF /* MedicationProfileCalculatorUITests.swift */; };
@@ -574,6 +576,7 @@
 		08ACEE088497C29D9FA48950 /* ConcentrationChartState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationChartState.swift; sourceTree = "<group>"; };
 		08C50F9DEC849D301360B33F /* ConcentrationChartAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationChartAccessibilityTests.swift; sourceTree = "<group>"; };
 		08F6208272FB1A53E2C39EC0 /* DoseDayDetailViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseDayDetailViewTests.swift; sourceTree = "<group>"; };
+		09AF345202BFA0B973607A7A /* USPShowcaseStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USPShowcaseStepView.swift; sourceTree = "<group>"; };
 		09C0B767E6E0E137E241FD1F /* ProgramConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramConfigurationTests.swift; sourceTree = "<group>"; };
 		0AE01E88C1172B85F1738A8D /* PlaceholderStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderStepView.swift; sourceTree = "<group>"; };
 		0BB336F084EFB16010D7C347 /* NotificationServiceActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceActionTests.swift; sourceTree = "<group>"; };
@@ -724,6 +727,7 @@
 		52BDBDBAC41A81D1296354AA /* FoodDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDayView.swift; sourceTree = "<group>"; };
 		5340248C9846270782F9BE88 /* ConcentrationCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationCardTests.swift; sourceTree = "<group>"; };
 		5396958B28069B3335FA109A /* Food+Serving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Food+Serving.swift"; sourceTree = "<group>"; };
+		539D714FC6E7650F7CC895B7 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
 		5443E4583C3CD1317842E368 /* SecurityPrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityPrivacyView.swift; sourceTree = "<group>"; };
 		55682325C79E148EEFC3A88F /* DoseHistoryViewModelFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryViewModelFilterTests.swift; sourceTree = "<group>"; };
 		55D1157B0D74776B1701D7B5 /* TDEECalculationEngine+EWMA.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TDEECalculationEngine+EWMA.swift"; sourceTree = "<group>"; };
@@ -1104,6 +1108,8 @@
 			isa = PBXGroup;
 			children = (
 				0AE01E88C1172B85F1738A8D /* PlaceholderStepView.swift */,
+				09AF345202BFA0B973607A7A /* USPShowcaseStepView.swift */,
+				539D714FC6E7650F7CC895B7 /* WelcomeStepView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2773,6 +2779,7 @@
 				F266F88AC7BAF42753893D50 /* TimePeriodSelector.swift in Sources */,
 				F7AF14088F8F5EC2B29445DE /* TitrationConfirmationDialog.swift in Sources */,
 				601DCD3047F7FA8E72DFAED0 /* TitrationErrorMessages.swift in Sources */,
+				F203E5DD4ABC13D29C5546C2 /* USPShowcaseStepView.swift in Sources */,
 				EAC3462E3FC281C2D8B170F6 /* UnitsOfMeasureView.swift in Sources */,
 				8C4394182B8C8AB47223C342 /* User.swift in Sources */,
 				F9CC419B1AD2C0B032763942 /* View+Conditional.swift in Sources */,
@@ -2781,6 +2788,7 @@
 				D4A402CD2A030BDBBB413C0C /* WeightEntry.swift in Sources */,
 				4329AFCB5AEDB93F27843DCD /* WeightPickerView.swift in Sources */,
 				ADFF78FA6894F4C1D2E7BBF5 /* WelcomeScreensView.swift in Sources */,
+				609783B1CD5967B1156840A5 /* WelcomeStepView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

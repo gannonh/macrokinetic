@@ -11,7 +11,7 @@ struct PlaceholderStepView: View {
 
             Image(systemName: iconName(for: step))
                 .font(.system(size: 64))
-                .foregroundStyle(DesignTokens.Colors.primaryGradient)
+                .foregroundStyle(DesignTokens.Colors.accent)
                 .accessibilityHidden(true)
 
             Text(step.title)

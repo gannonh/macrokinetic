@@ -27,6 +27,7 @@ excluded:
   - DerivedData
   - JabTracker/Services/DoseService.swift
   - JabTracker/Views/Nutrition/GoalConfigurationWizard.swift
+  - JabTracker/Design/DesignTokens.swift  # Defines colors - cannot use DesignTokens for itself
 
 
 line_length:

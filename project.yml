@@ -106,9 +106,9 @@ schemes:
         "--seed-collaborative": false
     run:
       commandLineArguments:
-        "--force-onboarding": false # resets onboarding if true
-        "--reset-app-data": true # seeding only works if true
-        "--ui-testing": true # Enable to bypasses auth AND auto-complete onboarding 
+        "--force-onboarding": true # resets onboarding if true
+        "--reset-app-data": false # seeding only works if true
+        "--ui-testing": false # Enable to bypasses auth AND auto-complete onboarding 
         "--seed-test-7d": false # medication history seeding 
         "--seed-test-30d": false # medication history seeding 
         "--seed-test-90d": false # medication history seeding 

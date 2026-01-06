@@ -55,6 +55,7 @@ struct OnboardingView: View {
 
                     // Navigation buttons
                     HStack {
+                        // Back button (only after first step)
                         if viewModel.currentStepIndex > 0 {
                             SecondaryButton(title: "Back") {
                                 withAnimation(.spring()) {
@@ -62,10 +63,11 @@ struct OnboardingView: View {
                                 }
                             }
                             .accessibilityIdentifier("onboarding-back-button")
+
+                            Spacer()
                         }
 
-                        Spacer()
-
+                        // Continue or Get Started button (centered when alone)
                         if viewModel.isLastStep {
                             PrimaryButton(
                                 title: viewModel.isLoading ? "Setting Up..." : "Get Started"
@@ -84,6 +86,12 @@ struct OnboardingView: View {
                             }
                             .disabled(!viewModel.canProceedToNext)
                             .accessibilityIdentifier("onboarding-continue-button")
+                        }
+
+                        // Spacer after Continue when Back is visible (for symmetry)
+                        if viewModel.currentStepIndex > 0 {
+                            Spacer()
+                                .frame(width: 0)  // Invisible spacer for HStack balance
                         }
                     }
                     .padding(.horizontal, 24)
@@ -121,7 +129,14 @@ struct OnboardingView: View {
 
     @ViewBuilder
     private func stepContent(for step: OnboardingStep, viewModel: OnboardingViewModel) -> some View {
-        PlaceholderStepView(step: step)
+        switch step {
+        case .welcome:
+            WelcomeStepView()
+        case .uspShowcase:
+            USPShowcaseStepView()
+        default:
+            PlaceholderStepView(step: step)
+        }
     }
 
     // MARK: - Completion Handler
@@ -130,13 +145,11 @@ struct OnboardingView: View {
         let result = await viewModel.completeOnboarding()
 
         switch result {
-        case .success:
+        case .success, .alreadyCompleted:
+            // Dismiss onboarding (already completed is also a success case)
             withAnimation(.spring()) {
                 isPresented = false
             }
-        case .alreadyCompleted:
-            // Error message already set by viewModel
-            break
         case .failed:
             // Error message already set by viewModel
             break

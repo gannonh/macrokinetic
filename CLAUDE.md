@@ -10,4 +10,6 @@
 6. Integrations: @.planning/codebase/INTEGRATIONS.md
 7. Known concerns: @.planning/codebase/CONCERNS.md
 
+## Important Reminders
 
+- Do not run build commands when iterating with the user. The user needs to run build to see the changes. When you run build after making a change he has to wait for your build to complete before running the app.

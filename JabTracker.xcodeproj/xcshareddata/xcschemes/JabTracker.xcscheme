@@ -169,11 +169,11 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--force-onboarding"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-check-in-good"
@@ -217,7 +217,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ui-testing"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
       <StoreKitConfigurationFileReference

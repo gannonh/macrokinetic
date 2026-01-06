@@ -30,14 +30,16 @@ struct JabTrackerApp: App {
                 Group {
                     switch self.authManager.authenticationState {
                     case .authenticated:
-                        ContentView()
-                            .modelContainer(self.dataController.container)
-                            .environmentObject(self.authManager)
-                            .environmentObject(self.biometricManager)
-                            .sheet(isPresented: self.$showingOnboarding) {
-                                OnboardingView(isPresented: self.$showingOnboarding, authManager: self.authManager)
-                                    .environmentObject(self.authManager)
-                            }
+                        // Show onboarding fullscreen if needed, otherwise ContentView
+                        if showingOnboarding {
+                            OnboardingView(isPresented: self.$showingOnboarding, authManager: self.authManager)
+                                .environmentObject(self.authManager)
+                        } else {
+                            ContentView()
+                                .modelContainer(self.dataController.container)
+                                .environmentObject(self.authManager)
+                                .environmentObject(self.biometricManager)
+                        }
                     case .notAuthenticated:
                         AuthenticationView()
                             .environmentObject(self.authManager)
