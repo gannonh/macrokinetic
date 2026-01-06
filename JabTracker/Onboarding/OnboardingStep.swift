@@ -97,7 +97,7 @@ enum OnboardingStep: String, CaseIterable {
     var subtitle: String {
         switch self {
         case .welcome:
-            return "Track your GLP-1 medication with confidence"
+            return "Track your fitness journey with confidence"
         case .uspShowcase:
             return "Discover how MacroKinetic helps you succeed"
         case .healthKit:

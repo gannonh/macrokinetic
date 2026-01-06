@@ -155,6 +155,39 @@ final class OnboardingViewModel {
         self.metricsService = MetricsService(context: context)
     }
 
+    // MARK: - Permission Methods
+
+    /// Enable HealthKit sync for the current user
+    /// - Returns: True if authorization was granted and sync enabled
+    func enableHealthKitSync() async -> Bool {
+        logger.info("enableHealthKitSync() called")
+
+        guard let user = authManager.currentUser else {
+            logger.warning("Cannot enable HealthKit: no currentUser")
+            return false
+        }
+        logger.info("Found user: \(user.email ?? "no email")")
+
+        guard let service = metricsService else {
+            logger.warning("Cannot enable HealthKit: no metricsService")
+            return false
+        }
+        logger.info("Found metricsService, calling setHealthSyncEnabled...")
+
+        do {
+            let success = try await service.setHealthSyncEnabled(true, for: user)
+            if success {
+                logger.info("HealthKit sync enabled via onboarding")
+            } else {
+                logger.info("HealthKit authorization denied by user")
+            }
+            return success
+        } catch {
+            logger.error("Failed to enable HealthKit: \(error.localizedDescription)")
+            return false
+        }
+    }
+
     // MARK: - Configuration
 
     /// Configure goal view model with user's current weight and preferences

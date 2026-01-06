@@ -55,8 +55,10 @@ struct OnboardingView: View {
                         )
                     )
 
-                    // Navigation buttons
-                    navigationButtons(viewModel: viewModel)
+                    // Navigation buttons (hidden for steps with internal navigation)
+                    if !stepHasInternalNavigation(viewModel.currentStep) {
+                        navigationButtons(viewModel: viewModel)
+                    }
                 }
                 .background(DesignTokens.Colors.groupedBackground)
                 .navigationBarHidden(true)
@@ -170,13 +172,21 @@ struct OnboardingView: View {
             return
         }
 
-        // Configure goal ViewModel when entering goalType step
-        if viewModel.currentStep == .healthKit {
-            await viewModel.configureGoalViewModel()
-        }
-
         withAnimation(.spring()) {
             viewModel.moveToNextStep()
+        }
+    }
+
+    // MARK: - Step Navigation Helpers
+
+    /// Returns true if the step has its own internal Enable/Skip buttons
+    /// and should not show the standard Continue button.
+    private func stepHasInternalNavigation(_ step: OnboardingStep) -> Bool {
+        switch step {
+        case .healthKit, .faceID, .notifications:
+            return true
+        default:
+            return false
         }
     }
 
@@ -190,7 +200,20 @@ struct OnboardingView: View {
         case .uspShowcase:
             USPShowcaseStepView()
         case .healthKit:
-            PlaceholderStepView(step: step)
+            HealthKitStepView(
+                onEnableHealthKit: {
+                    await viewModel.enableHealthKitSync()
+                },
+                onContinue: {
+                    Task {
+                        // Configure goal ViewModel before entering goalType step
+                        await viewModel.configureGoalViewModel()
+                        withAnimation(.spring()) {
+                            viewModel.moveToNextStep()
+                        }
+                    }
+                }
+            )
         case .goalType:
             GoalTypeSelectionView(selection: Bindable(viewModel.goalViewModel).goalType)
                 .accessibilityIdentifier("onboarding-goalType-step")
@@ -207,9 +230,17 @@ struct OnboardingView: View {
             SetupConfirmationStepView(viewModel: viewModel)
                 .accessibilityIdentifier("onboarding-setupConfirmation-step")
         case .faceID:
-            PlaceholderStepView(step: step)
+            FaceIDStepView {
+                withAnimation(.spring()) {
+                    viewModel.moveToNextStep()
+                }
+            }
         case .notifications:
-            PlaceholderStepView(step: step)
+            NotificationsStepView {
+                withAnimation(.spring()) {
+                    viewModel.moveToNextStep()
+                }
+            }
         case .completion:
             PlaceholderStepView(step: step)
         }
