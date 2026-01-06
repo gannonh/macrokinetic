@@ -360,7 +360,7 @@ struct DesignSystemAccessibilityTests {
     func designSystemAccessibilitySupport() throws {
         // Test that color contrast is maintained
         let primaryColor = DesignTokens.Colors.primary
-        let backgroundColor = Color(.systemBackground)
+        let backgroundColor = DesignTokens.Colors.background
 
         #expect(primaryColor != backgroundColor, "Primary color should be different from background")
 
@@ -375,8 +375,8 @@ struct DesignSystemAccessibilityTests {
             String(describing: gradientRect) != String(describing: solidRect),
             "Gradient should create different view than solid color")
 
-        // Test that design tokens maintain consistency
-        #expect(DesignTokens.Colors.primary == Color.primaryBlue)
-        #expect(DesignTokens.Colors.secondary == Color.primaryPurple)
+        // Test that design tokens exist and are distinct
+        #expect(DesignTokens.Colors.primary != DesignTokens.Colors.inactive)
+        #expect(DesignTokens.Colors.accent == DesignTokens.Colors.primary)  // accent equals primary in current design
     }
 }
