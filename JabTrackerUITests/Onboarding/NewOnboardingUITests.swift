@@ -7,6 +7,9 @@ final class NewOnboardingUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-app-data", "--force-onboarding"]
+        app.launch()
     }
 
     override func tearDownWithError() throws {

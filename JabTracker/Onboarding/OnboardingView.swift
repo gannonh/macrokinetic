@@ -121,24 +121,7 @@ struct OnboardingView: View {
 
     @ViewBuilder
     private func stepContent(for step: OnboardingStep, viewModel: OnboardingViewModel) -> some View {
-        switch step {
-        case .welcome:
-            WelcomeStepView()
-        case .uspShowcase:
-            USPShowcaseStepView()
-        case .goalSetup:
-            GoalSetupStepView()
-        case .programSetup:
-            ProgramSetupStepView()
-        case .healthKit:
-            HealthKitStepView()
-        case .faceID:
-            FaceIDStepView()
-        case .notifications:
-            NotificationsStepView()
-        case .completion:
-            CompletionStepView()
-        }
+        PlaceholderStepView(step: step)
     }
 
     // MARK: - Completion Handler
