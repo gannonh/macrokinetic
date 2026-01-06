@@ -45,12 +45,10 @@ struct PlaceholderStepView: View {
             return "hand.wave"
         case .uspShowcase:
             return "star.fill"
-        case .goalSetup:
-            return "target"
-        case .programSetup:
-            return "list.bullet.clipboard"
         case .healthKit:
             return "heart.fill"
+        case .goalProgram:
+            return "target"
         case .faceID:
             return "faceid"
         case .notifications:
@@ -64,9 +62,9 @@ struct PlaceholderStepView: View {
         switch step {
         case .welcome, .uspShowcase:
             return 26
-        case .goalSetup, .programSetup:
+        case .healthKit, .goalProgram:
             return 27
-        case .healthKit, .faceID, .notifications:
+        case .faceID, .notifications:
             return 28
         case .completion:
             return 29
@@ -79,12 +77,10 @@ struct PlaceholderStepView: View {
             return "welcome"
         case .uspShowcase:
             return "uspShowcase"
-        case .goalSetup:
-            return "goalSetup"
-        case .programSetup:
-            return "programSetup"
         case .healthKit:
             return "healthKit"
+        case .goalProgram:
+            return "goalProgram"
         case .faceID:
             return "faceID"
         case .notifications:

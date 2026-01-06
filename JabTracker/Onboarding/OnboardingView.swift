@@ -3,10 +3,15 @@
 //  JabTracker
 //
 //  Main view for the v0.6.0 onboarding flow.
-//  Uses the new simplified step structure with placeholder views.
+//  Integrates existing GoalWizard and ProgramWizard for goal/program setup.
 //
 
 import SwiftUI
+
+/// Delay between chained sheet presentations (matches StrategyView pattern)
+private enum OnboardingSheetConstants {
+    static let chainedSheetDelay: TimeInterval = 0.35
+}
 
 /// Main onboarding view that orchestrates the onboarding flow.
 ///
@@ -18,6 +23,17 @@ struct OnboardingView: View {
     let authManager: AuthenticationManager
 
     @State private var viewModel: OnboardingViewModel?
+
+    // MARK: - Wizard Sheet State
+
+    /// Whether the GoalWizard sheet is presented
+    @State private var showingGoalWizard = false
+
+    /// Whether the ProgramWizard sheet is presented
+    @State private var showingProgramWizard = false
+
+    /// Goal created by GoalWizard, used to chain to ProgramWizard
+    @State private var createdGoal: NutritionGoal?
 
     // MARK: - Init (API compatibility with JabTrackerApp.swift)
 
@@ -53,49 +69,10 @@ struct OnboardingView: View {
                         )
                     )
 
-                    // Navigation buttons
-                    HStack {
-                        // Back button (only after first step)
-                        if viewModel.currentStepIndex > 0 {
-                            SecondaryButton(title: "Back") {
-                                withAnimation(.spring()) {
-                                    viewModel.moveToPreviousStep()
-                                }
-                            }
-                            .accessibilityIdentifier("onboarding-back-button")
-
-                            Spacer()
-                        }
-
-                        // Continue or Get Started button (centered when alone)
-                        if viewModel.isLastStep {
-                            PrimaryButton(
-                                title: viewModel.isLoading ? "Setting Up..." : "Get Started"
-                            ) {
-                                Task {
-                                    await completeOnboarding(viewModel: viewModel)
-                                }
-                            }
-                            .disabled(viewModel.isLoading || !viewModel.canProceedToNext)
-                            .accessibilityIdentifier("onboarding-complete-button")
-                        } else {
-                            PrimaryButton(title: "Continue") {
-                                withAnimation(.spring()) {
-                                    viewModel.moveToNextStep()
-                                }
-                            }
-                            .disabled(!viewModel.canProceedToNext)
-                            .accessibilityIdentifier("onboarding-continue-button")
-                        }
-
-                        // Spacer after Continue when Back is visible (for symmetry)
-                        if viewModel.currentStepIndex > 0 {
-                            Spacer()
-                                .frame(width: 0)  // Invisible spacer for HStack balance
-                        }
+                    // Navigation buttons (hidden during goalProgram step - wizards have their own)
+                    if viewModel.currentStep != .goalProgram {
+                        navigationButtons(viewModel: viewModel)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 32)
                 }
                 .background(DesignTokens.Colors.background)
                 .navigationBarHidden(true)
@@ -107,6 +84,12 @@ struct OnboardingView: View {
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                     }
+                }
+                .sheet(isPresented: $showingGoalWizard) {
+                    goalWizardSheet(viewModel: viewModel)
+                }
+                .sheet(isPresented: $showingProgramWizard) {
+                    programWizardSheet(viewModel: viewModel)
                 }
             } else {
                 ProgressView("Loading...")
@@ -125,6 +108,54 @@ struct OnboardingView: View {
         .accessibilityIdentifier("onboarding-view")
     }
 
+    // MARK: - Navigation Buttons
+
+    @ViewBuilder
+    private func navigationButtons(viewModel: OnboardingViewModel) -> some View {
+        HStack {
+            // Back button (only after first step)
+            if viewModel.currentStepIndex > 0 {
+                SecondaryButton(title: "Back") {
+                    withAnimation(.spring()) {
+                        viewModel.moveToPreviousStep()
+                    }
+                }
+                .accessibilityIdentifier("onboarding-back-button")
+
+                Spacer()
+            }
+
+            // Continue or Get Started button (centered when alone)
+            if viewModel.isLastStep {
+                PrimaryButton(
+                    title: viewModel.isLoading ? "Setting Up..." : "Get Started"
+                ) {
+                    Task {
+                        await completeOnboarding(viewModel: viewModel)
+                    }
+                }
+                .disabled(viewModel.isLoading || !viewModel.canProceedToNext)
+                .accessibilityIdentifier("onboarding-complete-button")
+            } else {
+                PrimaryButton(title: "Continue") {
+                    withAnimation(.spring()) {
+                        viewModel.moveToNextStep()
+                    }
+                }
+                .disabled(!viewModel.canProceedToNext)
+                .accessibilityIdentifier("onboarding-continue-button")
+            }
+
+            // Spacer after Continue when Back is visible (for symmetry)
+            if viewModel.currentStepIndex > 0 {
+                Spacer()
+                    .frame(width: 0)  // Invisible spacer for HStack balance
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 32)
+    }
+
     // MARK: - Step Content Routing
 
     @ViewBuilder
@@ -134,12 +165,84 @@ struct OnboardingView: View {
             WelcomeStepView()
         case .uspShowcase:
             USPShowcaseStepView()
-        case .goalSetup:
-            GoalSetupStepView(viewModel: viewModel)
-        case .programSetup:
-            ProgramSetupStepView(viewModel: viewModel)
+        case .healthKit:
+            PlaceholderStepView(step: step)
+        case .goalProgram:
+            goalProgramStepContent(viewModel: viewModel)
         default:
             PlaceholderStepView(step: step)
+        }
+    }
+
+    // MARK: - Goal/Program Step
+
+    /// Content for the goalProgram step - auto-presents GoalWizard
+    @ViewBuilder
+    private func goalProgramStepContent(viewModel: OnboardingViewModel) -> some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            // Show a loading/transition state while wizard sheets are presented
+            Image(systemName: "target")
+                .font(.system(size: 80))
+                .foregroundStyle(DesignTokens.Colors.accent.gradient)
+                .accessibilityHidden(true)
+
+            Text("Setting Up Your Goals")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("Let's configure your nutrition goal and program.")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            Spacer()
+        }
+        .onAppear {
+            // Auto-present GoalWizard when this step is reached
+            if !showingGoalWizard && !showingProgramWizard && createdGoal == nil {
+                DispatchQueue.main.asyncAfter(
+                    deadline: .now() + OnboardingSheetConstants.chainedSheetDelay
+                ) {
+                    showingGoalWizard = true
+                }
+            }
+        }
+    }
+
+    // MARK: - Wizard Sheets
+
+    @ViewBuilder
+    private func goalWizardSheet(viewModel: OnboardingViewModel) -> some View {
+        if let user = authManager.currentUser {
+            GoalWizard(user: user, existingGoal: nil, showIntro: false) { goal in
+                createdGoal = goal
+                showingGoalWizard = false
+                // Chain to ProgramWizard after delay
+                DispatchQueue.main.asyncAfter(
+                    deadline: .now() + OnboardingSheetConstants.chainedSheetDelay
+                ) {
+                    showingProgramWizard = true
+                }
+            }
+            .interactiveDismissDisabled()  // Prevent dismissing during onboarding
+        }
+    }
+
+    @ViewBuilder
+    private func programWizardSheet(viewModel: OnboardingViewModel) -> some View {
+        if let goal = createdGoal {
+            ProgramWizard(goal: goal, existingProgram: nil) {
+                showingProgramWizard = false
+                // Mark goal/program setup complete and advance
+                viewModel.markGoalProgramComplete()
+                withAnimation(.spring()) {
+                    viewModel.moveToNextStep()
+                }
+            }
+            .interactiveDismissDisabled()  // Prevent dismissing during onboarding
         }
     }
 

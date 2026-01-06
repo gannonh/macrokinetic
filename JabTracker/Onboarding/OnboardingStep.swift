@@ -11,9 +11,13 @@ import Foundation
 ///
 /// The steps are organized into logical phases:
 /// - Phase 26: USP Showcase (welcome, uspShowcase)
-/// - Phase 27: Goal + Program (goalSetup, programSetup)
-/// - Phase 28: Permissions (healthKit, faceID, notifications)
+/// - Phase 27: Goal + Program (healthKit first for weight, then wizard sheets)
+/// - Phase 28: Permissions (faceID, notifications)
 /// - Phase 29: Completion (completion)
+///
+/// Note: Goal and Program setup use existing GoalWizard and ProgramWizard
+/// presented as sheets after the healthKit step. This ensures HealthKit
+/// weight data is available before goal configuration.
 enum OnboardingStep: String, CaseIterable {
     // MARK: - Phase 26: USP Showcase
 
@@ -23,18 +27,16 @@ enum OnboardingStep: String, CaseIterable {
     /// Unique selling proposition showcase
     case uspShowcase
 
-    // MARK: - Phase 27: Goal + Program
+    // MARK: - Phase 27: HealthKit + Goal/Program
 
-    /// User goal selection
-    case goalSetup
+    /// HealthKit integration permission (before goal setup to get weight)
+    case healthKit
 
-    /// GLP-1 program configuration
-    case programSetup
+    /// Goal and program setup using GoalWizard + ProgramWizard sheets
+    /// This step auto-presents the wizard sheets when reached
+    case goalProgram
 
     // MARK: - Phase 28: Permissions
-
-    /// HealthKit integration permission
-    case healthKit
 
     /// Face ID/Touch ID biometric permission
     case faceID
@@ -56,12 +58,10 @@ enum OnboardingStep: String, CaseIterable {
             return "Welcome to JabTracker"
         case .uspShowcase:
             return "Your GLP-1 Journey"
-        case .goalSetup:
-            return "Set Your Goals"
-        case .programSetup:
-            return "Choose Your Program"
         case .healthKit:
             return "Connect Health Data"
+        case .goalProgram:
+            return "Set Your Goals"
         case .faceID:
             return "Secure Your Data"
         case .notifications:
@@ -78,12 +78,10 @@ enum OnboardingStep: String, CaseIterable {
             return "Track your GLP-1 medication with confidence"
         case .uspShowcase:
             return "Discover how JabTracker helps you succeed"
-        case .goalSetup:
-            return "Tell us what you want to achieve"
-        case .programSetup:
-            return "Select the program that fits your needs"
         case .healthKit:
             return "Sync your health metrics automatically"
+        case .goalProgram:
+            return "Configure your goal and program"
         case .faceID:
             return "Protect your sensitive health information"
         case .notifications:

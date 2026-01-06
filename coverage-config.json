@@ -86,8 +86,7 @@
           "Services/TDEEService.swift",
           "Services/WeeklyCheckInService.swift",
           "Services/CalorieAdjustmentService.swift",
-          "Services/CalorieAdjustmentService+Adjustments.swift",
-          "Services/GoalProgramService.swift"
+          "Services/CalorieAdjustmentService+Adjustments.swift"
         ]
       },
       "framework_integration": {
@@ -187,8 +186,6 @@
       "Onboarding/Views/PlaceholderStepView.swift",
       "Onboarding/Views/USPShowcaseStepView.swift",
       "Onboarding/Views/WelcomeStepView.swift",
-      "Onboarding/Views/GoalSetupStepView.swift",
-      "Onboarding/Views/ProgramSetupStepView.swift",
       "Onboarding/Legacy/Components/ConcentrationCurvePreview.swift",
       "Onboarding/Legacy/Components/ConcentrationLabel.swift",
       "Onboarding/Legacy/Components/ReminderPreferencesView.swift",

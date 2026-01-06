@@ -18,6 +18,10 @@ import SwiftData
 ///
 /// Uses `@Observable` (iOS 17+) for automatic view updates.
 /// Manages step navigation, progress calculation, and completion logic.
+///
+/// Note: Goal and program creation is handled by GoalWizard and ProgramWizard
+/// (presented as sheets from OnboardingView). This ViewModel only tracks
+/// that the wizards have completed.
 @Observable
 @MainActor
 final class OnboardingViewModel {
@@ -39,23 +43,14 @@ final class OnboardingViewModel {
     /// Error message for display in UI
     var errorMessage: String?
 
-    // MARK: - Goal/Program Selection State (Phase 27)
-
-    /// Selected goal type from goalSetup step
-    var selectedGoalType: GoalType?
-
-    /// Selected program style from programSetup step
-    var selectedProgramStyle: ProgramStyle?
-
-    /// User's starting weight in kg for smart defaults calculation
-    /// Loaded from User profile or defaults to 70kg
-    var startingWeightKg: Double = 70.0
+    /// Whether goal/program wizards have been completed
+    /// Set by OnboardingView after ProgramWizard completes
+    private(set) var goalProgramComplete: Bool = false
 
     // MARK: - Private Properties
 
     private let dataController: DataController
     private let authManager: AuthenticationManager
-    private let goalProgramService = GoalProgramService()
     private let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
         category: "OnboardingViewModel"
@@ -79,15 +74,13 @@ final class OnboardingViewModel {
     }
 
     /// Whether the user can proceed to the next step.
-    /// Validates required selections for goal and program steps.
     var canProceedToNext: Bool {
         switch currentStep {
-        case .goalSetup:
-            return selectedGoalType != nil
-        case .programSetup:
-            return selectedProgramStyle != nil
+        case .goalProgram:
+            // Can only proceed if wizards have completed
+            return goalProgramComplete
         default:
-            // Other steps (welcome, uspShowcase, permissions, completion) can proceed immediately
+            // Other steps can proceed immediately
             return true
         }
     }
@@ -124,6 +117,13 @@ final class OnboardingViewModel {
             currentStep = OnboardingStep.allCases[currentIndex - 1]
             logger.debug("Moved back to step: \(self.currentStep.rawValue)")
         }
+    }
+
+    /// Mark goal/program wizards as complete.
+    /// Called by OnboardingView after ProgramWizard finishes.
+    func markGoalProgramComplete() {
+        goalProgramComplete = true
+        logger.info("Goal and program wizards completed")
     }
 
     // MARK: - Completion
@@ -164,31 +164,9 @@ final class OnboardingViewModel {
 
     // MARK: - Private Methods
 
-    /// Finalizes onboarding by creating goal/program and marking user as complete
+    /// Finalizes onboarding by marking user as complete.
+    /// Note: Goal/program are created by the wizards, not here.
     private func finalizeOnboarding(for user: User, in context: ModelContext) throws {
-        // Create goal and program if user made selections
-        if let goalType = selectedGoalType, let programStyle = selectedProgramStyle {
-            // Use user's weight if available, otherwise use default
-            // User.weight is stored in the user's preferred unit, convert to kg if needed
-            let weightInKg: Double
-            if user.weight > 0 {
-                weightInKg = user.prefersMetricWeight ? user.weight : user.weight / 2.20462
-            } else {
-                weightInKg = startingWeightKg
-            }
-
-            let (goal, program) = try goalProgramService.createGoalAndProgram(
-                for: user,
-                goalType: goalType,
-                programStyle: programStyle,
-                startingWeightKg: weightInKg,
-                in: context
-            )
-            logger.info("Created goal: \(goal.goalType.displayName), program: \(program.style.displayName)")
-        } else {
-            logger.debug("No goal/program selections - skipping creation")
-        }
-
         user.hasCompletedOnboarding = true
         user.onboardingCompletedAt = Date()
         user.updatedAt = Date()
@@ -198,6 +176,8 @@ final class OnboardingViewModel {
         // Store completion in UserDefaults as backup
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
+
+        logger.info("User marked as onboarded")
     }
 
     /// Update progress based on current step

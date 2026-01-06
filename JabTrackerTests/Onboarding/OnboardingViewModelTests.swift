@@ -64,16 +64,16 @@ struct OnboardingStepTests {
         // Given: The OnboardingStep enum
         let allSteps = OnboardingStep.allCases
 
-        // Then: Should have exactly 8 steps in the expected order
-        #expect(allSteps.count == 8)
+        // Then: Should have exactly 7 steps in the expected order
+        // HealthKit comes before goalProgram so weight data is available for goal setup
+        #expect(allSteps.count == 7)
         #expect(allSteps[0] == .welcome)
         #expect(allSteps[1] == .uspShowcase)
-        #expect(allSteps[2] == .goalSetup)
-        #expect(allSteps[3] == .programSetup)
-        #expect(allSteps[4] == .healthKit)
-        #expect(allSteps[5] == .faceID)
-        #expect(allSteps[6] == .notifications)
-        #expect(allSteps[7] == .completion)
+        #expect(allSteps[2] == .healthKit)
+        #expect(allSteps[3] == .goalProgram)
+        #expect(allSteps[4] == .faceID)
+        #expect(allSteps[5] == .notifications)
+        #expect(allSteps[6] == .completion)
     }
 
     @Test("Each step has a title")
@@ -228,8 +228,8 @@ struct OnboardingViewModelProgressTests {
         // When: At second step (index 1)
         viewModel.moveToNextStep()  // uspShowcase (index 1)
 
-        // Then: Progress = 1 / (8 - 1) = 1/7
-        let expectedProgress = 1.0 / 7.0
+        // Then: Progress = 1 / (7 - 1) = 1/6
+        let expectedProgress = 1.0 / 6.0
         #expect(abs(viewModel.progress - expectedProgress) < 0.001)
     }
 
@@ -241,8 +241,8 @@ struct OnboardingViewModelProgressTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Then: Total steps should be 8
-        #expect(viewModel.totalSteps == 8)
+        // Then: Total steps should be 7
+        #expect(viewModel.totalSteps == 7)
     }
 
     @Test("currentStepIndex returns correct index")
@@ -298,21 +298,69 @@ struct OnboardingViewModelStateTests {
         #expect(viewModel.isLastStep == true)
     }
 
-    @Test("canProceedToNext is always true for placeholder steps")
+    @Test("canProceedToNext is true for most steps except goalProgram")
     @MainActor
-    func testCanProceedToNextAlwaysTrue() {
+    func testCanProceedToNextBehavior() {
         // Given: A ViewModel
         let dataController = DataController(inMemory: true)
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Then: canProceedToNext should be true for all steps (placeholder behavior)
-        for _ in OnboardingStep.allCases {
-            #expect(viewModel.canProceedToNext == true)
-            if !viewModel.isLastStep {
-                viewModel.moveToNextStep()
-            }
-        }
+        // Then: canProceedToNext varies by step
+        // welcome -> true
+        #expect(viewModel.canProceedToNext == true)
+        viewModel.moveToNextStep()
+
+        // uspShowcase -> true
+        #expect(viewModel.canProceedToNext == true)
+        viewModel.moveToNextStep()
+
+        // healthKit -> true
+        #expect(viewModel.canProceedToNext == true)
+        viewModel.moveToNextStep()
+
+        // goalProgram -> false until wizards complete
+        #expect(viewModel.currentStep == .goalProgram)
+        #expect(viewModel.canProceedToNext == false)
+
+        // After marking wizards complete -> true
+        viewModel.markGoalProgramComplete()
+        #expect(viewModel.canProceedToNext == true)
+        viewModel.moveToNextStep()
+
+        // faceID -> true
+        #expect(viewModel.canProceedToNext == true)
+        viewModel.moveToNextStep()
+
+        // notifications -> true
+        #expect(viewModel.canProceedToNext == true)
+        viewModel.moveToNextStep()
+
+        // completion -> true
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("markGoalProgramComplete enables proceeding from goalProgram step")
+    @MainActor
+    func testMarkGoalProgramCompleteEnablesProceeding() {
+        // Given: A ViewModel at goalProgram step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Navigate to goalProgram
+        viewModel.moveToNextStep()  // uspShowcase
+        viewModel.moveToNextStep()  // healthKit
+        viewModel.moveToNextStep()  // goalProgram
+        #expect(viewModel.currentStep == .goalProgram)
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Marking goal/program complete
+        viewModel.markGoalProgramComplete()
+
+        // Then: Can proceed to next
+        #expect(viewModel.canProceedToNext == true)
+        #expect(viewModel.goalProgramComplete == true)
     }
 
     @Test("Initial isLoading is false")
