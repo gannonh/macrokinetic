@@ -20,6 +20,12 @@ struct OnboardingView: View {
     @State private var viewModel: OnboardingViewModel?
     @State private var isCalculatingTargets = false
     @State private var calculationError: String?
+    @State private var navigationDirection: NavigationDirection = .forward
+
+    /// Direction of navigation for transition animations
+    private enum NavigationDirection {
+        case forward, backward
+    }
 
     // MARK: - Init (API compatibility with JabTrackerApp.swift)
 
@@ -48,19 +54,15 @@ struct OnboardingView: View {
                         stepContent(for: viewModel.currentStep, viewModel: viewModel)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(
-                        .asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        )
-                    )
-
-                    // Navigation buttons (hidden for steps with internal navigation)
+                    .transition(transitionForDirection)
+                }
+                .background(DesignTokens.Colors.groupedBackground)
+                .overlay(alignment: .bottom) {
+                    // Floating navigation buttons
                     if !stepHasInternalNavigation(viewModel.currentStep) {
                         navigationButtons(viewModel: viewModel)
                     }
                 }
-                .background(DesignTokens.Colors.groupedBackground)
                 .navigationBarHidden(true)
                 .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
                     Button("OK") {
@@ -111,6 +113,7 @@ struct OnboardingView: View {
             // Back button (only after first step)
             if viewModel.currentStepIndex > 0 {
                 SecondaryButton(title: "Back") {
+                    navigationDirection = .backward
                     withAnimation(.spring()) {
                         viewModel.moveToPreviousStep()
                     }
@@ -156,6 +159,11 @@ struct OnboardingView: View {
     // MARK: - Continue Handler
 
     private func handleContinue(viewModel: OnboardingViewModel) async {
+        // Configure goal ViewModel when leaving HealthKit step (before goalType step)
+        if viewModel.currentStep == .healthKit {
+            await viewModel.configureGoalViewModel()
+        }
+
         // Determine if we're on the last step before setupConfirmation (need animation + calculation)
         let isLastConfigStep = isStepBeforeSetupConfirmation(viewModel.currentStep, viewModel: viewModel)
 
@@ -165,8 +173,29 @@ struct OnboardingView: View {
             return
         }
 
+        navigationDirection = .forward
         withAnimation(.spring()) {
             viewModel.moveToNextStep()
+        }
+    }
+
+    // MARK: - Transition
+
+    /// Direction-aware transition for step content
+    private var transitionForDirection: AnyTransition {
+        switch navigationDirection {
+        case .forward:
+            // New view slides in from right, old view slides out to left
+            return .asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            )
+        case .backward:
+            // New view slides in from left, old view slides out to right
+            return .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
         }
     }
 
@@ -186,12 +215,8 @@ struct OnboardingView: View {
     /// Returns true if the step has its own internal Enable/Skip buttons
     /// and should not show the standard Continue button.
     private func stepHasInternalNavigation(_ step: OnboardingStep) -> Bool {
-        switch step {
-        case .healthKit, .faceID, .notifications:
-            return true
-        default:
-            return false
-        }
+        // All steps now use standard Back/Continue navigation with toggles
+        false
     }
 
     // MARK: - Step Content Routing
@@ -204,20 +229,7 @@ struct OnboardingView: View {
         case .uspShowcase:
             USPShowcaseStepView()
         case .healthKit:
-            HealthKitStepView(
-                onEnableHealthKit: {
-                    await viewModel.enableHealthKitSync()
-                },
-                onContinue: {
-                    Task {
-                        // Configure goal ViewModel before entering goalType step
-                        await viewModel.configureGoalViewModel()
-                        withAnimation(.spring()) {
-                            viewModel.moveToNextStep()
-                        }
-                    }
-                }
-            )
+            HealthKitStepView(viewModel: viewModel)
         case .goalType:
             GoalTypeSelectionView(selection: Bindable(viewModel.goalViewModel).goalType)
                 .accessibilityIdentifier("onboarding-goalType-step")
@@ -252,17 +264,9 @@ struct OnboardingView: View {
             SetupConfirmationStepView(viewModel: viewModel)
                 .accessibilityIdentifier("onboarding-setupConfirmation-step")
         case .faceID:
-            FaceIDStepView {
-                withAnimation(.spring()) {
-                    viewModel.moveToNextStep()
-                }
-            }
+            FaceIDStepView()
         case .notifications:
-            NotificationsStepView {
-                withAnimation(.spring()) {
-                    viewModel.moveToNextStep()
-                }
-            }
+            NotificationsStepView()
         case .completion:
             CompletionStepView(viewModel: viewModel)
                 .accessibilityIdentifier("onboarding-completion-step")
@@ -292,6 +296,7 @@ struct OnboardingView: View {
         // Show overlay long enough to cycle through all messages (4 messages × 1.2s each)
         try? await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
 
+        navigationDirection = .forward
         withAnimation(.spring()) {
             isCalculatingTargets = false
             viewModel.moveToNextStep()

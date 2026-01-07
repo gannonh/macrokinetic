@@ -41,23 +41,27 @@ struct SetupConfirmationStepView: View {
     // MARK: - Collaborative Info Card
 
     private var collaborativeInfoCard: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: "slider.horizontal.3")
-                .font(.title2)
+                .font(.body)
                 .foregroundColor(DesignTokens.Colors.accent)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("Collaborative Mode")
-                    .font(.headline)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
 
                 Text("You can customize calories and macros for each day in Strategy settings.")
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.secondary)
             }
+
+            Spacer()
         }
-        .padding()
+        .padding(12)
+        .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(DesignTokens.Colors.accent.opacity(0.1))
         )
         .accessibilityIdentifier("collaborative-info-card")
@@ -231,11 +235,12 @@ struct SetupConfirmationStepView: View {
     // MARK: - Calculation Explanation
 
     private var calculationExplanation: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("How was your program designed?")
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.semibold)
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
                 explanationStep(
                     number: 1,
                     title: "Estimated Expenditure (TDEE)",
@@ -257,9 +262,9 @@ struct SetupConfirmationStepView: View {
                 )
             }
         }
-        .padding()
+        .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("calculation-explanation")
@@ -271,27 +276,27 @@ struct SetupConfirmationStepView: View {
         value: String,
         detail: String? = nil
     ) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 10) {
             // Number badge
             Text("\(number)")
-                .font(.caption)
+                .font(.caption2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-                .frame(width: 24, height: 24)
+                .frame(width: 20, height: 20)
                 .background(Circle().fill(DesignTokens.Colors.accent))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.secondary)
 
                 Text(value)
-                    .font(.body)
+                    .font(.footnote)
                     .fontWeight(.medium)
 
                 if let detail = detail {
                     Text(detail)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }

@@ -37,6 +37,10 @@ struct SecondaryButtonStyle: ButtonStyle {
             .padding(.vertical, 10)
             .background(
                 Capsule()
+                    .fill(DesignTokens.Colors.background)
+            )
+            .overlay(
+                Capsule()
                     .strokeBorder(
                         isEnabled ? buttonColor : buttonColor.opacity(0.5),
                         lineWidth: 1

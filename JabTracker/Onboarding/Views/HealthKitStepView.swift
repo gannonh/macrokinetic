@@ -3,7 +3,7 @@
 //  JabTracker
 //
 //  Permission screen for HealthKit integration during onboarding.
-//  Explains benefits and allows users to enable or skip.
+//  Explains benefits and allows users to toggle HealthKit sync.
 //
 
 import HealthKit
@@ -12,16 +12,22 @@ import SwiftUI
 
 /// HealthKit permission screen for onboarding.
 ///
-/// Displays benefits of HealthKit integration and provides Enable/Skip buttons.
-/// Navigation is handled via the onContinue callback.
+/// Displays benefits of HealthKit integration and provides a toggle to enable/disable.
+/// Uses standard navigation (Back/Continue) from parent OnboardingView.
 struct HealthKitStepView: View {
-    /// Callback to enable HealthKit sync (uses OnboardingViewModel)
-    let onEnableHealthKit: () async -> Bool
+    /// ViewModel for enabling HealthKit sync
+    let viewModel: OnboardingViewModel
 
-    /// Callback when user completes this step (enable or skip)
-    let onContinue: () -> Void
+    /// Tracks user's HealthKit preference
+    @State private var isEnabled: Bool = false
 
+    /// Shows activity indicator while requesting authorization
     @State private var isRequesting = false
+
+    /// Whether HealthKit is available on this device
+    private var isAvailable: Bool {
+        HKHealthStore.isHealthDataAvailable()
+    }
 
     private let step = OnboardingStep.healthKit
 
@@ -31,6 +37,11 @@ struct HealthKitStepView: View {
         "Keep your health data in one place",
     ]
 
+    private let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "HealthKitStepView"
+    )
+
     var body: some View {
         VStack(spacing: 0) {
             StepHeader(title: step.title, subtitle: step.subtitle)
@@ -38,31 +49,102 @@ struct HealthKitStepView: View {
 
             Spacer()
 
-            // Apple Health app icon style
+            if isAvailable {
+                availableContent
+            } else {
+                unavailableContent
+            }
+
+            Spacer()
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("onboarding-healthkit-step")
+    }
+
+    // MARK: - Available Content
+
+    private var availableContent: some View {
+        VStack(spacing: 32) {
+            // Apple Health app icon style with state-dependent opacity
             appleHealthIcon
-                .padding(.bottom, 32)
+                .opacity(isEnabled ? 1.0 : 0.5)
+                .animation(.easeInOut(duration: 0.2), value: isEnabled)
 
             // Benefits list
             BenefitsCard(benefits: benefits)
                 .padding(.horizontal, 24)
 
-            Spacer()
-
-            // Action buttons
-            PermissionActionButtons(
-                primaryTitle: "Connect to Apple Health",
-                loadingTitle: "Connecting...",
-                isLoading: isRequesting,
-                enableIdentifier: "healthkit-enable-button",
-                skipIdentifier: "healthkit-skip-button",
-                onEnable: enableHealthKit,
-                onSkip: onContinue
-            )
-            .padding(.horizontal, 24)
-            .padding(.bottom, 16)
+            // Toggle row
+            toggleRow
+                .padding(.horizontal, 24)
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("onboarding-healthkit-step")
+    }
+
+    // MARK: - Toggle Row
+
+    private var toggleRow: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Label {
+                    Text("Apple Health")
+                        .font(.body)
+                } icon: {
+                    Image(systemName: "heart.fill")
+                        .foregroundStyle(Color(red: 1.0, green: 0.23, blue: 0.35))
+                }
+
+                Spacer()
+
+                if isRequesting {
+                    ProgressView()
+                        .accessibilityIdentifier("healthkit-requesting")
+                } else {
+                    Toggle("", isOn: $isEnabled)
+                        .labelsHidden()
+                        .accessibilityIdentifier("healthkit-toggle")
+                        .onChange(of: isEnabled) { _, newValue in
+                            handleToggleChange(newValue)
+                        }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+        }
+        .background(DesignTokens.Colors.cardBackground)
+        .cornerRadius(12)
+    }
+
+    // MARK: - Unavailable Content
+
+    private var unavailableContent: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.white.opacity(0.5))
+                    .frame(width: 80, height: 80)
+
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 40, weight: .regular))
+                    .foregroundStyle(DesignTokens.Colors.inactive)
+            }
+            .accessibilityHidden(true)
+
+            VStack(spacing: 8) {
+                Text("Apple Health Not Available")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                Text("HealthKit is not available on this device.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            Text("You can continue without Health sync.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
     }
 
     // MARK: - Apple Health Icon
@@ -78,48 +160,33 @@ struct HealthKitStepView: View {
             // Pink/red heart
             Image(systemName: "heart.fill")
                 .font(.system(size: 40, weight: .regular))
-                .foregroundStyle(Color(red: 1.0, green: 0.23, blue: 0.35))  // Apple Health pink/red
+                .foregroundStyle(Color(red: 1.0, green: 0.23, blue: 0.35))
         }
         .accessibilityHidden(true)
     }
 
     // MARK: - Actions
 
-    private let logger = Logger(
-        subsystem: "com.gannonhall.JabTracker",
-        category: "HealthKitStepView"
-    )
-
-    private func enableHealthKit() {
-        logger.info("enableHealthKit() called")
-
-        // Check if HealthKit is available on this device
-        let isAvailable = HKHealthStore.isHealthDataAvailable()
-        logger.info("HealthKit available: \(isAvailable)")
-        guard isAvailable else {
-            logger.warning("HealthKit not available, skipping")
-            onContinue()
-            return
+    private func handleToggleChange(_ enabled: Bool) {
+        if enabled {
+            requestHealthKitAuthorization()
         }
+        // When disabled, just leave it off - no action needed
+    }
 
+    private func requestHealthKitAuthorization() {
+        logger.info("Requesting HealthKit authorization...")
         isRequesting = true
-        logger.info("Starting HealthKit authorization request...")
 
         Task { @MainActor in
-            logger.info("Calling onEnableHealthKit callback...")
-            // Use the OnboardingViewModel's method which properly sets user.healthSyncEnabled
-            let result = await onEnableHealthKit()
-            logger.info("onEnableHealthKit returned: \(result)")
+            let granted = await viewModel.enableHealthKitSync()
+            logger.info("HealthKit authorization result: \(granted)")
+
+            // Update toggle based on actual authorization result
+            isEnabled = granted
             isRequesting = false
-            logger.info("Calling onContinue...")
-            onContinue()
         }
     }
 }
 
-#Preview {
-    HealthKitStepView(
-        onEnableHealthKit: { true },
-        onContinue: {}
-    )
-}
+// Preview not available - requires OnboardingViewModel with DataController and AuthenticationManager

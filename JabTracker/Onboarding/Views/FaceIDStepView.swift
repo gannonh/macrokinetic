@@ -11,18 +11,12 @@ import SwiftUI
 /// Face ID/Touch ID permission screen for onboarding.
 ///
 /// Displays appropriate biometric type (Face ID, Touch ID, or Optic ID) and
-/// allows users to enable or skip biometric protection.
-/// Navigation is handled via the onContinue callback.
+/// allows users to toggle biometric protection on/off.
+/// Uses standard navigation (Back/Continue) from parent OnboardingView.
 struct FaceIDStepView: View {
-    /// Callback when user completes this step (enable or skip)
-    let onContinue: () -> Void
-
     // Note: BiometricAuthManager uses legacy ObservableObject pattern.
     // Broader refactor needed to migrate to @Observable (iOS 17+).
     @ObservedObject private var biometricManager = BiometricAuthManager.shared
-
-    /// Task for auto-skip when biometrics unavailable (cancellable on disappear)
-    @State private var autoSkipTask: Task<Void, Never>?
 
     private let step = OnboardingStep.faceID
 
@@ -47,37 +41,9 @@ struct FaceIDStepView: View {
             }
 
             Spacer()
-
-            // Action buttons (only show if biometrics available)
-            if biometricManager.isAvailable {
-                PermissionActionButtons(
-                    primaryTitle: "Enable \(biometricManager.biometricTypeDisplayName)",
-                    enableIdentifier: "faceid-enable-button",
-                    skipIdentifier: "faceid-skip-button",
-                    onEnable: enableBiometrics,
-                    onSkip: skipBiometrics
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 16)
-            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("onboarding-faceid-step")
-        .onAppear {
-            // Auto-skip if biometrics not available (using cancellable Task)
-            if !biometricManager.isAvailable {
-                autoSkipTask = Task { @MainActor in
-                    try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    if !Task.isCancelled {
-                        onContinue()
-                    }
-                }
-            }
-        }
-        .onDisappear {
-            // Cancel auto-skip if view disappears before timer fires
-            autoSkipTask?.cancel()
-        }
     }
 
     // MARK: - Available Content
@@ -87,13 +53,48 @@ struct FaceIDStepView: View {
             // Dynamic icon based on biometric type
             Image(systemName: biometricIconName)
                 .font(.system(size: 64))
-                .foregroundStyle(DesignTokens.Colors.accent)
+                .foregroundStyle(
+                    biometricManager.isBiometricEnabled
+                        ? DesignTokens.Colors.accent
+                        : DesignTokens.Colors.inactive
+                )
                 .accessibilityHidden(true)
+                .animation(.easeInOut(duration: 0.2), value: biometricManager.isBiometricEnabled)
 
             // Benefits list
             BenefitsCard(benefits: benefits)
                 .padding(.horizontal, 24)
+
+            // Toggle row
+            toggleRow
+                .padding(.horizontal, 24)
         }
+    }
+
+    // MARK: - Toggle Row
+
+    private var toggleRow: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Label {
+                    Text(biometricManager.biometricTypeDisplayName)
+                        .font(.body)
+                } icon: {
+                    Image(systemName: biometricIconName)
+                        .foregroundStyle(DesignTokens.Colors.accent)
+                }
+
+                Spacer()
+
+                Toggle("", isOn: $biometricManager.isBiometricEnabled)
+                    .labelsHidden()
+                    .accessibilityIdentifier("faceid-toggle")
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+        }
+        .background(DesignTokens.Colors.cardBackground)
+        .cornerRadius(12)
     }
 
     // MARK: - Unavailable Content
@@ -117,7 +118,7 @@ struct FaceIDStepView: View {
                     .padding(.horizontal, 32)
             }
 
-            Text("Skipping automatically...")
+            Text("You can continue without biometric protection.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -137,22 +138,8 @@ struct FaceIDStepView: View {
             return "lock.shield"
         }
     }
-
-    // MARK: - Actions
-
-    private func enableBiometrics() {
-        // LocalAuthentication doesn't require a system dialog for enabling preference
-        // Just set the preference and proceed
-        biometricManager.setBiometricPreference(enabled: true)
-        onContinue()
-    }
-
-    private func skipBiometrics() {
-        biometricManager.setBiometricPreference(enabled: false)
-        onContinue()
-    }
 }
 
 #Preview("Face ID Available") {
-    FaceIDStepView {}
+    FaceIDStepView()
 }
