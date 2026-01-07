@@ -204,6 +204,17 @@ final class OnboardingViewModel {
         return hasHeight && hasSex && hasBirthday
     }
 
+    /// Whether user can skip onboarding from current step (goalType through notifications, not completion)
+    var canSkip: Bool {
+        let skipAllowedSteps: [OnboardingStep] = [
+            .goalType, .targetWeight, .profileCompletion, .programStyle,
+            .dietPreference, .calorieFloor, .activityLevel, .weeklyDistribution,
+            .proteinLevel, .shiftedDaySelection, .setupConfirmation,
+            .faceID, .notifications,
+        ]
+        return skipAllowedSteps.contains(currentStep)
+    }
+
     // MARK: - Initialization
 
     init(dataController: DataController, authManager: AuthenticationManager) {
@@ -504,6 +515,32 @@ final class OnboardingViewModel {
             logger.error("Failed to complete onboarding: \(error.localizedDescription)")
             return .failed(OnboardingError.dataCreationFailed)
         }
+    }
+
+    /// Skip onboarding - marks as skipped without saving goal/program data.
+    /// User can complete goal setup later via Strategy tab "Create Goal".
+    func skipOnboarding() {
+        guard let user = authManager.currentUser else {
+            logger.error("Cannot skip onboarding: no current user")
+            return
+        }
+
+        let context = dataController.container.mainContext
+
+        user.onboardingSkippedAt = Date()
+        user.updatedAt = Date()
+
+        do {
+            try context.save()
+        } catch {
+            logger.error("Failed to save skip state: \(error.localizedDescription)")
+        }
+
+        // Store skip flag in UserDefaults for fast check
+        UserDefaults.standard.set(true, forKey: "hasSkippedOnboarding")
+        UserDefaults.standard.set(Date(), forKey: "onboardingSkippedAt")
+
+        logger.info("User skipped onboarding - can complete goal setup later via Strategy tab")
     }
 
     // MARK: - Private Methods

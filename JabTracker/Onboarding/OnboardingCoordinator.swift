@@ -64,6 +64,22 @@ class OnboardingCoordinator: ObservableObject {
             return false
         }
 
+        // Check if user skipped onboarding (will complete goal setup later via Strategy)
+        if user.onboardingSkippedAt != nil {
+            print("🔍 OnboardingCoordinator: User skipped onboarding - not showing")
+            return false
+        }
+
+        // Check UserDefaults for skipped state
+        let userDefaultsSkipped = UserDefaults.standard.bool(forKey: "hasSkippedOnboarding")
+        if userDefaultsSkipped {
+            print("🔍 OnboardingCoordinator: UserDefaults says skipped - syncing to model")
+            user.onboardingSkippedAt =
+                UserDefaults.standard.object(forKey: "onboardingSkippedAt") as? Date ?? Date()
+            try? self.dataController.container.mainContext.save()
+            return false
+        }
+
         // Check UserDefaults as backup
         let userDefaultsCompleted = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         print("🔍 OnboardingCoordinator: UserDefaults hasCompletedOnboarding: \(userDefaultsCompleted)")

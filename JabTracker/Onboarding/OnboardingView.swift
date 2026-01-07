@@ -21,6 +21,7 @@ struct OnboardingView: View {
     @State private var isCalculatingTargets = false
     @State private var calculationError: String?
     @State private var navigationDirection: NavigationDirection = .forward
+    @State private var showingSkipConfirmation = false
 
     /// Direction of navigation for transition animations
     private enum NavigationDirection {
@@ -82,6 +83,14 @@ struct OnboardingView: View {
                         Text(error)
                     }
                 }
+                .alert("Skip Goal Setup?", isPresented: $showingSkipConfirmation) {
+                    Button("Cancel", role: .cancel) {}
+                    Button("Skip for Now") {
+                        skipOnboarding(viewModel: viewModel)
+                    }
+                } message: {
+                    Text("You can set up your nutrition goal later from the Strategy tab.")
+                }
                 .overlay {
                     if isCalculatingTargets {
                         CalculatingOverlayView()
@@ -121,6 +130,19 @@ struct OnboardingView: View {
                 .accessibilityIdentifier("onboarding-back-button")
 
                 Spacer()
+
+                // Skip for now link (centered between Back and Continue)
+                Button("Skip for now") {
+                    showingSkipConfirmation = true
+                }
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .opacity(viewModel.canSkip ? 1 : 0)
+                .disabled(!viewModel.canSkip)
+                .accessibilityIdentifier("onboarding-skip-button")
+                .accessibilityHidden(!viewModel.canSkip)
+
+                Spacer()
             }
 
             // Continue or Get Started button (centered when alone)
@@ -144,12 +166,6 @@ struct OnboardingView: View {
                 }
                 .disabled(!viewModel.canProceedToNext || isCalculatingTargets)
                 .accessibilityIdentifier("onboarding-continue-button")
-            }
-
-            // Spacer after Continue when Back is visible (for symmetry)
-            if viewModel.currentStepIndex > 0 {
-                Spacer()
-                    .frame(width: 0)  // Invisible spacer for HStack balance
             }
         }
         .padding(.horizontal, 24)
@@ -317,6 +333,15 @@ struct OnboardingView: View {
         case .failed:
             // Error message already set by viewModel
             break
+        }
+    }
+
+    // MARK: - Skip Handler
+
+    private func skipOnboarding(viewModel: OnboardingViewModel) {
+        viewModel.skipOnboarding()
+        withAnimation(.spring()) {
+            isPresented = false
         }
     }
 }

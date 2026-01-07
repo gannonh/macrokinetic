@@ -52,6 +52,7 @@ final class User {
     // Onboarding tracking
     var hasCompletedOnboarding: Bool = false  // Track onboarding completion
     var onboardingCompletedAt: Date?  // When onboarding was completed
+    var onboardingSkippedAt: Date?  // When user skipped goal setup (can complete later via Strategy)
 
     // Analytics preferences and settings
     var analyticsEnabled: Bool = true  // User preference for analytics features
