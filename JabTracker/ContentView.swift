@@ -93,6 +93,7 @@ struct ContentView: View {
                 }
                 .tag(Tab.more)
         }
+        .tint(DesignTokens.Colors.accent)
         .accessibilityIdentifier("main-tab-view")
         // Floating Add button overlay - larger icon, no tab animation
         .overlay(alignment: .bottom) {
@@ -109,6 +110,7 @@ struct ContentView: View {
             } label: {
                 Image(systemName: Tab.add.icon)
                     .font(.system(size: 44, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.accent)
             }
             .accessibilityIdentifier("add-button")
             .offset(y: 8)

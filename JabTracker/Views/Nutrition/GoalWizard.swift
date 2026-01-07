@@ -444,7 +444,7 @@ struct GoalWizard: View {
             // Rocket illustration placeholder
             Image(systemName: "target")
                 .font(.system(size: 80))
-                .foregroundStyle(.blue.gradient)
+                .foregroundStyle(DesignTokens.Colors.accent.gradient)
                 .accessibilityHidden(true)
 
             VStack(spacing: 16) {
@@ -482,7 +482,7 @@ struct GoalWizard: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.blue)
+                    .fill(DesignTokens.Colors.accent)
                     .frame(width: 36, height: 36)
                 Text("\(number)")
                     .font(.headline)
@@ -505,7 +505,7 @@ struct GoalWizard: View {
         VStack(spacing: 0) {
             // Progress indicator
             ProgressView(value: viewModel.progressPercent)
-                .tint(.blue)
+                .tint(DesignTokens.Colors.accent)
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
                 .accessibilityLabel(

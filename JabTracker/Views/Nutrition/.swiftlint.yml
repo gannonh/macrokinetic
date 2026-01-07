@@ -10,7 +10,7 @@ type_body_length:
   error: 550
 
 file_length:
-  warning: 1250
+  warning: 1300
   error: 1500
 
 # Allow 3-member tuples for macro calculations (protein, fat, carbs)

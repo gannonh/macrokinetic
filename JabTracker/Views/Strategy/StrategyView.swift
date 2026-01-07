@@ -397,7 +397,7 @@ struct StrategyView: View {
         if isCheckInDue {
             return canCheckIn ? .green : .gray
         }
-        return .blue
+        return DesignTokens.Colors.accent
     }
 
     /// Card showing what users need to do to enable check-in
@@ -405,7 +405,7 @@ struct StrategyView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "lightbulb.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
                 Text("To Enable Check-In")
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -416,7 +416,7 @@ struct StrategyView: View {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "circle.fill")
                             .font(.system(size: 6))
-                            .foregroundColor(.blue)
+                            .foregroundColor(DesignTokens.Colors.accent)
                             .padding(.top, 6)
                         Text(tip)
                             .font(.subheadline)
@@ -718,7 +718,7 @@ struct StrategyView: View {
                 actionButton(
                     title: "Edit Goal",
                     icon: "target",
-                    color: .blue
+                    color: DesignTokens.Colors.accent
                 ) {
                     // Setting goalToEdit triggers sheet(item:) presentation
                     goalToEdit = activeGoal
@@ -791,14 +791,14 @@ struct StrategyView: View {
         VStack(spacing: 24) {
             Image(systemName: "target")
                 .font(.system(size: 64))
-                .foregroundStyle(.blue.gradient)
+                .foregroundStyle(DesignTokens.Colors.accent.gradient)
 
             VStack(spacing: 8) {
                 Text("No Active Goal")
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text("Create a goal to start tracking your nutrition progress.")
+                Text("Create a goal to start tracking\nyour nutrition progress.")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)

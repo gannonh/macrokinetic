@@ -61,11 +61,12 @@ struct OnboardingProfileCompletionView: View {
                     }
                     .accessibilityIdentifier("onboarding-profile-height")
 
-                    // Sex field
+                    // Sex field - 3 selectable options (notSet is the default state, not a choice)
                     profileField(title: "Sex", icon: "person.fill") {
-                        HStack {
-                            sexButton(title: "Male", value: "male")
-                            sexButton(title: "Female", value: "female")
+                        HStack(spacing: 8) {
+                            ForEach(BiologicalSex.selectableOptions, id: \.self) { sex in
+                                sexButton(sex: sex)
+                            }
                         }
                     }
                     .accessibilityIdentifier("onboarding-profile-sex")
@@ -119,24 +120,25 @@ struct OnboardingProfileCompletionView: View {
         )
     }
 
-    private func sexButton(title: String, value: String) -> some View {
-        Button {
-            viewModel.editSex = value
+    private func sexButton(sex: BiologicalSex) -> some View {
+        let isSelected = viewModel.editSex == sex.rawValue
+        return Button {
+            viewModel.editSex = sex.rawValue
         } label: {
-            Text(title)
+            Text(sex.displayName)
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(
-                            viewModel.editSex == value
+                            isSelected
                                 ? DesignTokens.Colors.accent
-                                : DesignTokens.Colors.inactive.opacity(0.2))
+                                : DesignTokens.Colors.inactive.opacity(0.4))
                 )
-                .foregroundColor(viewModel.editSex == value ? .white : .primary)
+                .foregroundColor(isSelected ? .white : .primary)
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("onboarding-sex-\(value)")
+        .accessibilityIdentifier("onboarding-sex-\(sex.rawValue.isEmpty ? "notset" : sex.rawValue)")
     }
 }

@@ -225,6 +225,7 @@
 		660575C2E93022B888FF4627 /* AdherenceStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB250F0FB4DE16CF063CA7F /* AdherenceStatistics.swift */; };
 		666E70338436B5345B89C04B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37937E214E6F17673D3C433D /* Assets.xcassets */; };
 		6694AA7D43C07344CDA156EE /* MockNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352C3C79DB4CC3585EAB580C /* MockNotificationCenter.swift */; };
+		66EDFF1DF1F7356369CDBED8 /* BiologicalSex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E269A3EBC55C817711B39F4 /* BiologicalSex.swift */; };
 		679A24B544908D9306D0F6F1 /* ShortcutButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46CAB1EB265743F8965E95E /* ShortcutButtonTests.swift */; };
 		682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */; };
 		68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */; };
@@ -765,6 +766,7 @@
 		5D6BF28F30DB57EEA0119DE5 /* MoreTabUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreTabUITests.swift; sourceTree = "<group>"; };
 		5DCC8203C65D1C3C6AD1CC3B /* ScheduleServiceAdherenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleServiceAdherenceTests.swift; sourceTree = "<group>"; };
 		5DEAD2D2EBA629B6069CF0FE /* StrategyViewUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrategyViewUITests.swift; sourceTree = "<group>"; };
+		5E269A3EBC55C817711B39F4 /* BiologicalSex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiologicalSex.swift; sourceTree = "<group>"; };
 		5E26F46A37536F5C66CB139C /* DoseSearchAndFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseSearchAndFilterView.swift; sourceTree = "<group>"; };
 		5E2EF906ADB897D77E416C9B /* StoreKitConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitConfigurationTests.swift; sourceTree = "<group>"; };
 		5E349F50B7F7E572CE58973C /* MonthlyStatsView+DetailedSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MonthlyStatsView+DetailedSections.swift"; sourceTree = "<group>"; };
@@ -1695,6 +1697,7 @@
 				DCB250F0FB4DE16CF063CA7F /* AdherenceStatistics.swift */,
 				34568701CE2D8C1D83F2AE36 /* AdherenceStatistics+Calculations.swift */,
 				D01A6A7F6B131EE8509708EA /* AdherenceTrendData.swift */,
+				5E269A3EBC55C817711B39F4 /* BiologicalSex.swift */,
 				61AFA297A4701D1F16676C6D /* ChartData.swift */,
 				2D51E304C8E3F02B581E6570 /* ChartDataEnums.swift */,
 				40324E9BF9CFB12EEC6BA782 /* ChartDataTypes.swift */,
@@ -2603,6 +2606,7 @@
 				BFF5E7E70314E00D22E10A9B /* AuthenticationView.swift in Sources */,
 				61B7EF1EBD8EDAE78BEE2C24 /* BarcodeScannerContentView.swift in Sources */,
 				B8F7DA435FE11B40FBF9CCA5 /* BenefitsCard.swift in Sources */,
+				66EDFF1DF1F7356369CDBED8 /* BiologicalSex.swift in Sources */,
 				885F734D833B8271C9413C0B /* BiometricAuthManager.swift in Sources */,
 				D354F861584A1CA2FC4305B1 /* BodyMetricsVisibilityView.swift in Sources */,
 				9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */,

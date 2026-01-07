@@ -36,7 +36,8 @@
           "Models/EntrySource.swift",
           "Models/ProgramConfiguration.swift",
           "Models/NutritionGoal.swift",
-          "Models/NutritionProgram.swift"
+          "Models/NutritionProgram.swift",
+          "Models/BiologicalSex.swift"
         ]
       },
       "business_logic_with_logging": {

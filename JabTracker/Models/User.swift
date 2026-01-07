@@ -211,6 +211,18 @@ extension User {
     var displayEmail: String {
         self.email ?? "No email"
     }
+
+    /// Biological sex as type-safe enum.
+    /// Wraps the underlying String storage for CloudKit compatibility.
+    var biologicalSex: BiologicalSex {
+        get { BiologicalSex(rawValue: gender) ?? .notSet }
+        set { gender = newValue.rawValue }
+    }
+
+    /// Whether the user has set their biological sex (not notSet)
+    var hasBiologicalSex: Bool {
+        biologicalSex != .notSet
+    }
 }
 
 // MARK: - Analytics Computed Properties

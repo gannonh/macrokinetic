@@ -110,6 +110,7 @@ struct ProgramStyleStepView: View {
 }
 
 /// Profile completion step for missing TDEE data
+/// Design matches OnboardingProfileCompletionView for consistency
 struct ProfileCompletionStepView: View {
     @Bindable var viewModel: ProgramWizardViewModel
 
@@ -125,13 +126,14 @@ struct ProfileCompletionStepView: View {
                     // Info card
                     HStack(spacing: 12) {
                         Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(DesignTokens.Colors.accent)
                             .font(.title2)
 
                         Text("We need these details to calculate your personalized calorie and macro targets.")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
@@ -162,15 +164,14 @@ struct ProfileCompletionStepView: View {
                         .accessibilityIdentifier("profile-completion-height")
                     }
 
-                    // Sex field
+                    // Sex field - 3 selectable options (notSet is the default state, not a choice)
                     if viewModel.missingSex {
                         profileField(title: "Sex", icon: "person.fill") {
-                            Picker("Sex", selection: $viewModel.editSex) {
-                                Text("Select...").tag("")
-                                Text("Male").tag("male")
-                                Text("Female").tag("female")
+                            HStack(spacing: 8) {
+                                ForEach(BiologicalSex.selectableOptions, id: \.self) { sex in
+                                    sexButton(sex: sex)
+                                }
                             }
-                            .pickerStyle(.segmented)
                         }
                         .accessibilityIdentifier("profile-completion-sex")
                     }
@@ -184,8 +185,11 @@ struct ProfileCompletionStepView: View {
                                 in: ...Date(),
                                 displayedComponents: .date
                             )
-                            .datePickerStyle(.compact)
+                            .datePickerStyle(.wheel)
                             .labelsHidden()
+                            .frame(height: 140)
+                            .padding(.vertical, 8)
+                            .clipped()
                         }
                         .accessibilityIdentifier("profile-completion-birthday")
                     }
@@ -203,13 +207,15 @@ struct ProfileCompletionStepView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
                 Text(title)
                     .font(.headline)
             }
 
             content()
+                .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
@@ -219,6 +225,28 @@ struct ProfileCompletionStepView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(DesignTokens.Colors.inactive.opacity(0.3), lineWidth: 1)
         )
+    }
+
+    private func sexButton(sex: BiologicalSex) -> some View {
+        let isSelected = viewModel.editSex == sex.rawValue
+        return Button {
+            viewModel.editSex = sex.rawValue
+        } label: {
+            Text(sex.displayName)
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            isSelected
+                                ? DesignTokens.Colors.accent
+                                : DesignTokens.Colors.inactive.opacity(0.4))
+                )
+                .foregroundColor(isSelected ? .white : .primary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("profile-completion-sex-\(sex.rawValue.isEmpty ? "notset" : sex.rawValue)")
     }
 }
 
