@@ -93,6 +93,10 @@
       </Testables>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "--bypass-onboarding"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--force-onboarding"
             isEnabled = "NO">
          </CommandLineArgument>

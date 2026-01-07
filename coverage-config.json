@@ -180,6 +180,8 @@
       "JabTrackerApp.swift",
       "Models/SubscriptionProducts.swift",
       "Onboarding/Components/OnboardingProgressIndicator.swift",
+      "Onboarding/Components/BenefitsCard.swift",
+      "Onboarding/Components/PermissionActionButtons.swift",
       "Onboarding/OnboardingError.swift",
       "Onboarding/OnboardingStep.swift",
       "Onboarding/OnboardingView.swift",

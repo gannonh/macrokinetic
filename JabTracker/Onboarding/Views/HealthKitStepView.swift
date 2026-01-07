@@ -43,18 +43,26 @@ struct HealthKitStepView: View {
                 .padding(.bottom, 32)
 
             // Benefits list
-            benefitsCard
+            BenefitsCard(benefits: benefits)
                 .padding(.horizontal, 24)
 
             Spacer()
 
             // Action buttons
-            actionButtons
-                .padding(.horizontal, 24)
-                .padding(.bottom, 16)
+            PermissionActionButtons(
+                primaryTitle: "Connect to Apple Health",
+                loadingTitle: "Connecting...",
+                isLoading: isRequesting,
+                enableIdentifier: "healthkit-enable-button",
+                skipIdentifier: "healthkit-skip-button",
+                onEnable: enableHealthKit,
+                onSkip: onContinue
+            )
+            .padding(.horizontal, 24)
+            .padding(.bottom, 16)
         }
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("onboarding-healthKit-step")
+        .accessibilityIdentifier("onboarding-healthkit-step")
     }
 
     // MARK: - Apple Health Icon
@@ -73,54 +81,6 @@ struct HealthKitStepView: View {
                 .foregroundStyle(Color(red: 1.0, green: 0.23, blue: 0.35))  // Apple Health pink/red
         }
         .accessibilityHidden(true)
-    }
-
-    // MARK: - Benefits Card
-
-    private var benefitsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ForEach(benefits, id: \.self) { benefit in
-                HStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(DesignTokens.Colors.accent)
-                        .accessibilityHidden(true)
-
-                    Text(benefit)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                }
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DesignTokens.Colors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.CornerRadius.card))
-    }
-
-    // MARK: - Action Buttons
-
-    private var actionButtons: some View {
-        VStack(spacing: 12) {
-            Button {
-                enableHealthKit()
-            } label: {
-                Text(isRequesting ? "Connecting..." : "Connect to Apple Health")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .disabled(isRequesting)
-            .accessibilityIdentifier("healthkit-enable-button")
-
-            Button {
-                onContinue()
-            } label: {
-                Text("Not Now")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(SecondaryButtonStyle())
-            .disabled(isRequesting)
-            .accessibilityIdentifier("healthkit-skip-button")
-        }
     }
 
     // MARK: - Actions
@@ -159,12 +119,7 @@ struct HealthKitStepView: View {
 
 #Preview {
     HealthKitStepView(
-        onEnableHealthKit: {
-            print("Enable HealthKit tapped")
-            return true
-        },
-        onContinue: {
-            print("Continue tapped")
-        }
+        onEnableHealthKit: { true },
+        onContinue: {}
     )
 }

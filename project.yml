@@ -91,6 +91,7 @@ schemes:
           parallelizable: true
           randomExecutionOrder: true
       commandLineArguments:
+        "--bypass-onboarding": true
         "--force-onboarding": false
         "--reset-app-data": false
         "--ui-testing": true

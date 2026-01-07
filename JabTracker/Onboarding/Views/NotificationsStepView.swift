@@ -42,66 +42,26 @@ struct NotificationsStepView: View {
                 .padding(.bottom, 32)
 
             // Benefits list
-            benefitsCard
+            BenefitsCard(benefits: benefits)
                 .padding(.horizontal, 24)
 
             Spacer()
 
             // Action buttons
-            actionButtons
-                .padding(.horizontal, 24)
-                .padding(.bottom, 16)
+            PermissionActionButtons(
+                primaryTitle: "Enable Notifications",
+                loadingTitle: "Requesting...",
+                isLoading: isRequesting,
+                enableIdentifier: "notifications-enable-button",
+                skipIdentifier: "notifications-skip-button",
+                onEnable: enableNotifications,
+                onSkip: onContinue
+            )
+            .padding(.horizontal, 24)
+            .padding(.bottom, 16)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("onboarding-notifications-step")
-    }
-
-    // MARK: - Benefits Card
-
-    private var benefitsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ForEach(benefits, id: \.self) { benefit in
-                HStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(DesignTokens.Colors.accent)
-                        .accessibilityHidden(true)
-
-                    Text(benefit)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                }
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DesignTokens.Colors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.CornerRadius.card))
-    }
-
-    // MARK: - Action Buttons
-
-    private var actionButtons: some View {
-        VStack(spacing: 12) {
-            Button {
-                enableNotifications()
-            } label: {
-                Text(isRequesting ? "Requesting..." : "Enable Notifications")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .disabled(isRequesting)
-            .accessibilityIdentifier("notifications-enable-button")
-
-            Button {
-                onContinue()
-            } label: {
-                Text("Not Now")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(SecondaryButtonStyle())
-            .disabled(isRequesting)
-            .accessibilityIdentifier("notifications-skip-button")
-        }
     }
 
     // MARK: - Actions
@@ -129,7 +89,5 @@ struct NotificationsStepView: View {
 }
 
 #Preview {
-    NotificationsStepView {
-        print("Continue tapped")
-    }
+    NotificationsStepView {}
 }
