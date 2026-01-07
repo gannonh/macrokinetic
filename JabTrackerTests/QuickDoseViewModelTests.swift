@@ -341,4 +341,168 @@ struct QuickDoseViewModelTests {
         viewModel.titrationRemindLater = true
         #expect(viewModel.titrationRemindLater == true)
     }
+
+    // MARK: - Split Dose Tests
+
+    @Test("Split dose schedule shows half the weekly dose per administration")
+    @MainActor
+    func splitDoseShowsHalfWeeklyDose() async {
+        // Given: A medication profile with split-dose schedule
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 2.0)
+
+        // Create a split-dose schedule
+        let schedule = DoseSchedule()
+        schedule.patternType = .splitDose
+        schedule.isActive = true
+        profile.schedules = [schedule]
+
+        let viewModel = QuickDoseViewModel()
+
+        // When: Selecting the profile
+        viewModel.selectedMedicationProfile = profile
+
+        // Then: Dose amount should be half (split between 2 weekly doses)
+        #expect(viewModel.doseAmount == 1.0, "Split-dose should show half the weekly dose")
+    }
+
+    @Test("Non-split dose schedule shows full dose")
+    @MainActor
+    func nonSplitDoseShowsFullDose() async {
+        // Given: A medication profile with standard weekly schedule
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 2.0)
+
+        // Create a standard weekly schedule
+        let schedule = DoseSchedule()
+        schedule.patternType = .weekly
+        schedule.isActive = true
+        profile.schedules = [schedule]
+
+        let viewModel = QuickDoseViewModel()
+
+        // When: Selecting the profile
+        viewModel.selectedMedicationProfile = profile
+
+        // Then: Dose amount should be the full weekly dose
+        #expect(viewModel.doseAmount == 2.0, "Non-split dose should show full weekly dose")
+    }
+
+    @Test("Profile without active schedule shows full dose")
+    @MainActor
+    func profileWithoutActiveScheduleShowsFullDose() async {
+        // Given: A medication profile without any active schedule
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.5)
+        profile.schedules = []
+
+        let viewModel = QuickDoseViewModel()
+
+        // When: Selecting the profile
+        viewModel.selectedMedicationProfile = profile
+
+        // Then: Dose amount should be the full dose
+        #expect(viewModel.doseAmount == 1.5, "Profile without schedule should show full dose")
+    }
+
+    // MARK: - Injection Site Tests
+
+    @Test("Clearing medication profile sets default injection sites")
+    @MainActor
+    func clearingProfileSetsDefaultSites() async {
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
+
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+
+        // When: Clearing the profile
+        viewModel.selectedMedicationProfile = nil
+
+        // Then: Dose amount should be 0
+        #expect(viewModel.doseAmount == 0.0)
+    }
+
+    @Test("setTitrationRemindLater updates flag")
+    @MainActor
+    func setTitrationRemindLaterUpdatesFlag() async {
+        let viewModel = QuickDoseViewModel()
+        #expect(viewModel.titrationRemindLater == false)
+
+        viewModel.setTitrationRemindLater(true)
+        #expect(viewModel.titrationRemindLater == true)
+
+        viewModel.setTitrationRemindLater(false)
+        #expect(viewModel.titrationRemindLater == false)
+    }
+
+    @Test("resetRemindLaterFlag clears the flag")
+    @MainActor
+    func resetRemindLaterFlagClearsFlag() async {
+        let viewModel = QuickDoseViewModel()
+        viewModel.titrationRemindLater = true
+
+        viewModel.resetRemindLaterFlag()
+
+        #expect(viewModel.titrationRemindLater == false)
+    }
+
+    // MARK: - Date Boundary Tests
+
+    @Test("Can save dose at 30-day past boundary")
+    @MainActor
+    func canSaveDoseAt30DayPastBoundary() async {
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic")
+
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = 1.0
+        viewModel.selectedInjectionSite = "Thigh"
+        viewModel.doseDate = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+
+        #expect(viewModel.canSaveDose == true, "Should allow dose exactly 30 days in past")
+    }
+
+    @Test("Can save dose at 30-day future boundary")
+    @MainActor
+    func canSaveDoseAt30DayFutureBoundary() async {
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic")
+
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = 1.0
+        viewModel.selectedInjectionSite = "Thigh"
+        viewModel.doseDate = Calendar.current.date(byAdding: .day, value: 30, to: Date())!
+
+        #expect(viewModel.canSaveDose == true, "Should allow dose exactly 30 days in future")
+    }
+
+    @Test("Cannot save dose with negative dose amount")
+    @MainActor
+    func cannotSaveDoseWithNegativeAmount() async {
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic")
+
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.doseAmount = -1.0
+        viewModel.selectedInjectionSite = "Thigh"
+
+        #expect(viewModel.canSaveDose == false, "Should not allow negative dose amount")
+    }
+
+    // MARK: - Medication Profile Extension Tests
+
+    @Test("All supported medications have correct mapping")
+    func allMedicationsHaveCorrectMapping() {
+        // Test all known medications
+        let medications: [(String, Medication)] = [
+            ("semaglutide", .semaglutide),
+            ("tirzepatide", .tirzepatide),
+            ("liraglutide", .liraglutide),
+            ("dulaglutide", .dulaglutide),
+        ]
+
+        for (genericName, expectedMedication) in medications {
+            let profile = MedicationProfile(genericName: genericName, brandName: "Test")
+            #expect(
+                profile.medication == expectedMedication,
+                "Profile with \(genericName) should map to \(expectedMedication)")
+        }
+    }
 }

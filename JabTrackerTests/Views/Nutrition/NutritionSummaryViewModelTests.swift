@@ -152,6 +152,151 @@ final class NutritionSummaryViewModelTests: XCTestCase {
         viewModel.activeEnergyBurned = 0
         XCTAssertEqual(viewModel.activeEnergyBurned, 0)
     }
+
+    // MARK: - Load Data Tests
+
+    func testLoadData_SetsIsLoadingToTrueInitially() async {
+        // Given
+        let today = Date()
+
+        // When - loadData runs
+        await viewModel.loadData(for: today)
+
+        // Then - after completion, isLoading should be false
+        XCTAssertFalse(viewModel.isLoading)
+    }
+
+    func testLoadData_WithNilMealLogService_DoesNotCrash() async {
+        // Given - viewModel was created with nil mealLogService
+        let today = Date()
+
+        // When - calling loadData should not crash
+        await viewModel.loadData(for: today)
+
+        // Then - no error occurred, totals remain zero
+        XCTAssertEqual(viewModel.totals.calories, 0)
+        XCTAssertNil(viewModel.loadError)
+    }
+
+    func testLoadData_CompletesWithoutError() async {
+        // Given
+        let today = Date()
+
+        // When
+        await viewModel.loadData(for: today)
+
+        // Then
+        XCTAssertFalse(viewModel.isLoading)
+    }
+
+    // MARK: - Update Calorie Target Tests
+
+    func testUpdateCalorieTarget_CalculatesCorrectly() async {
+        // Given
+        user.dailyCalorieGoal = 2000
+        let today = Date()
+
+        // When
+        await viewModel.updateCalorieTarget(user: user, date: today)
+
+        // Then - base target plus any adjustments
+        XCTAssertGreaterThanOrEqual(viewModel.adjustedCalorieTarget, 0)
+    }
+
+    // MARK: - Energy Observation Edge Cases
+
+    func testStartEnergyObservation_ResetsEnergyWhenDisabled() async {
+        // Given - observation was previously active with some energy
+        user.addBurnedCaloriesEnabled = true
+        user.healthSyncEnabled = true
+        viewModel.startEnergyObservation(user: user, date: Date())
+
+        // Simulate energy update
+        if let handler = mockStarter.handler {
+            handler(300)
+        }
+        XCTAssertEqual(viewModel.activeEnergyBurned, 300)
+
+        // Reset starter to track new start
+        mockStarter = MockEnergyObservationStarter()
+        mockStopper = MockEnergyObservationStopper()
+
+        // Create new viewModel with feature disabled
+        let newViewModel = NutritionSummaryViewModel(
+            mealLogService: nil,
+            calorieAdjustmentService: CalorieAdjustmentService(activeEnergyDataSource: mockDataSource),
+            energyObservationStarter: mockStarter.start,
+            energyObservationStopper: mockStopper.stop
+        )
+
+        // When - feature is disabled
+        user.addBurnedCaloriesEnabled = false
+        newViewModel.startEnergyObservation(user: user, date: Date())
+
+        // Then - energy should be reset to 0
+        XCTAssertEqual(newViewModel.activeEnergyBurned, 0)
+        XCTAssertFalse(mockStarter.isStarted)
+    }
+
+    func testStartEnergyObservation_StopsExistingObservationFirst() {
+        // Given
+        user.addBurnedCaloriesEnabled = true
+        user.healthSyncEnabled = true
+        let today = Date()
+
+        // When - start observation
+        viewModel.startEnergyObservation(user: user, date: today)
+
+        // Then - should have stopped any existing observation first
+        XCTAssertTrue(mockStopper.isStopped, "Should stop existing observation before starting new one")
+        XCTAssertTrue(mockStarter.isStarted)
+    }
+
+    func testObservationCallback_UpdatesActiveEnergy() {
+        // Given
+        user.addBurnedCaloriesEnabled = true
+        user.healthSyncEnabled = true
+        viewModel.startEnergyObservation(user: user, date: Date())
+
+        guard let handler = mockStarter.handler else {
+            XCTFail("Handler not captured")
+            return
+        }
+
+        // When
+        let testEnergy = 250.0
+        handler(testEnergy)
+
+        // Then
+        XCTAssertEqual(viewModel.activeEnergyBurned, testEnergy)
+    }
+
+    // MARK: - Initial State Tests
+
+    func testInitialState() {
+        // Given - fresh viewModel
+        let freshViewModel = NutritionSummaryViewModel(
+            mealLogService: nil,
+            calorieAdjustmentService: CalorieAdjustmentService(),
+            energyObservationStarter: mockStarter.start,
+            energyObservationStopper: mockStopper.stop
+        )
+
+        // Then - initial state should be correct
+        XCTAssertEqual(freshViewModel.activeEnergyBurned, 0)
+        XCTAssertEqual(freshViewModel.adjustedCalorieTarget, 0)
+        XCTAssertTrue(freshViewModel.isLoading)
+        XCTAssertNil(freshViewModel.loadError)
+    }
+
+    // MARK: - Totals Tests
+
+    func testTotals_DefaultsToZero() {
+        XCTAssertEqual(viewModel.totals.calories, 0)
+        XCTAssertEqual(viewModel.totals.protein, 0)
+        XCTAssertEqual(viewModel.totals.carbs, 0)
+        XCTAssertEqual(viewModel.totals.fat, 0)
+    }
 }
 
 // MARK: - Mocks

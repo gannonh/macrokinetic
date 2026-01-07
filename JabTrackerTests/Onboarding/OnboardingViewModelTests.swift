@@ -443,7 +443,7 @@ struct OnboardingViewModelStateTests {
         #expect(viewModel.currentStep == .activityLevel)
 
         // Reset trainingLevel to verify validation
-        viewModel.trainingLevel = .none
+        viewModel.trainingLevel = nil
 
         // Then: Cannot proceed without activity level
         #expect(viewModel.canProceedToNext == false)
@@ -596,6 +596,297 @@ struct OnboardingViewModelCompletionTests {
             // Success - it failed as expected
         } else {
             Issue.record("Expected .failed result but got \(result)")
+        }
+    }
+}
+
+// MARK: - OnboardingViewModel Skip Tests
+
+@Suite("OnboardingViewModel Skip Tests")
+struct OnboardingViewModelSkipTests {
+
+    @Test("skipOnboarding sets onboardingSkippedAt timestamp")
+    @MainActor
+    func testSkipOnboardingSetsTimestamp() {
+        // Given: A ViewModel with a user
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+        let user = createTestUser(in: context)
+        authManager.currentUser = user
+        #expect(user.onboardingSkippedAt == nil)
+
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // When: Skipping onboarding
+        viewModel.skipOnboarding()
+
+        // Then: onboardingSkippedAt should be set
+        #expect(user.onboardingSkippedAt != nil)
+    }
+
+    @Test("skipOnboarding stores flag in UserDefaults")
+    @MainActor
+    func testSkipOnboardingStoresUserDefaults() {
+        // Given: A ViewModel with a user
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let context = dataController.container.mainContext
+        let user = createTestUser(in: context)
+        authManager.currentUser = user
+
+        // Clear UserDefaults
+        UserDefaults.standard.removeObject(forKey: "hasSkippedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "onboardingSkippedAt")
+
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // When: Skipping onboarding
+        viewModel.skipOnboarding()
+
+        // Then: UserDefaults should have skip values
+        #expect(UserDefaults.standard.bool(forKey: "hasSkippedOnboarding") == true)
+        #expect(UserDefaults.standard.object(forKey: "onboardingSkippedAt") != nil)
+    }
+
+    @Test("skipOnboarding does nothing without user")
+    @MainActor
+    func testSkipOnboardingNoUser() {
+        // Given: A ViewModel without a current user
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        authManager.currentUser = nil
+
+        // Clear UserDefaults
+        UserDefaults.standard.removeObject(forKey: "hasSkippedOnboarding")
+
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // When: Skipping onboarding (should not crash)
+        viewModel.skipOnboarding()
+
+        // Then: UserDefaults should not be set (no crash occurred)
+        #expect(UserDefaults.standard.bool(forKey: "hasSkippedOnboarding") == false)
+    }
+
+    @Test("canSkip is true for goalType step")
+    @MainActor
+    func testCanSkipTrueForGoalType() {
+        // Given: A ViewModel at goalType step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Navigate to goalType step
+        viewModel.moveToNextStep()  // uspShowcase
+        viewModel.moveToNextStep()  // healthKit
+        viewModel.moveToNextStep()  // goalType
+        #expect(viewModel.currentStep == .goalType)
+
+        // Then: canSkip should be true
+        #expect(viewModel.canSkip == true)
+    }
+
+    @Test("canSkip is false for welcome step")
+    @MainActor
+    func testCanSkipFalseForWelcome() {
+        // Given: A ViewModel at welcome step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        #expect(viewModel.currentStep == .welcome)
+
+        // Then: canSkip should be false
+        #expect(viewModel.canSkip == false)
+    }
+
+    @Test("canSkip is false for completion step")
+    @MainActor
+    func testCanSkipFalseForCompletion() {
+        // Given: A ViewModel at completion step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state and navigate to completion
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
+
+        // Navigate to completion
+        var iterations = 0
+        while viewModel.currentStep != .completion && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .completion)
+
+        // Then: canSkip should be false for completion step
+        #expect(viewModel.canSkip == false)
+    }
+}
+
+// MARK: - OnboardingViewModel Available Steps Tests
+
+@Suite("OnboardingViewModel Available Steps Tests")
+struct OnboardingViewModelAvailableStepsTests {
+
+    @Test("availableSteps excludes profileCompletion when hasProfileDataFromHealthKit is true")
+    @MainActor
+    func testAvailableStepsExcludesProfileCompletionWithHealthKit() {
+        // Given: A ViewModel with profile data from HealthKit
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.hasProfileDataFromHealthKit = true
+
+        // Then: profileCompletion should not be in availableSteps
+        #expect(!viewModel.availableSteps.contains(.profileCompletion))
+    }
+
+    @Test("availableSteps includes profileCompletion when hasProfileDataFromHealthKit is false")
+    @MainActor
+    func testAvailableStepsIncludesProfileCompletion() {
+        // Given: A ViewModel without profile data from HealthKit
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.hasProfileDataFromHealthKit = false
+
+        // Then: profileCompletion should be in availableSteps
+        #expect(viewModel.availableSteps.contains(.profileCompletion))
+    }
+
+    @Test("availableSteps excludes weeklyDistribution for collaborative program style")
+    @MainActor
+    func testAvailableStepsExcludesWeeklyDistributionForCollaborative() {
+        // Given: A ViewModel with collaborative program style
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .collaborative
+
+        // Then: weeklyDistribution should not be in availableSteps
+        #expect(!viewModel.availableSteps.contains(.weeklyDistribution))
+    }
+
+    @Test("availableSteps excludes shiftedDaySelection for collaborative program style")
+    @MainActor
+    func testAvailableStepsExcludesShiftedDaySelectionForCollaborative() {
+        // Given: A ViewModel with collaborative program style
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .collaborative
+
+        // Then: shiftedDaySelection should not be in availableSteps
+        #expect(!viewModel.availableSteps.contains(.shiftedDaySelection))
+    }
+
+    @Test("availableSteps includes shiftedDaySelection when shifted distribution is selected")
+    @MainActor
+    func testAvailableStepsIncludesShiftedDaySelectionWhenShifted() {
+        // Given: A ViewModel with shifted weekly distribution
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .coached
+        viewModel.weeklyDistributionMode = .shifted
+
+        // Then: shiftedDaySelection should be in availableSteps
+        #expect(viewModel.availableSteps.contains(.shiftedDaySelection))
+    }
+
+    @Test("availableSteps excludes shiftedDaySelection when even distribution is selected")
+    @MainActor
+    func testAvailableStepsExcludesShiftedDaySelectionWhenEven() {
+        // Given: A ViewModel with even weekly distribution
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .coached
+        viewModel.weeklyDistributionMode = .even
+
+        // Then: shiftedDaySelection should not be in availableSteps
+        #expect(!viewModel.availableSteps.contains(.shiftedDaySelection))
+    }
+}
+
+// MARK: - OnboardingViewModel Profile Data Tests
+
+@Suite("OnboardingViewModel Profile Data Tests")
+struct OnboardingViewModelProfileDataTests {
+
+    @Test("editHeightCm computes correctly from feet and inches")
+    @MainActor
+    func testEditHeightCmComputation() {
+        // Given: A ViewModel with height in feet and inches
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // When: Setting height to 5 feet 10 inches
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 10
+
+        // Then: Should compute to approximately 177.8 cm
+        let expectedCm = Double(5 * 12 + 10) * 2.54  // 70 inches * 2.54 = 177.8 cm
+        #expect(abs(viewModel.editHeightCm - expectedCm) < 0.01)
+    }
+
+    @Test("canProceedToNext is false when high calorie days empty at shiftedDaySelection step")
+    @MainActor
+    func testCanProceedRequiresHighCalorieDays() {
+        // Given: A ViewModel at shiftedDaySelection step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state to navigate to shiftedDaySelection
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .shifted
+        viewModel.proteinLevel = .moderate
+
+        // Navigate to shiftedDaySelection step
+        var iterations = 0
+        while viewModel.currentStep != .shiftedDaySelection && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+
+        // Check if we reached the step (depends on step filtering)
+        if viewModel.currentStep == .shiftedDaySelection {
+            // Clear high calorie days
+            viewModel.highCalorieDays = []
+
+            // Then: Cannot proceed without high calorie days
+            #expect(viewModel.canProceedToNext == false)
+
+            // When: Adding a high calorie day
+            viewModel.highCalorieDays = [2]  // Monday
+
+            // Then: Can proceed
+            #expect(viewModel.canProceedToNext == true)
         }
     }
 }

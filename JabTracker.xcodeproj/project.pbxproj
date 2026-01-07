@@ -63,6 +63,7 @@
 		15934270FA0E309B92D8DDB2 /* QuickAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4115A03D244ED528179ACCF5 /* QuickAddViewModel.swift */; };
 		15DA362CB7875DA9908CBF18 /* DataControllerCloudKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */; };
 		162F01AE9AE1F576382B2097 /* MedicationProfileViewModelScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61639608F79641ACAD7953 /* MedicationProfileViewModelScheduleTests.swift */; };
+		169FD9450681603F9FC2ABCA /* BiologicalSexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126C9B1466328D44F9BED0E6 /* BiologicalSexTests.swift */; };
 		16F5D12718822BF0168AD2FA /* MedicationProfileDeleteUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0878CF2C2E6BFD1AA6AFAE0 /* MedicationProfileDeleteUITests.swift */; };
 		175B16233AEC401BC6EE438B /* NotificationServiceActivationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5486756E163374C18E8696 /* NotificationServiceActivationTests.swift */; };
 		17D0C0CDB4E90A9978B98B66 /* NotificationServiceBackgroundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58DAD4261D9C3F7E970A9BF /* NotificationServiceBackgroundTests.swift */; };
@@ -291,6 +292,7 @@
 		82A33932CA0EA17B714A17A4 /* RescheduleDoseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6809EC624F5CD58572747597 /* RescheduleDoseSheet.swift */; };
 		83307A77A4269AAB52B57092 /* CustomFoodService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F35D81E5C7FD2D03D95D30 /* CustomFoodService.swift */; };
 		857D9E2C0D6399A70E5FAC20 /* AdherenceProgressIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C45AF287FCA564EF5A70F3D /* AdherenceProgressIndicator.swift */; };
+		85ABF19AE205DFA55F60C0F3 /* AppServicesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028D798135616E1802D9F628 /* AppServicesTests.swift */; };
 		85E36AF8DB48413312EA46E8 /* DoseCalendarViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F103765B39CA0C6509686 /* DoseCalendarViewModelTests.swift */; };
 		86BD08ECC27F8F8DA81C2A35 /* StrategyTabUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF07FCB6C4CC2B1C25D560E /* StrategyTabUITests.swift */; };
 		86BFBEB2E2BE5AEC1807DE71 /* ProfileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DD385076B17502B720F566 /* ProfileValidation.swift */; };
@@ -571,6 +573,7 @@
 		01069C8164CE28C019FF35F2 /* DoseScheduleEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseScheduleEditView.swift; sourceTree = "<group>"; };
 		016E375D5A98FE61081A7935 /* DoseScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseScheduleTests.swift; sourceTree = "<group>"; };
 		01BB92D3A2A0EFB147B7695B /* ProgramTargetCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramTargetCalculationTests.swift; sourceTree = "<group>"; };
+		028D798135616E1802D9F628 /* AppServicesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServicesTests.swift; sourceTree = "<group>"; };
 		0457306FD4B5977579997DDC /* MetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsService.swift; sourceTree = "<group>"; };
 		0494B8E4B04DEEE6EF76134D /* ReconstitutionCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReconstitutionCalculatorView.swift; sourceTree = "<group>"; };
 		04EE862BB0DF2DE6355CC96C /* NutritionProgram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionProgram.swift; sourceTree = "<group>"; };
@@ -600,6 +603,7 @@
 		104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = usda_foods.sqlite; sourceTree = "<group>"; };
 		106421FCA575BB46D42EEA98 /* ChartControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartControlsView.swift; sourceTree = "<group>"; };
 		12278A5A98645DDEF61B77A5 /* LegacyOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyOnboardingView.swift; sourceTree = "<group>"; };
+		126C9B1466328D44F9BED0E6 /* BiologicalSexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiologicalSexTests.swift; sourceTree = "<group>"; };
 		12E043B51BE1DCC3D80AAF3D /* ChartDatasetService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDatasetService.swift; sourceTree = "<group>"; };
 		12EC9A418E69173C7ABC304C /* SubscriptionUIStateConsistencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIStateConsistencyTests.swift; sourceTree = "<group>"; };
 		13564236920B6E14A4C69066 /* QuickAddContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddContentView.swift; sourceTree = "<group>"; };
@@ -1624,6 +1628,7 @@
 				777443E8D9A33680C4ECAB15 /* UserAnalyticsTests.swift */,
 				5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */,
 				F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */,
+				D4B419743442D68BA670E866 /* App */,
 				F4D67BBDAAE1D42FEC592FE0 /* Design */,
 				0BD2FCF8D425AC7538490167 /* Helpers */,
 				01DFD7AE4EDEC38E3B9A4353 /* Integration */,
@@ -1876,6 +1881,7 @@
 				C80224AFE1CDA152A307F155 /* AdherencePatternTests.swift */,
 				4442B7182D0A1D85A9F16B37 /* AdherenceStatisticsTests.swift */,
 				34AA8F6E0D628950324EEFAD /* AdherenceTrendDataTests.swift */,
+				126C9B1466328D44F9BED0E6 /* BiologicalSexTests.swift */,
 				38F43C2AEC2CBDE7FEEE6D54 /* ChartDataEnumsTests.swift */,
 				2371FC6C0CDFC9C1317A4BC6 /* ChartDataModelTests.swift */,
 				DEACD58C8BE1C5D6E8C2F799 /* ConcentrationPointTests.swift */,
@@ -1959,6 +1965,14 @@
 				07B4504C00FE1EF648937EFE /* Views */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		D4B419743442D68BA670E866 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				028D798135616E1802D9F628 /* AppServicesTests.swift */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 		D78FB39411CBE69A1C5A3BC2 /* Nutrition */ = {
@@ -2403,6 +2417,7 @@
 				AAC18D23D444764BEB6B6504 /* AdherenceTrendDataTests.swift in Sources */,
 				1CC8DC64A1A77A66E65651CC /* AnalyticsServiceIntegrationTests.swift in Sources */,
 				5C89C5CF7CE268FC46F1A852 /* AnalyticsViewModelTests.swift in Sources */,
+				85ABF19AE205DFA55F60C0F3 /* AppServicesTests.swift in Sources */,
 				72A9BEB2AE70FDDEE0272DD2 /* AuthenticationDatabaseIntegrationTests.swift in Sources */,
 				1E3A643F050707A5290FE8E3 /* AuthenticationDelegateIntegrationTests.swift in Sources */,
 				F6DABF5FFAA7B073D31CFF18 /* AuthenticationDelegateMethodTests.swift in Sources */,
@@ -2412,6 +2427,7 @@
 				F455402E5301668AB4CCCDA4 /* AuthenticationManagerCoreTests.swift in Sources */,
 				E5615B081A4A0B884E9DC64F /* AuthenticationResetAndEdgeCaseTests.swift in Sources */,
 				AA281B0FB3CB49E08C78FA6F /* AuthenticationUITestingTests.swift in Sources */,
+				169FD9450681603F9FC2ABCA /* BiologicalSexTests.swift in Sources */,
 				CB0812C52EDE841D631C81B9 /* BiometricAuthManagerCoreTests.swift in Sources */,
 				DA0D619F46F9C28B62D22627 /* BiometricEnumTests.swift in Sources */,
 				523BC8DEDB62685FF5C39917 /* BiometricTestingTests.swift in Sources */,
