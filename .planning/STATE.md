@@ -20,12 +20,12 @@
 
 ## Current Position
 
-Phase: 27 of 29 (Simplified Goal & Program Setup)
+Phase: 29 of 29 (Integration & Polish)
 Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-06 - Completed 27-01-PLAN.md
+Last activity: 2026-01-07 - Completed 29-01-PLAN.md
 
-Progress: ████░░░░░░ 40%
+Progress: ██████████ 100%
 
 ## GitHub Tracking
 
@@ -36,9 +36,9 @@ Branch: feat/v0.6.0-onboarding-redux
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 42 min
-- Total execution time: 169 min
+- Total plans completed: 6
+- Average duration: 40 min
+- Total execution time: 245 min
 
 **By Phase:**
 
@@ -47,11 +47,13 @@ Branch: feat/v0.6.0-onboarding-redux
 | 25    | 2     | 24 min  | 12 min   |
 | 26    | 1     | 133 min | 133 min  |
 | 27    | 1     | 12 min  | 12 min   |
+| 28    | 1     | 38 min  | 38 min   |
+| 29    | 1     | 38 min  | 38 min   |
 
 **Recent Trend:**
-25-02: 4 min (Placeholder Views & Verification)
-26-01: 133 min (USP Showcase Screens - extensive user feedback iteration)
 27-01: 12 min (Simplified Goal & Program Setup)
+28-01: 38 min (Permission Setup Screens)
+29-01: 38 min (Integration & Polish - CompletionStepView, transitions, E2E test)
 
 *Updated after each plan completion*
 
@@ -74,6 +76,8 @@ Branch: feat/v0.6.0-onboarding-redux
 | 26-01 | Standard SF font (not rounded) | User preference for standard system typography |
 | 27-01 | 2000 kcal baseline with 150g/200g/67g macros | Simple starting point for all goal types |
 | 27-01 | Smart defaults for target weight | -10kg for loss, +5kg for gain, 0 for maintain |
+| 29-01 | Simple .transition(.opacity) for onboarding→main app | Clean, professional feel without complexity |
+| 29-01 | Private helper views in CompletionStepView | CompletionSummaryRow, NextStepRow kept local to file |
 
 ### Deferred Issues
 
@@ -98,6 +102,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-06T19:52:44Z
-Stopped at: Completed 27-01-PLAN.md (Phase 27 complete)
-Resume file: None (ready for Phase 28 planning)
+Last session: 2026-01-07T16:30:14Z
+Stopped at: Completed 29-01-PLAN.md (Phase 29 complete, v0.6.0 milestone complete)
+Resume file: None (ready for /gsd:complete-milestone)

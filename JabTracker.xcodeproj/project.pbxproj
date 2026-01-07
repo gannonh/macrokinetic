@@ -268,6 +268,7 @@
 		7A2CC51947857AB036DBD600 /* ShortcutButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E0A8110F52F67228377E20C /* ShortcutButton.swift */; };
 		7A675A5685DE8F31127995B9 /* ChartDataProcessorIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42B5D743F73F8999D070FF90 /* ChartDataProcessorIntegrationTests.swift */; };
 		7AE23FFC36E2C777FBD029B2 /* ReconstitutionCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3920FFDC07806ABF17F4B65F /* ReconstitutionCalculatorTests.swift */; };
+		7B75FF8BE4491A5A8017C624 /* CompletionStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F8555E95CF50A083FDA96D5 /* CompletionStepView.swift */; };
 		7B7A0BEDA7FA80891EA27BE7 /* ReconstitutionCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0494B8E4B04DEEE6EF76134D /* ReconstitutionCalculatorView.swift */; };
 		7B9403352834FAC65D8CBBF0 /* MedicationAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B20942E8632D13C2463169 /* MedicationAnalyticsTests.swift */; };
 		7BB9039CECE9F2568B677D7B /* DoseEntryPKSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06F3655D8833409426DDC09E /* DoseEntryPKSection.swift */; };
@@ -878,6 +879,7 @@
 		8D69FCF6989BEB501B767A9B /* NotificationsStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsStepView.swift; sourceTree = "<group>"; };
 		8E5F5430D61450E2C841609A /* Food.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Food.swift; sourceTree = "<group>"; };
 		8F01916179B4BDB4330034A5 /* AnalyticsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsViewModelTests.swift; sourceTree = "<group>"; };
+		8F8555E95CF50A083FDA96D5 /* CompletionStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionStepView.swift; sourceTree = "<group>"; };
 		8FD08D16B26A7F9381D85BF2 /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
 		8FF072B83B18BCC9CFC94449 /* SchedulePatternFilteringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulePatternFilteringTests.swift; sourceTree = "<group>"; };
 		905F601CB5113A06EF53A83C /* AccountViewUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewUITests.swift; sourceTree = "<group>"; };
@@ -1132,6 +1134,7 @@
 			isa = PBXGroup;
 			children = (
 				672CFDD5FEAD26BE3D1BF101 /* CalculatingOverlayView.swift */,
+				8F8555E95CF50A083FDA96D5 /* CompletionStepView.swift */,
 				A9F79C90B589449F4A203DDF /* FaceIDStepView.swift */,
 				EDAF934DC60510C551B09F06 /* HealthKitStepView.swift */,
 				8D69FCF6989BEB501B767A9B /* NotificationsStepView.swift */,
@@ -2626,6 +2629,7 @@
 				406940834CA0E7E68BBEED28 /* ChartExportView.swift in Sources */,
 				9221E182DE3BE570B3ACAC14 /* CircularProgressRing.swift in Sources */,
 				BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */,
+				7B75FF8BE4491A5A8017C624 /* CompletionStepView.swift in Sources */,
 				4136AAE981ECB4BDB595DE8C /* ConcentrationCard.swift in Sources */,
 				2ADE941214A65E26DE3C6475 /* ConcentrationChartAccessibility.swift in Sources */,
 				13050E5FF06CC13CEFC0867B /* ConcentrationChartControls.swift in Sources */,

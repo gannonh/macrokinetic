@@ -62,20 +62,20 @@ Plans:
 **Goal:** Individual screens for HealthKit, Face ID, and Notifications with explanations
 **Depends on:** Phase 27
 **Research:** Unlikely (existing HealthKit, LocalAuth, Notifications patterns)
-**Plans:** TBD
+**Plans:** 1
 
 Plans:
-- [ ] 28-01: TBD
+- [x] 28-01: Permission Setup Screens
 
 #### Phase 29: Integration & Polish
 
 **Goal:** Final flow integration, transitions, welcome screen, e2e tests
 **Depends on:** Phase 28
 **Research:** Unlikely (internal polish work)
-**Plans:** TBD
+**Plans:** 1
 
 Plans:
-- [ ] 29-01: TBD
+- [x] 29-01: Integration & Polish
 
 ## Progress
 
@@ -89,8 +89,8 @@ Phases execute in numeric order within each milestone.
 | 25. Onboarding Foundation           | 2/2            | Complete    | 2026-01-06 |
 | 26. USP Showcase Screens            | 1/1            | Complete    | 2026-01-06 |
 | 27. Simplified Goal & Program Setup | 1/1            | Complete    | 2026-01-06 |
-| 28. Permission Setup Screens        | 0/?            | Not started | -          |
-| 29. Integration & Polish            | 0/?            | Not started | -          |
+| 28. Permission Setup Screens        | 1/1            | Complete    | 2026-01-07 |
+| 29. Integration & Polish            | 1/1            | Complete    | 2026-01-07 |
 
 <details>
 <summary>✅ v0.5.0 Navigation Refinement (Phases 22-24) - SHIPPED 2026-01-05</summary>

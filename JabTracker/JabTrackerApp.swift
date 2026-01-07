@@ -34,11 +34,13 @@ struct JabTrackerApp: App {
                         if showingOnboarding {
                             OnboardingView(isPresented: self.$showingOnboarding, authManager: self.authManager)
                                 .environmentObject(self.authManager)
+                                .transition(.opacity)
                         } else {
                             ContentView()
                                 .modelContainer(self.dataController.container)
                                 .environmentObject(self.authManager)
                                 .environmentObject(self.biometricManager)
+                                .transition(.opacity)
                         }
                     case .notAuthenticated:
                         AuthenticationView()

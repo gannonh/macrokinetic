@@ -264,7 +264,8 @@ struct OnboardingView: View {
                 }
             }
         case .completion:
-            PlaceholderStepView(step: step)
+            CompletionStepView(viewModel: viewModel)
+                .accessibilityIdentifier("onboarding-completion-step")
         }
     }
 
