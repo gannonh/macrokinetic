@@ -1,6 +1,11 @@
 # SwiftLint overrides for Models
 # NutritionProgram init requires 6 parameters due to program configuration options
+# ProgramConfiguration.swift is large due to comprehensive enum/struct definitions
 
 function_parameter_count:
   warning: 6
   error: 8
+
+file_length:
+  warning: 560
+  error: 620

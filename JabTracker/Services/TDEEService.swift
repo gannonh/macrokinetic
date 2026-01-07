@@ -628,7 +628,7 @@ extension TDEEService {
         goal.dailyCalorieTarget = max(dailyCalorieTarget, calorieFloor)
 
         Self.logger.debug(
-            "Applied TDEE to goal: TDEE=\(Int(tdee)), adjustment=\(Int(dailyCalorieAdjustment)), target=\(Int(goal.dailyCalorieTarget))"
+            "Applied TDEE: \(Int(tdee)), adj=\(Int(dailyCalorieAdjustment)), target=\(Int(goal.dailyCalorieTarget))"
         )
         return true
     }
@@ -658,15 +658,15 @@ extension TDEEService {
     ///   - calories: Daily calorie target
     ///   - program: Nutrition program with diet and protein settings
     ///   - weightKg: User's weight in kg for protein calculation
-    /// - Returns: Tuple of protein, fat, carbs in grams
+    /// - Returns: MacroGrams with protein, fat, carbs in grams
     func calculateMacros(
         calories: Double,
         program: NutritionProgram,
         weightKg: Double
-    ) -> (protein: Double, fat: Double, carbs: Double) {
+    ) -> MacroGrams {
         // Protein from program's protein level (g per kg body weight)
         let proteinGrams = program.protein.gramsPerKg * weightKg
-        let proteinCalories = proteinGrams * 4
+        let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
 
         // Remaining calories for fat and carbs
         let remainingCalories = calories - proteinCalories
@@ -679,10 +679,10 @@ extension TDEEService {
         let fatCalories = remainingCalories * fatPercent
         let carbCalories = remainingCalories * carbPercent
 
-        return (
+        return MacroGrams(
             protein: proteinGrams,
-            fat: fatCalories / 9,  // 9 cal per gram fat
-            carbs: carbCalories / 4  // 4 cal per gram carbs
+            fat: fatCalories / MacroCalorieConstants.fatCaloriesPerGram,
+            carbs: carbCalories / MacroCalorieConstants.carbsCaloriesPerGram
         )
     }
 

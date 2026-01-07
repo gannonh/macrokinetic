@@ -198,108 +198,91 @@ final class WeeklyCheckInService {
         let calendar = Calendar.current
         let endDate = Date()
         guard let startDate = calendar.date(byAdding: .day, value: -28, to: endDate) else {
-            let emptyAssessment = DataQualityAssessment(
-                quality: .insufficient,
-                weightEntryCount: 0,
-                foodConsistency: 0,
-                daySpan: 0,
-                improvementTips: ["Unable to calculate date range"]
+            return createInsufficientDataResult(
+                goal: goal,
+                dataQuality: DataQualityAssessment(
+                    quality: .insufficient, weightEntryCount: 0, foodConsistency: 0,
+                    daySpan: 0, improvementTips: ["Unable to calculate date range"]
+                )
             )
-            return createInsufficientDataResult(goal: goal, dataQuality: emptyAssessment)
         }
 
         let currentTDEE = goal.lastCalculatedTDEE ?? goal.initialEstimatedTDEE ?? 2000
 
-        // Try to get adaptive TDEE
         do {
             let adaptiveResult = try await tdeeService.calculateAdaptiveTDEE(goal: goal)
-            let dataQuality = adaptiveResult.dataQuality
-
-            // Calculate weight change
             let actualWeightChangeKg = try await calculateActualWeightChange(from: startDate, to: endDate)
-            let goalWeightChangeKg = goal.weeklyWeightChangePaceKg * 4  // 4 weeks
-
-            // Check if on track
-            let weeklyActual = (actualWeightChangeKg ?? 0) / 4.0
-            let weeklyGoal = goal.weeklyWeightChangePaceKg
-            let isOnTrack = abs(weeklyActual - weeklyGoal) <= onTrackToleranceKgPerWeek
-
-            // Generate descriptions based on data quality
-            let qualityPrefix =
-                dataQuality.quality == .minimum
-                ? "Based on limited data: "
-                : ""
-
-            if isOnTrack {
-                return ProgramOptimizationResult(
-                    periodStart: startDate,
-                    periodEnd: endDate,
-                    currentTDEE: currentTDEE,
-                    proposedTDEE: nil,
-                    tdeeConfidence: adaptiveResult.confidence,
-                    dataQuality: dataQuality,
-                    actualWeightChangeKg: actualWeightChangeKg,
-                    goalWeightChangeKg: goalWeightChangeKg,
-                    isOnTrack: true,
-                    proposedDailyCalories: nil,
-                    proposedWeeklyMacros: nil,
-                    changeDescription: "\(qualityPrefix)You're on track! Your weight is changing at the expected pace.",
-                    whatNextDescription: generateWhatNextDescription(dataQuality: dataQuality, isOnTrack: true)
-                )
-            }
-
-            // Calculate new targets
-            let proposedCalories = calculateProposedCalories(
-                tdee: adaptiveResult.tdee,
-                weeklyPaceKg: goal.weeklyWeightChangePaceKg,
-                calorieFloor: goal.program?.calorieFloor.minimumCalories ?? 1200
-            )
-
-            let proposedMacros = calculateProposedMacros(
-                calories: proposedCalories,
-                program: goal.program,
-                weightKg: goal.startingWeightKg
-            )
-
-            let changeDescription =
-                qualityPrefix
-                + generateChangeDescription(
-                    currentTDEE: currentTDEE,
-                    proposedTDEE: adaptiveResult.tdee,
-                    isOnTrack: isOnTrack,
-                    actualWeightChangeKg: actualWeightChangeKg,
-                    goalWeightChangeKg: goalWeightChangeKg
-                )
-
-            return ProgramOptimizationResult(
-                periodStart: startDate,
-                periodEnd: endDate,
+            return buildOptimizationResult(
+                goal: goal,
+                adaptiveResult: adaptiveResult,
                 currentTDEE: currentTDEE,
-                proposedTDEE: adaptiveResult.tdee,
-                tdeeConfidence: adaptiveResult.confidence,
-                dataQuality: dataQuality,
                 actualWeightChangeKg: actualWeightChangeKg,
-                goalWeightChangeKg: goalWeightChangeKg,
-                isOnTrack: isOnTrack,
-                proposedDailyCalories: proposedCalories,
-                proposedWeeklyMacros: proposedMacros,
-                changeDescription: changeDescription,
-                whatNextDescription: generateWhatNextDescription(dataQuality: dataQuality, isOnTrack: false)
+                startDate: startDate,
+                endDate: endDate
             )
         } catch let error as TDEEServiceError {
-            // Handle insufficient data with quality assessment
             if let assessment = error.dataQualityAssessment {
-                Self.logger.info("Check-in blocked due to insufficient data: \(assessment.quality.displayName)")
+                Self.logger.info("Check-in blocked: \(assessment.quality.displayName)")
                 return createInsufficientDataResult(goal: goal, dataQuality: assessment)
             }
-            Self.logger.warning("Adaptive TDEE calculation failed: \(error.localizedDescription)")
-            let fallbackAssessment = await tdeeService.assessDataQuality()
-            return createInsufficientDataResult(goal: goal, dataQuality: fallbackAssessment)
+            Self.logger.warning("Adaptive TDEE failed: \(error.localizedDescription)")
+            return createInsufficientDataResult(goal: goal, dataQuality: await tdeeService.assessDataQuality())
         } catch {
-            Self.logger.warning("Adaptive TDEE calculation failed: \(error.localizedDescription)")
-            let fallbackAssessment = await tdeeService.assessDataQuality()
-            return createInsufficientDataResult(goal: goal, dataQuality: fallbackAssessment)
+            Self.logger.warning("Adaptive TDEE failed: \(error.localizedDescription)")
+            return createInsufficientDataResult(goal: goal, dataQuality: await tdeeService.assessDataQuality())
         }
+    }
+
+    /// Build optimization result from adaptive TDEE calculation
+    private func buildOptimizationResult(
+        goal: NutritionGoal,
+        adaptiveResult: AdaptiveTDEEResult,
+        currentTDEE: Double,
+        actualWeightChangeKg: Double?,
+        startDate: Date,
+        endDate: Date
+    ) -> ProgramOptimizationResult {
+        let dataQuality = adaptiveResult.dataQuality
+        let goalWeightChangeKg = goal.weeklyWeightChangePaceKg * 4
+
+        let weeklyActual = (actualWeightChangeKg ?? 0) / 4.0
+        let isOnTrack = abs(weeklyActual - goal.weeklyWeightChangePaceKg) <= onTrackToleranceKgPerWeek
+        let qualityPrefix = dataQuality.quality == .minimum ? "Based on limited data: " : ""
+
+        if isOnTrack {
+            return ProgramOptimizationResult(
+                periodStart: startDate, periodEnd: endDate, currentTDEE: currentTDEE,
+                proposedTDEE: nil, tdeeConfidence: adaptiveResult.confidence, dataQuality: dataQuality,
+                actualWeightChangeKg: actualWeightChangeKg, goalWeightChangeKg: goalWeightChangeKg,
+                isOnTrack: true, proposedDailyCalories: nil, proposedWeeklyMacros: nil,
+                changeDescription: "\(qualityPrefix)You're on track! Your weight is changing at the expected pace.",
+                whatNextDescription: generateWhatNextDescription(dataQuality: dataQuality, isOnTrack: true)
+            )
+        }
+
+        let proposedCalories = calculateProposedCalories(
+            tdee: adaptiveResult.tdee,
+            weeklyPaceKg: goal.weeklyWeightChangePaceKg,
+            calorieFloor: goal.program?.calorieFloor.minimumCalories ?? 1200
+        )
+        let proposedMacros = calculateProposedMacros(
+            calories: proposedCalories, program: goal.program, weightKg: goal.startingWeightKg
+        )
+        let changeDescription =
+            qualityPrefix
+            + generateChangeDescription(
+                currentTDEE: currentTDEE, proposedTDEE: adaptiveResult.tdee, isOnTrack: false,
+                actualWeightChangeKg: actualWeightChangeKg, goalWeightChangeKg: goalWeightChangeKg
+            )
+
+        return ProgramOptimizationResult(
+            periodStart: startDate, periodEnd: endDate, currentTDEE: currentTDEE,
+            proposedTDEE: adaptiveResult.tdee, tdeeConfidence: adaptiveResult.confidence, dataQuality: dataQuality,
+            actualWeightChangeKg: actualWeightChangeKg, goalWeightChangeKg: goalWeightChangeKg,
+            isOnTrack: false, proposedDailyCalories: proposedCalories, proposedWeeklyMacros: proposedMacros,
+            changeDescription: changeDescription,
+            whatNextDescription: generateWhatNextDescription(dataQuality: dataQuality, isOnTrack: false)
+        )
     }
 
     /// Generate "what's next" description based on data quality
@@ -447,15 +430,15 @@ final class WeeklyCheckInService {
         weightKg: Double
     ) -> WeeklyMacroDistribution {
         let proteinGrams = (program?.protein.gramsPerKg ?? 1.6) * weightKg
-        let proteinCalories = proteinGrams * 4
+        let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
 
         let remainingCalories = calories - proteinCalories
         let macroSplit = program?.diet.macroPercentages ?? DietPreference.balanced.macroPercentages
         let fatPercent = macroSplit.fat / (macroSplit.fat + macroSplit.carbs)
         let carbPercent = macroSplit.carbs / (macroSplit.fat + macroSplit.carbs)
 
-        let fatGrams = (remainingCalories * fatPercent) / 9
-        let carbsGrams = (remainingCalories * carbPercent) / 4
+        let fatGrams = (remainingCalories * fatPercent) / MacroCalorieConstants.fatCaloriesPerGram
+        let carbsGrams = (remainingCalories * carbPercent) / MacroCalorieConstants.carbsCaloriesPerGram
 
         let dailyMacros = DailyMacros(
             calories: calories,

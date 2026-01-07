@@ -43,9 +43,9 @@ final class QuickAddViewModel {
 
     // MARK: - Computed Properties
 
-    /// Macro sum calculation (protein*4 + carbs*4 + fat*9)
+    /// Macro sum calculation using standard Atwater factors
     var macroSum: Double {
-        (protein * 4) + (carbs * 4) + (fat * 9)
+        MacroCalorieConstants.calories(proteinGrams: protein, carbsGrams: carbs, fatGrams: fat)
     }
 
     /// Whether the form is valid and can be saved

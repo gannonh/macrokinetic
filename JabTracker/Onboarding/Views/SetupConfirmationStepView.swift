@@ -17,6 +17,9 @@ struct SetupConfirmationStepView: View {
 
     private static let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
 
+    /// Maps display index (0=Mon, 6=Sun) to Calendar weekday (2=Mon, 1=Sun)
+    private static let displayIndexToWeekday = [2, 3, 4, 5, 6, 7, 1]
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -101,14 +104,8 @@ struct SetupConfirmationStepView: View {
             }
             .padding(.bottom, 8)
 
-            // Calorie row (pill style)
-            macroRow(
-                label: "Cals",
-                value: Int(viewModel.calculatedCalories),
-                unit: "",
-                color: DesignTokens.Colors.calories,
-                isPill: true
-            )
+            // Calorie row (pill style) - uses per-day values for shifted distribution
+            calorieRow
 
             // Protein row
             macroRow(
@@ -196,6 +193,39 @@ struct SetupConfirmationStepView: View {
         case "C": return "grams carbs"
         default: return label
         }
+    }
+
+    /// Calorie row with per-day values for shifted distribution
+    private var calorieRow: some View {
+        let color = DesignTokens.Colors.calories
+
+        return HStack(spacing: 4) {
+            Text("Cals")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+                .frame(width: 30, alignment: .leading)
+
+            ForEach(0..<7, id: \.self) { index in
+                let weekday = Self.displayIndexToWeekday[index]
+                let dayCalories = viewModel.calculatedDailyCalories[weekday] ?? viewModel.calculatedCalories
+                let valueText = "\(Int(dayCalories))"
+                let dayName = Self.dayLabels[index]
+
+                ZStack {
+                    Capsule()
+                        .fill(color.opacity(0.15))
+
+                    Text(valueText)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(color)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 28)
+                .accessibilityLabel("\(dayName): \(Int(dayCalories)) calories")
+            }
+        }
+        .padding(.vertical, 4)
     }
 
     // MARK: - Calculation Explanation

@@ -93,8 +93,12 @@ final class OnboardingViewModel {
 
     // MARK: - Calculated Targets (populated after setupConfirmation)
 
-    /// Calculated daily calorie target
+    /// Calculated daily calorie target (base value)
     var calculatedCalories: Double = 0
+
+    /// Per-day calorie targets (weekday 1=Sun through 7=Sat)
+    /// Accounts for shifted distribution when selected
+    var calculatedDailyCalories: [Int: Double] = [:]
 
     /// Calculated daily protein target in grams
     var calculatedProtein: Double = 0
@@ -391,6 +395,9 @@ final class OnboardingViewModel {
         calculatedFat = goal.dailyFatTargetGrams
         calculatedCarbs = goal.dailyCarbTargetGrams
 
+        // Calculate per-day calories using shifted distribution if applicable
+        calculatedDailyCalories = calculatePerDayCalories(baseCalories: goal.dailyCalorieTarget)
+
         logger.info(
             "Calculated targets: \(Int(self.calculatedCalories)) cal, P:\(Int(self.calculatedProtein))g"
         )
@@ -452,6 +459,13 @@ final class OnboardingViewModel {
         goal.program = program
         context.insert(program)
 
+        // Apply shifted calorie distribution if selected
+        if weeklyDistributionMode == .shifted,
+            let distribution = WeeklyCalorieDistribution.shifted(highCalorieDays: highCalorieDays)
+        {
+            program.setWeeklyDistribution(distribution)
+        }
+
         try context.save()
         return goal
     }
@@ -507,6 +521,32 @@ final class OnboardingViewModel {
         UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
 
         logger.info("User marked as onboarded")
+    }
+
+    /// Calculate per-day calories using the shifted distribution if applicable
+    private func calculatePerDayCalories(baseCalories: Double) -> [Int: Double] {
+        var dailyCalories: [Int: Double] = [:]
+
+        // Use factory method to get shifted distribution if applicable
+        let distribution: WeeklyCalorieDistribution? = {
+            guard weeklyDistributionMode == .shifted, !highCalorieDays.isEmpty else {
+                return nil
+            }
+            return WeeklyCalorieDistribution.shifted(highCalorieDays: highCalorieDays)
+        }()
+
+        // Populate all 7 days (1=Sun through 7=Sat)
+        for weekday in WeeklyConstants.validWeekdayRange {
+            if let distribution = distribution,
+                let dayCalories = distribution.calorieTargetForDay(weekday, baseCalories: baseCalories)
+            {
+                dailyCalories[weekday] = dayCalories
+            } else {
+                dailyCalories[weekday] = baseCalories
+            }
+        }
+
+        return dailyCalories
     }
 
     /// Update progress based on current step
