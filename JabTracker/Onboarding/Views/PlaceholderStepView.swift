@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Placeholder view for onboarding steps not yet implemented.
-/// Used for healthKit, faceID, notifications, and completion steps.
+/// Placeholder view for onboarding steps.
+/// Provides fallback icons and phase numbers for all OnboardingStep cases.
 struct PlaceholderStepView: View {
     let step: OnboardingStep
 

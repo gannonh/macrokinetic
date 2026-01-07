@@ -33,7 +33,6 @@
           "Models/WeightEntry.swift",
           "Models/MetricsEntry.swift",
           "Models/ProgressPhoto.swift",
-          "Models/EntrySource.swift",
           "Models/ProgramConfiguration.swift",
           "Models/NutritionGoal.swift",
           "Models/NutritionProgram.swift",
@@ -162,10 +161,12 @@
       "SwiftUI-specific presentation logic",
       "App entry points",
       "Design system components",
-      "Protocol definitions"
+      "Protocol definitions",
+      "Pure enums with no executable code"
     ],
     "files": [
       "ContentView.swift",
+      "Models/EntrySource.swift",
       "Services/MetricsService+HealthKit.swift",
       "Design/ButtonComponents.swift",
       "Design/ButtonStyles.swift",

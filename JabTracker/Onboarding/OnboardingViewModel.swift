@@ -82,7 +82,7 @@ final class OnboardingViewModel {
     /// Selected training/activity level
     var trainingLevel: TrainingLevel?
 
-    /// Selected weekly distribution mode (even, front-loaded, back-loaded)
+    /// Selected weekly distribution mode (even or shifted to specific days)
     var weeklyDistributionMode: WeeklyDistributionMode?
 
     /// Selected protein level (moderate, high, very high)
@@ -302,8 +302,12 @@ final class OnboardingViewModel {
         if hasHeight && hasSex && hasBirthday {
             hasProfileDataFromHealthKit = true
             user.updatedAt = Date()
-            try? dataController.container.mainContext.save()
-            logger.info("All profile data populated from HealthKit - will skip profileCompletion step")
+            do {
+                try dataController.container.mainContext.save()
+                logger.info("All profile data populated from HealthKit - will skip profileCompletion step")
+            } catch {
+                logger.error("Failed to save HealthKit profile data: \(error.localizedDescription)")
+            }
         } else {
             logger.info(
                 "Incomplete profile data from HealthKit - height:\(hasHeight), sex:\(hasSex), birthday:\(hasBirthday)"

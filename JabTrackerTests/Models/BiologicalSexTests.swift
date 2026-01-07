@@ -45,28 +45,6 @@ struct BiologicalSexTests {
         #expect(BiologicalSex.other.displayName == "Other")
     }
 
-    // MARK: - Short Name Tests
-
-    @Test("shortName returns correct value for notSet")
-    func testShortNameNotSet() {
-        #expect(BiologicalSex.notSet.shortName == "Not Set")
-    }
-
-    @Test("shortName returns correct value for female")
-    func testShortNameFemale() {
-        #expect(BiologicalSex.female.shortName == "Female")
-    }
-
-    @Test("shortName returns correct value for male")
-    func testShortNameMale() {
-        #expect(BiologicalSex.male.shortName == "Male")
-    }
-
-    @Test("shortName returns correct value for other")
-    func testShortNameOther() {
-        #expect(BiologicalSex.other.shortName == "Other")
-    }
-
     // MARK: - BMR Adjustment Tests
 
     @Test("bmrAdjustment returns nil for notSet")

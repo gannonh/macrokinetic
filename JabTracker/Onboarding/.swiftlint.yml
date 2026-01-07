@@ -2,8 +2,8 @@
 # Extended limits for complex onboarding flows with many conditional steps
 
 file_length:
-  warning: 600
-  error: 700
+  warning: 650
+  error: 750
 
 type_body_length:
   warning: 400

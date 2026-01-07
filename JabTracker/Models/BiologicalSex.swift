@@ -26,16 +26,6 @@ enum BiologicalSex: String, CaseIterable, Codable {
         }
     }
 
-    /// Short display name for compact UI (e.g., segmented controls)
-    var shortName: String {
-        switch self {
-        case .notSet: return "Not Set"
-        case .female: return "Female"
-        case .male: return "Male"
-        case .other: return "Other"
-        }
-    }
-
     /// BMR adjustment for Mifflin-St Jeor formula.
     /// Returns nil for notSet (calculation should be blocked).
     /// Returns average of male/female for other.

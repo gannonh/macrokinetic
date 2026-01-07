@@ -40,7 +40,7 @@ enum OnboardingStep: String, CaseIterable {
     case targetWeight
 
     /// Profile completion for TDEE calculation (height, sex, birthday)
-    /// Reuses ProfileCompletionStepView component
+    /// Uses OnboardingProfileCompletionView (design matches ProfileCompletionStepView for consistency)
     case profileCompletion
 
     /// Program style selection (coached, collaborative, manual)
@@ -59,7 +59,7 @@ enum OnboardingStep: String, CaseIterable {
     /// Reuses TrainingLevelStepView component
     case activityLevel
 
-    /// Weekly distribution mode (even, front-loaded, back-loaded)
+    /// Weekly distribution mode (even or shifted to specific days)
     /// Reuses WeeklyDistributionStepView component
     case weeklyDistribution
 

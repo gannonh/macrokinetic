@@ -874,19 +874,22 @@ struct OnboardingViewModelProfileDataTests {
             iterations += 1
         }
 
-        // Check if we reached the step (depends on step filtering)
-        if viewModel.currentStep == .shiftedDaySelection {
-            // Clear high calorie days
-            viewModel.highCalorieDays = []
+        // Verify we reached the step (with shifted distribution, this step should be available)
+        #expect(
+            viewModel.currentStep == .shiftedDaySelection,
+            "Expected to reach shiftedDaySelection step but got \(viewModel.currentStep)"
+        )
 
-            // Then: Cannot proceed without high calorie days
-            #expect(viewModel.canProceedToNext == false)
+        // Clear high calorie days
+        viewModel.highCalorieDays = []
 
-            // When: Adding a high calorie day
-            viewModel.highCalorieDays = [2]  // Monday
+        // Then: Cannot proceed without high calorie days
+        #expect(viewModel.canProceedToNext == false)
 
-            // Then: Can proceed
-            #expect(viewModel.canProceedToNext == true)
-        }
+        // When: Adding a high calorie day
+        viewModel.highCalorieDays = [2]  // Monday
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
     }
 }

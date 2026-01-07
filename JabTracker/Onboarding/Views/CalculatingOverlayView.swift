@@ -11,6 +11,7 @@ import SwiftUI
 struct CalculatingOverlayView: View {
     @State private var isAnimating = false
     @State private var currentMessageIndex = 0
+    @State private var messageTimer: Timer?
 
     private let messages = [
         "Analyzing your profile...",
@@ -66,13 +67,17 @@ struct CalculatingOverlayView: View {
             isAnimating = true
             startMessageRotation()
         }
+        .onDisappear {
+            messageTimer?.invalidate()
+            messageTimer = nil
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Calculating your personalized plan")
         .accessibilityIdentifier("calculating-overlay")
     }
 
     private func startMessageRotation() {
-        Timer.scheduledTimer(withTimeInterval: 1.2, repeats: true) { _ in
+        messageTimer = Timer.scheduledTimer(withTimeInterval: 1.2, repeats: true) { _ in
             withAnimation {
                 currentMessageIndex = (currentMessageIndex + 1) % messages.count
             }

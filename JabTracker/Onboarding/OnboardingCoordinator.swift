@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import SwiftData
 
 @MainActor
@@ -7,6 +8,10 @@ class OnboardingCoordinator: ObservableObject {
 
     private let authManager: AuthenticationManager
     private let dataController: DataController
+    private let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "OnboardingCoordinator"
+    )
 
     init(authManager: AuthenticationManager, dataController: DataController? = nil) {
         self.authManager = authManager
@@ -27,13 +32,13 @@ class OnboardingCoordinator: ObservableObject {
 
         // Check if we're forcing onboarding (for testing) - only apply in non-unit-test context
         if !isUnitTestEnvironment && ProcessInfo.processInfo.arguments.contains("--force-onboarding") {
-            print("🔍 OnboardingCoordinator: Force onboarding enabled - showing onboarding")
+            logger.debug("Force onboarding enabled - showing onboarding")
             return true
         }
 
         // Check if we're bypassing onboarding (for real auth testing) - only apply in non-unit-test context
         if !isUnitTestEnvironment && ProcessInfo.processInfo.arguments.contains("--bypass-onboarding") {
-            print("🔍 OnboardingCoordinator: Bypass onboarding enabled - skipping onboarding")
+            logger.debug("Bypass onboarding enabled - skipping onboarding")
             return false
         }
 
@@ -44,59 +49,66 @@ class OnboardingCoordinator: ObservableObject {
             && (ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
                 || ProcessInfo.processInfo.arguments.contains("--ui-testing"))
         if isUITesting {
-            print("🔍 OnboardingCoordinator: UI testing mode detected - bypassing onboarding")
+            logger.debug("UI testing mode detected - bypassing onboarding")
             return false
         }
 
         // Check if user exists and has completed onboarding
         guard let user = authManager.currentUser else {
-            print("🔍 OnboardingCoordinator: No current user found - not showing onboarding")
+            logger.debug("No current user found - not showing onboarding")
             return false  // No user means not authenticated, shouldn't show onboarding
         }
 
-        print(
-            "🔍 OnboardingCoordinator: Found user \(user.id) - hasCompletedOnboarding: \(user.hasCompletedOnboarding)"
-        )
+        logger.debug(
+            "Found user \(user.id, privacy: .private) - hasCompletedOnboarding: \(user.hasCompletedOnboarding)")
 
         // Check user's onboarding status
         if user.hasCompletedOnboarding {
-            print("🔍 OnboardingCoordinator: User has completed onboarding - not showing")
+            logger.debug("User has completed onboarding - not showing")
             return false
         }
 
         // Check if user skipped onboarding (will complete goal setup later via Strategy)
         if user.onboardingSkippedAt != nil {
-            print("🔍 OnboardingCoordinator: User skipped onboarding - not showing")
+            logger.debug("User skipped onboarding - not showing")
             return false
         }
 
         // Check UserDefaults for skipped state
         let userDefaultsSkipped = UserDefaults.standard.bool(forKey: "hasSkippedOnboarding")
         if userDefaultsSkipped {
-            print("🔍 OnboardingCoordinator: UserDefaults says skipped - syncing to model")
+            logger.debug("UserDefaults says skipped - syncing to model")
             user.onboardingSkippedAt =
                 UserDefaults.standard.object(forKey: "onboardingSkippedAt") as? Date ?? Date()
-            try? self.dataController.container.mainContext.save()
+            do {
+                try self.dataController.container.mainContext.save()
+            } catch {
+                logger.error("Failed to sync skipped state to model: \(error.localizedDescription)")
+            }
             return false
         }
 
         // Check UserDefaults as backup
         let userDefaultsCompleted = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-        print("🔍 OnboardingCoordinator: UserDefaults hasCompletedOnboarding: \(userDefaultsCompleted)")
+        logger.debug("UserDefaults hasCompletedOnboarding: \(userDefaultsCompleted)")
 
         if userDefaultsCompleted {
-            print("🔍 OnboardingCoordinator: UserDefaults says completed - syncing to model")
+            logger.debug("UserDefaults says completed - syncing to model")
             // Sync the model if UserDefaults says completed but model doesn't
             user.hasCompletedOnboarding = true
             user.onboardingCompletedAt =
                 UserDefaults.standard.object(
                     forKey: "onboardingCompletedAt"
                 ) as? Date ?? Date()
-            try? self.dataController.container.mainContext.save()
+            do {
+                try self.dataController.container.mainContext.save()
+            } catch {
+                logger.error("Failed to sync completed state to model: \(error.localizedDescription)")
+            }
             return false
         }
 
-        print("🔍 OnboardingCoordinator: User needs onboarding - showing onboarding flow")
+        logger.debug("User needs onboarding - showing onboarding flow")
         return true
     }
 
