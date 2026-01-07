@@ -245,14 +245,15 @@ struct OnboardingView: View {
 
     // MARK: - Pre-Completion Animation
 
-    /// Shows the calculating overlay briefly before transitioning to completion step
+    /// Shows the calculating overlay before transitioning to completion step.
+    /// Duration allows all 4 messages to cycle through, showing the "magic" of personalization.
     private func showCalculatingThenComplete(viewModel: OnboardingViewModel) async {
         withAnimation(.easeIn(duration: 0.2)) {
             isCalculatingTargets = true
         }
 
-        // Brief delay for the animation to be visible
-        try? await Task.sleep(nanoseconds: 800_000_000)  // 0.8 seconds
+        // Show overlay long enough to cycle through all messages (4 messages × 1.2s each)
+        try? await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
 
         withAnimation(.spring()) {
             isCalculatingTargets = false
