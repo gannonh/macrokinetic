@@ -65,6 +65,9 @@ final class OnboardingViewModel {
         return totalInches * 2.54
     }
 
+    /// Whether profile data was populated from HealthKit (skip profileCompletion step)
+    var hasProfileDataFromHealthKit: Bool = false
+
     // MARK: - Activity Level State
 
     /// Selected training/activity level
@@ -99,19 +102,32 @@ final class OnboardingViewModel {
 
     // MARK: - Computed Properties
 
+    /// Steps available in the onboarding flow (filters out skippable steps)
+    var availableSteps: [OnboardingStep] {
+        OnboardingStep.allCases.filter { step in
+            switch step {
+            case .profileCompletion:
+                // Skip profileCompletion if HealthKit provided all profile data
+                return !hasProfileDataFromHealthKit
+            default:
+                return true
+            }
+        }
+    }
+
     /// Total number of steps in the onboarding flow
     var totalSteps: Int {
-        OnboardingStep.allCases.count
+        availableSteps.count
     }
 
     /// Index of the current step (0-based)
     var currentStepIndex: Int {
-        OnboardingStep.allCases.firstIndex(of: currentStep) ?? 0
+        availableSteps.firstIndex(of: currentStep) ?? 0
     }
 
     /// Whether the current step is the last step
     var isLastStep: Bool {
-        currentStep == OnboardingStep.allCases.last
+        currentStep == availableSteps.last
     }
 
     /// Whether the user can proceed to the next step.
@@ -178,6 +194,8 @@ final class OnboardingViewModel {
             let success = try await service.setHealthSyncEnabled(true, for: user)
             if success {
                 logger.info("HealthKit sync enabled via onboarding")
+                // After successful authorization, check for and populate profile data
+                await populateProfileFromHealthKit(user: user, service: service)
             } else {
                 logger.info("HealthKit authorization denied by user")
             }
@@ -185,6 +203,54 @@ final class OnboardingViewModel {
         } catch {
             logger.error("Failed to enable HealthKit: \(error.localizedDescription)")
             return false
+        }
+    }
+
+    /// Populate profile completion fields from HealthKit data if available.
+    /// Sets `hasProfileDataFromHealthKit` to true if all required fields were populated.
+    private func populateProfileFromHealthKit(user: User, service: MetricsService) async {
+        logger.info("Checking HealthKit for profile data...")
+
+        // Fetch height
+        var hasHeight = false
+        if let heightCm = await service.getCurrentHeight(for: user), heightCm > 0 {
+            let totalInches = heightCm / 2.54
+            editHeightFeet = Int(totalInches / 12)
+            editHeightInches = Int(totalInches.truncatingRemainder(dividingBy: 12))
+            user.heightCm = heightCm
+            hasHeight = true
+            logger.info("Populated height from HealthKit: \(heightCm) cm")
+        }
+
+        // Fetch biological sex
+        var hasSex = false
+        let gender = await service.getCurrentGender(for: user)
+        if !gender.isEmpty {
+            editSex = gender
+            user.gender = gender
+            hasSex = true
+            logger.info("Populated sex from HealthKit: \(gender)")
+        }
+
+        // Fetch date of birth
+        var hasBirthday = false
+        if let dob = await service.getCurrentDateOfBirth(for: user) {
+            editBirthday = dob
+            user.dateOfBirth = dob
+            hasBirthday = true
+            logger.info("Populated birthday from HealthKit")
+        }
+
+        // If all required profile data is available, skip the profileCompletion step
+        if hasHeight && hasSex && hasBirthday {
+            hasProfileDataFromHealthKit = true
+            user.updatedAt = Date()
+            try? dataController.container.mainContext.save()
+            logger.info("All profile data populated from HealthKit - will skip profileCompletion step")
+        } else {
+            logger.info(
+                "Incomplete profile data from HealthKit - height:\(hasHeight), sex:\(hasSex), birthday:\(hasBirthday)"
+            )
         }
     }
 
@@ -222,10 +288,10 @@ final class OnboardingViewModel {
     func moveToNextStep() {
         guard !isLastStep, canProceedToNext else { return }
 
-        if let currentIndex = OnboardingStep.allCases.firstIndex(of: currentStep),
-            currentIndex + 1 < OnboardingStep.allCases.count
+        if let currentIndex = availableSteps.firstIndex(of: currentStep),
+            currentIndex + 1 < availableSteps.count
         {
-            currentStep = OnboardingStep.allCases[currentIndex + 1]
+            currentStep = availableSteps[currentIndex + 1]
             logger.debug("Moved to step: \(self.currentStep.rawValue)")
         }
     }
@@ -233,10 +299,10 @@ final class OnboardingViewModel {
     /// Move to the previous step in the onboarding flow.
     /// Does nothing if already at the first step.
     func moveToPreviousStep() {
-        if let currentIndex = OnboardingStep.allCases.firstIndex(of: currentStep),
+        if let currentIndex = availableSteps.firstIndex(of: currentStep),
             currentIndex > 0
         {
-            currentStep = OnboardingStep.allCases[currentIndex - 1]
+            currentStep = availableSteps[currentIndex - 1]
             logger.debug("Moved back to step: \(self.currentStep.rawValue)")
         }
     }
