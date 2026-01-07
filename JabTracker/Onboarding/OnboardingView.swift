@@ -156,17 +156,14 @@ struct OnboardingView: View {
     // MARK: - Continue Handler
 
     private func handleContinue(viewModel: OnboardingViewModel) async {
-        // When leaving activityLevel step, calculate targets before showing confirmation
+        // When leaving activityLevel step, calculate targets silently (no overlay)
         if viewModel.currentStep == .activityLevel {
-            isCalculatingTargets = true
             do {
                 try await viewModel.calculateTargets()
-                isCalculatingTargets = false
                 withAnimation(.spring()) {
                     viewModel.moveToNextStep()
                 }
             } catch {
-                isCalculatingTargets = false
                 calculationError = "Failed to calculate your targets: \(error.localizedDescription)"
             }
             return
@@ -237,12 +234,29 @@ struct OnboardingView: View {
             }
         case .notifications:
             NotificationsStepView {
-                withAnimation(.spring()) {
-                    viewModel.moveToNextStep()
+                Task {
+                    await showCalculatingThenComplete(viewModel: viewModel)
                 }
             }
         case .completion:
             PlaceholderStepView(step: step)
+        }
+    }
+
+    // MARK: - Pre-Completion Animation
+
+    /// Shows the calculating overlay briefly before transitioning to completion step
+    private func showCalculatingThenComplete(viewModel: OnboardingViewModel) async {
+        withAnimation(.easeIn(duration: 0.2)) {
+            isCalculatingTargets = true
+        }
+
+        // Brief delay for the animation to be visible
+        try? await Task.sleep(nanoseconds: 800_000_000)  // 0.8 seconds
+
+        withAnimation(.spring()) {
+            isCalculatingTargets = false
+            viewModel.moveToNextStep()
         }
     }
 
