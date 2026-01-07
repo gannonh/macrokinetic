@@ -51,7 +51,7 @@ struct CalculatingOverlayView: View {
                 }
 
                 VStack(spacing: 12) {
-                    Text("Calculating Your Plan")
+                    Text("Customizing Your Program")
                         .font(.title2)
                         .fontWeight(.bold)
 
