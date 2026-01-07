@@ -53,8 +53,20 @@ struct PlaceholderStepView: View {
             return "scalemass"
         case .profileCompletion:
             return "person.crop.circle"
+        case .programStyle:
+            return "gearshape.2"
+        case .dietPreference:
+            return "fork.knife"
+        case .calorieFloor:
+            return "flame"
         case .activityLevel:
             return "figure.walk"
+        case .weeklyDistribution:
+            return "calendar"
+        case .proteinLevel:
+            return "dumbbell"
+        case .shiftedDaySelection:
+            return "calendar.badge.plus"
         case .setupConfirmation:
             return "checkmark.seal"
         case .faceID:
@@ -70,7 +82,9 @@ struct PlaceholderStepView: View {
         switch step {
         case .welcome, .uspShowcase:
             return 26
-        case .healthKit, .goalType, .targetWeight, .profileCompletion, .activityLevel, .setupConfirmation:
+        case .healthKit, .goalType, .targetWeight, .profileCompletion,
+            .programStyle, .dietPreference, .calorieFloor, .activityLevel,
+            .weeklyDistribution, .proteinLevel, .shiftedDaySelection, .setupConfirmation:
             return 27
         case .faceID, .notifications:
             return 28

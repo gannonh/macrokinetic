@@ -156,22 +156,29 @@ struct OnboardingView: View {
     // MARK: - Continue Handler
 
     private func handleContinue(viewModel: OnboardingViewModel) async {
-        // When leaving activityLevel step, calculate targets silently (no overlay)
-        if viewModel.currentStep == .activityLevel {
-            do {
-                try await viewModel.calculateTargets()
-                withAnimation(.spring()) {
-                    viewModel.moveToNextStep()
-                }
-            } catch {
-                calculationError = "Failed to calculate your targets: \(error.localizedDescription)"
-            }
+        // Determine if we're on the last step before setupConfirmation (need animation + calculation)
+        let isLastConfigStep = isStepBeforeSetupConfirmation(viewModel.currentStep, viewModel: viewModel)
+
+        if isLastConfigStep {
+            // Show animation, calculate targets, then move to setupConfirmation
+            await showCalculatingThenSetupConfirmation(viewModel: viewModel)
             return
         }
 
         withAnimation(.spring()) {
             viewModel.moveToNextStep()
         }
+    }
+
+    /// Determines if the current step is immediately before setupConfirmation
+    private func isStepBeforeSetupConfirmation(_ step: OnboardingStep, viewModel: OnboardingViewModel) -> Bool {
+        let steps = viewModel.availableSteps
+        guard let currentIndex = steps.firstIndex(of: step),
+            currentIndex + 1 < steps.count
+        else {
+            return false
+        }
+        return steps[currentIndex + 1] == .setupConfirmation
     }
 
     // MARK: - Step Navigation Helpers
@@ -220,9 +227,27 @@ struct OnboardingView: View {
         case .profileCompletion:
             OnboardingProfileCompletionView(viewModel: viewModel)
                 .accessibilityIdentifier("onboarding-profileCompletion-step")
+        case .programStyle:
+            ProgramStyleStepView(selection: Bindable(viewModel).programStyle)
+                .accessibilityIdentifier("onboarding-programStyle-step")
+        case .dietPreference:
+            DietPreferenceStepView(selection: Bindable(viewModel).dietPreference)
+                .accessibilityIdentifier("onboarding-dietPreference-step")
+        case .calorieFloor:
+            CalorieFloorStepView(selection: Bindable(viewModel).calorieFloorType)
+                .accessibilityIdentifier("onboarding-calorieFloor-step")
         case .activityLevel:
             TrainingLevelStepView(selection: Bindable(viewModel).trainingLevel)
                 .accessibilityIdentifier("onboarding-activityLevel-step")
+        case .weeklyDistribution:
+            WeeklyDistributionStepView(selection: Bindable(viewModel).weeklyDistributionMode)
+                .accessibilityIdentifier("onboarding-weeklyDistribution-step")
+        case .proteinLevel:
+            ProteinLevelStepView(selection: Bindable(viewModel).proteinLevel)
+                .accessibilityIdentifier("onboarding-proteinLevel-step")
+        case .shiftedDaySelection:
+            ShiftedDaySelectionStepView(highCalorieDays: Bindable(viewModel).highCalorieDays)
+                .accessibilityIdentifier("onboarding-shiftedDaySelection-step")
         case .setupConfirmation:
             SetupConfirmationStepView(viewModel: viewModel)
                 .accessibilityIdentifier("onboarding-setupConfirmation-step")
@@ -234,8 +259,8 @@ struct OnboardingView: View {
             }
         case .notifications:
             NotificationsStepView {
-                Task {
-                    await showCalculatingThenComplete(viewModel: viewModel)
+                withAnimation(.spring()) {
+                    viewModel.moveToNextStep()
                 }
             }
         case .completion:
@@ -243,13 +268,24 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Pre-Completion Animation
+    // MARK: - Pre-SetupConfirmation Animation
 
-    /// Shows the calculating overlay before transitioning to completion step.
+    /// Shows the calculating overlay before transitioning to setupConfirmation.
     /// Duration allows all 4 messages to cycle through, showing the "magic" of personalization.
-    private func showCalculatingThenComplete(viewModel: OnboardingViewModel) async {
+    private func showCalculatingThenSetupConfirmation(viewModel: OnboardingViewModel) async {
         withAnimation(.easeIn(duration: 0.2)) {
             isCalculatingTargets = true
+        }
+
+        // Calculate targets while showing animation
+        do {
+            try await viewModel.calculateTargets()
+        } catch {
+            calculationError = "Failed to calculate your targets: \(error.localizedDescription)"
+            withAnimation(.spring()) {
+                isCalculatingTargets = false
+            }
+            return
         }
 
         // Show overlay long enough to cycle through all messages (4 messages × 1.2s each)

@@ -256,7 +256,7 @@ final class ProgramWizardViewModel {
         return steps
     }
 
-    /// Steps for Collaborative mode
+    /// Steps for Collaborative mode (skips weeklyDistribution - they customize per-day in Strategy)
     private var collaborativeSteps: [ProgramWizardStep] {
         var steps = baseSteps
 
@@ -265,8 +265,8 @@ final class ProgramWizardViewModel {
             steps.append(.profileCompletion)
         }
 
-        // Collaborative shows: collaborativeDistribution -> confirmation
-        steps.append(contentsOf: [.collaborativeDistribution, .confirmation])
+        // Collaborative skips weeklyDistribution/shiftedDaySelection - customize per-day in Strategy
+        steps.append(contentsOf: [.dietPreference, .calorieFloor, .training, .proteinLevel, .confirmation])
         return steps
     }
 

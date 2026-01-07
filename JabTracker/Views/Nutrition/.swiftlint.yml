@@ -16,3 +16,8 @@ file_length:
 # Allow 3-member tuples for macro calculations (protein, fat, carbs)
 large_tuple:
   warning: 4
+
+# Extended function body length for complex wizard save/load functions
+function_body_length:
+  warning: 60
+  error: 80

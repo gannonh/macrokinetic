@@ -43,9 +43,34 @@ enum OnboardingStep: String, CaseIterable {
     /// Reuses ProfileCompletionStepView component
     case profileCompletion
 
+    /// Program style selection (coached, collaborative, manual)
+    /// Reuses ProgramStyleStepView component
+    case programStyle
+
+    /// Diet preference selection (balanced, low-carb, high-protein, keto)
+    /// Reuses DietPreferenceStepView component
+    case dietPreference
+
+    /// Calorie floor selection (standard, aggressive, very aggressive)
+    /// Reuses CalorieFloorStepView component
+    case calorieFloor
+
     /// Activity/training level selection
     /// Reuses TrainingLevelStepView component
     case activityLevel
+
+    /// Weekly distribution mode (even, front-loaded, back-loaded)
+    /// Reuses WeeklyDistributionStepView component
+    case weeklyDistribution
+
+    /// Shifted distribution: select which days have higher calories
+    /// Only shown when weeklyDistributionMode is .shifted
+    /// Reuses ShiftedDaySelectionStepView component
+    case shiftedDaySelection
+
+    /// Protein level selection (moderate, high, very high)
+    /// Reuses ProteinLevelStepView component
+    case proteinLevel
 
     /// Combined goal and program summary/confirmation
     case setupConfirmation
@@ -80,8 +105,20 @@ enum OnboardingStep: String, CaseIterable {
             return "Set Your Target"
         case .profileCompletion:
             return "Complete Your Profile"
+        case .programStyle:
+            return "Program Style"
+        case .dietPreference:
+            return "Diet Preference"
+        case .calorieFloor:
+            return "Calorie Floor"
         case .activityLevel:
             return "Activity Level"
+        case .weeklyDistribution:
+            return "Weekly Distribution"
+        case .proteinLevel:
+            return "Protein Level"
+        case .shiftedDaySelection:
+            return "High Calorie Days"
         case .setupConfirmation:
             return "Your Personalized Plan"
         case .faceID:
@@ -108,8 +145,20 @@ enum OnboardingStep: String, CaseIterable {
             return "Configure your target weight and pace"
         case .profileCompletion:
             return "We need a few details to calculate your targets"
+        case .programStyle:
+            return "How do you want to manage your nutrition?"
+        case .dietPreference:
+            return "Choose a macro distribution that fits your lifestyle"
+        case .calorieFloor:
+            return "Set a minimum daily calorie intake"
         case .activityLevel:
             return "What's your typical activity level?"
+        case .weeklyDistribution:
+            return "How should calories be spread across the week?"
+        case .proteinLevel:
+            return "Higher protein helps preserve muscle"
+        case .shiftedDaySelection:
+            return "Which days would you like to have higher calories?"
         case .setupConfirmation:
             return "Review your customized nutrition targets"
         case .faceID:

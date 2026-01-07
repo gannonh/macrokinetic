@@ -68,10 +68,28 @@ final class OnboardingViewModel {
     /// Whether profile data was populated from HealthKit (skip profileCompletion step)
     var hasProfileDataFromHealthKit: Bool = false
 
-    // MARK: - Activity Level State
+    // MARK: - Program Configuration State
+
+    /// Selected program style (coached, collaborative, manual)
+    var programStyle: ProgramStyle?
+
+    /// Selected diet preference (balanced, low-carb, high-protein, keto)
+    var dietPreference: DietPreference?
+
+    /// Selected calorie floor type (standard, aggressive, very aggressive)
+    var calorieFloorType: CalorieFloorType?
 
     /// Selected training/activity level
     var trainingLevel: TrainingLevel?
+
+    /// Selected weekly distribution mode (even, front-loaded, back-loaded)
+    var weeklyDistributionMode: WeeklyDistributionMode?
+
+    /// Selected protein level (moderate, high, very high)
+    var proteinLevel: ProteinLevel?
+
+    /// Days with higher calorie targets for Shifted distribution (weekday numbers: 2=Mon through 1=Sun)
+    var highCalorieDays: Set<Int> = []
 
     // MARK: - Calculated Targets (populated after setupConfirmation)
 
@@ -109,6 +127,18 @@ final class OnboardingViewModel {
             case .profileCompletion:
                 // Skip profileCompletion if HealthKit provided all profile data
                 return !hasProfileDataFromHealthKit
+
+            case .weeklyDistribution, .shiftedDaySelection:
+                // Skip for Collaborative - they customize per-day in Strategy
+                if programStyle == .collaborative {
+                    return false
+                }
+                // shiftedDaySelection only shows when Shifted distribution is selected
+                if step == .shiftedDaySelection {
+                    return weeklyDistributionMode == .shifted
+                }
+                return true
+
             default:
                 return true
             }
@@ -141,8 +171,20 @@ final class OnboardingViewModel {
             return goalViewModel.canContinue  // Uses GoalWizardViewModel validation
         case .profileCompletion:
             return isProfileDataComplete
+        case .programStyle:
+            return programStyle != nil
+        case .dietPreference:
+            return dietPreference != nil
+        case .calorieFloor:
+            return calorieFloorType != nil
         case .activityLevel:
             return trainingLevel != nil
+        case .weeklyDistribution:
+            return weeklyDistributionMode != nil
+        case .proteinLevel:
+            return proteinLevel != nil
+        case .shiftedDaySelection:
+            return !highCalorieDays.isEmpty  // At least one day must be selected
         case .setupConfirmation:
             return true  // Summary step, always can proceed
         case .faceID, .notifications, .completion:
@@ -319,6 +361,11 @@ final class OnboardingViewModel {
             throw OnboardingError.dataCreationFailed
         }
 
+        // Collaborative skips weeklyDistribution - default to even
+        if programStyle == .collaborative && weeklyDistributionMode == nil {
+            weeklyDistributionMode = .even
+        }
+
         let context = dataController.container.mainContext
 
         // Save profile data and log starting weight
@@ -392,14 +439,14 @@ final class OnboardingViewModel {
         goal.user = user
         context.insert(goal)
 
-        // Create program with smart defaults (Coached style)
+        // Create program with user-selected values (fallback to smart defaults)
         let program = NutritionProgram(
-            style: .coached,
-            diet: .balanced,
-            calorieFloor: .standard,
+            style: programStyle ?? .coached,
+            diet: dietPreference ?? .balanced,
+            calorieFloor: calorieFloorType ?? .standard,
             trainingLevel: trainingLevel,
-            distributionMode: .even,
-            proteinLevel: .moderate
+            distributionMode: weeklyDistributionMode ?? .even,
+            proteinLevel: proteinLevel ?? .moderate
         )
         program.goal = goal
         goal.program = program

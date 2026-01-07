@@ -442,6 +442,7 @@
 		D13BD68D456BABC603688447 /* ProgramSummarySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF83A469D02EA8A53F1657B8 /* ProgramSummarySheet.swift */; };
 		D189046B6A72A5056D1B00FB /* ConcentrationCurvePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D68C492863A13A6BC11172B /* ConcentrationCurvePreview.swift */; };
 		D19752FA0878611CB7C56F41 /* ProgramWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157A9DA1B2243A8A149DF479 /* ProgramWizard.swift */; };
+		D251BB4D22F384F6F5E0820B /* SetupConfirmationStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9B4C284496916A98908167 /* SetupConfirmationStepView.swift */; };
 		D3148B78DC1F980CF4FB46E2 /* NotificationSettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB5507316BB69978C0BFABDA /* NotificationSettingsUITests.swift */; };
 		D354F861584A1CA2FC4305B1 /* BodyMetricsVisibilityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A5AF00C7AD71DB0DEDA95D /* BodyMetricsVisibilityView.swift */; };
 		D456DAFE66A0EF08F30E22A0 /* FoodSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A08D25ACBA4D678632CFDF2B /* FoodSource.swift */; };
@@ -679,6 +680,7 @@
 		38F43C2AEC2CBDE7FEEE6D54 /* ChartDataEnumsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataEnumsTests.swift; sourceTree = "<group>"; };
 		391532D679612C6EC57DF841 /* PharmacokineticsEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PharmacokineticsEngineTests.swift; sourceTree = "<group>"; };
 		3920FFDC07806ABF17F4B65F /* ReconstitutionCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReconstitutionCalculatorTests.swift; sourceTree = "<group>"; };
+		3A9B4C284496916A98908167 /* SetupConfirmationStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupConfirmationStepView.swift; sourceTree = "<group>"; };
 		3AC5A4AC6357B513329A5A63 /* ProgressPhotoServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressPhotoServiceTests.swift; sourceTree = "<group>"; };
 		3AFBB2AEA81ADDFA68959A6C /* PKDashboardIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PKDashboardIntegrationTests.swift; sourceTree = "<group>"; };
 		3BB058CA68E61BCD9C97C693 /* MealLogServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealLogServiceTests.swift; sourceTree = "<group>"; };
@@ -1131,6 +1133,7 @@
 				8D69FCF6989BEB501B767A9B /* NotificationsStepView.swift */,
 				529FF9760FF8AACB53C86AC2 /* OnboardingStepViews.swift */,
 				0AE01E88C1172B85F1738A8D /* PlaceholderStepView.swift */,
+				3A9B4C284496916A98908167 /* SetupConfirmationStepView.swift */,
 				09AF345202BFA0B973607A7A /* USPShowcaseStepView.swift */,
 				539D714FC6E7650F7CC895B7 /* WelcomeStepView.swift */,
 			);
@@ -2790,6 +2793,7 @@
 				009B46599D9B6C5FF69B6185 /* SelectionCard.swift in Sources */,
 				57DEDA3EC175AB73B93EDAAC /* ServingInputView.swift in Sources */,
 				EEFC51E9355F6D75C8BC180A /* SettingsView.swift in Sources */,
+				D251BB4D22F384F6F5E0820B /* SetupConfirmationStepView.swift in Sources */,
 				7A2CC51947857AB036DBD600 /* ShortcutButton.swift in Sources */,
 				7E29E9B79E885701DFB077FC /* ShortcutRowButton.swift in Sources */,
 				A8CED30E5C4FE68E8BCF57B0 /* ShortcutsSheet.swift in Sources */,

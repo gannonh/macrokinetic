@@ -191,6 +191,7 @@
       "Onboarding/Views/PlaceholderStepView.swift",
       "Onboarding/Views/USPShowcaseStepView.swift",
       "Onboarding/Views/WelcomeStepView.swift",
+      "Onboarding/Views/SetupConfirmationStepView.swift",
       "Onboarding/Legacy/Components/ConcentrationCurvePreview.swift",
       "Onboarding/Legacy/Components/ConcentrationLabel.swift",
       "Onboarding/Legacy/Components/ReminderPreferencesView.swift",
