@@ -64,20 +64,26 @@ struct OnboardingStepTests {
         // Given: The OnboardingStep enum
         let allSteps = OnboardingStep.allCases
 
-        // Then: Should have exactly 11 steps in the expected order
-        // Integrated goal/program steps instead of wizard sheets
-        #expect(allSteps.count == 11)
+        // Then: Should have exactly 17 steps in the expected order
+        // Full onboarding flow with goal/program configuration steps
+        #expect(allSteps.count == 17)
         #expect(allSteps[0] == .welcome)
         #expect(allSteps[1] == .uspShowcase)
         #expect(allSteps[2] == .healthKit)
         #expect(allSteps[3] == .goalType)
         #expect(allSteps[4] == .targetWeight)
         #expect(allSteps[5] == .profileCompletion)
-        #expect(allSteps[6] == .activityLevel)
-        #expect(allSteps[7] == .setupConfirmation)
-        #expect(allSteps[8] == .faceID)
-        #expect(allSteps[9] == .notifications)
-        #expect(allSteps[10] == .completion)
+        #expect(allSteps[6] == .programStyle)
+        #expect(allSteps[7] == .dietPreference)
+        #expect(allSteps[8] == .calorieFloor)
+        #expect(allSteps[9] == .activityLevel)
+        #expect(allSteps[10] == .weeklyDistribution)
+        #expect(allSteps[11] == .shiftedDaySelection)
+        #expect(allSteps[12] == .proteinLevel)
+        #expect(allSteps[13] == .setupConfirmation)
+        #expect(allSteps[14] == .faceID)
+        #expect(allSteps[15] == .notifications)
+        #expect(allSteps[16] == .completion)
     }
 
     @Test("Each step has a title")
@@ -173,16 +179,31 @@ struct OnboardingViewModelNavigationTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Configure required state to proceed through goal/program steps
+        // Configure ALL required state to proceed through ALL steps
+        // Goal setup
         viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+
+        // Profile completion (editSex, editHeightFeet must be valid)
         viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+
+        // Program setup
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
         viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
 
         // Navigate to the last step
-        while viewModel.currentStep != .completion {
+        var iterations = 0
+        let maxIterations = 50  // Safety limit
+        while viewModel.currentStep != .completion && iterations < maxIterations {
             viewModel.moveToNextStep()
+            iterations += 1
         }
-        #expect(viewModel.currentStep == .completion)
+        #expect(viewModel.currentStep == .completion, "Should reach completion step")
 
         // When: Attempting to go to next step
         viewModel.moveToNextStep()
@@ -217,14 +238,23 @@ struct OnboardingViewModelProgressTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Configure required state to proceed through goal/program steps
+        // Configure ALL required state to proceed through ALL steps
         viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
         viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
         viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
 
-        // Navigate to the last step
-        while viewModel.currentStep != .completion {
+        // Navigate to the last step with safety limit
+        var iterations = 0
+        while viewModel.currentStep != .completion && iterations < 50 {
             viewModel.moveToNextStep()
+            iterations += 1
         }
 
         // Then: Progress should be 1.0
@@ -242,8 +272,8 @@ struct OnboardingViewModelProgressTests {
         // When: At second step (index 1)
         viewModel.moveToNextStep()  // uspShowcase (index 1)
 
-        // Then: Progress = 1 / (11 - 1) = 1/10
-        let expectedProgress = 1.0 / 10.0
+        // Then: Progress = 1 / (16 - 1) = 1/15
+        let expectedProgress = 1.0 / 15.0
         #expect(abs(viewModel.progress - expectedProgress) < 0.001)
     }
 
@@ -255,8 +285,8 @@ struct OnboardingViewModelProgressTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Then: Total steps should be 11
-        #expect(viewModel.totalSteps == 11)
+        // Then: Total steps should be 16 (17 total minus shiftedDaySelection which is skipped by default)
+        #expect(viewModel.totalSteps == 16)
     }
 
     @Test("currentStepIndex returns correct index")
@@ -303,14 +333,25 @@ struct OnboardingViewModelStateTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Configure required state to proceed
+        // Configure ALL required state to proceed through ALL steps
         viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
         viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 9
+        viewModel.editBirthday = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
         viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
 
-        // Navigate to the last step
-        while viewModel.currentStep != .completion {
+        // Navigate to the last step with safety limit
+        var iterations = 0
+        while viewModel.currentStep != .completion && iterations < 50 {
             viewModel.moveToNextStep()
+            iterations += 1
         }
 
         // Then: isLastStep should be true
@@ -378,9 +419,16 @@ struct OnboardingViewModelStateTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
 
-        // Configure required state
+        // Configure required state to navigate through all prerequisite steps
         viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
         viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 9
+        viewModel.editBirthday = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
 
         // Navigate to activityLevel step
         viewModel.moveToNextStep()  // uspShowcase
@@ -388,8 +436,14 @@ struct OnboardingViewModelStateTests {
         viewModel.moveToNextStep()  // goalType
         viewModel.moveToNextStep()  // targetWeight
         viewModel.moveToNextStep()  // profileCompletion
+        viewModel.moveToNextStep()  // programStyle
+        viewModel.moveToNextStep()  // dietPreference
+        viewModel.moveToNextStep()  // calorieFloor
         viewModel.moveToNextStep()  // activityLevel
         #expect(viewModel.currentStep == .activityLevel)
+
+        // Reset trainingLevel to verify validation
+        viewModel.trainingLevel = .none
 
         // Then: Cannot proceed without activity level
         #expect(viewModel.canProceedToNext == false)
