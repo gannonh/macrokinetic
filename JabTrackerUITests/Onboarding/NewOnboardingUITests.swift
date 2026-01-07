@@ -41,10 +41,11 @@ final class NewOnboardingUITests: XCTestCase {
             waitForElement(identifier: "onboarding-usp-showcase-step", timeout: 3), "USP Showcase step should appear")
         tapContinue()
 
-        // Step 3: HealthKit - Skip permission
+        // Step 3: HealthKit - Skip (leave toggle OFF, tap Continue)
         XCTAssertTrue(
             waitForElement(identifier: "onboarding-healthkit-step", timeout: 3), "HealthKit step should appear")
-        tapSkip(identifier: "healthkit-skip-button")
+        // HealthKit uses a toggle pattern - leave OFF and tap Continue to skip
+        tapContinue()
 
         // Step 4: Goal Type - Select Weight Loss
         XCTAssertTrue(
@@ -152,22 +153,17 @@ final class NewOnboardingUITests: XCTestCase {
             "Setup Confirmation step should appear")
         tapContinue()
 
-        // Step 14: Face ID - Skip permission
-        XCTAssertTrue(waitForElement(identifier: "onboarding-faceid-step", timeout: 3), "Face ID step should appear")
-        // Try skip button, or wait for auto-skip if biometrics unavailable
-        let skipFaceID = app.buttons["faceid-skip-button"]
-        if skipFaceID.waitForExistence(timeout: 2) {
-            skipFaceID.tap()
-        } else {
-            // Biometrics unavailable - step auto-skips after 1.5s
-            XCTAssertTrue(
-                waitForElement(identifier: "onboarding-notifications-step", timeout: 3),
-                "Should auto-skip to Notifications step")
+        // Step 14: Face ID - Skip (leave toggle OFF, tap Continue)
+        // Face ID may auto-skip if biometrics unavailable on simulator
+        if waitForElement(identifier: "onboarding-faceid-step", timeout: 3) {
+            // Leave toggle OFF and tap Continue to skip
+            tapContinue()
         }
 
-        // Step 15: Notifications - Skip permission
+        // Step 15: Notifications - Skip (leave toggle OFF, tap Continue)
         if waitForElement(identifier: "onboarding-notifications-step", timeout: 3) {
-            tapSkip(identifier: "notifications-skip-button")
+            // Leave toggle OFF and tap Continue to skip
+            tapContinue()
         }
 
         // Step 16: Completion - Verify and finish
@@ -261,7 +257,7 @@ final class NewOnboardingUITests: XCTestCase {
     }
 
     /// HealthKit permission step displays correctly
-    /// Acceptance: Icon, title, subtitle, Continue button enabled
+    /// Acceptance: Toggle visible, Continue button enabled
     func testHealthKitStepDisplays() throws {
         // Navigate to HealthKit step
         tapContinue()  // Welcome -> USP
@@ -270,9 +266,14 @@ final class NewOnboardingUITests: XCTestCase {
         XCTAssertTrue(
             waitForElement(identifier: "onboarding-healthkit-step", timeout: 3), "HealthKit step should appear")
 
-        // Verify skip button exists
-        let skipButton = app.buttons["healthkit-skip-button"]
-        XCTAssertTrue(skipButton.waitForExistence(timeout: 2), "Skip button should exist")
+        // Verify toggle exists (this is how users enable/skip HealthKit)
+        let toggle = app.switches["healthkit-toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 2), "HealthKit toggle should exist")
+
+        // Verify Continue button exists and is enabled
+        let continueButton = app.buttons["onboarding-continue-button"]
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 2), "Continue button should exist")
+        XCTAssertTrue(continueButton.isEnabled, "Continue button should be enabled")
     }
 
     /// Face ID permission step displays correctly
@@ -335,14 +336,6 @@ final class NewOnboardingUITests: XCTestCase {
         let continueButton = app.buttons["onboarding-continue-button"]
         if continueButton.waitForExistence(timeout: 3) {
             continueButton.tap()
-        }
-    }
-
-    /// Tap a skip button by identifier
-    private func tapSkip(identifier: String) {
-        let skipButton = app.buttons[identifier]
-        if skipButton.waitForExistence(timeout: 3) {
-            skipButton.tap()
         }
     }
 }
