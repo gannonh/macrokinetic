@@ -27,7 +27,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 **Milestone Goal:** Build the new unified dashboard with widget-based UI — static mockups first, wired to data once patterns established.
 
-**Design Reference:** [Figma Mockup](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=0-1)
+**Design Reference:**: `mocks/dashboard/DASHBOARD.png`
 
 #### Phase 30: Dashboard Foundation
 
@@ -37,11 +37,11 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 **Plans**: TBD
 
 **Figma References:**
-- [Main Widget Container](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-5)
-- [Standard Widget Pattern](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-11)
+- Hero Widget Container: `mocks/dashboard/Hero Widget.png`
+- Standard Widget Pattern: `mocks/dashboard/Standard Widget, Grouped.png`
 
 Plans:
-- [ ] 30-01: TBD (run /gsd:plan-phase 30 to break down)
+- [x] 30-01: Foundation & Containers (DashboardWidget protocol, WidgetCard, HeroWidgetContainer, StandardWidgetGroup)
 
 #### Phase 31: Main Widget (Hero)
 
@@ -51,9 +51,9 @@ Plans:
 **Plans**: TBD
 
 **Figma References:**
-- [Weekly Nutrition](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-6)
-- [Energy Balance](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-7)
-- [Daily Nutrition](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-8)
+- Weekly Nutrition: `mocks/dashboard/HERO - Weekly Nutrition.png`
+- Energy Balance: `mocks/dashboard/HERO - Energy Balance.png`
+- Daily Nutrition: `mocks/dashboard/HERO - Daily Nutrition.png`
 
 Plans:
 - [ ] 31-01: TBD
@@ -66,7 +66,7 @@ Plans:
 **Plans**: TBD
 
 **Figma References:**
-- [Insights & Analytics Group](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-11)
+- Insights & Analytics Group: `mocks/dashboard/Standard Widget, Grouped.png`
 
 Plans:
 - [ ] 32-01: TBD
@@ -79,9 +79,9 @@ Plans:
 **Plans**: TBD
 
 **Figma References:**
-- [Weight Trend Detail](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-22)
-- [Expenditure Detail](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-27)
-- [Energy Balance Detail](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-32)
+- Weight Trend Detail: `mocks/dashboard/Detail - Weight Trend.png`
+- Expenditure Detail: `mocks/dashboard/Detail - Expenditure.png`
+- Energy Balance Detail: `mocks/dashboard/Detail - Energy Balance.png`
 
 Plans:
 - [ ] 33-01: TBD
@@ -103,13 +103,13 @@ Phases execute in numeric order within each milestone.
 
 ### 🚧 v0.7.0 Dashboard Widget UX (Phases 30-34)
 
-| Phase                            | Plans Complete | Status      | Completed |
-| -------------------------------- | -------------- | ----------- | --------- |
-| 30. Dashboard Foundation         | 0/?            | Not started | -         |
-| 31. Main Widget (Hero)           | 0/?            | Not started | -         |
-| 32. Standard Widgets - Insights  | 0/?            | Not started | -         |
-| 33. Detail Views                 | 0/?            | Not started | -         |
-| 34. Integration & Polish         | 0/?            | Not started | -         |
+| Phase                           | Plans Complete | Status      | Completed |
+| ------------------------------- | -------------- | ----------- | --------- |
+| 30. Dashboard Foundation        | 1/?            | In progress | -         |
+| 31. Main Widget (Hero)          | 0/?            | Not started | -         |
+| 32. Standard Widgets - Insights | 0/?            | Not started | -         |
+| 33. Detail Views                | 0/?            | Not started | -         |
+| 34. Integration & Polish        | 0/?            | Not started | -         |
 
 <details>
 <summary>✅ v0.6.0 Onboarding Redux (Phases 25-29) - SHIPPED 2026-01-07</summary>
