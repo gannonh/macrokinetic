@@ -21,11 +21,11 @@
 ## Current Position
 
 Phase: 30 of 34 (Dashboard Foundation)
-Plan: 1 of TBD in current phase
+Plan: 2 of TBD in current phase
 Status: In progress
-Last activity: 2026-01-08 - Completed 30-01-PLAN.md
+Last activity: 2026-01-08 - Completed 30-02-PLAN.md
 
-Progress: █░░░░░░░░░ 10%
+Progress: ██░░░░░░░░ 20%
 
 ## GitHub Tracking
 
@@ -36,18 +36,19 @@ Branch: feat/v0.7.0-dashboard-widget-ux
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 7 min
-- Total execution time: 7 min
+- Total plans completed: 2
+- Average duration: 18 min
+- Total execution time: 37 min
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 30    | 1     | 7 min | 7 min    |
+| Phase | Plans | Total  | Avg/Plan |
+|-------|-------|--------|----------|
+| 30    | 2     | 37 min | 18 min   |
 
 **Recent Trend:**
 - 30-01: 7 min (Foundation & Containers)
+- 30-02: 30 min (Hero Widget Integration)
 
 *Updated after each plan completion*
 
@@ -73,6 +74,8 @@ Branch: feat/v0.7.0-dashboard-widget-ux
 | 29-01 | Simple .transition(.opacity) for onboarding→main app | Clean, professional feel without complexity |
 | 29-01 | Private helper views in CompletionStepView | CompletionSummaryRow, NextStepRow kept local to file |
 | 30-01 | Array-based HeroWidgetContainer init | Avoid SwiftLint large_tuple violations vs ViewBuilder tuple overloads |
+| 30-02 | Rectangular cells (26x38) for macro bars | Better visual hierarchy than square cells for progress visualization |
+| 30-02 | Border-only today indicator | Cleaner than "T" text inside cells |
 
 ### Deferred Issues
 
@@ -98,6 +101,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-08T19:53:59Z
-Stopped at: Completed 30-01-PLAN.md
+Last session: 2026-01-08T23:49:24Z
+Stopped at: Completed 30-02-PLAN.md
 Resume file: None
