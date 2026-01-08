@@ -49,7 +49,9 @@ struct WeeklyMacroRow: View {
     let target: Double
     let todayIndex: Int  // 0-6 for Mon-Sun
 
-    private let cellSize: CGFloat = 28
+    // Rectangular cells: narrower width, taller height
+    private let cellWidth: CGFloat = 26
+    private let cellHeight: CGFloat = 38
     private let cellSpacing: CGFloat = 14
 
     var body: some View {
@@ -117,30 +119,23 @@ struct WeeklyMacroRow: View {
             fillPercentage = min(1.0, CGFloat(value / target))
         }
 
-        let fillHeight = cellSize * fillPercentage
+        let fillHeight = cellHeight * fillPercentage
 
         return ZStack(alignment: .bottom) {
             // Background cell - darker for more contrast
             RoundedRectangle(cornerRadius: 4)
                 .fill(DesignTokens.Colors.inactive)
-                .frame(width: cellSize, height: cellSize)
+                .frame(width: cellWidth, height: cellHeight)
 
             // Fill from bottom - fixed height calculation
             if !isFuture && fillPercentage > 0 {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(macroColor)
-                    .frame(width: cellSize - 4, height: max(4, fillHeight - 4))
+                    .frame(width: cellWidth - 4, height: max(4, fillHeight - 4))
                     .padding(.bottom, 2)
             }
-
-            // Today indicator - show "T" in the cell
-            if isToday {
-                Text("T")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundColor(fillPercentage > 0.5 ? .white : macroColor)
-            }
         }
-        .frame(width: cellSize, height: cellSize)
+        .frame(width: cellWidth, height: cellHeight)
         .overlay(
             RoundedRectangle(cornerRadius: 4)
                 .stroke(isToday ? macroColor : Color.clear, lineWidth: 1.5)
@@ -160,7 +155,8 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     private let mockData = WeeklyMockData.sample
     private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
 
-    private let cellSize: CGFloat = 28
+    // Match dimensions with WeeklyMacroRow
+    private let cellWidth: CGFloat = 26
     private let cellSpacing: CGFloat = 14
 
     var body: some View {
@@ -168,45 +164,54 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     }
 
     var content: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Day labels header row
-            dayHeaderRow
+        VStack(alignment: .leading, spacing: 12) {
+            // Title
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(.primary)
 
-            // Macro rows - no dot indicator
-            WeeklyMacroRow(
-                macroType: .calories,
-                macroColor: DesignTokens.Colors.calories,
-                dailyValues: mockData.calories,
-                target: mockData.caloriesTarget,
-                todayIndex: mockData.todayIndex
-            )
+            // Grid section
+            VStack(alignment: .leading, spacing: 6) {
+                // Day labels header row
+                dayHeaderRow
 
-            WeeklyMacroRow(
-                macroType: .protein,
-                macroColor: DesignTokens.Colors.protein,
-                dailyValues: mockData.protein,
-                target: mockData.proteinTarget,
-                todayIndex: mockData.todayIndex
-            )
+                // Macro rows - no dot indicator
+                WeeklyMacroRow(
+                    macroType: .calories,
+                    macroColor: DesignTokens.Colors.calories,
+                    dailyValues: mockData.calories,
+                    target: mockData.caloriesTarget,
+                    todayIndex: mockData.todayIndex
+                )
 
-            WeeklyMacroRow(
-                macroType: .fat,
-                macroColor: DesignTokens.Colors.fat,
-                dailyValues: mockData.fat,
-                target: mockData.fatTarget,
-                todayIndex: mockData.todayIndex
-            )
+                WeeklyMacroRow(
+                    macroType: .protein,
+                    macroColor: DesignTokens.Colors.protein,
+                    dailyValues: mockData.protein,
+                    target: mockData.proteinTarget,
+                    todayIndex: mockData.todayIndex
+                )
 
-            WeeklyMacroRow(
-                macroType: .carbs,
-                macroColor: DesignTokens.Colors.carbs,
-                dailyValues: mockData.carbs,
-                target: mockData.carbsTarget,
-                todayIndex: mockData.todayIndex
-            )
+                WeeklyMacroRow(
+                    macroType: .fat,
+                    macroColor: DesignTokens.Colors.fat,
+                    dailyValues: mockData.fat,
+                    target: mockData.fatTarget,
+                    todayIndex: mockData.todayIndex
+                )
+
+                WeeklyMacroRow(
+                    macroType: .carbs,
+                    macroColor: DesignTokens.Colors.carbs,
+                    dailyValues: mockData.carbs,
+                    target: mockData.carbsTarget,
+                    todayIndex: mockData.todayIndex
+                )
+            }
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 12)
+        .padding(.top, 20)
+        .padding(.bottom, 12)
         .accessibilityIdentifier("weekly-nutrition-hero-widget")
     }
 
@@ -219,7 +224,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     Text(dayLabels[index])
                         .font(.system(size: 10, weight: mockData.todayIndex == index ? .bold : .regular))
                         .foregroundColor(mockData.todayIndex == index ? .primary : .secondary)
-                        .frame(width: cellSize)
+                        .frame(width: cellWidth)
                 }
             }
 

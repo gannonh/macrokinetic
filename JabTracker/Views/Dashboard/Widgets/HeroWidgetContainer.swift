@@ -13,7 +13,8 @@ import SwiftUI
 ///
 /// Features:
 /// - TabView-based page navigation
-/// - Custom page indicator dots
+/// - Consumed/Remaining toggle control
+/// - Custom page indicator dots (outside card)
 /// - Smooth animation between pages
 /// - DesignCard-style container styling
 ///
@@ -30,6 +31,7 @@ import SwiftUI
 struct HeroWidgetContainer: View {
     let pages: [AnyView]
     @State private var selectedIndex: Int = 0
+    @State private var displayMode: HeroDisplayMode = .consumed
 
     init(pages: [AnyView]) {
         self.pages = pages
@@ -44,26 +46,64 @@ struct HeroWidgetContainer: View {
     }
 
     private var heroContent: some View {
-        VStack(spacing: 0) {
-            TabView(selection: $selectedIndex) {
-                ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
-                    page
-                        .tag(index)
-                        .padding(.horizontal, 4)
+        VStack(spacing: 8) {
+            // Card container with content and segment control
+            VStack(spacing: 0) {
+                TabView(selection: $selectedIndex) {
+                    ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
+                        page
+                            .tag(index)
+                            .padding(.horizontal, 4)
+                    }
                 }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut, value: selectedIndex)
-            .frame(height: 200)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.easeInOut, value: selectedIndex)
+                .frame(height: 250)
 
-            // Custom page indicator dots
+                // Consumed/Remaining segment control - minimal spacing above
+                displayModeToggle
+                    .padding(.top, 2)
+                    .padding(.bottom, 12)
+            }
+            .cardStyle()
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("hero-widget-container")
+
+            // Page indicator dots - always visible outside card, below segment control
             pageIndicator
-                .padding(.top, 8)
-                .padding(.bottom, 12)
+                .padding(.top, 4)
         }
-        .cardStyle()
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("hero-widget-container")
+    }
+
+    /// Consumed/Remaining segment control
+    private var displayModeToggle: some View {
+        HStack(spacing: 0) {
+            ForEach(HeroDisplayMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        displayMode = mode
+                    }
+                } label: {
+                    Text(mode.rawValue)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(displayMode == mode ? .primary : .secondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            displayMode == mode
+                                ? DesignTokens.Colors.tertiaryBackground
+                                : Color.clear
+                        )
+                        .clipShape(Capsule())
+                }
+                .accessibilityLabel("\(mode.rawValue) view")
+                .accessibilityAddTraits(displayMode == mode ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(DesignTokens.Colors.inactive.opacity(0.3))
+        .clipShape(Capsule())
+        .accessibilityIdentifier("hero-display-toggle")
     }
 
     private var pageIndicator: some View {
