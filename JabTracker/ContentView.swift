@@ -354,8 +354,8 @@ struct DashboardView: View {
                     // Content with standard padding
                     LazyVStack(alignment: .leading, spacing: 16) {
                         if let currentUser = users.first {
-                            // Coming soon banner for early testers
-                            self.comingSoonCard
+                            // Hero widget carousel
+                            heroWidgetSection
 
                             self.concentrationSection(for: currentUser)
 
@@ -376,6 +376,14 @@ struct DashboardView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .accessibilityIdentifier("dashboard-view")
+    }
+
+    // MARK: - Hero Widget Section
+
+    private var heroWidgetSection: some View {
+        HeroWidgetContainer(pages: [
+            AnyView(WeeklyNutritionHeroWidget())
+        ])
     }
 
     // MARK: - Concentration Section
@@ -413,22 +421,6 @@ struct DashboardView: View {
             .padding()
         }
         .accessibilityIdentifier("no-user-message")
-    }
-
-    private var comingSoonCard: some View {
-        DesignCard {
-            VStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 40))
-                    .foregroundColor(.secondary)
-
-                Text("Dashboard Coming Soon")
-                    .font(DesignTokens.Typography.headline)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-        }
-        .accessibilityIdentifier("coming-soon-card")
     }
 }
 

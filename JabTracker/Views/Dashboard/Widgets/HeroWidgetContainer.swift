@@ -54,12 +54,12 @@ struct HeroWidgetContainer: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.easeInOut, value: selectedIndex)
-            .frame(height: 360)
+            .frame(height: 200)
 
             // Custom page indicator dots
             pageIndicator
-                .padding(.top, 16)
-                .padding(.bottom, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
         }
         .cardStyle()
         .accessibilityElement(children: .contain)
