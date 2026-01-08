@@ -2,58 +2,52 @@
 
 ## Project Summary
 
-**Building:** Complete onboarding rewrite for MacroKinetic — focused on core experience with USP showcase, simplified goal/program setup, and permission screens.
+**Building:** Dashboard Widget UX for MacroKinetic — unified dashboard with widget-based UI, static mockups first then wired to data.
 
 **Core requirements:**
-- Complete rewrite of onboarding (stash current as reference)
-- USP/feature showcase screens (adaptive TDEE, precision tracking, calorie adjustments, GLP-1 support)
-- Simplified Goal + Program setup (streamlined for first-time users)
-- Individual permission screens: HealthKit, Face ID, Notifications
-- Retain Sign in with Apple as first step
-- Remove GLP-1 setup and StoreKit for now
+- Dashboard foundation with widget container system
+- Main Widget (Hero): Swipeable carousel (Weekly Nutrition, Energy Balance, Daily Nutrition) with Consumed/Remaining toggle
+- Standard Widgets - Insights & Analytics group (Expenditure, Weight Trend, Energy Balance, Goal Progress, Deficit)
+- Detail Views: Weight Trend, Expenditure, Energy Balance screens with charts and time filters
+- Static UI first, wire to live data once patterns established
 
 **Constraints:**
 - CloudKit sync required for cross-device access
 - Offline-first functionality
 - Follow existing MVVM architecture and @Observable patterns
 - iOS 17+ APIs only
+- Use Swift Charts for visualizations
 
 ## Current Position
 
-Phase: 29 of 29 (Integration & Polish)
-Plan: 1 of 1 in current phase
-Status: Pre-merge complete - ready for milestone completion
-Last activity: 2026-01-07 - Pre-merge complete (CI + reviews passed)
+Phase: 30 of 34 (Dashboard Foundation)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-08 - Milestone v0.7.0 created
 
-Progress: ██████████ 100%
+Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: #329
-PR: #330
-Branch: feat/v0.6.0-onboarding-redux
+Issue: TBD
+PR: TBD
+Branch: TBD
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 40 min
-- Total execution time: 245 min
+- Total plans completed: 0
+- Average duration: -
+- Total execution time: 0 min
 
 **By Phase:**
 
-| Phase | Plans | Total   | Avg/Plan |
-|-------|-------|---------|----------|
-| 25    | 2     | 24 min  | 12 min   |
-| 26    | 1     | 133 min | 133 min  |
-| 27    | 1     | 12 min  | 12 min   |
-| 28    | 1     | 38 min  | 38 min   |
-| 29    | 1     | 38 min  | 38 min   |
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 30    | 0     | -     | -        |
 
 **Recent Trend:**
-27-01: 12 min (Simplified Goal & Program Setup)
-28-01: 38 min (Permission Setup Screens)
-29-01: 38 min (Integration & Polish - CompletionStepView, transitions, E2E test)
+None yet.
 
 *Updated after each plan completion*
 
@@ -88,6 +82,7 @@ None yet.
 - Milestone v0.4.0 created: Calorie Expenditure Enhancements, 4 phases (Phase 18-21)
 - Milestone v0.5.0 created: Navigation Refinement, 3 phases (Phase 22-24)
 - Milestone v0.6.0 created: Onboarding Redux, 5 phases (Phase 25-29)
+- Milestone v0.7.0 created: Dashboard Widget UX, 5 phases (Phase 30-34)
 
 ### Blockers/Concerns Carried Forward
 
@@ -102,6 +97,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-07T23:49:11Z
-Stopped at: Pre-merge complete (CI + reviews passed)
-Resume file: None (ready for /gsd:complete-milestone)
+Last session: 2026-01-08T18:46:40Z
+Stopped at: Milestone v0.7.0 initialization
+Resume file: None

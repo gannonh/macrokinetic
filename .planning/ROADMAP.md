@@ -19,16 +19,97 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 📋 **v0.7.0** - TBD (next milestone)
+- 🚧 **v0.7.0 Dashboard Widget UX** - Phases 30-34 (in progress)
 
 ## Phases
 
-_No active phases. Use `/gsd:new-milestone` to plan next milestone._
+### 🚧 v0.7.0 Dashboard Widget UX (In Progress)
+
+**Milestone Goal:** Build the new unified dashboard with widget-based UI — static mockups first, wired to data once patterns established.
+
+**Design Reference:** [Figma Mockup](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=0-1)
+
+#### Phase 30: Dashboard Foundation
+
+**Goal**: Create DashboardView with widget container system, establish reusable widget card patterns
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (SwiftUI patterns)
+**Plans**: TBD
+
+**Figma References:**
+- [Main Widget Container](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-5)
+- [Standard Widget Pattern](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-11)
+
+Plans:
+- [ ] 30-01: TBD (run /gsd:plan-phase 30 to break down)
+
+#### Phase 31: Main Widget (Hero)
+
+**Goal**: Swipeable carousel with 3 states (Weekly Nutrition, Energy Balance, Daily Nutrition), Consumed/Remaining toggle
+**Depends on**: Phase 30
+**Research**: Unlikely (Swift Charts, internal)
+**Plans**: TBD
+
+**Figma References:**
+- [Weekly Nutrition](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-6)
+- [Energy Balance](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-7)
+- [Daily Nutrition](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-8)
+
+Plans:
+- [ ] 31-01: TBD
+
+#### Phase 32: Standard Widgets - Insights
+
+**Goal**: Insights & Analytics widget group with Expenditure, Weight Trend, Energy Balance, Goal Progress, Deficit cards
+**Depends on**: Phase 31
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+**Figma References:**
+- [Insights & Analytics Group](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-11)
+
+Plans:
+- [ ] 32-01: TBD
+
+#### Phase 33: Detail Views
+
+**Goal**: Weight Trend, Expenditure, Energy Balance detail screens with charts and time range filters
+**Depends on**: Phase 32
+**Research**: Unlikely (Swift Charts, internal)
+**Plans**: TBD
+
+**Figma References:**
+- [Weight Trend Detail](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-22)
+- [Expenditure Detail](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-27)
+- [Energy Balance Detail](https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-32)
+
+Plans:
+- [ ] 33-01: TBD
+
+#### Phase 34: Integration & Polish
+
+**Goal**: Wire static UI to live data, transitions, E2E tests
+**Depends on**: Phase 33
+**Research**: Unlikely (internal wiring)
+**Plans**: TBD
+
+Plans:
+- [ ] 34-01: TBD
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
+
+### 🚧 v0.7.0 Dashboard Widget UX (Phases 30-34)
+
+| Phase                            | Plans Complete | Status      | Completed |
+| -------------------------------- | -------------- | ----------- | --------- |
+| 30. Dashboard Foundation         | 0/?            | Not started | -         |
+| 31. Main Widget (Hero)           | 0/?            | Not started | -         |
+| 32. Standard Widgets - Insights  | 0/?            | Not started | -         |
+| 33. Detail Views                 | 0/?            | Not started | -         |
+| 34. Integration & Polish         | 0/?            | Not started | -         |
 
 <details>
 <summary>✅ v0.6.0 Onboarding Redux (Phases 25-29) - SHIPPED 2026-01-07</summary>
