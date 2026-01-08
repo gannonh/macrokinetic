@@ -65,8 +65,13 @@ identifier_name:
 custom_rules:
   prefer_design_tokens_colors:
     name: "Prefer DesignTokens.Colors"
-    regex: 'Color\(\s*\.(system(?!Image)|secondarySystem|tertiarySystem)'
+    regex: 'Color\(\s*\.(system(?!Image)|secondarySystem|tertiarySystem|label|secondaryLabel|tertiaryLabel|quaternaryLabel|separator|opaqueSeparator|placeholderText)'
     message: "Use DesignTokens.Colors instead of raw system colors (e.g., DesignTokens.Colors.cardBackground instead of Color(.systemGray6))"
+    severity: warning
+  prefer_design_tokens_static_colors:
+    name: "Prefer DesignTokens over Static Colors"
+    regex: 'Color\.(white|black|gray)(?!\s*\))'
+    message: "Use semantic colors or DesignTokens.Colors instead of Color.white/black/gray (e.g., Color.primary or DesignTokens.Colors.cardBackground)"
     severity: warning
   prefer_design_tokens_backgrounds:
     name: "Prefer DesignTokens for Backgrounds"
