@@ -8,12 +8,14 @@
 
 import SwiftUI
 
-// MARK: - HeroDisplayMode
+// MARK: - Grid Layout Constants
 
-/// Display mode toggle for hero widgets
-enum HeroDisplayMode: String, CaseIterable {
-    case consumed = "Consumed"
-    case remaining = "Remaining"
+/// Shared layout constants for weekly nutrition grid components
+private enum GridLayout {
+    static let cellWidth: CGFloat = 26
+    static let cellHeight: CGFloat = 38
+    static let cellSpacing: CGFloat = 14
+    static let dayCount: Int = 7
 }
 
 // MARK: - MacroType
@@ -49,16 +51,11 @@ struct WeeklyMacroRow: View {
     let target: Double
     let todayIndex: Int  // 0-6 for Mon-Sun
 
-    // Rectangular cells: narrower width, taller height
-    private let cellWidth: CGFloat = 26
-    private let cellHeight: CGFloat = 38
-    private let cellSpacing: CGFloat = 14
-
     var body: some View {
         HStack(spacing: 0) {
-            // Day cells - squares with fill from bottom
-            HStack(spacing: cellSpacing) {
-                ForEach(0..<7, id: \.self) { dayIndex in
+            // Day cells - rectangles with fill from bottom
+            HStack(spacing: GridLayout.cellSpacing) {
+                ForEach(0..<GridLayout.dayCount, id: \.self) { dayIndex in
                     dayCellView(for: dayIndex)
                 }
             }
@@ -72,7 +69,11 @@ struct WeeklyMacroRow: View {
     }
 
     private var summaryView: some View {
-        let todayValue = dailyValues[todayIndex]
+        // Safe bounds check for todayIndex
+        let todayValue =
+            (todayIndex >= 0 && todayIndex < dailyValues.count)
+            ? dailyValues[todayIndex]
+            : 0
 
         return VStack(alignment: .leading, spacing: 0) {
             // Value with symbol - LEFT aligned
@@ -107,35 +108,36 @@ struct WeeklyMacroRow: View {
     }
 
     private func dayCellView(for index: Int) -> some View {
-        let value = dailyValues[index]
+        // Safe bounds check for dailyValues array
+        let value = (index >= 0 && index < dailyValues.count) ? dailyValues[index] : 0
         let isToday = index == todayIndex
         let isFuture = index > todayIndex
 
-        // Calculate fill percentage
+        // Calculate fill percentage with division by zero protection
         let fillPercentage: CGFloat
-        if isFuture {
+        if isFuture || target <= 0 {
             fillPercentage = 0
         } else {
             fillPercentage = min(1.0, CGFloat(value / target))
         }
 
-        let fillHeight = cellHeight * fillPercentage
+        let fillHeight = GridLayout.cellHeight * fillPercentage
 
         return ZStack(alignment: .bottom) {
             // Background cell - darker for more contrast
             RoundedRectangle(cornerRadius: 4)
                 .fill(DesignTokens.Colors.inactive)
-                .frame(width: cellWidth, height: cellHeight)
+                .frame(width: GridLayout.cellWidth, height: GridLayout.cellHeight)
 
             // Fill from bottom - fixed height calculation
             if !isFuture && fillPercentage > 0 {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(macroColor)
-                    .frame(width: cellWidth - 4, height: max(4, fillHeight - 4))
+                    .frame(width: GridLayout.cellWidth - 4, height: max(4, fillHeight - 4))
                     .padding(.bottom, 2)
             }
         }
-        .frame(width: cellWidth, height: cellHeight)
+        .frame(width: GridLayout.cellWidth, height: GridLayout.cellHeight)
         .overlay(
             RoundedRectangle(cornerRadius: 4)
                 .stroke(isToday ? macroColor : Color.clear, lineWidth: 1.5)
@@ -154,10 +156,6 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
 
     private let mockData = WeeklyMockData.sample
     private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
-
-    // Match dimensions with WeeklyMacroRow
-    private let cellWidth: CGFloat = 26
-    private let cellSpacing: CGFloat = 14
 
     var body: some View {
         content
@@ -219,12 +217,12 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     private var dayHeaderRow: some View {
         HStack(spacing: 0) {
             // Day labels aligned with cells
-            HStack(spacing: cellSpacing) {
-                ForEach(0..<7, id: \.self) { index in
+            HStack(spacing: GridLayout.cellSpacing) {
+                ForEach(0..<GridLayout.dayCount, id: \.self) { index in
                     Text(dayLabels[index])
                         .font(.system(size: 10, weight: mockData.todayIndex == index ? .bold : .regular))
                         .foregroundColor(mockData.todayIndex == index ? .primary : .secondary)
-                        .frame(width: cellWidth)
+                        .frame(width: GridLayout.cellWidth)
                 }
             }
 

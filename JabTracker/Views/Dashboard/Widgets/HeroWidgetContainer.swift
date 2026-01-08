@@ -9,6 +9,16 @@
 
 import SwiftUI
 
+// MARK: - HeroDisplayMode
+
+/// Display mode toggle for hero widgets (Consumed vs Remaining view)
+enum HeroDisplayMode: String, CaseIterable {
+    case consumed = "Consumed"
+    case remaining = "Remaining"
+}
+
+// MARK: - HeroWidgetContainer
+
 /// Swipeable carousel container for hero dashboard widgets.
 ///
 /// Features:
