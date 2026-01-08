@@ -31,7 +31,7 @@ struct OnboardingIntegrationTests {
         authManager.currentUser = testUser
 
         // Create ViewModel
-        let viewModel = OnboardingViewModel(
+        let viewModel = LegacyOnboardingViewModel(
             dataController: dataController,
             authManager: authManager
         )
@@ -179,7 +179,7 @@ struct OnboardingIntegrationTests {
         let authManager = AuthenticationManager(dataController: dataController)
         authManager.currentUser = nil  // No authenticated user
 
-        let viewModel = OnboardingViewModel(
+        let viewModel = LegacyOnboardingViewModel(
             dataController: dataController,
             authManager: authManager
         )

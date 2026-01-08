@@ -18,16 +18,22 @@ enum DesignTokens {
     // MARK: - Colors
 
     enum Colors {
-        static let primary = Color.primaryBlue
-        static let primaryLight = Color(hex: "8b9ff4") ?? .blue
-        static let primaryDark = Color(hex: "4c5fbf") ?? .blue
-        static let secondary = Color.primaryPurple
+        // MARK: - Brand Colors (Teal-based)
+
+        /// Primary brand color - use for buttons, progress indicators, interactive elements
+        static let primary = Color(hex: "00A693") ?? Color(.systemMint)
+
+        /// App accent color - darker mint for good contrast with white text
+        static let accent = Color(hex: "00A693") ?? Color(.systemMint)
+
+        // Semantic status colors
         static let success = Color.green
         static let warning = Color.orange
         static let danger = Color.red
         static let info = Color.blue
 
-        // Background colors following Apple HIG
+        // MARK: - Background Colors (Apple HIG)
+
         static let background = Color(.systemBackground)
         static let secondaryBackground = Color(.secondarySystemBackground)
         static let tertiaryBackground = Color(.tertiarySystemBackground)
@@ -37,8 +43,17 @@ enum DesignTokens {
         static let groupedBackground = Color(.systemGroupedBackground)
         static let cardBackground = Color(.secondarySystemGroupedBackground)
 
+        /// Card background when selected - tinted with accent for selection state
+        static let cardBackgroundSelected = accent.opacity(0.15)
+
+        /// Inactive/disabled state color - for progress indicators, deselected items
+        static let inactive = Color(.systemGray4)
+
+        // MARK: - Brand Gradient
+
+        /// Brand gradient for decorative elements (icons, illustrations)
         static let primaryGradient = LinearGradient(
-            colors: [Color.primaryBlue, Color.primaryPurple],
+            colors: [Color(.systemTeal), Color(hex: "0A8F8F") ?? Color(.systemTeal)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing)
 
@@ -81,7 +96,7 @@ enum DesignTokens {
     }
 
     enum Typography {
-        static let largeTitle = Font.system(.largeTitle, design: .rounded)
+        static let largeTitle = Font.system(.largeTitle, design: .default)
         static let headline = Font.system(.headline, design: .default).bold()
         static let body = Font.system(.body, design: .default)
         static let caption = Font.system(.caption, design: .default)

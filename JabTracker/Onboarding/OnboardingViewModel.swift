@@ -1,351 +1,555 @@
+//
+//  OnboardingViewModel.swift
+//  JabTracker
+//
+//  ViewModel for the v0.6.0 onboarding flow.
+//
+
 import Foundation
-import HealthKit
+import OSLog
 import SwiftData
-import UserNotifications
 
-/// Result type for onboarding completion with explicit success, duplicate, and error states
-enum OnboardingCompletionResult {
-    case success
-    case alreadyCompleted
-    case failed(Error)
-}
+// MARK: - OnboardingViewModel
 
+// Note: OnboardingCompletionResult is defined in LegacyOnboardingViewModel.swift
+// and is shared between both implementations for API compatibility.
+
+/// ViewModel for managing onboarding flow state and navigation.
+///
+/// Uses `@Observable` (iOS 17+) for automatic view updates.
+/// Manages step navigation, progress calculation, goal/program configuration,
+/// and completion logic.
+@Observable
 @MainActor
-class OnboardingViewModel: ObservableObject {
-    @Published var currentStep: OnboardingStep = .welcome {
+final class OnboardingViewModel {
+    // MARK: - Properties
+
+    /// Current step in the onboarding flow
+    var currentStep: OnboardingStep = .welcome {
         didSet {
-            self.updateProgress()
+            updateProgress()
         }
     }
 
-    @Published var progress: Double = 0.0
-    @Published var selectedMedication: Medication?
-    @Published var selectedDose: Double = 0.0
-    @Published var selectedStartDate: Date = .init()
-    @Published var selectedSites: Set<String> = ["Thigh"]  // Changed to Set for multiple sites
-    @Published var notificationsGranted: Bool = false
-    @Published var healthKitGranted: Bool = false
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
+    /// Progress value from 0.0 to 1.0
+    var progress: Double = 0.0
 
-    // Schedule configuration properties
-    @Published var schedulePattern: SchedulePatternType = .weekly
-    @Published var reminderMinutes: Int = 60  // 1 hour before
-    @Published var enableMultipleReminders: Bool = false
-    @Published var customScheduleValid: Bool = false
+    /// Whether an async operation is in progress
+    var isLoading: Bool = false
 
-    // Time selection properties
-    @Published var selectedDoseTime: Date  // For weekly/daily patterns
-    @Published var selectedFirstDoseTime: Date  // For split-dose 1st time
-    @Published var selectedSecondDoseTime: Date  // For split-dose 2nd time
+    /// Error message for display in UI
+    var errorMessage: String?
+
+    // MARK: - Goal Configuration (from GoalWizardViewModel)
+
+    /// Goal wizard state for goal configuration steps
+    let goalViewModel = GoalWizardViewModel()
+
+    // MARK: - Profile Completion State
+
+    /// Height in feet (for US users)
+    var editHeightFeet: Int = 5
+
+    /// Height in inches (remainder)
+    var editHeightInches: Int = 7
+
+    /// Biological sex for TDEE calculation
+    var editSex: String = ""
+
+    /// Date of birth for age calculation
+    var editBirthday: Date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+
+    /// Height in cm from feet/inches
+    var editHeightCm: Double {
+        let totalInches = Double(editHeightFeet * 12 + editHeightInches)
+        return totalInches * 2.54
+    }
+
+    /// Whether profile data was populated from HealthKit (skip profileCompletion step)
+    var hasProfileDataFromHealthKit: Bool = false
+
+    // MARK: - Program Configuration State
+
+    /// Selected program style (coached, collaborative, manual)
+    var programStyle: ProgramStyle?
+
+    /// Selected diet preference (balanced, low-carb, high-protein, keto)
+    var dietPreference: DietPreference?
+
+    /// Selected calorie floor type (standard, aggressive, very aggressive)
+    var calorieFloorType: CalorieFloorType?
+
+    /// Selected training/activity level
+    var trainingLevel: TrainingLevel?
+
+    /// Selected weekly distribution mode (even or shifted to specific days)
+    var weeklyDistributionMode: WeeklyDistributionMode?
+
+    /// Selected protein level (moderate, high, very high)
+    var proteinLevel: ProteinLevel?
+
+    /// Days with higher calorie targets for Shifted distribution (weekday numbers: 2=Mon through 1=Sun)
+    var highCalorieDays: Set<Int> = []
+
+    // MARK: - Calculated Targets (populated after setupConfirmation)
+
+    /// Calculated daily calorie target (base value)
+    var calculatedCalories: Double = 0
+
+    /// Per-day calorie targets (weekday 1=Sun through 7=Sat)
+    /// Accounts for shifted distribution when selected
+    var calculatedDailyCalories: [Int: Double] = [:]
+
+    /// Calculated daily protein target in grams
+    var calculatedProtein: Double = 0
+
+    /// Calculated daily fat target in grams
+    var calculatedFat: Double = 0
+
+    /// Calculated daily carbs target in grams
+    var calculatedCarbs: Double = 0
+
+    // MARK: - Private Properties
 
     private let dataController: DataController
     private let authManager: AuthenticationManager
-    let pkEngine = PharmacokineticsEngine()  // Internal for ScheduleSetupView access
+    private let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "OnboardingViewModel"
+    )
 
-    // Test hooks (internal so testable with @testable import). In production these remain nil.
-    // They allow unit tests to simulate HealthKit availability and forced authorization result
-    // without invoking real HKHealthStore UI.
-    var testIsHealthDataAvailable: Bool?
-    var testForcedHealthAuthResult: Bool?
+    // Services initialized lazily when context is available
+    private var tdeeService: TDEEService?
+    private var metricsService: MetricsService?
+
+    // MARK: - Computed Properties
+
+    /// Steps available in the onboarding flow (filters out skippable steps)
+    var availableSteps: [OnboardingStep] {
+        OnboardingStep.allCases.filter { step in
+            switch step {
+            case .profileCompletion:
+                // Skip profileCompletion if HealthKit provided all profile data
+                return !hasProfileDataFromHealthKit
+
+            case .weeklyDistribution, .shiftedDaySelection:
+                // Skip for Collaborative - they customize per-day in Strategy
+                if programStyle == .collaborative {
+                    return false
+                }
+                // shiftedDaySelection only shows when Shifted distribution is selected
+                if step == .shiftedDaySelection {
+                    return weeklyDistributionMode == .shifted
+                }
+                return true
+
+            default:
+                return true
+            }
+        }
+    }
+
+    /// Total number of steps in the onboarding flow
+    var totalSteps: Int {
+        availableSteps.count
+    }
+
+    /// Index of the current step (0-based)
+    var currentStepIndex: Int {
+        availableSteps.firstIndex(of: currentStep) ?? 0
+    }
+
+    /// Whether the current step is the last step
+    var isLastStep: Bool {
+        currentStep == availableSteps.last
+    }
+
+    /// Whether the user can proceed to the next step.
+    var canProceedToNext: Bool {
+        switch currentStep {
+        case .welcome, .uspShowcase, .healthKit:
+            return true
+        case .goalType:
+            return goalViewModel.goalType != nil
+        case .targetWeight:
+            return goalViewModel.canContinue  // Uses GoalWizardViewModel validation
+        case .profileCompletion:
+            return isProfileDataComplete
+        case .programStyle:
+            return programStyle != nil
+        case .dietPreference:
+            return dietPreference != nil
+        case .calorieFloor:
+            return calorieFloorType != nil
+        case .activityLevel:
+            return trainingLevel != nil
+        case .weeklyDistribution:
+            return weeklyDistributionMode != nil
+        case .proteinLevel:
+            return proteinLevel != nil
+        case .shiftedDaySelection:
+            return !highCalorieDays.isEmpty  // At least one day must be selected
+        case .setupConfirmation:
+            return true  // Summary step, always can proceed
+        case .faceID, .notifications, .completion:
+            return true
+        }
+    }
+
+    /// Whether all profile fields are filled in
+    private var isProfileDataComplete: Bool {
+        let hasHeight = editHeightFeet >= 3 && editHeightFeet <= 7
+        let hasSex = !editSex.isEmpty
+        let hasBirthday = true  // DatePicker always has a value
+        return hasHeight && hasSex && hasBirthday
+    }
+
+    /// Whether user can skip onboarding from current step (goalType through notifications, not completion)
+    var canSkip: Bool {
+        let skipAllowedSteps: [OnboardingStep] = [
+            .goalType, .targetWeight, .profileCompletion, .programStyle,
+            .dietPreference, .calorieFloor, .activityLevel, .weeklyDistribution,
+            .proteinLevel, .shiftedDaySelection, .setupConfirmation,
+            .faceID, .notifications,
+        ]
+        return skipAllowedSteps.contains(currentStep)
+    }
+
+    // MARK: - Initialization
 
     init(dataController: DataController, authManager: AuthenticationManager) {
         self.dataController = dataController
         self.authManager = authManager
+        updateProgress()
 
-        // Initialize time properties with defaults (8:00 AM and 8:00 PM)
-        let calendar = Calendar.current
-        let now = Date()
-
-        // Default to 8:00 AM for dose time and first dose time
-        self.selectedDoseTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: now) ?? now
-        self.selectedFirstDoseTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: now) ?? now
-
-        // Default to 8:00 PM for second dose time
-        self.selectedSecondDoseTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: now) ?? now
-
-        self.updateProgress()
+        // Initialize services
+        let context = dataController.container.mainContext
+        self.tdeeService = TDEEService(context: context)
+        self.metricsService = MetricsService(context: context)
     }
 
-    var totalSteps: Int {
-        OnboardingStep.allCases.count
-    }
+    // MARK: - Permission Methods
 
-    var currentStepIndex: Int {
-        OnboardingStep.allCases.firstIndex(of: self.currentStep) ?? 0
-    }
+    /// Enable HealthKit sync for the current user
+    /// - Returns: True if authorization was granted and sync enabled
+    func enableHealthKitSync() async -> Bool {
+        logger.info("enableHealthKitSync() called")
 
-    var isLastStep: Bool {
-        self.currentStep == OnboardingStep.allCases.last
-    }
-
-    /// Validates that split-dose times are 6-18 hours apart
-    var areSplitDoseTimesValid: Bool {
-        guard schedulePattern == .splitDose else {
-            return true  // Not split-dose, so no validation needed
+        guard let user = authManager.currentUser else {
+            logger.warning("Cannot enable HealthKit: no currentUser")
+            return false
         }
+        logger.info("Found user: \(user.email ?? "no email")")
 
-        let calendar = Calendar.current
-        let firstTime = calendar.dateComponents([.hour, .minute], from: selectedFirstDoseTime)
-        let secondTime = calendar.dateComponents([.hour, .minute], from: selectedSecondDoseTime)
+        guard let service = metricsService else {
+            logger.warning("Cannot enable HealthKit: no metricsService")
+            return false
+        }
+        logger.info("Found metricsService, calling setHealthSyncEnabled...")
 
-        let firstMinutes = (firstTime.hour ?? 0) * 60 + (firstTime.minute ?? 0)
-        let secondMinutes = (secondTime.hour ?? 0) * 60 + (secondTime.minute ?? 0)
-
-        let diff = abs(secondMinutes - firstMinutes)
-        let actualDiff = min(diff, 1440 - diff)  // Handle midnight crossing
-
-        return actualDiff >= 360 && actualDiff <= 1080  // 6-18 hours (360-1080 minutes)
-    }
-
-    var canProceedToNext: Bool {
-        switch self.currentStep {
-        case .welcome:
-            return true
-        case .medicationSelection:
-            return self.selectedMedication != nil
-        case .doseSetup:
-            return self.selectedDose > 0 && !self.selectedSites.isEmpty  // Require at least one site
-        case .scheduleSetup:
-            return validateScheduleConfiguration()
-        case .notifications, .healthKit, .subscription:
-            return true
+        do {
+            let success = try await service.setHealthSyncEnabled(true, for: user)
+            if success {
+                logger.info("HealthKit sync enabled via onboarding")
+                // After successful authorization, check for and populate profile data
+                await populateProfileFromHealthKit(user: user, service: service)
+            } else {
+                logger.info("HealthKit authorization denied by user")
+            }
+            return success
+        } catch {
+            logger.error("Failed to enable HealthKit: \(error.localizedDescription)")
+            return false
         }
     }
 
+    /// Populate profile completion fields from HealthKit data if available.
+    /// Sets `hasProfileDataFromHealthKit` to true if all required fields were populated.
+    private func populateProfileFromHealthKit(user: User, service: MetricsService) async {
+        logger.info("Checking HealthKit for profile data...")
+
+        // Fetch height
+        var hasHeight = false
+        if let heightCm = await service.getCurrentHeight(for: user), heightCm > 0 {
+            let totalInches = heightCm / 2.54
+            editHeightFeet = Int(totalInches / 12)
+            editHeightInches = Int(totalInches.truncatingRemainder(dividingBy: 12))
+            user.heightCm = heightCm
+            hasHeight = true
+            logger.info("Populated height from HealthKit: \(heightCm) cm")
+        }
+
+        // Fetch biological sex
+        var hasSex = false
+        let gender = await service.getCurrentGender(for: user)
+        if !gender.isEmpty {
+            editSex = gender
+            user.gender = gender
+            hasSex = true
+            logger.info("Populated sex from HealthKit: \(gender)")
+        }
+
+        // Fetch date of birth
+        var hasBirthday = false
+        if let dob = await service.getCurrentDateOfBirth(for: user) {
+            editBirthday = dob
+            user.dateOfBirth = dob
+            hasBirthday = true
+            logger.info("Populated birthday from HealthKit")
+        }
+
+        // If all required profile data is available, skip the profileCompletion step
+        if hasHeight && hasSex && hasBirthday {
+            hasProfileDataFromHealthKit = true
+            user.updatedAt = Date()
+            do {
+                try dataController.container.mainContext.save()
+                logger.info("All profile data populated from HealthKit - will skip profileCompletion step")
+            } catch {
+                logger.error("Failed to save HealthKit profile data: \(error.localizedDescription)")
+            }
+        } else {
+            logger.info(
+                "Incomplete profile data from HealthKit - height:\(hasHeight), sex:\(hasSex), birthday:\(hasBirthday)"
+            )
+        }
+    }
+
+    // MARK: - Configuration
+
+    /// Configure goal view model with user's current weight and preferences
+    func configureGoalViewModel() async {
+        guard let user = authManager.currentUser else { return }
+
+        // Get current weight from MetricsService (handles HealthKit if enabled)
+        let currentWeightKg: Double
+        if let service = metricsService {
+            currentWeightKg = await service.getCurrentWeight(for: user)
+        } else {
+            // Fallback: Local weight is stored in user's preferred unit
+            currentWeightKg =
+                user.prefersMetricWeight
+                ? user.weight
+                : user.weight / WeightEntry.kgToLbsConversion
+        }
+
+        // Configure with weight in user's display unit
+        let displayWeight =
+            user.prefersMetricWeight
+            ? currentWeightKg
+            : currentWeightKg * WeightEntry.kgToLbsConversion
+
+        goalViewModel.configureWithCurrentWeight(displayWeight, usesMetric: user.prefersMetricWeight)
+    }
+
+    // MARK: - Navigation Methods
+
+    /// Move to the next step in the onboarding flow.
+    /// Does nothing if already at the last step or cannot proceed.
     func moveToNextStep() {
-        guard !self.isLastStep, self.canProceedToNext else { return }
+        guard !isLastStep, canProceedToNext else { return }
 
-        if let currentIndex = OnboardingStep.allCases.firstIndex(of: currentStep),
-            currentIndex + 1 < OnboardingStep.allCases.count
+        if let currentIndex = availableSteps.firstIndex(of: currentStep),
+            currentIndex + 1 < availableSteps.count
         {
-            self.currentStep = OnboardingStep.allCases[currentIndex + 1]
+            currentStep = availableSteps[currentIndex + 1]
+            logger.debug("Moved to step: \(self.currentStep.rawValue)")
         }
     }
 
+    /// Move to the previous step in the onboarding flow.
+    /// Does nothing if already at the first step.
     func moveToPreviousStep() {
-        if let currentIndex = OnboardingStep.allCases.firstIndex(of: currentStep),
+        if let currentIndex = availableSteps.firstIndex(of: currentStep),
             currentIndex > 0
         {
-            self.currentStep = OnboardingStep.allCases[currentIndex - 1]
+            currentStep = availableSteps[currentIndex - 1]
+            logger.debug("Moved back to step: \(self.currentStep.rawValue)")
         }
     }
 
-    func selectMedication(_ medication: Medication) {
-        self.selectedMedication = medication
-        // Set default dose for selected medication
-        if let firstDose = medication.availableDoses.first {
-            self.selectedDose = firstDose
+    // MARK: - Goal & Program Creation
+
+    /// Calculate TDEE and nutrition targets based on collected data
+    func calculateTargets() async throws {
+        guard let user = authManager.currentUser else {
+            throw OnboardingError.userNotFound
         }
-        // Set appropriate schedule pattern based on medication frequency
-        switch medication.frequency {
-        case .daily:
-            self.schedulePattern = .daily
-        case .weekly:
-            self.schedulePattern = .weekly
+
+        guard let trainingLevel else {
+            throw OnboardingError.dataCreationFailed
         }
+
+        // Collaborative skips weeklyDistribution - default to even
+        if programStyle == .collaborative && weeklyDistributionMode == nil {
+            weeklyDistributionMode = .even
+        }
+
+        let context = dataController.container.mainContext
+
+        // Save profile data and log starting weight
+        try await saveProfileData(user: user, context: context)
+
+        // Create goal and program
+        let goal = try createGoalAndProgram(
+            user: user,
+            trainingLevel: trainingLevel,
+            context: context
+        )
+
+        // Calculate TDEE and apply to goal
+        guard let service = tdeeService else {
+            throw OnboardingError.dataCreationFailed
+        }
+
+        try await service.calculateAndApplyFullTDEE(for: user, goal: goal)
+
+        // Store calculated values for display
+        calculatedCalories = goal.dailyCalorieTarget
+        calculatedProtein = goal.dailyProteinTargetGrams
+        calculatedFat = goal.dailyFatTargetGrams
+        calculatedCarbs = goal.dailyCarbTargetGrams
+
+        // Calculate per-day calories using shifted distribution if applicable
+        calculatedDailyCalories = calculatePerDayCalories(baseCalories: goal.dailyCalorieTarget)
+
+        logger.info(
+            "Calculated targets: \(Int(self.calculatedCalories)) cal, P:\(Int(self.calculatedProtein))g"
+        )
     }
 
-    func toggleInjectionSite(_ site: String) {
-        if self.selectedSites.contains(site) {
-            self.selectedSites.remove(site)
-        } else {
-            self.selectedSites.insert(site)
-        }
-    }
+    /// Save user profile data and log initial weight
+    private func saveProfileData(user: User, context: ModelContext) async throws {
+        user.heightCm = editHeightCm
+        user.gender = editSex
+        user.dateOfBirth = editBirthday
+        user.updatedAt = Date()
 
-    func requestNotificationPermissions() async {
-        self.isLoading = true
-        defer { isLoading = false }
-
-        do {
-            let settings = await UNUserNotificationCenter.current().notificationSettings()
-            if settings.authorizationStatus == .notDetermined {
-                let granted = try await UNUserNotificationCenter.current().requestAuthorization(
-                    options: [.alert, .badge, .sound]
-                )
-                self.notificationsGranted = granted
-            } else {
-                self.notificationsGranted = settings.authorizationStatus == .authorized
-            }
-        } catch {
-            self.errorMessage =
-                "Failed to request notification permissions: \(error.localizedDescription)"
-            self.notificationsGranted = false
-        }
-    }
-
-    func requestHealthKitPermissions() async {
-        self.isLoading = true
-        defer { isLoading = false }
-
-        // Short-circuit during unit / snapshot / Swift Testing runs to avoid hanging on real
-        // HealthKit permission UI (which requires user interaction that's not available in
-        // non-UI test environments). We detect a test context via the presence of the
-        // XCTest configuration environment variable. This keeps the production code path
-        // untouched while allowing fast, deterministic tests.
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil,
-            self.testIsHealthDataAvailable == nil, self.testForcedHealthAuthResult == nil
-        {
-            // Default early-exit path (legacy behavior) when no explicit test override supplied.
-            self.healthKitGranted = false
-            return
-        }
-
-        let isAvailable = self.testIsHealthDataAvailable ?? MetricsService.isHealthKitAvailable
-        guard isAvailable else {
-            self.healthKitGranted = false
-            return
-        }
-
-        if let forced = testForcedHealthAuthResult {
-            self.healthKitGranted = forced
-        } else {
-            // Use MetricsService as single source of truth for HealthKit authorization
-            let metricsService = MetricsService(context: dataController.container.mainContext)
+        // Log current weight as a WeightEntry (required for TDEE calculation)
+        if let service = metricsService {
             do {
-                let granted = try await metricsService.requestFullHealthKitAuthorization()
-                self.healthKitGranted = granted
-                if !granted {
-                    self.errorMessage =
-                        "HealthKit permissions were denied. You can enable them later in Settings."
-                } else {
-                    self.errorMessage = nil
-                }
+                _ = try await service.logWeight(
+                    weightKg: goalViewModel.currentWeightKg,
+                    for: user
+                )
+                logger.info("Logged starting weight: \(self.goalViewModel.currentWeightKg) kg")
             } catch {
-                self.errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
-                self.healthKitGranted = false
+                logger.warning("Failed to log weight entry: \(error.localizedDescription)")
             }
         }
+
+        try context.save()
     }
 
-    // MARK: - Schedule Configuration Methods
-
-    /// Validates the current schedule configuration
-    /// - Returns: true if configuration is valid, false otherwise
-    func validateScheduleConfiguration() -> Bool {
-        switch schedulePattern {
-        case .daily, .weekly:
-            return true
-        case .splitDose:
-            return areSplitDoseTimesValid
-        case .custom:
-            return customScheduleValid
+    /// Create goal and program entities
+    private func createGoalAndProgram(
+        user: User,
+        trainingLevel: TrainingLevel,
+        context: ModelContext
+    ) throws -> NutritionGoal {
+        guard let goalType = goalViewModel.goalType else {
+            throw OnboardingError.dataCreationFailed
         }
+
+        let weeklyPace = goalType == .weightLoss ? -goalViewModel.weeklyRateKg : goalViewModel.weeklyRateKg
+        let goal = NutritionGoal(
+            goalType: goalType,
+            startingWeightKg: goalViewModel.currentWeightKg,
+            targetWeightKg: goalViewModel.targetWeightKg,
+            weeklyWeightChangePaceKg: weeklyPace
+        )
+        goal.user = user
+        context.insert(goal)
+
+        // Create program with user-selected values (fallback to smart defaults)
+        let program = NutritionProgram(
+            style: programStyle ?? .coached,
+            diet: dietPreference ?? .balanced,
+            calorieFloor: calorieFloorType ?? .standard,
+            trainingLevel: trainingLevel,
+            distributionMode: weeklyDistributionMode ?? .even,
+            proteinLevel: proteinLevel ?? .moderate
+        )
+        program.goal = goal
+        goal.program = program
+        context.insert(program)
+
+        // Apply shifted calorie distribution if selected
+        if weeklyDistributionMode == .shifted,
+            let distribution = WeeklyCalorieDistribution.shifted(highCalorieDays: highCalorieDays)
+        {
+            program.setWeeklyDistribution(distribution)
+        }
+
+        try context.save()
+        return goal
     }
 
-    /// Saves schedule configuration and proceeds to next onboarding step if valid
-    func saveScheduleConfiguration(
-        pattern: SchedulePatternType,
-        reminderMinutes: Int,
-        enableMultiple: Bool
-    ) {
-        // Validate reminder minutes input
-        let validReminderMinutes = [15, 30, 60, 120]  // 15 min, 30 min, 1 hour, 2 hours
-        guard validReminderMinutes.contains(reminderMinutes) else {
-            self.errorMessage =
-                "Invalid reminder time. Please select from available options (15, 30, 60, or 120 minutes)."
-            return
-        }
+    // MARK: - Completion
 
-        // Temporarily save pattern to validate
-        let originalPattern = self.schedulePattern
-        self.schedulePattern = pattern
-
-        // Validate configuration
-        guard validateScheduleConfiguration() else {
-            // Restore original pattern on validation failure
-            self.schedulePattern = originalPattern
-            self.errorMessage = "Invalid schedule configuration. Please check your custom schedule settings."
-            return
-        }
-
-        // Update remaining configuration properties
-        self.reminderMinutes = reminderMinutes
-        self.enableMultipleReminders = enableMultiple
-
-        // Clear any previous errors
-        self.errorMessage = nil
-
-        // Proceed to next step
-        moveToNextStep()
-    }
-
+    /// Complete the onboarding flow and mark the user as onboarded.
+    ///
+    /// - Returns: Result indicating success, already completed, or failure
     func completeOnboarding() async -> OnboardingCompletionResult {
-        guard let user = authManager.currentUser,
-            let selectedMedication
-        else {
-            self.errorMessage = "Missing required onboarding data. Please complete all steps."
-            return .failed(OnboardingError.missingRequiredData)
-        }
-
-        self.isLoading = true
+        isLoading = true
         defer { isLoading = false }
 
-        let context = self.dataController.container.mainContext
-
-        // Check for existing profiles and prevent duplicates
-        do {
-            let alreadyCompleted = try checkAndPreventDuplicateProfiles(for: user, in: context)
-            if alreadyCompleted {
-                self.errorMessage = "Onboarding has already been completed for this account."
-                return .alreadyCompleted
-            }
-        } catch {
-            self.errorMessage = "Failed to check existing profiles: \(error.localizedDescription)"
-            return .failed(error)
+        // User is required to complete onboarding
+        guard let user = authManager.currentUser else {
+            errorMessage = "No user found to complete onboarding"
+            logger.error("Cannot complete onboarding: no current user")
+            return .failed(OnboardingError.userNotFound)
         }
 
-        // Create and save medication profile
-        let medicationProfile = createMedicationProfile(for: user, with: selectedMedication, in: context)
+        // Check if already completed
+        if user.hasCompletedOnboarding {
+            logger.info("Onboarding already completed for user")
+            return .alreadyCompleted
+        }
+
+        let context = dataController.container.mainContext
+
+        do {
+            try finalizeOnboarding(for: user, in: context)
+            logger.info("Onboarding completed successfully")
+            errorMessage = nil
+            return .success
+        } catch {
+            errorMessage = "Failed to complete onboarding: \(error.localizedDescription)"
+            logger.error("Failed to complete onboarding: \(error.localizedDescription)")
+            return .failed(OnboardingError.dataCreationFailed)
+        }
+    }
+
+    /// Skip onboarding - marks as skipped without saving goal/program data.
+    /// User can complete goal setup later via Strategy tab "Create Goal".
+    func skipOnboarding() {
+        guard let user = authManager.currentUser else {
+            logger.error("Cannot skip onboarding: no current user")
+            return
+        }
+
+        let context = dataController.container.mainContext
+
+        user.onboardingSkippedAt = Date()
+        user.updatedAt = Date()
+
         do {
             try context.save()
         } catch {
-            self.errorMessage = "Failed to save medication profile: \(error.localizedDescription)"
-            return .failed(error)
+            logger.error("Failed to save skip state: \(error.localizedDescription)")
         }
 
-        // Create initial dose schedule
-        do {
-            try await createInitialSchedule(for: medicationProfile, in: context)
-        } catch {
-            self.errorMessage = "Failed to create dose schedule: \(error.localizedDescription)"
-            return .failed(error)
-        }
+        // Store skip flag in UserDefaults for fast check
+        UserDefaults.standard.set(true, forKey: "hasSkippedOnboarding")
+        UserDefaults.standard.set(Date(), forKey: "onboardingSkippedAt")
 
-        // Finalize onboarding completion
-        do {
-            try finalizeOnboarding(for: user, in: context)
-        } catch {
-            self.errorMessage = "Failed to finalize onboarding: \(error.localizedDescription)"
-            return .failed(error)
-        }
-
-        // Clear any error messages on success
-        self.errorMessage = nil
-        return .success
+        logger.info("User skipped onboarding - can complete goal setup later via Strategy tab")
     }
 
-    /// Creates medication profile for the user
-    private func createMedicationProfile(
-        for user: User,
-        with medication: Medication,
-        in context: ModelContext
-    ) -> MedicationProfile {
-        let medicationProfile = MedicationProfile(
-            genericName: medication.displayName,
-            brandName: medication.brands.first ?? "",
-            currentDose: self.selectedDose,
-            startDate: self.selectedStartDate,
-            medicationType: medication.rawValue,
-            preferredInjectionSites: Array(self.selectedSites))
+    // MARK: - Private Methods
 
-        medicationProfile.user = user
-        context.insert(medicationProfile)
-        return medicationProfile
-    }
-
-    /// Finalizes onboarding by marking user as complete and persisting to UserDefaults
+    /// Finalizes onboarding by marking user as complete.
     private func finalizeOnboarding(for user: User, in context: ModelContext) throws {
         user.hasCompletedOnboarding = true
         user.onboardingCompletedAt = Date()
@@ -356,132 +560,42 @@ class OnboardingViewModel: ObservableObject {
         // Store completion in UserDefaults as backup
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
+
+        logger.info("User marked as onboarded")
     }
 
-    /// Checks for existing medication profiles and prevents duplicate creation
-    /// - Parameters:
-    ///   - user: The current user
-    ///   - context: SwiftData model context
-    /// - Returns: true if user already has profiles (onboarding marked complete), false otherwise
-    /// - Throws: SwiftData fetch errors
-    private func checkAndPreventDuplicateProfiles(for user: User, in context: ModelContext) throws -> Bool {
-        let existingProfiles = user.medicationProfiles ?? []
+    /// Calculate per-day calories using the shifted distribution if applicable
+    private func calculatePerDayCalories(baseCalories: Double) -> [Int: Double] {
+        var dailyCalories: [Int: Double] = [:]
 
-        if !existingProfiles.isEmpty {
-            // User already has profiles, mark onboarding as complete
-            user.hasCompletedOnboarding = true
-            user.onboardingCompletedAt = Date()
-            user.updatedAt = Date()
+        // Use factory method to get shifted distribution if applicable
+        let distribution: WeeklyCalorieDistribution? = {
+            guard weeklyDistributionMode == .shifted, !highCalorieDays.isEmpty else {
+                return nil
+            }
+            return WeeklyCalorieDistribution.shifted(highCalorieDays: highCalorieDays)
+        }()
 
-            try context.save()
-
-            // Store completion in UserDefaults as backup
-            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
-            UserDefaults.standard.set(Date(), forKey: "onboardingCompletedAt")
-            return true
+        // Populate all 7 days (1=Sun through 7=Sat)
+        for weekday in WeeklyConstants.validWeekdayRange {
+            if let distribution = distribution,
+                let dayCalories = distribution.calorieTargetForDay(weekday, baseCalories: baseCalories)
+            {
+                dailyCalories[weekday] = dayCalories
+            } else {
+                dailyCalories[weekday] = baseCalories
+            }
         }
 
-        return false
+        return dailyCalories
     }
 
-    /// Creates initial dose schedule for the medication profile
-    private func createInitialSchedule(
-        for medicationProfile: MedicationProfile,
-        in context: ModelContext
-    ) async throws {
-        guard let scheduleService = AppServices.shared.scheduleService else { return }
-
-        let scheduleConfig = buildScheduleConfiguration()
-        let actualStartDate = calculateActualStartDate(with: scheduleConfig.timeOfDay)
-
-        _ = try scheduleService.createSchedule(
-            for: medicationProfile,
-            pattern: schedulePattern,
-            startDate: actualStartDate,
-            baseSchedule: scheduleConfig
-        )
-
-        await configureNotifications()
-    }
-
-    /// Builds schedule configuration based on current pattern and settings
-    private func buildScheduleConfiguration() -> ScheduleConfiguration {
-        let (interval, dayOfWeek) = buildIntervalAndDayOfWeek()
-        let (timeOfDay, secondTimeOfDay) = buildTimeComponents()
-
-        return ScheduleConfiguration(
-            dayOfWeek: dayOfWeek,
-            timeOfDay: timeOfDay,
-            secondTimeOfDay: secondTimeOfDay,
-            interval: interval,
-            doseAmount: selectedDose,
-            windowMinutesBefore: 120,
-            windowMinutesAfter: 120,
-            splitDoseCount: schedulePattern == .splitDose ? 2 : nil,
-            splitIntervalMinutes: schedulePattern == .splitDose ? TimeConstants.splitDoseInterval : nil,
-            customRecurrence: nil
-        )
-    }
-
-    /// Builds interval and day of week based on schedule pattern
-    private func buildIntervalAndDayOfWeek() -> (interval: Int, dayOfWeek: Int?) {
-        switch schedulePattern {
-        case .daily:
-            return (1, nil)
-        case .weekly:
-            return (7, Calendar.current.component(.weekday, from: selectedStartDate))
-        case .splitDose:
-            return (7, nil)
-        case .custom:
-            return (7, Calendar.current.component(.weekday, from: selectedStartDate))
-        }
-    }
-
-    /// Builds time components based on schedule pattern
-    private func buildTimeComponents() -> (primary: TimeComponents, secondary: TimeComponents?) {
-        let calendar = Calendar.current
-
-        if schedulePattern == .splitDose {
-            let primary = TimeComponents(
-                hour: calendar.component(.hour, from: selectedFirstDoseTime),
-                minute: calendar.component(.minute, from: selectedFirstDoseTime)
-            )
-            let secondary = TimeComponents(
-                hour: calendar.component(.hour, from: selectedSecondDoseTime),
-                minute: calendar.component(.minute, from: selectedSecondDoseTime)
-            )
-            return (primary, secondary)
-        } else {
-            let primary = TimeComponents(
-                hour: calendar.component(.hour, from: selectedDoseTime),
-                minute: calendar.component(.minute, from: selectedDoseTime)
-            )
-            return (primary, nil)
-        }
-    }
-
-    /// Calculates the actual start date by combining date and time components
-    private func calculateActualStartDate(with timeOfDay: TimeComponents) -> Date {
-        Calendar.current.date(
-            bySettingHour: timeOfDay.hour,
-            minute: timeOfDay.minute,
-            second: 0,
-            of: selectedStartDate
-        ) ?? selectedStartDate
-    }
-
-    /// Configures notification service with reminder preferences
-    private func configureNotifications() async {
-        guard let notificationService = AppServices.shared.notificationService else { return }
-
-        notificationService.reminderMinutesBefore = reminderMinutes
-
-        if notificationsGranted {
-            try? await notificationService.enable()
-        }
-    }
-
+    /// Update progress based on current step
     private func updateProgress() {
-        self.progress = Double(self.currentStepIndex) / Double(self.totalSteps - 1)
+        guard totalSteps > 1 else {
+            progress = 0.0
+            return
+        }
+        progress = Double(currentStepIndex) / Double(totalSteps - 1)
     }
 }

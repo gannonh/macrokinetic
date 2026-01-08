@@ -70,13 +70,13 @@ struct JabTrackerTests {
 
         // Test that design tokens are accessible and have expected properties
         let primaryColor = DesignTokens.Colors.primary
-        let secondaryColor = DesignTokens.Colors.secondary
+        let inactiveColor = DesignTokens.Colors.inactive
         let typography = DesignTokens.Typography.headline
         let bodyTypography = DesignTokens.Typography.body
         let gradient = DesignTokens.Colors.primaryGradient
 
         // Test that colors are different (behavioral validation)
-        #expect(primaryColor != secondaryColor)
+        #expect(primaryColor != inactiveColor)
         #expect(typography != bodyTypography)
 
         // Test that gradient exists and is a LinearGradient

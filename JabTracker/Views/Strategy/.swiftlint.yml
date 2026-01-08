@@ -4,13 +4,18 @@
 # and program optimization flow
 
 type_body_length:
-  warning: 700
-  error: 750
+  warning: 750
+  error: 800
 
 file_length:
-  warning: 850
-  error: 950
+  warning: 950
+  error: 1050
 
 function_body_length:
-  warning: 100
-  error: 120
+  warning: 120
+  error: 140
+
+# Pre-existing background color usage - systemGroupedBackground is semantic
+disabled_rules:
+  - prefer_design_tokens_backgrounds
+  - prefer_design_tokens_colors

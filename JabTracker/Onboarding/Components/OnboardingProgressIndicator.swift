@@ -8,7 +8,7 @@ struct OnboardingProgressIndicator: View {
         VStack(spacing: 12) {
             // Progress bar
             ProgressView(value: Double(self.currentStep - 1), total: Double(self.totalSteps - 1))
-                .tint(DesignTokens.Colors.primary)
+                .tint(DesignTokens.Colors.accent)
                 .accessibilityIdentifier("onboarding-progress-bar")
 
             // Step indicator
@@ -23,7 +23,7 @@ struct OnboardingProgressIndicator: View {
                 HStack(spacing: 8) {
                     ForEach(1...self.totalSteps, id: \.self) { step in
                         Circle()
-                            .fill(step <= self.currentStep ? DesignTokens.Colors.primary : Color(.systemGray4))
+                            .fill(step <= self.currentStep ? DesignTokens.Colors.accent : DesignTokens.Colors.inactive)
                             .frame(width: 8, height: 8)
                             .accessibilityHidden(true)
                     }

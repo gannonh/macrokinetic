@@ -3,6 +3,10 @@ import SwiftUI
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
+    private var buttonColor: Color {
+        DesignTokens.Colors.accent
+    }
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.semibold))
@@ -11,7 +15,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, 10)
             .background(
                 Capsule()
-                    .fill(isEnabled ? Color.accentColor : Color.accentColor.opacity(0.5))
+                    .fill(isEnabled ? buttonColor : buttonColor.opacity(0.5))
             )
             .opacity(configuration.isPressed ? 0.8 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
@@ -21,16 +25,24 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct SecondaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
+    private var buttonColor: Color {
+        DesignTokens.Colors.accent
+    }
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundColor(isEnabled ? .accentColor : .accentColor.opacity(0.5))
+            .foregroundColor(isEnabled ? buttonColor : buttonColor.opacity(0.5))
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(
                 Capsule()
+                    .fill(DesignTokens.Colors.background)
+            )
+            .overlay(
+                Capsule()
                     .strokeBorder(
-                        isEnabled ? Color.accentColor : Color.accentColor.opacity(0.5),
+                        isEnabled ? buttonColor : buttonColor.opacity(0.5),
                         lineWidth: 1
                     )
             )

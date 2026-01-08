@@ -1,7 +1,8 @@
 # TDEE & Calorie Algorithms
 
-**Last Updated:** 2026-01-04T15:09:08Z (Calorie Expenditure Adjustments)
+**Last Updated:** 2026-01-07T21:17:37Z (BiologicalSex enum integration)
 **Source Files:**
+- `JabTracker/Models/BiologicalSex.swift`
 - `JabTracker/Services/TDEECalculationEngine.swift`
 - `JabTracker/Services/TDEECalculationEngine+Adaptive.swift`
 - `JabTracker/Services/TDEECalculationEngine+EWMA.swift`
@@ -52,12 +53,20 @@ The Basal Metabolic Rate (BMR) is calculated using the Mifflin-St Jeor equation,
 BMR = (10 × weight_kg) + (6.25 × height_cm) - (5 × age) + adjustment
 ```
 
-**Gender Adjustments:**
-| Gender  | Adjustment    |
-| ------- | ------------- |
-| Male    | +5            |
-| Female  | -161          |
-| Unknown | -78 (average) |
+**BiologicalSex Adjustments:**
+
+The `BiologicalSex` enum (matching HealthKit's `HKBiologicalSex`) provides type-safe sex handling:
+
+| BiologicalSex | Raw Value | Adjustment | Calculation Allowed |
+| ------------- | --------- | ---------- | ------------------- |
+| `.female`     | "female"  | -161       | Yes                 |
+| `.male`       | "male"    | +5         | Yes                 |
+| `.other`      | "other"   | -78 (avg)  | Yes                 |
+| `.notSet`     | ""        | N/A        | **No** (blocked)    |
+
+**Type-Safe API:** New overloads accepting `BiologicalSex` throw `ValidationError.sexNotSet` when sex is `.notSet`, enforcing profile completion before TDEE calculations.
+
+**Legacy API:** String-based methods still accept any value and use the average adjustment (-78) for unrecognized values, maintaining backward compatibility.
 
 **Example:**
 ```
@@ -93,11 +102,14 @@ TDEE = 1798.75 × 1.55 = 2788 kcal/day
 
 ### Input Validation Ranges
 
-| Parameter | Valid Range | Unit  |
-| --------- | ----------- | ----- |
-| Weight    | 20 - 500    | kg    |
-| Height    | 100 - 250   | cm    |
-| Age       | 10 - 120    | years |
+| Parameter | Valid Range | Unit  | Error if Invalid |
+| --------- | ----------- | ----- | ---------------- |
+| Weight    | 20 - 500    | kg    | `invalidWeight`  |
+| Height    | 100 - 250   | cm    | `invalidHeight`  |
+| Age       | 10 - 120    | years | `invalidAge`     |
+| Sex       | Not `.notSet` | enum | `sexNotSet`     |
+
+**Note:** The `sexNotSet` validation only applies to type-safe `BiologicalSex` overloads. Legacy string-based methods accept any value.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 created: 2024-01-15T00:00:00Z
-updated: 2026-01-05T21:08:43Z
+updated: 2026-01-07T22:20:31Z
 ---
 
 # MacroKinetic Product Requirements Document
@@ -806,6 +806,91 @@ Streamlined navigation by consolidating GLP-1 features under More tab, promoting
 
 ---
 
+### ✅ Onboarding Redux (v0.6.0)
+
+Issue: [#329](https://github.com/gannonh/jab-tracker-ios/issues/329)
+Completed: 2026-01-07
+
+Complete rewrite of onboarding focused on core experience — USP showcase, simplified goal/program setup, and permission screens (HealthKit, Face ID, Notifications).
+
+#### Requirements
+
+- [x] Archive legacy onboarding (prefixed with "Legacy" for reference)
+- [x] New OnboardingCoordinator with clean step structure
+- [x] Sign in with Apple retained as first step
+- [x] USP showcase screens (adaptive TDEE, precision tracking, calorie adjustments, GLP-1 support)
+- [x] Simplified goal setup (weight loss/gain/maintain, target weight)
+- [x] Simplified program setup (program style, diet preference, calorie floor, activity level, weekly distribution, protein level)
+- [x] Profile completion step (height, DOB, sex) with HealthKit pre-fill when available
+- [x] Individual permission screens with toggle pattern (HealthKit, Face ID, Notifications)
+- [x] Setup confirmation screen with calculated targets display
+- [x] Completion screen with summary and next steps
+- [x] Smooth transition from onboarding to main app with opacity animation
+- [x] "Skip for now" option on goal/program steps
+- [x] E2E tests for complete onboarding flow
+
+#### User Stories
+
+##### Discovery
+- **As a new user**, I want to see what makes MacroKinetic special, so that I understand the value proposition.
+- **As a user**, I want a streamlined setup, so that I can start tracking quickly.
+
+##### Setup
+- **As a user**, I want to set my weight goal, so that the app calculates my targets.
+- **As a user**, I want to configure my program, so that macros match my preferences.
+- **As a user**, I want to enable permissions selectively, so that I control what data the app accesses.
+
+##### Flexibility
+- **As a user**, I want to skip setup if I'm exploring, so that I can complete it later.
+- **As a user**, I want to see my calculated targets before finishing, so that I can verify my setup.
+
+#### Key Design Decisions
+
+1. **Toggle pattern for permissions** - HealthKit, Face ID, and Notifications use toggle + Continue instead of separate skip/enable buttons.
+2. **Mint accent color (#00A693)** - Brand identity with good contrast in both light and dark modes.
+3. **Fullscreen onboarding** - Avoids flash of ContentView before onboarding completes.
+4. **2000 kcal baseline** - Simple starting point (150g protein, 200g carbs, 67g fat) for all goal types.
+5. **Smart target weight defaults** - -10kg for loss, +5kg for gain, 0 for maintain.
+6. **Calculating overlay** - 5-second animation while computing targets for perceived sophistication.
+7. **BiologicalSex enum** - Cleaner model than raw strings with HealthKit integration.
+
+#### Acceptance Criteria
+
+- [x] User completes onboarding in under 3 minutes
+- [x] USP screens showcase 4 key features
+- [x] Goal and program setup calculates personalized targets
+- [x] Permission toggles work correctly (enable/skip)
+- [x] Setup confirmation shows calculated calories and macros
+- [x] Completion screen provides clear next steps
+- [x] Transition to main app is smooth
+- [x] Skip option available on appropriate steps
+- [x] E2E tests pass for complete flow and all permission scenarios
+
+#### Delivered Components
+
+**Coordinator:**
+- OnboardingCoordinator (step progression, data collection)
+- OnboardingViewModel (step validation, target calculation)
+
+**Views:**
+- WelcomeStepView, USPShowcaseStepView
+- GoalTypeStepView, TargetWeightStepView, ProfileCompletionStepView
+- ProgramStyleStepView, DietPreferenceStepView, CalorieFloorStepView
+- ActivityLevelStepView, WeeklyDistributionStepView, ProteinLevelStepView
+- SetupConfirmationStepView (with calculating overlay)
+- HealthKitStepView, FaceIDStepView, NotificationsStepView
+- CompletionStepView (summary card, next steps)
+
+**Tests:**
+- NewOnboardingUITests (12 tests - complete flow, navigation, step display)
+- OnboardingPermissionsUITests (7 tests - HealthKit, Face ID, Notifications enable/skip)
+
+**Deferred:**
+- GLP-1 medication setup (moved to future milestone)
+- StoreKit subscription screen (moved to future milestone)
+
+---
+
 ### 📋 Protein Preservation Alerts
 
 Proactive protein monitoring to prevent muscle loss during weight loss, with alerts and recommendations.
@@ -1190,6 +1275,7 @@ StoreKit 2 integration for subscription tiers with paywall UI and purchase resto
 
 ## Update History
 
+- 2026-01-07: Added Onboarding Redux (v0.6.0) - Complete onboarding rewrite with USP showcase, simplified goal/program setup, permission screens with toggle pattern, E2E tests
 - 2026-01-05: Added Navigation Refinement (v0.5.0) - GLP-1 Programs consolidation, Strategy tab promotion, Add button redesign
 - 2026-01-01: Added Goals & Nutrition Programs (v0.3.0) - goal/program wizards, 3 program styles (Coached/Collaborative/Manual), adaptive TDEE engine, progress rings, weekly check-ins, More tab refinements
 - 2025-12-26: Added Enhanced Daily Tracking (v0.2.0) - calendar navigation, food library, quick add, weight tracking, body metrics, progress photos, feature settings

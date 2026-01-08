@@ -1,0 +1,8 @@
+# SwiftLint configuration for Legacy onboarding code
+# These files are archived for reference only and should not be modified.
+# Disable rules that weren't in place when these files were written.
+
+disabled_rules:
+  - prefer_design_tokens_colors
+  - prefer_design_tokens_backgrounds
+  - type_body_length

@@ -46,7 +46,7 @@ struct CardBackgroundModifier: ViewModifier {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.05))
+                    .fill(DesignTokens.Colors.cardBackground)
             )
     }
 }
@@ -59,7 +59,7 @@ struct CompactCardBackgroundModifier: ViewModifier {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.gray.opacity(0.05))
+                    .fill(DesignTokens.Colors.cardBackground)
             )
     }
 }
@@ -110,6 +110,7 @@ struct ProgramStyleStepView: View {
 }
 
 /// Profile completion step for missing TDEE data
+/// Design matches OnboardingProfileCompletionView for consistency
 struct ProfileCompletionStepView: View {
     @Bindable var viewModel: ProgramWizardViewModel
 
@@ -125,17 +126,18 @@ struct ProfileCompletionStepView: View {
                     // Info card
                     HStack(spacing: 12) {
                         Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(DesignTokens.Colors.accent)
                             .font(.title2)
 
                         Text("We need these details to calculate your personalized calorie and macro targets.")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(DesignTokens.Colors.accent.opacity(0.1))
                     )
 
                     // Height field
@@ -162,15 +164,14 @@ struct ProfileCompletionStepView: View {
                         .accessibilityIdentifier("profile-completion-height")
                     }
 
-                    // Sex field
+                    // Sex field - 3 selectable options (notSet is the default state, not a choice)
                     if viewModel.missingSex {
                         profileField(title: "Sex", icon: "person.fill") {
-                            Picker("Sex", selection: $viewModel.editSex) {
-                                Text("Select...").tag("")
-                                Text("Male").tag("male")
-                                Text("Female").tag("female")
+                            HStack(spacing: 8) {
+                                ForEach(BiologicalSex.selectableOptions, id: \.self) { sex in
+                                    sexButton(sex: sex)
+                                }
                             }
-                            .pickerStyle(.segmented)
                         }
                         .accessibilityIdentifier("profile-completion-sex")
                     }
@@ -184,8 +185,11 @@ struct ProfileCompletionStepView: View {
                                 in: ...Date(),
                                 displayedComponents: .date
                             )
-                            .datePickerStyle(.compact)
+                            .datePickerStyle(.wheel)
                             .labelsHidden()
+                            .frame(height: 140)
+                            .padding(.vertical, 8)
+                            .clipped()
                         }
                         .accessibilityIdentifier("profile-completion-birthday")
                     }
@@ -203,22 +207,46 @@ struct ProfileCompletionStepView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.Colors.accent)
                 Text(title)
                     .font(.headline)
             }
 
             content()
+                .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                .stroke(DesignTokens.Colors.inactive.opacity(0.3), lineWidth: 1)
         )
+    }
+
+    private func sexButton(sex: BiologicalSex) -> some View {
+        let isSelected = viewModel.editSex == sex.rawValue
+        return Button {
+            viewModel.editSex = sex.rawValue
+        } label: {
+            Text(sex.displayName)
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            isSelected
+                                ? DesignTokens.Colors.accent
+                                : DesignTokens.Colors.inactive.opacity(0.4))
+                )
+                .foregroundColor(isSelected ? .white : .primary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("profile-completion-sex-\(sex.rawValue.isEmpty ? "notset" : sex.rawValue)")
     }
 }
 
@@ -451,7 +479,7 @@ struct ProgramConfirmationStepView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.1))
+                .fill(DesignTokens.Colors.accent.opacity(0.1))
         )
     }
 
@@ -468,128 +496,8 @@ struct ProgramConfirmationStepView: View {
     }
 }
 
-// MARK: - Reusable Step Header
-
-struct StepHeader: View {
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 24)
-    }
-}
-
-// MARK: - Selection Card
-
-/// Selection card for wizard options
-struct SelectionCard: View {
-    let title: String
-    let description: String
-    var icon: String?
-    var detail: String?
-    let isSelected: Bool
-    var showWarning: Bool = false
-    let onSelect: () -> Void
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 16) {
-                if let icon {
-                    Image(systemName: icon)
-                        .font(.title2)
-                        .foregroundColor(isSelected ? .blue : .secondary)
-                        .frame(width: 32)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(title)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-
-                        if showWarning {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                                .font(.caption)
-                        }
-                    }
-
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if let detail {
-                        Text(detail)
-                            .font(.caption2)
-                            .foregroundColor(.blue)
-                            .padding(.top, 2)
-                    }
-                }
-
-                Spacer()
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
-                        .font(.title2)
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.gray.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title)
-        .accessibilityHint(description)
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
-    }
-}
-
-/// Summary row for confirmation step
-struct SummaryRow: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.05))
-        )
-    }
-}
+// Note: StepHeader, SelectionCard, and SummaryRow are now shared components
+// located in JabTracker/Design/ for reuse across wizards and onboarding
 
 // MARK: - Macro Customization Step View (Collaborative)
 

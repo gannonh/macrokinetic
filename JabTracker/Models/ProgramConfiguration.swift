@@ -31,6 +31,47 @@ struct MacroPercentages: Codable, Equatable {
     }
 }
 
+// MARK: - MacroCalorieConstants
+
+/// Calories per gram for each macronutrient (standard Atwater factors)
+enum MacroCalorieConstants {
+    /// Calories per gram of protein
+    static let proteinCaloriesPerGram: Double = 4.0
+    /// Calories per gram of carbohydrates
+    static let carbsCaloriesPerGram: Double = 4.0
+    /// Calories per gram of fat
+    static let fatCaloriesPerGram: Double = 9.0
+
+    /// Calculate total calories from macro grams
+    static func calories(proteinGrams: Double, carbsGrams: Double, fatGrams: Double) -> Double {
+        (proteinGrams * proteinCaloriesPerGram) + (carbsGrams * carbsCaloriesPerGram) + (fatGrams * fatCaloriesPerGram)
+    }
+
+    /// Calculate calories from protein grams only
+    static func proteinCalories(_ grams: Double) -> Double {
+        grams * proteinCaloriesPerGram
+    }
+
+    /// Calculate calories from carbs grams only
+    static func carbsCalories(_ grams: Double) -> Double {
+        grams * carbsCaloriesPerGram
+    }
+
+    /// Calculate calories from fat grams only
+    static func fatCalories(_ grams: Double) -> Double {
+        grams * fatCaloriesPerGram
+    }
+}
+
+// MARK: - MacroGrams
+
+/// Macro targets in grams (protein, fat, carbs)
+struct MacroGrams: Equatable {
+    let protein: Double
+    let fat: Double
+    let carbs: Double
+}
+
 // MARK: - GoalType
 
 /// Type of weight/nutrition goal the user is pursuing
@@ -411,6 +452,35 @@ struct WeeklyCalorieDistribution: Codable, Equatable {
     /// Even distribution (all days at base calories)
     static var even: WeeklyCalorieDistribution {
         WeeklyCalorieDistribution(dayMultipliers: [:])
+    }
+
+    /// Multiplier applied to high calorie days in shifted distribution
+    static let shiftedHighDayMultiplier = 1.1
+
+    /// Create a shifted distribution from a set of high calorie days
+    /// - Parameter highCalorieDays: Set of weekdays (1=Sunday through 7=Saturday)
+    ///   that should have higher calories
+    /// - Returns: Distribution with high days at 1.1x and low days reduced to maintain
+    ///   weekly average, or nil if invalid
+    static func shifted(highCalorieDays: Set<Int>) -> WeeklyCalorieDistribution? {
+        guard !highCalorieDays.isEmpty else { return nil }
+
+        let highDayCount = Double(highCalorieDays.count)
+        let lowDayCount = 7.0 - highDayCount
+
+        // If all days are high, no shift possible - use even distribution
+        guard lowDayCount > 0 else { return nil }
+
+        // High days get boost, low days get reduced to maintain weekly average of 7.0
+        let highMultiplier = shiftedHighDayMultiplier
+        let lowMultiplier = (7.0 - highDayCount * highMultiplier) / lowDayCount
+
+        var dayMultipliers: [Int: Double] = [:]
+        for weekday in WeeklyConstants.validWeekdayRange {
+            dayMultipliers[weekday] = highCalorieDays.contains(weekday) ? highMultiplier : lowMultiplier
+        }
+
+        return WeeklyCalorieDistribution(dayMultipliers: dayMultipliers)
     }
 
     /// Valid weekday range (1=Sunday through 7=Saturday)

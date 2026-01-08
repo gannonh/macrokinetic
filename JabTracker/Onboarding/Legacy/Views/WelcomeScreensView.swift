@@ -1,7 +1,8 @@
 import SwiftUI
 
+/// Legacy welcome screens view (v0.5.x and earlier). Retained for reference only.
 struct WelcomeScreensView: View {
-    @ObservedObject var viewModel: OnboardingViewModel
+    @ObservedObject var viewModel: LegacyOnboardingViewModel
     @State private var currentWelcomeStep: Int = 0
 
     private let welcomeScreens = [

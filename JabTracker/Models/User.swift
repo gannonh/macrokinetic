@@ -52,6 +52,7 @@ final class User {
     // Onboarding tracking
     var hasCompletedOnboarding: Bool = false  // Track onboarding completion
     var onboardingCompletedAt: Date?  // When onboarding was completed
+    var onboardingSkippedAt: Date?  // When user skipped goal setup (can complete later via Strategy)
 
     // Analytics preferences and settings
     var analyticsEnabled: Bool = true  // User preference for analytics features
@@ -209,6 +210,18 @@ extension User {
     /// Display email - handles nil email gracefully for UI presentation
     var displayEmail: String {
         self.email ?? "No email"
+    }
+
+    /// Biological sex as type-safe enum.
+    /// Wraps the underlying String storage for CloudKit compatibility.
+    var biologicalSex: BiologicalSex {
+        get { BiologicalSex(rawValue: gender) ?? .notSet }
+        set { gender = newValue.rawValue }
+    }
+
+    /// Whether the user has set their biological sex (not notSet)
+    var hasBiologicalSex: Bool {
+        biologicalSex != .notSet
     }
 }
 

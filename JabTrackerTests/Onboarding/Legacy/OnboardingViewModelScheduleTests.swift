@@ -19,7 +19,7 @@ struct OnboardingViewModelScheduleTests {
     private func createTestViewModel() -> OnboardingViewModel {
         let dataController = DataController.testContainer()
         let authManager = AuthenticationManager(dataController: dataController)
-        return OnboardingViewModel(dataController: dataController, authManager: authManager)
+        return LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
     }
 
     // MARK: - saveScheduleConfiguration() Tests

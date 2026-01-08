@@ -64,13 +64,19 @@ final class TDEECalculationEngine {
 
         let baseBMR = (10 * weightKg) + (6.25 * heightCm) - (5 * Double(age))
 
+        // Map gender string to BMR adjustment using BiologicalSex enum
+        let sex = BiologicalSex(rawValue: gender) ?? BiologicalSex(fromHealthKit: gender)
         let adjustment: Double
-        switch gender.lowercased() {
-        case "male", "m":
+        switch sex {
+        case .male:
             adjustment = Self.maleAdjustment
-        case "female", "f":
+        case .female:
             adjustment = Self.femaleAdjustment
-        default:
+        case .other:
+            adjustment = Self.averageAdjustment
+        case .notSet:
+            // Legacy behavior: use average when sex not set (for backward compatibility)
+            // New code should use BiologicalSex overloads which throw for notSet
             adjustment = Self.averageAdjustment
         }
 
@@ -146,6 +152,88 @@ final class TDEECalculationEngine {
             heightCm: heightCm,
             age: age,
             gender: gender,
+            activityMultiplier: trainingLevel.tdeeMultiplier
+        )
+    }
+
+    // MARK: - BiologicalSex Overloads
+
+    /// Calculate BMR using BiologicalSex enum (type-safe)
+    /// - Parameters:
+    ///   - weightKg: Weight in kilograms
+    ///   - heightCm: Height in centimeters
+    ///   - age: Age in years
+    ///   - sex: BiologicalSex enum value
+    /// - Returns: BMR in calories per day
+    /// - Throws: ValidationError.sexNotSet if sex is .notSet, or other ValidationError for invalid inputs
+    func calculateBMR(
+        weightKg: Double,
+        heightCm: Double,
+        age: Int,
+        sex: BiologicalSex
+    ) throws -> Double {
+        guard sex.allowsCalculation else {
+            logger.warning("BMR calculation blocked: sex not set")
+            throw ValidationError.sexNotSet
+        }
+        return try calculateBMR(
+            weightKg: weightKg,
+            heightCm: heightCm,
+            age: age,
+            gender: sex.rawValue
+        )
+    }
+
+    /// Calculate initial TDEE using BiologicalSex enum (type-safe)
+    /// - Parameters:
+    ///   - weightKg: Weight in kilograms
+    ///   - heightCm: Height in centimeters
+    ///   - age: Age in years
+    ///   - sex: BiologicalSex enum value
+    ///   - activityMultiplier: Activity multiplier
+    /// - Returns: TDEE in calories per day
+    /// - Throws: ValidationError.sexNotSet if sex is .notSet, or other ValidationError for invalid inputs
+    func calculateInitialTDEE(
+        weightKg: Double,
+        heightCm: Double,
+        age: Int,
+        sex: BiologicalSex,
+        activityMultiplier: Double
+    ) throws -> Double {
+        guard sex.allowsCalculation else {
+            logger.warning("TDEE calculation blocked: sex not set")
+            throw ValidationError.sexNotSet
+        }
+        return try calculateInitialTDEE(
+            weightKg: weightKg,
+            heightCm: heightCm,
+            age: age,
+            gender: sex.rawValue,
+            activityMultiplier: activityMultiplier
+        )
+    }
+
+    /// Calculate initial TDEE using BiologicalSex and TrainingLevel enums (type-safe)
+    /// - Parameters:
+    ///   - weightKg: Weight in kilograms
+    ///   - heightCm: Height in centimeters
+    ///   - age: Age in years
+    ///   - sex: BiologicalSex enum value
+    ///   - trainingLevel: Training level enum value
+    /// - Returns: TDEE in calories per day
+    /// - Throws: ValidationError.sexNotSet if sex is .notSet, or other ValidationError for invalid inputs
+    func calculateInitialTDEE(
+        weightKg: Double,
+        heightCm: Double,
+        age: Int,
+        sex: BiologicalSex,
+        trainingLevel: TrainingLevel
+    ) throws -> Double {
+        try calculateInitialTDEE(
+            weightKg: weightKg,
+            heightCm: heightCm,
+            age: age,
+            sex: sex,
             activityMultiplier: trainingLevel.tdeeMultiplier
         )
     }

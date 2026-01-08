@@ -1,0 +1,18 @@
+# SwiftLint overrides for Onboarding module
+# Extended limits for complex onboarding flows with many conditional steps
+
+file_length:
+  warning: 650
+  error: 750
+
+type_body_length:
+  warning: 400
+  error: 450
+
+function_body_length:
+  warning: 80
+  error: 100
+
+cyclomatic_complexity:
+  warning: 20
+  error: 25

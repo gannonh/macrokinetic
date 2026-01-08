@@ -169,7 +169,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--force-onboarding"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
@@ -189,15 +189,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-check-in-ready"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-collaborative"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-30d"

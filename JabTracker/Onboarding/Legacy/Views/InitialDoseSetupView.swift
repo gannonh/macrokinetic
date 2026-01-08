@@ -1,7 +1,8 @@
 import SwiftUI
 
+/// Legacy initial dose setup view (v0.5.x and earlier). Retained for reference only.
 struct InitialDoseSetupView: View {
-    @ObservedObject var viewModel: OnboardingViewModel
+    @ObservedObject var viewModel: LegacyOnboardingViewModel
 
     var body: some View {
         ScrollView {

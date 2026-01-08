@@ -134,18 +134,18 @@ final class ProgramWizardViewModel {
 
         /// Calculate fat grams from remaining calories after protein
         func fatGrams(bodyWeightLb: Double) -> Double {
-            let proteinCals = proteinGrams(bodyWeightLb: bodyWeightLb) * 4
+            let proteinCals = MacroCalorieConstants.proteinCalories(proteinGrams(bodyWeightLb: bodyWeightLb))
             let remaining = calories - proteinCals
             let fatCalories = remaining * (1 - carbFatRatio)
-            return fatCalories / 9
+            return fatCalories / MacroCalorieConstants.fatCaloriesPerGram
         }
 
         /// Calculate carb grams from remaining calories after protein
         func carbGrams(bodyWeightLb: Double) -> Double {
-            let proteinCals = proteinGrams(bodyWeightLb: bodyWeightLb) * 4
+            let proteinCals = MacroCalorieConstants.proteinCalories(proteinGrams(bodyWeightLb: bodyWeightLb))
             let remaining = calories - proteinCals
             let carbCalories = remaining * carbFatRatio
-            return carbCalories / 4
+            return carbCalories / MacroCalorieConstants.carbsCaloriesPerGram
         }
     }
 
@@ -256,7 +256,7 @@ final class ProgramWizardViewModel {
         return steps
     }
 
-    /// Steps for Collaborative mode
+    /// Steps for Collaborative mode (skips weeklyDistribution - they customize per-day in Strategy)
     private var collaborativeSteps: [ProgramWizardStep] {
         var steps = baseSteps
 
@@ -265,8 +265,8 @@ final class ProgramWizardViewModel {
             steps.append(.profileCompletion)
         }
 
-        // Collaborative shows: collaborativeDistribution -> confirmation
-        steps.append(contentsOf: [.collaborativeDistribution, .confirmation])
+        // Collaborative skips weeklyDistribution/shiftedDaySelection - customize per-day in Strategy
+        steps.append(contentsOf: [.dietPreference, .calorieFloor, .training, .proteinLevel, .confirmation])
         return steps
     }
 
@@ -545,9 +545,9 @@ final class ProgramWizardViewModel {
 
             // Derive UI parameters from stored macro values
             let proteinGramsPerLb = weightLb > 0 ? macros.proteinGrams / weightLb : 0.8
-            let proteinCalories = macros.proteinGrams * 4
+            let proteinCalories = MacroCalorieConstants.proteinCalories(macros.proteinGrams)
             let remainingCalories = macros.calories - proteinCalories
-            let carbCalories = macros.carbsGrams * 4
+            let carbCalories = MacroCalorieConstants.carbsCalories(macros.carbsGrams)
             let carbFatRatio = remainingCalories > 0 ? carbCalories / remainingCalories : 0.5
 
             collaborativeDays[weekday] = CollaborativeDayConfig(
@@ -590,36 +590,11 @@ final class ProgramWizardViewModel {
 
     // MARK: - Save
 
-    /// 10% calorie boost on high days (e.g., training days)
-    private static let shiftedHighDayMultiplier = 1.1
-
     /// Build WeeklyCalorieDistribution from highCalorieDays selection
     /// See mock: mocks/goal-program/Coached-Shift/IMG_2103.PNG
     private func buildWeeklyCalorieDistribution() -> WeeklyCalorieDistribution? {
-        guard weeklyDistributionMode == .shifted, !highCalorieDays.isEmpty else {
-            return nil
-        }
-
-        // Create multipliers: high days get boost, low days get reduction
-        // Sum of multipliers should equal 7.0 to maintain weekly average
-        let highDayCount = Double(highCalorieDays.count)
-        let lowDayCount = 7.0 - highDayCount
-
-        // If all days are high, just use even distribution (no shift needed)
-        guard lowDayCount > 0 else {
-            return nil
-        }
-
-        // Example: if 3 high days, high=1.1, low=0.95 -> 3*1.1 + 4*0.95 = 3.3 + 3.8 = 7.1 ~ 7
-        let highMultiplier = Self.shiftedHighDayMultiplier
-        let lowMultiplier = (7.0 - highDayCount * highMultiplier) / lowDayCount
-
-        var dayMultipliers: [Int: Double] = [:]
-        for weekday in WeeklyConstants.validWeekdayRange {
-            dayMultipliers[weekday] = highCalorieDays.contains(weekday) ? highMultiplier : lowMultiplier
-        }
-
-        return WeeklyCalorieDistribution(dayMultipliers: dayMultipliers)
+        guard weeklyDistributionMode == .shifted else { return nil }
+        return WeeklyCalorieDistribution.shifted(highCalorieDays: highCalorieDays)
     }
 
     /// Build WeeklyMacroDistribution from wizard selections
@@ -643,7 +618,7 @@ final class ProgramWizardViewModel {
                 guard let config = collaborativeDays[weekday] else { continue }
 
                 let proteinGrams = config.proteinGramsPerLb * weightLb
-                let proteinCalories = proteinGrams * 4
+                let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
                 let remainingCalories = config.calories - proteinCalories
                 let fatCalories = remainingCalories * (1 - config.carbFatRatio)
                 let carbCalories = remainingCalories * config.carbFatRatio
@@ -651,8 +626,8 @@ final class ProgramWizardViewModel {
                 dayMacros[weekday] = DailyMacros(
                     calories: config.calories,
                     proteinGrams: proteinGrams,
-                    fatGrams: fatCalories / 9,
-                    carbsGrams: carbCalories / 4,
+                    fatGrams: fatCalories / MacroCalorieConstants.fatCaloriesPerGram,
+                    carbsGrams: carbCalories / MacroCalorieConstants.carbsCaloriesPerGram,
                     isLocked: config.isLocked
                 )
             }

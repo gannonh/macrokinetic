@@ -7,13 +7,11 @@
 
 import SwiftUI
 
-/// Onboarding step for configuring medication dosing schedule
-///
-/// Allows users to select a schedule pattern (weekly, split-dose, custom),
-/// preview concentration curves, and configure reminder preferences.
-/// Integrates with OnboardingViewModel for state management.
+/// Legacy onboarding step for configuring medication dosing schedule (v0.5.x and earlier).
+/// Retained for reference only.
+/// New implementation: JabTracker/Onboarding/Views/ScheduleSetupView.swift
 struct ScheduleSetupView: View {
-    @ObservedObject var viewModel: OnboardingViewModel
+    @ObservedObject var viewModel: LegacyOnboardingViewModel
 
     @State private var showConcentrationPreview: Bool = true
 
@@ -193,15 +191,16 @@ struct ScheduleSetupView: View {
 #Preview {
     let dataController = DataController.testContainer()
     let authManager = AuthenticationManager(dataController: dataController)
-    let viewModel = OnboardingViewModel(
+    let viewModel = LegacyOnboardingViewModel(
         dataController: dataController,
         authManager: authManager
     )
 
-    // Setup medication selection
-    viewModel.selectedMedication = .semaglutide
-    viewModel.selectedDose = 0.5
-    viewModel.currentStep = .scheduleSetup
-
+    // Setup medication selection using closure to avoid view builder issues
     return ScheduleSetupView(viewModel: viewModel)
+        .onAppear {
+            viewModel.selectedMedication = .semaglutide
+            viewModel.selectedDose = 0.5
+            viewModel.currentStep = .scheduleSetup
+        }
 }

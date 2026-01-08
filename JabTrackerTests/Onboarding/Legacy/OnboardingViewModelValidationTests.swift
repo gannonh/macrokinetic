@@ -17,7 +17,7 @@ struct OnboardingViewModelValidationTests {
         // Create test container
         dataController = DataController.testContainer()
         authManager = AuthenticationManager(dataController: dataController)
-        viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+        viewModel = LegacyOnboardingViewModel(dataController: dataController, authManager: authManager)
     }
 
     // MARK: - Weekly Pattern Validation Tests

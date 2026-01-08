@@ -44,6 +44,7 @@ extension TDEECalculationEngine {
         case invalidDuration(Int)
         case invalidIntake(Double)
         case insufficientData(required: Int, actual: Int)
+        case sexNotSet
 
         var errorDescription: String? {
             switch self {
@@ -69,6 +70,8 @@ extension TDEECalculationEngine {
                 return "Calorie intake must be positive. Got \(Int(intake)) calories."
             case .insufficientData(let required, let actual):
                 return "Need at least \(required) data points. You have \(actual)."
+            case .sexNotSet:
+                return "Biological sex is required for TDEE calculation. Please set your sex in your profile."
             }
         }
     }

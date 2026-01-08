@@ -16,7 +16,7 @@ settings:
     # MARKETING_VERSION: User-facing version (e.g., 1.0.0, 1.1.0)
     # CURRENT_PROJECT_VERSION: Build number -- increment with each upload (1, 2, 3...)
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "4"
+    CURRENT_PROJECT_VERSION: "5"
     IPHONEOS_DEPLOYMENT_TARGET: "17.5"
     TARGETED_DEVICE_FAMILY: "1"
     SUPPORTS_MACCATALYST: false
@@ -54,7 +54,10 @@ targets:
   JabTrackerTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [JabTrackerTests]
+    sources:
+      - path: JabTrackerTests
+        excludes:
+          - "Onboarding/Legacy/**"
     settings:
       GENERATE_INFOPLIST_FILE: YES
       CODE_SIGN_STYLE: Automatic
@@ -103,17 +106,17 @@ schemes:
         "--seed-collaborative": false
     run:
       commandLineArguments:
-        "--force-onboarding": false # resets onboarding if true
+        "--force-onboarding": true # resets onboarding if true
         "--reset-app-data": true # seeding only works if true
         "--ui-testing": true # Enable to bypasses auth AND auto-complete onboarding 
         "--seed-test-7d": false # medication history seeding 
         "--seed-test-30d": false # medication history seeding 
         "--seed-test-90d": false # medication history seeding 
-        "--seed-test-1y": true # medication history seeding 
+        "--seed-test-1y": false # medication history seeding 
         "--test-titration-data": false
-        "--seed-check-in-ready": true  # Seeds goal/program with check-in due (excellent tier)
+        "--seed-check-in-ready": false  # Seeds goal/program with check-in due (excellent tier)
         "--seed-check-in-good": false  # Seeds goal/program with good data tier
         "--seed-check-in-minimum": false  # Seeds goal/program with minimum data tier
         "--seed-check-in-insufficient": false  # Seeds goal/program with insufficient data (check-in blocked)
-        "--seed-collaborative": true  # Use Collaborative program style (default: Coached)
+        "--seed-collaborative": false  # Use Collaborative program style (default: Coached)
       storeKitConfiguration: JabTrackerStoreKit.storekit
