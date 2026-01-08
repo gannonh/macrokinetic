@@ -29,9 +29,9 @@ Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
-Issue: TBD
-PR: TBD
-Branch: TBD
+Issue: #331
+PR: #332
+Branch: feat/v0.7.0-dashboard-widget-ux
 
 ## Performance Metrics
 
