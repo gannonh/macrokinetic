@@ -1,5 +1,33 @@
 # Project Milestones: MacroKinetic
 
+## v0.6.0 Onboarding Redux (Shipped: 2026-01-07)
+
+**Delivered:** Complete rewrite of onboarding focused on core experience — USP showcase with mint brand identity, streamlined goal/program setup, permission screens (HealthKit, Face ID, Notifications), and animated completion flow with smooth transition to main app.
+
+**Phases completed:** 25-29 (6 plans total)
+
+**Key accomplishments:**
+
+- Archived legacy GLP-1 onboarding to Legacy/, created new 17-step @Observable OnboardingViewModel with TDD (21+ tests)
+- Welcome screen with AppLogo and 4-feature USP carousel (Adaptive TDEE, Precision Tracking, Calorie Adjustments, GLP-1 Support)
+- Streamlined GoalSetupStepView and ProgramSetupStepView with GoalProgramService for smart defaults
+- Permission screens for HealthKit, Face ID (dynamic biometric detection), and Notifications with enable/skip options
+- CompletionStepView with animated checkmark, personalized summary card, and numbered next-steps guidance
+- Comprehensive E2E test navigating through all 17 onboarding steps
+
+**Stats:**
+
+- 102 files modified
+- +10,098 / -1,583 lines (net +8,515)
+- 5 phases, 6 plans, 245 min execution time (~4 hours)
+- 3 days from start to ship (Jan 5-7, 2026)
+
+**Git range:** `770d03d` → `e9a156b`
+
+**What's next:** Protein Preservation Alerts, Analytics Dashboard, Subscription Management, or Recipe Builder
+
+---
+
 ## v0.5.0 Navigation Refinement (Shipped: 2026-01-05)
 
 **Delivered:** Streamlined navigation by consolidating GLP-1 features under More tab, promoting Strategy to a top-level tab with check-in badge, and modernizing the Add button with a floating 44pt icon-only design.

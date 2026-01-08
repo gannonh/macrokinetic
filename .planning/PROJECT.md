@@ -1,17 +1,18 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-05)
+## Current State (Updated: 2026-01-07)
 
-**Shipped:** v0.5.0 Navigation Refinement (2026-01-05)
+**Shipped:** v0.6.0 Onboarding Redux (2026-01-07)
 **Status:** Development / TestFlight
-**Codebase:** ~59,400 lines Swift, SwiftUI/SwiftData, iOS 17+
+**Codebase:** ~68,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.5.0 Delivered:**
-- Consolidated GLP-1 features (analytics + medications) into unified section under More tab
-- Promoted Strategy to top-level tab with target icon and check-in badge
-- Floating 44pt Add button overlay replacing tab item for visual prominence
-- Extracted reusable section components (ConcentrationSection, AdherenceSection, HistorySection) with TDD
-- Standardized navigation bar styling (inline titles, circle buttons) across app
+**v0.6.0 Delivered:**
+- Complete onboarding rewrite with new 17-step @Observable OnboardingViewModel
+- Welcome screen with AppLogo and 4-feature USP carousel (mint brand identity)
+- Streamlined goal/program setup with GoalProgramService smart defaults
+- Permission screens for HealthKit, Face ID (dynamic detection), and Notifications
+- CompletionStepView with animated checkmark, summary card, and next-steps guidance
+- Comprehensive E2E test covering full onboarding flow
 
 ## Next Milestone Goals
 
