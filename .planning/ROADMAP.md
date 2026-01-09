@@ -58,7 +58,7 @@ Plans:
 
 Plans:
 - [x] 31-01: Daily Nutrition Widget (DailyNutritionHeroWidget with circular ring, macro bars, environment-based toggle)
-- [ ] 31-02: Energy Balance Widget + Integration (EnergyBalanceHeroWidget with Swift Charts, complete carousel)
+- [x] 31-02: Energy Balance Widget + Integration (EnergyBalanceHeroWidget with Swift Charts, complete carousel)
 
 #### Phase 32: Standard Widgets - Insights
 
@@ -108,10 +108,10 @@ Phases execute in numeric order within each milestone.
 | Phase                           | Plans Complete | Status      | Completed  |
 | ------------------------------- | -------------- | ----------- | ---------- |
 | 30. Dashboard Foundation        | 2/2            | Complete    | 2026-01-08 |
-| 31. Main Widget (Hero)          | 1/2            | In progress | -          |
-| 32. Standard Widgets - Insights | 0/?            | Not started | -         |
-| 33. Detail Views                | 0/?            | Not started | -         |
-| 34. Integration & Polish        | 0/?            | Not started | -         |
+| 31. Main Widget (Hero)          | 2/2            | Complete    | 2026-01-09 |
+| 32. Standard Widgets - Insights | 0/?            | Not started | -          |
+| 33. Detail Views                | 0/?            | Not started | -          |
+| 34. Integration & Polish        | 0/?            | Not started | -          |
 
 <details>
 <summary>✅ v0.6.0 Onboarding Redux (Phases 25-29) - SHIPPED 2026-01-07</summary>

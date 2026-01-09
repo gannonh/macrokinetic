@@ -21,11 +21,11 @@
 ## Current Position
 
 Phase: 31 of 34 (Main Widget Hero)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-09 - Completed 31-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-01-09 - Completed 31-02 Energy Balance Widget
 
-Progress: ███░░░░░░░ 30%
+Progress: ████░░░░░░ 40%
 
 ## GitHub Tracking
 
@@ -36,21 +36,22 @@ Branch: feat/v0.7.0-dashboard-widget-ux
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 34 min
-- Total execution time: 101 min
+- Total plans completed: 4
+- Average duration: 36 min
+- Total execution time: 146 min
 
 **By Phase:**
 
 | Phase | Plans | Total   | Avg/Plan |
 |-------|-------|---------|----------|
 | 30    | 2     | 37 min  | 18 min   |
-| 31    | 1     | 64 min  | 64 min   |
+| 31    | 2     | 109 min | 54 min   |
 
 **Recent Trend:**
 - 30-01: 7 min (Foundation & Containers)
 - 30-02: 30 min (Hero Widget Integration)
 - 31-01: 64 min (Daily Nutrition Widget)
+- 31-02: 45 min (Energy Balance + Integration)
 
 *Updated after each plan completion*
 
@@ -80,6 +81,11 @@ Branch: feat/v0.7.0-dashboard-widget-ux
 | 30-02 | Border-only today indicator | Cleaner than "T" text inside cells |
 | 31-01 | Environment key for HeroDisplayMode | Cleaner than closure-based injection for shared toggle state |
 | 31-01 | 130pt ring diameter (vs 160pt) | User feedback - reduced vertical cramping |
+| 31-02 | EnergyDisplayMode environment key | Same pattern as HeroDisplayMode for consistency |
+| 31-02 | Page-specific toggles in container | Energy Balance uses different toggle options than Weekly/Daily |
+| 31-02 | Daily averages for Energy Balance | More meaningful than 30-day totals for "Last 30 Days" view |
+| 31-02 | Day selection defaults to week totals | Simplest UX; tap to drill down into specific days |
+| 31-02 | Carousel order: Weekly → Daily → Energy | Daily exists in carousel, Weekly should be primary |
 
 ### Deferred Issues
 
@@ -105,6 +111,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-09T16:02:46Z
-Stopped at: Completed 31-01-PLAN.md, ready for 31-02
+Last session: 2026-01-09T19:11:36Z
+Stopped at: Completed 31-02, Phase 31 complete, ready for Phase 32
 Resume file: None
