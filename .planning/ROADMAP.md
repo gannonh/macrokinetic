@@ -42,6 +42,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 Plans:
 - [x] 30-01: Foundation & Containers (DashboardWidget protocol, WidgetCard, HeroWidgetContainer, StandardWidgetGroup)
+- [x] 30-02: Hero Widget Integration (WeeklyNutritionHeroWidget with mock data, integrate into DashboardView)
 
 #### Phase 31: Main Widget (Hero)
 
@@ -105,7 +106,7 @@ Phases execute in numeric order within each milestone.
 
 | Phase                           | Plans Complete | Status      | Completed |
 | ------------------------------- | -------------- | ----------- | --------- |
-| 30. Dashboard Foundation        | 1/?            | In progress | -         |
+| 30. Dashboard Foundation        | 2/2            | Complete    | 2026-01-08 |
 | 31. Main Widget (Hero)          | 0/?            | Not started | -         |
 | 32. Standard Widgets - Insights | 0/?            | Not started | -         |
 | 33. Detail Views                | 0/?            | Not started | -         |
