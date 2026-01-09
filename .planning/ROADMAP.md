@@ -57,7 +57,8 @@ Plans:
 - Daily Nutrition: `mocks/dashboard/HERO - Daily Nutrition.png`
 
 Plans:
-- [ ] 31-01: TBD
+- [ ] 31-01: Daily Nutrition Widget (DailyNutritionHeroWidget with circular ring, macro bars, environment-based toggle)
+- [ ] 31-02: Energy Balance Widget + Integration (EnergyBalanceHeroWidget with Swift Charts, complete carousel)
 
 #### Phase 32: Standard Widgets - Insights
 
