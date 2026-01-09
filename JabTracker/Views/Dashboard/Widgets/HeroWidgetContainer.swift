@@ -100,10 +100,10 @@ struct HeroWidgetContainer: View {
                 .environment(\.energyDisplayMode, energyDisplayMode)
 
                 // Segment control - switches based on selected page
-                // Pages 0 & 2 (Weekly/Daily): Consumed/Remaining
-                // Page 1 (Energy Balance): Expenditure/Targets
+                // Pages 0 & 1 (Weekly/Daily): Consumed/Remaining
+                // Page 2 (Energy Balance): Expenditure/Targets
                 Group {
-                    if selectedIndex == 1 {
+                    if selectedIndex == 2 {
                         energyModeToggle
                     } else {
                         displayModeToggle

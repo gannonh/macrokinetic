@@ -247,8 +247,8 @@ struct EnergyBalanceMockData {
             HeroWidgetContainer(
                 pages: [
                     AnyView(WeeklyNutritionHeroWidget()),
-                    AnyView(EnergyBalanceHeroWidget()),
                     AnyView(DailyNutritionHeroWidget()),
+                    AnyView(EnergyBalanceHeroWidget()),
                 ]
             )
         }
