@@ -20,12 +20,12 @@
 
 ## Current Position
 
-Phase: 30 of 34 (Dashboard Foundation) - COMPLETE
-Plan: 2 of 2 in current phase
-Status: Complete - ready for Phase 31
-Last activity: 2026-01-09 - Phase 30 complete, CI passed
+Phase: 31 of 34 (Main Widget Hero)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-09 - Completed 31-01-PLAN.md
 
-Progress: ██░░░░░░░░ 20%
+Progress: ███░░░░░░░ 30%
 
 ## GitHub Tracking
 
@@ -36,19 +36,21 @@ Branch: feat/v0.7.0-dashboard-widget-ux
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 18 min
-- Total execution time: 37 min
+- Total plans completed: 3
+- Average duration: 34 min
+- Total execution time: 101 min
 
 **By Phase:**
 
-| Phase | Plans | Total  | Avg/Plan |
-|-------|-------|--------|----------|
-| 30    | 2     | 37 min | 18 min   |
+| Phase | Plans | Total   | Avg/Plan |
+|-------|-------|---------|----------|
+| 30    | 2     | 37 min  | 18 min   |
+| 31    | 1     | 64 min  | 64 min   |
 
 **Recent Trend:**
 - 30-01: 7 min (Foundation & Containers)
 - 30-02: 30 min (Hero Widget Integration)
+- 31-01: 64 min (Daily Nutrition Widget)
 
 *Updated after each plan completion*
 
@@ -76,6 +78,8 @@ Branch: feat/v0.7.0-dashboard-widget-ux
 | 30-01 | Array-based HeroWidgetContainer init | Avoid SwiftLint large_tuple violations vs ViewBuilder tuple overloads |
 | 30-02 | Rectangular cells (26x38) for macro bars | Better visual hierarchy than square cells for progress visualization |
 | 30-02 | Border-only today indicator | Cleaner than "T" text inside cells |
+| 31-01 | Environment key for HeroDisplayMode | Cleaner than closure-based injection for shared toggle state |
+| 31-01 | 130pt ring diameter (vs 160pt) | User feedback - reduced vertical cramping |
 
 ### Deferred Issues
 
@@ -101,6 +105,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-09T00:02:04Z
-Stopped at: Phase 30 complete, ready for Phase 31
+Last session: 2026-01-09T16:02:46Z
+Stopped at: Completed 31-01-PLAN.md, ready for 31-02
 Resume file: None

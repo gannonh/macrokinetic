@@ -57,7 +57,7 @@ Plans:
 - Daily Nutrition: `mocks/dashboard/HERO - Daily Nutrition.png`
 
 Plans:
-- [ ] 31-01: Daily Nutrition Widget (DailyNutritionHeroWidget with circular ring, macro bars, environment-based toggle)
+- [x] 31-01: Daily Nutrition Widget (DailyNutritionHeroWidget with circular ring, macro bars, environment-based toggle)
 - [ ] 31-02: Energy Balance Widget + Integration (EnergyBalanceHeroWidget with Swift Charts, complete carousel)
 
 #### Phase 32: Standard Widgets - Insights
@@ -105,10 +105,10 @@ Phases execute in numeric order within each milestone.
 
 ### 🚧 v0.7.0 Dashboard Widget UX (Phases 30-34)
 
-| Phase                           | Plans Complete | Status      | Completed |
-| ------------------------------- | -------------- | ----------- | --------- |
+| Phase                           | Plans Complete | Status      | Completed  |
+| ------------------------------- | -------------- | ----------- | ---------- |
 | 30. Dashboard Foundation        | 2/2            | Complete    | 2026-01-08 |
-| 31. Main Widget (Hero)          | 0/?            | Not started | -         |
+| 31. Main Widget (Hero)          | 1/2            | In progress | -          |
 | 32. Standard Widgets - Insights | 0/?            | Not started | -         |
 | 33. Detail Views                | 0/?            | Not started | -         |
 | 34. Integration & Polish        | 0/?            | Not started | -         |
