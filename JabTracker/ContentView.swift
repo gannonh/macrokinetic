@@ -382,7 +382,8 @@ struct DashboardView: View {
 
     private var heroWidgetSection: some View {
         HeroWidgetContainer(pages: [
-            AnyView(WeeklyNutritionHeroWidget())
+            AnyView(WeeklyNutritionHeroWidget()),
+            AnyView(DailyNutritionHeroWidget()),
         ])
     }
 

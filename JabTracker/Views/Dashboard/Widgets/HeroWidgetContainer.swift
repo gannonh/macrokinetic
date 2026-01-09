@@ -17,6 +17,19 @@ enum HeroDisplayMode: String, CaseIterable {
     case remaining = "Remaining"
 }
 
+// MARK: - HeroDisplayMode Environment Key
+
+struct HeroDisplayModeKey: EnvironmentKey {
+    static let defaultValue: HeroDisplayMode = .consumed
+}
+
+extension EnvironmentValues {
+    var heroDisplayMode: HeroDisplayMode {
+        get { self[HeroDisplayModeKey.self] }
+        set { self[HeroDisplayModeKey.self] = newValue }
+    }
+}
+
 // MARK: - HeroWidgetContainer
 
 /// Swipeable carousel container for hero dashboard widgets.
@@ -69,6 +82,7 @@ struct HeroWidgetContainer: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: selectedIndex)
                 .frame(height: 250)
+                .environment(\.heroDisplayMode, displayMode)
 
                 // Consumed/Remaining segment control - minimal spacing above
                 displayModeToggle

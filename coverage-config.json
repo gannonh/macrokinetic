@@ -246,6 +246,7 @@
       "Views/Dashboard/Widgets/HeroWidgetContainer.swift",
       "Views/Dashboard/Widgets/StandardWidgetGroup.swift",
       "Views/Dashboard/Widgets/WeeklyNutritionHeroWidget.swift",
+      "Views/Dashboard/Widgets/DailyNutritionHeroWidget.swift",
       "Views/Dashboard/Widgets/WidgetCard.swift",
       "Views/DoseEntry/DoseEntryFormSections.swift",
       "Views/DoseEntry/DoseEntryPKSection.swift",
