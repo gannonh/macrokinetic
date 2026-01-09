@@ -383,6 +383,7 @@ struct DashboardView: View {
     private var heroWidgetSection: some View {
         HeroWidgetContainer(pages: [
             AnyView(WeeklyNutritionHeroWidget()),
+            AnyView(EnergyBalanceHeroWidget()),
             AnyView(DailyNutritionHeroWidget()),
         ])
     }

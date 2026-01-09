@@ -50,6 +50,7 @@ struct WeeklyMacroRow: View {
     let dailyValues: [Double]  // 7 values for Mon-Sun
     let target: Double
     let todayIndex: Int  // 0-6 for Mon-Sun
+    let displayMode: HeroDisplayMode
 
     var body: some View {
         HStack(spacing: 0) {
@@ -70,15 +71,17 @@ struct WeeklyMacroRow: View {
 
     private var summaryView: some View {
         // Safe bounds check for todayIndex
-        let todayValue =
+        let todayConsumed =
             (todayIndex >= 0 && todayIndex < dailyValues.count)
             ? dailyValues[todayIndex]
             : 0
+        let todayRemaining = max(0, target - todayConsumed)
+        let displayValue = displayMode == .consumed ? todayConsumed : todayRemaining
 
         return VStack(alignment: .leading, spacing: 0) {
             // Value with symbol - LEFT aligned
             HStack(spacing: 3) {
-                Text("\(Int(todayValue))")
+                Text("\(Int(displayValue))")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(macroColor)
 
@@ -93,7 +96,7 @@ struct WeeklyMacroRow: View {
                 }
             }
 
-            Text("of \(formattedTarget)")
+            Text(displayMode == .consumed ? "of \(formattedTarget)" : "left")
                 .font(.system(size: 9))
                 .foregroundColor(.secondary)
         }
@@ -109,7 +112,9 @@ struct WeeklyMacroRow: View {
 
     private func dayCellView(for index: Int) -> some View {
         // Safe bounds check for dailyValues array
-        let value = (index >= 0 && index < dailyValues.count) ? dailyValues[index] : 0
+        let consumed = (index >= 0 && index < dailyValues.count) ? dailyValues[index] : 0
+        let remaining = max(0, target - consumed)
+        let displayValue = displayMode == .consumed ? consumed : remaining
         let isToday = index == todayIndex
         let isFuture = index > todayIndex
 
@@ -118,7 +123,7 @@ struct WeeklyMacroRow: View {
         if isFuture || target <= 0 {
             fillPercentage = 0
         } else {
-            fillPercentage = min(1.0, CGFloat(value / target))
+            fillPercentage = min(1.0, CGFloat(displayValue / target))
         }
 
         let fillHeight = GridLayout.cellHeight * fillPercentage
@@ -152,6 +157,8 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     let id = "weekly-nutrition"
     let title = "Weekly Nutrition"
 
+    @Environment(\.heroDisplayMode) private var displayMode
+
     // MARK: - Mock Data
 
     private let mockData = WeeklyMockData.sample
@@ -179,7 +186,8 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     macroColor: DesignTokens.Colors.calories,
                     dailyValues: mockData.calories,
                     target: mockData.caloriesTarget,
-                    todayIndex: mockData.todayIndex
+                    todayIndex: mockData.todayIndex,
+                    displayMode: displayMode
                 )
 
                 WeeklyMacroRow(
@@ -187,7 +195,8 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     macroColor: DesignTokens.Colors.protein,
                     dailyValues: mockData.protein,
                     target: mockData.proteinTarget,
-                    todayIndex: mockData.todayIndex
+                    todayIndex: mockData.todayIndex,
+                    displayMode: displayMode
                 )
 
                 WeeklyMacroRow(
@@ -195,7 +204,8 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     macroColor: DesignTokens.Colors.fat,
                     dailyValues: mockData.fat,
                     target: mockData.fatTarget,
-                    todayIndex: mockData.todayIndex
+                    todayIndex: mockData.todayIndex,
+                    displayMode: displayMode
                 )
 
                 WeeklyMacroRow(
@@ -203,7 +213,8 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     macroColor: DesignTokens.Colors.carbs,
                     dailyValues: mockData.carbs,
                     target: mockData.carbsTarget,
-                    todayIndex: mockData.todayIndex
+                    todayIndex: mockData.todayIndex,
+                    displayMode: displayMode
                 )
             }
         }

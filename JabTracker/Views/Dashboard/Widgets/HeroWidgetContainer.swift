@@ -30,6 +30,19 @@ extension EnvironmentValues {
     }
 }
 
+// MARK: - EnergyDisplayMode Environment Key
+
+struct EnergyDisplayModeKey: EnvironmentKey {
+    static let defaultValue: EnergyDisplayMode = .expenditure
+}
+
+extension EnvironmentValues {
+    var energyDisplayMode: EnergyDisplayMode {
+        get { self[EnergyDisplayModeKey.self] }
+        set { self[EnergyDisplayModeKey.self] = newValue }
+    }
+}
+
 // MARK: - HeroWidgetContainer
 
 /// Swipeable carousel container for hero dashboard widgets.
@@ -55,6 +68,7 @@ struct HeroWidgetContainer: View {
     let pages: [AnyView]
     @State private var selectedIndex: Int = 0
     @State private var displayMode: HeroDisplayMode = .consumed
+    @State private var energyDisplayMode: EnergyDisplayMode = .expenditure
 
     init(pages: [AnyView]) {
         self.pages = pages
@@ -83,11 +97,20 @@ struct HeroWidgetContainer: View {
                 .animation(.easeInOut, value: selectedIndex)
                 .frame(height: 250)
                 .environment(\.heroDisplayMode, displayMode)
+                .environment(\.energyDisplayMode, energyDisplayMode)
 
-                // Consumed/Remaining segment control - minimal spacing above
-                displayModeToggle
-                    .padding(.top, 2)
-                    .padding(.bottom, 12)
+                // Segment control - switches based on selected page
+                // Pages 0 & 2 (Weekly/Daily): Consumed/Remaining
+                // Page 1 (Energy Balance): Expenditure/Targets
+                Group {
+                    if selectedIndex == 1 {
+                        energyModeToggle
+                    } else {
+                        displayModeToggle
+                    }
+                }
+                .padding(.top, 2)
+                .padding(.bottom, 12)
             }
             .cardStyle()
             .accessibilityElement(children: .contain)
@@ -128,6 +151,37 @@ struct HeroWidgetContainer: View {
         .background(DesignTokens.Colors.inactive.opacity(0.3))
         .clipShape(Capsule())
         .accessibilityIdentifier("hero-display-toggle")
+    }
+
+    /// Expenditure/Targets segment control (for Energy Balance widget)
+    private var energyModeToggle: some View {
+        HStack(spacing: 0) {
+            ForEach(EnergyDisplayMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        energyDisplayMode = mode
+                    }
+                } label: {
+                    Text(mode.rawValue)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(energyDisplayMode == mode ? .primary : .secondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            energyDisplayMode == mode
+                                ? DesignTokens.Colors.tertiaryBackground
+                                : Color.clear
+                        )
+                        .clipShape(Capsule())
+                }
+                .accessibilityLabel("\(mode.rawValue) view")
+                .accessibilityAddTraits(energyDisplayMode == mode ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(DesignTokens.Colors.inactive.opacity(0.3))
+        .clipShape(Capsule())
+        .accessibilityIdentifier("energy-display-toggle")
     }
 
     private var pageIndicator: some View {

@@ -95,6 +95,77 @@ final class DashboardUITests: XCTestCase {
         XCTSkip("Stub: Requires additional hero widgets (Phase 31)")
     }
 
+    // MARK: - Hero Widget Carousel Tests (Phase 31-02)
+
+    /// User can swipe through all hero widget pages.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Carousel shows 3 pages (Weekly, Energy Balance, Daily)
+    /// - Swipe left navigates to next page
+    /// - Swipe right navigates to previous page
+    /// - Page indicator dots update on swipe
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testHeroWidgetCarouselNavigation() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Dashboard is displayed
+        // WHEN: User swipes left/right on hero widget
+        // THEN: Carousel navigates to next/previous page
+        // THEN: Page indicator dots update correctly (3 dots)
+        XCTSkip("Stub: Hero carousel navigation test")
+    }
+
+    /// Daily Nutrition widget shows circular ring with macro bars.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Ring displays calorie progress
+    /// - 3 macro bars visible (Protein, Fat, Carbs)
+    /// - Toggle affects center/left values
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testDailyNutritionWidgetDisplay() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Dashboard is displayed
+        // WHEN: User swipes to Daily Nutrition widget
+        // THEN: Circular ring is visible with calorie value
+        // THEN: Protein, Fat, Carbs bars are visible
+        XCTSkip("Stub: Daily Nutrition widget display test")
+    }
+
+    /// Energy Balance widget shows bar chart with reference line.
+    ///
+    /// **Acceptance Criteria:**
+    /// - 30-day bar chart is visible
+    /// - Dotted reference line shows expenditure/targets
+    /// - Summary equation row shows Nutrition - Expenditure = Difference
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testEnergyBalanceWidgetDisplay() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Dashboard is displayed
+        // WHEN: User swipes to Energy Balance widget
+        // THEN: Bar chart is visible
+        // THEN: Summary equation row shows Nutrition - Expenditure/Targets = Difference
+        XCTSkip("Stub: Energy Balance widget display test")
+    }
+
+    /// Energy Balance Expenditure/Targets toggle changes reference line.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Toggle switches between Expenditure and Targets views
+    /// - Reference line value changes
+    /// - Summary equation updates with new comparison value
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testEnergyBalanceToggle() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Energy Balance widget is visible
+        // WHEN: User taps Expenditure/Targets toggle
+        // THEN: Reference line value changes
+        // THEN: Summary equation updates with new comparison value
+        XCTSkip("Stub: Energy Balance toggle test")
+    }
+
     // MARK: - Dashboard Layout Tests
 
     /// Tests that the Dashboard displays hero widget above other content.
