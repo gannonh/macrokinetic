@@ -17,6 +17,12 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
 
     @Environment(\.heroDisplayMode) private var displayMode
 
+    // MARK: - Constants
+
+    private enum Layout {
+        static let ringDiameter: CGFloat = 130
+    }
+
     // MARK: - Mock Data
 
     private let mockData = DailyMockData.sample
@@ -54,7 +60,7 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
 
             // Center ring
             calorieRing
-                .frame(width: 130, height: 130)
+                .frame(width: Layout.ringDiameter, height: Layout.ringDiameter)
 
             // Right stat
             rightStatView
@@ -62,30 +68,25 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         }
     }
 
-    private var leftStatView: some View {
+    private func statView(value: Int, label: String) -> some View {
         VStack(spacing: 2) {
-            Text("\(leftValue)")
+            Text("\(value)")
                 .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
-            Text(leftLabel)
+            Text(label)
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(leftValue) \(leftLabel)")
+        .accessibilityLabel("\(value) \(label)")
+    }
+
+    private var leftStatView: some View {
+        statView(value: leftValue, label: leftLabel)
     }
 
     private var rightStatView: some View {
-        VStack(spacing: 2) {
-            Text("\(mockData.caloriesTarget)")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-            Text("Target")
-                .font(.system(size: 11))
-                .foregroundColor(.secondary)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(mockData.caloriesTarget) Target")
+        statView(value: mockData.caloriesTarget, label: "Target")
     }
 
     /// Value shown in the left stat (opposite of center)
@@ -111,7 +112,10 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
     // MARK: - Calorie Ring
 
     private var calorieRing: some View {
-        let progress = Double(mockData.caloriesConsumed) / Double(mockData.caloriesTarget)
+        let progress =
+            mockData.caloriesTarget > 0
+            ? Double(mockData.caloriesConsumed) / Double(mockData.caloriesTarget)
+            : 0
 
         return ZStack {
             // Background track
@@ -240,7 +244,7 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
 
 // MARK: - Mock Data
 
-private struct DailyMockData {
+struct DailyMockData {
     let caloriesConsumed: Int
     let caloriesTarget: Int
     let proteinConsumed: Int
