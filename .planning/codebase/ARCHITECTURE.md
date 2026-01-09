@@ -1,7 +1,7 @@
 ---
 name: Architecture
 created: 2025-12-22
-last_modified: 2026-01-04
+last_modified: 2026-01-09
 ---
 
 # Architecture
@@ -77,6 +77,16 @@ last_modified: 2026-01-04
 - CloudKit sync transparent to services
 - UserDefaults for app preferences (`NotificationService+Persistence.swift`)
 
+**Dashboard Hero Widget Carousel (NEW - Phase 31):**
+
+1. User views Dashboard tab → `DashboardView` section in ContentView
+2. `HeroWidgetContainer` renders carousel with 3 widgets
+3. Container applies `@State displayMode` via environment
+4. Environment propagation: `.environment(\.heroDisplayMode, displayMode)`
+5. Widgets read: `@Environment(\.heroDisplayMode) private var displayMode`
+6. User toggles consumed/remaining → environment updates all widgets
+7. TabView page navigation with custom page indicators
+
 ## Key Abstractions
 
 **Services:**
@@ -102,6 +112,19 @@ last_modified: 2026-01-04
 - Example: `AppServices.shared` - singleton
 - Pattern: Initializes services with ModelContext on first use
 - Location: `JabTracker/App/AppServices.swift`
+
+**Dashboard Widgets (NEW - Phase 31):**
+- Purpose: Modular dashboard display components
+- Protocol: `DashboardWidget` defines `id`, `title`, `content`
+- Examples: `WeeklyNutritionHeroWidget`, `DailyNutritionHeroWidget`, `EnergyBalanceHeroWidget`
+- Pattern: Protocol-based composition with environment state management
+- Location: `JabTracker/Views/Dashboard/Widgets/*.swift`
+
+**Environment-based Display Modes (NEW):**
+- Purpose: Propagate display state through widget hierarchy
+- Examples: `HeroDisplayModeKey` (consumed/remaining), `EnergyDisplayModeKey` (expenditure/targets)
+- Pattern: Custom `EnvironmentKey` + `EnvironmentValues` extension
+- Location: `JabTracker/Views/Dashboard/Widgets/HeroWidgetContainer.swift`
 
 ## Entry Points
 

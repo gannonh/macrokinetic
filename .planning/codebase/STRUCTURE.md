@@ -1,7 +1,7 @@
 ---
 name: Codebase Structure
 created: 2025-12-22
-last_modified: 2026-01-04
+last_modified: 2026-01-09
 ---
 
 # Codebase Structure
@@ -51,6 +51,7 @@ jab-tracker-ios/
 - Subdirectories:
   - `Analytics/` - Charts, trends, insights
   - `Dashboard/` - Main dashboard, concentration cards
+    - `Widgets/` - Hero carousel and standard grid widgets (Phase 31)
   - `DoseEntry/` - Quick dose entry, titration dialogs
   - `FoodLog/` - Today's meals view
   - `History/` - Calendar and list views
@@ -180,5 +181,5 @@ jab-tracker-ios/
 
 ---
 
-*Structure analysis: 2026-01-04*
+*Structure analysis: 2026-01-09*
 *Update when directory structure changes*

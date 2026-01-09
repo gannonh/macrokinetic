@@ -1,7 +1,7 @@
 ---
 name: Coding Conventions
 created: 2025-12-22
-last_modified: 2026-01-04
+last_modified: 2026-01-09
 ---
 
 # Coding Conventions
@@ -242,7 +242,46 @@ final class AppServices: ObservableObject {
 }
 ```
 
+## Widget Patterns (Phase 31)
+
+**Protocol-Based Widgets:**
+```swift
+protocol DashboardWidget: Identifiable {
+    associatedtype Content: View
+    var id: String { get }
+    var title: String { get }
+    @ViewBuilder var content: Content { get }
+}
+```
+
+**Environment-Based State Management:**
+```swift
+// Define custom environment key
+private struct HeroDisplayModeKey: EnvironmentKey {
+    static let defaultValue: HeroDisplayMode = .consumed
+}
+
+// Extend EnvironmentValues
+extension EnvironmentValues {
+    var heroDisplayMode: HeroDisplayMode {
+        get { self[HeroDisplayModeKey.self] }
+        set { self[HeroDisplayModeKey.self] = newValue }
+    }
+}
+
+// Container propagates state
+.environment(\.heroDisplayMode, displayMode)
+
+// Widgets read from environment
+@Environment(\.heroDisplayMode) private var displayMode
+```
+
+**Widget File Naming:**
+- `*HeroWidget.swift` - Full-width carousel widgets
+- `*Widget.swift` - Standard grid widgets
+- `WidgetCard.swift` - Shared card wrapper component
+
 ---
 
-*Convention analysis: 2026-01-04*
+*Convention analysis: 2026-01-09*
 *Update when patterns change*

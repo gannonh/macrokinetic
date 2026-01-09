@@ -1,7 +1,7 @@
 ---
 name: Codebase Concerns
 created: 2025-12-22
-last_modified: 2026-01-04
+last_modified: 2026-01-09
 ---
 
 # Codebase Concerns
@@ -30,16 +30,18 @@ last_modified: 2026-01-04
 - Fix approach: Consolidate into FoodService, remove from ViewModel
 
 **Debug print statements in production code:**
-- Issue: Multiple `print()` statements instead of OSLog
-- Files:
+- Issue: 19+ `print()` statements instead of OSLog
+- Files (partial list):
   - `JabTracker/Models/Dose.swift` - Emoji debugging prints
   - `JabTracker/ViewModels/DoseHistoryViewModel.swift` - Debug printing
   - `JabTracker/Views/Settings/Components/PauseScheduleSheet.swift` - Console debugging
   - `JabTracker/Views/Settings/MedicationProfileSettingsView.swift` - Error printing
   - `JabTracker/Views/Dashboard/QuickDoseButton.swift` - Print statements
+  - `JabTracker/Views/Dashboard/Widgets/*.swift` - Various debug prints
 - Why: Quick debugging during development, not cleaned up
 - Impact: Console noise in production, inconsistent logging practices
 - Fix approach: Replace all `print()` calls with OSLog using existing logger instances
+- Status: Still present as of 2026-01-09
 
 **Scattered UserDefaults string keys:**
 - Issue: UserDefaults keys are string literals without centralized constants
@@ -80,6 +82,14 @@ Minor issues:
 - Measurement: Not measured, but called per-item in search results
 - Cause: Regex pattern `#"^([\d.]+)\s*(\w+)\s*\((\d+(?:\.\d+)?)g\)$"#` created inline
 - Improvement path: Compile once as static property
+
+**Large view files approaching limits:**
+- Files exceeding 300 lines:
+  - `WeeklyNutritionHeroWidget.swift` (421 lines)
+  - `DailyNutritionHeroWidget.swift` (300 lines)
+  - `EnergyBalanceHeroWidget.swift` (260 lines)
+- SwiftLint warning threshold: 350 lines
+- Improvement path: Extract computed subviews into separate files or extensions
 
 ## Fragile Areas
 
@@ -171,5 +181,5 @@ Minor issues:
 
 ---
 
-*Concerns audit: 2026-01-04*
+*Concerns audit: 2026-01-09*
 *Update as issues are fixed or new ones discovered*
