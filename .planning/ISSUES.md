@@ -7,4 +7,6 @@ Strategy
 Tabs
 - Using blue instead of accent
 
-
+Food search
+- Barcope scanner: stays active after food detail sheet appears, cuasing possible additional scans
+- Search: slow and sluggish when typing quickly; why slow when 100% on device?

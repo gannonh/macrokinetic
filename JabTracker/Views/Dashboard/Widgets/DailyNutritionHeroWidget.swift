@@ -54,7 +54,7 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
 
             // Center ring
             calorieRing
-                .frame(width: 160, height: 160)
+                .frame(width: 130, height: 130)
 
             // Right stat
             rightStatView
