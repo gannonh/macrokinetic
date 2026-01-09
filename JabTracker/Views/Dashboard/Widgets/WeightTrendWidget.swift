@@ -84,14 +84,14 @@ struct WeightTrendWidget: View {
                 x: .value("Day", point.day),
                 y: .value("Weight", point.weight)
             )
-            .foregroundStyle(Color.purple)
+            .foregroundStyle(DesignTokens.Colors.weight)
             .lineStyle(StrokeStyle(lineWidth: 2))
 
             PointMark(
                 x: .value("Day", point.day),
                 y: .value("Weight", point.weight)
             )
-            .foregroundStyle(Color.purple)
+            .foregroundStyle(DesignTokens.Colors.weight)
             .symbolSize(20)
         }
         .chartXAxis(.hidden)

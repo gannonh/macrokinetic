@@ -35,6 +35,8 @@ enum DesignTokens {
         // Energy balance colors
         static let expenditure = Color.orange
         static let targets = Color.yellow
+        static let deficit = Color.blue
+        static let weight = Color.purple
 
         // MARK: - Background Colors (Apple HIG)
 

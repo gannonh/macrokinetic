@@ -59,7 +59,7 @@ struct GoalProgressWidget: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-            Text("Last 1 Days")
+            Text("Today")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

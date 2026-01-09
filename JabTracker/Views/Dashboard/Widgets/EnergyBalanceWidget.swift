@@ -76,7 +76,7 @@ struct EnergyBalanceWidget: View {
             }
 
             // Blue bar showing net deficit
-            let barColor = data.isDeficit ? Color.blue : DesignTokens.Colors.success
+            let barColor = data.isDeficit ? DesignTokens.Colors.deficit : DesignTokens.Colors.success
             RoundedRectangle(cornerRadius: 2)
                 .fill(barColor)
                 .frame(width: 40, height: 6)
