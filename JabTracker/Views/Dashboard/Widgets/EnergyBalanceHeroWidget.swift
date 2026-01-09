@@ -98,16 +98,18 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     // MARK: - Summary Equation Row
 
     private var summaryEquationRow: some View {
-        let referenceValue =
+        // All values are daily averages
+        let avgNutrition = mockData.totalNutrition / 30
+        let avgReference =
             displayMode == .expenditure
-            ? mockData.averageExpenditure
-            : mockData.averageTargets
-        let difference = mockData.totalNutrition - Int(referenceValue * 30)
+            ? Int(mockData.averageExpenditure)
+            : Int(mockData.averageTargets)
+        let avgDifference = avgNutrition - avgReference
 
         return HStack(spacing: 0) {
-            // Nutrition value
+            // Nutrition value (daily average)
             summaryValue(
-                value: mockData.totalNutrition,
+                value: avgNutrition,
                 label: "Nutrition",
                 icon: "chart.bar.fill",
                 color: DesignTokens.Colors.calories
@@ -119,9 +121,9 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity)
 
-            // Expenditure/Targets value
+            // Expenditure/Targets value (daily average)
             summaryValue(
-                value: Int(referenceValue * 30),
+                value: avgReference,
                 label: displayMode == .expenditure ? "Expenditure" : "Targets",
                 icon: "checkmark",
                 color: displayMode == .expenditure ? Color.orange : Color.yellow
@@ -133,8 +135,8 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity)
 
-            // Difference value
-            differenceValue(value: difference)
+            // Difference value (daily average)
+            differenceValue(value: avgDifference)
         }
     }
 

@@ -70,7 +70,7 @@ struct WeeklyMacroRow: View {
 
             // Summary (LEFT-aligned, 2 lines with symbol)
             summaryView
-                .frame(width: 55, alignment: .leading)
+                .frame(width: 70, alignment: .leading)
         }
     }
 
@@ -279,7 +279,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
             Text(summaryColumnLabel)
                 .font(.system(size: 10, weight: .regular))
                 .foregroundColor(.secondary)
-                .frame(width: 55, alignment: .leading)
+                .frame(width: 70, alignment: .leading)
         }
     }
 
