@@ -188,4 +188,83 @@ final class DashboardUITests: XCTestCase {
         // 5. Verify nutrition summary card appears below concentration
         XCTSkip("Stub: Basic layout verification")
     }
+
+    // MARK: - Standard Widgets (Phase 32)
+
+    /// User sees Insights & Analytics widget group on dashboard.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Group header "Insights & Analytics" is visible
+    /// - 4 widgets displayed in 2x2 grid layout
+    /// - All widgets have chevron indicators for navigation
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testInsightsAnalyticsGroupDisplayed() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Dashboard is displayed
+        // WHEN: User scrolls to Insights & Analytics section
+        // THEN: Group header is visible
+        // THEN: 4 widgets visible in 2x2 grid
+        XCTSkip("Stub: Insights & Analytics group display test")
+    }
+
+    /// User can tap Expenditure widget to navigate to detail.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Expenditure widget is tappable
+    /// - Tap triggers navigation (detail view in Phase 33)
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testExpenditureWidgetTappable() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Insights & Analytics group is visible
+        // WHEN: User taps Expenditure widget
+        // THEN: Navigation to detail view occurs (Phase 33)
+        XCTSkip("Stub: Expenditure widget tap test")
+    }
+
+    /// User can tap Weight Trend widget to navigate to detail.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Weight Trend widget is tappable
+    /// - Tap triggers navigation (detail view in Phase 33)
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testWeightTrendWidgetTappable() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Insights & Analytics group is visible
+        // WHEN: User taps Weight Trend widget
+        // THEN: Navigation to detail view occurs (Phase 33)
+        XCTSkip("Stub: Weight Trend widget tap test")
+    }
+
+    /// User can tap Energy Balance widget to navigate to detail.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Energy Balance widget is tappable
+    /// - Tap triggers navigation (detail view in Phase 33)
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testEnergyBalanceWidgetTappable() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Insights & Analytics group is visible
+        // WHEN: User taps Energy Balance widget
+        // THEN: Navigation to detail view occurs (Phase 33)
+        XCTSkip("Stub: Energy Balance widget tap test")
+    }
+
+    /// User can tap Goal Progress widget to navigate to detail.
+    ///
+    /// **Acceptance Criteria:**
+    /// - Goal Progress widget is tappable
+    /// - Tap triggers navigation (detail view in Phase 33)
+    ///
+    /// **TODO:** Implement after manual smoke test
+    func testGoalProgressWidgetTappable() throws {
+        // TODO: Implement after manual smoke test
+        // GIVEN: Insights & Analytics group is visible
+        // WHEN: User taps Goal Progress widget
+        // THEN: Navigation to detail view occurs (Phase 33)
+        XCTSkip("Stub: Goal Progress widget tap test")
+    }
 }

@@ -71,7 +71,7 @@ Plans:
 - Insights & Analytics Group: `mocks/dashboard/Standard Widget, Grouped.png`
 
 Plans:
-- [ ] 32-01: TBD
+- [x] 32-01: Standard Widget Components (ExpenditureWidget, WeightTrendWidget, EnergyBalanceWidget, GoalProgressWidget)
 
 #### Phase 33: Detail Views
 
@@ -109,7 +109,7 @@ Phases execute in numeric order within each milestone.
 | ------------------------------- | -------------- | ----------- | ---------- |
 | 30. Dashboard Foundation        | 2/2            | Complete    | 2026-01-08 |
 | 31. Main Widget (Hero)          | 2/2            | Complete    | 2026-01-09 |
-| 32. Standard Widgets - Insights | 0/?            | Not started | -          |
+| 32. Standard Widgets - Insights | 1/1            | Complete    | 2026-01-09 |
 | 33. Detail Views                | 0/?            | Not started | -          |
 | 34. Integration & Polish        | 0/?            | Not started | -          |
 

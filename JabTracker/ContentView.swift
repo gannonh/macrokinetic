@@ -357,6 +357,9 @@ struct DashboardView: View {
                             // Hero widget carousel
                             heroWidgetSection
 
+                            // Insights & Analytics standard widgets
+                            insightsAnalyticsSection
+
                             self.concentrationSection(for: currentUser)
 
                             // Nutrition summary card
@@ -386,6 +389,17 @@ struct DashboardView: View {
             AnyView(DailyNutritionHeroWidget()),
             AnyView(EnergyBalanceHeroWidget()),
         ])
+    }
+
+    // MARK: - Insights & Analytics Section
+
+    private var insightsAnalyticsSection: some View {
+        StandardWidgetGroup(title: "Insights & Analytics") {
+            ExpenditureWidget()
+            WeightTrendWidget()
+            EnergyBalanceWidget()
+            GoalProgressWidget()
+        }
     }
 
     // MARK: - Concentration Section
