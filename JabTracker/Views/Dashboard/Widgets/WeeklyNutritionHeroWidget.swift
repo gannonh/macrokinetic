@@ -187,6 +187,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
 
     private let mockData = WeeklyMockData.sample
     private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+    private let fullDayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
 
     var body: some View {
         content
@@ -272,8 +273,22 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                 }
             }
 
-            Spacer()
+            Spacer(minLength: 20)
+
+            // Summary column label - "TOTALS" or day name
+            Text(summaryColumnLabel)
+                .font(.system(size: 10, weight: .regular))
+                .foregroundColor(.secondary)
+                .frame(width: 55, alignment: .leading)
         }
+    }
+
+    /// Label for the summary column - "TOTALS" when showing week, day name when selected
+    private var summaryColumnLabel: String {
+        if let selected = selectedDayIndex, selected >= 0 && selected < fullDayNames.count {
+            return fullDayNames[selected]
+        }
+        return "TOTALS"
     }
 
     private func fontWeight(for index: Int) -> Font.Weight {
