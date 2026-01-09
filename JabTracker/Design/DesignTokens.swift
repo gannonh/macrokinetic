@@ -32,6 +32,10 @@ enum DesignTokens {
         static let danger = Color.red
         static let info = Color.blue
 
+        // Energy balance colors
+        static let expenditure = Color.orange
+        static let targets = Color.yellow
+
         // MARK: - Background Colors (Apple HIG)
 
         static let background = Color(.systemBackground)

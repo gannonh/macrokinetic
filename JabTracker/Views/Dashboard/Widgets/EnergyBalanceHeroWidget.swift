@@ -88,7 +88,8 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
             // Reference line (dotted) for expenditure/target
             RuleMark(y: .value("Reference", referenceValue))
                 .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                .foregroundStyle(displayMode == .expenditure ? Color.orange : Color.yellow)
+                .foregroundStyle(
+                    displayMode == .expenditure ? DesignTokens.Colors.expenditure : DesignTokens.Colors.targets)
         }
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
@@ -126,7 +127,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
                 value: avgReference,
                 label: displayMode == .expenditure ? "Expenditure" : "Targets",
                 icon: "checkmark",
-                color: displayMode == .expenditure ? Color.orange : Color.yellow
+                color: displayMode == .expenditure ? DesignTokens.Colors.expenditure : DesignTokens.Colors.targets
             )
 
             // Equals operator
