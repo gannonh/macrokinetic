@@ -8,7 +8,25 @@
 //
 
 import Charts
+import GameplayKit
 import SwiftUI
+
+// MARK: - Seeded Random Generator
+
+/// Random number generator with seed for reproducible mock data
+private struct SeededRandomNumberGenerator: RandomNumberGenerator {
+    private var source: GKMersenneTwisterRandomSource
+
+    init(seed: UInt64) {
+        source = GKMersenneTwisterRandomSource(seed: seed)
+    }
+
+    mutating func next() -> UInt64 {
+        let high = UInt64(bitPattern: Int64(source.nextInt()))
+        let low = UInt64(bitPattern: Int64(source.nextInt()))
+        return (high << 32) | (low & 0xFFFF_FFFF)
+    }
+}
 
 // MARK: - Detail Time Period
 
@@ -84,6 +102,9 @@ struct WeightTrendDetailData {
         var scalePoints: [WeightPoint] = []
         var trendPoints: [WeightPoint] = []
 
+        // Seeded random generator for consistent mock data
+        var rng = SeededRandomNumberGenerator(seed: 42)
+
         // Generate data for 180 days (6 months)
         for dayOffset in stride(from: 180, through: 0, by: -1) {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
@@ -92,15 +113,16 @@ struct WeightTrendDetailData {
             let progress = Double(180 - dayOffset) / 180.0
             let baseWeight = 202.0 - (19.0 * progress)
 
-            // Add daily fluctuations for scale weight (every 2-3 days to simulate real weigh-ins)
-            if dayOffset % 2 == 0 || dayOffset % 3 == 0 {
-                let fluctuation = Double.random(in: -1.5...1.5)
+            // Scale weight: daily measurements with small natural fluctuations (±0.5 lbs)
+            // Real weigh-ins happen most days
+            if dayOffset % 1 == 0 || dayOffset % 2 == 0 {
+                let fluctuation = Double.random(in: -0.5...0.5, using: &rng)
                 let scaleWeight = baseWeight + fluctuation
                 scalePoints.append(WeightPoint(date: date, weight: scaleWeight, isTrendLine: false))
             }
 
-            // Trend line is smoother (calculated moving average)
-            if dayOffset % 7 == 0 {
+            // Trend line: frequent points following the smoothed trend (every 2-3 days)
+            if dayOffset % 2 == 0 {
                 trendPoints.append(WeightPoint(date: date, weight: baseWeight, isTrendLine: true))
             }
         }
@@ -310,15 +332,14 @@ struct WeightTrendDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Chart
             Chart {
-                // Scale weight line (actual measurements - lighter, curved background)
+                // Scale weight line (actual measurements - lighter background line)
                 ForEach(scaleWeightPoints) { point in
                     LineMark(
                         x: .value("Date", point.date),
                         y: .value("Weight", point.weight)
                     )
-                    .foregroundStyle(DesignTokens.Colors.weight.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5))
-                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(DesignTokens.Colors.weight.opacity(0.35))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
                 }
 
                 // Trend weight line with dots (smoothed - prominent, main line)
@@ -329,14 +350,13 @@ struct WeightTrendDetailView: View {
                     )
                     .foregroundStyle(DesignTokens.Colors.weight)
                     .lineStyle(StrokeStyle(lineWidth: 2))
-                    .interpolationMethod(.catmullRom)
 
                     PointMark(
                         x: .value("Date", point.date),
                         y: .value("Weight", point.weight)
                     )
                     .foregroundStyle(DesignTokens.Colors.weight)
-                    .symbolSize(25)
+                    .symbolSize(30)
                 }
             }
             .chartYScale(domain: .automatic(includesZero: false))
@@ -512,28 +532,39 @@ struct WeightTrendDetailView: View {
 
     private var projectionDescription: String {
         "Your projected weight in 30 days if your current rate of weight loss continues. "
-            + "Changes in energy intake or expenditure can significantly alter this projection."
     }
 
     private func insightCard(title: String, value: String, unit: String, description: String) -> some View {
-        DesignCard {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(value)
-                        .font(.system(size: 28, weight: .bold))
-                    Text(unit)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                Text(description)
+        HStack(alignment: .top, spacing: 16) {
+            // Left: Value box
+            VStack(spacing: 2) {
+                Text(value)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.white)
+                Text(unit)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .frame(width: 100)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(DesignTokens.Colors.cardBackground)
+            )
+
+            // Right: Title and description
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.primary)
+
+                Text(description)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
         }
     }
 
