@@ -97,6 +97,7 @@ struct WeightTrendWidget: View {
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
         .chartYScale(domain: .automatic(includesZero: false))
+        .frame(maxWidth: .infinity)
         .frame(height: 30)
     }
 

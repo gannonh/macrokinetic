@@ -25,32 +25,46 @@ import SwiftUI
 ///     GoalProgressWidget()
 /// }
 /// ```
-struct StandardWidgetGroup<Content: View>: View {
+struct StandardWidgetGroup<W1: View, W2: View, W3: View, W4: View>: View {
     let title: String
-    let content: Content
+    let widget1: W1
+    let widget2: W2
+    let widget3: W3
+    let widget4: W4
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-    ]
-
-    init(title: String, @ViewBuilder content: () -> Content) {
+    init(
+        title: String,
+        @ViewBuilder content: () -> TupleView<(W1, W2, W3, W4)>
+    ) {
         self.title = title
-        self.content = content()
+        let views = content().value
+        self.widget1 = views.0
+        self.widget2 = views.1
+        self.widget3 = views.2
+        self.widget4 = views.3
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 12) {
             Text(title)
                 .font(DesignTokens.Typography.headline)
                 .foregroundColor(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 4)
                 .accessibilityAddTraits(.isHeader)
 
-            LazyVGrid(columns: columns, spacing: 12) {
-                content
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    widget1.frame(minWidth: 0, maxWidth: .infinity)
+                    widget2.frame(minWidth: 0, maxWidth: .infinity)
+                }
+                HStack(spacing: 12) {
+                    widget3.frame(minWidth: 0, maxWidth: .infinity)
+                    widget4.frame(minWidth: 0, maxWidth: .infinity)
+                }
             }
         }
+        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("standard-widget-group-\(title.lowercased().replacingOccurrences(of: " ", with: "-"))")
     }
@@ -66,11 +80,6 @@ struct StandardWidgetGroup<Content: View>: View {
                 previewWidget(title: "Weight Trend", value: "−2.5", unit: "lbs")
                 previewWidget(title: "Energy Balance", value: "+150", unit: "kcal")
                 previewWidget(title: "Goal Progress", value: "68", unit: "%")
-            }
-
-            StandardWidgetGroup(title: "Quick Stats") {
-                previewWidget(title: "Steps", value: "8,432", unit: "")
-                previewWidget(title: "Water", value: "6", unit: "cups")
             }
         }
         .padding()

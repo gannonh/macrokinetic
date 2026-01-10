@@ -72,7 +72,6 @@ struct EnergyBalanceWidget: View {
                         .fill(DesignTokens.Colors.expenditure)
                         .frame(width: 8, height: 8)
                 }
-                Spacer()
             }
 
             // Blue bar showing net deficit
@@ -81,6 +80,7 @@ struct EnergyBalanceWidget: View {
                 .fill(barColor)
                 .frame(width: 40, height: 6)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 30)
     }
 

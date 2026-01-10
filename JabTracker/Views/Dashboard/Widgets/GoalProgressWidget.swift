@@ -59,7 +59,7 @@ struct GoalProgressWidget: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-            Text("Today")
+            Text("Last 7 Days")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -89,7 +89,7 @@ struct GoalProgressWidget: View {
                     .offset(x: max(targetPosition, 0))
             }
         }
-        .frame(height: 16)
+        .frame(height: 30)
     }
 
     private var valueSection: some View {

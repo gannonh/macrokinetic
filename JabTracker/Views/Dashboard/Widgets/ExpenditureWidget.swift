@@ -76,9 +76,9 @@ struct ExpenditureWidget: View {
                     .fill(DesignTokens.Colors.expenditure)
                     .frame(width: 20, height: height)
             }
-            Spacer()
         }
-        .frame(height: 24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 30)
     }
 
     private var valueSection: some View {

@@ -1,0 +1,5 @@
+# SwiftLint overrides for Dashboard Widgets
+# StandardWidgetGroup uses a 4-tuple for ViewBuilder pattern
+
+disabled_rules:
+  - large_tuple
