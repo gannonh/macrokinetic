@@ -482,24 +482,67 @@ class AuthenticationManager: NSObject, ObservableObject {
                     // Seed 21 days of food entries (75% of 28-day window > 70% threshold)
                     for dayOffset in 0..<21 {
                         let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
-                        // Create 3 meals per day with realistic macros (totaling ~2000 cal)
-                        let meals: [(MealSection, Double, Double, Double, Double)] = [
-                            (.breakfast, 400, 25, 50, 15),  // cal, protein, carbs, fat
-                            (.lunch, 700, 45, 60, 30),
-                            (.dinner, 800, 55, 70, 35),
+
+                        // Add daily variance: some days higher, some lower (±15%)
+                        let dayMultiplier = Double.random(in: 0.85...1.15)
+
+                        // Occasionally skip breakfast (~20% of days)
+                        let skipBreakfast = Double.random(in: 0...1) < 0.2
+
+                        // Base meals with per-meal variance (±10%)
+                        let breakfastMult = skipBreakfast ? 0.0 : Double.random(in: 0.9...1.1)
+                        let lunchMult = Double.random(in: 0.9...1.1)
+                        let dinnerMult = Double.random(in: 0.9...1.1)
+
+                        // Sometimes add snacks (~40% of days)
+                        let hasSnack = Double.random(in: 0...1) < 0.4
+
+                        // Create meals with variance applied via serving size
+                        let mealConfigs: [(MealSection, Double)] = [
+                            (.breakfast, breakfastMult * dayMultiplier),
+                            (.lunch, lunchMult * dayMultiplier),
+                            (.dinner, dinnerMult * dayMultiplier),
                         ]
-                        for (section, cal, protein, carbs, fat) in meals {
+
+                        for (section, mult) in mealConfigs {
+                            guard mult > 0 else { continue }  // Skip if multiplier is 0
+
+                            // Base macros per meal type
+                            let (baseCal, protein, carbs, fat): (Double, Double, Double, Double) = {
+                                switch section {
+                                case .breakfast: return (400, 25, 50, 15)
+                                case .lunch: return (700, 45, 60, 30)
+                                case .dinner: return (800, 55, 70, 35)
+                                default: return (500, 30, 50, 20)
+                                }
+                            }()
+
                             let entry = FoodEntry(
                                 foodName: "Test \(section.rawValue)",
                                 mealSection: section,
                                 loggedAt: date,
-                                servingGrams: 100.0,
-                                caloriesPer100g: cal,
+                                servingGrams: 100.0 * mult,
+                                caloriesPer100g: baseCal,
                                 proteinPer100g: protein,
                                 carbsPer100g: carbs,
                                 fatPer100g: fat
                             )
                             context.insert(entry)
+                        }
+
+                        // Add snack on some days
+                        if hasSnack {
+                            let snackEntry = FoodEntry(
+                                foodName: "Test snack",
+                                mealSection: .snacks,
+                                loggedAt: date,
+                                servingGrams: 100.0 * Double.random(in: 0.8...1.2),
+                                caloriesPer100g: 200,
+                                proteinPer100g: 10,
+                                carbsPer100g: 25,
+                                fatPer100g: 8
+                            )
+                            context.insert(snackEntry)
                         }
                     }
 
@@ -512,8 +555,9 @@ class AuthenticationManager: NSObject, ObservableObject {
                            - Program: Coached/Balanced
                            - TDEE: 2350 kcal
                            - Last check-in: 10 days ago (due for check-in)
-                           - Weight entries: 28 days
-                           - Food entries: 21 days (63 meals)
+                           - Weight entries: 28 days (with ±0.3kg noise)
+                           - Food entries: 21 days (with variance: ±15% daily, ±10% per meal)
+                           - Breakfast skipped ~20% of days, snacks added ~40% of days
                         """)
                 } catch {
                     Self.logger.error("❌ Check-in ready data seeding failed: \(error)")

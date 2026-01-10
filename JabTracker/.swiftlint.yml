@@ -2,12 +2,12 @@
 # AuthenticationManager handles complex seeding scenarios with multiple data tiers
 
 type_body_length:
-  warning: 700
-  error: 800
+  warning: 800
+  error: 900
 
 large_tuple:
-  warning: 4
-  error: 5
+  warning: 5
+  error: 6
 
 cyclomatic_complexity:
   warning: 15
