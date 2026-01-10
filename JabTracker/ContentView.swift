@@ -338,6 +338,7 @@ struct DashboardView: View {
     @Query private var users: [User]
     @State private var pkEngine = PharmacokineticsEngine()
     @State private var showingWeightTrendDetail = false
+    @State private var showingExpenditureDetail = false
     let doseService: DoseService
 
     init(doseService: DoseService) {
@@ -381,6 +382,9 @@ struct DashboardView: View {
         .sheet(isPresented: $showingWeightTrendDetail) {
             WeightTrendDetailView(data: .mock)
         }
+        .sheet(isPresented: $showingExpenditureDetail) {
+            ExpenditureDetailView(data: .mock)
+        }
         .accessibilityIdentifier("dashboard-view")
     }
 
@@ -398,7 +402,7 @@ struct DashboardView: View {
 
     private var insightsAnalyticsSection: some View {
         StandardWidgetGroup(title: "Insights & Analytics") {
-            ExpenditureWidget()
+            ExpenditureWidget(onTap: { showingExpenditureDetail = true })
             WeightTrendWidget(onTap: { showingWeightTrendDetail = true })
             EnergyBalanceWidget()
             GoalProgressWidget()

@@ -36,6 +36,8 @@ struct ExpenditureDetailData {
         let id = UUID()
         let date: Date
         let value: Int
+        let upperBound: Int  // Flux range upper bound
+        let lowerBound: Int  // Flux range lower bound
         let status: ExpenditureStatus
     }
 
@@ -82,28 +84,52 @@ struct ExpenditureDetailData {
         var rng = SeededExpenditureRNG(seed: 123)
 
         // Generate data for 365 days (1 year)
+        // Create a slow-changing trend with small daily variations
+        var runningAverage = 1893.0
+
         for dayOffset in stride(from: 365, through: 0, by: -1) {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
 
-            // Base expenditure around 1893 with variations
-            let baseExpenditure = 1893
-            let variation = Int.random(in: -100...100, using: &rng)
-            let value = baseExpenditure + variation
+            // Slow drift in the underlying trend (±3 kcal per day max)
+            let trendDrift = Double.random(in: -3...3, using: &rng)
+            runningAverage += trendDrift
+            runningAverage = max(1800, min(2100, runningAverage))  // Keep in realistic range
+
+            // Small daily variation around the trend
+            let dailyVariation = Int.random(in: -10...10, using: &rng)
+            let value = Int(runningAverage) + dailyVariation
+
+            // Flux range (margin of error) - tighter for more recent data
+            let fluxMargin: Int
+            if dayOffset < 14 {
+                fluxMargin = 15  // Recent: tight estimate
+            } else if dayOffset < 60 {
+                fluxMargin = 25  // Medium: moderate uncertainty
+            } else {
+                fluxMargin = 40  // Older: more uncertainty
+            }
+
+            let upperBound = value + fluxMargin
+            let lowerBound = value - fluxMargin
 
             // Determine status based on recency
             let status: ExpenditureStatus
             if dayOffset < 14 {
-                // Recent data - holding (stable)
                 status = .holding
             } else if dayOffset < 60 {
-                // Medium-term data - updating
                 status = .updating
             } else {
-                // Older data - flux range
                 status = .fluxRange
             }
 
-            dailyData.append(DailyExpenditure(date: date, value: value, status: status))
+            dailyData.append(
+                DailyExpenditure(
+                    date: date,
+                    value: value,
+                    upperBound: upperBound,
+                    lowerBound: lowerBound,
+                    status: status
+                ))
         }
 
         // Historical entries for Data Sources section
@@ -284,24 +310,59 @@ struct ExpenditureDetailView: View {
 
     // MARK: - Chart Section
 
+    /// Whether to show dots on data points (only for shorter periods)
+    private var showDataPoints: Bool {
+        switch selectedPeriod {
+        case .oneWeek, .oneMonth:
+            return true
+        case .threeMonths, .sixMonths, .oneYear, .all:
+            return false
+        }
+    }
+
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Chart
             Chart {
+                // Flux range band (shaded area between upper and lower bounds)
                 ForEach(filteredData) { day in
-                    BarMark(
-                        x: .value("Date", day.date, unit: .day),
+                    AreaMark(
+                        x: .value("Date", day.date),
+                        yStart: .value("Lower", day.lowerBound),
+                        yEnd: .value("Upper", day.upperBound)
+                    )
+                    .foregroundStyle(DesignTokens.Colors.expenditure.opacity(0.25))
+                    .interpolationMethod(.catmullRom)
+                }
+
+                // Main expenditure line
+                ForEach(filteredData) { day in
+                    LineMark(
+                        x: .value("Date", day.date),
                         y: .value("Expenditure", day.value)
                     )
-                    .foregroundStyle(colorForStatus(day.status))
-                    .cornerRadius(2)
+                    .foregroundStyle(DesignTokens.Colors.expenditure)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .interpolationMethod(.catmullRom)
+                }
+
+                // Data point dots (only for 1W/1M)
+                if showDataPoints {
+                    ForEach(filteredData) { day in
+                        PointMark(
+                            x: .value("Date", day.date),
+                            y: .value("Expenditure", day.value)
+                        )
+                        .foregroundStyle(DesignTokens.Colors.expenditure)
+                        .symbolSize(25)
+                    }
                 }
             }
             .chartYScale(domain: chartYDomain)
             .chartXAxis {
                 AxisMarks(values: .stride(by: xAxisStride, count: 1)) { _ in
                     AxisValueLabel(format: xAxisFormat)
-                    AxisGridLine()
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                        .foregroundStyle(Color.secondary.opacity(0.3))
                 }
             }
             .chartYAxis {
@@ -311,7 +372,8 @@ struct ExpenditureDetailView: View {
                             Text("\(expenditure)")
                         }
                     }
-                    AxisGridLine()
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                        .foregroundStyle(Color.secondary.opacity(0.3))
                 }
             }
             .frame(height: 200)
@@ -319,9 +381,9 @@ struct ExpenditureDetailView: View {
 
             // Legend
             HStack(spacing: 16) {
-                legendItem(color: DesignTokens.Colors.expenditure, label: "Flux Range")
-                legendItem(color: .blue, label: "Updating")
-                legendItem(color: .gray, label: "Holding")
+                legendItem(icon: "triangle.fill", color: DesignTokens.Colors.expenditure, label: "Flux Range")
+                legendItem(icon: "circle.fill", color: DesignTokens.Colors.expenditure, label: "Updating")
+                legendItem(icon: "square.fill", color: DesignTokens.Colors.expenditure, label: "Holding")
             }
             .font(.caption)
         }
@@ -333,11 +395,11 @@ struct ExpenditureDetailView: View {
         .accessibilityIdentifier("expenditure-chart-section")
     }
 
-    private func legendItem(color: Color, label: String) -> some View {
+    private func legendItem(icon: String, color: Color, label: String) -> some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
+            Image(systemName: icon)
+                .font(.system(size: 8))
+                .foregroundColor(color)
             Text(label)
                 .foregroundColor(.secondary)
         }
@@ -380,14 +442,17 @@ struct ExpenditureDetailView: View {
         return data.dailyData.filter { $0.date >= startDate }.sorted { $0.date < $1.date }
     }
 
-    /// Y-axis domain based on filtered data
+    /// Y-axis domain based on filtered data - tight fit to fill chart area
     private var chartYDomain: ClosedRange<Int> {
-        let values = filteredData.map { $0.value }
-        guard let minValue = values.min(), let maxValue = values.max() else {
+        // Use upper/lower bounds for the full range
+        let lowerValues = filteredData.map { $0.lowerBound }
+        let upperValues = filteredData.map { $0.upperBound }
+        guard let minValue = lowerValues.min(), let maxValue = upperValues.max() else {
             return 1800...2000
         }
-        // Add padding to domain
-        let padding = max((maxValue - minValue) / 10, 50)
+        // Minimal padding (5%) to give slight breathing room
+        let range = maxValue - minValue
+        let padding = max(range / 20, 5)
         return (minValue - padding)...(maxValue + padding)
     }
 
