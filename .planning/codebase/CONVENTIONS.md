@@ -1,7 +1,7 @@
 ---
 name: Coding Conventions
 created: 2025-12-22
-last_modified: 2026-01-09
+last_modified: 2026-01-10
 ---
 
 # Coding Conventions
@@ -44,6 +44,12 @@ last_modified: 2026-01-09
 - Tests: Relaxed rules (no function_body_length, force_unwrapping allowed)
 - Services/Views: Extended file/type length limits
 - Run: `swiftlint` or `swiftlint --fix`
+
+**SwiftLint Rule Exceptions:**
+- Prefer directory-level `.swiftlint.yml` files over inline `// swiftlint:disable` comments
+- Directory configs apply to all files in that directory, reducing scattered inline comments
+- Example: `JabTracker/Views/Dashboard/Widgets/.swiftlint.yml` disables `large_tuple` for widget files
+- Only use inline disable comments for one-off exceptions affecting a single line
 
 **Key SwiftLint Settings (`.swiftlint.yml`):**
 ```yaml

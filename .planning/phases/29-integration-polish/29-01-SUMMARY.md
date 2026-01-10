@@ -41,7 +41,7 @@ None - build, lint, and all tests pass.
 ## Next Step
 
 Phase 29 complete. v0.6.0 Onboarding Redux milestone complete.
-Ready for `/gsd:complete-milestone` or PR review.
+Ready for `/pm-complete-milestone` or PR review.
 
 ---
 *Phase: 29-integration-polish*

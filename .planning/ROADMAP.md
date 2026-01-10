@@ -78,7 +78,7 @@ Plans:
 **Goal**: Weight Trend, Expenditure, Energy Balance detail screens with charts and time range filters
 **Depends on**: Phase 32
 **Research**: Unlikely (Swift Charts, internal)
-**Plans**: TBD
+**Plans**: 3
 
 **Figma References:**
 - Weight Trend Detail: `mocks/dashboard/Detail - Weight Trend.png`
@@ -86,7 +86,9 @@ Plans:
 - Energy Balance Detail: `mocks/dashboard/Detail - Energy Balance.png`
 
 Plans:
-- [ ] 33-01: TBD
+- [ ] 33-01: Weight Trend Detail View (header, time filters, line chart, insights cards, data sources)
+- [ ] 33-02: Expenditure Detail View (bar chart, insights cards, shared DetailTimePeriodSelector)
+- [ ] 33-03: Energy Balance Detail View (mode toggle, navigation wiring from widgets)
 
 #### Phase 34: Integration & Polish
 
