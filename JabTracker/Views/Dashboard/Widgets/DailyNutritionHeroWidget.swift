@@ -6,6 +6,7 @@
 //  Part of v0.7.0 Dashboard Widget UX milestone.
 //
 
+import SwiftData
 import SwiftUI
 
 // MARK: - DailyNutritionHeroWidget
@@ -16,6 +17,13 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
     let title = "Daily Nutrition"
 
     @Environment(\.heroDisplayMode) private var displayMode
+    @Environment(\.modelContext) private var modelContext
+
+    /// ViewModel for live data - initialized lazily on first access
+    @State private var viewModel: DailyNutritionHeroViewModel?
+
+    /// Whether to use mock data (for previews)
+    private let useMockData: Bool
 
     // MARK: - Constants
 
@@ -23,12 +31,23 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         static let ringDiameter: CGFloat = 130
     }
 
-    // MARK: - Mock Data
+    // MARK: - Initialization
 
-    private let mockData = DailyMockData.sample
+    /// Initialize with live data (default for production)
+    init() {
+        self.useMockData = false
+    }
+
+    /// Initialize with mock data flag (for previews)
+    init(useMockData: Bool) {
+        self.useMockData = useMockData
+    }
 
     var body: some View {
         content
+            .task {
+                await loadDataIfNeeded()
+            }
     }
 
     var content: some View {
@@ -48,6 +67,56 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         .padding(.top, 20)
         .padding(.bottom, 12)
         .accessibilityIdentifier("daily-nutrition-hero-widget")
+    }
+
+    // MARK: - Data Loading
+
+    private func loadDataIfNeeded() async {
+        guard !useMockData else { return }
+
+        if viewModel == nil {
+            let mealLogService = AppServices.shared.mealLogService ?? MealLogService(context: modelContext)
+            viewModel = DailyNutritionHeroViewModel(mealLogService: mealLogService, context: modelContext)
+        }
+        await viewModel?.loadData()
+    }
+
+    // MARK: - Data Accessors
+
+    private var caloriesConsumed: Int {
+        useMockData ? DailyMockData.sample.caloriesConsumed : (viewModel?.caloriesConsumed ?? 0)
+    }
+
+    private var caloriesTarget: Int {
+        useMockData ? DailyMockData.sample.caloriesTarget : (viewModel?.caloriesTarget ?? 2000)
+    }
+
+    private var caloriesRemaining: Int {
+        useMockData ? DailyMockData.sample.caloriesRemaining : (viewModel?.caloriesRemaining ?? caloriesTarget)
+    }
+
+    private var proteinConsumed: Int {
+        useMockData ? DailyMockData.sample.proteinConsumed : (viewModel?.proteinConsumed ?? 0)
+    }
+
+    private var proteinTarget: Int {
+        useMockData ? DailyMockData.sample.proteinTarget : (viewModel?.proteinTarget ?? 150)
+    }
+
+    private var fatConsumed: Int {
+        useMockData ? DailyMockData.sample.fatConsumed : (viewModel?.fatConsumed ?? 0)
+    }
+
+    private var fatTarget: Int {
+        useMockData ? DailyMockData.sample.fatTarget : (viewModel?.fatTarget ?? 65)
+    }
+
+    private var carbsConsumed: Int {
+        useMockData ? DailyMockData.sample.carbsConsumed : (viewModel?.carbsConsumed ?? 0)
+    }
+
+    private var carbsTarget: Int {
+        useMockData ? DailyMockData.sample.carbsTarget : (viewModel?.carbsTarget ?? 200)
     }
 
     // MARK: - Calorie Ring Section
@@ -86,16 +155,16 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
     }
 
     private var rightStatView: some View {
-        statView(value: mockData.caloriesTarget, label: "Target")
+        statView(value: caloriesTarget, label: "Target")
     }
 
     /// Value shown in the left stat (opposite of center)
     private var leftValue: Int {
         switch displayMode {
         case .consumed:
-            return mockData.caloriesRemaining
+            return caloriesRemaining
         case .remaining:
-            return mockData.caloriesConsumed
+            return caloriesConsumed
         }
     }
 
@@ -113,8 +182,8 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
 
     private var calorieRing: some View {
         let progress =
-            mockData.caloriesTarget > 0
-            ? Double(mockData.caloriesConsumed) / Double(mockData.caloriesTarget)
+            caloriesTarget > 0
+            ? Double(caloriesConsumed) / Double(caloriesTarget)
             : 0
 
         return ZStack {
@@ -157,9 +226,9 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
     private var centerValue: Int {
         switch displayMode {
         case .consumed:
-            return mockData.caloriesConsumed
+            return caloriesConsumed
         case .remaining:
-            return mockData.caloriesRemaining
+            return caloriesRemaining
         }
     }
 
@@ -179,22 +248,22 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         HStack(spacing: 16) {
             macroBar(
                 label: "Protein",
-                consumed: mockData.proteinConsumed,
-                target: mockData.proteinTarget,
+                consumed: proteinConsumed,
+                target: proteinTarget,
                 color: DesignTokens.Colors.protein
             )
 
             macroBar(
                 label: "Fat",
-                consumed: mockData.fatConsumed,
-                target: mockData.fatTarget,
+                consumed: fatConsumed,
+                target: fatTarget,
                 color: DesignTokens.Colors.fat
             )
 
             macroBar(
                 label: "Carbs",
-                consumed: mockData.carbsConsumed,
-                target: mockData.carbsTarget,
+                consumed: carbsConsumed,
+                target: carbsTarget,
                 color: DesignTokens.Colors.carbs
             )
         }
@@ -278,7 +347,7 @@ struct DailyMockData {
 #Preview("Consumed Mode") {
     ScrollView {
         VStack(spacing: 16) {
-            DailyNutritionHeroWidget()
+            DailyNutritionHeroWidget(useMockData: true)
                 .environment(\.heroDisplayMode, .consumed)
                 .cardStyle()
         }
@@ -290,7 +359,7 @@ struct DailyMockData {
 #Preview("Remaining Mode") {
     ScrollView {
         VStack(spacing: 16) {
-            DailyNutritionHeroWidget()
+            DailyNutritionHeroWidget(useMockData: true)
                 .environment(\.heroDisplayMode, .remaining)
                 .cardStyle()
         }

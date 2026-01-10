@@ -1,0 +1,281 @@
+//
+//  WeeklyNutritionHeroViewModelTests.swift
+//  JabTrackerTests
+//
+//  Tests for WeeklyNutritionHeroViewModel - 7-day nutrition widget data source
+//
+
+import Foundation
+import SwiftData
+import Testing
+
+@testable import JabTracker
+
+@Suite("WeeklyNutritionHeroViewModel Tests")
+@MainActor
+struct WeeklyNutritionHeroViewModelTests {
+
+    // MARK: - Test Helpers
+
+    private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
+        let schema = Schema([
+            User.self, Dose.self, Food.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
+        ])
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return (container.mainContext, container)
+    }
+
+    private func createTestUser(in context: ModelContext) -> User {
+        let user = User(
+            email: "test@example.com",
+            name: "Test User",
+            appleUserId: "test-apple-id",
+            dailyCalorieGoal: 2000,
+            dailyProteinGoal: 150,
+            dailyCarbGoal: 200,
+            dailyFatGoal: 65
+        )
+        context.insert(user)
+        return user
+    }
+
+    private func createFoodEntry(
+        in context: ModelContext,
+        calories: Double,
+        protein: Double,
+        carbs: Double,
+        fat: Double,
+        loggedAt: Date = Date()
+    ) -> FoodEntry {
+        let entry = FoodEntry(
+            foodId: UUID(),
+            foodName: "Test Food",
+            foodBrand: nil,
+            mealSection: .lunch,
+            loggedAt: loggedAt,
+            servingGrams: 100,
+            servingDescription: nil,
+            caloriesPer100g: calories,
+            proteinPer100g: protein,
+            carbsPer100g: carbs,
+            fatPer100g: fat,
+            fiberPer100g: 0,
+            notes: nil
+        )
+        context.insert(entry)
+        return entry
+    }
+
+    /// Get start of the current week (Monday)
+    private func startOfWeek() -> Date {
+        let calendar = Calendar.current
+        let today = Date()
+        // Get current weekday (1=Sunday, 2=Monday, ..., 7=Saturday)
+        let weekday = calendar.component(.weekday, from: today)
+        // Convert to 0=Monday format
+        let daysFromMonday = weekday == 1 ? 6 : weekday - 2
+        return calendar.date(byAdding: .day, value: -daysFromMonday, to: calendar.startOfDay(for: today))!
+    }
+
+    // MARK: - Initial State Tests
+
+    @Test("ViewModel initializes with correct default state")
+    func testInitialState() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        #expect(viewModel.isLoading == false)
+        #expect(viewModel.calories.count == 7)
+        #expect(viewModel.protein.count == 7)
+        #expect(viewModel.fat.count == 7)
+        #expect(viewModel.carbs.count == 7)
+    }
+
+    // MARK: - 7-Day Data Loading Tests
+
+    @Test("ViewModel loads 7 days of nutrition data")
+    func testLoads7DaysData() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let weekStart = startOfWeek()
+
+        // Given: Food entries for Monday and Tuesday of this week
+        let monday = weekStart
+        let tuesday = calendar.date(byAdding: .day, value: 1, to: monday)!
+
+        _ = createFoodEntry(in: context, calories: 500, protein: 30, carbs: 50, fat: 20, loggedAt: monday)
+        _ = createFoodEntry(in: context, calories: 600, protein: 40, carbs: 60, fat: 25, loggedAt: tuesday)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Data arrays have 7 elements and Monday/Tuesday have values
+        #expect(viewModel.calories.count == 7)
+        #expect(viewModel.calories[0] == 500)  // Monday
+        #expect(viewModel.calories[1] == 600)  // Tuesday
+    }
+
+    @Test("ViewModel calculates today index correctly")
+    func testTodayIndex() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        await viewModel.loadData()
+
+        // Today index should be between 0 (Monday) and 6 (Sunday)
+        #expect(viewModel.todayIndex >= 0)
+        #expect(viewModel.todayIndex <= 6)
+
+        // Verify today index calculation
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        let expectedIndex = weekday == 1 ? 6 : weekday - 2  // Convert 1=Sunday to 0=Monday format
+        #expect(viewModel.todayIndex == expectedIndex)
+    }
+
+    @Test("ViewModel sets future days to zero")
+    func testFutureDaysAreZero() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        await viewModel.loadData()
+
+        // Days after today should be 0
+        for dayIndex in (viewModel.todayIndex + 1)..<7 {
+            #expect(viewModel.calories[dayIndex] == 0)
+            #expect(viewModel.protein[dayIndex] == 0)
+            #expect(viewModel.fat[dayIndex] == 0)
+            #expect(viewModel.carbs[dayIndex] == 0)
+        }
+    }
+
+    @Test("ViewModel loads targets from User")
+    func testLoadsTargetsFromUser() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with nutrition goals
+        let user = createTestUser(in: context)
+        user.dailyCalorieGoal = 1800
+        user.dailyProteinGoal = 130
+        user.dailyCarbGoal = 180
+        user.dailyFatGoal = 60
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Targets match user's goals
+        #expect(viewModel.caloriesTarget == 1800)
+        #expect(viewModel.proteinTarget == 130)
+        #expect(viewModel.carbsTarget == 180)
+        #expect(viewModel.fatTarget == 60)
+    }
+
+    @Test("ViewModel handles empty data gracefully")
+    func testHandlesEmptyData() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading with no food entries
+        await viewModel.loadData()
+
+        // Then: All arrays are zeros
+        #expect(viewModel.calories.allSatisfy { $0 == 0 })
+        #expect(viewModel.protein.allSatisfy { $0 == 0 })
+        #expect(viewModel.fat.allSatisfy { $0 == 0 })
+        #expect(viewModel.carbs.allSatisfy { $0 == 0 })
+    }
+
+    @Test("ViewModel aggregates multiple entries per day")
+    func testAggregatesMultipleEntriesPerDay() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let weekStart = startOfWeek()
+        let monday = weekStart
+
+        // Given: Multiple food entries on Monday
+        _ = createFoodEntry(in: context, calories: 300, protein: 20, carbs: 30, fat: 10, loggedAt: monday)
+        _ = createFoodEntry(
+            in: context, calories: 400, protein: 25, carbs: 40, fat: 15,
+            loggedAt: calendar.date(byAdding: .hour, value: 2, to: monday)!
+        )
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Monday values are aggregated
+        #expect(viewModel.calories[0] == 700)  // 300 + 400
+        #expect(viewModel.protein[0] == 45)  // 20 + 25
+        #expect(viewModel.carbs[0] == 70)  // 30 + 40
+        #expect(viewModel.fat[0] == 25)  // 10 + 15
+    }
+
+    // MARK: - Active NutritionGoal Tests
+
+    @Test("ViewModel uses active NutritionGoal targets when available")
+    func testUsesActiveNutritionGoal() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with active NutritionGoal
+        let user = createTestUser(in: context)
+        user.dailyCalorieGoal = 2000  // Fallback values
+
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500,
+            dailyProteinTargetGrams: 120,
+            dailyCarbTargetGrams: 150,
+            dailyFatTargetGrams: 50
+        )
+        nutritionGoal.user = user
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Targets come from active NutritionGoal
+        #expect(viewModel.caloriesTarget == 1500)
+        #expect(viewModel.proteinTarget == 120)
+        #expect(viewModel.carbsTarget == 150)
+        #expect(viewModel.fatTarget == 50)
+    }
+}

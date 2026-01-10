@@ -8,6 +8,7 @@
 //
 
 import Charts
+import SwiftData
 import SwiftUI
 
 // MARK: - EnergyDisplayMode
@@ -26,13 +27,31 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     let title = "Energy Balance"
 
     @Environment(\.energyDisplayMode) private var displayMode
+    @Environment(\.modelContext) private var modelContext
 
-    // MARK: - Mock Data
+    /// ViewModel for live data - initialized lazily on first access
+    @State private var viewModel: EnergyBalanceHeroViewModel?
 
-    private let mockData = EnergyBalanceMockData.sample
+    /// Whether to use mock data (for previews)
+    private let useMockData: Bool
+
+    // MARK: - Initialization
+
+    /// Initialize with live data (default for production)
+    init() {
+        self.useMockData = false
+    }
+
+    /// Initialize with mock data flag (for previews)
+    init(useMockData: Bool) {
+        self.useMockData = useMockData
+    }
 
     var body: some View {
         content
+            .task {
+                await loadDataIfNeeded()
+            }
     }
 
     var content: some View {
@@ -66,17 +85,52 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
         .accessibilityIdentifier("energy-balance-hero-widget")
     }
 
+    // MARK: - Data Loading
+
+    private func loadDataIfNeeded() async {
+        guard !useMockData else { return }
+
+        if viewModel == nil {
+            let mealLogService = AppServices.shared.mealLogService ?? MealLogService(context: modelContext)
+            viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: modelContext)
+        }
+        await viewModel?.loadData()
+    }
+
+    // MARK: - Data Accessors
+
+    private var dailyCalories: [DayCalories] {
+        if useMockData {
+            return EnergyBalanceMockData.sample.dailyCalories.map {
+                DayCalories(date: $0.date, value: $0.value)
+            }
+        }
+        return viewModel?.dailyCalories ?? []
+    }
+
+    private var averageExpenditure: Double {
+        useMockData ? EnergyBalanceMockData.sample.averageExpenditure : (viewModel?.averageExpenditure ?? 2000)
+    }
+
+    private var averageTargets: Double {
+        useMockData ? EnergyBalanceMockData.sample.averageTargets : (viewModel?.averageTargets ?? 1800)
+    }
+
+    private var totalNutrition: Int {
+        useMockData ? EnergyBalanceMockData.sample.totalNutrition : (viewModel?.totalNutrition ?? 0)
+    }
+
     // MARK: - Bar Chart
 
     private var energyBalanceChart: some View {
         let referenceValue =
             displayMode == .expenditure
-            ? mockData.averageExpenditure
-            : mockData.averageTargets
+            ? averageExpenditure
+            : averageTargets
 
         return Chart {
             // Blue bars for daily calories
-            ForEach(mockData.dailyCalories) { day in
+            ForEach(dailyCalories) { day in
                 BarMark(
                     x: .value("Day", day.date, unit: .day),
                     y: .value("Calories", day.value)
@@ -100,11 +154,11 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
     private var summaryEquationRow: some View {
         // All values are daily averages
-        let avgNutrition = mockData.totalNutrition / 30
+        let avgNutrition = totalNutrition / 30
         let avgReference =
             displayMode == .expenditure
-            ? Int(mockData.averageExpenditure)
-            : Int(mockData.averageTargets)
+            ? Int(averageExpenditure)
+            : Int(averageTargets)
         let avgDifference = avgNutrition - avgReference
 
         return HStack(spacing: 0) {
@@ -117,7 +171,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
             )
 
             // Minus operator
-            Text("–")
+            Text("-")
                 .font(.system(size: 20, weight: .medium))
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity)
@@ -236,7 +290,7 @@ struct EnergyBalanceMockData {
 #Preview("Expenditure Mode") {
     ScrollView {
         VStack(spacing: 16) {
-            EnergyBalanceHeroWidget()
+            EnergyBalanceHeroWidget(useMockData: true)
                 .cardStyle()
         }
         .padding()
@@ -249,9 +303,9 @@ struct EnergyBalanceMockData {
         VStack(spacing: 16) {
             HeroWidgetContainer(
                 pages: [
-                    AnyView(WeeklyNutritionHeroWidget()),
-                    AnyView(DailyNutritionHeroWidget()),
-                    AnyView(EnergyBalanceHeroWidget()),
+                    AnyView(WeeklyNutritionHeroWidget(useMockData: true)),
+                    AnyView(DailyNutritionHeroWidget(useMockData: true)),
+                    AnyView(EnergyBalanceHeroWidget(useMockData: true)),
                 ]
             )
         }

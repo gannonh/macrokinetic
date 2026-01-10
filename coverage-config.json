@@ -121,6 +121,9 @@
           "ViewModels/FoodSearchSheetViewModel.swift",
           "ViewModels/CreateFoodViewModel.swift",
           "ViewModels/QuickAddViewModel.swift",
+          "ViewModels/DailyNutritionHeroViewModel.swift",
+          "ViewModels/WeeklyNutritionHeroViewModel.swift",
+          "ViewModels/EnergyBalanceHeroViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift",
           "Views/Nutrition/NutritionSummaryViewModel.swift"

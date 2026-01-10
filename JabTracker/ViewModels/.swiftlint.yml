@@ -1,0 +1,4 @@
+# ViewModels directory - relaxed rules for preview support code
+disabled_rules:
+  - force_try  # Allow force try in preview static properties
+  - force_unwrapping  # Allow in date arithmetic

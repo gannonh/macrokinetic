@@ -6,6 +6,7 @@
 //  Part of v0.7.0 Dashboard Widget UX milestone.
 //
 
+import SwiftData
 import SwiftUI
 
 // MARK: - Grid Layout Constants
@@ -181,16 +182,35 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     let title = "Weekly Nutrition"
 
     @Environment(\.heroDisplayMode) private var displayMode
+    @Environment(\.modelContext) private var modelContext
     @State private var selectedDayIndex: Int?  // nil = show week totals
 
-    // MARK: - Mock Data
+    /// ViewModel for live data - initialized lazily on first access
+    @State private var viewModel: WeeklyNutritionHeroViewModel?
 
-    private let mockData = WeeklyMockData.sample
+    /// Whether to use mock data (for previews)
+    private let useMockData: Bool
+
     private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
     private let fullDayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
 
+    // MARK: - Initialization
+
+    /// Initialize with live data (default for production)
+    init() {
+        self.useMockData = false
+    }
+
+    /// Initialize with mock data flag (for previews)
+    init(useMockData: Bool) {
+        self.useMockData = useMockData
+    }
+
     var body: some View {
         content
+            .task {
+                await loadDataIfNeeded()
+            }
     }
 
     var content: some View {
@@ -209,9 +229,9 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                 WeeklyMacroRow(
                     macroType: .calories,
                     macroColor: DesignTokens.Colors.calories,
-                    dailyValues: mockData.calories,
-                    target: mockData.caloriesTarget,
-                    todayIndex: mockData.todayIndex,
+                    dailyValues: calories,
+                    target: caloriesTarget,
+                    todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
                     onDayTap: handleDayTap
@@ -220,9 +240,9 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                 WeeklyMacroRow(
                     macroType: .protein,
                     macroColor: DesignTokens.Colors.protein,
-                    dailyValues: mockData.protein,
-                    target: mockData.proteinTarget,
-                    todayIndex: mockData.todayIndex,
+                    dailyValues: protein,
+                    target: proteinTarget,
+                    todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
                     onDayTap: handleDayTap
@@ -231,9 +251,9 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                 WeeklyMacroRow(
                     macroType: .fat,
                     macroColor: DesignTokens.Colors.fat,
-                    dailyValues: mockData.fat,
-                    target: mockData.fatTarget,
-                    todayIndex: mockData.todayIndex,
+                    dailyValues: fat,
+                    target: fatTarget,
+                    todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
                     onDayTap: handleDayTap
@@ -242,9 +262,9 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                 WeeklyMacroRow(
                     macroType: .carbs,
                     macroColor: DesignTokens.Colors.carbs,
-                    dailyValues: mockData.carbs,
-                    target: mockData.carbsTarget,
-                    todayIndex: mockData.todayIndex,
+                    dailyValues: carbs,
+                    target: carbsTarget,
+                    todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
                     onDayTap: handleDayTap
@@ -255,6 +275,56 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
         .padding(.top, 20)
         .padding(.bottom, 12)
         .accessibilityIdentifier("weekly-nutrition-hero-widget")
+    }
+
+    // MARK: - Data Loading
+
+    private func loadDataIfNeeded() async {
+        guard !useMockData else { return }
+
+        if viewModel == nil {
+            let mealLogService = AppServices.shared.mealLogService ?? MealLogService(context: modelContext)
+            viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: modelContext)
+        }
+        await viewModel?.loadData()
+    }
+
+    // MARK: - Data Accessors
+
+    private var calories: [Double] {
+        useMockData ? WeeklyMockData.sample.calories : (viewModel?.calories ?? Array(repeating: 0, count: 7))
+    }
+
+    private var protein: [Double] {
+        useMockData ? WeeklyMockData.sample.protein : (viewModel?.protein ?? Array(repeating: 0, count: 7))
+    }
+
+    private var fat: [Double] {
+        useMockData ? WeeklyMockData.sample.fat : (viewModel?.fat ?? Array(repeating: 0, count: 7))
+    }
+
+    private var carbs: [Double] {
+        useMockData ? WeeklyMockData.sample.carbs : (viewModel?.carbs ?? Array(repeating: 0, count: 7))
+    }
+
+    private var caloriesTarget: Double {
+        useMockData ? WeeklyMockData.sample.caloriesTarget : (viewModel?.caloriesTarget ?? 2000)
+    }
+
+    private var proteinTarget: Double {
+        useMockData ? WeeklyMockData.sample.proteinTarget : (viewModel?.proteinTarget ?? 150)
+    }
+
+    private var fatTarget: Double {
+        useMockData ? WeeklyMockData.sample.fatTarget : (viewModel?.fatTarget ?? 65)
+    }
+
+    private var carbsTarget: Double {
+        useMockData ? WeeklyMockData.sample.carbsTarget : (viewModel?.carbsTarget ?? 200)
+    }
+
+    private var todayIndex: Int {
+        useMockData ? WeeklyMockData.sample.todayIndex : (viewModel?.todayIndex ?? 0)
     }
 
     /// Day labels header row aligned with cells
@@ -294,7 +364,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     private func fontWeight(for index: Int) -> Font.Weight {
         if index == selectedDayIndex {
             return .bold
-        } else if selectedDayIndex == nil && index == mockData.todayIndex {
+        } else if selectedDayIndex == nil && index == todayIndex {
             return .bold
         }
         return .regular
@@ -303,7 +373,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     private func labelColor(for index: Int) -> Color {
         if index == selectedDayIndex {
             return .primary
-        } else if selectedDayIndex == nil && index == mockData.todayIndex {
+        } else if selectedDayIndex == nil && index == todayIndex {
             return .primary
         }
         return .secondary
@@ -411,7 +481,7 @@ private struct WeeklyMockData {
         VStack(spacing: 16) {
             HeroWidgetContainer(
                 pages: [
-                    AnyView(WeeklyNutritionHeroWidget())
+                    AnyView(WeeklyNutritionHeroWidget(useMockData: true))
                 ]
             )
         }
