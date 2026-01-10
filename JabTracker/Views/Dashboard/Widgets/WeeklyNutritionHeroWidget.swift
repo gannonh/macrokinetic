@@ -53,6 +53,7 @@ struct WeeklyMacroRow: View {
     let todayIndex: Int  // 0-6 for Mon-Sun
     let displayMode: HeroDisplayMode
     let selectedDayIndex: Int?  // nil = show week totals
+    let isAnimated: Bool  // Animation state for grow-in effect
     let onDayTap: (Int) -> Void
 
     var body: some View {
@@ -143,12 +144,14 @@ struct WeeklyMacroRow: View {
         let isFuture = index > todayIndex
 
         // Calculate fill percentage with division by zero protection
-        let fillPercentage: CGFloat
+        let baseFillPercentage: CGFloat
         if isFuture || target <= 0 {
-            fillPercentage = 0
+            baseFillPercentage = 0
         } else {
-            fillPercentage = min(1.0, CGFloat(displayValue / target))
+            baseFillPercentage = min(1.0, CGFloat(displayValue / target))
         }
+        // Apply animation multiplier for grow-in effect
+        let fillPercentage = baseFillPercentage * (isAnimated ? 1.0 : 0.0)
 
         let fillHeight = GridLayout.cellHeight * fillPercentage
 
@@ -159,11 +162,12 @@ struct WeeklyMacroRow: View {
                 .frame(width: GridLayout.cellWidth, height: GridLayout.cellHeight)
 
             // Fill from bottom - fixed height calculation
-            if !isFuture && fillPercentage > 0 {
+            if !isFuture && baseFillPercentage > 0 {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(macroColor)
                     .frame(width: GridLayout.cellWidth - 4, height: max(4, fillHeight - 4))
                     .padding(.bottom, 2)
+                    .animation(.easeOut(duration: 0.6), value: fillPercentage)
             }
         }
         .frame(width: GridLayout.cellWidth, height: GridLayout.cellHeight)
@@ -188,6 +192,9 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
     /// ViewModel for live data - initialized lazily on first access
     @State private var viewModel: WeeklyNutritionHeroViewModel?
 
+    /// Animation state for "grow in" effect
+    @State private var isAnimated = false
+
     /// Whether to use mock data (for previews)
     private let useMockData: Bool
 
@@ -210,6 +217,14 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
         content
             .task {
                 await loadDataIfNeeded()
+            }
+            .onAppear {
+                // Trigger grow-in animation after a brief delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeOut(duration: 0.6)) {
+                        isAnimated = true
+                    }
+                }
             }
     }
 
@@ -234,6 +249,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
+                    isAnimated: isAnimated,
                     onDayTap: handleDayTap
                 )
 
@@ -245,6 +261,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
+                    isAnimated: isAnimated,
                     onDayTap: handleDayTap
                 )
 
@@ -256,6 +273,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
+                    isAnimated: isAnimated,
                     onDayTap: handleDayTap
                 )
 
@@ -267,6 +285,7 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
                     todayIndex: todayIndex,
                     displayMode: displayMode,
                     selectedDayIndex: selectedDayIndex,
+                    isAnimated: isAnimated,
                     onDayTap: handleDayTap
                 )
             }

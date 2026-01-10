@@ -32,6 +32,9 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     /// ViewModel for live data - initialized lazily on first access
     @State private var viewModel: EnergyBalanceHeroViewModel?
 
+    /// Animation state for "grow in" effect
+    @State private var isAnimated = false
+
     /// Whether to use mock data (for previews)
     private let useMockData: Bool
 
@@ -51,6 +54,14 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
         content
             .task {
                 await loadDataIfNeeded()
+            }
+            .onAppear {
+                // Trigger grow-in animation after a brief delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeOut(duration: 0.6)) {
+                        isAnimated = true
+                    }
+                }
             }
     }
 
@@ -127,26 +138,28 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
             displayMode == .expenditure
             ? averageExpenditure
             : averageTargets
+        let animationMultiplier = isAnimated ? 1.0 : 0.0
 
         return Chart {
             // Blue bars for daily calories
             ForEach(dailyCalories) { day in
                 BarMark(
                     x: .value("Day", day.date, unit: .day),
-                    y: .value("Calories", day.value)
+                    y: .value("Calories", day.value * animationMultiplier)
                 )
                 .foregroundStyle(DesignTokens.Colors.calories)
                 .cornerRadius(2)
             }
 
             // Reference line (dotted) for expenditure/target
-            RuleMark(y: .value("Reference", referenceValue))
+            RuleMark(y: .value("Reference", referenceValue * animationMultiplier))
                 .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                 .foregroundStyle(
                     displayMode == .expenditure ? DesignTokens.Colors.expenditure : DesignTokens.Colors.targets)
         }
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
+        .animation(.easeOut(duration: 0.6), value: isAnimated)
         .accessibilityLabel("Energy balance chart showing last 30 days")
     }
 

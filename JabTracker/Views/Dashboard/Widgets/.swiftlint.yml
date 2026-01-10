@@ -1,5 +1,7 @@
 # SwiftLint overrides for Dashboard Widgets
 # StandardWidgetGroup uses a 4-tuple for ViewBuilder pattern
+# Hero widgets contain row components and mock data in single file
 
 disabled_rules:
   - large_tuple
+  - file_length

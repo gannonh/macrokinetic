@@ -22,6 +22,9 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
     /// ViewModel for live data - initialized lazily on first access
     @State private var viewModel: DailyNutritionHeroViewModel?
 
+    /// Animation state for "grow in" effect
+    @State private var isAnimated = false
+
     /// Whether to use mock data (for previews)
     private let useMockData: Bool
 
@@ -47,6 +50,14 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         content
             .task {
                 await loadDataIfNeeded()
+            }
+            .onAppear {
+                // Trigger grow-in animation after a brief delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeOut(duration: 0.6)) {
+                        isAnimated = true
+                    }
+                }
             }
     }
 
@@ -181,10 +192,11 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
     // MARK: - Calorie Ring
 
     private var calorieRing: some View {
-        let progress =
+        let baseProgress =
             caloriesTarget > 0
             ? Double(caloriesConsumed) / Double(caloriesTarget)
             : 0
+        let progress = baseProgress * (isAnimated ? 1.0 : 0.0)
 
         return ZStack {
             // Background track
@@ -275,7 +287,8 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         target: Int,
         color: Color
     ) -> some View {
-        let progress = target > 0 ? Double(consumed) / Double(target) : 0
+        let baseProgress = target > 0 ? Double(consumed) / Double(target) : 0
+        let progress = baseProgress * (isAnimated ? 1.0 : 0.0)
 
         return VStack(alignment: .leading, spacing: 4) {
             // Label
