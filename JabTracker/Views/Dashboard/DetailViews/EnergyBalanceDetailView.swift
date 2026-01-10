@@ -56,22 +56,34 @@ struct EnergyBalanceDetailData {
         var rng = SeededRNG(seed: 456)
 
         // Generate expenditure mode data (1 year of data)
+        // Mix of deficit days (negative) and occasional surplus days (positive)
         var expenditureDaily: [DailyBalance] = []
         for dayOffset in stride(from: 365, through: 0, by: -1) {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
-            // Mix of deficits (mostly negative) with occasional surplus days
-            let baseDeficit = -Int.random(in: 200...500, using: &rng)
-            let variance = Int.random(in: -100...200, using: &rng)
-            let value = baseDeficit + variance
+            // 70% deficit days, 30% surplus days for realistic variation
+            let isDeficit = Int.random(in: 1...10, using: &rng) <= 7
+            let value: Int
+            if isDeficit {
+                value = -Int.random(in: 200...600, using: &rng)  // Deficit: ate less than expended
+            } else {
+                value = Int.random(in: 100...400, using: &rng)  // Surplus: ate more than expended
+            }
             expenditureDaily.append(DailyBalance(date: date, value: value))
         }
 
         // Generate calorie targets mode data (3 months of data)
+        // Similar pattern but relative to targets
         var targetDaily: [DailyBalance] = []
         for dayOffset in stride(from: 90, through: 0, by: -1) {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
-            // More consistent deficits relative to targets
-            let value = -Int.random(in: 400...800, using: &rng)
+            // 75% below target, 25% above target
+            let isBelowTarget = Int.random(in: 1...100, using: &rng) <= 75
+            let value: Int
+            if isBelowTarget {
+                value = -Int.random(in: 300...700, using: &rng)  // Below target
+            } else {
+                value = Int.random(in: 50...300, using: &rng)  // Above target
+            }
             targetDaily.append(DailyBalance(date: date, value: value))
         }
 
@@ -255,13 +267,10 @@ struct EnergyBalanceDetailView: View {
             .frame(height: 200)
             .accessibilityIdentifier("energy-balance-chart")
 
-            // Legend
+            // Legend - shows what bar colors mean
             HStack(spacing: 16) {
-                legendItem(color: DesignTokens.Colors.calories, label: "Calories")
-                legendItem(
-                    color: DesignTokens.Colors.expenditure,
-                    label: displayMode == .expenditure ? "Expenditure" : "Targets"
-                )
+                legendItem(color: DesignTokens.Colors.calories, label: "Deficit")
+                legendItem(color: DesignTokens.Colors.danger, label: "Surplus")
             }
             .font(.caption)
         }

@@ -8,25 +8,7 @@
 //
 
 import Charts
-import GameplayKit
 import SwiftUI
-
-// MARK: - Seeded Random Generator
-
-/// Random number generator with seed for reproducible mock data
-private struct SeededRandomNumberGenerator: RandomNumberGenerator {
-    private var source: GKMersenneTwisterRandomSource
-
-    init(seed: UInt64) {
-        source = GKMersenneTwisterRandomSource(seed: seed)
-    }
-
-    mutating func next() -> UInt64 {
-        let high = UInt64(bitPattern: Int64(source.nextInt()))
-        let low = UInt64(bitPattern: Int64(source.nextInt()))
-        return (high << 32) | (low & 0xFFFF_FFFF)
-    }
-}
 
 // MARK: - Detail Time Period
 
@@ -51,6 +33,28 @@ enum DetailTimePeriod: String, CaseIterable, Identifiable {
         case .sixMonths: return "Six months"
         case .oneYear: return "One year"
         case .all: return "All time"
+        }
+    }
+
+    /// Start date for filtering data based on selected time period.
+    /// Returns nil for `.all` (no filtering).
+    var startDate: Date? {
+        let calendar = Calendar.current
+        let today = Date()
+
+        switch self {
+        case .oneWeek:
+            return calendar.date(byAdding: .day, value: -7, to: today)
+        case .oneMonth:
+            return calendar.date(byAdding: .month, value: -1, to: today)
+        case .threeMonths:
+            return calendar.date(byAdding: .month, value: -3, to: today)
+        case .sixMonths:
+            return calendar.date(byAdding: .month, value: -6, to: today)
+        case .oneYear:
+            return calendar.date(byAdding: .year, value: -1, to: today)
+        case .all:
+            return nil
         }
     }
 }
@@ -103,7 +107,7 @@ struct WeightTrendDetailData {
         var trendPoints: [WeightPoint] = []
 
         // Seeded random generator for consistent mock data
-        var rng = SeededRandomNumberGenerator(seed: 42)
+        var rng = SeededRNG(seed: 42)
 
         // Generate data for 180 days (6 months)
         for dayOffset in stride(from: 180, through: 0, by: -1) {
@@ -367,38 +371,17 @@ struct WeightTrendDetailView: View {
         }
     }
 
-    /// Start date for selected time period
-    private var periodStartDate: Date? {
-        let calendar = Calendar.current
-        let today = Date()
-
-        switch selectedPeriod {
-        case .oneWeek:
-            return calendar.date(byAdding: .day, value: -7, to: today)
-        case .oneMonth:
-            return calendar.date(byAdding: .month, value: -1, to: today)
-        case .threeMonths:
-            return calendar.date(byAdding: .month, value: -3, to: today)
-        case .sixMonths:
-            return calendar.date(byAdding: .month, value: -6, to: today)
-        case .oneYear:
-            return calendar.date(byAdding: .year, value: -1, to: today)
-        case .all:
-            return nil
-        }
-    }
-
     /// Scale weight points (actual measurements) - filtered and sorted
     private var scaleWeightPoints: [WeightTrendDetailData.WeightPoint] {
         let points = data.dataPoints.filter { !$0.isTrendLine }
-        let filtered = periodStartDate.map { start in points.filter { $0.date >= start } } ?? points
+        let filtered = selectedPeriod.startDate.map { start in points.filter { $0.date >= start } } ?? points
         return filtered.sorted { $0.date < $1.date }
     }
 
     /// Trend weight points (smoothed) - filtered and sorted
     private var trendWeightPoints: [WeightTrendDetailData.WeightPoint] {
         let points = data.dataPoints.filter { $0.isTrendLine }
-        let filtered = periodStartDate.map { start in points.filter { $0.date >= start } } ?? points
+        let filtered = selectedPeriod.startDate.map { start in points.filter { $0.date >= start } } ?? points
         return filtered.sorted { $0.date < $1.date }
     }
 

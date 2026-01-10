@@ -8,25 +8,7 @@
 //
 
 import Charts
-import GameplayKit
 import SwiftUI
-
-// MARK: - Seeded Random Generator
-
-/// Random number generator with seed for reproducible mock data
-private struct SeededExpenditureRNG: RandomNumberGenerator {
-    private var source: GKMersenneTwisterRandomSource
-
-    init(seed: UInt64) {
-        source = GKMersenneTwisterRandomSource(seed: seed)
-    }
-
-    mutating func next() -> UInt64 {
-        let high = UInt64(bitPattern: Int64(source.nextInt()))
-        let low = UInt64(bitPattern: Int64(source.nextInt()))
-        return (high << 32) | (low & 0xFFFF_FFFF)
-    }
-}
 
 // MARK: - Mock Data Structure
 
@@ -81,7 +63,7 @@ struct ExpenditureDetailData {
         var dailyData: [DailyExpenditure] = []
 
         // Seeded random generator for consistent mock data
-        var rng = SeededExpenditureRNG(seed: 123)
+        var rng = SeededRNG(seed: 123)
 
         // Generate data for 365 days (1 year)
         // Create a slow-changing trend with small daily variations
@@ -381,9 +363,21 @@ struct ExpenditureDetailView: View {
 
             // Legend
             HStack(spacing: 16) {
-                legendItem(icon: "triangle.fill", color: DesignTokens.Colors.expenditure, label: "Flux Range")
-                legendItem(icon: "circle.fill", color: DesignTokens.Colors.expenditure, label: "Updating")
-                legendItem(icon: "square.fill", color: DesignTokens.Colors.expenditure, label: "Holding")
+                legendItem(
+                    icon: "triangle.fill",
+                    color: colorForStatus(.fluxRange),
+                    label: "Flux Range"
+                )
+                legendItem(
+                    icon: "circle.fill",
+                    color: colorForStatus(.updating),
+                    label: "Updating"
+                )
+                legendItem(
+                    icon: "square.fill",
+                    color: colorForStatus(.holding),
+                    label: "Holding"
+                )
             }
             .font(.caption)
         }
@@ -413,30 +407,9 @@ struct ExpenditureDetailView: View {
         }
     }
 
-    /// Start date for selected time period
-    private var periodStartDate: Date? {
-        let calendar = Calendar.current
-        let today = Date()
-
-        switch selectedPeriod {
-        case .oneWeek:
-            return calendar.date(byAdding: .day, value: -7, to: today)
-        case .oneMonth:
-            return calendar.date(byAdding: .month, value: -1, to: today)
-        case .threeMonths:
-            return calendar.date(byAdding: .month, value: -3, to: today)
-        case .sixMonths:
-            return calendar.date(byAdding: .month, value: -6, to: today)
-        case .oneYear:
-            return calendar.date(byAdding: .year, value: -1, to: today)
-        case .all:
-            return nil
-        }
-    }
-
     /// Filtered data based on selected time period
     private var filteredData: [ExpenditureDetailData.DailyExpenditure] {
-        guard let startDate = periodStartDate else {
+        guard let startDate = selectedPeriod.startDate else {
             return data.dailyData.sorted { $0.date < $1.date }
         }
         return data.dailyData.filter { $0.date >= startDate }.sorted { $0.date < $1.date }
@@ -516,9 +489,29 @@ struct ExpenditureDetailView: View {
     }
 
     private func expenditureChangeRow(_ change: ExpenditureDetailData.ExpenditureChange) -> some View {
-        let changeText = change.change == 0 ? "0 kcal" : "\(change.change > 0 ? "+" : "")\(change.change) kcal"
-        let arrowName = change.change < 0 ? "arrow.down" : (change.change > 0 ? "arrow.up" : "minus")
-        let arrowColor: Color = change.change < 0 ? .green : (change.change > 0 ? .red : .secondary)
+        // Format change text with sign
+        let changeText: String
+        if change.change == 0 {
+            changeText = "0 kcal"
+        } else if change.change > 0 {
+            changeText = "+\(change.change) kcal"
+        } else {
+            changeText = "\(change.change) kcal"
+        }
+
+        // Determine arrow icon and color based on direction
+        let arrowName: String
+        let arrowColor: Color
+        if change.change < 0 {
+            arrowName = "arrow.down"
+            arrowColor = .green
+        } else if change.change > 0 {
+            arrowName = "arrow.up"
+            arrowColor = .red
+        } else {
+            arrowName = "minus"
+            arrowColor = .secondary
+        }
 
         return HStack {
             Text(change.period)
