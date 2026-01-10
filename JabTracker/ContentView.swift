@@ -23,7 +23,6 @@ struct ContentView: View {
     /// Cached badge state - updated on scene activation and tab changes
     @State private var checkInBadgeVisible = false
     @Environment(\.scenePhase) private var scenePhase
-
     // MARK: - Constants
 
     private enum SheetTransitionTiming {
@@ -338,6 +337,7 @@ struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
     @State private var pkEngine = PharmacokineticsEngine()
+    @State private var showingWeightTrendDetail = false
     let doseService: DoseService
 
     init(doseService: DoseService) {
@@ -378,6 +378,9 @@ struct DashboardView: View {
             .background(DesignTokens.Colors.groupedBackground)
             .toolbar(.hidden, for: .navigationBar)
         }
+        .sheet(isPresented: $showingWeightTrendDetail) {
+            WeightTrendDetailView(data: .mock)
+        }
         .accessibilityIdentifier("dashboard-view")
     }
 
@@ -396,7 +399,7 @@ struct DashboardView: View {
     private var insightsAnalyticsSection: some View {
         StandardWidgetGroup(title: "Insights & Analytics") {
             ExpenditureWidget()
-            WeightTrendWidget()
+            WeightTrendWidget(onTap: { showingWeightTrendDetail = true })
             EnergyBalanceWidget()
             GoalProgressWidget()
         }
