@@ -86,7 +86,7 @@ Plans:
 - Energy Balance Detail: `mocks/dashboard/Detail - Energy Balance.png`
 
 Plans:
-- [ ] 33-01: Weight Trend Detail View (header, time filters, line chart, insights cards, data sources)
+- [x] 33-01: Weight Trend Detail View (header, time filters, line chart, insights cards, data sources)
 - [ ] 33-02: Expenditure Detail View (bar chart, insights cards, shared DetailTimePeriodSelector)
 - [ ] 33-03: Energy Balance Detail View (mode toggle, navigation wiring from widgets)
 
@@ -112,7 +112,7 @@ Phases execute in numeric order within each milestone.
 | 30. Dashboard Foundation        | 2/2            | Complete    | 2026-01-08 |
 | 31. Main Widget (Hero)          | 2/2            | Complete    | 2026-01-09 |
 | 32. Standard Widgets - Insights | 1/1            | Complete    | 2026-01-09 |
-| 33. Detail Views                | 0/?            | Not started | -          |
+| 33. Detail Views                | 1/3            | In progress | -          |
 | 34. Integration & Polish        | 0/?            | Not started | -          |
 
 <details>

@@ -249,6 +249,7 @@
       "Views/Dashboard/Widgets/WeeklyNutritionHeroWidget.swift",
       "Views/Dashboard/Widgets/WeightTrendWidget.swift",
       "Views/Dashboard/Widgets/WidgetCard.swift",
+      "Views/Dashboard/DetailViews/WeightTrendDetailView.swift",
       "Views/DoseEntry/DoseEntryFormSections.swift",
       "Views/DoseEntry/DoseEntryPKSection.swift",
       "Views/DoseEntry/DoseEntryPhotoSection.swift",
