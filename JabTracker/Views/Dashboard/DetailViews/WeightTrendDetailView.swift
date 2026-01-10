@@ -310,24 +310,33 @@ struct WeightTrendDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Chart
             Chart {
-                // Scale weight points (actual measurements)
-                ForEach(filteredDataPoints.filter { !$0.isTrendLine }) { point in
+                // Scale weight line (actual measurements - lighter, curved background)
+                ForEach(scaleWeightPoints) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
+                    )
+                    .foregroundStyle(DesignTokens.Colors.weight.opacity(0.4))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5))
+                    .interpolationMethod(.catmullRom)
+                }
+
+                // Trend weight line with dots (smoothed - prominent, main line)
+                ForEach(trendWeightPoints) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
+                    )
+                    .foregroundStyle(DesignTokens.Colors.weight)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .interpolationMethod(.catmullRom)
+
                     PointMark(
                         x: .value("Date", point.date),
                         y: .value("Weight", point.weight)
                     )
                     .foregroundStyle(DesignTokens.Colors.weight)
-                    .symbolSize(40)
-                }
-
-                // Trend line (smoothed)
-                ForEach(filteredDataPoints.filter { $0.isTrendLine }.sorted { $0.date < $1.date }) { point in
-                    LineMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(DesignTokens.Colors.weight.opacity(0.6))
-                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .symbolSize(25)
                 }
             }
             .chartYScale(domain: .automatic(includesZero: false))
@@ -352,8 +361,8 @@ struct WeightTrendDetailView: View {
 
             // Legend
             HStack(spacing: 16) {
-                legendItem(color: DesignTokens.Colors.weight, label: "Scale Weight", isLine: false)
-                legendItem(color: DesignTokens.Colors.weight.opacity(0.6), label: "Trend Weight", isLine: true)
+                legendItem(color: DesignTokens.Colors.weight.opacity(0.4), label: "Scale Weight", isLine: true)
+                legendItem(color: DesignTokens.Colors.weight, label: "Trend Weight", isLine: false)
             }
             .font(.caption)
         }
@@ -381,30 +390,39 @@ struct WeightTrendDetailView: View {
         }
     }
 
-    /// Filter data points based on selected time period
-    private var filteredDataPoints: [WeightTrendDetailData.WeightPoint] {
+    /// Start date for selected time period
+    private var periodStartDate: Date? {
         let calendar = Calendar.current
         let today = Date()
 
-        let startDate: Date? = {
-            switch selectedPeriod {
-            case .oneWeek:
-                return calendar.date(byAdding: .day, value: -7, to: today)
-            case .oneMonth:
-                return calendar.date(byAdding: .month, value: -1, to: today)
-            case .threeMonths:
-                return calendar.date(byAdding: .month, value: -3, to: today)
-            case .sixMonths:
-                return calendar.date(byAdding: .month, value: -6, to: today)
-            case .oneYear:
-                return calendar.date(byAdding: .year, value: -1, to: today)
-            case .all:
-                return nil
-            }
-        }()
+        switch selectedPeriod {
+        case .oneWeek:
+            return calendar.date(byAdding: .day, value: -7, to: today)
+        case .oneMonth:
+            return calendar.date(byAdding: .month, value: -1, to: today)
+        case .threeMonths:
+            return calendar.date(byAdding: .month, value: -3, to: today)
+        case .sixMonths:
+            return calendar.date(byAdding: .month, value: -6, to: today)
+        case .oneYear:
+            return calendar.date(byAdding: .year, value: -1, to: today)
+        case .all:
+            return nil
+        }
+    }
 
-        guard let startDate else { return data.dataPoints }
-        return data.dataPoints.filter { $0.date >= startDate }
+    /// Scale weight points (actual measurements) - filtered and sorted
+    private var scaleWeightPoints: [WeightTrendDetailData.WeightPoint] {
+        let points = data.dataPoints.filter { !$0.isTrendLine }
+        let filtered = periodStartDate.map { start in points.filter { $0.date >= start } } ?? points
+        return filtered.sorted { $0.date < $1.date }
+    }
+
+    /// Trend weight points (smoothed) - filtered and sorted
+    private var trendWeightPoints: [WeightTrendDetailData.WeightPoint] {
+        let points = data.dataPoints.filter { $0.isTrendLine }
+        let filtered = periodStartDate.map { start in points.filter { $0.date >= start } } ?? points
+        return filtered.sorted { $0.date < $1.date }
     }
 
     // MARK: - Insights Section
