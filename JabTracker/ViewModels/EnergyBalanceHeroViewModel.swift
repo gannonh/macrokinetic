@@ -2,19 +2,24 @@
 //  EnergyBalanceHeroViewModel.swift
 //  JabTracker
 //
-//  ViewModel for EnergyBalanceHeroWidget - provides 30-day energy balance data.
+//  ViewModel for EnergyBalanceHeroWidget - provides 30-day energy balance data
+//  with daily expenditure from TDEESnapshots.
 //
 
 import Foundation
 import OSLog
 import SwiftData
 
-/// Data point for daily calorie chart
+/// Data point for daily calorie chart with expenditure
 struct DayCalories: Identifiable {
     /// Use date as stable identifier for animation continuity
     var id: Date { date }
     let date: Date
     let value: Double
+    /// Daily expenditure from TDEESnapshot (varies per day)
+    let expenditure: Double
+    /// Daily calorie target (fixed from NutritionGoal)
+    let target: Double
 }
 
 /// ViewModel providing 30-day energy balance data for EnergyBalanceHeroWidget
@@ -30,6 +35,7 @@ final class EnergyBalanceHeroViewModel {
     )
 
     private let mealLogService: MealLogService
+    private let tdeeService: TDEEService
     private let context: ModelContext
 
     /// Number of days to display
@@ -40,44 +46,66 @@ final class EnergyBalanceHeroViewModel {
     /// Whether data is currently loading
     private(set) var isLoading: Bool = false
 
-    /// Daily calories for each of the last 30 days
+    /// Daily calories for each of the last 30 days (includes per-day expenditure from TDEESnapshots)
     private(set) var dailyCalories: [DayCalories] = []
 
-    /// Average daily expenditure (TDEE)
-    private(set) var averageExpenditure: Double = 2000
+    /// Average daily expenditure (TDEE) - computed from dailyCalories
+    var averageExpenditure: Double {
+        guard !dailyCalories.isEmpty else { return 2000 }
+        return dailyCalories.map(\.expenditure).reduce(0, +) / Double(dailyCalories.count)
+    }
 
-    /// Average daily calorie target
-    private(set) var averageTargets: Double = 1800
+    /// Average daily calorie target - computed from dailyCalories
+    var averageTargets: Double {
+        guard !dailyCalories.isEmpty else { return 1800 }
+        return dailyCalories.map(\.target).reduce(0, +) / Double(dailyCalories.count)
+    }
 
     /// Total nutrition (sum of all daily calories)
     private(set) var totalNutrition: Int = 0
 
     // MARK: - Initialization
 
-    /// Initialize with meal log service and model context
+    /// Initialize with meal log service, TDEE service, and model context
     /// - Parameters:
     ///   - mealLogService: Service for fetching meal log data
+    ///   - tdeeService: Service for fetching TDEE snapshots
     ///   - context: ModelContext for fetching user data
-    init(mealLogService: MealLogService, context: ModelContext) {
+    init(mealLogService: MealLogService, tdeeService: TDEEService, context: ModelContext) {
         self.mealLogService = mealLogService
+        self.tdeeService = tdeeService
         self.context = context
-
-        // Initialize with empty daily calories
-        dailyCalories = createEmptyDailyCalories()
     }
 
     // MARK: - Data Loading
 
-    /// Load 30 days of energy balance data
+    /// Load 30 days of energy balance data with per-day TDEESnapshot values
     func loadData() async {
         isLoading = true
         defer { isLoading = false }
 
-        // Load daily calorie data
-        await loadDailyCalories()
+        // Get user and active nutrition goal for fallback values and target
+        guard let user = context.fetchCurrentUser(logger: Self.logger),
+            let activeGoal = user.activeNutritionGoal
+        else {
+            Self.logger.debug("No user or active nutrition goal found")
+            return
+        }
 
-        // Load user targets and expenditure
-        loadUserData()
+        // Get fallback TDEE (used when no snapshot exists for a date)
+        let fallbackTDEE: Double
+        if let lastCalculated = activeGoal.lastCalculatedTDEE {
+            fallbackTDEE = lastCalculated
+        } else if let initial = activeGoal.initialEstimatedTDEE {
+            fallbackTDEE = initial
+        } else {
+            fallbackTDEE = 2000  // Reasonable default
+        }
+
+        let calorieTarget = activeGoal.dailyCalorieTarget
+
+        // Load daily calorie data with TDEESnapshot expenditure
+        await loadDailyCalories(fallbackTDEE: fallbackTDEE, calorieTarget: calorieTarget)
 
         Self.logger.debug(
             """
@@ -87,23 +115,28 @@ final class EnergyBalanceHeroViewModel {
         )
     }
 
-    /// Create empty daily calories array with dates
-    private func createEmptyDailyCalories() -> [DayCalories] {
+    /// Load daily calorie totals for the last 30 days with per-day TDEESnapshot values
+    private func loadDailyCalories(fallbackTDEE: Double, calorieTarget: Double) async {
         let calendar = Calendar.current
         let today = Date()
 
-        return (0..<dayCount).reversed().compactMap { daysAgo in
-            guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) else {
-                return nil
-            }
-            return DayCalories(date: date, value: 0)
+        // Calculate start date for TDEESnapshot query
+        guard let startDate = calendar.date(byAdding: .day, value: -(dayCount - 1), to: today) else {
+            return
         }
-    }
 
-    /// Load daily calorie totals for the last 30 days
-    private func loadDailyCalories() async {
-        let calendar = Calendar.current
-        let today = Date()
+        // Load TDEE snapshots for the period to get historical expenditure values
+        var tdeeByDate: [Date: Double] = [:]
+        do {
+            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: today)
+            for snapshot in snapshots {
+                let dayStart = calendar.startOfDay(for: snapshot.timestamp)
+                tdeeByDate[dayStart] = snapshot.tdeeValue
+            }
+            Self.logger.debug("Loaded \(snapshots.count) TDEE snapshots for energy balance hero")
+        } catch {
+            Self.logger.error("Failed to load TDEE snapshots: \(error)")
+        }
 
         var newDailyCalories: [DayCalories] = []
         var newTotalNutrition = 0
@@ -114,42 +147,36 @@ final class EnergyBalanceHeroViewModel {
                 continue
             }
 
+            let dayStart = calendar.startOfDay(for: dayDate)
+            // Use historical TDEE if available, otherwise fallback
+            let dayExpenditure = tdeeByDate[dayStart] ?? fallbackTDEE
+
             do {
                 let totals = try await mealLogService.getDailyTotals(for: dayDate)
                 let calories = totals.calories
-                newDailyCalories.append(DayCalories(date: dayDate, value: calories))
+                newDailyCalories.append(
+                    DayCalories(
+                        date: dayDate,
+                        value: calories,
+                        expenditure: dayExpenditure,
+                        target: calorieTarget
+                    ))
                 newTotalNutrition += Int(calories)
             } catch {
                 Self.logger.error("Failed to load totals for day \(-daysAgo): \(error)")
-                // Add zero for this day on error
-                newDailyCalories.append(DayCalories(date: dayDate, value: 0))
+                // Add zero calories for this day on error, but still include expenditure
+                newDailyCalories.append(
+                    DayCalories(
+                        date: dayDate,
+                        value: 0,
+                        expenditure: dayExpenditure,
+                        target: calorieTarget
+                    ))
             }
         }
 
         dailyCalories = newDailyCalories
         totalNutrition = newTotalNutrition
-    }
-
-    /// Load expenditure and target data from user's NutritionGoal or User defaults
-    private func loadUserData() {
-        if let user = context.fetchCurrentUser(logger: Self.logger) {
-            if let activeGoal = user.activeNutritionGoal {
-                // Use TDEE from active NutritionGoal for expenditure
-                if let tdee = activeGoal.initialEstimatedTDEE ?? activeGoal.lastCalculatedTDEE {
-                    averageExpenditure = tdee
-                }
-
-                // Use daily calorie target for targets
-                averageTargets = activeGoal.dailyCalorieTarget
-            } else {
-                // Fallback to User's direct calorie goal for targets
-                averageTargets = user.dailyCalorieGoal
-                // Use a reasonable default for expenditure if no TDEE available
-                // Expenditure defaults to targets + 500 (typical deficit)
-                averageExpenditure = user.dailyCalorieGoal + 500
-            }
-        }
-        // If no user found, keep default values
     }
 
 }
@@ -160,7 +187,12 @@ extension EnergyBalanceHeroViewModel {
     /// Preview data for SwiftUI previews
     static var preview: EnergyBalanceHeroViewModel {
         let context = PreviewHelpers.previewContext()
-        let service = MealLogService(context: context)
-        return EnergyBalanceHeroViewModel(mealLogService: service, context: context)
+        let mealLogService = MealLogService(context: context)
+        let tdeeService = TDEEService(context: context)
+        return EnergyBalanceHeroViewModel(
+            mealLogService: mealLogService,
+            tdeeService: tdeeService,
+            context: context
+        )
     }
 }

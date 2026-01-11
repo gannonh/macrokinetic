@@ -20,6 +20,7 @@ struct EnergyBalanceHeroViewModelTests {
     private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([
             User.self, Dose.self, Food.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
+            TDEESnapshot.self,
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -28,6 +29,17 @@ struct EnergyBalanceHeroViewModelTests {
         )
         let container = try! ModelContainer(for: schema, configurations: [config])
         return (container.mainContext, container)
+    }
+
+    /// Helper to create ViewModel with required services
+    private func createViewModel(context: ModelContext) -> EnergyBalanceHeroViewModel {
+        let mealLogService = MealLogService(context: context)
+        let tdeeService = TDEEService(context: context)
+        return EnergyBalanceHeroViewModel(
+            mealLogService: mealLogService,
+            tdeeService: tdeeService,
+            context: context
+        )
     }
 
     private func createTestUser(in context: ModelContext) -> User {
@@ -75,11 +87,11 @@ struct EnergyBalanceHeroViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         #expect(viewModel.isLoading == false)
-        #expect(viewModel.dailyCalories.count == 30)
+        // dailyCalories starts empty until loadData is called (no longer pre-populated)
+        #expect(viewModel.dailyCalories.isEmpty)
         #expect(viewModel.averageExpenditure > 0)  // Should have default
         #expect(viewModel.averageTargets > 0)  // Should have default
     }
@@ -94,6 +106,17 @@ struct EnergyBalanceHeroViewModelTests {
         let calendar = Calendar.current
         let today = Date()
 
+        // Given: User with active NutritionGoal (required for loadData to work)
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+
         // Given: Food entries for a few days
         let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
         let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: today)!
@@ -103,8 +126,7 @@ struct EnergyBalanceHeroViewModelTests {
         _ = createFoodEntry(in: context, calories: 700, loggedAt: twoDaysAgo)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -122,6 +144,17 @@ struct EnergyBalanceHeroViewModelTests {
         let calendar = Calendar.current
         let today = Date()
 
+        // Given: User with active NutritionGoal (required for loadData to work)
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+
         // Given: Food entries for multiple days
         for daysAgo in 0..<5 {
             let date = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
@@ -129,8 +162,7 @@ struct EnergyBalanceHeroViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -156,13 +188,13 @@ struct EnergyBalanceHeroViewModelTests {
         context.insert(nutritionGoal)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: Expenditure is from TDEE
+        // Then: Average expenditure should use fallback TDEE (no snapshots exist)
+        // Since dailyCalories are loaded with fallback TDEE, the average equals the fallback
         #expect(viewModel.averageExpenditure == 2200)
     }
 
@@ -179,11 +211,11 @@ struct EnergyBalanceHeroViewModelTests {
             dailyCalorieTarget: 1500
         )
         nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000  // Add TDEE so loadData works
         context.insert(nutritionGoal)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -218,8 +250,7 @@ struct EnergyBalanceHeroViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -237,21 +268,21 @@ struct EnergyBalanceHeroViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        // Note: With no user/goal, loadData returns early without populating data
+        let viewModel = createViewModel(context: context)
 
-        // When: Loading with no food entries
+        // When: Loading with no user/goal (returns early)
         await viewModel.loadData()
 
-        // Then: All values are zeros or defaults
-        #expect(viewModel.dailyCalories.allSatisfy { $0.value == 0 })
+        // Then: No data loaded (requires user and NutritionGoal)
+        #expect(viewModel.dailyCalories.isEmpty)
         #expect(viewModel.totalNutrition == 0)
         #expect(viewModel.averageExpenditure > 0)  // Should have default
         #expect(viewModel.averageTargets > 0)  // Should have default
     }
 
-    @Test("ViewModel uses User fallback when no active NutritionGoal")
-    func testUsesUserFallbackForTargets() async throws {
+    @Test("ViewModel requires active NutritionGoal to load data")
+    func testRequiresActiveNutritionGoal() async throws {
         let (context, container) = createTestContext()
         _ = container
 
@@ -260,14 +291,13 @@ struct EnergyBalanceHeroViewModelTests {
         user.dailyCalorieGoal = 1800
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
-        // When: Loading data
+        // When: Loading data (no active NutritionGoal)
         await viewModel.loadData()
 
-        // Then: Falls back to User's daily calorie goal for targets
-        #expect(viewModel.averageTargets == 1800)
+        // Then: Data is not loaded (requires active NutritionGoal)
+        #expect(viewModel.dailyCalories.isEmpty)
     }
 
     @Test("DayCalories struct has correct date format")
@@ -275,8 +305,19 @@ struct EnergyBalanceHeroViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: context)
+        // Given: User with active NutritionGoal (required for loadData to work)
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
 
         await viewModel.loadData()
 

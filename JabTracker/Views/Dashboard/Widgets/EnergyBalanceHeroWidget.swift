@@ -107,7 +107,12 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
         if viewModel == nil {
             let mealLogService = AppServices.shared.mealLogService ?? MealLogService(context: modelContext)
-            viewModel = EnergyBalanceHeroViewModel(mealLogService: mealLogService, context: modelContext)
+            let tdeeService = AppServices.shared.tdeeService ?? TDEEService(context: modelContext)
+            viewModel = EnergyBalanceHeroViewModel(
+                mealLogService: mealLogService,
+                tdeeService: tdeeService,
+                context: modelContext
+            )
         }
         await viewModel?.loadData()
     }
@@ -145,16 +150,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     // MARK: - Bar Chart (Custom SwiftUI for reliable animation)
 
     private var energyBalanceChart: some View {
-        let referenceValue =
-            displayMode == .expenditure
-            ? averageExpenditure
-            : averageTargets
-
-        // Calculate reference line position as percentage of max
-        let baseReferencePercent = chartYMax > 0 ? referenceValue / chartYMax : 0
-        let referencePercent = baseReferencePercent * (isAnimated ? 1.0 : 0.0)
-
-        return GeometryReader { geometry in
+        GeometryReader { geometry in
             let barWidth: CGFloat = 6
             let spacing: CGFloat =
                 (geometry.size.width - barWidth * CGFloat(dailyCalories.count))
@@ -176,22 +172,45 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 
-                // Reference line (dotted)
-                let lineY = geometry.size.height * (1 - referencePercent)
-                Path { path in
-                    path.move(to: CGPoint(x: 0, y: lineY))
-                    path.addLine(to: CGPoint(x: geometry.size.width, y: lineY))
-                }
-                .stroke(
-                    displayMode == .expenditure
-                        ? DesignTokens.Colors.expenditure
-                        : DesignTokens.Colors.targets,
-                    style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
-                )
-                .animation(.easeOut(duration: 0.6), value: referencePercent)
+                // Reference line (varying per day based on TDEESnapshots)
+                varyingReferenceLine(in: geometry, barWidth: barWidth, spacing: spacing)
             }
         }
         .accessibilityLabel("Energy balance chart showing last 30 days")
+    }
+
+    /// Draw a varying reference line that follows per-day expenditure or target values
+    private func varyingReferenceLine(
+        in geometry: GeometryProxy,
+        barWidth: CGFloat,
+        spacing: CGFloat
+    ) -> some View {
+        Path { path in
+            guard !dailyCalories.isEmpty else { return }
+
+            for (index, day) in dailyCalories.enumerated() {
+                let referenceValue = displayMode == .expenditure ? day.expenditure : day.target
+                let basePercent = chartYMax > 0 ? referenceValue / chartYMax : 0
+                let percent = basePercent * (isAnimated ? 1.0 : 0.0)
+                let lineY = geometry.size.height * (1 - percent)
+
+                // Calculate x position at center of each bar
+                let xPos = CGFloat(index) * (barWidth + spacing) + barWidth / 2
+
+                if index == 0 {
+                    path.move(to: CGPoint(x: xPos, y: lineY))
+                } else {
+                    path.addLine(to: CGPoint(x: xPos, y: lineY))
+                }
+            }
+        }
+        .stroke(
+            displayMode == .expenditure
+                ? DesignTokens.Colors.expenditure
+                : DesignTokens.Colors.targets,
+            style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
+        )
+        .animation(.easeOut(duration: 0.6), value: isAnimated)
     }
 
     // MARK: - Summary Equation Row
@@ -279,14 +298,26 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 struct EnergyBalanceMockData {
     // Uses DayCalories from EnergyBalanceHeroViewModel
     let dailyCalories: [DayCalories]
-    let averageExpenditure: Double
-    let averageTargets: Double
     let totalNutrition: Int
 
+    /// Average daily expenditure - computed from dailyCalories
+    var averageExpenditure: Double {
+        guard !dailyCalories.isEmpty else { return 1893 }
+        return dailyCalories.map(\.expenditure).reduce(0, +) / Double(dailyCalories.count)
+    }
+
+    /// Average daily calorie target - computed from dailyCalories
+    var averageTargets: Double {
+        guard !dailyCalories.isEmpty else { return 1429 }
+        return dailyCalories.map(\.target).reduce(0, +) / Double(dailyCalories.count)
+    }
+
     static var sample: EnergyBalanceMockData {
-        // Generate 30 days of mock data
+        // Generate 30 days of mock data with varying expenditure
         let calendar = Calendar.current
         let today = Date()
+        let baseExpenditure: Double = 1893
+        let baseTarget: Double = 1429
 
         var dailyData: [DayCalories] = []
 
@@ -309,7 +340,17 @@ struct EnergyBalanceMockData {
                 baseValue = Double.random(in: 400...900)
             }
 
-            dailyData.append(DayCalories(date: date, value: baseValue))
+            // Vary expenditure slightly per day to simulate TDEE adaptation
+            let expenditureVariation = Double.random(in: -50...50)
+            let dayExpenditure = baseExpenditure + expenditureVariation
+
+            dailyData.append(
+                DayCalories(
+                    date: date,
+                    value: baseValue,
+                    expenditure: dayExpenditure,
+                    target: baseTarget
+                ))
         }
 
         // Calculate totals
@@ -317,8 +358,6 @@ struct EnergyBalanceMockData {
 
         return EnergyBalanceMockData(
             dailyCalories: dailyData,
-            averageExpenditure: 1893,  // Average daily expenditure
-            averageTargets: 1429,  // Average daily target (deficit goal)
             totalNutrition: totalCalories
         )
     }
