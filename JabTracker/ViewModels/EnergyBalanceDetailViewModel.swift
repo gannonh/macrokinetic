@@ -156,18 +156,27 @@ final class EnergyBalanceDetailViewModel {
     /// Generate daily data for selected period (only days with actual food logged)
     private func generateDailyData(fallbackTDEE: Int, calorieTarget: Int) async {
         let calendar = Calendar.current
-        let today = Date()
+        let todayStart = calendar.startOfDay(for: Date())
 
         // Get start date based on selected period
-        guard let startDate = selectedPeriod.startDate ?? calendar.date(byAdding: .year, value: -1, to: today) else {
-            dailyData = []
-            return
+        // For "All", use nil which means no start date filter
+        let startDate: Date
+        if let periodStart = selectedPeriod.startDate {
+            startDate = calendar.startOfDay(for: periodStart)
+        } else {
+            // For "All" - fetch the earliest food entry date
+            let earliestDate = await getEarliestFoodEntryDate()
+            startDate =
+                earliestDate
+                ?? calendar.startOfDay(
+                    for: calendar.date(byAdding: .year, value: -1, to: todayStart) ?? todayStart
+                )
         }
 
         // Load TDEE snapshots for the period to get historical expenditure values
         var tdeeByDate: [Date: Int] = [:]
         do {
-            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: today)
+            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: todayStart)
             for snapshot in snapshots {
                 let dayStart = calendar.startOfDay(for: snapshot.timestamp)
                 tdeeByDate[dayStart] = Int(snapshot.tdeeValue)
@@ -181,12 +190,12 @@ final class EnergyBalanceDetailViewModel {
 
         // Generate data from start date to today (only include days with food logged)
         var currentDate = startDate
-        while currentDate <= today {
+        while currentDate <= todayStart {
             let dayStart = calendar.startOfDay(for: currentDate)
 
             // Get calories consumed for this date
             do {
-                let totals = try await mealLogService.getDailyTotals(for: currentDate)
+                let totals = try await mealLogService.getDailyTotals(for: dayStart)
                 let calories = Int(totals.calories)
 
                 // Only include days where food was actually logged
@@ -196,7 +205,7 @@ final class EnergyBalanceDetailViewModel {
 
                     data.append(
                         DailyData(
-                            date: currentDate,
+                            date: dayStart,
                             caloriesConsumed: calories,
                             expenditure: expenditure,
                             calorieTarget: calorieTarget
@@ -211,6 +220,25 @@ final class EnergyBalanceDetailViewModel {
         }
 
         dailyData = data.sorted { $0.date < $1.date }
+    }
+
+    /// Get the earliest date with a food entry
+    private func getEarliestFoodEntryDate() async -> Date? {
+        let descriptor = FetchDescriptor<FoodEntry>(
+            sortBy: [SortDescriptor(\.loggedAt, order: .forward)]
+        )
+        var limitedDescriptor = descriptor
+        limitedDescriptor.fetchLimit = 1
+
+        do {
+            let entries = try context.fetch(limitedDescriptor)
+            if let earliest = entries.first {
+                return Calendar.current.startOfDay(for: earliest.loggedAt)
+            }
+        } catch {
+            Self.logger.error("Failed to fetch earliest food entry: \(error)")
+        }
+        return nil
     }
 
     /// Generate balance changes at standard intervals (only using days with actual data)
