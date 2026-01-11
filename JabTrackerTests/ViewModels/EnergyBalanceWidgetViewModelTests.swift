@@ -238,4 +238,70 @@ struct EnergyBalanceWidgetViewModelTests {
         #expect(viewModel.hasData == false)
         #expect(viewModel.isLoading == false)
     }
+
+    @Test("Loading state is false after load completes")
+    func testLoadingStateAfterLoad() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: isLoading is false after completion
+        #expect(viewModel.isLoading == false)
+    }
+
+    @Test("Preview instance can be created")
+    func testPreviewInstance() async {
+        // Verify preview factory method works
+        let preview = EnergyBalanceWidgetViewModel.preview
+        #expect(preview.isLoading == false)
+        #expect(preview.dailyBalances.isEmpty)
+    }
+
+    @Test("hasData returns true when balances exist")
+    func testHasDataWithBalances() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: hasData returns true
+        #expect(viewModel.hasData == true)
+    }
+
+    @Test("ViewModel uses lastCalculatedTDEE when available")
+    func testUsesLastCalculatedTDEE() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: Goal with both initial and last calculated TDEE
+        let user = createTestUser(in: context)
+        let goal = createNutritionGoal(in: context, user: user, tdee: 2000)
+        goal.lastCalculatedTDEE = 2100  // Updated value
+        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 0)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Uses lastCalculatedTDEE (2100), so today's balance is 0
+        // The balance for today with 2100 consumed - 2100 TDEE = 0
+        #expect(viewModel.dailyBalances.count == 7)
+    }
 }

@@ -210,4 +210,65 @@ struct WeightTrendWidgetViewModelTests {
             #expect(viewModel.dataPoints.first!.day <= viewModel.dataPoints.last!.day)
         }
     }
+
+    @Test("hasData returns true when data points exist")
+    func testHasDataWithDataPoints() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: A weight entry
+        _ = createWeightEntry(in: context, weightKg: 83.4, daysAgo: 0)
+        try context.save()
+
+        let metricsService = MetricsService(context: context)
+        let viewModel = WeightTrendWidgetViewModel(metricsService: metricsService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: hasData returns true
+        #expect(viewModel.hasData == true)
+    }
+
+    @Test("Preview instance can be created")
+    func testPreviewInstance() async {
+        // Verify preview factory method works
+        let preview = WeightTrendWidgetViewModel.preview
+        #expect(preview.isLoading == false)
+        #expect(preview.dataPoints.isEmpty)
+    }
+
+    @Test("Loading state is false after load completes")
+    func testLoadingStateAfterLoad() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let metricsService = MetricsService(context: context)
+        let viewModel = WeightTrendWidgetViewModel(metricsService: metricsService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: isLoading is false after completion
+        #expect(viewModel.isLoading == false)
+    }
+
+    @Test("Unit defaults to lbs without user")
+    func testUnitDefaultsToLbs() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: No user
+        _ = createWeightEntry(in: context, weightKg: 83.4, daysAgo: 0)
+        try context.save()
+
+        let metricsService = MetricsService(context: context)
+        let viewModel = WeightTrendWidgetViewModel(metricsService: metricsService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Unit defaults to lbs
+        #expect(viewModel.unit == "lbs")
+    }
 }

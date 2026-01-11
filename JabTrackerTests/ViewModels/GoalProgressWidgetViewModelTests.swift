@@ -220,4 +220,70 @@ struct GoalProgressWidgetViewModelTests {
         #expect(viewModel.progressPercentage == 0)
         #expect(viewModel.displayPercentage == 0)
     }
+
+    @Test("ViewModel handles zero calorie target gracefully")
+    func testHandlesZeroCalorieTarget() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with 0 calorie target
+        let user = createTestUser(in: context, calorieGoal: 0)
+        _ = createNutritionGoal(in: context, user: user, calorieTarget: 0)
+        _ = createFoodEntry(in: context, calories: 1000, daysAgo: 0)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = GoalProgressWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Progress is 0 (avoids division by zero)
+        #expect(viewModel.progressPercentage == 0)
+        #expect(viewModel.displayPercentage == 0)
+    }
+
+    @Test("ViewModel uses default target without user")
+    func testUsesDefaultTargetWithoutUser() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: No user, just food entries
+        _ = createFoodEntry(in: context, calories: 1000, daysAgo: 0)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = GoalProgressWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Progress calculated against default 2000 calorie target
+        #expect(abs(viewModel.progressPercentage - 0.5) < 0.01)
+        #expect(viewModel.displayPercentage == 50)
+    }
+
+    @Test("hasData always returns true")
+    func testHasDataAlwaysTrue() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = GoalProgressWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // hasData is always true for this widget
+        #expect(viewModel.hasData == true)
+
+        // Even after loading
+        await viewModel.loadData()
+        #expect(viewModel.hasData == true)
+    }
+
+    @Test("Preview instance can be created")
+    func testPreviewInstance() async {
+        // Verify preview factory method works
+        let preview = GoalProgressWidgetViewModel.preview
+        #expect(preview.isLoading == false)
+        #expect(preview.progressPercentage == 0)
+    }
 }

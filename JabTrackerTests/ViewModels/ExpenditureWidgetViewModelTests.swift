@@ -186,4 +186,54 @@ struct ExpenditureWidgetViewModelTests {
         #expect(viewModel.tdee == nil)
         #expect(viewModel.hasData == false)
     }
+
+    @Test("Loading state is false after load completes")
+    func testLoadingStateAfterLoad() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let viewModel = ExpenditureWidgetViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: isLoading is false after completion
+        #expect(viewModel.isLoading == false)
+    }
+
+    @Test("Preview instance can be created")
+    func testPreviewInstance() async {
+        // Verify preview factory method works
+        let preview = ExpenditureWidgetViewModel.preview
+        #expect(preview.isLoading == false)
+        #expect(preview.tdee == nil)
+    }
+
+    @Test("ViewModel handles goal with nil TDEE values")
+    func testHandlesNilTDEEValues() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: Goal with no TDEE values at all
+        let user = createTestUser(in: context)
+        let goal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1800
+        )
+        goal.initialEstimatedTDEE = nil
+        goal.lastCalculatedTDEE = nil
+        goal.user = user
+        context.insert(goal)
+        try context.save()
+
+        let viewModel = ExpenditureWidgetViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: TDEE is nil
+        #expect(viewModel.tdee == nil)
+        #expect(viewModel.hasData == false)
+    }
 }
