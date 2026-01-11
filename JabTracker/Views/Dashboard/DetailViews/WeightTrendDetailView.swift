@@ -8,6 +8,7 @@
 //
 
 import Charts
+import SwiftData
 import SwiftUI
 
 // MARK: - Detail Time Period
@@ -61,7 +62,7 @@ enum DetailTimePeriod: String, CaseIterable, Identifiable {
 
 // MARK: - Mock Data Structure
 
-/// Data model for Weight Trend detail view
+/// Data model for Weight Trend detail view (used for previews)
 struct WeightTrendDetailData {
     struct WeightPoint: Identifiable {
         let id = UUID()
@@ -186,13 +187,28 @@ struct WeightTrendDetailData {
 
 struct WeightTrendDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedPeriod: DetailTimePeriod = .oneYear
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: WeightTrendDetailViewModel?
     @State private var showDetailedDates = false
 
-    let data: WeightTrendDetailData
+    /// Flag to use mock data instead of live ViewModel (for previews)
+    private let useMockData: Bool
 
-    init(data: WeightTrendDetailData = .mock) {
-        self.data = data
+    /// Mock data for preview mode
+    private let mockData: WeightTrendDetailData
+
+    // MARK: - Initialization
+
+    /// Initialize with live data from ViewModel
+    init() {
+        self.useMockData = false
+        self.mockData = .mock
+    }
+
+    /// Initialize with mock data for previews
+    init(useMockData: Bool) {
+        self.useMockData = useMockData
+        self.mockData = .mock
     }
 
     var body: some View {
@@ -215,8 +231,130 @@ struct WeightTrendDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .task {
+                if !useMockData {
+                    await initializeAndLoad()
+                }
+            }
+            .onChange(of: selectedPeriod) { _, _ in
+                Task {
+                    if !useMockData {
+                        await reloadData()
+                    }
+                }
+            }
         }
         .accessibilityIdentifier("weight-trend-detail-view")
+    }
+
+    // MARK: - Data Access Helpers
+
+    /// Selected time period - binds to ViewModel when live, local state when mock
+    private var selectedPeriod: DetailTimePeriod {
+        get { viewModel?.selectedPeriod ?? .oneYear }
+        nonmutating set { viewModel?.selectedPeriod = newValue }
+    }
+
+    /// Current/average weight
+    private var currentWeight: Double {
+        if useMockData { return mockData.currentWeight }
+        return viewModel?.currentWeight ?? 0
+    }
+
+    /// Weight unit (lbs or kg)
+    private var weightUnit: String {
+        if useMockData { return mockData.weightUnit }
+        return viewModel?.weightUnit ?? "lbs"
+    }
+
+    /// Difference from period start
+    private var difference: Double {
+        if useMockData { return mockData.difference }
+        return viewModel?.difference ?? 0
+    }
+
+    /// Date range string
+    private var dateRange: String {
+        if useMockData { return mockData.dateRange }
+        return viewModel?.dateRange ?? ""
+    }
+
+    /// All data points for chart
+    private var dataPoints: [WeightTrendDetailData.WeightPoint] {
+        if useMockData { return mockData.dataPoints }
+        return viewModel?.dataPoints.map { point in
+            WeightTrendDetailData.WeightPoint(
+                date: point.date,
+                weight: point.weight,
+                isTrendLine: point.isTrendLine
+            )
+        } ?? []
+    }
+
+    /// Weight changes at intervals
+    private var weightChanges: [WeightTrendDetailData.WeightChange] {
+        if useMockData { return mockData.weightChanges }
+        return viewModel?.weightChanges.map { change in
+            WeightTrendDetailData.WeightChange(
+                period: change.period,
+                change: change.change,
+                trend: change.trend
+            )
+        } ?? []
+    }
+
+    /// Smoothed weight via EWMA
+    private var smoothedWeight: Double {
+        if useMockData { return mockData.smoothedWeight }
+        return viewModel?.smoothedWeight ?? 0
+    }
+
+    /// Weekly change rate
+    private var weeklyChange: Double {
+        if useMockData { return mockData.weeklyChange }
+        return viewModel?.weeklyChange ?? 0
+    }
+
+    /// Energy deficit in kcal/day
+    private var energyDeficit: Int {
+        if useMockData { return mockData.energyDeficit }
+        return viewModel?.energyDeficit ?? 0
+    }
+
+    /// 30-day projected weight
+    private var projectedWeight: Double {
+        if useMockData { return mockData.projectedWeight }
+        return viewModel?.projectedWeight ?? 0
+    }
+
+    /// Historical entries for data sources
+    private var historicalEntries: [WeightTrendDetailData.HistoricalEntry] {
+        if useMockData { return mockData.historicalEntries }
+        return viewModel?.historicalEntries.map { entry in
+            WeightTrendDetailData.HistoricalEntry(
+                weight: entry.weight,
+                date: entry.date,
+                changeLabel: entry.changeLabel
+            )
+        } ?? []
+    }
+
+    /// Whether data has loaded
+    private var hasData: Bool {
+        if useMockData { return true }
+        return viewModel?.hasData ?? false
+    }
+
+    // MARK: - Data Loading
+
+    private func initializeAndLoad() async {
+        let metricsService = MetricsService(context: modelContext)
+        viewModel = WeightTrendDetailViewModel(metricsService: metricsService, context: modelContext)
+        await viewModel?.loadData()
+    }
+
+    private func reloadData() async {
+        await viewModel?.loadData()
     }
 
     // MARK: - Header Section
@@ -231,10 +369,10 @@ struct WeightTrendDetailView: View {
 
                 // Current weight value
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(String(format: "%.1f", data.currentWeight))
+                    Text(String(format: "%.1f", currentWeight))
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
-                    Text(data.weightUnit)
+                    Text(weightUnit)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -244,16 +382,16 @@ struct WeightTrendDetailView: View {
                     Text("Difference")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(String(format: "%+.1f", data.difference))
+                    Text(String(format: "%+.1f", difference))
                         .font(.caption.weight(.semibold))
-                        .foregroundColor(data.difference < 0 ? .green : .red)
-                    Text(data.weightUnit)
+                        .foregroundColor(difference < 0 ? .green : .red)
+                    Text(weightUnit)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
 
                 // Date range
-                Text(data.dateRange)
+                Text(dateRange)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -282,7 +420,12 @@ struct WeightTrendDetailView: View {
 
     private var timePeriodSelector: some View {
         DetailTimePeriodSelector(
-            selectedPeriod: $selectedPeriod,
+            selectedPeriod: Binding(
+                get: { selectedPeriod },
+                set: { newValue in
+                    viewModel?.selectedPeriod = newValue
+                }
+            ),
             showDetailedDates: $showDetailedDates
         )
     }
@@ -373,14 +516,14 @@ struct WeightTrendDetailView: View {
 
     /// Scale weight points (actual measurements) - filtered and sorted
     private var scaleWeightPoints: [WeightTrendDetailData.WeightPoint] {
-        let points = data.dataPoints.filter { !$0.isTrendLine }
+        let points = dataPoints.filter { !$0.isTrendLine }
         let filtered = selectedPeriod.startDate.map { start in points.filter { $0.date >= start } } ?? points
         return filtered.sorted { $0.date < $1.date }
     }
 
     /// Trend weight points (smoothed) - filtered and sorted
     private var trendWeightPoints: [WeightTrendDetailData.WeightPoint] {
-        let points = data.dataPoints.filter { $0.isTrendLine }
+        let points = dataPoints.filter { $0.isTrendLine }
         let filtered = selectedPeriod.startDate.map { start in points.filter { $0.date >= start } } ?? points
         return filtered.sorted { $0.date < $1.date }
     }
@@ -398,23 +541,23 @@ struct WeightTrendDetailView: View {
             // Current Weight card
             insightCard(
                 title: "Current Weight",
-                value: String(format: "%.1f", data.smoothedWeight),
-                unit: data.weightUnit,
+                value: String(format: "%.1f", smoothedWeight),
+                unit: weightUnit,
                 description: "Our estimate of your true weight after smoothing out day-to-day fluctuations."
             )
 
             // Weekly Weight Change card
             insightCard(
                 title: "Weekly Weight Change",
-                value: String(format: "%.2f", data.weeklyChange),
-                unit: "\(data.weightUnit) per week",
+                value: String(format: "%.2f", weeklyChange),
+                unit: "\(weightUnit) per week",
                 description: "Your typical weekly rate of weight loss over the past three weeks."
             )
 
             // Energy Deficit card
             insightCard(
                 title: "Energy Deficit",
-                value: "~\(data.energyDeficit)",
+                value: "~\(energyDeficit)",
                 unit: "kcal per day",
                 description: energyDeficitDescription
             )
@@ -422,8 +565,8 @@ struct WeightTrendDetailView: View {
             // 30-Day Projection card
             insightCard(
                 title: "30-Day Projection",
-                value: String(format: "%.1f", data.projectedWeight),
-                unit: data.weightUnit,
+                value: String(format: "%.1f", projectedWeight),
+                unit: weightUnit,
                 description: projectionDescription
             )
         }
@@ -436,7 +579,7 @@ struct WeightTrendDetailView: View {
                 Text("Weight Changes")
                     .font(DesignTokens.Typography.headline)
 
-                ForEach(data.weightChanges) { change in
+                ForEach(weightChanges) { change in
                     weightChangeRow(change)
                 }
             }
@@ -445,7 +588,7 @@ struct WeightTrendDetailView: View {
     }
 
     private func weightChangeRow(_ change: WeightTrendDetailData.WeightChange) -> some View {
-        let changeText = "\(change.change > 0 ? "+" : "")\(String(format: "%.1f", change.change)) \(data.weightUnit)"
+        let changeText = "\(change.change > 0 ? "+" : "")\(String(format: "%.1f", change.change)) \(weightUnit)"
         let arrowName = change.change < 0 ? "arrow.down" : (change.change > 0 ? "arrow.up" : "minus")
         let arrowColor: Color = change.change < 0 ? .green : (change.change > 0 ? .red : .secondary)
 
@@ -553,14 +696,14 @@ struct WeightTrendDetailView: View {
     private var historicalWeightLog: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Month header
-            Text(monthYearString(from: data.historicalEntries.first?.date ?? Date()))
+            Text(monthYearString(from: historicalEntries.first?.date ?? Date()))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            ForEach(data.historicalEntries) { entry in
+            ForEach(historicalEntries) { entry in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: "%.1f %@", entry.weight, data.weightUnit))
+                        Text(String(format: "%.1f %@", entry.weight, weightUnit))
                             .font(.subheadline)
                         Text(dayDateString(from: entry.date))
                             .font(.caption)
@@ -597,15 +740,15 @@ struct WeightTrendDetailView: View {
 // MARK: - Preview
 
 #Preview {
-    WeightTrendDetailView()
+    WeightTrendDetailView(useMockData: true)
 }
 
 #Preview("Light Mode") {
-    WeightTrendDetailView()
+    WeightTrendDetailView(useMockData: true)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark Mode") {
-    WeightTrendDetailView()
+    WeightTrendDetailView(useMockData: true)
         .preferredColorScheme(.dark)
 }

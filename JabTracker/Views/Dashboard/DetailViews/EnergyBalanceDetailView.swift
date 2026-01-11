@@ -8,11 +8,12 @@
 //
 
 import Charts
+import SwiftData
 import SwiftUI
 
 // MARK: - Mock Data Structure
 
-/// Data model for Energy Balance detail view with dual-mode display
+/// Data model for Energy Balance detail view with dual-mode display (used for previews)
 struct EnergyBalanceDetailData {
     /// Daily data point with calories consumed and reference values
     struct DailyData: Identifiable {
@@ -127,14 +128,21 @@ struct EnergyBalanceDetailData {
 
 struct EnergyBalanceDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var displayMode: EnergyBalanceDetailData.DisplayMode = .expenditure
     @State private var selectedPeriod: DetailTimePeriod = .oneYear
     @State private var showDetailedDates = false
+    @State private var viewModel: EnergyBalanceDetailViewModel?
 
-    let data: EnergyBalanceDetailData
+    /// Whether to use mock data for previews
+    private let useMockData: Bool
 
-    init(data: EnergyBalanceDetailData = .mock) {
-        self.data = data
+    /// Mock data for preview mode
+    private let mockData: EnergyBalanceDetailData
+
+    init(useMockData: Bool = false, data: EnergyBalanceDetailData = .mock) {
+        self.useMockData = useMockData
+        self.mockData = data
     }
 
     var body: some View {
@@ -158,8 +166,103 @@ struct EnergyBalanceDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .task {
+                if !useMockData {
+                    initializeViewModel()
+                    await loadData()
+                }
+            }
+            .onChange(of: selectedPeriod) { _, _ in
+                Task {
+                    await loadData()
+                }
+            }
+            .onChange(of: displayMode) { _, _ in
+                Task {
+                    await loadData()
+                }
+            }
         }
         .accessibilityIdentifier("energy-balance-detail-view")
+    }
+
+    // MARK: - ViewModel Management
+
+    private func initializeViewModel() {
+        guard viewModel == nil else { return }
+        let mealLogService = MealLogService(context: modelContext)
+        viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: modelContext)
+    }
+
+    private func loadData() async {
+        guard let viewModel = viewModel else { return }
+        viewModel.selectedPeriod = selectedPeriod
+        viewModel.displayMode = displayModeToViewModelMode(displayMode)
+        await viewModel.loadData()
+    }
+
+    private func displayModeToViewModelMode(
+        _ mode: EnergyBalanceDetailData.DisplayMode
+    ) -> EnergyBalanceDetailViewModel.DisplayMode {
+        switch mode {
+        case .expenditure:
+            return .expenditure
+        case .calorieTargets:
+            return .calorieTargets
+        }
+    }
+
+    // MARK: - Data Accessors
+
+    private var dailyData: [EnergyBalanceDetailData.DailyData] {
+        if useMockData {
+            return filteredMockDailyData
+        }
+        guard let viewModel = viewModel else { return [] }
+        return viewModel.dailyData.map { vmData in
+            EnergyBalanceDetailData.DailyData(
+                date: vmData.date,
+                caloriesConsumed: vmData.caloriesConsumed,
+                expenditure: vmData.expenditure,
+                calorieTarget: vmData.calorieTarget
+            )
+        }
+    }
+
+    private var balanceChanges: [EnergyBalanceDetailData.BalanceChange] {
+        if useMockData {
+            return displayMode == .expenditure ? mockData.expenditureChanges : mockData.targetChanges
+        }
+        guard let viewModel = viewModel else { return [] }
+        return viewModel.balanceChanges.map { vmChange in
+            EnergyBalanceDetailData.BalanceChange(
+                period: vmChange.period,
+                value: vmChange.value,
+                trend: vmChange.trend
+            )
+        }
+    }
+
+    private var currentValue: Int {
+        if useMockData {
+            return displayMode == .expenditure ? mockData.expenditureDeficit : mockData.targetAverage
+        }
+        return viewModel?.headerValue ?? 0
+    }
+
+    private var currentDateRange: String {
+        if useMockData {
+            return displayMode == .expenditure ? mockData.expenditureDateRange : mockData.targetDateRange
+        }
+        return viewModel?.dateRange ?? ""
+    }
+
+    /// Filtered mock daily data based on selected time period
+    private var filteredMockDailyData: [EnergyBalanceDetailData.DailyData] {
+        guard let startDate = selectedPeriod.startDate else {
+            return mockData.dailyData.sorted { $0.date < $1.date }
+        }
+        return mockData.dailyData.filter { $0.date >= startDate }.sorted { $0.date < $1.date }
     }
 
     // MARK: - Mode Toggle
@@ -220,14 +323,6 @@ struct EnergyBalanceDetailView: View {
         .accessibilityIdentifier("energy-balance-header-section")
     }
 
-    private var currentValue: Int {
-        displayMode == .expenditure ? data.expenditureDeficit : data.targetAverage
-    }
-
-    private var currentDateRange: String {
-        displayMode == .expenditure ? data.expenditureDateRange : data.targetDateRange
-    }
-
     // MARK: - Time Period Selector
 
     private var timePeriodSelector: some View {
@@ -243,7 +338,7 @@ struct EnergyBalanceDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Chart {
                 // Vertical bars for calories consumed
-                ForEach(filteredDailyData) { day in
+                ForEach(dailyData) { day in
                     BarMark(
                         x: .value("Date", day.date, unit: .day),
                         y: .value("Calories", day.caloriesConsumed)
@@ -307,21 +402,13 @@ struct EnergyBalanceDetailView: View {
         }
     }
 
-    /// Filtered daily data based on selected time period
-    private var filteredDailyData: [EnergyBalanceDetailData.DailyData] {
-        guard let startDate = selectedPeriod.startDate else {
-            return data.dailyData.sorted { $0.date < $1.date }
-        }
-        return data.dailyData.filter { $0.date >= startDate }.sorted { $0.date < $1.date }
-    }
-
     /// Average reference value (expenditure or target) for the horizontal line
     private var averageReferenceValue: Int {
-        guard !filteredDailyData.isEmpty else { return 2000 }
-        let sum = filteredDailyData.reduce(0) { total, day in
+        guard !dailyData.isEmpty else { return 2000 }
+        let sum = dailyData.reduce(0) { total, day in
             total + (displayMode == .expenditure ? day.expenditure : day.calorieTarget)
         }
-        return sum / filteredDailyData.count
+        return sum / dailyData.count
     }
 
     /// X-axis stride based on selected period
@@ -364,7 +451,7 @@ struct EnergyBalanceDetailView: View {
     }
 
     private var balanceChangesCard: some View {
-        let changes = displayMode == .expenditure ? data.expenditureChanges : data.targetChanges
+        let changes = balanceChanges
         let title = displayMode == .expenditure ? "Relative to Expenditure" : "Relative to Targets"
 
         return DesignCard {
@@ -412,11 +499,11 @@ struct EnergyBalanceDetailView: View {
     private var historicalLogSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Month header
-            Text(monthYearString(from: filteredDailyData.last?.date ?? Date()))
+            Text(monthYearString(from: dailyData.last?.date ?? Date()))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            ForEach(filteredDailyData.suffix(7).reversed()) { day in
+            ForEach(dailyData.suffix(7).reversed()) { day in
                 let balance = displayMode == .expenditure ? day.expenditureBalance : day.targetBalance
                 let trendLabel =
                     displayMode == .expenditure
@@ -463,15 +550,15 @@ struct EnergyBalanceDetailView: View {
 // MARK: - Preview
 
 #Preview {
-    EnergyBalanceDetailView()
+    EnergyBalanceDetailView(useMockData: true)
 }
 
 #Preview("Light Mode") {
-    EnergyBalanceDetailView()
+    EnergyBalanceDetailView(useMockData: true)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark Mode") {
-    EnergyBalanceDetailView()
+    EnergyBalanceDetailView(useMockData: true)
         .preferredColorScheme(.dark)
 }

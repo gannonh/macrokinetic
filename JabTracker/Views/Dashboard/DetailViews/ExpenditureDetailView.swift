@@ -8,11 +8,12 @@
 //
 
 import Charts
+import SwiftData
 import SwiftUI
 
 // MARK: - Mock Data Structure
 
-/// Data model for Expenditure detail view
+/// Data model for Expenditure detail view (used for previews)
 struct ExpenditureDetailData {
     struct DailyExpenditure: Identifiable {
         let id = UUID()
@@ -181,13 +182,16 @@ struct ExpenditureDetailData {
 
 struct ExpenditureDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: ExpenditureDetailViewModel?
     @State private var selectedPeriod: DetailTimePeriod = .oneYear
     @State private var showDetailedDates = false
 
-    let data: ExpenditureDetailData
+    /// Flag to use mock data for previews
+    private let useMockData: Bool
 
-    init(data: ExpenditureDetailData = .mock) {
-        self.data = data
+    init(useMockData: Bool = false) {
+        self.useMockData = useMockData
     }
 
     var body: some View {
@@ -210,8 +214,110 @@ struct ExpenditureDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .task {
+                if !useMockData {
+                    await loadData()
+                }
+            }
+            .onChange(of: selectedPeriod) { _, _ in
+                Task {
+                    if !useMockData {
+                        await loadData()
+                    }
+                }
+            }
         }
         .accessibilityIdentifier("expenditure-detail-view")
+    }
+
+    // MARK: - Data Loading
+
+    private func loadData() async {
+        if viewModel == nil {
+            viewModel = ExpenditureDetailViewModel(context: modelContext)
+        }
+        viewModel?.selectedPeriod = selectedPeriod
+        await viewModel?.loadData()
+    }
+
+    // MARK: - Data Access Helpers
+
+    private var averageExpenditure: Int {
+        if useMockData {
+            return ExpenditureDetailData.mock.averageExpenditure
+        }
+        return viewModel?.averageExpenditure ?? 0
+    }
+
+    private var currentExpenditure: Int {
+        if useMockData {
+            return ExpenditureDetailData.mock.currentExpenditure
+        }
+        return viewModel?.currentExpenditure ?? 0
+    }
+
+    private var difference: Int {
+        if useMockData {
+            return ExpenditureDetailData.mock.difference
+        }
+        return viewModel?.difference ?? 0
+    }
+
+    private var dateRange: String {
+        if useMockData {
+            return ExpenditureDetailData.mock.dateRange
+        }
+        return viewModel?.dateRange ?? ""
+    }
+
+    private var currentStrategy: String {
+        if useMockData {
+            return ExpenditureDetailData.mock.currentStrategy
+        }
+        return viewModel?.currentStrategy ?? "Holding"
+    }
+
+    private var strategyDescription: String {
+        if useMockData {
+            return ExpenditureDetailData.mock.strategyDescription
+        }
+        return viewModel?.strategyDescription ?? ""
+    }
+
+    private var expenditureChanges: [ExpenditureDetailViewModel.ExpenditureChange] {
+        if useMockData {
+            return ExpenditureDetailData.mock.expenditureChanges.map {
+                ExpenditureDetailViewModel.ExpenditureChange(
+                    period: $0.period,
+                    change: $0.change,
+                    trend: $0.trend
+                )
+            }
+        }
+        return viewModel?.expenditureChanges ?? []
+    }
+
+    private var historicalEntries: [ExpenditureDetailViewModel.HistoricalEntry] {
+        if useMockData {
+            return ExpenditureDetailData.mock.historicalEntries.map {
+                ExpenditureDetailViewModel.HistoricalEntry(
+                    expenditure: $0.expenditure,
+                    date: $0.date,
+                    status: convertStatus($0.status)
+                )
+            }
+        }
+        return viewModel?.historicalEntries ?? []
+    }
+
+    private func convertStatus(_ status: ExpenditureDetailData.ExpenditureStatus)
+        -> ExpenditureDetailViewModel.ExpenditureStatus
+    {
+        switch status {
+        case .fluxRange: return .fluxRange
+        case .updating: return .updating
+        case .holding: return .holding
+        }
     }
 
     // MARK: - Header Section
@@ -226,7 +332,7 @@ struct ExpenditureDetailView: View {
 
                 // Current expenditure value
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("\(data.averageExpenditure)")
+                    Text("\(averageExpenditure)")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                     Text("kcal")
@@ -241,14 +347,14 @@ struct ExpenditureDetailView: View {
                         .foregroundColor(.secondary)
                     Text(differenceText)
                         .font(.caption.weight(.semibold))
-                        .foregroundColor(data.difference < 0 ? .green : .red)
+                        .foregroundColor(difference < 0 ? .green : .red)
                     Text("kcal")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
 
                 // Date range
-                Text(data.dateRange)
+                Text(dateRange)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -274,10 +380,10 @@ struct ExpenditureDetailView: View {
     }
 
     private var differenceText: String {
-        if data.difference >= 0 {
-            return "+\(data.difference)"
+        if difference >= 0 {
+            return "+\(difference)"
         } else {
-            return "\(data.difference)"
+            return "\(difference)"
         }
     }
 
@@ -399,7 +505,7 @@ struct ExpenditureDetailView: View {
         }
     }
 
-    private func colorForStatus(_ status: ExpenditureDetailData.ExpenditureStatus) -> Color {
+    private func colorForStatus(_ status: ExpenditureDetailViewModel.ExpenditureStatus) -> Color {
         switch status {
         case .fluxRange: return DesignTokens.Colors.expenditure
         case .updating: return .blue
@@ -408,11 +514,30 @@ struct ExpenditureDetailView: View {
     }
 
     /// Filtered data based on selected time period
-    private var filteredData: [ExpenditureDetailData.DailyExpenditure] {
-        guard let startDate = selectedPeriod.startDate else {
-            return data.dailyData.sorted { $0.date < $1.date }
+    private var filteredData: [ExpenditureDetailViewModel.DailyExpenditure] {
+        if useMockData {
+            let mockData = ExpenditureDetailData.mock.dailyData
+            guard let startDate = selectedPeriod.startDate else {
+                return mockData.map { convertDailyData($0) }.sorted { $0.date < $1.date }
+            }
+            return mockData.filter { $0.date >= startDate }.map { convertDailyData($0) }.sorted { $0.date < $1.date }
         }
-        return data.dailyData.filter { $0.date >= startDate }.sorted { $0.date < $1.date }
+        guard let startDate = selectedPeriod.startDate else {
+            return (viewModel?.dailyData ?? []).sorted { $0.date < $1.date }
+        }
+        return (viewModel?.dailyData ?? []).filter { $0.date >= startDate }.sorted { $0.date < $1.date }
+    }
+
+    private func convertDailyData(_ data: ExpenditureDetailData.DailyExpenditure)
+        -> ExpenditureDetailViewModel.DailyExpenditure
+    {
+        ExpenditureDetailViewModel.DailyExpenditure(
+            date: data.date,
+            value: data.value,
+            upperBound: data.upperBound,
+            lowerBound: data.lowerBound,
+            status: convertStatus(data.status)
+        )
     }
 
     /// Y-axis domain based on filtered data - tight fit to fill chart area
@@ -480,7 +605,7 @@ struct ExpenditureDetailView: View {
                 Text("Expenditure Changes")
                     .font(DesignTokens.Typography.headline)
 
-                ForEach(data.expenditureChanges) { change in
+                ForEach(expenditureChanges) { change in
                     expenditureChangeRow(change)
                 }
             }
@@ -488,7 +613,7 @@ struct ExpenditureDetailView: View {
         .accessibilityIdentifier("expenditure-changes-card")
     }
 
-    private func expenditureChangeRow(_ change: ExpenditureDetailData.ExpenditureChange) -> some View {
+    private func expenditureChangeRow(_ change: ExpenditureDetailViewModel.ExpenditureChange) -> some View {
         // Format change text with sign
         let changeText: String
         if change.change == 0 {
@@ -531,7 +656,7 @@ struct ExpenditureDetailView: View {
         HStack(alignment: .top, spacing: 16) {
             // Left: Value box
             VStack(spacing: 2) {
-                Text("\(data.currentExpenditure)")
+                Text("\(currentExpenditure)")
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.white)
                 Text("kcal")
@@ -570,7 +695,7 @@ struct ExpenditureDetailView: View {
         HStack(alignment: .top, spacing: 16) {
             // Left: Strategy value box
             VStack(spacing: 2) {
-                Text(data.currentStrategy)
+                Text(currentStrategy)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
                 Text("status")
@@ -590,7 +715,7 @@ struct ExpenditureDetailView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(.primary)
 
-                Text(data.strategyDescription)
+                Text(strategyDescription)
                     .font(.footnote)
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -675,11 +800,11 @@ struct ExpenditureDetailView: View {
     private var historicalExpenditureLog: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Month header
-            Text(monthYearString(from: data.historicalEntries.first?.date ?? Date()))
+            Text(monthYearString(from: historicalEntries.first?.date ?? Date()))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            ForEach(data.historicalEntries) { entry in
+            ForEach(historicalEntries) { entry in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(entry.expenditure) kcal")
@@ -722,15 +847,15 @@ struct ExpenditureDetailView: View {
 // MARK: - Preview
 
 #Preview {
-    ExpenditureDetailView()
+    ExpenditureDetailView(useMockData: true)
 }
 
 #Preview("Light Mode") {
-    ExpenditureDetailView()
+    ExpenditureDetailView(useMockData: true)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark Mode") {
-    ExpenditureDetailView()
+    ExpenditureDetailView(useMockData: true)
         .preferredColorScheme(.dark)
 }

@@ -381,13 +381,13 @@ struct DashboardView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .sheet(isPresented: $showingWeightTrendDetail) {
-            WeightTrendDetailView(data: .mock)
+            WeightTrendDetailView()
         }
         .sheet(isPresented: $showingExpenditureDetail) {
-            ExpenditureDetailView(data: .mock)
+            ExpenditureDetailView()
         }
         .sheet(isPresented: $showingEnergyBalanceDetail) {
-            EnergyBalanceDetailView(data: .mock)
+            EnergyBalanceDetailView()
         }
         .accessibilityIdentifier("dashboard-view")
     }
