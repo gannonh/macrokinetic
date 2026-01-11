@@ -87,7 +87,8 @@ final class EnergyBalanceWidgetViewModel {
                 balances.append(balance)
                 totalBalance += balance
             } catch {
-                // No food logged = 0 calories consumed = full TDEE deficit
+                // No food logged or fetch error = 0 calories consumed = full TDEE deficit
+                Self.logger.debug("No meal data for \(date): \(error.localizedDescription)")
                 let balance = 0 - tdee
                 balances.append(balance)
                 totalBalance += balance

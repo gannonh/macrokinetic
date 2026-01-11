@@ -212,7 +212,7 @@ extension WeightTrendWidget: DashboardWidget {
 #Preview("Empty State") {
     VStack(spacing: 16) {
         // Empty state would show when no weight entries exist
-        WeightTrendWidget(useMockData: true)
+        WeightTrendWidget(useMockData: false)
     }
     .padding()
     .background(DesignTokens.Colors.groupedBackground)
