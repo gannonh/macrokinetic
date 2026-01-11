@@ -70,7 +70,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     }
 
     var content: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 4) {
             // Title
             Text(title)
                 .font(.system(size: 15, weight: .semibold))
@@ -78,25 +78,24 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
             // Bar chart with reference line
             energyBalanceChart
-                .frame(height: 120)
+                .frame(height: 140)
 
-            // "Last 30 Days" label - right aligned, minimal spacing
+            // "Last 30 Days" label - right aligned
             HStack {
                 Spacer()
                 Text("Last 30 Days")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
-            .padding(.top, -4)
 
-            // Summary equation row
+            // Summary equation row - closer to segment control
             summaryEquationRow
 
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
-        .padding(.top, 20)
-        .padding(.bottom, 12)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
         .frame(maxHeight: .infinity, alignment: .top)
         .accessibilityIdentifier("energy-balance-hero-widget")
     }
