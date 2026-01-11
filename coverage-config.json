@@ -36,6 +36,7 @@
           "Models/ProgramConfiguration.swift",
           "Models/NutritionGoal.swift",
           "Models/NutritionProgram.swift",
+          "Models/TDEESnapshot.swift",
           "Models/BiologicalSex.swift"
         ]
       },

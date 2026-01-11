@@ -56,6 +56,8 @@ final class ExpenditureDetailViewModel {
         category: "ExpenditureDetailViewModel"
     )
 
+    private let tdeeService: TDEEService
+
     private let context: ModelContext
 
     // MARK: - Published State
@@ -104,6 +106,7 @@ final class ExpenditureDetailViewModel {
     /// - Parameter context: ModelContext for fetching user data
     init(context: ModelContext) {
         self.context = context
+        self.tdeeService = TDEEService(context: context)
     }
 
     // MARK: - Data Loading
@@ -145,16 +148,21 @@ final class ExpenditureDetailViewModel {
             difference = Int(currentTDEE - initial)
         }
 
-        // Calculate average (for now, same as current since we don't have historical TDEE)
-        averageExpenditure = currentExpenditure
+        // Load real TDEE history data from snapshots
+        loadDailyData(currentTDEE: currentTDEE)
+
+        // Calculate average from generated daily data
+        if !dailyData.isEmpty {
+            let sum = dailyData.reduce(0) { $0 + $1.value }
+            averageExpenditure = sum / dailyData.count
+        } else {
+            averageExpenditure = currentExpenditure
+        }
 
         // Determine strategy based on data availability
         determineStrategy(goal: activeGoal)
 
-        // Generate synthetic daily data based on current TDEE and selected period
-        generateDailyData(baseTDEE: currentTDEE)
-
-        // Generate expenditure changes (currently stable since we don't have true history)
+        // Generate expenditure changes based on daily data
         generateExpenditureChanges()
 
         // Generate historical entries
@@ -231,8 +239,8 @@ final class ExpenditureDetailViewModel {
         return uniqueDays.count
     }
 
-    /// Generate daily expenditure data for chart
-    private func generateDailyData(baseTDEE: Double) {
+    /// Load daily expenditure data from TDEESnapshot history
+    private func loadDailyData(currentTDEE: Double) {
         let calendar = Calendar.current
         let today = Date()
 
@@ -242,67 +250,82 @@ final class ExpenditureDetailViewModel {
             return
         }
 
-        // Seeded random generator for consistent data
-        var rng = SeededRNG(seed: 456)
+        do {
+            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: today)
 
-        var data: [DailyExpenditure] = []
-        var runningTDEE = baseTDEE
-
-        // Generate data from start date to today
-        var currentDate = startDate
-        while currentDate <= today {
-            let dayOffset = calendar.dateComponents([.day], from: currentDate, to: today).day ?? 0
-
-            // Small variation around base TDEE (slower changes than weight)
-            let variation = Double.random(in: -5...5, using: &rng)
-            runningTDEE = max(1200, min(baseTDEE + 200, baseTDEE + variation))
-
-            let value = Int(runningTDEE)
-
-            // Flux range (margin of error) - tighter for more recent data
-            let fluxMargin: Int
-            if dayOffset < 14 {
-                fluxMargin = 15  // Recent: tight estimate
-            } else if dayOffset < 60 {
-                fluxMargin = 25  // Medium: moderate uncertainty
+            if snapshots.isEmpty {
+                // Fallback: show single entry for current TDEE if no history
+                dailyData = [
+                    DailyExpenditure(
+                        date: today,
+                        value: Int(currentTDEE),
+                        upperBound: Int(currentTDEE) + 30,
+                        lowerBound: Int(currentTDEE) - 30,
+                        status: .holding
+                    )
+                ]
             } else {
-                fluxMargin = 40  // Older: more uncertainty
+                // Map TDEESnapshot to DailyExpenditure using snapshot's computed properties
+                dailyData = snapshots.map { snapshot in
+                    DailyExpenditure(
+                        date: snapshot.timestamp,
+                        value: Int(snapshot.tdeeValue),
+                        upperBound: Int(snapshot.tdeeValue) + snapshot.fluxMargin,
+                        lowerBound: Int(snapshot.tdeeValue) - snapshot.fluxMargin,
+                        status: snapshot.status
+                    )
+                }
             }
-
-            // Determine status based on recency
-            let status: ExpenditureStatus
-            if dayOffset < 14 {
-                status = .holding
-            } else if dayOffset < 60 {
-                status = .updating
-            } else {
-                status = .fluxRange
-            }
-
-            data.append(
+        } catch {
+            Self.logger.error("Failed to load TDEE snapshots: \(error)")
+            // Graceful fallback: show current TDEE as single data point
+            dailyData = [
                 DailyExpenditure(
-                    date: currentDate,
-                    value: value,
-                    upperBound: value + fluxMargin,
-                    lowerBound: value - fluxMargin,
-                    status: status
-                ))
-
-            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
-            currentDate = nextDate
+                    date: today,
+                    value: Int(currentTDEE),
+                    upperBound: Int(currentTDEE) + 30,
+                    lowerBound: Int(currentTDEE) - 30,
+                    status: .holding
+                )
+            ]
         }
-
-        dailyData = data.sorted { $0.date < $1.date }
     }
 
-    /// Generate expenditure changes at standard intervals
+    /// Generate expenditure changes at standard intervals from daily data
     private func generateExpenditureChanges() {
-        // Since we don't have true historical TDEE values,
-        // generate placeholder data showing no change
-        let intervals = ["3-day", "7-day", "14-day", "30-day", "90-day"]
+        guard !dailyData.isEmpty else {
+            expenditureChanges = []
+            return
+        }
 
-        expenditureChanges = intervals.map { period in
-            ExpenditureChange(period: period, change: 0, trend: "No Change")
+        let intervals: [(String, Int)] = [
+            ("3-day", 3),
+            ("7-day", 7),
+            ("14-day", 14),
+            ("30-day", 30),
+            ("90-day", 90),
+        ]
+
+        let latestValue = dailyData.last?.value ?? 0
+
+        expenditureChanges = intervals.compactMap { period, days in
+            // Get value from N days ago
+            guard dailyData.count > days else { return nil }
+            let pastIndex = dailyData.count - 1 - days
+            guard pastIndex >= 0 else { return nil }
+            let pastValue = dailyData[pastIndex].value
+
+            let change = latestValue - pastValue
+            let trend: String
+            if change < -5 {
+                trend = "Decrease"
+            } else if change > 5 {
+                trend = "Increase"
+            } else {
+                trend = "No Change"
+            }
+
+            return ExpenditureChange(period: period, change: change, trend: trend)
         }
     }
 

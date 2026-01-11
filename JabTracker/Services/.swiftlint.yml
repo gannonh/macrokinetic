@@ -2,8 +2,8 @@
 # Allows longer files for complex service classes requiring comprehensive medical logic
 
 file_length:
-  warning: 750  # TDEEService requires comprehensive TDEE calculation logic
-  error: 850
+  warning: 800  # TDEEService requires comprehensive TDEE calculation + snapshot logic
+  error: 900
 
 type_body_length:
   warning: 450  # Increased for service classes with extensive method collections

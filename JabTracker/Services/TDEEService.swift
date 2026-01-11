@@ -253,9 +253,50 @@ final class TDEEService {
 
         try context.save()
 
+        // Save TDEE snapshot for historical tracking
+        try saveTDEESnapshot(tdee: tdee, confidence: 1.0, source: .initial)
+
         Self.logger.debug(
             "Initial TDEE calculated: \(Int(tdee)) kcal/day for training level \(trainingLevel.displayName)"
         )
+    }
+
+    // MARK: - Snapshot Methods
+
+    /// Save a TDEE snapshot for historical tracking
+    /// - Parameters:
+    ///   - tdee: TDEE value in kcal
+    ///   - confidence: Confidence score (0.0-1.0)
+    ///   - source: Source type for the calculation
+    func saveTDEESnapshot(
+        tdee: Double,
+        confidence: Double,
+        source: TDEESourceType
+    ) throws {
+        let snapshot = TDEESnapshot(
+            timestamp: Date(),
+            tdeeValue: tdee,
+            confidence: confidence,
+            source: source
+        )
+        context.insert(snapshot)
+        try context.save()
+        Self.logger.debug("Saved TDEE snapshot: \(Int(tdee)) kcal (\(source.rawValue))")
+    }
+
+    /// Get TDEE snapshots within date range
+    /// - Parameters:
+    ///   - startDate: Start of date range (inclusive)
+    ///   - endDate: End of date range (inclusive)
+    /// - Returns: Array of TDEESnapshot sorted by timestamp ascending
+    func getTDEESnapshots(from startDate: Date, to endDate: Date) throws -> [TDEESnapshot] {
+        let descriptor = FetchDescriptor<TDEESnapshot>(
+            predicate: #Predicate { snapshot in
+                snapshot.timestamp >= startDate && snapshot.timestamp <= endDate
+            },
+            sortBy: [SortDescriptor(\.timestamp, order: .forward)]
+        )
+        return try context.fetch(descriptor)
     }
 }
 
@@ -422,6 +463,9 @@ extension TDEEService {
         goal.lastTDEECalculationDate = Date()
 
         try context.save()
+
+        // Save TDEE snapshot for historical tracking
+        try saveTDEESnapshot(tdee: result.tdee, confidence: result.confidence, source: .adaptive)
 
         Self.logger.debug("Goal updated with adaptive TDEE: \(Int(result.tdee)) kcal/day")
     }

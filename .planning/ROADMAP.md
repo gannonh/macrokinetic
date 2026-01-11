@@ -90,6 +90,22 @@ Plans:
 - [x] 33-02: Expenditure Detail View (bar chart, insights cards, shared DetailTimePeriodSelector)
 - [x] 33-03: Energy Balance Detail View (mode toggle, navigation wiring from widgets)
 
+#### Phase 33.1: TDEE History Tracking (INSERTED)
+
+**Goal**: Store daily TDEE calculations so ExpenditureDetailView can display real historical expenditure data instead of synthetic values
+**Depends on**: Phase 33
+**Research**: Unlikely (internal data model)
+**Plans**: TBD
+
+Plans:
+- [x] 33.1-01: TDEESnapshot Model + TDEEService + ViewModel Integration
+
+**Details:**
+Urgent insertion - Phase 34-03 implemented synthetic data for Expenditure detail view because historical TDEE data doesn't exist. Need to:
+1. Add TDEESnapshot model to store TDEE values when recalculated
+2. Update TDEECalculationEngine to save snapshots
+3. Update ExpenditureDetailViewModel to use real history
+
 #### Phase 34: Integration & Polish
 
 **Goal**: Wire static UI to live data, transitions, E2E tests
@@ -116,6 +132,7 @@ Phases execute in numeric order within each milestone.
 | 31. Main Widget (Hero)          | 2/2            | Complete    | 2026-01-09 |
 | 32. Standard Widgets - Insights | 1/1            | Complete    | 2026-01-09 |
 | 33. Detail Views                | 3/3            | Complete    | 2026-01-10 |
+| 33.1 TDEE History (INSERTED)    | 1/1            | Complete    | 2026-01-11 |
 | 34. Integration & Polish        | 3/4            | In progress | -          |
 
 <details>
