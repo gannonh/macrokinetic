@@ -161,11 +161,11 @@ struct WeeklyMacroRow: View {
                 .fill(DesignTokens.Colors.inactive)
                 .frame(width: GridLayout.cellWidth, height: GridLayout.cellHeight)
 
-            // Fill from bottom - fixed height calculation
-            if !isFuture && baseFillPercentage > 0 {
+            // Fill from bottom - always render for non-future days to enable smooth animation
+            if !isFuture {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(macroColor)
-                    .frame(width: GridLayout.cellWidth - 4, height: max(4, fillHeight - 4))
+                    .frame(width: GridLayout.cellWidth - 4, height: max(0, fillHeight - 4))
                     .padding(.bottom, 2)
                     .animation(.easeOut(duration: 0.6), value: fillPercentage)
             }
