@@ -12,12 +12,12 @@ import SwiftUI
 /// Mock data for energy balance widget - used for previews
 struct EnergyBalanceWidgetData {
     let dailyBalances: [Double]  // 7 days: negative = deficit, positive = surplus
-    let netBalance: Int  // Total deficit/surplus over period
+    let averageDailyBalance: Int  // Average daily deficit/surplus
     let isDeficit: Bool
 
     static let mock = EnergyBalanceWidgetData(
         dailyBalances: [-250, -300, -200, -280, -320, -210, -233],
-        netBalance: 1793,
+        averageDailyBalance: 256,  // Average of ~1793/7
         isDeficit: true
     )
 }
@@ -82,8 +82,8 @@ struct EnergyBalanceWidget: View {
         useMockData ? EnergyBalanceWidgetData.mock.dailyBalances : (viewModel?.dailyBalances ?? [])
     }
 
-    private var netBalance: Int {
-        useMockData ? EnergyBalanceWidgetData.mock.netBalance : (viewModel?.netBalance ?? 0)
+    private var averageDailyBalance: Int {
+        useMockData ? EnergyBalanceWidgetData.mock.averageDailyBalance : (viewModel?.averageDailyBalance ?? 0)
     }
 
     private var isDeficit: Bool {
@@ -152,10 +152,10 @@ struct EnergyBalanceWidget: View {
     private var valueSection: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             if hasData {
-                Text("\(netBalance)")
+                Text("\(averageDailyBalance)")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
-                Text("kcal \(isDeficit ? "deficit" : "surplus")")
+                Text("kcal/day \(isDeficit ? "deficit" : "surplus")")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {

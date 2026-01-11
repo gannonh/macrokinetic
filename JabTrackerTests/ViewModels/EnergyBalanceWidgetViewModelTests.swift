@@ -93,7 +93,7 @@ struct EnergyBalanceWidgetViewModelTests {
 
         #expect(viewModel.isLoading == false)
         #expect(viewModel.dailyBalances.isEmpty)
-        #expect(viewModel.netBalance == 0)
+        #expect(viewModel.averageDailyBalance == 0)
         #expect(viewModel.hasData == false)
     }
 
@@ -148,7 +148,7 @@ struct EnergyBalanceWidgetViewModelTests {
 
         // Then: Net balance is sum of all deficits (1400 kcal deficit)
         #expect(viewModel.dailyBalances.count == 7)
-        #expect(viewModel.netBalance != 0)
+        #expect(viewModel.averageDailyBalance != 0)
         #expect(viewModel.isDeficit == true)
     }
 
@@ -171,8 +171,8 @@ struct EnergyBalanceWidgetViewModelTests {
         // Then: Balance shows full TDEE as deficit (0 - 2000 = -2000 per day)
         #expect(viewModel.hasData == true)
         #expect(viewModel.isDeficit == true)
-        // Net deficit for 7 days with no food = 7 * 2000 = 14000
-        #expect(viewModel.netBalance == 14000)
+        // Average daily deficit with no food = 2000 kcal/day
+        #expect(viewModel.averageDailyBalance == 2000)
     }
 
     @Test("ViewModel shows surplus when eating above TDEE consistently")
@@ -196,9 +196,9 @@ struct EnergyBalanceWidgetViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: Shows as surplus (7 days * 500 = 3500 surplus)
+        // Then: Shows as surplus (average of 500 kcal/day surplus)
         #expect(viewModel.isDeficit == false)
-        #expect(viewModel.netBalance == 3500)
+        #expect(viewModel.averageDailyBalance == 500)
     }
 
     @Test("ViewModel handles missing TDEE gracefully")
@@ -234,7 +234,7 @@ struct EnergyBalanceWidgetViewModelTests {
 
         // Then: No crash, no data
         #expect(viewModel.dailyBalances.isEmpty)
-        #expect(viewModel.netBalance == 0)
+        #expect(viewModel.averageDailyBalance == 0)
         #expect(viewModel.hasData == false)
         #expect(viewModel.isLoading == false)
     }

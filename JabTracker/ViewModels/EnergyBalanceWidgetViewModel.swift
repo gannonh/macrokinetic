@@ -32,8 +32,8 @@ final class EnergyBalanceWidgetViewModel {
     /// Daily balance values for 7 days (negative = deficit, positive = surplus)
     private(set) var dailyBalances: [Double] = []
 
-    /// Net balance over 7 days (absolute value)
-    private(set) var netBalance: Int = 0
+    /// Average daily balance over 7 days (absolute value)
+    private(set) var averageDailyBalance: Int = 0
 
     /// Whether the net balance is a deficit
     private(set) var isDeficit: Bool = true
@@ -68,7 +68,7 @@ final class EnergyBalanceWidgetViewModel {
         else {
             // Cannot calculate balance without TDEE
             dailyBalances = []
-            netBalance = 0
+            averageDailyBalance = 0
             isDeficit = true
             Self.logger.debug("No TDEE available for energy balance calculation")
             return
@@ -96,11 +96,13 @@ final class EnergyBalanceWidgetViewModel {
         }
 
         dailyBalances = balances
-        netBalance = Int(abs(totalBalance))
+        // Calculate average daily balance (divide by number of days)
+        let averageBalance = totalBalance / Double(balances.count)
+        averageDailyBalance = Int(abs(averageBalance))
         isDeficit = totalBalance < 0
 
         Self.logger.debug(
-            "Loaded energy balance: net=\(self.netBalance), deficit=\(self.isDeficit)"
+            "Loaded energy balance: avgDaily=\(self.averageDailyBalance), deficit=\(self.isDeficit)"
         )
     }
 }
