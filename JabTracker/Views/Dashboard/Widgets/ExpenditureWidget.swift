@@ -2,21 +2,36 @@
 //  ExpenditureWidget.swift
 //  JabTracker
 //
-//  Standard widget showing TDEE expenditure with bar visualization.
+//  Standard widget showing TDEE expenditure with line chart visualization.
 //  Part of v0.7.0 Dashboard Widget UX milestone.
 //
 
+import Charts
 import SwiftData
 import SwiftUI
 
 /// Mock data for expenditure widget - used for previews
 struct ExpenditureWidgetData {
-    let dailyValues: [Double]  // 7 days of expenditure values
-    let averageKcal: Int
+    struct DataPoint: Identifiable {
+        let id = UUID()
+        let day: Int
+        let value: Double
+    }
+
+    let dataPoints: [DataPoint]
+    let currentTdee: Int
 
     static let mock = ExpenditureWidgetData(
-        dailyValues: [1850, 2100, 1920, 1780, 2050, 1900, 1650],
-        averageKcal: 1893
+        dataPoints: [
+            DataPoint(day: 0, value: 2340),
+            DataPoint(day: 1, value: 2355),
+            DataPoint(day: 2, value: 2360),
+            DataPoint(day: 3, value: 2350),
+            DataPoint(day: 4, value: 2345),
+            DataPoint(day: 5, value: 2355),
+            DataPoint(day: 6, value: 2350),
+        ],
+        currentTdee: 2350
     )
 }
 
@@ -75,9 +90,18 @@ struct ExpenditureWidget: View {
 
     // MARK: - Data Accessors
 
+    private var dataPoints: [ExpenditureWidgetData.DataPoint] {
+        if useMockData {
+            return ExpenditureWidgetData.mock.dataPoints
+        }
+        return viewModel?.dailyValues.map { data in
+            ExpenditureWidgetData.DataPoint(day: data.day, value: data.value)
+        } ?? []
+    }
+
     private var tdeeValue: Int {
         if useMockData {
-            return ExpenditureWidgetData.mock.averageKcal
+            return ExpenditureWidgetData.mock.currentTdee
         }
         return Int(viewModel?.tdee ?? 0)
     }
@@ -105,27 +129,41 @@ struct ExpenditureWidget: View {
         }
     }
 
+    @ViewBuilder
     private var visualizationSection: some View {
-        // Simple indicator bar based on TDEE range
-        HStack(spacing: 4) {
-            if hasData {
-                // Create 7 equal bars as a simple visualization
-                ForEach(0..<7, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(DesignTokens.Colors.expenditure)
-                        .frame(width: 20, height: 14)
-                }
-            } else {
-                // Empty state
-                ForEach(0..<7, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(DesignTokens.Colors.inactive.opacity(0.3))
-                        .frame(width: 20, height: 14)
-                }
+        if hasData {
+            Chart(dataPoints) { point in
+                LineMark(
+                    x: .value("Day", point.day),
+                    y: .value("TDEE", point.value)
+                )
+                .foregroundStyle(DesignTokens.Colors.expenditure)
+                .lineStyle(StrokeStyle(lineWidth: 2))
+
+                PointMark(
+                    x: .value("Day", point.day),
+                    y: .value("TDEE", point.value)
+                )
+                .foregroundStyle(DesignTokens.Colors.expenditure)
+                .symbolSize(20)
             }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .chartYScale(domain: .automatic(includesZero: false))
+            .frame(maxWidth: .infinity)
+            .frame(height: 30)
+        } else {
+            // Empty state placeholder
+            Rectangle()
+                .fill(DesignTokens.Colors.inactive.opacity(0.3))
+                .frame(maxWidth: .infinity)
+                .frame(height: 30)
+                .overlay {
+                    Text("No TDEE data")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 30)
     }
 
     private var valueSection: some View {

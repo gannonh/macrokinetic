@@ -171,8 +171,8 @@ struct EnergyBalanceWidgetViewModelTests {
         // Then: Balance shows full TDEE as deficit (0 - 2000 = -2000 per day)
         #expect(viewModel.hasData == true)
         #expect(viewModel.isDeficit == true)
-        // Average daily deficit with no food = 2000 kcal/day
-        #expect(viewModel.averageDailyBalance == 2000)
+        // Average daily deficit with no food = -2000 kcal/day (signed)
+        #expect(viewModel.averageDailyBalance == -2000)
     }
 
     @Test("ViewModel shows surplus when eating above TDEE consistently")

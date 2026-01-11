@@ -29,10 +29,16 @@ final class EnergyBalanceWidgetViewModel {
     /// Whether data is currently loading
     private(set) var isLoading: Bool = false
 
+    /// Daily intake values for 7 days (calories consumed)
+    private(set) var dailyIntake: [Double] = []
+
     /// Daily balance values for 7 days (negative = deficit, positive = surplus)
     private(set) var dailyBalances: [Double] = []
 
-    /// Average daily balance over 7 days (absolute value)
+    /// TDEE used for balance calculation (reference line value)
+    private(set) var tdee: Double = 0
+
+    /// Average daily balance over 7 days (signed: negative for deficit)
     private(set) var averageDailyBalance: Int = 0
 
     /// Whether the net balance is a deficit
@@ -64,17 +70,23 @@ final class EnergyBalanceWidgetViewModel {
         // Get user and TDEE
         guard let user = context.fetchCurrentUser(logger: Self.logger),
             let activeGoal = user.activeNutritionGoal,
-            let tdee = activeGoal.lastCalculatedTDEE ?? activeGoal.initialEstimatedTDEE
+            let userTdee = activeGoal.lastCalculatedTDEE ?? activeGoal.initialEstimatedTDEE
         else {
             // Cannot calculate balance without TDEE
+            dailyIntake = []
             dailyBalances = []
+            tdee = 0
             averageDailyBalance = 0
             isDeficit = true
             Self.logger.debug("No TDEE available for energy balance calculation")
             return
         }
 
+        // Store TDEE for reference line
+        tdee = userTdee
+
         // Calculate balance for each of the last 7 days
+        var intake: [Double] = []
         var balances: [Double] = []
         var totalBalance: Double = 0
 
@@ -83,22 +95,25 @@ final class EnergyBalanceWidgetViewModel {
             do {
                 let totals = try await mealLogService.getDailyTotals(for: date)
                 let consumed = totals.calories
-                let balance = consumed - tdee  // Negative = deficit, positive = surplus
+                intake.append(consumed)
+                let balance = consumed - userTdee  // Negative = deficit, positive = surplus
                 balances.append(balance)
                 totalBalance += balance
             } catch {
                 // No food logged or fetch error = 0 calories consumed = full TDEE deficit
                 Self.logger.debug("No meal data for \(date): \(error.localizedDescription)")
-                let balance = 0 - tdee
+                intake.append(0)
+                let balance = 0 - userTdee
                 balances.append(balance)
                 totalBalance += balance
             }
         }
 
+        dailyIntake = intake
         dailyBalances = balances
-        // Calculate average daily balance (divide by number of days)
+        // Calculate average daily balance (signed: negative for deficit)
         let averageBalance = totalBalance / Double(balances.count)
-        averageDailyBalance = Int(abs(averageBalance))
+        averageDailyBalance = Int(averageBalance)  // Keep sign for display
         isDeficit = totalBalance < 0
 
         Self.logger.debug(
