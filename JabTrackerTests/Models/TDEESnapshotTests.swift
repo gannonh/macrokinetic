@@ -85,48 +85,57 @@ struct TDEESnapshotComputedPropertyTests {
         context.insert(adaptiveSnapshot)
         #expect(adaptiveSnapshot.sourceType == .adaptive)
 
+        let holdingSnapshot = TDEESnapshot(source: .holding)
+        context.insert(holdingSnapshot)
+        #expect(holdingSnapshot.sourceType == .holding)
+
         let manualSnapshot = TDEESnapshot(source: .manual)
         context.insert(manualSnapshot)
         #expect(manualSnapshot.sourceType == .manual)
     }
 
-    @Test("status returns holding for recent snapshots (< 14 days)")
-    func statusReturnsHoldingForRecent() throws {
+    @Test("status returns fluxRange for initial source")
+    func statusReturnsFluxRangeForInitial() throws {
         let container = try createTestContainer()
         let context = ModelContext(container)
 
-        // Snapshot from 5 days ago
-        let recentDate = Calendar.current.date(byAdding: .day, value: -5, to: Date())!
-        let snapshot = TDEESnapshot(timestamp: recentDate)
+        let snapshot = TDEESnapshot(source: .initial)
         context.insert(snapshot)
 
-        #expect(snapshot.status == .holding)
+        #expect(snapshot.status == .fluxRange)
     }
 
-    @Test("status returns updating for medium-age snapshots (14-60 days)")
-    func statusReturnsUpdatingForMediumAge() throws {
+    @Test("status returns updating for adaptive source")
+    func statusReturnsUpdatingForAdaptive() throws {
         let container = try createTestContainer()
         let context = ModelContext(container)
 
-        // Snapshot from 30 days ago
-        let mediumDate = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
-        let snapshot = TDEESnapshot(timestamp: mediumDate)
+        let snapshot = TDEESnapshot(source: .adaptive)
         context.insert(snapshot)
 
         #expect(snapshot.status == .updating)
     }
 
-    @Test("status returns fluxRange for old snapshots (> 60 days)")
-    func statusReturnsFluxRangeForOld() throws {
+    @Test("status returns holding for holding source")
+    func statusReturnsHoldingForHolding() throws {
         let container = try createTestContainer()
         let context = ModelContext(container)
 
-        // Snapshot from 90 days ago
-        let oldDate = Calendar.current.date(byAdding: .day, value: -90, to: Date())!
-        let snapshot = TDEESnapshot(timestamp: oldDate)
+        let snapshot = TDEESnapshot(source: .holding)
         context.insert(snapshot)
 
-        #expect(snapshot.status == .fluxRange)
+        #expect(snapshot.status == .holding)
+    }
+
+    @Test("status returns updating for manual source")
+    func statusReturnsUpdatingForManual() throws {
+        let container = try createTestContainer()
+        let context = ModelContext(container)
+
+        let snapshot = TDEESnapshot(source: .manual)
+        context.insert(snapshot)
+
+        #expect(snapshot.status == .updating)
     }
 
     @Test("fluxMargin is tight for high confidence")
@@ -178,6 +187,7 @@ struct TDEESourceTypeTests {
     func rawValueStrings() {
         #expect(TDEESourceType.initial.rawValue == "initial")
         #expect(TDEESourceType.adaptive.rawValue == "adaptive")
+        #expect(TDEESourceType.holding.rawValue == "holding")
         #expect(TDEESourceType.manual.rawValue == "manual")
     }
 
@@ -185,6 +195,7 @@ struct TDEESourceTypeTests {
     func initFromRawValue() {
         #expect(TDEESourceType(rawValue: "initial") == .initial)
         #expect(TDEESourceType(rawValue: "adaptive") == .adaptive)
+        #expect(TDEESourceType(rawValue: "holding") == .holding)
         #expect(TDEESourceType(rawValue: "manual") == .manual)
         #expect(TDEESourceType(rawValue: "invalid") == nil)
     }

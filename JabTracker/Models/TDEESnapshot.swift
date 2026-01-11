@@ -19,6 +19,9 @@ enum TDEESourceType: String, Codable, CaseIterable {
     /// Adaptive calculation from weight trend + intake data
     case adaptive
 
+    /// Carried forward from previous value (insufficient data to recalculate)
+    case holding
+
     /// User manual override
     case manual
 }
@@ -103,18 +106,21 @@ extension TDEESnapshot {
         }
     }
 
-    /// Expenditure status based on snapshot recency
-    /// - Returns: `.holding` for < 14 days, `.updating` for 14-60 days, `.fluxRange` for > 60 days
+    /// Expenditure status derived from source type
+    /// - `.initial` → `.fluxRange` (orange - initial estimate with uncertainty)
+    /// - `.adaptive` → `.updating` (blue - actively refined with data)
+    /// - `.holding` → `.holding` (gray - carried forward, insufficient data)
+    /// - `.manual` → `.updating` (blue - user-specified value)
     var status: ExpenditureDetailViewModel.ExpenditureStatus {
-        let calendar = Calendar.current
-        let daysSinceSnapshot = calendar.dateComponents([.day], from: timestamp, to: Date()).day ?? 0
-
-        if daysSinceSnapshot < 14 {
-            return .holding
-        } else if daysSinceSnapshot < 60 {
-            return .updating
-        } else {
+        switch sourceType {
+        case .initial:
             return .fluxRange
+        case .adaptive:
+            return .updating
+        case .holding:
+            return .holding
+        case .manual:
+            return .updating
         }
     }
 

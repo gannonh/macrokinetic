@@ -47,6 +47,37 @@ struct ContentView: View {
         checkInBadgeVisible = service.isCheckInDue(for: goal)
     }
 
+    /// Ensure daily TDEE snapshots are up to date
+    /// Runs once per day on app launch, backfilling any missed days
+    private func ensureTDEESnapshots() async {
+        // Check if already ran today
+        let lastBackfillKey = "lastTDEEBackfillDate"
+        if let lastBackfill = UserDefaults.standard.object(forKey: lastBackfillKey) as? Date,
+            Calendar.current.isDateInToday(lastBackfill)
+        {
+            logger.debug("TDEE backfill already ran today, skipping")
+            return
+        }
+
+        // Get user and active goal
+        guard let user = users.first,
+            let goal = user.activeNutritionGoal
+        else {
+            logger.debug("No user or active goal for TDEE backfill")
+            return
+        }
+
+        // Run backfill
+        let tdeeService = TDEEService(context: modelContext)
+        do {
+            try await tdeeService.ensureDailySnapshots(for: goal)
+            UserDefaults.standard.set(Date(), forKey: lastBackfillKey)
+            logger.info("TDEE snapshot backfill completed")
+        } catch {
+            logger.error("TDEE snapshot backfill failed: \(error.localizedDescription)")
+        }
+    }
+
     init() {
         let pkEngine = PharmacokineticsEngine()
         self._pkEngine = State(wrappedValue: pkEngine)
@@ -203,6 +234,9 @@ struct ContentView: View {
 
             // Initial badge state
             updateCheckInBadge()
+        }
+        .task {
+            await ensureTDEESnapshots()
         }
         .onChange(of: scenePhase) { _, newPhase in
             // Refresh badge when app becomes active (e.g., after completing check-in)

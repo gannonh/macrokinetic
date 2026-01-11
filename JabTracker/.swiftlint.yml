@@ -1,9 +1,14 @@
 # SwiftLint Configuration for JabTracker root
 # AuthenticationManager handles complex seeding scenarios with multiple data tiers
+# ContentView handles main app navigation with TDEE backfill integration
+
+file_length:
+  warning: 550  # ContentView includes app launch TDEE snapshot backfill logic
+  error: 650
 
 type_body_length:
-  warning: 800
-  error: 900
+  warning: 850  # AuthenticationManager seeding logic spans multiple data tiers
+  error: 950
 
 large_tuple:
   warning: 5

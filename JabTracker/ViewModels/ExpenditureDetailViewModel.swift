@@ -252,6 +252,7 @@ final class ExpenditureDetailViewModel {
 
         do {
             let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: today)
+            Self.logger.debug("getTDEESnapshots returned \(snapshots.count) snapshots for \(startDate) to \(today)")
 
             if snapshots.isEmpty {
                 // Fallback: show single entry for current TDEE if no history

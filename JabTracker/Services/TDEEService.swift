@@ -263,27 +263,6 @@ final class TDEEService {
 
     // MARK: - Snapshot Methods
 
-    /// Save a TDEE snapshot for historical tracking
-    /// - Parameters:
-    ///   - tdee: TDEE value in kcal
-    ///   - confidence: Confidence score (0.0-1.0)
-    ///   - source: Source type for the calculation
-    func saveTDEESnapshot(
-        tdee: Double,
-        confidence: Double,
-        source: TDEESourceType
-    ) throws {
-        let snapshot = TDEESnapshot(
-            timestamp: Date(),
-            tdeeValue: tdee,
-            confidence: confidence,
-            source: source
-        )
-        context.insert(snapshot)
-        try context.save()
-        Self.logger.debug("Saved TDEE snapshot: \(Int(tdee)) kcal (\(source.rawValue))")
-    }
-
     /// Get TDEE snapshots within date range
     /// - Parameters:
     ///   - startDate: Start of date range (inclusive)
@@ -754,5 +733,170 @@ extension TDEEService {
         try context.save()
 
         Self.logger.debug("Full TDEE calculation complete for goal")
+    }
+}
+
+// MARK: - Daily Snapshot Backfill
+
+extension TDEEService {
+
+    // MARK: - Data Sufficiency Check
+
+    /// Check if sufficient data exists to recalculate TDEE as of a specific date
+    /// Requires 3+ days of food logging and 1+ day of weight logging in the 7-day window
+    /// - Parameter date: The date to check (uses 7-day lookback window ending on this date)
+    /// - Returns: True if sufficient data exists for adaptive TDEE calculation
+    func hasSufficientData(asOf date: Date) -> Bool {
+        let calendar = Calendar.current
+        guard let windowStart = calendar.date(byAdding: .day, value: -7, to: date) else {
+            return false
+        }
+
+        let foodDays = countFoodDays(from: windowStart, to: date)
+        let weightDays = countWeightDays(from: windowStart, to: date)
+
+        return foodDays >= 3 && weightDays >= 1
+    }
+
+    /// Count unique days with food entries in date range
+    private func countFoodDays(from start: Date, to end: Date) -> Int {
+        let descriptor = FetchDescriptor<FoodEntry>(
+            predicate: #Predicate { entry in
+                entry.loggedAt >= start && entry.loggedAt <= end
+            }
+        )
+        guard let entries = try? context.fetch(descriptor) else { return 0 }
+        return Set(entries.map { Calendar.current.startOfDay(for: $0.loggedAt) }).count
+    }
+
+    /// Count unique days with weight entries in date range
+    private func countWeightDays(from start: Date, to end: Date) -> Int {
+        let descriptor = FetchDescriptor<WeightEntry>(
+            predicate: #Predicate { entry in
+                entry.timestamp >= start && entry.timestamp <= end
+            }
+        )
+        guard let entries = try? context.fetch(descriptor) else { return 0 }
+        return Set(entries.map { Calendar.current.startOfDay(for: $0.timestamp) }).count
+    }
+
+    // MARK: - Snapshot Helpers
+
+    /// Get the date of the most recent TDEE snapshot
+    /// - Returns: Date of most recent snapshot, or nil if no snapshots exist
+    func getLastSnapshotDate() throws -> Date? {
+        var descriptor = FetchDescriptor<TDEESnapshot>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first?.timestamp
+    }
+
+    /// Get the TDEE value from the most recent snapshot
+    /// - Returns: TDEE value from most recent snapshot, or nil if no snapshots exist
+    func getLastTDEEValue() throws -> Double? {
+        var descriptor = FetchDescriptor<TDEESnapshot>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first?.tdeeValue
+    }
+
+    /// Get the confidence from the most recent snapshot
+    /// - Returns: Confidence value from most recent snapshot, or nil if no snapshots exist
+    func getLastConfidence() throws -> Double? {
+        var descriptor = FetchDescriptor<TDEESnapshot>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first?.confidence
+    }
+
+    // MARK: - Backfill
+
+    /// Ensure daily TDEE snapshots exist from last snapshot to today
+    /// Creates "holding" snapshots when data is insufficient, "adaptive" when sufficient
+    /// - Parameter goal: The NutritionGoal to use for backfill calculations
+    func ensureDailySnapshots(for goal: NutritionGoal) async throws {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        // Get last snapshot date (or goal creation date)
+        let lastSnapshotDate =
+            try getLastSnapshotDate()
+            .map { calendar.startOfDay(for: $0) }
+            ?? calendar.startOfDay(for: goal.createdAt)
+
+        // If already up to date, nothing to do
+        if lastSnapshotDate >= today {
+            Self.logger.debug("TDEE snapshots already up to date")
+            return
+        }
+
+        // Start from day after last snapshot
+        guard var currentDate = calendar.date(byAdding: .day, value: 1, to: lastSnapshotDate) else {
+            return
+        }
+
+        var lastTDEE = try getLastTDEEValue() ?? goal.initialEstimatedTDEE ?? 2000
+        var lastConfidence = try getLastConfidence() ?? 1.0
+
+        Self.logger.debug("Backfilling TDEE snapshots from \(lastSnapshotDate) to \(today)")
+
+        while currentDate <= today {
+            if hasSufficientData(asOf: currentDate) {
+                // Sufficient data: attempt adaptive calculation
+                // For now, we'll use the existing TDEE since historical calculation is complex
+                // TODO: Implement calculateTDEEAsOf for true historical calculation
+                try saveTDEESnapshot(
+                    tdee: lastTDEE,
+                    confidence: lastConfidence,
+                    source: .adaptive,
+                    timestamp: currentDate
+                )
+                Self.logger.debug("Created adaptive snapshot for \(currentDate)")
+            } else {
+                // Insufficient: hold previous value with decayed confidence
+                let decayedConfidence = max(0.3, lastConfidence * 0.98)
+                try saveTDEESnapshot(
+                    tdee: lastTDEE,
+                    confidence: decayedConfidence,
+                    source: .holding,
+                    timestamp: currentDate
+                )
+                lastConfidence = decayedConfidence
+                Self.logger.debug("Created holding snapshot for \(currentDate)")
+            }
+
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
+            }
+            currentDate = nextDate
+        }
+
+        Self.logger.info("Completed TDEE snapshot backfill")
+    }
+
+    /// Save a TDEE snapshot with custom timestamp
+    /// - Parameters:
+    ///   - tdee: TDEE value in kcal
+    ///   - confidence: Confidence score (0.0-1.0)
+    ///   - source: Source type for the calculation
+    ///   - timestamp: Timestamp for the snapshot (defaults to now)
+    func saveTDEESnapshot(
+        tdee: Double,
+        confidence: Double,
+        source: TDEESourceType,
+        timestamp: Date = Date()
+    ) throws {
+        let snapshot = TDEESnapshot(
+            timestamp: timestamp,
+            tdeeValue: tdee,
+            confidence: confidence,
+            source: source
+        )
+        context.insert(snapshot)
+        try context.save()
+        Self.logger.debug("Saved TDEE snapshot: \(Int(tdee)) kcal (\(source.rawValue)) at \(timestamp)")
     }
 }

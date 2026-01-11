@@ -174,6 +174,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         let progressPhotoCount = try deleteAll(ProgressPhoto.self, from: context)
         let nutritionGoalCount = try deleteAll(NutritionGoal.self, from: context)
         let nutritionProgramCount = try deleteAll(NutritionProgram.self, from: context)
+        let tdeeSnapshotCount = try deleteAll(TDEESnapshot.self, from: context)
 
         try context.save()
         Self.logger.info(
@@ -183,7 +184,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             \(titrationCount) titrations, \(doseScheduleCount) schedules, \(scheduledDoseCount) scheduled doses, \
             \(foodCount) foods, \(foodEntryCount) food entries, \(weightEntryCount) weight entries, \
             \(metricsEntryCount) metrics entries, \(progressPhotoCount) progress photos, \
-            \(nutritionGoalCount) goals, \(nutritionProgramCount) programs
+            \(nutritionGoalCount) goals, \(nutritionProgramCount) programs, \(tdeeSnapshotCount) TDEE snapshots
             """)
     }
 
@@ -550,6 +551,59 @@ class AuthenticationManager: NSObject, ObservableObject {
                         }
                     }
 
+                    // Seed 90 days of TDEE history snapshots
+                    // Shows gradual decrease from initial (2400) to current (2350)
+                    let initialTDEE = 2400.0
+                    let currentTDEE = 2350.0
+                    let tdeeRange = initialTDEE - currentTDEE  // 50 kcal decrease over 90 days
+
+                    Self.logger.debug("🔄 Seeding 90 TDEESnapshot entries...")
+                    var snapshotCount = 0
+                    for dayOffset in 0..<90 {
+                        guard let snapshotDate = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) else {
+                            continue
+                        }
+
+                        // Calculate TDEE: gradual decrease with daily noise
+                        let progress = Double(90 - dayOffset) / 90.0  // 0 at day -90, 1 at today
+                        let baseTDEE = initialTDEE - (tdeeRange * progress)
+                        let noise = Double.random(in: -8...8)
+                        let tdeeValue = baseTDEE + noise
+
+                        // Source: initial for first week, then mix of adaptive/holding
+                        // Days 1-7 (dayOffset 83-89): initial
+                        // Days 8-60 (dayOffset 30-82): 70% adaptive, 30% holding
+                        // Days 61-90 (dayOffset 0-29): 90% adaptive, 10% holding
+                        let sourceType: TDEESourceType
+                        if dayOffset > 83 {
+                            sourceType = .initial
+                        } else if dayOffset >= 30 {
+                            // Days 8-60: 70% adaptive, 30% holding
+                            sourceType = Double.random(in: 0...1) < 0.7 ? .adaptive : .holding
+                        } else {
+                            // Days 61-90: 90% adaptive, 10% holding
+                            sourceType = Double.random(in: 0...1) < 0.9 ? .adaptive : .holding
+                        }
+
+                        // Confidence increases over time (more data = more confidence)
+                        // Holding snapshots get lower confidence
+                        // Day -90: 0.3, Day 0: 0.85, holding snapshots reduced by 20%
+                        var confidence = 0.3 + (0.55 * progress)
+                        if sourceType == .holding {
+                            confidence *= 0.8
+                        }
+
+                        let snapshot = TDEESnapshot(
+                            timestamp: snapshotDate,
+                            tdeeValue: tdeeValue,
+                            confidence: confidence,
+                            source: sourceType
+                        )
+                        context.insert(snapshot)
+                        snapshotCount += 1
+                    }
+                    Self.logger.debug("✅ Created \(snapshotCount) TDEESnapshot entries")
+
                     try context.save()
 
                     Self.logger.info(
@@ -557,7 +611,8 @@ class AuthenticationManager: NSObject, ObservableObject {
                         ✅ Check-in ready data seeded:
                            - Goal: Weight loss (90kg → 80kg)
                            - Program: Coached/Balanced
-                           - TDEE: 2350 kcal
+                           - TDEE: 2350 kcal (from 2400 initial)
+                           - TDEE snapshots: 90 days (mixed sources: initial/adaptive/holding)
                            - Last check-in: 10 days ago (due for check-in)
                            - Weight entries: 28 days (with ±0.3kg noise)
                            - Food entries: 21 days (with variance: ±15% daily, ±10% per meal)
