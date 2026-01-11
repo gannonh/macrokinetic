@@ -19,7 +19,7 @@ struct EnergyBalanceDetailViewModelTests {
 
     private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([
-            User.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
+            User.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self, TDEESnapshot.self,
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -28,6 +28,16 @@ struct EnergyBalanceDetailViewModelTests {
         )
         let container = try! ModelContainer(for: schema, configurations: [config])
         return (container.mainContext, container)
+    }
+
+    private func createViewModel(context: ModelContext) -> EnergyBalanceDetailViewModel {
+        let mealLogService = MealLogService(context: context)
+        let tdeeService = TDEEService(context: context)
+        return EnergyBalanceDetailViewModel(
+            mealLogService: mealLogService,
+            tdeeService: tdeeService,
+            context: context
+        )
     }
 
     private func createTestUser(in context: ModelContext) -> User {
@@ -88,8 +98,7 @@ struct EnergyBalanceDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         #expect(viewModel.isLoading == false)
         #expect(viewModel.dailyData.isEmpty)
@@ -119,8 +128,7 @@ struct EnergyBalanceDetailViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.selectedPeriod = .oneWeek
 
         // When: Loading data
@@ -150,8 +158,7 @@ struct EnergyBalanceDetailViewModelTests {
         _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.displayMode = .expenditure
 
         // When: Loading data
@@ -179,8 +186,7 @@ struct EnergyBalanceDetailViewModelTests {
         _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.displayMode = .calorieTargets
 
         // When: Loading data
@@ -210,8 +216,7 @@ struct EnergyBalanceDetailViewModelTests {
         _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.displayMode = .expenditure
         viewModel.selectedPeriod = .oneWeek  // Use short period for faster test
 
@@ -246,8 +251,7 @@ struct EnergyBalanceDetailViewModelTests {
         _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.displayMode = .calorieTargets
         viewModel.selectedPeriod = .oneWeek  // Use short period for faster test
 
@@ -285,8 +289,7 @@ struct EnergyBalanceDetailViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -315,8 +318,7 @@ struct EnergyBalanceDetailViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -342,8 +344,7 @@ struct EnergyBalanceDetailViewModelTests {
         )
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -374,8 +375,7 @@ struct EnergyBalanceDetailViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading in expenditure mode
         viewModel.displayMode = .expenditure
@@ -421,8 +421,7 @@ struct EnergyBalanceDetailViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -453,8 +452,7 @@ struct EnergyBalanceDetailViewModelTests {
         )
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading with 1 week period
         viewModel.selectedPeriod = .oneWeek
@@ -489,8 +487,7 @@ struct EnergyBalanceDetailViewModelTests {
         _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading in expenditure mode
         viewModel.displayMode = .expenditure
@@ -525,8 +522,7 @@ struct EnergyBalanceDetailViewModelTests {
         )
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.selectedPeriod = .oneWeek
 
         // When: Loading data
@@ -557,8 +553,7 @@ struct EnergyBalanceDetailViewModelTests {
         )
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.displayMode = .expenditure
 
         // When: Loading data
@@ -584,8 +579,7 @@ struct EnergyBalanceDetailViewModelTests {
         )
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.displayMode = .calorieTargets
 
         // When: Loading data
@@ -612,8 +606,7 @@ struct EnergyBalanceDetailViewModelTests {
         goal.isActive = false
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()
@@ -640,8 +633,7 @@ struct EnergyBalanceDetailViewModelTests {
         )
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
         viewModel.selectedPeriod = .oneMonth
 
         // When: Loading data
@@ -672,8 +664,7 @@ struct EnergyBalanceDetailViewModelTests {
         }
         try context.save()
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading in expenditure mode
         viewModel.displayMode = .expenditure
@@ -697,8 +688,7 @@ struct EnergyBalanceDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        let mealLogService = MealLogService(context: context)
-        let viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: context)
+        let viewModel = createViewModel(context: context)
 
         // When: Loading data
         await viewModel.loadData()

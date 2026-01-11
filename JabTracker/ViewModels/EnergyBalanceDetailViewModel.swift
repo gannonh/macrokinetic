@@ -56,6 +56,7 @@ final class EnergyBalanceDetailViewModel {
     )
 
     private let mealLogService: MealLogService
+    private let tdeeService: TDEEService
     private let context: ModelContext
 
     // MARK: - Published State
@@ -88,12 +89,14 @@ final class EnergyBalanceDetailViewModel {
 
     // MARK: - Initialization
 
-    /// Initialize with meal log service and model context
+    /// Initialize with meal log service, TDEE service, and model context
     /// - Parameters:
     ///   - mealLogService: Service for fetching meal log data
+    ///   - tdeeService: Service for fetching TDEE snapshots
     ///   - context: ModelContext for fetching user data
-    init(mealLogService: MealLogService, context: ModelContext) {
+    init(mealLogService: MealLogService, tdeeService: TDEEService, context: ModelContext) {
         self.mealLogService = mealLogService
+        self.tdeeService = tdeeService
         self.context = context
     }
 
@@ -113,38 +116,31 @@ final class EnergyBalanceDetailViewModel {
             return
         }
 
-        // Get TDEE (required for expenditure mode)
-        let tdee: Int?
+        // Get fallback TDEE (used when no snapshot exists for a date)
+        let fallbackTDEE: Int
         if let lastCalculated = activeGoal.lastCalculatedTDEE {
-            tdee = Int(lastCalculated)
+            fallbackTDEE = Int(lastCalculated)
         } else if let initial = activeGoal.initialEstimatedTDEE {
-            tdee = Int(initial)
+            fallbackTDEE = Int(initial)
         } else {
-            tdee = nil
-        }
-
-        // Expenditure mode requires TDEE
-        if displayMode == .expenditure && tdee == nil {
-            clearAllData()
-            Self.logger.debug("No TDEE available for expenditure mode")
-            return
+            fallbackTDEE = 2000  // Reasonable default
         }
 
         let calorieTarget = Int(activeGoal.dailyCalorieTarget)
 
-        // Generate daily data for selected period
-        await generateDailyData(tdee: tdee ?? calorieTarget, calorieTarget: calorieTarget)
+        // Generate daily data (only days with actual food logged)
+        await generateDailyData(fallbackTDEE: fallbackTDEE, calorieTarget: calorieTarget)
 
-        // Generate balance changes
-        generateBalanceChanges(tdee: tdee ?? calorieTarget, calorieTarget: calorieTarget)
+        // Generate balance changes (only from days with data)
+        generateBalanceChanges()
 
-        // Generate header value
-        calculateHeaderValue(tdee: tdee ?? calorieTarget, calorieTarget: calorieTarget)
+        // Generate header value (only from days with data)
+        calculateHeaderValue()
 
-        // Generate date range
+        // Generate date range (from actual data, not selected period)
         generateDateRange()
 
-        Self.logger.debug("Loaded energy balance data: \(self.dailyData.count) days")
+        Self.logger.debug("Loaded energy balance data: \(self.dailyData.count) days with actual food logs")
     }
 
     // MARK: - Private Methods
@@ -157,8 +153,8 @@ final class EnergyBalanceDetailViewModel {
         headerValue = nil
     }
 
-    /// Generate daily data for selected period
-    private func generateDailyData(tdee: Int, calorieTarget: Int) async {
+    /// Generate daily data for selected period (only days with actual food logged)
+    private func generateDailyData(fallbackTDEE: Int, calorieTarget: Int) async {
         let calendar = Calendar.current
         let today = Date()
 
@@ -168,28 +164,47 @@ final class EnergyBalanceDetailViewModel {
             return
         }
 
+        // Load TDEE snapshots for the period to get historical expenditure values
+        var tdeeByDate: [Date: Int] = [:]
+        do {
+            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: today)
+            for snapshot in snapshots {
+                let dayStart = calendar.startOfDay(for: snapshot.timestamp)
+                tdeeByDate[dayStart] = Int(snapshot.tdeeValue)
+            }
+            Self.logger.debug("Loaded \(snapshots.count) TDEE snapshots for energy balance")
+        } catch {
+            Self.logger.error("Failed to load TDEE snapshots: \(error)")
+        }
+
         var data: [DailyData] = []
 
-        // Generate data from start date to today
+        // Generate data from start date to today (only include days with food logged)
         var currentDate = startDate
         while currentDate <= today {
+            let dayStart = calendar.startOfDay(for: currentDate)
+
             // Get calories consumed for this date
-            let calories: Int
             do {
                 let totals = try await mealLogService.getDailyTotals(for: currentDate)
-                calories = Int(totals.calories)
-            } catch {
-                Self.logger.debug("No meal data for \(currentDate): \(error.localizedDescription)")
-                calories = 0
-            }
+                let calories = Int(totals.calories)
 
-            data.append(
-                DailyData(
-                    date: currentDate,
-                    caloriesConsumed: calories,
-                    expenditure: tdee,
-                    calorieTarget: calorieTarget
-                ))
+                // Only include days where food was actually logged
+                if calories > 0 {
+                    // Use historical TDEE if available, otherwise fallback
+                    let expenditure = tdeeByDate[dayStart] ?? fallbackTDEE
+
+                    data.append(
+                        DailyData(
+                            date: currentDate,
+                            caloriesConsumed: calories,
+                            expenditure: expenditure,
+                            calorieTarget: calorieTarget
+                        ))
+                }
+            } catch {
+                // No data for this day - skip it
+            }
 
             guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
             currentDate = nextDate
@@ -198,25 +213,28 @@ final class EnergyBalanceDetailViewModel {
         dailyData = data.sorted { $0.date < $1.date }
     }
 
-    /// Generate balance changes at standard intervals
-    private func generateBalanceChanges(tdee: Int, calorieTarget: Int) {
-        let intervals: [(String, Int)] = [
-            ("3-day", 3),
-            ("7-day", 7),
-            ("14-day", 14),
-            ("30-day", 30),
-            ("90-day", 90),
-        ]
+    /// Generate balance changes at standard intervals (only using days with actual data)
+    private func generateBalanceChanges() {
+        // Only show intervals where we have enough data
+        let totalDays = dailyData.count
+        var intervals: [(String, Int)] = []
+
+        // Add intervals based on available data
+        if totalDays >= 3 { intervals.append(("3-day", 3)) }
+        if totalDays >= 7 { intervals.append(("7-day", 7)) }
+        if totalDays >= 14 { intervals.append(("14-day", 14)) }
+        if totalDays >= 30 { intervals.append(("30-day", 30)) }
+        if totalDays >= 90 { intervals.append(("90-day", 90)) }
 
         balanceChanges = intervals.map { period, days in
-            let balance = calculateBalanceForInterval(days: days, tdee: tdee, calorieTarget: calorieTarget)
+            let balance = calculateBalanceForInterval(days: days)
             let trend = trendLabelForBalance(balance)
             return BalanceChange(period: period, value: balance, trend: trend)
         }
     }
 
-    /// Calculate balance for a specific interval
-    private func calculateBalanceForInterval(days: Int, tdee: Int, calorieTarget: Int) -> Int {
+    /// Calculate AVERAGE daily balance for a specific interval (using most recent N days with data)
+    private func calculateBalanceForInterval(days: Int) -> Int {
         let recentData = dailyData.suffix(days)
         guard !recentData.isEmpty else { return 0 }
 
@@ -227,7 +245,8 @@ final class EnergyBalanceDetailViewModel {
             totalBalance = recentData.reduce(0) { $0 + $1.targetBalance }
         }
 
-        return totalBalance
+        // Return AVERAGE daily balance, not cumulative
+        return totalBalance / recentData.count
     }
 
     /// Get trend label for balance value based on display mode
@@ -251,36 +270,43 @@ final class EnergyBalanceDetailViewModel {
         }
     }
 
-    /// Calculate header value (deficit for expenditure, average for targets)
-    private func calculateHeaderValue(tdee: Int, calorieTarget: Int) {
+    /// Calculate header value (AVERAGE daily deficit for expenditure, AVERAGE relative to targets)
+    /// Only uses days with actual food data
+    private func calculateHeaderValue() {
         guard !dailyData.isEmpty else {
             headerValue = nil
             return
         }
 
         if displayMode == .expenditure {
-            // Total deficit/surplus over period
-            headerValue = dailyData.reduce(0) { $0 + $1.expenditureBalance }
+            // AVERAGE daily deficit/surplus over days with data
+            let total = dailyData.reduce(0) { $0 + $1.expenditureBalance }
+            headerValue = total / dailyData.count
         } else {
-            // Average relative to target
+            // AVERAGE daily balance relative to target over days with data
             let total = dailyData.reduce(0) { $0 + $1.targetBalance }
             headerValue = total / dailyData.count
         }
     }
 
-    /// Generate date range string based on selected period
+    /// Generate date range string based on actual data (not selected period)
     private func generateDateRange() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-
-        let today = Date()
-        guard let startDate = selectedPeriod.startDate ?? Calendar.current.date(byAdding: .year, value: -1, to: today)
-        else {
-            dateRange = formatter.string(from: today)
+        guard !dailyData.isEmpty else {
+            dateRange = ""
             return
         }
 
-        dateRange = "\(formatter.string(from: startDate)) - \(formatter.string(from: today))"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+
+        let startDate = dailyData.first!.date
+        let endDate = dailyData.last!.date
+
+        if Calendar.current.isDate(startDate, inSameDayAs: endDate) {
+            dateRange = formatter.string(from: startDate)
+        } else {
+            dateRange = "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+        }
     }
 }
 
@@ -290,7 +316,12 @@ extension EnergyBalanceDetailViewModel {
     /// Preview data for SwiftUI previews
     static var preview: EnergyBalanceDetailViewModel {
         let context = PreviewHelpers.previewContext()
-        let service = MealLogService(context: context)
-        return EnergyBalanceDetailViewModel(mealLogService: service, context: context)
+        let mealLogService = MealLogService(context: context)
+        let tdeeService = TDEEService(context: context)
+        return EnergyBalanceDetailViewModel(
+            mealLogService: mealLogService,
+            tdeeService: tdeeService,
+            context: context
+        )
     }
 }

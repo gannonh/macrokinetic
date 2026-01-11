@@ -411,7 +411,7 @@ final class WeightTrendDetailViewModel {
         projectedWeight = smoothed + (weekly * weeks)
     }
 
-    /// Calculate current weight and difference from period start
+    /// Calculate current weight (average for period) and difference from period start
     private func calculateCurrentAndDifference(from entries: [WeightEntry]) {
         guard !entries.isEmpty else {
             currentWeight = nil
@@ -419,15 +419,15 @@ final class WeightTrendDetailViewModel {
             return
         }
 
-        // Current weight is average of last few entries (or just latest)
-        let recentEntries = Array(entries.suffix(min(3, entries.count)))
-        let weights = recentEntries.map { weightUnit == "lbs" ? $0.weightInLbs : $0.weightKg }
-        currentWeight = weights.reduce(0, +) / Double(weights.count)
+        // Average weight for the entire selected period
+        let allWeights = entries.map { weightUnit == "lbs" ? $0.weightInLbs : $0.weightKg }
+        currentWeight = allWeights.reduce(0, +) / Double(allWeights.count)
 
-        // Difference from first entry in period
-        if entries.count >= 2, let current = currentWeight {
+        // Difference: compare latest weight to first weight in period
+        if entries.count >= 2 {
             let firstWeight = weightUnit == "lbs" ? entries.first!.weightInLbs : entries.first!.weightKg
-            difference = current - firstWeight
+            let lastWeight = weightUnit == "lbs" ? entries.last!.weightInLbs : entries.last!.weightKg
+            difference = lastWeight - firstWeight
         } else {
             difference = nil
         }

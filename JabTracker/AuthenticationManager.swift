@@ -471,17 +471,21 @@ class AuthenticationManager: NSObject, ObservableObject {
                     program.goal = goal
                     context.insert(program)
 
-                    // Seed 28 days of weight history (matches TDEE lookback window)
-                    for dayOffset in 0..<28 {
+                    // Seed 90 days of weight history (matches TDEE snapshot history)
+                    // Starting weight ~92kg, ending ~88kg (gradual 4kg loss over 90 days)
+                    for dayOffset in 0..<90 {
                         let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
-                        // Slight downward trend with noise
-                        let weightKg = 89.0 - (Double(14 - dayOffset) * 0.05) + Double.random(in: -0.3...0.3)
+                        // Gradual downward trend: 92kg -> 88kg over 90 days with daily noise
+                        let progress = Double(90 - dayOffset) / 90.0  // 0 at day -90, 1 at today
+                        let baseWeight = 92.0 - (4.0 * progress)  // 92kg to 88kg
+                        let noise = Double.random(in: -0.4...0.4)
+                        let weightKg = baseWeight + noise
                         let weightEntry = WeightEntry(timestamp: date, weightKg: weightKg)
                         context.insert(weightEntry)
                     }
 
-                    // Seed 21 days of food entries (75% of 28-day window > 70% threshold)
-                    for dayOffset in 0..<21 {
+                    // Seed 90 days of food entries (matches weight and TDEE snapshot history)
+                    for dayOffset in 0..<90 {
                         let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
 
                         // Today (dayOffset == 0): only breakfast + lunch to show partial progress (~50%)
@@ -614,8 +618,8 @@ class AuthenticationManager: NSObject, ObservableObject {
                            - TDEE: 2350 kcal (from 2400 initial)
                            - TDEE snapshots: 90 days (mixed sources: initial/adaptive/holding)
                            - Last check-in: 10 days ago (due for check-in)
-                           - Weight entries: 28 days (with ±0.3kg noise)
-                           - Food entries: 21 days (with variance: ±15% daily, ±10% per meal)
+                           - Weight entries: 90 days (92kg → 88kg with ±0.4kg noise)
+                           - Food entries: 90 days (with variance: ±15% daily, ±10% per meal)
                            - Breakfast skipped ~20% of days, snacks added ~40% of days
                         """)
                 } catch {

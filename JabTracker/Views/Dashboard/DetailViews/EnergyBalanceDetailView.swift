@@ -191,7 +191,12 @@ struct EnergyBalanceDetailView: View {
     private func initializeViewModel() {
         guard viewModel == nil else { return }
         let mealLogService = MealLogService(context: modelContext)
-        viewModel = EnergyBalanceDetailViewModel(mealLogService: mealLogService, context: modelContext)
+        let tdeeService = TDEEService(context: modelContext)
+        viewModel = EnergyBalanceDetailViewModel(
+            mealLogService: mealLogService,
+            tdeeService: tdeeService,
+            context: modelContext
+        )
     }
 
     private func loadData() async {
@@ -334,11 +339,16 @@ struct EnergyBalanceDetailView: View {
 
     // MARK: - Chart Section
 
+    /// Daily data filtered to only include days with actual data (calories > 0)
+    private var chartData: [EnergyBalanceDetailData.DailyData] {
+        dailyData.filter { $0.caloriesConsumed > 0 }
+    }
+
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Chart {
-                // Vertical bars for calories consumed
-                ForEach(dailyData) { day in
+                // Vertical bars for calories consumed (only days with data)
+                ForEach(chartData) { day in
                     BarMark(
                         x: .value("Date", day.date, unit: .day),
                         y: .value("Calories", day.caloriesConsumed)
@@ -347,10 +357,19 @@ struct EnergyBalanceDetailView: View {
                     .cornerRadius(2)
                 }
 
-                // Horizontal reference line for expenditure or target
-                RuleMark(y: .value("Reference", averageReferenceValue))
+                // Line showing expenditure or target per day (varies based on TDEESnapshots)
+                ForEach(chartData) { day in
+                    LineMark(
+                        x: .value("Date", day.date, unit: .day),
+                        y: .value(
+                            "Reference",
+                            displayMode == .expenditure ? day.expenditure : day.calorieTarget
+                        ),
+                        series: .value("Series", "Reference")
+                    )
                     .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
                     .foregroundStyle(DesignTokens.Colors.expenditure)
+                }
             }
             .chartYScale(domain: 0...2500)
             .chartXAxis {
@@ -400,15 +419,6 @@ struct EnergyBalanceDetailView: View {
             Text(label)
                 .foregroundColor(.secondary)
         }
-    }
-
-    /// Average reference value (expenditure or target) for the horizontal line
-    private var averageReferenceValue: Int {
-        guard !dailyData.isEmpty else { return 2000 }
-        let sum = dailyData.reduce(0) { total, day in
-            total + (displayMode == .expenditure ? day.expenditure : day.calorieTarget)
-        }
-        return sum / dailyData.count
     }
 
     /// X-axis stride based on selected period
@@ -496,40 +506,80 @@ struct EnergyBalanceDetailView: View {
 
     // MARK: - Historical Log Section
 
+    /// Number of historical entries to show based on selected period
+    private var historicalEntryCount: Int {
+        switch selectedPeriod {
+        case .oneWeek:
+            return 7
+        case .oneMonth:
+            return 14
+        case .threeMonths, .sixMonths, .oneYear, .all:
+            return 30
+        }
+    }
+
+    /// Group daily data by month for display
+    private var dailyDataByMonth: [(month: String, days: [EnergyBalanceDetailData.DailyData])] {
+        let recentData = Array(dailyData.suffix(historicalEntryCount).reversed())
+        var grouped: [String: [EnergyBalanceDetailData.DailyData]] = [:]
+        var monthOrder: [String] = []
+
+        for day in recentData {
+            let monthKey = monthYearString(from: day.date)
+            if grouped[monthKey] == nil {
+                grouped[monthKey] = []
+                monthOrder.append(monthKey)
+            }
+            grouped[monthKey]?.append(day)
+        }
+
+        return monthOrder.map { month in
+            (month: month, days: grouped[month] ?? [])
+        }
+    }
+
     private var historicalLogSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Month header
-            Text(monthYearString(from: dailyData.last?.date ?? Date()))
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+        VStack(alignment: .leading, spacing: 16) {
+            ForEach(dailyDataByMonth, id: \.month) { monthData in
+                DesignCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(monthData.month)
+                            .font(DesignTokens.Typography.headline)
 
-            ForEach(dailyData.suffix(7).reversed()) { day in
-                let balance = displayMode == .expenditure ? day.expenditureBalance : day.targetBalance
-                let trendLabel =
-                    displayMode == .expenditure
-                    ? (balance < 0 ? "Deficit" : "Surplus")
-                    : (balance < 0 ? "Below Target" : "Above Target")
+                        ForEach(monthData.days) { day in
+                            let balance =
+                                displayMode == .expenditure
+                                ? day.expenditureBalance
+                                : day.targetBalance
+                            let trendLabel =
+                                displayMode == .expenditure
+                                ? (balance < 0 ? "Deficit" : "Surplus")
+                                : (balance < 0 ? "Below Target" : "Above Target")
 
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(balance) kcal")
+                            HStack {
+                                Text(formatDayDate(day.date))
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(balance) kcal")
+                                    .fontWeight(.medium)
+                                trendIndicator(for: trendLabel)
+                                Text(trendLabel)
+                                    .foregroundColor(.secondary)
+                            }
                             .font(.subheadline)
-                        Text(formatDate(day.date))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        }
                     }
-                    Spacer()
-                    Image(systemName: balance < 0 ? "arrow.down" : "arrow.up")
-                        .font(.system(size: 12))
-                        .foregroundColor(balance < 0 ? .green : .red)
-                    Text(trendLabel)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 4)
             }
         }
         .accessibilityIdentifier("historical-balance-log")
+    }
+
+    /// Format date as "Mon, Jan 6"
+    private func formatDayDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E, MMM d"
+        return formatter.string(from: date)
     }
 
     // MARK: - Date Formatting Helpers

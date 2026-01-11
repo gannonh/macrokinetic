@@ -440,7 +440,8 @@ struct WeightTrendDetailView: View {
                 ForEach(scaleWeightPoints) { point in
                     LineMark(
                         x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
+                        y: .value("Weight", point.weight),
+                        series: .value("Series", "Scale")
                     )
                     .foregroundStyle(DesignTokens.Colors.weight.opacity(0.35))
                     .lineStyle(StrokeStyle(lineWidth: 1))
@@ -450,7 +451,8 @@ struct WeightTrendDetailView: View {
                 ForEach(trendWeightPoints) { point in
                     LineMark(
                         x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
+                        y: .value("Weight", point.weight),
+                        series: .value("Series", "Trend")
                     )
                     .foregroundStyle(DesignTokens.Colors.weight)
                     .lineStyle(StrokeStyle(lineWidth: 2))
