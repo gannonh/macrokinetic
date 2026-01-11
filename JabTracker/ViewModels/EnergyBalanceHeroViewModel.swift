@@ -92,8 +92,10 @@ final class EnergyBalanceHeroViewModel {
         let calendar = Calendar.current
         let today = Date()
 
-        return (0..<dayCount).reversed().map { daysAgo in
-            let date = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+        return (0..<dayCount).reversed().compactMap { daysAgo in
+            guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) else {
+                return nil
+            }
             return DayCalories(date: date, value: 0)
         }
     }
@@ -130,7 +132,7 @@ final class EnergyBalanceHeroViewModel {
 
     /// Load expenditure and target data from user's NutritionGoal or User defaults
     private func loadUserData() {
-        if let user = fetchUser() {
+        if let user = context.fetchCurrentUser(logger: Self.logger) {
             if let activeGoal = user.activeNutritionGoal {
                 // Use TDEE from active NutritionGoal for expenditure
                 if let tdee = activeGoal.initialEstimatedTDEE ?? activeGoal.lastCalculatedTDEE {
@@ -150,17 +152,6 @@ final class EnergyBalanceHeroViewModel {
         // If no user found, keep default values
     }
 
-    /// Fetch the current user from context
-    private func fetchUser() -> User? {
-        let descriptor = FetchDescriptor<User>()
-        do {
-            let users = try context.fetch(descriptor)
-            return users.first
-        } catch {
-            Self.logger.error("Failed to fetch user: \(error)")
-            return nil
-        }
-    }
 }
 
 // MARK: - Preview Support
@@ -168,14 +159,7 @@ final class EnergyBalanceHeroViewModel {
 extension EnergyBalanceHeroViewModel {
     /// Preview data for SwiftUI previews
     static var preview: EnergyBalanceHeroViewModel {
-        let schema = Schema([User.self, FoodEntry.self])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
-        let container = try! ModelContainer(for: schema, configurations: [config])
-        let context = container.mainContext
+        let context = PreviewHelpers.previewContext()
         let service = MealLogService(context: context)
         return EnergyBalanceHeroViewModel(mealLogService: service, context: context)
     }

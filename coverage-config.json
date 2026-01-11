@@ -222,6 +222,8 @@
       "Services/CameraService.swift",
       "Services/MetricsService+HealthKit.swift",
       "Services/NotificationCenterProtocol.swift",
+      "Utils/ModelContext+CurrentUser.swift",
+      "Utils/PreviewHelpers.swift",
       "Utils/TestDataSeeding.swift",
       "Utilities/SeededRNG.swift",
       "Views/Analytics/AdherenceMetricsCard.swift",

@@ -106,7 +106,7 @@ final class WeeklyNutritionHeroViewModel {
             byAdding: .day,
             value: -daysFromMonday,
             to: calendar.startOfDay(for: today)
-        )!
+        ) ?? calendar.startOfDay(for: today)
     }
 
     /// Load nutrition totals for each day of the current week
@@ -148,7 +148,7 @@ final class WeeklyNutritionHeroViewModel {
 
     /// Load macro targets from user's active NutritionGoal or fallback to User's direct goals
     private func loadUserTargets() {
-        if let user = fetchUser() {
+        if let user = context.fetchCurrentUser(logger: Self.logger) {
             if let activeGoal = user.activeNutritionGoal {
                 // Use active NutritionGoal targets
                 // For weekly widget, use today's targets (simplification)
@@ -168,17 +168,6 @@ final class WeeklyNutritionHeroViewModel {
         // If no user found, keep default values
     }
 
-    /// Fetch the current user from context
-    private func fetchUser() -> User? {
-        let descriptor = FetchDescriptor<User>()
-        do {
-            let users = try context.fetch(descriptor)
-            return users.first
-        } catch {
-            Self.logger.error("Failed to fetch user: \(error)")
-            return nil
-        }
-    }
 }
 
 // MARK: - Preview Support
@@ -186,14 +175,7 @@ final class WeeklyNutritionHeroViewModel {
 extension WeeklyNutritionHeroViewModel {
     /// Preview data for SwiftUI previews
     static var preview: WeeklyNutritionHeroViewModel {
-        let schema = Schema([User.self, FoodEntry.self])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
-        let container = try! ModelContainer(for: schema, configurations: [config])
-        let context = container.mainContext
+        let context = PreviewHelpers.previewContext()
         let service = MealLogService(context: context)
         return WeeklyNutritionHeroViewModel(mealLogService: service, context: context)
     }

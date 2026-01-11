@@ -116,9 +116,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
     private var dailyCalories: [DayCalories] {
         if useMockData {
-            return EnergyBalanceMockData.sample.dailyCalories.map {
-                DayCalories(date: $0.date, value: $0.value)
-            }
+            return EnergyBalanceMockData.sample.dailyCalories
         }
         return viewModel?.dailyCalories ?? []
     }
@@ -279,12 +277,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 // MARK: - Mock Data
 
 struct EnergyBalanceMockData {
-    struct DayCalories: Identifiable {
-        var id: Date { date }
-        let date: Date
-        let value: Double
-    }
-
+    // Uses DayCalories from EnergyBalanceHeroViewModel
     let dailyCalories: [DayCalories]
     let averageExpenditure: Double
     let averageTargets: Double

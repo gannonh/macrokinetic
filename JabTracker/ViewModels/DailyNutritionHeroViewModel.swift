@@ -104,7 +104,7 @@ final class DailyNutritionHeroViewModel {
     /// Load macro targets from user's active NutritionGoal or fallback to User's direct goals
     private func loadUserTargets() {
         // First try to find active NutritionGoal via User
-        if let user = fetchUser() {
+        if let user = context.fetchCurrentUser(logger: Self.logger) {
             if let activeGoal = user.activeNutritionGoal {
                 // Use active NutritionGoal targets (may include per-day macros)
                 let macros = activeGoal.macroTargetsForDate(Date())
@@ -123,17 +123,6 @@ final class DailyNutritionHeroViewModel {
         // If no user found, keep default values
     }
 
-    /// Fetch the current user from context
-    private func fetchUser() -> User? {
-        let descriptor = FetchDescriptor<User>()
-        do {
-            let users = try context.fetch(descriptor)
-            return users.first
-        } catch {
-            Self.logger.error("Failed to fetch user: \(error)")
-            return nil
-        }
-    }
 }
 
 // MARK: - Preview Support
@@ -141,16 +130,7 @@ final class DailyNutritionHeroViewModel {
 extension DailyNutritionHeroViewModel {
     /// Preview data for SwiftUI previews
     static var preview: DailyNutritionHeroViewModel {
-        // Create a minimal mock for preview purposes
-        // In production, DailyMockData.sample is used directly by the widget for previews
-        let schema = Schema([User.self, FoodEntry.self])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
-        let container = try! ModelContainer(for: schema, configurations: [config])
-        let context = container.mainContext
+        let context = PreviewHelpers.previewContext()
         let service = MealLogService(context: context)
         return DailyNutritionHeroViewModel(mealLogService: service, context: context)
     }
