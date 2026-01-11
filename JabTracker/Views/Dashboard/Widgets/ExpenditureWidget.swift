@@ -2,13 +2,14 @@
 //  ExpenditureWidget.swift
 //  JabTracker
 //
-//  Standard widget showing 7-day expenditure with bar visualization.
+//  Standard widget showing TDEE expenditure with bar visualization.
 //  Part of v0.7.0 Dashboard Widget UX milestone.
 //
 
+import SwiftData
 import SwiftUI
 
-/// Mock data for expenditure widget - will be replaced with live data in Phase 34
+/// Mock data for expenditure widget - used for previews
 struct ExpenditureWidgetData {
     let dailyValues: [Double]  // 7 days of expenditure values
     let averageKcal: Int
@@ -19,13 +20,29 @@ struct ExpenditureWidgetData {
     )
 }
 
-/// Standard widget displaying 7-day calorie expenditure with mini bar chart.
+/// Standard widget displaying TDEE calorie expenditure.
 struct ExpenditureWidget: View {
-    let data: ExpenditureWidgetData
+    @Environment(\.modelContext) private var modelContext
+
+    /// ViewModel for live data - initialized lazily on first access
+    @State private var viewModel: ExpenditureWidgetViewModel?
+
+    /// Whether to use mock data (for previews)
+    private let useMockData: Bool
+
     var onTap: (() -> Void)?
 
-    init(data: ExpenditureWidgetData = .mock, onTap: (() -> Void)? = nil) {
-        self.data = data
+    // MARK: - Initialization
+
+    /// Initialize with live data (default for production)
+    init(onTap: (() -> Void)? = nil) {
+        self.useMockData = false
+        self.onTap = onTap
+    }
+
+    /// Initialize with mock data flag (for previews)
+    init(useMockData: Bool, onTap: (() -> Void)? = nil) {
+        self.useMockData = useMockData
         self.onTap = onTap
     }
 
@@ -40,6 +57,33 @@ struct ExpenditureWidget: View {
             onTap?()
         }
         .accessibilityIdentifier("expenditure-widget")
+        .task {
+            await loadDataIfNeeded()
+        }
+    }
+
+    // MARK: - Data Loading
+
+    private func loadDataIfNeeded() async {
+        guard !useMockData else { return }
+
+        if viewModel == nil {
+            viewModel = ExpenditureWidgetViewModel(context: modelContext)
+        }
+        await viewModel?.loadData()
+    }
+
+    // MARK: - Data Accessors
+
+    private var tdeeValue: Int {
+        if useMockData {
+            return ExpenditureWidgetData.mock.averageKcal
+        }
+        return Int(viewModel?.tdee ?? 0)
+    }
+
+    private var hasData: Bool {
+        useMockData ? true : (viewModel?.hasData ?? false)
     }
 
     // MARK: - Sections
@@ -55,26 +99,29 @@ struct ExpenditureWidget: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-            Text("Last 7 Days")
+            Text("Daily TDEE")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
     }
 
     private var visualizationSection: some View {
-        let maxValue = data.dailyValues.max() ?? 1
-        let minValue = data.dailyValues.min() ?? 0
-        let range = maxValue - minValue
-
-        return HStack(spacing: 4) {
-            ForEach(0..<data.dailyValues.count, id: \.self) { index in
-                let value = data.dailyValues[index]
-                let normalizedHeight = range > 0 ? (value - minValue) / range : 0.5
-                let height = 6 + (normalizedHeight * 14)  // 6-20pt range
-
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(DesignTokens.Colors.expenditure)
-                    .frame(width: 20, height: height)
+        // Simple indicator bar based on TDEE range
+        HStack(spacing: 4) {
+            if hasData {
+                // Create 7 equal bars as a simple visualization
+                ForEach(0..<7, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(DesignTokens.Colors.expenditure)
+                        .frame(width: 20, height: 14)
+                }
+            } else {
+                // Empty state
+                ForEach(0..<7, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(DesignTokens.Colors.inactive.opacity(0.3))
+                        .frame(width: 20, height: 14)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -83,12 +130,21 @@ struct ExpenditureWidget: View {
 
     private var valueSection: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text("\(data.averageKcal)")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-            Text("kcal")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            if hasData {
+                Text("\(tdeeValue)")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                Text("kcal")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("--")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(.secondary)
+                Text("kcal")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
     }
 }
@@ -103,14 +159,17 @@ extension ExpenditureWidget: DashboardWidget {
 
 // MARK: - Preview
 
-#Preview {
+#Preview("With Mock Data") {
     VStack(spacing: 16) {
-        ExpenditureWidget()
-        ExpenditureWidget(
-            data: ExpenditureWidgetData(
-                dailyValues: [2200, 2100, 2300, 2150, 2000, 2250, 2100],
-                averageKcal: 2157
-            ))
+        ExpenditureWidget(useMockData: true)
+    }
+    .padding()
+    .background(DesignTokens.Colors.groupedBackground)
+}
+
+#Preview("Empty State") {
+    VStack(spacing: 16) {
+        ExpenditureWidget(useMockData: false)
     }
     .padding()
     .background(DesignTokens.Colors.groupedBackground)

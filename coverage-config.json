@@ -124,6 +124,10 @@
           "ViewModels/DailyNutritionHeroViewModel.swift",
           "ViewModels/WeeklyNutritionHeroViewModel.swift",
           "ViewModels/EnergyBalanceHeroViewModel.swift",
+          "ViewModels/WeightTrendWidgetViewModel.swift",
+          "ViewModels/ExpenditureWidgetViewModel.swift",
+          "ViewModels/EnergyBalanceWidgetViewModel.swift",
+          "ViewModels/GoalProgressWidgetViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift",
           "Views/Nutrition/NutritionSummaryViewModel.swift"

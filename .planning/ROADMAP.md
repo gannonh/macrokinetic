@@ -99,7 +99,7 @@ Plans:
 
 Plans:
 - [x] 34-01: Hero Widgets Live Data (DailyNutrition, WeeklyNutrition, EnergyBalance)
-- [ ] 34-02: Standard Widgets Live Data (Expenditure, WeightTrend, EnergyBalance, GoalProgress)
+- [x] 34-02: Standard Widgets Live Data (Expenditure, WeightTrend, EnergyBalance, GoalProgress)
 - [ ] 34-03: Detail Views Live Data (WeightTrend, Expenditure, EnergyBalance)
 - [ ] 34-04: E2E Tests & Polish (dashboard tests, loading states, transitions)
 
@@ -116,7 +116,7 @@ Phases execute in numeric order within each milestone.
 | 31. Main Widget (Hero)          | 2/2            | Complete    | 2026-01-09 |
 | 32. Standard Widgets - Insights | 1/1            | Complete    | 2026-01-09 |
 | 33. Detail Views                | 3/3            | Complete    | 2026-01-10 |
-| 34. Integration & Polish        | 1/4            | In progress | -          |
+| 34. Integration & Polish        | 2/4            | In progress | -          |
 
 <details>
 <summary>✅ v0.6.0 Onboarding Redux (Phases 25-29) - SHIPPED 2026-01-07</summary>

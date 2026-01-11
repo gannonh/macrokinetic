@@ -6,9 +6,10 @@
 //  Part of v0.7.0 Dashboard Widget UX milestone.
 //
 
+import SwiftData
 import SwiftUI
 
-/// Mock data for goal progress widget - will be replaced with live data in Phase 34
+/// Mock data for goal progress widget - used for previews
 struct GoalProgressWidgetData {
     let progressPercentage: Double  // 0.0 to 1.0
     let targetPercentage: Double  // Where the target marker sits (usually 1.0)
@@ -25,11 +26,27 @@ struct GoalProgressWidgetData {
 
 /// Standard widget displaying daily goal progress with progress bar.
 struct GoalProgressWidget: View {
-    let data: GoalProgressWidgetData
+    @Environment(\.modelContext) private var modelContext
+
+    /// ViewModel for live data - initialized lazily on first access
+    @State private var viewModel: GoalProgressWidgetViewModel?
+
+    /// Whether to use mock data (for previews)
+    private let useMockData: Bool
+
     var onTap: (() -> Void)?
 
-    init(data: GoalProgressWidgetData = .mock, onTap: (() -> Void)? = nil) {
-        self.data = data
+    // MARK: - Initialization
+
+    /// Initialize with live data (default for production)
+    init(onTap: (() -> Void)? = nil) {
+        self.useMockData = false
+        self.onTap = onTap
+    }
+
+    /// Initialize with mock data flag (for previews)
+    init(useMockData: Bool, onTap: (() -> Void)? = nil) {
+        self.useMockData = useMockData
         self.onTap = onTap
     }
 
@@ -44,6 +61,35 @@ struct GoalProgressWidget: View {
             onTap?()
         }
         .accessibilityIdentifier("goal-progress-widget")
+        .task {
+            await loadDataIfNeeded()
+        }
+    }
+
+    // MARK: - Data Loading
+
+    private func loadDataIfNeeded() async {
+        guard !useMockData else { return }
+
+        if viewModel == nil {
+            let mealLogService = AppServices.shared.mealLogService ?? MealLogService(context: modelContext)
+            viewModel = GoalProgressWidgetViewModel(mealLogService: mealLogService, context: modelContext)
+        }
+        await viewModel?.loadData()
+    }
+
+    // MARK: - Data Accessors
+
+    private var progressPercentage: Double {
+        useMockData ? GoalProgressWidgetData.mock.progressPercentage : (viewModel?.progressPercentage ?? 0)
+    }
+
+    private var targetPercentage: Double {
+        useMockData ? GoalProgressWidgetData.mock.targetPercentage : (viewModel?.targetPercentage ?? 1.0)
+    }
+
+    private var displayPercentage: Int {
+        useMockData ? GoalProgressWidgetData.mock.displayPercentage : (viewModel?.displayPercentage ?? 0)
     }
 
     // MARK: - Sections
@@ -59,7 +105,7 @@ struct GoalProgressWidget: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-            Text("Last 7 Days")
+            Text("Today")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -68,8 +114,8 @@ struct GoalProgressWidget: View {
     private var progressBarSection: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
-            let progressWidth = width * min(data.progressPercentage, 1.0)
-            let targetPosition = width * min(data.targetPercentage, 1.0) - 2  // -2 for marker width offset
+            let progressWidth = width * min(progressPercentage, 1.0)
+            let targetPosition = width * min(targetPercentage, 1.0) - 2  // -2 for marker width offset
 
             ZStack(alignment: .leading) {
                 // Background track
@@ -94,7 +140,7 @@ struct GoalProgressWidget: View {
 
     private var valueSection: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text("\(data.displayPercentage)")
+            Text("\(displayPercentage)")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
             Text("%")
@@ -114,19 +160,17 @@ extension GoalProgressWidget: DashboardWidget {
 
 // MARK: - Preview
 
-#Preview {
+#Preview("With Mock Data") {
     VStack(spacing: 16) {
-        GoalProgressWidget()
-        GoalProgressWidget(
-            data: GoalProgressWidgetData(
-                progressPercentage: 0.68,
-                targetPercentage: 1.0
-            ))
-        GoalProgressWidget(
-            data: GoalProgressWidgetData(
-                progressPercentage: 1.0,
-                targetPercentage: 1.0
-            ))
+        GoalProgressWidget(useMockData: true)
+    }
+    .padding()
+    .background(DesignTokens.Colors.groupedBackground)
+}
+
+#Preview("Empty State") {
+    VStack(spacing: 16) {
+        GoalProgressWidget(useMockData: false)
     }
     .padding()
     .background(DesignTokens.Colors.groupedBackground)

@@ -7,9 +7,10 @@
 //
 
 import Charts
+import SwiftData
 import SwiftUI
 
-/// Mock data for weight trend widget - will be replaced with live data in Phase 34
+/// Mock data for weight trend widget - used for previews
 struct WeightTrendWidgetData {
     struct DataPoint: Identifiable {
         let id = UUID()
@@ -38,11 +39,27 @@ struct WeightTrendWidgetData {
 
 /// Standard widget displaying 7-day weight trend with sparkline chart.
 struct WeightTrendWidget: View {
-    let data: WeightTrendWidgetData
+    @Environment(\.modelContext) private var modelContext
+
+    /// ViewModel for live data - initialized lazily on first access
+    @State private var viewModel: WeightTrendWidgetViewModel?
+
+    /// Whether to use mock data (for previews)
+    private let useMockData: Bool
+
     var onTap: (() -> Void)?
 
-    init(data: WeightTrendWidgetData = .mock, onTap: (() -> Void)? = nil) {
-        self.data = data
+    // MARK: - Initialization
+
+    /// Initialize with live data (default for production)
+    init(onTap: (() -> Void)? = nil) {
+        self.useMockData = false
+        self.onTap = onTap
+    }
+
+    /// Initialize with mock data flag (for previews)
+    init(useMockData: Bool, onTap: (() -> Void)? = nil) {
+        self.useMockData = useMockData
         self.onTap = onTap
     }
 
@@ -57,6 +74,44 @@ struct WeightTrendWidget: View {
             onTap?()
         }
         .accessibilityIdentifier("weight-trend-widget")
+        .task {
+            await loadDataIfNeeded()
+        }
+    }
+
+    // MARK: - Data Loading
+
+    private func loadDataIfNeeded() async {
+        guard !useMockData else { return }
+
+        if viewModel == nil {
+            let metricsService = AppServices.shared.metricsService ?? MetricsService(context: modelContext)
+            viewModel = WeightTrendWidgetViewModel(metricsService: metricsService, context: modelContext)
+        }
+        await viewModel?.loadData()
+    }
+
+    // MARK: - Data Accessors
+
+    private var dataPoints: [WeightTrendWidgetData.DataPoint] {
+        if useMockData {
+            return WeightTrendWidgetData.mock.dataPoints
+        }
+        return viewModel?.dataPoints.map { dataPoint in
+            WeightTrendWidgetData.DataPoint(day: dataPoint.day, weight: dataPoint.weight)
+        } ?? []
+    }
+
+    private var latestWeight: Double {
+        useMockData ? WeightTrendWidgetData.mock.latestWeight : (viewModel?.latestWeight ?? 0)
+    }
+
+    private var unit: String {
+        useMockData ? WeightTrendWidgetData.mock.unit : (viewModel?.unit ?? "lbs")
+    }
+
+    private var hasData: Bool {
+        useMockData ? true : (viewModel?.hasData ?? false)
     }
 
     // MARK: - Sections
@@ -78,37 +133,60 @@ struct WeightTrendWidget: View {
         }
     }
 
+    @ViewBuilder
     private var chartSection: some View {
-        Chart(data.dataPoints) { point in
-            LineMark(
-                x: .value("Day", point.day),
-                y: .value("Weight", point.weight)
-            )
-            .foregroundStyle(DesignTokens.Colors.weight)
-            .lineStyle(StrokeStyle(lineWidth: 2))
+        if hasData {
+            Chart(dataPoints) { point in
+                LineMark(
+                    x: .value("Day", point.day),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(DesignTokens.Colors.weight)
+                .lineStyle(StrokeStyle(lineWidth: 2))
 
-            PointMark(
-                x: .value("Day", point.day),
-                y: .value("Weight", point.weight)
-            )
-            .foregroundStyle(DesignTokens.Colors.weight)
-            .symbolSize(20)
+                PointMark(
+                    x: .value("Day", point.day),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(DesignTokens.Colors.weight)
+                .symbolSize(20)
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .chartYScale(domain: .automatic(includesZero: false))
+            .frame(maxWidth: .infinity)
+            .frame(height: 30)
+        } else {
+            // Empty state placeholder
+            Rectangle()
+                .fill(DesignTokens.Colors.inactive.opacity(0.3))
+                .frame(maxWidth: .infinity)
+                .frame(height: 30)
+                .overlay {
+                    Text("No weight data")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
         }
-        .chartXAxis(.hidden)
-        .chartYAxis(.hidden)
-        .chartYScale(domain: .automatic(includesZero: false))
-        .frame(maxWidth: .infinity)
-        .frame(height: 30)
     }
 
     private var valueSection: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text(String(format: "%.1f", data.latestWeight))
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-            Text(data.unit)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            if hasData {
+                Text(String(format: "%.1f", latestWeight))
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                Text(unit)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("--")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(.secondary)
+                Text(unit)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
     }
 }
@@ -123,23 +201,18 @@ extension WeightTrendWidget: DashboardWidget {
 
 // MARK: - Preview
 
-#Preview {
+#Preview("With Mock Data") {
     VStack(spacing: 16) {
-        WeightTrendWidget()
-        WeightTrendWidget(
-            data: WeightTrendWidgetData(
-                dataPoints: [
-                    WeightTrendWidgetData.DataPoint(day: 0, weight: 180.0),
-                    WeightTrendWidgetData.DataPoint(day: 1, weight: 180.5),
-                    WeightTrendWidgetData.DataPoint(day: 2, weight: 181.0),
-                    WeightTrendWidgetData.DataPoint(day: 3, weight: 180.8),
-                    WeightTrendWidgetData.DataPoint(day: 4, weight: 181.2),
-                    WeightTrendWidgetData.DataPoint(day: 5, weight: 181.5),
-                    WeightTrendWidgetData.DataPoint(day: 6, weight: 182.0),
-                ],
-                latestWeight: 182.0,
-                unit: "lbs"
-            ))
+        WeightTrendWidget(useMockData: true)
+    }
+    .padding()
+    .background(DesignTokens.Colors.groupedBackground)
+}
+
+#Preview("Empty State") {
+    VStack(spacing: 16) {
+        // Empty state would show when no weight entries exist
+        WeightTrendWidget(useMockData: true)
     }
     .padding()
     .background(DesignTokens.Colors.groupedBackground)
