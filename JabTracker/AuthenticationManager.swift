@@ -483,19 +483,23 @@ class AuthenticationManager: NSObject, ObservableObject {
                     for dayOffset in 0..<21 {
                         let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
 
+                        // Today (dayOffset == 0): only breakfast + lunch to show partial progress (~50%)
+                        let isToday = dayOffset == 0
+
                         // Add daily variance: some days higher, some lower (±15%)
                         let dayMultiplier = Double.random(in: 0.85...1.15)
 
-                        // Occasionally skip breakfast (~20% of days)
-                        let skipBreakfast = Double.random(in: 0...1) < 0.2
+                        // Occasionally skip breakfast (~20% of days, but not today)
+                        let skipBreakfast = !isToday && Double.random(in: 0...1) < 0.2
 
                         // Base meals with per-meal variance (±10%)
                         let breakfastMult = skipBreakfast ? 0.0 : Double.random(in: 0.9...1.1)
                         let lunchMult = Double.random(in: 0.9...1.1)
-                        let dinnerMult = Double.random(in: 0.9...1.1)
+                        // Skip dinner today to show partial day progress
+                        let dinnerMult = isToday ? 0.0 : Double.random(in: 0.9...1.1)
 
-                        // Sometimes add snacks (~40% of days)
-                        let hasSnack = Double.random(in: 0...1) < 0.4
+                        // Sometimes add snacks (~40% of days, but not today)
+                        let hasSnack = !isToday && Double.random(in: 0...1) < 0.4
 
                         // Create meals with variance applied via serving size
                         let mealConfigs: [(MealSection, Double)] = [

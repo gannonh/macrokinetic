@@ -11,7 +11,8 @@ import SwiftData
 
 /// Data point for daily calorie chart
 struct DayCalories: Identifiable {
-    let id = UUID()
+    /// Use date as stable identifier for animation continuity
+    var id: Date { date }
     let date: Date
     let value: Double
 }

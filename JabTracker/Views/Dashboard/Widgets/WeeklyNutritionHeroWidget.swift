@@ -217,13 +217,10 @@ struct WeeklyNutritionHeroWidget: View, DashboardWidget {
         content
             .task {
                 await loadDataIfNeeded()
-            }
-            .onAppear {
-                // Trigger grow-in animation after a brief delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeOut(duration: 0.6)) {
-                        isAnimated = true
-                    }
+                // Trigger grow-in animation after data loads
+                try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1s delay
+                withAnimation(.easeOut(duration: 0.6)) {
+                    isAnimated = true
                 }
             }
     }

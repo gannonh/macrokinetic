@@ -7,7 +7,6 @@
 //  Part of v0.7.0 Dashboard Widget UX milestone.
 //
 
-import Charts
 import SwiftData
 import SwiftUI
 
@@ -28,6 +27,10 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
     @Environment(\.energyDisplayMode) private var displayMode
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.selectedHeroPageIndex) private var selectedPageIndex
+
+    /// This widget's page index in the carousel
+    private let pageIndex = 2
 
     /// ViewModel for live data - initialized lazily on first access
     @State private var viewModel: EnergyBalanceHeroViewModel?
@@ -55,8 +58,9 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
             .task {
                 await loadDataIfNeeded()
             }
-            .onAppear {
-                // Trigger grow-in animation after a brief delay
+            .onChange(of: selectedPageIndex) { _, newIndex in
+                // Animate when this page becomes selected (only once)
+                guard newIndex == pageIndex, !isAnimated else { return }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     withAnimation(.easeOut(duration: 0.6)) {
                         isAnimated = true
@@ -66,7 +70,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     }
 
     var content: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             // Title
             Text(title)
                 .font(.system(size: 15, weight: .semibold))
@@ -74,15 +78,16 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
             // Bar chart with reference line
             energyBalanceChart
-                .frame(height: 100)
+                .frame(height: 120)
 
-            // "Last 30 Days" label - right aligned
+            // "Last 30 Days" label - right aligned, minimal spacing
             HStack {
                 Spacer()
                 Text("Last 30 Days")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
+            .padding(.top, -4)
 
             // Summary equation row
             summaryEquationRow
@@ -131,35 +136,64 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
         useMockData ? EnergyBalanceMockData.sample.totalNutrition : (viewModel?.totalNutrition ?? 0)
     }
 
-    // MARK: - Bar Chart
+    /// Maximum Y value for fixed chart scale (prevents axis animation)
+    private var chartYMax: Double {
+        let maxCalories = dailyCalories.map(\.value).max() ?? 0
+        let maxReference = max(averageExpenditure, averageTargets)
+        // Use 10% headroom above the larger of max calories or reference line
+        // Minimum of 100 to prevent 0...0 domain when data is empty
+        return max(max(maxCalories, maxReference) * 1.1, 100)
+    }
+
+    // MARK: - Bar Chart (Custom SwiftUI for reliable animation)
 
     private var energyBalanceChart: some View {
         let referenceValue =
             displayMode == .expenditure
             ? averageExpenditure
             : averageTargets
-        let animationMultiplier = isAnimated ? 1.0 : 0.0
 
-        return Chart {
-            // Blue bars for daily calories
-            ForEach(dailyCalories) { day in
-                BarMark(
-                    x: .value("Day", day.date, unit: .day),
-                    y: .value("Calories", day.value * animationMultiplier)
+        // Calculate reference line position as percentage of max
+        let baseReferencePercent = chartYMax > 0 ? referenceValue / chartYMax : 0
+        let referencePercent = baseReferencePercent * (isAnimated ? 1.0 : 0.0)
+
+        return GeometryReader { geometry in
+            let barWidth: CGFloat = 6
+            let spacing: CGFloat =
+                (geometry.size.width - barWidth * CGFloat(dailyCalories.count))
+                / CGFloat(max(1, dailyCalories.count - 1))
+
+            ZStack(alignment: .bottom) {
+                // Bars
+                HStack(alignment: .bottom, spacing: spacing) {
+                    ForEach(dailyCalories) { day in
+                        let baseHeightPercent = chartYMax > 0 ? day.value / chartYMax : 0
+                        let heightPercent = baseHeightPercent * (isAnimated ? 1.0 : 0.0)
+                        let barHeight = geometry.size.height * heightPercent
+
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(DesignTokens.Colors.calories)
+                            .frame(width: barWidth, height: max(0, barHeight))
+                            .animation(.easeOut(duration: 0.6), value: heightPercent)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+
+                // Reference line (dotted)
+                let lineY = geometry.size.height * (1 - referencePercent)
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: lineY))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: lineY))
+                }
+                .stroke(
+                    displayMode == .expenditure
+                        ? DesignTokens.Colors.expenditure
+                        : DesignTokens.Colors.targets,
+                    style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
                 )
-                .foregroundStyle(DesignTokens.Colors.calories)
-                .cornerRadius(2)
+                .animation(.easeOut(duration: 0.6), value: referencePercent)
             }
-
-            // Reference line (dotted) for expenditure/target
-            RuleMark(y: .value("Reference", referenceValue * animationMultiplier))
-                .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                .foregroundStyle(
-                    displayMode == .expenditure ? DesignTokens.Colors.expenditure : DesignTokens.Colors.targets)
         }
-        .chartXAxis(.hidden)
-        .chartYAxis(.hidden)
-        .animation(.easeOut(duration: 0.6), value: isAnimated)
         .accessibilityLabel("Energy balance chart showing last 30 days")
     }
 
@@ -247,7 +281,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
 struct EnergyBalanceMockData {
     struct DayCalories: Identifiable {
-        let id = UUID()
+        var id: Date { date }
         let date: Date
         let value: Double
     }

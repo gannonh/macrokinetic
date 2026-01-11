@@ -50,13 +50,10 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         content
             .task {
                 await loadDataIfNeeded()
-            }
-            .onAppear {
-                // Trigger grow-in animation after a brief delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeOut(duration: 0.6)) {
-                        isAnimated = true
-                    }
+                // Trigger grow-in animation after data loads
+                try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1s delay
+                withAnimation(.easeOut(duration: 0.6)) {
+                    isAnimated = true
                 }
             }
     }
@@ -192,10 +189,17 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
     // MARK: - Calorie Ring
 
     private var calorieRing: some View {
-        let baseProgress =
-            caloriesTarget > 0
-            ? Double(caloriesConsumed) / Double(caloriesTarget)
-            : 0
+        // In Consumed mode: show consumed/target (how full)
+        // In Remaining mode: show remaining/target (how much left)
+        let baseProgress: Double = {
+            guard caloriesTarget > 0 else { return 0 }
+            switch displayMode {
+            case .consumed:
+                return Double(caloriesConsumed) / Double(caloriesTarget)
+            case .remaining:
+                return Double(caloriesRemaining) / Double(caloriesTarget)
+            }
+        }()
         let progress = baseProgress * (isAnimated ? 1.0 : 0.0)
 
         return ZStack {
@@ -287,8 +291,24 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
         target: Int,
         color: Color
     ) -> some View {
-        let baseProgress = target > 0 ? Double(consumed) / Double(target) : 0
+        let remaining = max(0, target - consumed)
+
+        // In Consumed mode: show consumed/target (how full)
+        // In Remaining mode: show remaining/target (how much left)
+        let baseProgress: Double = {
+            guard target > 0 else { return 0 }
+            switch displayMode {
+            case .consumed:
+                return Double(consumed) / Double(target)
+            case .remaining:
+                return Double(remaining) / Double(target)
+            }
+        }()
         let progress = baseProgress * (isAnimated ? 1.0 : 0.0)
+
+        // Display value and text based on mode
+        let displayValue = displayMode == .consumed ? consumed : remaining
+        let valueText = displayMode == .consumed ? "\(consumed) / \(target)g" : "\(remaining)g left"
 
         return VStack(alignment: .leading, spacing: 4) {
             // Label
@@ -314,12 +334,12 @@ struct DailyNutritionHeroWidget: View, DashboardWidget {
             .frame(height: 8)
 
             // Value text
-            Text("\(consumed) / \(target)g")
+            Text(valueText)
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(consumed) of \(target) grams")
+        .accessibilityLabel("\(label): \(displayValue) \(displayMode == .consumed ? "of" : "left of") \(target) grams")
         .accessibilityValue(String(format: "%.0f percent", progress * 100))
     }
 }

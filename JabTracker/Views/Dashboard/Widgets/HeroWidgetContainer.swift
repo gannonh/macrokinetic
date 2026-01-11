@@ -43,6 +43,19 @@ extension EnvironmentValues {
     }
 }
 
+// MARK: - Selected Hero Page Index Environment Key
+
+struct SelectedHeroPageIndexKey: EnvironmentKey {
+    static let defaultValue: Int = 0
+}
+
+extension EnvironmentValues {
+    var selectedHeroPageIndex: Int {
+        get { self[SelectedHeroPageIndexKey.self] }
+        set { self[SelectedHeroPageIndexKey.self] = newValue }
+    }
+}
+
 // MARK: - HeroWidgetContainer
 
 /// Swipeable carousel container for hero dashboard widgets.
@@ -98,6 +111,7 @@ struct HeroWidgetContainer: View {
                 .frame(height: 250)
                 .environment(\.heroDisplayMode, displayMode)
                 .environment(\.energyDisplayMode, energyDisplayMode)
+                .environment(\.selectedHeroPageIndex, selectedIndex)
 
                 // Segment control - switches based on selected page
                 // Pages 0 & 1 (Weekly/Daily): Consumed/Remaining
