@@ -109,16 +109,23 @@ actor LocalFoodDatabase {
         }
 
         // Prepare FTS5 query with prefix matching
-        let ftsQuery =
+        let queryWords =
             trimmedQuery
             .components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
+        let ftsQuery =
+            queryWords
             .map { "\($0)*" }  // Add prefix matching
             .joined(separator: " ")
 
+        // Create pattern for name prefix boosting (names starting with search term rank higher)
+        // E.g., "banana" -> "banana%" so "Bananas, raw" ranks above "Snacks, banana chips"
+        let namePrefixPattern = (queryWords.first ?? trimmedQuery).lowercased() + "%"
+
         // Build SQL with optional source filtering
+        // Ranking: 1) Names starting with search term first, 2) Then by BM25 relevance
         let sql: String
-        var parameters: [Any] = [ftsQuery]
+        var parameters: [Any] = []
 
         if let sources = sources, !sources.isEmpty {
             // Build placeholders for IN clause (?, ?, ...)
@@ -132,10 +139,15 @@ actor LocalFoodDatabase {
                 FROM foods_fts fts
                 JOIN foods f ON fts.rowid = f.id
                 WHERE foods_fts MATCH ? AND f.source IN (\(placeholders))
-                ORDER BY rank
+                ORDER BY
+                    CASE WHEN LOWER(f.name) LIKE ? THEN 0 ELSE 1 END,
+                    bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
+            // Parameter order: ftsQuery, sources..., namePrefixPattern, limit
+            parameters.append(ftsQuery)
             parameters.append(contentsOf: sources)
+            parameters.append(namePrefixPattern)
             parameters.append(limit)
         } else {
             sql = """
@@ -147,9 +159,14 @@ actor LocalFoodDatabase {
                 FROM foods_fts fts
                 JOIN foods f ON fts.rowid = f.id
                 WHERE foods_fts MATCH ?
-                ORDER BY rank
+                ORDER BY
+                    CASE WHEN LOWER(f.name) LIKE ? THEN 0 ELSE 1 END,
+                    bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
+            // Parameter order: ftsQuery, namePrefixPattern, limit
+            parameters.append(ftsQuery)
+            parameters.append(namePrefixPattern)
             parameters.append(limit)
         }
 
