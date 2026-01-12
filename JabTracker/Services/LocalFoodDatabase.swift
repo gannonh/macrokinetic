@@ -26,8 +26,8 @@ struct LocalFoodResult {
 }
 
 /// Service for searching the bundled food database (USDA + Open Food Facts) using SQLite FTS5
-@MainActor
-final class LocalFoodDatabase {
+/// Note: Database queries run on a background thread to avoid blocking the main thread
+final class LocalFoodDatabase: @unchecked Sendable {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "LocalFoodDatabase")
 
     private var database: OpaquePointer?
@@ -57,9 +57,7 @@ final class LocalFoodDatabase {
     }
 
     deinit {
-        MainActor.assumeIsolated {
-            closeDatabase()
-        }
+        closeDatabase()
     }
 
     // MARK: - Database Connection
@@ -157,7 +155,10 @@ final class LocalFoodDatabase {
             parameters.append(limit)
         }
 
-        return try executeSearch(sql: sql, parameters: parameters)
+        // Execute SQLite query on background thread to avoid blocking main thread
+        return try await Task.detached(priority: .userInitiated) { [self] in
+            try self.executeSearch(sql: sql, parameters: parameters)
+        }.value
     }
 
     /// Look up a specific food by FDC ID
@@ -179,7 +180,10 @@ final class LocalFoodDatabase {
             LIMIT 1
             """
 
-        let results = try executeSearch(sql: sql, parameters: [fdcId])
+        // Execute SQLite query on background thread to avoid blocking main thread
+        let results = try await Task.detached(priority: .userInitiated) { [self] in
+            try self.executeSearch(sql: sql, parameters: [fdcId])
+        }.value
         return results.first
     }
 
@@ -205,7 +209,10 @@ final class LocalFoodDatabase {
             LIMIT ?
             """
 
-        return try executeSearch(sql: sql, parameters: [category, limit])
+        // Execute SQLite query on background thread to avoid blocking main thread
+        return try await Task.detached(priority: .userInitiated) { [self] in
+            try self.executeSearch(sql: sql, parameters: [category, limit])
+        }.value
     }
 
     // MARK: - Private Helpers
