@@ -80,8 +80,6 @@ struct ShortcutsSheet: View {
                 listRowsSection
             }
             .padding(.top, 8)
-            .navigationTitle("Shortcuts")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
