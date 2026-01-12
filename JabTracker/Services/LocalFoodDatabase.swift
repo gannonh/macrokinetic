@@ -26,16 +26,20 @@ struct LocalFoodResult {
 }
 
 /// Service for searching the bundled food database (USDA + Open Food Facts) using SQLite FTS5
-/// Note: Database queries run on a background thread to avoid blocking the main thread
-final class LocalFoodDatabase: @unchecked Sendable {
+/// Note: Actor ensures serial access to SQLite connection (required for thread safety)
+actor LocalFoodDatabase {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "LocalFoodDatabase")
 
     private var database: OpaquePointer?
     private let databasePath: String
+    private var hasOpened = false
 
     /// Whether the database is available for queries
     var isAvailable: Bool {
-        database != nil
+        get async {
+            ensureDatabaseOpen()
+            return database != nil
+        }
     }
 
     /// Initialize with the bundled database
@@ -47,22 +51,22 @@ final class LocalFoodDatabase: @unchecked Sendable {
             Self.logger.warning("USDA foods database not found in bundle")
             self.databasePath = ""
         }
-        openDatabase()
+        // Database opened lazily on first query
     }
 
     /// Initialize with a custom path (for testing)
     init(databasePath: String) {
         self.databasePath = databasePath
-        openDatabase()
-    }
-
-    deinit {
-        closeDatabase()
+        // Database opened lazily on first query
     }
 
     // MARK: - Database Connection
 
-    private func openDatabase() {
+    /// Opens database on first use (lazy initialization)
+    private func ensureDatabaseOpen() {
+        guard !hasOpened else { return }
+        hasOpened = true
+
         guard !databasePath.isEmpty else {
             Self.logger.warning("Database path is empty, database unavailable")
             return
@@ -83,13 +87,6 @@ final class LocalFoodDatabase: @unchecked Sendable {
         }
     }
 
-    private func closeDatabase() {
-        if database != nil {
-            sqlite3_close(database)
-            database = nil
-        }
-    }
-
     // MARK: - Search Methods
 
     /// Search for foods matching the query using FTS5 full-text search
@@ -99,12 +96,13 @@ final class LocalFoodDatabase: @unchecked Sendable {
     ///   - sources: Optional array of source values to filter by (e.g., ["foundation", "sr_legacy"] for USDA,
     ///              or ["openFoodFacts"] for branded). If nil, searches all sources.
     /// - Returns: Array of matching foods
-    func search(query: String, limit: Int = 20, sources: [String]? = nil) async throws -> [LocalFoodResult] {
+    func search(query: String, limit: Int = 20, sources: [String]? = nil) throws -> [LocalFoodResult] {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             return []
         }
 
+        ensureDatabaseOpen()
         guard database != nil else {
             Self.logger.warning("Database not available for search")
             return []
@@ -155,16 +153,14 @@ final class LocalFoodDatabase: @unchecked Sendable {
             parameters.append(limit)
         }
 
-        // Execute SQLite query on background thread to avoid blocking main thread
-        return try await Task.detached(priority: .userInitiated) { [self] in
-            try self.executeSearch(sql: sql, parameters: parameters)
-        }.value
+        return try executeSearch(sql: sql, parameters: parameters)
     }
 
     /// Look up a specific food by FDC ID
     /// - Parameter fdcId: USDA FoodData Central ID
     /// - Returns: The food if found, nil otherwise
-    func lookup(fdcId: Int) async throws -> LocalFoodResult? {
+    func lookup(fdcId: Int) throws -> LocalFoodResult? {
+        ensureDatabaseOpen()
         guard database != nil else {
             return nil
         }
@@ -180,10 +176,31 @@ final class LocalFoodDatabase: @unchecked Sendable {
             LIMIT 1
             """
 
-        // Execute SQLite query on background thread to avoid blocking main thread
-        let results = try await Task.detached(priority: .userInitiated) { [self] in
-            try self.executeSearch(sql: sql, parameters: [fdcId])
-        }.value
+        let results = try executeSearch(sql: sql, parameters: [fdcId])
+        return results.first
+    }
+
+    /// Look up a food by barcode
+    /// - Parameter barcode: Product barcode (EAN/UPC)
+    /// - Returns: The food if found, nil otherwise
+    func lookupBarcode(_ barcode: String) throws -> LocalFoodResult? {
+        ensureDatabaseOpen()
+        guard database != nil else {
+            return nil
+        }
+
+        let sql = """
+            SELECT fdc_id, name, brand,
+                   calories_per_100g, protein_per_100g, carbs_per_100g,
+                   fat_per_100g, fiber_per_100g, category,
+                   source, barcode,
+                   serving_size, serving_unit, serving_options
+            FROM foods
+            WHERE barcode = ?
+            LIMIT 1
+            """
+
+        let results = try executeSearch(sql: sql, parameters: [barcode])
         return results.first
     }
 
@@ -192,7 +209,8 @@ final class LocalFoodDatabase: @unchecked Sendable {
     ///   - category: Category name to filter by
     ///   - limit: Maximum number of results
     /// - Returns: Array of foods in the category
-    func searchByCategory(_ category: String, limit: Int = 50) async throws -> [LocalFoodResult] {
+    func searchByCategory(_ category: String, limit: Int = 50) throws -> [LocalFoodResult] {
+        ensureDatabaseOpen()
         guard database != nil else {
             return []
         }
@@ -209,10 +227,7 @@ final class LocalFoodDatabase: @unchecked Sendable {
             LIMIT ?
             """
 
-        // Execute SQLite query on background thread to avoid blocking main thread
-        return try await Task.detached(priority: .userInitiated) { [self] in
-            try self.executeSearch(sql: sql, parameters: [category, limit])
-        }.value
+        return try executeSearch(sql: sql, parameters: [category, limit])
     }
 
     // MARK: - Private Helpers
