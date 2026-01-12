@@ -44,6 +44,7 @@ struct FoodSearchSheet: View {
     @State var barcodeNotFound = false
     @State var lastScannedBarcode: String?
     @State private var searchTask: Task<Void, Never>?
+    @FocusState private var isSearchFocused: Bool
 
     // MARK: - Constants
 
@@ -330,6 +331,7 @@ struct FoodSearchSheet: View {
             TextField("Search for a food", text: $viewModel.searchText)
                 .textFieldStyle(.plain)
                 .autocorrectionDisabled()
+                .focused($isSearchFocused)
                 .accessibilityIdentifier(Self.searchFieldIdentifier)
 
             if !viewModel.searchText.isEmpty {
@@ -359,6 +361,15 @@ struct FoodSearchSheet: View {
                 try? await Task.sleep(nanoseconds: SearchTiming.debounceNanoseconds)
                 guard !Task.isCancelled else { return }
                 await viewModel.performSearch()
+            }
+        }
+        .onAppear {
+            // Auto-focus search field when in search mode
+            // Delay slightly to ensure sheet animation completes
+            if viewModel.selectedMethod == .search {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isSearchFocused = true
+                }
             }
         }
     }
