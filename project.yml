@@ -99,6 +99,10 @@ schemes:
         "--seed-test-30d": false
         "--seed-test-90d": false
         "--seed-test-1y": false
+        "--seed-test-1y-high": false
+        "--seed-test-1y-medium": false
+        "--seed-test-1y-low": false
+        "--seed-test-new-user": false
         "--seed-check-in-ready": false
         "--seed-check-in-good": false
         "--seed-check-in-minimum": false
@@ -112,7 +116,11 @@ schemes:
         "--seed-test-7d": false # medication history seeding 
         "--seed-test-30d": false # medication history seeding 
         "--seed-test-90d": false # medication history seeding 
-        "--seed-test-1y": false # medication history seeding 
+        "--seed-test-1y": false # medication history seeding
+        "--seed-test-1y-high": false # 1 year with high quality data (complete daily logging)
+        "--seed-test-1y-medium": false # 1 year with medium quality data (4-5 days/week)
+        "--seed-test-1y-low": false # 1 year with low quality data (1-2 days/week)
+        "--seed-test-new-user": false # new user - today only data
         "--test-titration-data": false
         "--seed-check-in-ready": false  # Seeds goal/program with check-in due (excellent tier)
         "--seed-check-in-good": false  # Seeds goal/program with good data tier
