@@ -85,7 +85,7 @@ struct ReminderPreferencesView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
+                .fill(DesignTokens.Colors.cardBackground)
         )
     }
 
@@ -169,7 +169,7 @@ struct ReminderPreferencesView: View {
             Text("Multiple: \(enableMultiple ? "Enabled" : "Disabled")")
         }
         .padding()
-        .background(Color.blue.opacity(0.1))
+        .background(DesignTokens.Colors.primary.opacity(0.1))
         .cornerRadius(8)
     }
     .padding()
