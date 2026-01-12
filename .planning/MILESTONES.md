@@ -1,5 +1,33 @@
 # Project Milestones: MacroKinetic
 
+## v0.7.0 Dashboard Widget UX (Shipped: 2026-01-12)
+
+**Delivered:** Unified dashboard with widget-based UI featuring hero carousel (Weekly Nutrition, Daily Nutrition, Energy Balance), standard insights grid (4 widgets), detail views with time filtering and Swift Charts, and TDEE history tracking infrastructure.
+
+**Phases completed:** 30-34 (14 plans total, including decimal phase 33.1)
+
+**Key accomplishments:**
+
+- DashboardWidget protocol and container components (WidgetCard, HeroWidgetContainer, StandardWidgetGroup)
+- Hero carousel with 3 swipeable widgets using environment-based display mode toggles
+- Standard insights grid with 4 widgets (Expenditure, Weight Trend, Energy Balance, Goal Progress)
+- Detail views for Weight Trend, Expenditure, and Energy Balance with time period filtering and Swift Charts
+- TDEESnapshot model for historical TDEE tracking with daily backfill logic
+- Live data wiring with MVVM ViewModels and comprehensive E2E test suite
+
+**Stats:**
+
+- 151 files modified
+- +20,324 / -2,173 lines (net +18,151)
+- 6 phases (including 1 decimal phase), 14 plans, 296 min execution time (~5 hours)
+- 5 days from start to ship (Jan 8-12, 2026)
+
+**Git range:** `feat(30-01)` → `feat(34-04)`
+
+**What's next:** Protein Alerts, Analytics enhancements, Subscription Management, or Recipe Builder
+
+---
+
 ## v0.6.0 Onboarding Redux (Shipped: 2026-01-07)
 
 **Delivered:** Complete rewrite of onboarding focused on core experience — USP showcase with mint brand identity, streamlined goal/program setup, permission screens (HealthKit, Face ID, Notifications), and animated completion flow with smooth transition to main app.

@@ -1,18 +1,19 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-07)
+## Current State (Updated: 2026-01-12)
 
-**Shipped:** v0.6.0 Onboarding Redux (2026-01-07)
+**Shipped:** v0.7.0 Dashboard Widget UX (2026-01-12)
 **Status:** Development / TestFlight
-**Codebase:** ~68,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+**Codebase:** ~71,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.6.0 Delivered:**
-- Complete onboarding rewrite with new 17-step @Observable OnboardingViewModel
-- Welcome screen with AppLogo and 4-feature USP carousel (mint brand identity)
-- Streamlined goal/program setup with GoalProgramService smart defaults
-- Permission screens for HealthKit, Face ID (dynamic detection), and Notifications
-- CompletionStepView with animated checkmark, summary card, and next-steps guidance
-- Comprehensive E2E test covering full onboarding flow
+**v0.7.0 Delivered:**
+- Unified dashboard with widget-based UI and DashboardWidget protocol
+- Hero carousel with 3 swipeable widgets (Weekly Nutrition, Daily Nutrition, Energy Balance)
+- Standard insights grid with 4 widgets (Expenditure, Weight Trend, Energy Balance, Goal Progress)
+- Detail views for Weight Trend, Expenditure, and Energy Balance with Swift Charts
+- TDEESnapshot model for historical TDEE tracking with daily backfill
+- Environment-based display mode toggles for widget state sharing
+- Live data wiring with MVVM ViewModels and comprehensive E2E test suite
 
 ## Next Milestone Goals
 
@@ -20,9 +21,9 @@
 
 **Candidates:**
 - Protein Preservation Alerts - Minimum protein thresholds and notifications
-- Analytics Dashboard - Weight trends, nutrition insights, medication correlation
 - Subscription Management - StoreKit 2 integration and paywall
 - Recipe Builder - Combine foods into calculated recipes
+- GLP-1 Medication Correlation - Connect dose timing with appetite/nutrition patterns
 
 ## Vision
 

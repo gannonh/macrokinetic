@@ -10,6 +10,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Completed Milestones
 
+- ✅ [v0.7.0 Dashboard Widget UX](milestones/v0.7.0-ROADMAP.md) (Phases 30-34) - SHIPPED 2026-01-12
 - ✅ [v0.6.0 Onboarding Redux](milestones/v0.6.0-ROADMAP.md) (Phases 25-29) - SHIPPED 2026-01-07
 - ✅ [v0.5.0 Navigation Refinement](milestones/v0.5.0-ROADMAP.md) (Phases 22-24) - SHIPPED 2026-01-05
 - ✅ [v0.4.0 Calorie Expenditure Enhancements](milestones/v0.4.0-ROADMAP.md) (Phases 18-21) - SHIPPED 2026-01-04
@@ -19,114 +20,19 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 🚧 **v0.7.0 Dashboard Widget UX** - Phases 30-34 (in progress)
+(None in progress - ready for next milestone planning)
 
 ## Phases
 
-### 🚧 v0.7.0 Dashboard Widget UX (In Progress)
-
-**Milestone Goal:** Build the new unified dashboard with widget-based UI — static mockups first, wired to data once patterns established.
-
-**Design Reference:**: `mocks/dashboard/DASHBOARD.png`
-
-#### Phase 30: Dashboard Foundation
-
-**Goal**: Create DashboardView with widget container system, establish reusable widget card patterns
-**Depends on**: Previous milestone complete
-**Research**: Unlikely (SwiftUI patterns)
-**Plans**: TBD
-
-**Figma References:**
-- Hero Widget Container: `mocks/dashboard/Hero Widget.png`
-- Standard Widget Pattern: `mocks/dashboard/Standard Widget, Grouped.png`
-
-Plans:
-- [x] 30-01: Foundation & Containers (DashboardWidget protocol, WidgetCard, HeroWidgetContainer, StandardWidgetGroup)
-- [x] 30-02: Hero Widget Integration (WeeklyNutritionHeroWidget with mock data, integrate into DashboardView)
-
-#### Phase 31: Main Widget (Hero)
-
-**Goal**: Swipeable carousel with 3 states (Weekly Nutrition, Energy Balance, Daily Nutrition), Consumed/Remaining toggle
-**Depends on**: Phase 30
-**Research**: Unlikely (Swift Charts, internal)
-**Plans**: TBD
-
-**Figma References:**
-- Weekly Nutrition: `mocks/dashboard/HERO - Weekly Nutrition.png`
-- Energy Balance: `mocks/dashboard/HERO - Energy Balance.png`
-- Daily Nutrition: `mocks/dashboard/HERO - Daily Nutrition.png`
-
-Plans:
-- [x] 31-01: Daily Nutrition Widget (DailyNutritionHeroWidget with circular ring, macro bars, environment-based toggle)
-- [x] 31-02: Energy Balance Widget + Integration (EnergyBalanceHeroWidget with Swift Charts, complete carousel)
-
-#### Phase 32: Standard Widgets - Insights
-
-**Goal**: Insights & Analytics widget group with Expenditure, Weight Trend, Energy Balance, Goal Progress, Deficit cards
-**Depends on**: Phase 31
-**Research**: Unlikely (internal patterns)
-**Plans**: TBD
-
-**Figma References:**
-- Insights & Analytics Group: `mocks/dashboard/Standard Widget, Grouped.png`
-
-Plans:
-- [x] 32-01: Standard Widget Components (ExpenditureWidget, WeightTrendWidget, EnergyBalanceWidget, GoalProgressWidget)
-
-#### Phase 33: Detail Views
-
-**Goal**: Weight Trend, Expenditure, Energy Balance detail screens with charts and time range filters
-**Depends on**: Phase 32
-**Research**: Unlikely (Swift Charts, internal)
-**Plans**: 3
-
-**Figma References:**
-- Weight Trend Detail: `mocks/dashboard/Detail - Weight Trend.png`
-- Expenditure Detail: `mocks/dashboard/Detail - Expenditure.png`
-- Energy Balance Detail: `mocks/dashboard/Detail - Energy Balance.png`
-
-Plans:
-- [x] 33-01: Weight Trend Detail View (header, time filters, line chart, insights cards, data sources)
-- [x] 33-02: Expenditure Detail View (bar chart, insights cards, shared DetailTimePeriodSelector)
-- [x] 33-03: Energy Balance Detail View (mode toggle, navigation wiring from widgets)
-
-#### Phase 33.1: TDEE History Tracking (INSERTED)
-
-**Goal**: Store daily TDEE calculations so ExpenditureDetailView can display real historical expenditure data instead of synthetic values
-**Depends on**: Phase 33
-**Research**: Unlikely (internal data model)
-**Plans**: TBD
-
-Plans:
-- [x] 33.1-01: TDEESnapshot Model + TDEEService + ViewModel Integration
-- [x] 33.1-02: Daily TDEE Snapshot Backfill (holding vs adaptive sources)
-
-**Details:**
-Urgent insertion - Phase 34-03 implemented synthetic data for Expenditure detail view because historical TDEE data doesn't exist. Need to:
-1. Add TDEESnapshot model to store TDEE values when recalculated
-2. Update TDEECalculationEngine to save snapshots
-3. Update ExpenditureDetailViewModel to use real history
-4. (33.1-02) Add daily snapshot creation with backfill and holding/adaptive distinction
-
-#### Phase 34: Integration & Polish
-
-**Goal**: Wire static UI to live data, transitions, E2E tests
-**Depends on**: Phase 33
-**Research**: Unlikely (internal wiring)
-**Plans**: 4
-
-Plans:
-- [x] 34-01: Hero Widgets Live Data (DailyNutrition, WeeklyNutrition, EnergyBalance)
-- [x] 34-02: Standard Widgets Live Data (Expenditure, WeightTrend, EnergyBalance, GoalProgress)
-- [x] 34-03: Detail Views Live Data (WeightTrend, Expenditure, EnergyBalance)
-- [x] 34-04: E2E Tests & Polish (dashboard tests, loading states, transitions)
+(No active phases - ready for next milestone planning)
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
 
-### 🚧 v0.7.0 Dashboard Widget UX (Phases 30-34)
+<details>
+<summary>✅ v0.7.0 Dashboard Widget UX (Phases 30-34) - SHIPPED 2026-01-12</summary>
 
 | Phase                           | Plans Complete | Status      | Completed  |
 | ------------------------------- | -------------- | ----------- | ---------- |
@@ -136,6 +42,8 @@ Phases execute in numeric order within each milestone.
 | 33. Detail Views                | 3/3            | Complete    | 2026-01-10 |
 | 33.1 TDEE History (INSERTED)    | 2/2            | Complete    | 2026-01-11 |
 | 34. Integration & Polish        | 4/4            | Complete    | 2026-01-12 |
+
+</details>
 
 <details>
 <summary>✅ v0.6.0 Onboarding Redux (Phases 25-29) - SHIPPED 2026-01-07</summary>
