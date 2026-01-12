@@ -233,6 +233,7 @@
       "Utils/ModelContext+CurrentUser.swift",
       "Utils/PreviewHelpers.swift",
       "Utils/TestDataSeeding.swift",
+      "Utils/TestDataSeeding+Quality.swift",
       "Utilities/SeededRNG.swift",
       "Views/Analytics/AdherenceMetricsCard.swift",
       "Views/Analytics/AdherenceProgressIndicator.swift",

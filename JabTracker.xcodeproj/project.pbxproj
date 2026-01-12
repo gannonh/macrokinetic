@@ -242,6 +242,7 @@
 		66EDFF1DF1F7356369CDBED8 /* BiologicalSex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E269A3EBC55C817711B39F4 /* BiologicalSex.swift */; };
 		679A24B544908D9306D0F6F1 /* ShortcutButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46CAB1EB265743F8965E95E /* ShortcutButtonTests.swift */; };
 		682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */; };
+		683A5D6ECD91170E5FFBCF4F /* TestDataSeeding+Quality.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C4228BBE2A18864F21A401 /* TestDataSeeding+Quality.swift */; };
 		68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */; };
 		691E3606502F2B1EB6508ED8 /* CreateFoodViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99234A94DDA7AD9A89878536 /* CreateFoodViewModelTests.swift */; };
 		6987A1D4EF21586531C4FE0E /* ConcentrationTimelineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240B04AE5BF1245C25DDF8DE /* ConcentrationTimelineChart.swift */; };
@@ -1164,6 +1165,7 @@
 		EF5486756E163374C18E8696 /* NotificationServiceActivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceActivationTests.swift; sourceTree = "<group>"; };
 		EFAC98568E2B6DDACE02702F /* ShortcutRowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRowButton.swift; sourceTree = "<group>"; };
 		EFF8B252630E402BBA4F704A /* LibraryTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryTab.swift; sourceTree = "<group>"; };
+		F0C4228BBE2A18864F21A401 /* TestDataSeeding+Quality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TestDataSeeding+Quality.swift"; sourceTree = "<group>"; };
 		F159BD90B4C33E36F0D9A449 /* ConcentrationChartGestureHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationChartGestureHandlerTests.swift; sourceTree = "<group>"; };
 		F1CC08CDA4082AC79CF36A50 /* BodyMetricsVisibilityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyMetricsVisibilityUITests.swift; sourceTree = "<group>"; };
 		F20F2BCFE26F733D5B7CEC3E /* UserProfileViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewTests.swift; sourceTree = "<group>"; };
@@ -2086,6 +2088,7 @@
 				89F2F17A6910B53D3C7274E5 /* PreviewHelpers.swift */,
 				E0DD385076B17502B720F566 /* ProfileValidation.swift */,
 				9F09C8437E50CB42D0FAD5DD /* TestDataSeeding.swift */,
+				F0C4228BBE2A18864F21A401 /* TestDataSeeding+Quality.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -3031,6 +3034,7 @@
 				B00D28AE84A51EC284CD9653 /* TDEEService.swift in Sources */,
 				D734D0485A2D4ABEA89BF937 /* TDEESnapshot.swift in Sources */,
 				3C3201FF56466E9027707F7C /* Tab.swift in Sources */,
+				683A5D6ECD91170E5FFBCF4F /* TestDataSeeding+Quality.swift in Sources */,
 				F03D98EBAB3A375CA80C21A6 /* TestDataSeeding.swift in Sources */,
 				F05249E24C3261BE478DCCF8 /* TimeConstants.swift in Sources */,
 				F266F88AC7BAF42753893D50 /* TimePeriodSelector.swift in Sources */,
@@ -3108,7 +3112,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = ZBZKKWF95G;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -3191,7 +3195,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = ZBZKKWF95G;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

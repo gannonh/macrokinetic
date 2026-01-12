@@ -278,7 +278,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     // swiftlint:disable:next orphaned_doc_comment
     /// Seed test data for UI testing if TEST_DATA_SEED environment variable or time period launch arguments are set
     /// Enables fast E2E performance testing with large datasets and manual testing with realistic data
-    // swiftlint:disable:next function_body_length
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     private func seedTestDataIfRequested(for user: User, context: ModelContext) async {
         #if DEBUG || TEST
             let environment = ProcessInfo.processInfo.environment
@@ -305,6 +305,12 @@ class AuthenticationManager: NSObject, ObservableObject {
             let shouldSeedCheckInMinimum = arguments.contains("--seed-check-in-minimum")
             let shouldSeedCheckInInsufficient = arguments.contains("--seed-check-in-insufficient")
 
+            // Check for data quality seeding flags (1-year data with different densities)
+            let shouldSeedHighQuality = arguments.contains("--seed-test-1y-high")
+            let shouldSeedMediumQuality = arguments.contains("--seed-test-1y-medium")
+            let shouldSeedLowQuality = arguments.contains("--seed-test-1y-low")
+            let shouldSeedNewUser = arguments.contains("--seed-test-new-user")
+
             // Program style modifier (default: Coached, with flag: Collaborative)
             let useCollaborative = arguments.contains("--seed-collaborative")
             let programStyle: ProgramStyle = useCollaborative ? .collaborative : .coached
@@ -313,9 +319,41 @@ class AuthenticationManager: NSObject, ObservableObject {
                 shouldSeedCheckInReady || shouldSeedCheckInGood
                 || shouldSeedCheckInMinimum || shouldSeedCheckInInsufficient
 
+            let hasDataQualitySeeding =
+                shouldSeedHighQuality || shouldSeedMediumQuality
+                || shouldSeedLowQuality || shouldSeedNewUser
+
             // If neither flag is present, skip seeding
-            if daysOfHistory == 0 && !hasCheckInSeeding {
+            if daysOfHistory == 0 && !hasCheckInSeeding && !hasDataQualitySeeding {
                 return  // No seeding requested
+            }
+
+            // Seed data quality variants (1-year with different densities)
+            if hasDataQualitySeeding {
+                let qualityLevel: DataQualityLevel
+                if shouldSeedHighQuality {
+                    qualityLevel = .high
+                } else if shouldSeedMediumQuality {
+                    qualityLevel = .medium
+                } else if shouldSeedLowQuality {
+                    qualityLevel = .low
+                } else {
+                    qualityLevel = .newUser
+                }
+
+                Self.logger.info("🎯 Seeding data quality level: \(qualityLevel.rawValue)")
+                await MainActor.run {
+                    do {
+                        _ = try TestDataSeeding.seedDataWithQuality(
+                            into: context,
+                            qualityLevel: qualityLevel,
+                            existingUser: user
+                        )
+                    } catch {
+                        Self.logger.error("❌ Data quality seeding failed: \(error)")
+                    }
+                }
+                return  // Data quality seeding is comprehensive, skip other seeding
             }
 
             // Seed check-in data based on requested tier (only one tier at a time)
