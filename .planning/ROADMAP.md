@@ -20,16 +20,77 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-(None in progress - ready for next milestone planning)
+- 🚧 **v0.8.0 Food Search & Library** - Phases 35-39 (in progress)
 
 ## Phases
 
-(No active phases - ready for next milestone planning)
+### 🚧 v0.8.0 Food Search & Library (In Progress)
+
+**Milestone Goal:** Dramatically improve food search UX with better performance, ranking, and serving size handling
+
+#### Phase 35: Search Performance & UX
+
+**Goal**: Fix sluggish typing, auto-focus input, expand amount field tap target, polish search header
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 35-01: TBD (run /gsd:plan-phase 35 to break down)
+
+#### Phase 36: Search Ranking & Recall
+
+**Goal**: Improve FTS5 ranking so common foods surface easily (apples, eggs, etc.)
+**Depends on**: Phase 35
+**Research**: Unlikely (FTS5 optimization, internal)
+**Plans**: TBD
+
+Plans:
+- [ ] 36-01: TBD
+
+#### Phase 37: Unit/Serving Strategy
+
+**Goal**: Research competitors and implement serving size improvements (1 large egg, 1 medium apple)
+**Depends on**: Phase 36
+**Research**: Likely (competitive analysis required)
+**Research topics**: How other apps handle serving sizes, common consumption units from OFF/USDA data
+**Plans**: TBD
+
+Plans:
+- [ ] 37-01: TBD
+
+#### Phase 38: Bug Fixes & Cleanup
+
+**Goal**: Fix barcode scanner bug, remove API fallback, run database update
+**Depends on**: Phase 37
+**Research**: Unlikely (internal fixes)
+**Plans**: TBD
+
+Plans:
+- [ ] 38-01: TBD
+
+#### Phase 39: Pending Todos
+
+**Goal**: Restore concentration card to Analytics view, make check-in day setting more compact
+**Depends on**: Phase 38
+**Research**: Unlikely (straightforward UI work)
+**Plans**: TBD
+
+Plans:
+- [ ] 39-01: TBD
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
+
+| Phase                        | Milestone | Plans Complete | Status      | Completed |
+| ---------------------------- | --------- | -------------- | ----------- | --------- |
+| 35. Search Performance & UX  | v0.8.0    | 0/?            | Not started | -         |
+| 36. Search Ranking & Recall  | v0.8.0    | 0/?            | Not started | -         |
+| 37. Unit/Serving Strategy    | v0.8.0    | 0/?            | Not started | -         |
+| 38. Bug Fixes & Cleanup      | v0.8.0    | 0/?            | Not started | -         |
+| 39. Pending Todos            | v0.8.0    | 0/?            | Not started | -         |
 
 <details>
 <summary>✅ v0.7.0 Dashboard Widget UX (Phases 30-34) - SHIPPED 2026-01-12</summary>
