@@ -46,7 +46,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 35.1-01: TBD (run /gsd:plan-phase 35.1 to break down)
+- [x] 35.1-01: Food Search header indicators
 
 #### Phase 36: Search Ranking & Recall
 
@@ -97,7 +97,7 @@ Phases execute in numeric order within each milestone.
 | Phase                              | Milestone | Plans Complete | Status      | Completed  |
 | ---------------------------------- | --------- | -------------- | ----------- | ---------- |
 | 35. Search Performance & UX        | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
-| 35.1 Header Indicators (INSERTED)  | v0.8.0    | 0/?            | Not started | -         |
+| 35.1 Header Indicators (INSERTED)  | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
 | 36. Search Ranking & Recall        | v0.8.0    | 0/?            | Not started | -         |
 | 37. Unit/Serving Strategy   | v0.8.0    | 0/?            | Not started | -         |
 | 38. Bug Fixes & Cleanup     | v0.8.0    | 0/?            | Not started | -         |
