@@ -233,28 +233,30 @@ extension FoodSearchSheet {
 
             Spacer()
 
-            // Remaining macros display
+            // Macro progress indicators matching Food Log style
             HStack(spacing: 12) {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingCalories)) left")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(DesignTokens.Colors.calories)
-                    Text("Calories")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+                MacroProgressBar(
+                    label: "",
+                    current: viewModel.consumedCalories,
+                    target: viewModel.targetCalories,
+                    color: DesignTokens.Colors.calories,
+                    displayMode: .fraction,
+                    icon: "flame.fill",
+                    showRemainingBelow: true,
+                    accessibilityIdentifier: "search-header-calories"
+                )
+                .frame(width: 80)
 
-                Divider()
-                    .frame(height: 24)
-
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingProtein))g left")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(DesignTokens.Colors.protein)
-                    Text("Protein")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+                MacroProgressBar(
+                    label: "P",
+                    current: viewModel.consumedProtein,
+                    target: viewModel.targetProtein,
+                    color: DesignTokens.Colors.protein,
+                    displayMode: .fraction,
+                    showRemainingBelow: true,
+                    accessibilityIdentifier: "search-header-protein"
+                )
+                .frame(width: 70)
             }
         }
         .padding(.horizontal, 16)
