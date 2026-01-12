@@ -7,7 +7,7 @@
 - Search - improve performance, precision & recall:
   - Slow and sluggish when typing quickly; why slow when data 100% on device? Begins searching on first letter, synchronously, stopping typing flow.
   - Input box shold be in focus immediately when opening search screen
-  - Header: kcals and protien remaining indicators shoud look like indicators on the food log view
+  - Header: kcals and protein remaining indicators shoud look like indicators on the food log view: /Users/gannonhall/Desktop/Screenshot 2026-01-12 at 1.00.33 PM.png
   - The docs (docs/features/food-data-layer.md) mention that we do API searching as a fallback, but this shouldnt be necessary with the OFF+USDA local DB
 - Food Detail:
   - How are we handling units for food items from  USDA and OFF? The entry for Eggs for example doesnt have item as a unit, which would be the most common use. E.g. 2 whole eggs
