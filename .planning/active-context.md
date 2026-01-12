@@ -17,3 +17,11 @@
 ## Pending Todos
 
 - Run `/gsd:check-todos` and add pending todos to milestone scope
+
+---
+
+
+ /gsd:execute-plan .planning/phases/36-search-ranking-recall/36-01-PLAN.md; Context: We are in the process of working on this. Here is my latest feedback:
+
+ - I think we need to favor whole words so that Apple comes before APPLEBEE'S in search results. `/Users/gannonhall/Desktop/Simulator Screenshot - iPhone 17 Pro - 2026-01-12 at 14.32.39.png`
+ - Also, perhaps we favor shorter results over longer results so that in this case Bananas, raw comes before Bananas, dehydrated...: `/Users/gannonhall/Desktop/Simulator Screenshot - iPhone 17 Pro - 2026-01-12 at 14.34.09.png`
