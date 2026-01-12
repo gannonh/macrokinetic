@@ -132,7 +132,9 @@ actor LocalFoodDatabase {
                 FROM foods_fts fts
                 JOIN foods f ON fts.rowid = f.id
                 WHERE foods_fts MATCH ? AND f.source IN (\(placeholders))
-                ORDER BY rank
+                ORDER BY
+                    CASE WHEN f.source IN ('foundation', 'sr_legacy') THEN 0 ELSE 1 END,
+                    bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
             parameters.append(contentsOf: sources)
@@ -147,7 +149,9 @@ actor LocalFoodDatabase {
                 FROM foods_fts fts
                 JOIN foods f ON fts.rowid = f.id
                 WHERE foods_fts MATCH ?
-                ORDER BY rank
+                ORDER BY
+                    CASE WHEN f.source IN ('foundation', 'sr_legacy') THEN 0 ELSE 1 END,
+                    bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
             parameters.append(limit)
