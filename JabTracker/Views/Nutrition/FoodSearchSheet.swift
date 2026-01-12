@@ -43,6 +43,7 @@ struct FoodSearchSheet: View {
     @State var isLookingUpBarcode = false
     @State var barcodeNotFound = false
     @State var lastScannedBarcode: String?
+    @State private var searchTask: Task<Void, Never>?
 
     // MARK: - Constants
 
@@ -352,9 +353,11 @@ struct FoodSearchSheet: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .onChange(of: viewModel.searchText) { _, _ in
-            // Trigger search on any input (no minimum)
-            Task {
+            // Cancel any pending search task before starting a new one
+            searchTask?.cancel()
+            searchTask = Task {
                 try? await Task.sleep(nanoseconds: SearchTiming.debounceNanoseconds)
+                guard !Task.isCancelled else { return }
                 await viewModel.performSearch()
             }
         }
