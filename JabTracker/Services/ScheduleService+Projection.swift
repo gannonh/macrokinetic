@@ -149,10 +149,6 @@ extension ScheduleService {
 
     // MARK: - Private Pattern Generators
 
-    // swiftlint:disable function_body_length
-    // Rationale: generateWeeklyDoses algorithm requires complete pattern handling
-    // (weekday alignment, pause periods, window calculations) in single coherent flow.
-
     /**
      * Generates weekly scheduled doses.
      *
@@ -247,11 +243,6 @@ extension ScheduleService {
         return doses
     }
 
-    // swiftlint:enable function_body_length
-
-    // swiftlint:disable function_body_length
-    // Rationale: Split-dose algorithm requires complete pattern handling (alignment,
-    // pause periods, window calculations) in single coherent flow for medical accuracy.
     /**
      * Generates split-dose scheduled doses.
      *
@@ -349,8 +340,6 @@ extension ScheduleService {
 
         return doses
     }
-
-    // swiftlint:enable function_body_length
 
     /**
      * Generates custom recurrence pattern scheduled doses.

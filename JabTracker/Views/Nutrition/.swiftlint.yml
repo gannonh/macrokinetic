@@ -21,3 +21,4 @@ large_tuple:
 function_body_length:
   warning: 60
   error: 80
+
