@@ -135,10 +135,32 @@ struct ExpenditureWidget: View {
         }
     }
 
+    /// Chart data points - ensures a flat line when values are stable (holding)
+    /// When only 1 point or all values are the same, shows a flat line
+    private var chartDataPoints: [ExpenditureWidgetData.DataPoint] {
+        guard !dataPoints.isEmpty else { return [] }
+
+        // Check if all values are effectively the same (within 1 kcal)
+        let values = dataPoints.map { $0.value }
+        let minValue = values.min() ?? 0
+        let maxValue = values.max() ?? 0
+        let isStable = (maxValue - minValue) < 2
+
+        if dataPoints.count == 1 || isStable {
+            // Show flat line at the current TDEE
+            let flatValue = Double(tdeeValue)
+            return [
+                ExpenditureWidgetData.DataPoint(day: 0, value: flatValue),
+                ExpenditureWidgetData.DataPoint(day: 6, value: flatValue),
+            ]
+        }
+        return dataPoints
+    }
+
     @ViewBuilder
     private var visualizationSection: some View {
         if hasData {
-            Chart(dataPoints) { point in
+            Chart(chartDataPoints) { point in
                 LineMark(
                     x: .value("Day", point.day),
                     y: .value("TDEE", point.value)

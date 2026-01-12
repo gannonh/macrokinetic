@@ -410,60 +410,84 @@ struct ExpenditureDetailView: View {
         }
     }
 
+    /// Whether there's enough data to show a meaningful chart
+    private var hasEnoughChartData: Bool {
+        filteredData.count >= 3
+    }
+
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Chart {
-                // Flux range band (shaded area between upper and lower bounds)
-                ForEach(filteredData) { day in
-                    AreaMark(
-                        x: .value("Date", day.date),
-                        yStart: .value("Lower", day.lowerBound),
-                        yEnd: .value("Upper", day.upperBound)
-                    )
-                    .foregroundStyle(DesignTokens.Colors.expenditure.opacity(0.25))
-                    .interpolationMethod(.catmullRom)
-                }
+            ZStack {
+                if hasEnoughChartData {
+                    Chart {
+                        // Flux range band (shaded area between upper and lower bounds)
+                        ForEach(filteredData) { day in
+                            AreaMark(
+                                x: .value("Date", day.date),
+                                yStart: .value("Lower", day.lowerBound),
+                                yEnd: .value("Upper", day.upperBound)
+                            )
+                            .foregroundStyle(DesignTokens.Colors.expenditure.opacity(0.25))
+                            .interpolationMethod(.catmullRom)
+                        }
 
-                // Main expenditure line
-                ForEach(filteredData) { day in
-                    LineMark(
-                        x: .value("Date", day.date),
-                        y: .value("Expenditure", day.value)
-                    )
-                    .foregroundStyle(DesignTokens.Colors.expenditure)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
-                    .interpolationMethod(.catmullRom)
-                }
+                        // Main expenditure line
+                        ForEach(filteredData) { day in
+                            LineMark(
+                                x: .value("Date", day.date),
+                                y: .value("Expenditure", day.value)
+                            )
+                            .foregroundStyle(DesignTokens.Colors.expenditure)
+                            .lineStyle(StrokeStyle(lineWidth: 2))
+                            .interpolationMethod(.catmullRom)
+                        }
 
-                // Data point dots (only for 1W/1M)
-                if showDataPoints {
-                    ForEach(filteredData) { day in
-                        PointMark(
-                            x: .value("Date", day.date),
-                            y: .value("Expenditure", day.value)
-                        )
-                        .foregroundStyle(DesignTokens.Colors.expenditure)
-                        .symbolSize(25)
-                    }
-                }
-            }
-            .chartYScale(domain: chartYDomain)
-            .chartXAxis {
-                AxisMarks(values: .stride(by: xAxisStride, count: 1)) { _ in
-                    AxisValueLabel(format: xAxisFormat)
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
-                        .foregroundStyle(Color.secondary.opacity(0.3))
-                }
-            }
-            .chartYAxis {
-                AxisMarks(position: .trailing) { value in
-                    AxisValueLabel {
-                        if let expenditure = value.as(Int.self) {
-                            Text("\(expenditure)")
+                        // Data point dots (only for 1W/1M)
+                        if showDataPoints {
+                            ForEach(filteredData) { day in
+                                PointMark(
+                                    x: .value("Date", day.date),
+                                    y: .value("Expenditure", day.value)
+                                )
+                                .foregroundStyle(DesignTokens.Colors.expenditure)
+                                .symbolSize(25)
+                            }
                         }
                     }
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
-                        .foregroundStyle(Color.secondary.opacity(0.3))
+                    .chartYScale(domain: chartYDomain)
+                    .chartXAxis {
+                        AxisMarks(values: .stride(by: xAxisStride, count: 1)) { _ in
+                            AxisValueLabel(format: xAxisFormat)
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                                .foregroundStyle(Color.secondary.opacity(0.3))
+                        }
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .trailing) { value in
+                            AxisValueLabel {
+                                if let expenditure = value.as(Int.self) {
+                                    Text("\(expenditure)")
+                                }
+                            }
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                                .foregroundStyle(Color.secondary.opacity(0.3))
+                        }
+                    }
+                } else {
+                    // Empty state
+                    VStack(spacing: 8) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        Text("Not enough data yet")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(.secondary)
+                        Text("Your expenditure trend will appear after a few days of tracking.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(height: 200)
@@ -607,8 +631,15 @@ struct ExpenditureDetailView: View {
                 Text("Expenditure Changes")
                     .font(DesignTokens.Typography.headline)
 
-                ForEach(expenditureChanges) { change in
-                    expenditureChangeRow(change)
+                if expenditureChanges.isEmpty {
+                    Text("Not enough data yet. Changes will appear after a few days of tracking.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(expenditureChanges) { change in
+                        expenditureChangeRow(change)
+                    }
                 }
             }
         }
@@ -660,7 +691,7 @@ struct ExpenditureDetailView: View {
             VStack(spacing: 2) {
                 Text("\(currentExpenditure)")
                     .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 Text("kcal")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -699,7 +730,7 @@ struct ExpenditureDetailView: View {
             VStack(spacing: 2) {
                 Text(currentStrategy)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 Text("status")
                     .font(.caption)
                     .foregroundColor(.secondary)

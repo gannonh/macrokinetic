@@ -346,50 +346,74 @@ struct EnergyBalanceDetailView: View {
         dailyData.filter { $0.caloriesConsumed > 0 }
     }
 
+    /// Whether there's enough data to show a meaningful chart
+    private var hasEnoughChartData: Bool {
+        chartData.count >= 3
+    }
+
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Chart {
-                // Vertical bars for calories consumed (only days with data)
-                ForEach(chartData) { day in
-                    BarMark(
-                        x: .value("Date", day.date, unit: .day),
-                        y: .value("Calories", day.caloriesConsumed)
-                    )
-                    .foregroundStyle(DesignTokens.Colors.calories)
-                    .cornerRadius(2)
-                }
+            ZStack {
+                if hasEnoughChartData {
+                    Chart {
+                        // Vertical bars for calories consumed (only days with data)
+                        ForEach(chartData) { day in
+                            BarMark(
+                                x: .value("Date", day.date, unit: .day),
+                                y: .value("Calories", day.caloriesConsumed)
+                            )
+                            .foregroundStyle(DesignTokens.Colors.calories)
+                            .cornerRadius(2)
+                        }
 
-                // Line showing expenditure or target per day (varies based on TDEESnapshots)
-                ForEach(chartData) { day in
-                    LineMark(
-                        x: .value("Date", day.date, unit: .day),
-                        y: .value(
-                            "Reference",
-                            displayMode == .expenditure ? day.expenditure : day.calorieTarget
-                        ),
-                        series: .value("Series", "Reference")
-                    )
-                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
-                    .foregroundStyle(DesignTokens.Colors.expenditure)
-                }
-            }
-            .chartYScale(domain: 0...2500)
-            .chartXAxis {
-                AxisMarks(values: .stride(by: xAxisStride, count: 1)) { _ in
-                    AxisValueLabel(format: xAxisFormat)
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
-                        .foregroundStyle(Color.secondary.opacity(0.3))
-                }
-            }
-            .chartYAxis {
-                AxisMarks(position: .trailing) { value in
-                    AxisValueLabel {
-                        if let kcal = value.as(Int.self) {
-                            Text("\(kcal)")
+                        // Line showing expenditure or target per day (varies based on TDEESnapshots)
+                        ForEach(chartData) { day in
+                            LineMark(
+                                x: .value("Date", day.date, unit: .day),
+                                y: .value(
+                                    "Reference",
+                                    displayMode == .expenditure ? day.expenditure : day.calorieTarget
+                                ),
+                                series: .value("Series", "Reference")
+                            )
+                            .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                            .foregroundStyle(DesignTokens.Colors.expenditure)
                         }
                     }
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
-                        .foregroundStyle(Color.secondary.opacity(0.3))
+                    .chartYScale(domain: 0...2500)
+                    .chartXAxis {
+                        AxisMarks(values: .stride(by: xAxisStride, count: 1)) { _ in
+                            AxisValueLabel(format: xAxisFormat)
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                                .foregroundStyle(Color.secondary.opacity(0.3))
+                        }
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .trailing) { value in
+                            AxisValueLabel {
+                                if let kcal = value.as(Int.self) {
+                                    Text("\(kcal)")
+                                }
+                            }
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                                .foregroundStyle(Color.secondary.opacity(0.3))
+                        }
+                    }
+                } else {
+                    // Empty state
+                    VStack(spacing: 8) {
+                        Image(systemName: "chart.bar.xaxis")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        Text("Not enough data yet")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(.secondary)
+                        Text("Your energy balance will appear after logging a few days of meals.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(height: 200)
@@ -471,18 +495,25 @@ struct EnergyBalanceDetailView: View {
                 Text(title)
                     .font(DesignTokens.Typography.headline)
 
-                ForEach(changes) { change in
-                    HStack {
-                        Text(change.period)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("\(change.value) kcal")
-                            .fontWeight(.medium)
-                        trendIndicator(for: change.trend)
-                        Text(change.trend)
-                            .foregroundColor(.secondary)
+                if changes.isEmpty {
+                    Text("Not enough data yet. Balance changes will appear after a few days of tracking.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(changes) { change in
+                        HStack {
+                            Text(change.period)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("\(change.value) kcal")
+                                .fontWeight(.medium)
+                            trendIndicator(for: change.trend)
+                            Text(change.trend)
+                                .foregroundColor(.secondary)
+                        }
+                        .font(.subheadline)
                     }
-                    .font(.subheadline)
                 }
             }
         }

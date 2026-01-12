@@ -139,10 +139,23 @@ struct WeightTrendWidget: View {
         }
     }
 
+    /// Chart data points - ensures at least 2 points for a visible line
+    /// When only 1 data point exists, duplicates it to show a flat line
+    private var chartDataPoints: [WeightTrendWidgetData.DataPoint] {
+        if dataPoints.count == 1, let single = dataPoints.first {
+            // Create a flat line with 2 points at the same weight
+            return [
+                WeightTrendWidgetData.DataPoint(day: 0, weight: single.weight),
+                WeightTrendWidgetData.DataPoint(day: 6, weight: single.weight),
+            ]
+        }
+        return dataPoints
+    }
+
     @ViewBuilder
     private var chartSection: some View {
         if hasData {
-            Chart(dataPoints) { point in
+            Chart(chartDataPoints) { point in
                 LineMark(
                     x: .value("Day", point.day),
                     y: .value("Weight", point.weight)

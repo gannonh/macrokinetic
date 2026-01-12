@@ -434,54 +434,78 @@ struct WeightTrendDetailView: View {
 
     // MARK: - Chart Section
 
+    /// Whether there's enough data to show a meaningful chart
+    private var hasEnoughChartData: Bool {
+        scaleWeightPoints.count >= 3 || trendWeightPoints.count >= 3
+    }
+
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Chart
-            Chart {
-                // Scale weight line (actual measurements - lighter background line)
-                ForEach(scaleWeightPoints) { point in
-                    LineMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight),
-                        series: .value("Series", "Scale")
-                    )
-                    .foregroundStyle(DesignTokens.Colors.weight.opacity(0.35))
-                    .lineStyle(StrokeStyle(lineWidth: 1))
-                }
+            ZStack {
+                if hasEnoughChartData {
+                    Chart {
+                        // Scale weight line (actual measurements - lighter background line)
+                        ForEach(scaleWeightPoints) { point in
+                            LineMark(
+                                x: .value("Date", point.date),
+                                y: .value("Weight", point.weight),
+                                series: .value("Series", "Scale")
+                            )
+                            .foregroundStyle(DesignTokens.Colors.weight.opacity(0.35))
+                            .lineStyle(StrokeStyle(lineWidth: 1))
+                        }
 
-                // Trend weight line with dots (smoothed - prominent, main line)
-                ForEach(trendWeightPoints) { point in
-                    LineMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight),
-                        series: .value("Series", "Trend")
-                    )
-                    .foregroundStyle(DesignTokens.Colors.weight)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
+                        // Trend weight line with dots (smoothed - prominent, main line)
+                        ForEach(trendWeightPoints) { point in
+                            LineMark(
+                                x: .value("Date", point.date),
+                                y: .value("Weight", point.weight),
+                                series: .value("Series", "Trend")
+                            )
+                            .foregroundStyle(DesignTokens.Colors.weight)
+                            .lineStyle(StrokeStyle(lineWidth: 2))
 
-                    PointMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(DesignTokens.Colors.weight)
-                    .symbolSize(30)
-                }
-            }
-            .chartYScale(domain: .automatic(includesZero: false))
-            .chartXAxis {
-                AxisMarks(values: .automatic) { _ in
-                    AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                    AxisGridLine()
-                }
-            }
-            .chartYAxis {
-                AxisMarks(position: .trailing) { value in
-                    AxisValueLabel {
-                        if let weight = value.as(Double.self) {
-                            Text("\(Int(weight))")
+                            PointMark(
+                                x: .value("Date", point.date),
+                                y: .value("Weight", point.weight)
+                            )
+                            .foregroundStyle(DesignTokens.Colors.weight)
+                            .symbolSize(30)
                         }
                     }
-                    AxisGridLine()
+                    .chartYScale(domain: .automatic(includesZero: false))
+                    .chartXAxis {
+                        AxisMarks(values: .automatic) { _ in
+                            AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                            AxisGridLine()
+                        }
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .trailing) { value in
+                            AxisValueLabel {
+                                if let weight = value.as(Double.self) {
+                                    Text("\(Int(weight))")
+                                }
+                            }
+                            AxisGridLine()
+                        }
+                    }
+                } else {
+                    // Empty state
+                    VStack(spacing: 8) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        Text("Not enough data yet")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(.secondary)
+                        Text("Your weight trend will appear after a few weigh-ins.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(height: 200)
@@ -583,8 +607,15 @@ struct WeightTrendDetailView: View {
                 Text("Weight Changes")
                     .font(DesignTokens.Typography.headline)
 
-                ForEach(weightChanges) { change in
-                    weightChangeRow(change)
+                if weightChanges.isEmpty {
+                    Text("Not enough data yet. Changes will appear after a few days of tracking.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(weightChanges) { change in
+                        weightChangeRow(change)
+                    }
                 }
             }
         }
@@ -627,7 +658,7 @@ struct WeightTrendDetailView: View {
             VStack(spacing: 2) {
                 Text(value)
                     .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 Text(unit)
                     .font(.caption)
                     .foregroundColor(.secondary)

@@ -318,9 +318,9 @@ final class ExpenditureDetailViewModel {
 
             let change = latestValue - pastValue
             let trend: String
-            if change < -5 {
+            if change < 0 {
                 trend = "Decrease"
-            } else if change > 5 {
+            } else if change > 0 {
                 trend = "Increase"
             } else {
                 trend = "No Change"
