@@ -104,6 +104,10 @@ Branch: feat/v0.7.0-dashboard-widget-ux
 
 None yet.
 
+### Pending Todos
+
+1 todo in `.planning/todos/pending/`
+
 ### Roadmap Evolution
 
 - Milestone v0.4.0 created: Calorie Expenditure Enhancements, 4 phases (Phase 18-21)
