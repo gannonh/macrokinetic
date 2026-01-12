@@ -34,6 +34,7 @@ struct FoodDetailSheet: View {
     @State var selectedUnit: ServingUnit = .item
     @State private var notes: String = ""
     @State private var showingCreateCustom = false
+    @FocusState var isInputFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Constants

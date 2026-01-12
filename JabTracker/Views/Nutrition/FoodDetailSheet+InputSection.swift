@@ -157,6 +157,7 @@ extension FoodDetailSheet {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: 100)
+                    .focused($isInputFocused)
                     .accessibilityIdentifier(Self.quantityInputIdentifier)
 
                 Spacer()
@@ -178,6 +179,7 @@ extension FoodDetailSheet {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: 100)
+                    .focused($isInputFocused)
                     .accessibilityIdentifier("target-input")
 
                 Spacer()
@@ -194,6 +196,10 @@ extension FoodDetailSheet {
         }
         .padding()
         .cardStyle(cornerRadius: 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isInputFocused = true
+        }
     }
 
     // MARK: - Mode and Unit Selector
