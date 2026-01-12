@@ -34,21 +34,24 @@ final class DashboardWidgetsUITests: XCTestCase {
         XCTAssertTrue(heroContainer.waitForExistence(timeout: 5), "Hero widget container should exist")
 
         // Verify first hero widget is visible (Weekly Nutrition)
-        let weeklyWidget = app.otherElements["weekly-nutrition-hero-widget"]
+        // The widget identifier is on StaticText children, use staticTexts query
+        let weeklyWidget = app.staticTexts["weekly-nutrition-hero-widget"].firstMatch
         XCTAssertTrue(weeklyWidget.waitForExistence(timeout: 5), "Weekly nutrition widget should be visible initially")
 
         // Swipe left to navigate to second widget (Daily Nutrition)
         heroContainer.swipeLeft()
         Thread.sleep(forTimeInterval: 0.5)  // Allow animation to complete
 
-        let dailyWidget = app.otherElements["daily-nutrition-hero-widget"]
+        // Daily Nutrition widget - look for its identifier on staticTexts
+        let dailyWidget = app.staticTexts["daily-nutrition-hero-widget"].firstMatch
         XCTAssertTrue(dailyWidget.waitForExistence(timeout: 3), "Daily nutrition widget should appear after swipe")
 
         // Swipe left to navigate to third widget (Energy Balance)
         heroContainer.swipeLeft()
         Thread.sleep(forTimeInterval: 0.5)
 
-        let energyWidget = app.otherElements["energy-balance-hero-widget"]
+        // Energy Balance widget - look for its identifier on staticTexts
+        let energyWidget = app.staticTexts["energy-balance-hero-widget"].firstMatch
         XCTAssertTrue(
             energyWidget.waitForExistence(timeout: 3), "Energy balance widget should appear after second swipe")
 
@@ -65,26 +68,27 @@ final class DashboardWidgetsUITests: XCTestCase {
         let dashboardView = app.otherElements["dashboard-view"]
         XCTAssertTrue(dashboardView.waitForExistence(timeout: 10), "Dashboard should load")
 
-        // Find and tap the display toggle
-        let displayToggle = app.buttons["hero-display-toggle"]
-        XCTAssertTrue(displayToggle.waitForExistence(timeout: 5), "Display toggle should exist")
+        // Find the Consumed and Remaining buttons inside the toggle
+        let consumedButton = app.buttons["Consumed view"]
+        let remainingButton = app.buttons["Remaining view"]
+        XCTAssertTrue(consumedButton.waitForExistence(timeout: 5), "Consumed button should exist")
+        XCTAssertTrue(remainingButton.exists, "Remaining button should exist")
 
-        // Capture initial state
-        let initialToggleLabel = displayToggle.label
+        // Verify Consumed is initially selected
+        XCTAssertTrue(consumedButton.isSelected, "Consumed should be initially selected")
 
-        // Tap to toggle
-        displayToggle.tap()
+        // Tap Remaining to toggle
+        remainingButton.tap()
         Thread.sleep(forTimeInterval: 0.3)
 
-        // Verify toggle state changed
-        let newToggleLabel = displayToggle.label
-        XCTAssertNotEqual(initialToggleLabel, newToggleLabel, "Toggle label should change after tap")
+        // Verify Remaining is now selected
+        XCTAssertTrue(remainingButton.isSelected, "Remaining should be selected after tap")
 
-        // Toggle back
-        displayToggle.tap()
+        // Toggle back to Consumed
+        consumedButton.tap()
         Thread.sleep(forTimeInterval: 0.3)
 
-        XCTAssertEqual(displayToggle.label, initialToggleLabel, "Toggle should return to original state")
+        XCTAssertTrue(consumedButton.isSelected, "Consumed should be selected again")
     }
 
     func testEnergyDisplayToggle() throws {
@@ -97,23 +101,28 @@ final class DashboardWidgetsUITests: XCTestCase {
         let heroContainer = app.otherElements["hero-widget-container"]
         XCTAssertTrue(heroContainer.waitForExistence(timeout: 5), "Hero container should exist")
 
-        // Swipe twice to get to energy balance
+        // Swipe twice to get to energy balance (page index 2)
         heroContainer.swipeLeft()
         Thread.sleep(forTimeInterval: 0.5)
         heroContainer.swipeLeft()
         Thread.sleep(forTimeInterval: 0.5)
 
-        // Find energy display toggle
-        let energyToggle = app.buttons["energy-display-toggle"]
-        XCTAssertTrue(energyToggle.waitForExistence(timeout: 3), "Energy display toggle should exist")
+        // Find the Expenditure and Targets buttons inside the toggle
+        let expenditureButton = app.buttons["Expenditure view"]
+        let targetsButton = app.buttons["Targets view"]
+        XCTAssertTrue(expenditureButton.waitForExistence(timeout: 5), "Expenditure button should exist")
+        XCTAssertTrue(targetsButton.exists, "Targets button should exist")
 
-        // Tap to toggle
-        energyToggle.tap()
+        // Tap to toggle to Targets
+        targetsButton.tap()
         Thread.sleep(forTimeInterval: 0.3)
 
         // Verify widget is still visible after toggle
         let energyWidget = app.otherElements["energy-balance-hero-widget"]
         XCTAssertTrue(energyWidget.exists, "Energy balance widget should remain visible after toggle")
+
+        // Verify Targets is now selected
+        XCTAssertTrue(targetsButton.isSelected, "Targets should be selected after tap")
     }
 
     // MARK: - Standard Widget Grid Tests
@@ -165,9 +174,9 @@ final class DashboardWidgetsUITests: XCTestCase {
         let detailView = app.otherElements["weight-trend-detail-view"]
         XCTAssertTrue(detailView.waitForExistence(timeout: 5), "Weight trend detail view should appear")
 
-        // Verify time period selector exists
-        let timePeriodSelector = app.otherElements["detail-time-period-selector"]
-        XCTAssertTrue(timePeriodSelector.waitForExistence(timeout: 3), "Time period selector should exist")
+        // Verify time period buttons exist (use accessibility labels)
+        let yearButton = app.buttons["One year"]
+        XCTAssertTrue(yearButton.waitForExistence(timeout: 3), "Time period selector should exist")
 
         // Dismiss detail view
         dismissDetailView()
@@ -240,11 +249,12 @@ final class DashboardWidgetsUITests: XCTestCase {
         let detailView = app.otherElements["weight-trend-detail-view"]
         XCTAssertTrue(detailView.waitForExistence(timeout: 5), "Detail view should appear")
 
-        // Test time period buttons
-        let weekButton = app.buttons["1w-period-button"]
-        let monthButton = app.buttons["1m-period-button"]
-        let threeMonthButton = app.buttons["3m-period-button"]
-        let yearButton = app.buttons["1y-period-button"]
+        // Test time period buttons (use accessibility labels, not identifiers)
+        // The buttons have identifier 'detail-time-period-selector' but labels like 'One week'
+        let weekButton = app.buttons["One week"]
+        let monthButton = app.buttons["One month"]
+        let threeMonthButton = app.buttons["Three months"]
+        let yearButton = app.buttons["One year"]
 
         // Verify buttons exist
         XCTAssertTrue(weekButton.waitForExistence(timeout: 3), "Week period button should exist")
@@ -279,7 +289,8 @@ final class DashboardWidgetsUITests: XCTestCase {
         XCTAssertTrue(heroContainer.waitForExistence(timeout: 5), "Hero container should exist")
 
         // Verify weekly widget shows (may show partial data state)
-        let weeklyWidget = app.otherElements["weekly-nutrition-hero-widget"]
+        // Widget identifier is on StaticText children
+        let weeklyWidget = app.staticTexts["weekly-nutrition-hero-widget"].firstMatch
         XCTAssertTrue(weeklyWidget.waitForExistence(timeout: 5), "Weekly widget should handle partial data")
 
         // Scroll to standard widgets
@@ -362,8 +373,17 @@ final class DashboardWidgetsUITests: XCTestCase {
         let detailView = app.otherElements["weight-trend-detail-view"]
         XCTAssertTrue(detailView.waitForExistence(timeout: 5), "Detail view should appear")
 
-        // Drag down to dismiss
-        detailView.swipeDown()
+        // Use the sheet grabber to dismiss (more reliable than swipeDown on view)
+        let sheetGrabber = app.buttons["Sheet Grabber"]
+        if sheetGrabber.exists {
+            // Drag the sheet grabber down to dismiss
+            let start = sheetGrabber.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            let end = start.withOffset(CGVector(dx: 0, dy: 400))
+            start.press(forDuration: 0.1, thenDragTo: end)
+        } else {
+            // Fallback: swipe down on the detail view itself
+            detailView.swipeDown()
+        }
         Thread.sleep(forTimeInterval: 0.5)
 
         // Verify detail view is dismissed
