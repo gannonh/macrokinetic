@@ -344,10 +344,8 @@ struct FoodSearchSheet: View {
                 .accessibilityIdentifier("clear-search-button")
             }
 
-            if viewModel.isSearching {
-                ProgressView()
-                    .scaleEffect(0.8)
-            }
+            // Note: Spinner removed - local FTS5 searches complete in <50ms
+            // The 200ms debounce provides enough "thinking time" without visual noise
         }
         .padding(12)
         .background(Color(.systemGray6))

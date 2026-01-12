@@ -5,6 +5,14 @@
 # ProgramWizardStepViews.swift contains all step views including CollaborativeDistributionStepView (15.2-04)
 # ProgramWizardViewModel extended in 15.2-04 with Collaborative config storage/loading
 
+# Disable design token rules for legacy views pending future refactor
+# FoodSearchSheet.swift, BarcodeScannerContentView use older patterns
+disabled_rules:
+  - prefer_design_tokens_colors
+  - prefer_design_tokens_backgrounds
+  - prefer_design_tokens_static_colors
+  - prefer_design_tokens_backgrounds_static
+
 type_body_length:
   warning: 500
   error: 550

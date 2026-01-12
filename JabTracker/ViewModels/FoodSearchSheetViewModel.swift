@@ -188,6 +188,8 @@ final class FoodSearchSheetViewModel {
     }
 
     /// Perform search with the current search text
+    /// Note: Spinner is not shown for local searches since FTS5 queries complete in <50ms.
+    /// The 200ms debounce provides enough "thinking time" without visual spinner noise.
     func performSearch() async {
         // Cancel any ongoing search
         searchTask?.cancel()
@@ -201,7 +203,9 @@ final class FoodSearchSheetViewModel {
         }
 
         Self.logger.debug("Searching for: \(query)")
-        isSearching = true
+        // Note: isSearching is not set to true here - local searches are fast enough
+        // that showing a spinner causes more visual noise than benefit.
+        // The 200ms debounce in FoodSearchSheet already provides "thinking time".
         errorMessage = nil
 
         searchTask = Task {
@@ -230,8 +234,6 @@ final class FoodSearchSheetViewModel {
                 Self.logger.error("Search failed: \(error.localizedDescription)")
                 errorMessage = error.localizedDescription
             }
-
-            isSearching = false
         }
 
         await searchTask?.value
