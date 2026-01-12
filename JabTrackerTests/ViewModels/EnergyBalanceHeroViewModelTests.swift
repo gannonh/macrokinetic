@@ -904,4 +904,165 @@ struct EnergyBalanceHeroViewModelTests {
             previousDate = dayCalories.date
         }
     }
+
+    // MARK: - Snapshot Count and Balance Tests
+
+    @Test("ViewModel correctly counts loaded TDEE snapshots")
+    func testTDEESnapshotCount() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        // Given: User with NutritionGoal and multiple TDEESnapshots
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+
+        // Add TDEESnapshots for every day in the last 30 days
+        // Use start of day to ensure proper matching
+        for daysAgo in 0..<30 {
+            let snapshotDate = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+            let snapshot = TDEESnapshot(
+                timestamp: snapshotDate,
+                tdeeValue: 2000 + Double(daysAgo * 10)
+            )
+            context.insert(snapshot)
+        }
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All 30 days have snapshot-based expenditure values
+        #expect(viewModel.dailyCalories.count == 30)
+
+        // Verify expenditure varies by day (from snapshots)
+        // Note: Each day should have unique TDEE from 2000 to 2290
+        let expenditures = viewModel.dailyCalories.map(\.expenditure)
+        let uniqueExpenditures = Set(expenditures)
+        // Should have many unique values (at least 25 to account for any edge cases)
+        #expect(uniqueExpenditures.count >= 25)
+    }
+
+    @Test("ViewModel calculates net balance from intake and expenditure")
+    func testNetBalanceCalculation() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1800
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2200
+        context.insert(nutritionGoal)
+
+        // Add consistent food intake for 7 days (1600 cal/day)
+        for daysAgo in 0..<7 {
+            let date = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+            _ = createFoodEntry(in: context, calories: 1600, loggedAt: date)
+        }
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Total nutrition reflects 7 days of 1600 calories
+        #expect(viewModel.totalNutrition == 11200)
+
+        // Each day's balance is intake - expenditure = 1600 - 2200 = -600 (deficit)
+        for dayCalories in viewModel.dailyCalories.suffix(7) {
+            let balance = dayCalories.value - dayCalories.expenditure
+            // Days with food should show deficit of -600
+            if dayCalories.value > 0 {
+                #expect(balance == -600)
+            }
+        }
+    }
+
+    @Test("DayCalories balance calculation works for surplus")
+    func testDayCaloriesSurplusBalance() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let today = Date()
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .maintenance,
+            isActive: true,
+            dailyCalorieTarget: 2000
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+
+        // Add surplus calories today (2500 cal)
+        _ = createFoodEntry(in: context, calories: 2500, loggedAt: today)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Today shows surplus
+        if let todayCalories = viewModel.dailyCalories.last {
+            let balance = todayCalories.value - todayCalories.expenditure
+            #expect(balance == 500)  // 2500 - 2000 = +500 surplus
+        }
+    }
+
+    @Test("ViewModel handles rapid reloading without data corruption")
+    func testRapidReloading() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data multiple times rapidly
+        await viewModel.loadData()
+        let firstCount = viewModel.dailyCalories.count
+        let firstTotal = viewModel.totalNutrition
+
+        await viewModel.loadData()
+        let secondCount = viewModel.dailyCalories.count
+        let secondTotal = viewModel.totalNutrition
+
+        // Then: Data is consistent across reloads
+        #expect(firstCount == secondCount)
+        #expect(firstTotal == secondTotal)
+        #expect(viewModel.isLoading == false)
+    }
 }

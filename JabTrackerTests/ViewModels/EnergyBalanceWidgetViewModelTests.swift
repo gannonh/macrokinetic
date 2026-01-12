@@ -461,4 +461,111 @@ struct EnergyBalanceWidgetViewModelTests {
         // Then: Uses initial TDEE
         #expect(viewModel.tdee == 1950)
     }
+
+    // MARK: - Additional Balance Tests
+
+    @Test("ViewModel tracks isDeficit correctly for mixed week")
+    func testIsDeficitMixedWeek() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE of 2000
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+
+        // Log food with net deficit over 7 days
+        // Days 0-3: 1800 cal (deficit)
+        // Days 4-6: 2100 cal (surplus)
+        // Net: 4*1800 + 3*2100 = 7200 + 6300 = 13500, TDEE = 14000, so deficit
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 0)
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 2)
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 3)
+        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 4)
+        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 5)
+        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 6)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Net deficit should be detected
+        // Total intake: 13500, Total TDEE: 14000, Net: -500
+        #expect(viewModel.isDeficit == true)
+        #expect(viewModel.averageDailyBalance < 0)
+    }
+
+    @Test("ViewModel calculates correct average daily balance")
+    func testAverageDailyBalanceCalculation() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE of 2000 eating exactly maintenance
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+
+        // Log exactly 2000 calories each day
+        for daysAgo in 0..<7 {
+            _ = createFoodEntry(in: context, calories: 2000, daysAgo: daysAgo)
+        }
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Average balance should be 0 (maintenance)
+        #expect(viewModel.averageDailyBalance == 0)
+    }
+
+    @Test("ViewModel handles rapid reloading")
+    func testRapidReloading() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data multiple times
+        await viewModel.loadData()
+        let firstBalance = viewModel.averageDailyBalance
+
+        await viewModel.loadData()
+        let secondBalance = viewModel.averageDailyBalance
+
+        // Then: Results are consistent
+        #expect(firstBalance == secondBalance)
+        #expect(viewModel.isLoading == false)
+    }
+
+    @Test("ViewModel correctly stores all 7 daily balance values")
+    func testDailyBalancesCount() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: 7 daily balances are stored
+        #expect(viewModel.dailyBalances.count == 7)
+        #expect(viewModel.dailyIntake.count == 7)
+    }
 }
