@@ -1,9 +1,6 @@
 # SwiftLint config for DetailViews directory
 # Detail views have larger mock data structures and multi-section layouts
-
-disabled_rules:
-  - file_length
-  - type_body_length
+# Relaxed thresholds for file and type body length
 
 type_body_length:
   warning: 450

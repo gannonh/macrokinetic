@@ -57,7 +57,7 @@ struct ExpenditureWidgetViewModelTests {
 
     // MARK: - Initial State Tests
 
-    @Test("ViewModel initializes with loading state and no data")
+    @Test("ViewModel initializes with default state and no data")
     func testInitialState() async {
         let (context, container) = createTestContext()
         _ = container

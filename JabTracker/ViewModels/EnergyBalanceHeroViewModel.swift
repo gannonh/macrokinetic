@@ -64,6 +64,15 @@ final class EnergyBalanceHeroViewModel {
     /// Total nutrition (sum of all daily calories)
     private(set) var totalNutrition: Int = 0
 
+    /// Number of days that failed to load (data may be incomplete)
+    private(set) var daysWithLoadingErrors: Int = 0
+
+    /// Whether fallback TDEE is being used (no calculated TDEE exists)
+    private(set) var isUsingFallbackTDEE: Bool = false
+
+    /// Error message if significant loading issues occurred
+    private(set) var loadingError: String?
+
     // MARK: - Initialization
 
     /// Initialize with meal log service, TDEE service, and model context
@@ -96,10 +105,14 @@ final class EnergyBalanceHeroViewModel {
         let fallbackTDEE: Double
         if let lastCalculated = activeGoal.lastCalculatedTDEE {
             fallbackTDEE = lastCalculated
+            isUsingFallbackTDEE = false
         } else if let initial = activeGoal.initialEstimatedTDEE {
             fallbackTDEE = initial
+            isUsingFallbackTDEE = false
         } else {
             fallbackTDEE = 2000  // Reasonable default
+            isUsingFallbackTDEE = true
+            Self.logger.warning("No TDEE available, using default 2000 kcal - user should complete setup")
         }
 
         let calorieTarget = activeGoal.dailyCalorieTarget
@@ -135,11 +148,13 @@ final class EnergyBalanceHeroViewModel {
             }
             Self.logger.debug("Loaded \(snapshots.count) TDEE snapshots for energy balance hero")
         } catch {
-            Self.logger.error("Failed to load TDEE snapshots: \(error)")
+            Self.logger.error("Failed to load TDEE snapshots: \(error.localizedDescription)")
+            loadingError = "Unable to load historical expenditure data."
         }
 
         var newDailyCalories: [DayCalories] = []
         var newTotalNutrition = 0
+        var failedDays = 0
 
         // Load data for each day (oldest to newest)
         for daysAgo in (0..<dayCount).reversed() {
@@ -163,8 +178,10 @@ final class EnergyBalanceHeroViewModel {
                     ))
                 newTotalNutrition += Int(calories)
             } catch {
-                Self.logger.error("Failed to load totals for day \(-daysAgo): \(error)")
+                Self.logger.error("Failed to load totals for day \(-daysAgo): \(error.localizedDescription)")
+                failedDays += 1
                 // Add zero calories for this day on error, but still include expenditure
+                // Note: This may show incorrect deficit - tracked by daysWithLoadingErrors
                 newDailyCalories.append(
                     DayCalories(
                         date: dayDate,
@@ -177,6 +194,11 @@ final class EnergyBalanceHeroViewModel {
 
         dailyCalories = newDailyCalories
         totalNutrition = newTotalNutrition
+        daysWithLoadingErrors = failedDays
+
+        if failedDays > 0 {
+            loadingError = "\(failedDays) day(s) could not be loaded. Data may be incomplete."
+        }
     }
 
 }

@@ -86,6 +86,12 @@ final class ExpenditureDetailViewModel {
     /// Date range string for display
     private(set) var dateRange: String = ""
 
+    /// Error message if data loading failed
+    private(set) var loadingError: String?
+
+    /// Whether fallback data is being displayed instead of real history
+    private(set) var isUsingFallbackData: Bool = false
+
     /// Current strategy ("Holding" or "Updating")
     private(set) var currentStrategy: String = "Holding"
 
@@ -177,6 +183,8 @@ final class ExpenditureDetailViewModel {
         dateRange = ""
         currentStrategy = "Holding"
         strategyDescription = ""
+        loadingError = nil
+        isUsingFallbackData = false
     }
 
     /// Determine strategy based on available data
@@ -268,8 +276,11 @@ final class ExpenditureDetailViewModel {
                 }
             }
         } catch {
-            Self.logger.error("Failed to load TDEE snapshots: \(error)")
-            // Graceful fallback: show current TDEE as single data point
+            Self.logger.error("Failed to load TDEE snapshots: \(error.localizedDescription)")
+            // Set error state so UI can show appropriate indicator
+            loadingError = "Unable to load expenditure history. Showing current estimate only."
+            isUsingFallbackData = true
+            // Fallback: show current TDEE as single data point
             dailyData = [
                 DailyExpenditure(
                     date: today,

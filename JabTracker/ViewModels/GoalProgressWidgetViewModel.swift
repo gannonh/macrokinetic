@@ -46,6 +46,9 @@ final class GoalProgressWidgetViewModel {
         Int(progressPercentage * 100)
     }
 
+    /// Error message if data loading failed
+    private(set) var loadingError: String?
+
     // MARK: - Initialization
 
     /// Initialize with meal log service and model context
@@ -87,7 +90,8 @@ final class GoalProgressWidgetViewModel {
                 progressPercentage = 0
             }
         } catch {
-            Self.logger.error("Failed to load daily totals: \(error)")
+            Self.logger.error("Failed to load daily totals: \(error.localizedDescription)")
+            loadingError = "Unable to load today's progress."
             progressPercentage = 0
         }
 

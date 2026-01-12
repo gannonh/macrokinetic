@@ -58,6 +58,9 @@ final class DailyNutritionHeroViewModel {
         max(0, caloriesTarget - caloriesConsumed)
     }
 
+    /// Error message if data loading failed
+    private(set) var loadingError: String?
+
     // MARK: - Initialization
 
     /// Initialize with meal log service and model context
@@ -96,8 +99,9 @@ final class DailyNutritionHeroViewModel {
             carbsConsumed = Int(totals.carbs)
             fatConsumed = Int(totals.fat)
         } catch {
-            Self.logger.error("Failed to load daily totals: \(error)")
-            // Keep zeros on error
+            Self.logger.error("Failed to load daily totals: \(error.localizedDescription)")
+            loadingError = "Unable to load today's nutrition data."
+            // Keep zeros on error - loadingError indicates failure vs no data
         }
     }
 

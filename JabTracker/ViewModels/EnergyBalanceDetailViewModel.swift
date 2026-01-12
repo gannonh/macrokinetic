@@ -82,6 +82,15 @@ final class EnergyBalanceDetailViewModel {
     /// Selected time period for filtering
     var selectedPeriod: DetailTimePeriod = .oneYear
 
+    /// Error message if data loading failed
+    private(set) var loadingError: String?
+
+    /// Whether fallback TDEE is being used (no calculated TDEE exists)
+    private(set) var isUsingFallbackTDEE: Bool = false
+
+    /// Whether historical TDEE snapshots failed to load
+    private(set) var tdeeSnapshotLoadFailed: Bool = false
+
     /// Whether valid data exists
     var hasData: Bool {
         !dailyData.isEmpty
@@ -120,10 +129,14 @@ final class EnergyBalanceDetailViewModel {
         let fallbackTDEE: Int
         if let lastCalculated = activeGoal.lastCalculatedTDEE {
             fallbackTDEE = Int(lastCalculated)
+            isUsingFallbackTDEE = false
         } else if let initial = activeGoal.initialEstimatedTDEE {
             fallbackTDEE = Int(initial)
+            isUsingFallbackTDEE = false
         } else {
             fallbackTDEE = 2000  // Reasonable default
+            isUsingFallbackTDEE = true
+            Self.logger.warning("No TDEE available, using default 2000 kcal - user should complete setup")
         }
 
         let calorieTarget = Int(activeGoal.dailyCalorieTarget)
@@ -151,6 +164,9 @@ final class EnergyBalanceDetailViewModel {
         balanceChanges = []
         dateRange = ""
         headerValue = nil
+        loadingError = nil
+        isUsingFallbackTDEE = false
+        tdeeSnapshotLoadFailed = false
     }
 
     /// Generate daily data for selected period (only days with actual food logged)
@@ -183,7 +199,9 @@ final class EnergyBalanceDetailViewModel {
             }
             Self.logger.debug("Loaded \(snapshots.count) TDEE snapshots for energy balance")
         } catch {
-            Self.logger.error("Failed to load TDEE snapshots: \(error)")
+            Self.logger.error("Failed to load TDEE snapshots: \(error.localizedDescription)")
+            tdeeSnapshotLoadFailed = true
+            loadingError = "Unable to load historical expenditure data. Using current TDEE estimate."
         }
 
         var data: [DailyData] = []
@@ -236,7 +254,9 @@ final class EnergyBalanceDetailViewModel {
                 return Calendar.current.startOfDay(for: earliest.loggedAt)
             }
         } catch {
-            Self.logger.error("Failed to fetch earliest food entry: \(error)")
+            Self.logger.error("Failed to fetch earliest food entry: \(error.localizedDescription)")
+            // Note: returning nil here will cause fallback to 1-year default
+            // The UI should handle this gracefully
         }
         return nil
     }

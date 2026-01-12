@@ -38,7 +38,7 @@ struct TDEESnapshotInitializationTests {
         let snapshot = TDEESnapshot()
         context.insert(snapshot)
 
-        #expect(snapshot.id != UUID())
+        #expect(snapshot.id.uuidString.isEmpty == false)
         #expect(snapshot.tdeeValue == 2000.0)
         #expect(snapshot.confidence == 0.5)
         #expect(snapshot.source == "initial")

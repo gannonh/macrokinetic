@@ -56,6 +56,9 @@ final class WeeklyNutritionHeroViewModel {
     /// Today's index in the week (0=Monday, 6=Sunday)
     private(set) var todayIndex: Int = 0
 
+    /// Number of days that failed to load (data may be incomplete)
+    private(set) var daysWithLoadingErrors: Int = 0
+
     // MARK: - Initialization
 
     /// Initialize with meal log service and model context
@@ -119,6 +122,7 @@ final class WeeklyNutritionHeroViewModel {
         var newProtein = Array(repeating: 0.0, count: 7)
         var newCarbs = Array(repeating: 0.0, count: 7)
         var newFat = Array(repeating: 0.0, count: 7)
+        var failedDays = 0
 
         // Load data for each day up to and including today
         for dayIndex in 0...todayIndex {
@@ -133,8 +137,9 @@ final class WeeklyNutritionHeroViewModel {
                 newCarbs[dayIndex] = totals.carbs
                 newFat[dayIndex] = totals.fat
             } catch {
-                Self.logger.error("Failed to load totals for day \(dayIndex): \(error)")
-                // Keep zeros for this day on error
+                Self.logger.error("Failed to load totals for day \(dayIndex): \(error.localizedDescription)")
+                failedDays += 1
+                // Keep zeros for this day on error - tracked by daysWithLoadingErrors
             }
         }
 
@@ -144,6 +149,7 @@ final class WeeklyNutritionHeroViewModel {
         protein = newProtein
         carbs = newCarbs
         fat = newFat
+        daysWithLoadingErrors = failedDays
     }
 
     /// Load macro targets from user's active NutritionGoal or fallback to User's direct goals

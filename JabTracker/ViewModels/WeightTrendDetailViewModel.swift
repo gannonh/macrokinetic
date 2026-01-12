@@ -94,6 +94,9 @@ final class WeightTrendDetailViewModel {
     /// Selected time period for filtering
     var selectedPeriod: DetailTimePeriod = .oneYear
 
+    /// Error message if data loading failed
+    private(set) var loadingError: String?
+
     /// Whether any weight data exists
     var hasData: Bool {
         !dataPoints.filter { !$0.isTrendLine }.isEmpty
@@ -180,7 +183,9 @@ final class WeightTrendDetailViewModel {
                 return try await metricsService.getAllWeightEntries()
             }
         } catch {
-            Self.logger.error("Failed to load weight entries: \(error)")
+            Self.logger.error("Failed to load weight entries: \(error.localizedDescription)")
+            // Set error so UI can distinguish between "no data" and "fetch failed"
+            loadingError = "Unable to load weight history. Please try again."
             return []
         }
     }
@@ -197,6 +202,7 @@ final class WeightTrendDetailViewModel {
         weeklyChange = nil
         energyDeficit = nil
         projectedWeight = nil
+        loadingError = nil
     }
 
     /// Generate actual weight data points

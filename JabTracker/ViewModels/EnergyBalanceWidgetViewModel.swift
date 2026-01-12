@@ -44,6 +44,9 @@ final class EnergyBalanceWidgetViewModel {
     /// Whether the net balance is a deficit
     private(set) var isDeficit: Bool = true
 
+    /// Number of days that failed to load (data may be incomplete)
+    private(set) var daysWithLoadingErrors: Int = 0
+
     /// Whether valid data exists (TDEE is required)
     var hasData: Bool {
         !dailyBalances.isEmpty
@@ -89,6 +92,7 @@ final class EnergyBalanceWidgetViewModel {
         var intake: [Double] = []
         var balances: [Double] = []
         var totalBalance: Double = 0
+        var failedDays = 0
 
         for daysAgo in stride(from: 6, through: 0, by: -1) {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
@@ -100,8 +104,11 @@ final class EnergyBalanceWidgetViewModel {
                 balances.append(balance)
                 totalBalance += balance
             } catch {
-                // No food logged or fetch error = 0 calories consumed = full TDEE deficit
-                Self.logger.debug("No meal data for \(date): \(error.localizedDescription)")
+                // Distinguish between "no data" and "fetch error"
+                // SwiftData throws when no matching records exist, but we should still log at error level
+                // to ensure actual DB errors are visible in production logs
+                Self.logger.error("Failed to load meal data for \(date): \(error.localizedDescription)")
+                failedDays += 1
                 intake.append(0)
                 let balance = 0 - userTdee
                 balances.append(balance)
@@ -111,13 +118,14 @@ final class EnergyBalanceWidgetViewModel {
 
         dailyIntake = intake
         dailyBalances = balances
+        daysWithLoadingErrors = failedDays
         // Calculate average daily balance (signed: negative for deficit)
         let averageBalance = totalBalance / Double(balances.count)
         averageDailyBalance = Int(averageBalance)  // Keep sign for display
         isDeficit = totalBalance < 0
 
         Self.logger.debug(
-            "Loaded energy balance: avgDaily=\(self.averageDailyBalance), deficit=\(self.isDeficit)"
+            "Loaded energy balance: avgDaily=\(self.averageDailyBalance), deficit=\(self.isDeficit), failedDays=\(failedDays)"
         )
     }
 }

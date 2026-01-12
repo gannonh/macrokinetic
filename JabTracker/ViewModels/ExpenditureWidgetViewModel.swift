@@ -92,6 +92,7 @@ final class ExpenditureWidgetViewModel {
 
         // Calculate date range for last 7 days
         guard let startDate = calendar.date(byAdding: .day, value: -6, to: today) else {
+            Self.logger.error("Unexpected: Failed to calculate start date for 7-day range")
             dailyValues = []
             return
         }

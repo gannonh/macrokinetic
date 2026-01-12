@@ -288,13 +288,33 @@ extension TDEEService {
     /// - Returns: DataQualityAssessment with tier and improvement tips
     func assessDataQuality(lookbackDays: Int? = nil) async -> DataQualityAssessment {
         let days = lookbackDays ?? self.lookbackDays
-        guard let (startDate, endDate) = try? getDateRange(lookbackDays: days) else {
+
+        let startDate: Date
+        let endDate: Date
+        do {
+            (startDate, endDate) = try getDateRange(lookbackDays: days)
+        } catch {
+            Self.logger.error(
+                "Failed to calculate date range for data quality assessment: \(error.localizedDescription)")
             return createInsufficientAssessment(weightCount: 0, foodConsistency: 0, daySpan: 0)
         }
 
-        // Get raw data counts
-        let weightEntries = (try? await metricsService.getWeightEntries(from: startDate, to: endDate)) ?? []
-        let foodEntries = (try? await getFoodEntries(from: startDate, to: endDate)) ?? []
+        // Get raw data counts with proper error handling
+        let weightEntries: [WeightEntry]
+        do {
+            weightEntries = try await metricsService.getWeightEntries(from: startDate, to: endDate)
+        } catch {
+            Self.logger.error("Failed to fetch weight entries for quality assessment: \(error.localizedDescription)")
+            weightEntries = []
+        }
+
+        let foodEntries: [FoodEntry]
+        do {
+            foodEntries = try await getFoodEntries(from: startDate, to: endDate)
+        } catch {
+            Self.logger.error("Failed to fetch food entries for quality assessment: \(error.localizedDescription)")
+            foodEntries = []
+        }
 
         let weightCount = weightEntries.count
         let uniqueDaysWithFood = Set(foodEntries.map { Calendar.current.startOfDay(for: $0.loggedAt) }).count
@@ -765,8 +785,13 @@ extension TDEEService {
                 entry.loggedAt >= start && entry.loggedAt <= end
             }
         )
-        guard let entries = try? context.fetch(descriptor) else { return 0 }
-        return Set(entries.map { Calendar.current.startOfDay(for: $0.loggedAt) }).count
+        do {
+            let entries = try context.fetch(descriptor)
+            return Set(entries.map { Calendar.current.startOfDay(for: $0.loggedAt) }).count
+        } catch {
+            Self.logger.error("Failed to fetch food entries for day count: \(error.localizedDescription)")
+            return 0
+        }
     }
 
     /// Count unique days with weight entries in date range
@@ -776,8 +801,13 @@ extension TDEEService {
                 entry.timestamp >= start && entry.timestamp <= end
             }
         )
-        guard let entries = try? context.fetch(descriptor) else { return 0 }
-        return Set(entries.map { Calendar.current.startOfDay(for: $0.timestamp) }).count
+        do {
+            let entries = try context.fetch(descriptor)
+            return Set(entries.map { Calendar.current.startOfDay(for: $0.timestamp) }).count
+        } catch {
+            Self.logger.error("Failed to fetch weight entries for day count: \(error.localizedDescription)")
+            return 0
+        }
     }
 
     // MARK: - Snapshot Helpers

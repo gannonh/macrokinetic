@@ -73,7 +73,7 @@ struct DailyNutritionHeroViewModelTests {
 
     // MARK: - Initial State Tests
 
-    @Test("ViewModel initializes with loading state")
+    @Test("ViewModel initializes with default state and zero values")
     func testInitialState() async {
         let (context, container) = createTestContext()
         _ = container

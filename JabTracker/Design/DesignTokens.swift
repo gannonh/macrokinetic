@@ -23,7 +23,7 @@ enum DesignTokens {
         /// Primary brand color - use for buttons, progress indicators, interactive elements
         static let primary = Color(.systemTeal)
 
-        /// App accent color - darker mint for good contrast with white text
+        /// App accent color - currently same as primary for consistent branding
         static let accent = Color(.systemTeal)
 
         // Semantic status colors

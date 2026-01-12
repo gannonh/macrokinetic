@@ -54,7 +54,7 @@ struct WeightTrendDetailViewModelTests {
 
     // MARK: - Initial State Tests
 
-    @Test("ViewModel initializes with loading state and empty data")
+    @Test("ViewModel initializes with default state and empty data")
     func testInitialState() async {
         let (context, container) = createTestContext()
         _ = container
