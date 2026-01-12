@@ -1,6 +1,6 @@
 ---
 created: 2025-12-19T21:32:45Z
-updated: 2025-12-21T20:50:20Z
+updated: 2026-01-12T15:32:00Z
 ---
 
 # Food Data Layer
@@ -265,22 +265,27 @@ FUNCTION search(query: String) -> [Food]
 
 ### FTS5 Full-Text Search
 
-The local database uses SQLite FTS5 (Full-Text Search 5) with BM25 relevance ranking:
+The local database uses SQLite FTS5 (Full-Text Search 5) with a custom multi-factor ranking algorithm. See **[Search Ranking Algorithm](./search-ranking-algorithm.md)** for complete details.
 
 ```sql
--- Search query with prefix matching
-SELECT f.*
-FROM foods f
-JOIN foods_fts fts ON f.id = fts.rowid
-WHERE foods_fts MATCH '"chicken"*'
-ORDER BY bm25(foods_fts) DESC
+-- Search query with multi-factor ranking
+SELECT f.fdc_id, f.name, f.brand, ...
+FROM foods_fts fts
+JOIN foods f ON fts.rowid = f.id
+WHERE foods_fts MATCH 'chicken*'
+ORDER BY
+    CASE WHEN LOWER(f.name) LIKE 'chicken%' THEN 0 ELSE 1 END,  -- Prefix match
+    CASE WHEN LOWER(f.name) GLOB 'chicken[s,]*' THEN 0 ELSE 1 END,  -- Whole word
+    LENGTH(f.name),  -- Shorter names preferred
+    bm25(foods_fts, 10.0, 1.0)  -- BM25 relevance
 LIMIT 25
 ```
 
-**BM25 Ranking Factors**:
-- Term frequency (TF): How often the term appears
-- Inverse document frequency (IDF): Rarity of the term
-- Document length normalization
+**Ranking Factors (Priority Order)**:
+1. **Prefix match**: Names starting with search term rank first
+2. **Whole word match**: "Apple" ranks before "APPLEBEE'S"
+3. **Name length**: Shorter names preferred ("Bananas, raw" > "Bananas, dehydrated...")
+4. **BM25 relevance**: Standard TF-IDF scoring with name weighted 10x
 
 ### Debounce Algorithm
 
@@ -519,6 +524,7 @@ FUNCTION loadRecentSearches() -> [Food]
 | `FoodEntry.swift`                | SwiftData model for logged food entries           |
 | `FoodSource.swift`               | Enum for food source types                        |
 | `usda_foods.sqlite`              | Bundled local database                            |
+| [`search-ranking-algorithm.md`](./search-ranking-algorithm.md) | Detailed ranking algorithm documentation |
 
 ## Performance Metrics
 
