@@ -122,8 +122,20 @@ actor LocalFoodDatabase {
         // E.g., "banana" -> "banana%" so "Bananas, raw" ranks above "Snacks, banana chips"
         let namePrefixPattern = (queryWords.first ?? trimmedQuery).lowercased() + "%"
 
+        // Create pattern for whole word matching (exact word should rank higher than partial)
+        // E.g., "apple" matches "Apples, raw" as whole word but not "APPLEBEE'S"
+        // GLOB pattern: word followed by word boundary (s for plural, comma, space)
+        // SQLite GLOB is case-sensitive, so we use LOWER() in the query
+        let firstWord = (queryWords.first ?? trimmedQuery).lowercased()
+        // Match: "apples,*" or "apples *" or "apple,*" or "apple *" (with optional 's' for plurals)
+        let wholeWordPattern = firstWord + "[s,]*"
+
         // Build SQL with optional source filtering
-        // Ranking: 1) Names starting with search term first, 2) Then by BM25 relevance
+        // Ranking factors (in order of priority):
+        // 1) Names starting with search term (prefix match)
+        // 2) Whole word matches ("Apple" > "APPLEBEE'S")
+        // 3) Shorter names preferred ("Bananas, raw" > "Bananas, dehydrated, or...")
+        // 4) BM25 relevance score
         let sql: String
         var parameters: [Any] = []
 
@@ -141,13 +153,16 @@ actor LocalFoodDatabase {
                 WHERE foods_fts MATCH ? AND f.source IN (\(placeholders))
                 ORDER BY
                     CASE WHEN LOWER(f.name) LIKE ? THEN 0 ELSE 1 END,
+                    CASE WHEN LOWER(f.name) GLOB ? THEN 0 ELSE 1 END,
+                    LENGTH(f.name),
                     bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
-            // Parameter order: ftsQuery, sources..., namePrefixPattern, limit
+            // Parameter order: ftsQuery, sources..., namePrefixPattern, wholeWordPattern, limit
             parameters.append(ftsQuery)
             parameters.append(contentsOf: sources)
             parameters.append(namePrefixPattern)
+            parameters.append(wholeWordPattern)
             parameters.append(limit)
         } else {
             sql = """
@@ -161,12 +176,15 @@ actor LocalFoodDatabase {
                 WHERE foods_fts MATCH ?
                 ORDER BY
                     CASE WHEN LOWER(f.name) LIKE ? THEN 0 ELSE 1 END,
+                    CASE WHEN LOWER(f.name) GLOB ? THEN 0 ELSE 1 END,
+                    LENGTH(f.name),
                     bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
-            // Parameter order: ftsQuery, namePrefixPattern, limit
+            // Parameter order: ftsQuery, namePrefixPattern, wholeWordPattern, limit
             parameters.append(ftsQuery)
             parameters.append(namePrefixPattern)
+            parameters.append(wholeWordPattern)
             parameters.append(limit)
         }
 
