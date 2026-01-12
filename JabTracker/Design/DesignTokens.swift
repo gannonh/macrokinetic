@@ -55,6 +55,9 @@ enum DesignTokens {
         /// Inactive/disabled state color - for progress indicators, deselected items
         static let inactive = Color(.systemGray4)
 
+        /// Tertiary content color - for disclosure chevrons, secondary icons
+        static let tertiaryContent = Color(.tertiaryLabel)
+
         // MARK: - Brand Gradient
 
         /// Brand gradient for decorative elements (icons, illustrations)

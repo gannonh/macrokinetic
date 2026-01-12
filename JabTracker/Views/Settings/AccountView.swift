@@ -227,7 +227,8 @@ struct AccountView: View {
             Button("OK") {}
         } message: {
             Text(
-                "\(healthKitReadOnlyField ?? "This field") is synced from the Health app. To change it, go to Settings → Health → Health Details."
+                "\(healthKitReadOnlyField ?? "This field") is synced from the Health app. "
+                    + "To change it, go to Settings → Health → Health Details."
             )
         }
         .accessibilityIdentifier("account-view")
@@ -240,7 +241,7 @@ struct AccountView: View {
             // Avatar with initials
             ZStack {
                 Circle()
-                    .fill(Color.blue)
+                    .fill(DesignTokens.Colors.info)
                     .frame(width: 64, height: 64)
 
                 Image(systemName: "person.fill")
@@ -360,7 +361,7 @@ struct AccountView: View {
                     .foregroundColor(.secondary)
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(Color(.tertiaryLabel))
+                    .foregroundColor(DesignTokens.Colors.tertiaryContent)
             }
         }
         .buttonStyle(.plain)
