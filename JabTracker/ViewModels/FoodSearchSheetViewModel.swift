@@ -72,6 +72,18 @@ final class FoodSearchSheetViewModel {
 
     // MARK: - Daily Tracking
 
+    /// Consumed calories for the day
+    var consumedCalories: Double = 0
+
+    /// Target calories for the day
+    var targetCalories: Double = 0
+
+    /// Consumed protein for the day
+    var consumedProtein: Double = 0
+
+    /// Target protein for the day
+    var targetProtein: Double = 0
+
     /// Remaining calories for the day
     var remainingCalories: Double = 0
 
@@ -165,14 +177,23 @@ final class FoodSearchSheetViewModel {
     func loadInitialData(user: User, for date: Date) async {
         Self.logger.debug("Loading initial data for food search")
 
-        // Load remaining macros
+        // Set target values from user goals
+        targetCalories = user.dailyCalorieGoal
+        targetProtein = user.dailyProteinGoal
+
+        // Load consumed and remaining macros
         do {
             let totals = try await mealLogService.getDailyTotals(for: date)
+            consumedCalories = totals.calories
+            consumedProtein = totals.protein
             remainingCalories = max(0, user.dailyCalorieGoal - totals.calories)
             remainingProtein = max(0, user.dailyProteinGoal - totals.protein)
+            Self.logger.debug("Consumed: \(self.consumedCalories) cal, \(self.consumedProtein)g protein")
             Self.logger.debug("Remaining: \(self.remainingCalories) cal, \(self.remainingProtein)g protein")
         } catch {
             Self.logger.error("Failed to load daily totals: \(error.localizedDescription)")
+            consumedCalories = 0
+            consumedProtein = 0
             remainingCalories = user.dailyCalorieGoal
             remainingProtein = user.dailyProteinGoal
         }
