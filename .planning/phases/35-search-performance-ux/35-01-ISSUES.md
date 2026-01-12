@@ -25,6 +25,21 @@
 **Fix:** Moved database queries to background thread via Task.detached, removed unnecessary spinner
 **Commits:** 924b344e (perf: move queries off main thread), a09b6fb7 (fix: remove spinner)
 
+### UAT-002: SQLite multi-threaded access crash during rapid typing
+
+**Discovered:** 2026-01-12
+**Phase/Plan:** 35-01-FIX
+**Severity:** Blocker
+**Feature:** Food search
+**Description:** After UAT-001 fix, app crashes while typing in search field with error: "BUG IN CLIENT OF libsqlite3.dylib: illegal multi-threaded access to database connection"
+**Expected:** Search should work without crashing
+**Actual:** App crashes after multiple rapid keystrokes
+
+**Resolved:** 2026-01-12
+**Root Cause:** Task.detached created multiple concurrent threads accessing the same SQLite connection. SQLite requires serial access to database connections.
+**Fix:** Converted LocalFoodDatabase from class with Task.detached to Swift actor, which serializes all database access automatically.
+**Commits:** 7158343f (fix: convert LocalFoodDatabase to actor for SQLite thread safety)
+
 ---
 
 *Phase: 35-search-performance-ux*

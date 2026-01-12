@@ -10,7 +10,7 @@ requires:
     provides: Food search implementation with LocalFoodDatabase FTS5
 
 provides:
-  - Non-blocking SQLite FTS5 queries via Task.detached
+  - Thread-safe SQLite FTS5 queries via Swift actor
   - Responsive food search UI without spinner noise
 
 affects: [food-search, nutrition, performance]
@@ -18,7 +18,7 @@ affects: [food-search, nutrition, performance]
 # Tech tracking
 tech-stack:
   added: []
-  patterns: [Task.detached for background database I/O, @unchecked Sendable for thread-safe types]
+  patterns: [Swift actor for thread-safe database I/O, lazy database initialization]
 
 key-files:
   created: []
@@ -28,17 +28,18 @@ key-files:
     - JabTracker/Views/Nutrition/FoodSearchSheet.swift
 
 key-decisions:
-  - "Use Task.detached instead of removing @MainActor from FoodService - cleaner isolation"
+  - "Use Swift actor instead of Task.detached - ensures serial access to SQLite connection"
   - "Remove spinner entirely rather than conditional delay - 200ms debounce provides thinking time"
+  - "Lazy database initialization to avoid actor isolation issues in init"
 
 patterns-established:
-  - "Task.detached(priority: .userInitiated) for SQLite queries that must not block UI"
+  - "Swift actor for types requiring serial access (SQLite, file handles, etc.)"
 
 issues-created: []
 
 # Metrics
-duration: 15min
-completed: 2026-01-12T21:28:08Z
+duration: 27min
+completed: 2026-01-12T21:40:25Z
 ---
 
 # Phase 35-01-FIX: Search Performance & UX Summary
@@ -47,16 +48,17 @@ completed: 2026-01-12T21:28:08Z
 
 ## Performance
 
-- **Duration:** 15 min
+- **Duration:** 27 min
 - **Started:** 2026-01-12T21:13:00Z
-- **Completed:** 2026-01-12T21:28:08Z
-- **Tasks:** 3 (1 investigation, 2 code changes)
+- **Completed:** 2026-01-12T21:40:25Z
+- **Tasks:** 4 (1 investigation, 3 code changes)
 - **Files modified:** 4
 
 ## Accomplishments
-- SQLite FTS5 queries now execute on background thread via Task.detached
+- SQLite FTS5 queries now execute with thread-safe actor serialization
 - Main thread remains responsive during food search typing
 - Spinner removed from search field (local searches are fast enough not to need it)
+- Fixed SQLite multi-threaded crash (UAT-002) by converting to actor pattern
 
 ## Task Commits
 
@@ -65,9 +67,10 @@ Each task was committed atomically:
 1. **Task 1: Investigate and document blocking behavior** - No commit (investigation only)
 2. **Task 2: Move database queries off main thread** - `924b344e` (perf)
 3. **Task 3: Remove spinner for fast local searches** - `a09b6fb7` (fix)
+4. **Task 4: Fix SQLite thread safety crash (UAT-002)** - `7158343f` (fix)
 
 ## Files Created/Modified
-- `JabTracker/Services/LocalFoodDatabase.swift` - Removed @MainActor, added Task.detached for all SQLite queries
+- `JabTracker/Services/LocalFoodDatabase.swift` - Converted to actor with lazy initialization for thread-safe SQLite access
 - `JabTracker/ViewModels/FoodSearchSheetViewModel.swift` - Removed isSearching state updates in performSearch()
 - `JabTracker/Views/Nutrition/FoodSearchSheet.swift` - Removed ProgressView spinner from search field
 - `JabTracker/Views/Nutrition/.swiftlint.yml` - Disabled design token rules for legacy views
@@ -92,9 +95,10 @@ FoodSearchSheet.onChange(of: viewModel.searchText)
 ```
 
 ## Decisions Made
-- Used Task.detached instead of removing @MainActor from the entire class - provides cleaner isolation of background work
+- **Iteration 1:** Used Task.detached to move queries off main thread - caused SQLite multi-threaded crash
+- **Iteration 2:** Converted LocalFoodDatabase to Swift actor - ensures serial access to SQLite connection
 - Removed spinner entirely rather than adding conditional delay logic - the 200ms debounce already provides enough "thinking time"
-- Added @unchecked Sendable to LocalFoodDatabase for thread safety compliance
+- Used lazy database initialization to avoid actor isolation issues in init/deinit
 
 ## Deviations from Plan
 
@@ -118,8 +122,9 @@ None
 
 ## Next Phase Readiness
 - UAT-001 (Search UI freezes during typing) is resolved
+- UAT-002 (SQLite multi-threaded crash) is resolved
 - Ready for re-verification by user
-- Food search should now be completely responsive
+- Food search should now be responsive and thread-safe
 
 ---
 *Phase: 35-search-performance-ux (01-FIX)*
