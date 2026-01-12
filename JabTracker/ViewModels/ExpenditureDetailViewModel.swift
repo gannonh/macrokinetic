@@ -126,17 +126,7 @@ final class ExpenditureDetailViewModel {
         }
 
         // Get current TDEE: prefer lastCalculatedTDEE, fall back to initialEstimatedTDEE
-        let tdee: Double?
-        if let lastCalculated = activeGoal.lastCalculatedTDEE {
-            tdee = lastCalculated
-        } else if let initial = activeGoal.initialEstimatedTDEE {
-            tdee = initial
-        } else {
-            clearAllData()
-            return
-        }
-
-        guard let currentTDEE = tdee else {
+        guard let currentTDEE = activeGoal.lastCalculatedTDEE ?? activeGoal.initialEstimatedTDEE else {
             clearAllData()
             return
         }
