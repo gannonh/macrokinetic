@@ -36,7 +36,17 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 **Plans**: TBD
 
 Plans:
-- [ ] 35-01: TBD (run /gsd:plan-phase 35 to break down)
+- [x] 35-01: Search UX fixes (debounce, auto-focus, tap targets)
+
+#### Phase 35.1: Food Search Header Indicators (INSERTED)
+
+**Goal**: Update Food Search sheet header to show kcal and protein remaining indicators matching the Food Log view style (progress bars with "X left" labels)
+**Depends on**: Phase 35
+**Research**: Unlikely (internal patterns - reuse existing FoodLogView indicators)
+**Plans**: TBD
+
+Plans:
+- [ ] 35.1-01: TBD (run /gsd:plan-phase 35.1 to break down)
 
 #### Phase 36: Search Ranking & Recall
 
@@ -61,7 +71,7 @@ Plans:
 
 #### Phase 38: Bug Fixes & Cleanup
 
-**Goal**: Fix barcode scanner bug, remove API fallback, run database update
+**Goal**: Fix barcode scanner bug, remove API fallback
 **Depends on**: Phase 37
 **Research**: Unlikely (internal fixes)
 **Plans**: TBD
@@ -84,25 +94,26 @@ Plans:
 **Execution Order:**
 Phases execute in numeric order within each milestone.
 
-| Phase                        | Milestone | Plans Complete | Status      | Completed |
-| ---------------------------- | --------- | -------------- | ----------- | --------- |
-| 35. Search Performance & UX  | v0.8.0    | 0/?            | Not started | -         |
-| 36. Search Ranking & Recall  | v0.8.0    | 0/?            | Not started | -         |
-| 37. Unit/Serving Strategy    | v0.8.0    | 0/?            | Not started | -         |
-| 38. Bug Fixes & Cleanup      | v0.8.0    | 0/?            | Not started | -         |
-| 39. Pending Todos            | v0.8.0    | 0/?            | Not started | -         |
+| Phase                              | Milestone | Plans Complete | Status      | Completed  |
+| ---------------------------------- | --------- | -------------- | ----------- | ---------- |
+| 35. Search Performance & UX        | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
+| 35.1 Header Indicators (INSERTED)  | v0.8.0    | 0/?            | Not started | -         |
+| 36. Search Ranking & Recall        | v0.8.0    | 0/?            | Not started | -         |
+| 37. Unit/Serving Strategy   | v0.8.0    | 0/?            | Not started | -         |
+| 38. Bug Fixes & Cleanup     | v0.8.0    | 0/?            | Not started | -         |
+| 39. Pending Todos           | v0.8.0    | 0/?            | Not started | -         |
 
 <details>
 <summary>✅ v0.7.0 Dashboard Widget UX (Phases 30-34) - SHIPPED 2026-01-12</summary>
 
-| Phase                           | Plans Complete | Status      | Completed  |
-| ------------------------------- | -------------- | ----------- | ---------- |
-| 30. Dashboard Foundation        | 2/2            | Complete    | 2026-01-08 |
-| 31. Main Widget (Hero)          | 2/2            | Complete    | 2026-01-09 |
-| 32. Standard Widgets - Insights | 1/1            | Complete    | 2026-01-09 |
-| 33. Detail Views                | 3/3            | Complete    | 2026-01-10 |
-| 33.1 TDEE History (INSERTED)    | 2/2            | Complete    | 2026-01-11 |
-| 34. Integration & Polish        | 4/4            | Complete    | 2026-01-12 |
+| Phase                           | Plans Complete | Status   | Completed  |
+| ------------------------------- | -------------- | -------- | ---------- |
+| 30. Dashboard Foundation        | 2/2            | Complete | 2026-01-08 |
+| 31. Main Widget (Hero)          | 2/2            | Complete | 2026-01-09 |
+| 32. Standard Widgets - Insights | 1/1            | Complete | 2026-01-09 |
+| 33. Detail Views                | 3/3            | Complete | 2026-01-10 |
+| 33.1 TDEE History (INSERTED)    | 2/2            | Complete | 2026-01-11 |
+| 34. Integration & Polish        | 4/4            | Complete | 2026-01-12 |
 
 </details>
 
