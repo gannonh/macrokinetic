@@ -244,6 +244,8 @@ struct WeightTrendDetailView: View {
                 }
             }
         }
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.large])
         .accessibilityIdentifier("weight-trend-detail-view")
     }
 

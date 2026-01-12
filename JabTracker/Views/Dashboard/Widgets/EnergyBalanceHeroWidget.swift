@@ -53,8 +53,14 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
         self.useMockData = useMockData
     }
 
+    /// Whether data is currently loading
+    private var isLoading: Bool {
+        viewModel?.isLoading ?? (!useMockData && viewModel == nil)
+    }
+
     var body: some View {
         content
+            .redacted(reason: isLoading ? .placeholder : [])
             .task {
                 await loadDataIfNeeded()
             }

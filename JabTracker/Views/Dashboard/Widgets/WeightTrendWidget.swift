@@ -63,6 +63,11 @@ struct WeightTrendWidget: View {
         self.onTap = onTap
     }
 
+    /// Whether data is currently loading
+    private var isLoading: Bool {
+        viewModel?.isLoading ?? (!useMockData && viewModel == nil)
+    }
+
     var body: some View {
         WidgetCard(title: nil) {
             VStack(alignment: .leading, spacing: 8) {
@@ -73,6 +78,7 @@ struct WeightTrendWidget: View {
         } onTap: {
             onTap?()
         }
+        .redacted(reason: isLoading ? .placeholder : [])
         .accessibilityIdentifier("weight-trend-widget")
         .task {
             await loadDataIfNeeded()

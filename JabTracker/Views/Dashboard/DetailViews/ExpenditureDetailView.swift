@@ -227,6 +227,8 @@ struct ExpenditureDetailView: View {
                 }
             }
         }
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.large])
         .accessibilityIdentifier("expenditure-detail-view")
     }
 

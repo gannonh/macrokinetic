@@ -61,6 +61,11 @@ struct ExpenditureWidget: View {
         self.onTap = onTap
     }
 
+    /// Whether data is currently loading
+    private var isLoading: Bool {
+        viewModel?.isLoading ?? (!useMockData && viewModel == nil)
+    }
+
     var body: some View {
         WidgetCard(title: nil) {
             VStack(alignment: .leading, spacing: 8) {
@@ -71,6 +76,7 @@ struct ExpenditureWidget: View {
         } onTap: {
             onTap?()
         }
+        .redacted(reason: isLoading ? .placeholder : [])
         .accessibilityIdentifier("expenditure-widget")
         .task {
             await loadDataIfNeeded()

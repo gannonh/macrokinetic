@@ -1,0 +1,32 @@
+Build 0.1.0 (7) - Dashboard Widgets Live Data
+
+What's New
+- Dashboard widgets now display real data from your logged meals and metrics
+- Energy Balance widget shows your average daily calorie deficit or surplus
+- New TDEE tracking system saves daily snapshots for accurate expenditure calculations
+- Detail views (Weight Trend, Energy Balance, Expenditure) now show live data with ViewModels
+- Smooth grow-in animations when hero widgets appear
+- Improved chart visualizations with better scaling and legends
+
+Bug Fixes
+- Fixed Energy Balance date handling for users with limited data history
+- Fixed 100% filled nutrition progress bars now animate smoothly
+- Corrected Weight Trend chart to show trend line prominently with lighter scale line
+- Fixed Energy Balance chart to properly display surplus bars
+
+Focus Areas for Testing
+- Dashboard: Verify all widgets show your actual logged data (not placeholder values)
+- Energy Balance: Check that deficit/surplus calculations look accurate based on your food logs
+- Detail Views: Tap widgets to open detail views and verify charts display correctly
+- Weight Trend: If you have weight entries, verify the trend line appears correctly
+- Animations: Notice the smooth grow-in effect when widgets load
+
+Feedback Needed
+- Do the calorie calculations in Energy Balance match your expectations?
+- Are the charts readable and the data presentation clear?
+- Any widgets showing unexpected values or errors?
+
+Not Yet Implemented
+- Background notification refresh
+- Split-dose schedule UI configuration
+- Crash/error reporting service

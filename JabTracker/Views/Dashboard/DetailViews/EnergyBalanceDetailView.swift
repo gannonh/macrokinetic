@@ -183,6 +183,8 @@ struct EnergyBalanceDetailView: View {
                 }
             }
         }
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.large])
         .accessibilityIdentifier("energy-balance-detail-view")
     }
 

@@ -36,6 +36,11 @@ struct GoalProgressWidget: View {
 
     var onTap: (() -> Void)?
 
+    /// Whether data is currently loading
+    private var isLoading: Bool {
+        viewModel?.isLoading ?? (!useMockData && viewModel == nil)
+    }
+
     // MARK: - Initialization
 
     /// Initialize with live data (default for production)
@@ -60,6 +65,7 @@ struct GoalProgressWidget: View {
         } onTap: {
             onTap?()
         }
+        .redacted(reason: isLoading ? .placeholder : [])
         .accessibilityIdentifier("goal-progress-widget")
         .task {
             await loadDataIfNeeded()
