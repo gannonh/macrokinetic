@@ -981,7 +981,7 @@ struct NutritionProgramTests {
         context.insert(program)
 
         // When - set invalid JSON data
-        program.configurationData = "not valid json".data(using: .utf8)!
+        program.configurationData = Data("not valid json".utf8)
 
         // Then
         #expect(program.configuration == nil)
@@ -1000,7 +1000,7 @@ struct NutritionProgramTests {
         context.insert(program)
 
         // When - set invalid JSON data
-        program.weeklyDistributionData = "not valid json".data(using: .utf8)!
+        program.weeklyDistributionData = Data("not valid json".utf8)
 
         // Then
         #expect(program.weeklyDistribution == nil)
@@ -1019,7 +1019,7 @@ struct NutritionProgramTests {
         context.insert(program)
 
         // When - set invalid JSON data
-        program.weeklyMacroDistributionData = "not valid json".data(using: .utf8)!
+        program.weeklyMacroDistributionData = Data("not valid json".utf8)
 
         // Then
         #expect(program.weeklyMacros == nil)
@@ -1106,7 +1106,7 @@ struct NutritionProgramTests {
         context.insert(program)
 
         // When - set invalid JSON data
-        program.collaborativeConfigData = "not valid json".data(using: .utf8)!
+        program.collaborativeConfigData = Data("not valid json".utf8)
 
         // Then
         #expect(program.collaborativeConfig == nil)

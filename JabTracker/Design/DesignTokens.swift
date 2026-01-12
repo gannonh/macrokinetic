@@ -21,16 +21,22 @@ enum DesignTokens {
         // MARK: - Brand Colors (Teal-based)
 
         /// Primary brand color - use for buttons, progress indicators, interactive elements
-        static let primary = Color(hex: "00A693") ?? Color(.systemMint)
+        static let primary = Color(.systemTeal)
 
-        /// App accent color - darker mint for good contrast with white text
-        static let accent = Color(hex: "00A693") ?? Color(.systemMint)
+        /// App accent color - currently same as primary for consistent branding
+        static let accent = Color(.systemTeal)
 
         // Semantic status colors
         static let success = Color.green
         static let warning = Color.orange
         static let danger = Color.red
         static let info = Color.blue
+
+        // Energy balance colors
+        static let expenditure = Color.orange
+        static let targets = Color.yellow
+        static let deficit = Color.blue
+        static let weight = Color.purple
 
         // MARK: - Background Colors (Apple HIG)
 
@@ -48,6 +54,9 @@ enum DesignTokens {
 
         /// Inactive/disabled state color - for progress indicators, deselected items
         static let inactive = Color(.systemGray4)
+
+        /// Tertiary content color - for disclosure chevrons, secondary icons
+        static let tertiaryContent = Color(.tertiaryLabel)
 
         // MARK: - Brand Gradient
 

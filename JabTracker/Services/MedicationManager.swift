@@ -30,7 +30,7 @@ class MedicationManager: ObservableObject {
             switch self {
             case .invalidDose:
                 return "Invalid dose amount"
-            case let .doseOutOfRange(medication, currentDose):
+            case .doseOutOfRange(let medication, let currentDose):
                 let minDose = medication.availableDoses.min() ?? 0.0
                 let maxDose = medication.availableDoses.max() ?? 0.0
                 let dose = String(format: "%.2f", currentDose)
@@ -155,7 +155,7 @@ class MedicationManager: ObservableObject {
         }
     }
 
-    // swiftlint:disable cyclomatic_complexity function_body_length
+    // swiftlint:disable cyclomatic_complexity
     /// Update an existing medication profile
     /// Complex medical validation logic requiring multiple parameter validation paths for patient safety
     func updateProfile(
@@ -257,7 +257,7 @@ class MedicationManager: ObservableObject {
         }
     }
 
-    // swiftlint:enable cyclomatic_complexity function_body_length
+    // swiftlint:enable cyclomatic_complexity
 
     /// Disable a medication profile (soft delete - preserves historical dose data)
     ///

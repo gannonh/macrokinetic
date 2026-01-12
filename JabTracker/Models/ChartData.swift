@@ -2,7 +2,6 @@
 //  ChartData.swift
 //  JabTracker
 //
-// swiftlint:disable file_length
 
 import Foundation
 import SwiftUI

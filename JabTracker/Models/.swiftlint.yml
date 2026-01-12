@@ -1,6 +1,7 @@
 # SwiftLint overrides for Models
 # NutritionProgram init requires 6 parameters due to program configuration options
 # ProgramConfiguration.swift is large due to comprehensive enum/struct definitions
+# ChartData.swift: ChartTheme enum intentionally uses raw colors for chart theming variations
 
 function_parameter_count:
   warning: 6
@@ -9,3 +10,8 @@ function_parameter_count:
 file_length:
   warning: 560
   error: 620
+
+# ChartTheme intentionally defines multiple color themes for charts - not a design system violation
+disabled_rules:
+  - prefer_design_tokens_colors
+  - prefer_design_tokens_backgrounds

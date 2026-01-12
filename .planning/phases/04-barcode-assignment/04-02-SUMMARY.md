@@ -41,7 +41,7 @@ None
 
 ## Next Phase Readiness
 
-Phase 4 complete - all barcode scanning functionality implemented. Milestone complete, ready for `/gsd:complete-milestone`.
+Phase 4 complete - all barcode scanning functionality implemented. Milestone complete, ready for `/pm-complete-milestone`.
 
 ---
 *Phase: 04-barcode-assignment*

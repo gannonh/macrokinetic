@@ -37,6 +37,9 @@ final class AppServices: ObservableObject {
     /// Calorie adjustment service for burned calories and rollover calculations
     @Published private(set) var calorieAdjustmentService: CalorieAdjustmentService?
 
+    /// TDEE service for TDEE snapshots and adaptive calculations
+    @Published private(set) var tdeeService: TDEEService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -88,6 +91,10 @@ final class AppServices: ObservableObject {
         // Create ProgressPhotoService for photo tracking
         let progressPhotoService = ProgressPhotoService(context: modelContext)
         self.progressPhotoService = progressPhotoService
+
+        // Create TDEEService for TDEE snapshots and adaptive calculations
+        let tdeeService = TDEEService(context: modelContext)
+        self.tdeeService = tdeeService
     }
 
     /// Reset services (useful for testing or sign-out)
@@ -100,6 +107,7 @@ final class AppServices: ObservableObject {
         metricsService = nil
         progressPhotoService = nil
         calorieAdjustmentService = nil
+        tdeeService = nil
     }
 }
 

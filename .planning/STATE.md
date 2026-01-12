@@ -20,34 +20,51 @@
 
 ## Current Position
 
-Phase: 30 of 34 (Dashboard Foundation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-01-08 - Milestone v0.7.0 created
+Phase: 34 (Integration & Polish) ✅
+Plan: 4 of 4 in current phase (complete)
+Status: Milestone v0.7.0 complete - ready for TestFlight
+Last activity: 2026-01-12 - Completed 34-04-PLAN.md
 
-Progress: ░░░░░░░░░░ 0%
+Progress: ██████████ 100%
 
 ## GitHub Tracking
 
-Issue: TBD
-PR: TBD
-Branch: TBD
+Issue: #331
+PR: #332
+Branch: feat/v0.7.0-dashboard-widget-ux
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 min
+- Total plans completed: 13
+- Average duration: 23 min
+- Total execution time: 296 min
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 30    | 0     | -     | -        |
+| Phase | Plans | Total   | Avg/Plan |
+|-------|-------|---------|----------|
+| 30    | 2     | 37 min  | 18 min   |
+| 31    | 2     | 109 min | 54 min   |
+| 32    | 1     | 4 min   | 4 min    |
+| 33    | 3     | 11 min  | 3 min    |
+| 33.1  | 1     | 15 min  | 15 min   |
+| 34    | 4     | 120 min | 30 min   |
 
 **Recent Trend:**
-None yet.
+- 30-01: 7 min (Foundation & Containers)
+- 30-02: 30 min (Hero Widget Integration)
+- 31-01: 64 min (Daily Nutrition Widget)
+- 31-02: 45 min (Energy Balance + Integration)
+- 32-01: 4 min (Standard Widgets - Insights)
+- 33-01: 5 min (Weight Trend Detail View)
+- 33-02: 4 min (Expenditure Detail View)
+- 33-03: 2 min (Energy Balance Detail View)
+- 34-01: 21 min (Hero Widgets Live Data)
+- 34-02: 22 min (Standard Widgets Live Data)
+- 34-03: 32 min (Detail Views Live Data)
+- 33.1-01: 15 min (TDEE History Tracking)
+- 34-04: 45 min (E2E Tests & Polish)
 
 *Updated after each plan completion*
 
@@ -72,10 +89,24 @@ None yet.
 | 27-01 | Smart defaults for target weight | -10kg for loss, +5kg for gain, 0 for maintain |
 | 29-01 | Simple .transition(.opacity) for onboarding→main app | Clean, professional feel without complexity |
 | 29-01 | Private helper views in CompletionStepView | CompletionSummaryRow, NextStepRow kept local to file |
+| 30-01 | Array-based HeroWidgetContainer init | Avoid SwiftLint large_tuple violations vs ViewBuilder tuple overloads |
+| 30-02 | Rectangular cells (26x38) for macro bars | Better visual hierarchy than square cells for progress visualization |
+| 30-02 | Border-only today indicator | Cleaner than "T" text inside cells |
+| 31-01 | Environment key for HeroDisplayMode | Cleaner than closure-based injection for shared toggle state |
+| 31-01 | 130pt ring diameter (vs 160pt) | User feedback - reduced vertical cramping |
+| 31-02 | EnergyDisplayMode environment key | Same pattern as HeroDisplayMode for consistency |
+| 31-02 | Page-specific toggles in container | Energy Balance uses different toggle options than Weekly/Daily |
+| 31-02 | Daily averages for Energy Balance | More meaningful than 30-day totals for "Last 30 Days" view |
+| 31-02 | Day selection defaults to week totals | Simplest UX; tap to drill down into specific days |
+| 31-02 | Carousel order: Weekly → Daily → Energy | Daily exists in carousel, Weekly should be primary |
 
 ### Deferred Issues
 
 None yet.
+
+### Pending Todos
+
+3 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
@@ -83,6 +114,7 @@ None yet.
 - Milestone v0.5.0 created: Navigation Refinement, 3 phases (Phase 22-24)
 - Milestone v0.6.0 created: Onboarding Redux, 5 phases (Phase 25-29)
 - Milestone v0.7.0 created: Dashboard Widget UX, 5 phases (Phase 30-34)
+- Phase 33.1 inserted after Phase 33: TDEE History Tracking (URGENT) - Phase 34-03 blocked because ExpenditureDetailView requires historical TDEE data that doesn't exist
 
 ### Blockers/Concerns Carried Forward
 
@@ -97,6 +129,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-08T18:46:40Z
-Stopped at: Milestone v0.7.0 initialization
+Last session: 2026-01-12T14:24:51Z
+Stopped at: Completed 34-04-PLAN.md - Milestone v0.7.0 complete
 Resume file: None

@@ -129,6 +129,18 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--seed-test-1y-high"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-test-1y-low"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-test-1y-medium"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--seed-test-30d"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -138,6 +150,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-test-new-user"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -169,7 +185,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--force-onboarding"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
@@ -200,6 +216,18 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--seed-test-1y-high"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-test-1y-low"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-test-1y-medium"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--seed-test-30d"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -210,6 +238,10 @@
          <CommandLineArgument
             argument = "--seed-test-90d"
             isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-test-new-user"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--test-titration-data"

@@ -23,7 +23,6 @@ struct ContentView: View {
     /// Cached badge state - updated on scene activation and tab changes
     @State private var checkInBadgeVisible = false
     @Environment(\.scenePhase) private var scenePhase
-
     // MARK: - Constants
 
     private enum SheetTransitionTiming {
@@ -46,6 +45,37 @@ struct ContentView: View {
         }
         let service = WeeklyCheckInService(context: modelContext)
         checkInBadgeVisible = service.isCheckInDue(for: goal)
+    }
+
+    /// Ensure daily TDEE snapshots are up to date
+    /// Runs once per day on app launch, backfilling any missed days
+    private func ensureTDEESnapshots() async {
+        // Check if already ran today
+        let lastBackfillKey = "lastTDEEBackfillDate"
+        if let lastBackfill = UserDefaults.standard.object(forKey: lastBackfillKey) as? Date,
+            Calendar.current.isDateInToday(lastBackfill)
+        {
+            logger.debug("TDEE backfill already ran today, skipping")
+            return
+        }
+
+        // Get user and active goal
+        guard let user = users.first,
+            let goal = user.activeNutritionGoal
+        else {
+            logger.debug("No user or active goal for TDEE backfill")
+            return
+        }
+
+        // Run backfill
+        let tdeeService = TDEEService(context: modelContext)
+        do {
+            try await tdeeService.ensureDailySnapshots(for: goal)
+            UserDefaults.standard.set(Date(), forKey: lastBackfillKey)
+            logger.info("TDEE snapshot backfill completed")
+        } catch {
+            logger.error("TDEE snapshot backfill failed: \(error.localizedDescription)")
+        }
     }
 
     init() {
@@ -205,6 +235,9 @@ struct ContentView: View {
             // Initial badge state
             updateCheckInBadge()
         }
+        .task {
+            await ensureTDEESnapshots()
+        }
         .onChange(of: scenePhase) { _, newPhase in
             // Refresh badge when app becomes active (e.g., after completing check-in)
             if newPhase == .active {
@@ -338,6 +371,9 @@ struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
     @State private var pkEngine = PharmacokineticsEngine()
+    @State private var showingWeightTrendDetail = false
+    @State private var showingExpenditureDetail = false
+    @State private var showingEnergyBalanceDetail = false
     let doseService: DoseService
 
     init(doseService: DoseService) {
@@ -354,8 +390,11 @@ struct DashboardView: View {
                     // Content with standard padding
                     LazyVStack(alignment: .leading, spacing: 16) {
                         if let currentUser = users.first {
-                            // Coming soon banner for early testers
-                            self.comingSoonCard
+                            // Hero widget carousel
+                            heroWidgetSection
+
+                            // Insights & Analytics standard widgets
+                            insightsAnalyticsSection
 
                             self.concentrationSection(for: currentUser)
 
@@ -375,7 +414,37 @@ struct DashboardView: View {
             .background(DesignTokens.Colors.groupedBackground)
             .toolbar(.hidden, for: .navigationBar)
         }
+        .sheet(isPresented: $showingWeightTrendDetail) {
+            WeightTrendDetailView()
+        }
+        .sheet(isPresented: $showingExpenditureDetail) {
+            ExpenditureDetailView()
+        }
+        .sheet(isPresented: $showingEnergyBalanceDetail) {
+            EnergyBalanceDetailView()
+        }
         .accessibilityIdentifier("dashboard-view")
+    }
+
+    // MARK: - Hero Widget Section
+
+    private var heroWidgetSection: some View {
+        HeroWidgetContainer(pages: [
+            AnyView(WeeklyNutritionHeroWidget()),
+            AnyView(DailyNutritionHeroWidget()),
+            AnyView(EnergyBalanceHeroWidget()),
+        ])
+    }
+
+    // MARK: - Insights & Analytics Section
+
+    private var insightsAnalyticsSection: some View {
+        StandardWidgetGroup(title: "Insights & Analytics") {
+            ExpenditureWidget(onTap: { showingExpenditureDetail = true })
+            WeightTrendWidget(onTap: { showingWeightTrendDetail = true })
+            EnergyBalanceWidget(onTap: { showingEnergyBalanceDetail = true })
+            GoalProgressWidget()
+        }
     }
 
     // MARK: - Concentration Section
@@ -413,22 +482,6 @@ struct DashboardView: View {
             .padding()
         }
         .accessibilityIdentifier("no-user-message")
-    }
-
-    private var comingSoonCard: some View {
-        DesignCard {
-            VStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 40))
-                    .foregroundColor(.secondary)
-
-                Text("Dashboard Coming Soon")
-                    .font(DesignTokens.Typography.headline)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-        }
-        .accessibilityIdentifier("coming-soon-card")
     }
 }
 

@@ -1,19 +1,19 @@
-We should start with UI. Build out as static mockups first, then implemennt wiring once happy with core UI patterns: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=0-1&t=0i83j8gx0BZCATC2-1
+# Next Milestone
 
-- There are 2 primary widget designs: 
-  - Main widget, which is unique, will always appear first, and does not have a detail view: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-5&t=0i83j8gx0BZCATC2-1
-  - Standard Widgets, which appear grouped by category and each has a detail view: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-11&t=0i83j8gx0BZCATC2-1
+## Food Libray and Search Improvements
 
-First views to build
-- Main widget, comprised of 3 views (swipeable), each with a consumed and Remaining state
-  - 3 swipe states:
-    - Weekly Nutrition: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-6&t=0i83j8gx0BZCATC2-1
-    - energy Balance: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-7&t=0i83j8gx0BZCATC2-1
-    - Daily Nutrition: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-8&t=0i83j8gx0BZCATC2-1
-- Stabdard Widget: insights and analytics group: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=28-11&t=a24vSSZt7lWvczBd-1
-  - Detail views
-    - Weight Trend detail view: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-22&t=a24vSSZt7lWvczBd-1
-    - Expenditure detail view: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-27&t=a24vSSZt7lWvczBd-1
-    - Energy Balance detail view: https://www.figma.com/design/eHyHy3hhH5IrJLriOSfwgN/MacroKinetic---Dashboard?node-id=3-32&t=a24vSSZt7lWvczBd-1
+- Update db: ./scripts/update-food-database.sh (latest off data set already downloaded to `scripts/off_data/en.openfoodfacts.org.products.csv.gz`)
+- Barcope scanner: stays active after food detail sheet appears, cuasing possible additional scans
+- Search - improve performance, precision & recall:
+  - Slow and sluggish when typing quickly; why slow when data 100% on device? Begins searching on first letter, synchronously, stopping typing flow.
+  - Input box shold be in focus immediately when opening search screen
+  - Header: kcals and protien remaining indicators shoud look like indicators on the food log view
+  - The docs (docs/features/food-data-layer.md) mention that we do API searching as a fallback, but this shouldnt be necessary with the OFF+USDA local DB
+- Food Detail:
+  - How are we handling units for food items from  USDA and OFF? The entry for Eggs for example doesnt have item as a unit, which would be the most common use: 2 whole eggs
+  - I can't find whole Apples when searching "Apples". I think because we limit resesults to 15 common items and the seaerch ranking needs work. If I search for Apples raw I can find them.
+  - clicking anywhere in the amount field should bring up the numpad; currently you need to carefully tap the numbers.
 
-Lets call this: v0.7.0 Dashboard Widget UX
+## Pending Todos
+
+- Run `/gsd:check-todos` and add pending todos to milestone scope

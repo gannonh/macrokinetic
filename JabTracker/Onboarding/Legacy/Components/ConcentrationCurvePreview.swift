@@ -96,7 +96,7 @@ struct ConcentrationCurvePreview: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("concentration-curve-preview")
         .task {

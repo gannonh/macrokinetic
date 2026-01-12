@@ -60,16 +60,16 @@ The food data layer provides fast, reliable food search using a comprehensive lo
 
 ### Local Food Database
 
-| Attribute | Value |
-|-----------|-------|
-| File | `JabTracker/Resources/usda_foods.sqlite` |
-| Size | ~322 MB |
-| Total Foods | 1,731,053 |
-| USDA Foods | 8,080 (Foundation 287 + SR Legacy 7,793) |
-| Open Food Facts | 1,722,973 branded products |
-| Search | FTS5 full-text search |
-| Latency | ~10-50ms |
-| Offline | Yes |
+| Attribute       | Value                                    |
+| --------------- | ---------------------------------------- |
+| File            | `JabTracker/Resources/usda_foods.sqlite` |
+| Size            | ~322 MB                                  |
+| Total Foods     | 1,731,053                                |
+| USDA Foods      | 8,080 (Foundation 287 + SR Legacy 7,793) |
+| Open Food Facts | 1,722,973 branded products               |
+| Search          | FTS5 full-text search                    |
+| Latency         | ~10-50ms                                 |
+| Offline         | Yes                                      |
 
 **USDA Foods** (source: `foundation`, `sr_legacy`): Raw ingredients, whole foods
 - Chicken breast, salmon, ground beef
@@ -85,12 +85,12 @@ The food data layer provides fast, reliable food search using a comprehensive lo
 
 ### Open Food Facts API (Fallback Only)
 
-| Attribute | Value |
-|-----------|-------|
-| Endpoint | `world.openfoodfacts.org` |
-| Rate Limit | 100 requests/minute per IP |
-| Timeout | 30 seconds |
-| Use Case | New products not yet in local DB |
+| Attribute  | Value                            |
+| ---------- | -------------------------------- |
+| Endpoint   | `world.openfoodfacts.org`        |
+| Rate Limit | 100 requests/minute per IP       |
+| Timeout    | 30 seconds                       |
+| Use Case   | New products not yet in local DB |
 
 The API is only used as a fallback when a barcode is scanned that isn't in the local database. With 1.7M+ products with barcodes stored locally, most barcode scans will complete instantly offline.
 
@@ -128,12 +128,12 @@ The search results are organized into expandable sections, each queried separate
 
 **Result Categories**:
 
-| Category | Source | Description |
-|----------|--------|-------------|
-| History | FoodEntry records | Foods the user has previously logged |
-| Custom | User-created | User-created foods (stub for now) |
-| Common | USDA (foundation, sr_legacy) | Whole foods, raw ingredients |
-| Branded | Open Food Facts | Packaged/branded products |
+| Category | Source                       | Description                          |
+| -------- | ---------------------------- | ------------------------------------ |
+| History  | FoodEntry records            | Foods the user has previously logged |
+| Custom   | User-created                 | User-created foods (stub for now)    |
+| Common   | USDA (foundation, sr_legacy) | Whole foods, raw ingredients         |
+| Branded  | Open Food Facts              | Packaged/branded products            |
 
 **Why Per-Source Queries?**
 
@@ -345,10 +345,10 @@ FUNCTION calculateForServing(baseValue: Double, servingGrams: Double) -> Double
 
 ### USDA API (NOT USED)
 
-| Limit Type | Value | Scope |
-|------------|-------|-------|
-| DEMO_KEY | 30/hour | **Shared across ALL users** |
-| Registered | 1,000/hour | Per API key |
+| Limit Type | Value      | Scope                       |
+| ---------- | ---------- | --------------------------- |
+| DEMO_KEY   | 30/hour    | **Shared across ALL users** |
+| Registered | 1,000/hour | Per API key                 |
 
 **Problem**: DEMO_KEY is shared globally, causing rate limiting even with few users.
 
@@ -356,10 +356,10 @@ FUNCTION calculateForServing(baseValue: Double, servingGrams: Double) -> Double
 
 ### Open Food Facts API
 
-| Limit Type | Value | Scope |
-|------------|-------|-------|
-| Search | 100/minute | Per IP address |
-| Barcode | 100/minute | Per IP address |
+| Limit Type | Value      | Scope          |
+| ---------- | ---------- | -------------- |
+| Search     | 100/minute | Per IP address |
+| Barcode    | 100/minute | Per IP address |
 
 **Mitigation strategies**:
 1. Local database searched first (reduces API calls)
@@ -369,9 +369,9 @@ FUNCTION calculateForServing(baseValue: Double, servingGrams: Double) -> Double
 
 ### Cache TTL
 
-| Cache Type | TTL | Storage |
-|------------|-----|---------|
-| API Results | 24 hours | SwiftData |
+| Cache Type      | TTL      | Storage   |
+| --------------- | -------- | --------- |
+| API Results     | 24 hours | SwiftData |
 | Recent Searches | 50 items | SwiftData |
 
 ## Caching
@@ -485,11 +485,11 @@ FUNCTION loadRecentSearches() -> [Food]
 
 ### Source Indicators
 
-| Icon | Color | Meaning | Example Foods |
-|------|-------|---------|---------------|
-| `leaf.fill` | Green | Local USDA database | Chicken, apple, rice |
-| `barcode` | Orange | Open Food Facts API | Coca-Cola, Oreos |
-| `person.fill` | Blue | User-created food | Custom recipes |
+| Icon          | Color  | Meaning             | Example Foods        |
+| ------------- | ------ | ------------------- | -------------------- |
+| `leaf.fill`   | Green  | Local USDA database | Chicken, apple, rice |
+| `barcode`     | Orange | Open Food Facts API | Coca-Cola, Oreos     |
+| `person.fill` | Blue   | User-created food   | Custom recipes       |
 
 ### Serving Size Controls
 
@@ -499,44 +499,44 @@ FUNCTION loadRecentSearches() -> [Food]
 
 ### Error States
 
-| State | UI | Recovery |
-|-------|-----|----------|
-| No results | "No Results" view with suggestion | Try different search term |
-| API error | Alert with message | OK dismisses, local results still show |
-| Offline | Local results only | No indicator (graceful) |
+| State      | UI                                | Recovery                               |
+| ---------- | --------------------------------- | -------------------------------------- |
+| No results | "No Results" view with suggestion | Try different search term              |
+| API error  | Alert with message                | OK dismisses, local results still show |
+| Offline    | Local results only                | No indicator (graceful)                |
 
 ## File Reference
 
-| File | Purpose |
-|------|---------|
-| `FoodService.swift` | Orchestrates search, categorized queries, caching |
-| `LocalFoodDatabase.swift` | SQLite/FTS5 queries with source filtering |
-| `OpenFoodFactsService.swift` | REST API client for packaged foods |
-| `FoodSearchSheetViewModel.swift` | Manages search state, expand/collapse |
-| `FoodSearchSheet+Sections.swift` | Expandable section UI components |
-| `FoodDetailView.swift` | Nutrition facts and serving adjustment |
-| `Food.swift` | SwiftData model for food items |
-| `FoodEntry.swift` | SwiftData model for logged food entries |
-| `FoodSource.swift` | Enum for food source types |
-| `usda_foods.sqlite` | Bundled local database |
+| File                             | Purpose                                           |
+| -------------------------------- | ------------------------------------------------- |
+| `FoodService.swift`              | Orchestrates search, categorized queries, caching |
+| `LocalFoodDatabase.swift`        | SQLite/FTS5 queries with source filtering         |
+| `OpenFoodFactsService.swift`     | REST API client for packaged foods                |
+| `FoodSearchSheetViewModel.swift` | Manages search state, expand/collapse             |
+| `FoodSearchSheet+Sections.swift` | Expandable section UI components                  |
+| `FoodDetailView.swift`           | Nutrition facts and serving adjustment            |
+| `Food.swift`                     | SwiftData model for food items                    |
+| `FoodEntry.swift`                | SwiftData model for logged food entries           |
+| `FoodSource.swift`               | Enum for food source types                        |
+| `usda_foods.sqlite`              | Bundled local database                            |
 
 ## Performance Metrics
 
-| Operation | Target | Actual |
-|-----------|--------|--------|
-| Local search | <50ms | ~10ms |
-| API search | <2s | 500-1000ms |
-| UI debounce | 500ms | 500ms |
-| Cache lookup | <10ms | ~5ms |
+| Operation    | Target | Actual     |
+| ------------ | ------ | ---------- |
+| Local search | <50ms  | ~10ms      |
+| API search   | <2s    | 500-1000ms |
+| UI debounce  | 500ms  | 500ms      |
+| Cache lookup | <10ms  | ~5ms       |
 
 ## Testing
 
-| Test Suite | Tests | Coverage |
-|------------|-------|----------|
-| LocalFoodDatabaseTests | 27 | 90% |
-| FoodServiceTests | 24 | 85% |
-| FoodSearchSheetViewModelTests | 22 | 85% |
-| NutritionFlowUITests | 11 | E2E |
+| Test Suite                    | Tests | Coverage |
+| ----------------------------- | ----- | -------- |
+| LocalFoodDatabaseTests        | 27    | 90%      |
+| FoodServiceTests              | 24    | 85%      |
+| FoodSearchSheetViewModelTests | 22    | 85%      |
+| NutritionFlowUITests          | 11    | E2E      |
 
 ### Key Test Scenarios
 
@@ -573,15 +573,20 @@ The local USDA database can be updated using the automated script:
 
 ### Script Options
 
-| Option | Description |
-|--------|-------------|
-| (none) | Full rebuild: USDA download + OFF processing (if available) |
-| `--skip-download` | Rebuild from existing data files (faster) |
-| `--usda-only` | Only process USDA data, skip Open Food Facts |
-| `--verify` | Only verify the current database |
-| `--help` | Show usage information |
+| Option            | Description                                                 |
+| ----------------- | ----------------------------------------------------------- |
+| (none)            | Full rebuild: USDA download + OFF processing (if available) |
+| `--skip-download` | Rebuild from existing data files (faster)                   |
+| `--usda-only`     | Only process USDA data, skip Open Food Facts                |
+| `--verify`        | Only verify the current database                            |
+| `--help`          | Show usage information                                      |
 
 ### Full Update Workflow
+
+Download OFF data
+1. Go to: https://world.openfoodfacts.org/data
+2. Download: https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz
+3. Save file to `scripts/off_data/en.openfoodfacts.org.products.csv.gz`
 
 ```bash
 # 1. Run the update script
@@ -704,11 +709,11 @@ ok
 
 ### Data Sources
 
-| Dataset | Update Frequency | URL |
-|---------|------------------|-----|
-| Foundation Foods | Quarterly (~4x/year) | [fdc.nal.usda.gov](https://fdc.nal.usda.gov/download-datasets.html) |
-| SR Legacy | Static (2018) | [fdc.nal.usda.gov](https://fdc.nal.usda.gov/download-datasets.html) |
-| Open Food Facts | Weekly | [world.openfoodfacts.org/data](https://world.openfoodfacts.org/data) |
+| Dataset          | Update Frequency     | URL                                                                  |
+| ---------------- | -------------------- | -------------------------------------------------------------------- |
+| Foundation Foods | Quarterly (~4x/year) | [fdc.nal.usda.gov](https://fdc.nal.usda.gov/download-datasets.html)  |
+| SR Legacy        | Static (2018)        | [fdc.nal.usda.gov](https://fdc.nal.usda.gov/download-datasets.html)  |
+| Open Food Facts  | Weekly               | [world.openfoodfacts.org/data](https://world.openfoodfacts.org/data) |
 
 ### Open Food Facts Data Setup
 
@@ -722,12 +727,12 @@ The CSV is ~1.1GB compressed and contains 4M+ products. Processing filters for p
 
 ### When to Update
 
-| Trigger | Action |
-|---------|--------|
-| Quarterly USDA release | Run full update |
-| Before major app release | Run full update |
+| Trigger                   | Action                                   |
+| ------------------------- | ---------------------------------------- |
+| Quarterly USDA release    | Run full update                          |
+| Before major app release  | Run full update                          |
 | User reports missing food | Check if food exists in latest USDA data |
-| Database corruption | Run `--skip-download` to rebuild |
+| Database corruption       | Run `--skip-download` to rebuild         |
 
 ### Updating Download URLs
 
@@ -743,13 +748,13 @@ SR_LEGACY_URL="https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_
 
 ### Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Download fails | Check USDA website for updated URLs |
-| "JSON not found" | Verify ZIP extraction completed |
-| Fewer foods than expected | Check USDA data format hasn't changed |
-| Tests fail | Review test output, may need schema update |
-| Database too large | Check for duplicate entries in processing |
+| Issue                     | Solution                                   |
+| ------------------------- | ------------------------------------------ |
+| Download fails            | Check USDA website for updated URLs        |
+| "JSON not found"          | Verify ZIP extraction completed            |
+| Fewer foods than expected | Check USDA data format hasn't changed      |
+| Tests fail                | Review test output, may need schema update |
+| Database too large        | Check for duplicate entries in processing  |
 
 ### Directory Structure
 

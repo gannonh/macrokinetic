@@ -1,0 +1,220 @@
+//
+//  EnergyBalanceHeroViewModel.swift
+//  JabTracker
+//
+//  ViewModel for EnergyBalanceHeroWidget - provides 30-day energy balance data
+//  with daily expenditure from TDEESnapshots.
+//
+
+import Foundation
+import OSLog
+import SwiftData
+
+/// Data point for daily calorie chart with expenditure
+struct DayCalories: Identifiable {
+    /// Use date as stable identifier for animation continuity
+    var id: Date { date }
+    let date: Date
+    let value: Double
+    /// Daily expenditure from TDEESnapshot (varies per day)
+    let expenditure: Double
+    /// Daily calorie target (fixed from NutritionGoal)
+    let target: Double
+}
+
+/// ViewModel providing 30-day energy balance data for EnergyBalanceHeroWidget
+@MainActor
+@Observable
+final class EnergyBalanceHeroViewModel {
+
+    // MARK: - Properties
+
+    private static let logger = Logger(
+        subsystem: "com.gannonhall.JabTracker",
+        category: "EnergyBalanceHeroViewModel"
+    )
+
+    private let mealLogService: MealLogService
+    private let tdeeService: TDEEService
+    private let context: ModelContext
+
+    /// Number of days to display
+    private let dayCount = 30
+
+    // MARK: - Published State
+
+    /// Whether data is currently loading
+    private(set) var isLoading: Bool = false
+
+    /// Daily calories for each of the last 30 days (includes per-day expenditure from TDEESnapshots)
+    private(set) var dailyCalories: [DayCalories] = []
+
+    /// Average daily expenditure (TDEE) - computed from dailyCalories
+    var averageExpenditure: Double {
+        guard !dailyCalories.isEmpty else { return 2000 }
+        return dailyCalories.map(\.expenditure).reduce(0, +) / Double(dailyCalories.count)
+    }
+
+    /// Average daily calorie target - computed from dailyCalories
+    var averageTargets: Double {
+        guard !dailyCalories.isEmpty else { return 1800 }
+        return dailyCalories.map(\.target).reduce(0, +) / Double(dailyCalories.count)
+    }
+
+    /// Total nutrition (sum of all daily calories)
+    private(set) var totalNutrition: Int = 0
+
+    /// Number of days that failed to load (data may be incomplete)
+    private(set) var daysWithLoadingErrors: Int = 0
+
+    /// Whether fallback TDEE is being used (no calculated TDEE exists)
+    private(set) var isUsingFallbackTDEE: Bool = false
+
+    /// Error message if significant loading issues occurred
+    private(set) var loadingError: String?
+
+    // MARK: - Initialization
+
+    /// Initialize with meal log service, TDEE service, and model context
+    /// - Parameters:
+    ///   - mealLogService: Service for fetching meal log data
+    ///   - tdeeService: Service for fetching TDEE snapshots
+    ///   - context: ModelContext for fetching user data
+    init(mealLogService: MealLogService, tdeeService: TDEEService, context: ModelContext) {
+        self.mealLogService = mealLogService
+        self.tdeeService = tdeeService
+        self.context = context
+    }
+
+    // MARK: - Data Loading
+
+    /// Load 30 days of energy balance data with per-day TDEESnapshot values
+    func loadData() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        // Get user and active nutrition goal for fallback values and target
+        guard let user = context.fetchCurrentUser(logger: Self.logger),
+            let activeGoal = user.activeNutritionGoal
+        else {
+            Self.logger.debug("No user or active nutrition goal found")
+            return
+        }
+
+        // Get fallback TDEE (used when no snapshot exists for a date)
+        let fallbackTDEE: Double
+        if let lastCalculated = activeGoal.lastCalculatedTDEE {
+            fallbackTDEE = lastCalculated
+            isUsingFallbackTDEE = false
+        } else if let initial = activeGoal.initialEstimatedTDEE {
+            fallbackTDEE = initial
+            isUsingFallbackTDEE = false
+        } else {
+            fallbackTDEE = 2000  // Reasonable default
+            isUsingFallbackTDEE = true
+            Self.logger.warning("No TDEE available, using default 2000 kcal - user should complete setup")
+        }
+
+        let calorieTarget = activeGoal.dailyCalorieTarget
+
+        // Load daily calorie data with TDEESnapshot expenditure
+        await loadDailyCalories(fallbackTDEE: fallbackTDEE, calorieTarget: calorieTarget)
+
+        Self.logger.debug(
+            """
+            Loaded energy balance: total=\(self.totalNutrition), \
+            exp=\(Int(self.averageExpenditure)), target=\(Int(self.averageTargets))
+            """
+        )
+    }
+
+    /// Load daily calorie totals for the last 30 days with per-day TDEESnapshot values
+    private func loadDailyCalories(fallbackTDEE: Double, calorieTarget: Double) async {
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Calculate start date for TDEESnapshot query
+        guard let startDate = calendar.date(byAdding: .day, value: -(dayCount - 1), to: today) else {
+            return
+        }
+
+        // Load TDEE snapshots for the period to get historical expenditure values
+        var tdeeByDate: [Date: Double] = [:]
+        do {
+            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: today)
+            for snapshot in snapshots {
+                let dayStart = calendar.startOfDay(for: snapshot.timestamp)
+                tdeeByDate[dayStart] = snapshot.tdeeValue
+            }
+            Self.logger.debug("Loaded \(snapshots.count) TDEE snapshots for energy balance hero")
+        } catch {
+            Self.logger.error("Failed to load TDEE snapshots: \(error.localizedDescription)")
+            loadingError = "Unable to load historical expenditure data."
+        }
+
+        var newDailyCalories: [DayCalories] = []
+        var newTotalNutrition = 0
+        var failedDays = 0
+
+        // Load data for each day (oldest to newest)
+        for daysAgo in (0..<dayCount).reversed() {
+            guard let dayDate = calendar.date(byAdding: .day, value: -daysAgo, to: today) else {
+                continue
+            }
+
+            let dayStart = calendar.startOfDay(for: dayDate)
+            // Use historical TDEE if available, otherwise fallback
+            let dayExpenditure = tdeeByDate[dayStart] ?? fallbackTDEE
+
+            do {
+                let totals = try await mealLogService.getDailyTotals(for: dayDate)
+                let calories = totals.calories
+                newDailyCalories.append(
+                    DayCalories(
+                        date: dayDate,
+                        value: calories,
+                        expenditure: dayExpenditure,
+                        target: calorieTarget
+                    ))
+                newTotalNutrition += Int(calories)
+            } catch {
+                Self.logger.error("Failed to load totals for day \(-daysAgo): \(error.localizedDescription)")
+                failedDays += 1
+                // Add zero calories for this day on error, but still include expenditure
+                // Note: This may show incorrect deficit - tracked by daysWithLoadingErrors
+                newDailyCalories.append(
+                    DayCalories(
+                        date: dayDate,
+                        value: 0,
+                        expenditure: dayExpenditure,
+                        target: calorieTarget
+                    ))
+            }
+        }
+
+        dailyCalories = newDailyCalories
+        totalNutrition = newTotalNutrition
+        daysWithLoadingErrors = failedDays
+
+        if failedDays > 0 {
+            loadingError = "\(failedDays) day(s) could not be loaded. Data may be incomplete."
+        }
+    }
+
+}
+
+// MARK: - Preview Support
+
+extension EnergyBalanceHeroViewModel {
+    /// Preview data for SwiftUI previews
+    static var preview: EnergyBalanceHeroViewModel {
+        let context = PreviewHelpers.previewContext()
+        let mealLogService = MealLogService(context: context)
+        let tdeeService = TDEEService(context: context)
+        return EnergyBalanceHeroViewModel(
+            mealLogService: mealLogService,
+            tdeeService: tdeeService,
+            context: context
+        )
+    }
+}

@@ -187,14 +187,12 @@ extension ChartDataProcessor {
         }
     }
 
-    // swiftlint:disable:next orphaned_doc_comment
     /// Aggregate doses by time period for efficient chart display
     /// - Parameters:
     ///   - doses: Array of dose records to aggregate
     ///   - aggregationPeriod: Time period for aggregation
     ///   - maxDataPoints: Maximum number of aggregated data points to return
     /// - Returns: Array of aggregated dose points
-    // swiftlint:disable:next function_body_length
     func aggregateDosesByTimePeriod(
         _ doses: [Dose],
         aggregationPeriod: AggregationPeriod,

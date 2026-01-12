@@ -88,6 +88,7 @@ class DataController: ObservableObject {
         ProgressPhoto.self,
         NutritionGoal.self,
         NutritionProgram.self,
+        TDEESnapshot.self,
     ]
 
     init(inMemory: Bool = false) {

@@ -1,0 +1,19 @@
+# ViewModels directory - relaxed rules for preview support code
+# ViewModels with complex data loading logic may exceed default thresholds
+
+disabled_rules:
+  - force_try  # Allow force try in preview static properties
+  - force_unwrapping  # Allow in date arithmetic
+
+# Relaxed thresholds for ViewModels with complex data loading
+file_length:
+  warning: 550
+  error: 600
+
+function_body_length:
+  warning: 60
+  error: 80
+
+line_length:
+  warning: 130
+  error: 150

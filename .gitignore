@@ -29,6 +29,7 @@ ccpm/
 logs/
 
 .claude/commands/prompt.md
+.claude/auto-memory/dirty-files
 
 # Backup files
 *.bak

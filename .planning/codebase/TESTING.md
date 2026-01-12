@@ -1,7 +1,7 @@
 ---
 name: Testing Patterns
 created: 2025-12-22
-last_modified: 2026-01-04
+last_modified: 2026-01-09
 ---
 
 # Testing Patterns
@@ -327,7 +327,34 @@ app.launchArguments = ["--ui-testing", "--seed-test-7d"]
 app.launch()
 ```
 
+**TestDataPreset Enum (Unit Tests):**
+```swift
+enum TestDataPreset {
+    case empty
+    case sevenDays
+    case thirtyDays
+    case ninetyDays
+    case oneYear
+
+    var dateRange: ClosedRange<Date> { ... }
+}
+
+// Usage in tests
+let preset = TestDataPreset.sevenDays
+seedTestData(for: preset, in: context)
+```
+
+**CloudKit Testing Mode:**
+```swift
+// Disable CloudKit sync for unit tests
+let config = ModelConfiguration(
+    schema: schema,
+    isStoredInMemoryOnly: true,
+    cloudKitDatabase: .none  // Critical for test isolation
+)
+```
+
 ---
 
-*Testing analysis: 2026-01-04*
+*Testing analysis: 2026-01-09*
 *Update when test patterns change*

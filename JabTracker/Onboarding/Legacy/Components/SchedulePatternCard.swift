@@ -41,7 +41,7 @@ struct SchedulePatternCard: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.gray.opacity(0.05))
+                    .fill(isSelected ? Color.blue.opacity(0.1) : DesignTokens.Colors.cardBackground)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)

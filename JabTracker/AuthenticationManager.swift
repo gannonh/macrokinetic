@@ -174,6 +174,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         let progressPhotoCount = try deleteAll(ProgressPhoto.self, from: context)
         let nutritionGoalCount = try deleteAll(NutritionGoal.self, from: context)
         let nutritionProgramCount = try deleteAll(NutritionProgram.self, from: context)
+        let tdeeSnapshotCount = try deleteAll(TDEESnapshot.self, from: context)
 
         try context.save()
         Self.logger.info(
@@ -183,7 +184,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             \(titrationCount) titrations, \(doseScheduleCount) schedules, \(scheduledDoseCount) scheduled doses, \
             \(foodCount) foods, \(foodEntryCount) food entries, \(weightEntryCount) weight entries, \
             \(metricsEntryCount) metrics entries, \(progressPhotoCount) progress photos, \
-            \(nutritionGoalCount) goals, \(nutritionProgramCount) programs
+            \(nutritionGoalCount) goals, \(nutritionProgramCount) programs, \(tdeeSnapshotCount) TDEE snapshots
             """)
     }
 
@@ -277,7 +278,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     // swiftlint:disable:next orphaned_doc_comment
     /// Seed test data for UI testing if TEST_DATA_SEED environment variable or time period launch arguments are set
     /// Enables fast E2E performance testing with large datasets and manual testing with realistic data
-    // swiftlint:disable:next function_body_length
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     private func seedTestDataIfRequested(for user: User, context: ModelContext) async {
         #if DEBUG || TEST
             let environment = ProcessInfo.processInfo.environment
@@ -304,6 +305,12 @@ class AuthenticationManager: NSObject, ObservableObject {
             let shouldSeedCheckInMinimum = arguments.contains("--seed-check-in-minimum")
             let shouldSeedCheckInInsufficient = arguments.contains("--seed-check-in-insufficient")
 
+            // Check for data quality seeding flags (1-year data with different densities)
+            let shouldSeedHighQuality = arguments.contains("--seed-test-1y-high")
+            let shouldSeedMediumQuality = arguments.contains("--seed-test-1y-medium")
+            let shouldSeedLowQuality = arguments.contains("--seed-test-1y-low")
+            let shouldSeedNewUser = arguments.contains("--seed-test-new-user")
+
             // Program style modifier (default: Coached, with flag: Collaborative)
             let useCollaborative = arguments.contains("--seed-collaborative")
             let programStyle: ProgramStyle = useCollaborative ? .collaborative : .coached
@@ -312,9 +319,41 @@ class AuthenticationManager: NSObject, ObservableObject {
                 shouldSeedCheckInReady || shouldSeedCheckInGood
                 || shouldSeedCheckInMinimum || shouldSeedCheckInInsufficient
 
+            let hasDataQualitySeeding =
+                shouldSeedHighQuality || shouldSeedMediumQuality
+                || shouldSeedLowQuality || shouldSeedNewUser
+
             // If neither flag is present, skip seeding
-            if daysOfHistory == 0 && !hasCheckInSeeding {
+            if daysOfHistory == 0 && !hasCheckInSeeding && !hasDataQualitySeeding {
                 return  // No seeding requested
+            }
+
+            // Seed data quality variants (1-year with different densities)
+            if hasDataQualitySeeding {
+                let qualityLevel: DataQualityLevel
+                if shouldSeedHighQuality {
+                    qualityLevel = .high
+                } else if shouldSeedMediumQuality {
+                    qualityLevel = .medium
+                } else if shouldSeedLowQuality {
+                    qualityLevel = .low
+                } else {
+                    qualityLevel = .newUser
+                }
+
+                Self.logger.info("🎯 Seeding data quality level: \(qualityLevel.rawValue)")
+                await MainActor.run {
+                    do {
+                        _ = try TestDataSeeding.seedDataWithQuality(
+                            into: context,
+                            qualityLevel: qualityLevel,
+                            existingUser: user
+                        )
+                    } catch {
+                        Self.logger.error("❌ Data quality seeding failed: \(error)")
+                    }
+                }
+                return  // Data quality seeding is comprehensive, skip other seeding
             }
 
             // Seed check-in data based on requested tier (only one tier at a time)
@@ -470,38 +509,142 @@ class AuthenticationManager: NSObject, ObservableObject {
                     program.goal = goal
                     context.insert(program)
 
-                    // Seed 28 days of weight history (matches TDEE lookback window)
-                    for dayOffset in 0..<28 {
+                    // Seed 90 days of weight history (matches TDEE snapshot history)
+                    // Starting weight ~92kg, ending ~88kg (gradual 4kg loss over 90 days)
+                    for dayOffset in 0..<90 {
                         let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
-                        // Slight downward trend with noise
-                        let weightKg = 89.0 - (Double(14 - dayOffset) * 0.05) + Double.random(in: -0.3...0.3)
+                        // Gradual downward trend: 92kg -> 88kg over 90 days with daily noise
+                        let progress = Double(90 - dayOffset) / 90.0  // 0 at day -90, 1 at today
+                        let baseWeight = 92.0 - (4.0 * progress)  // 92kg to 88kg
+                        let noise = Double.random(in: -0.4...0.4)
+                        let weightKg = baseWeight + noise
                         let weightEntry = WeightEntry(timestamp: date, weightKg: weightKg)
                         context.insert(weightEntry)
                     }
 
-                    // Seed 21 days of food entries (75% of 28-day window > 70% threshold)
-                    for dayOffset in 0..<21 {
+                    // Seed 90 days of food entries (matches weight and TDEE snapshot history)
+                    for dayOffset in 0..<90 {
                         let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
-                        // Create 3 meals per day with realistic macros (totaling ~2000 cal)
-                        let meals: [(MealSection, Double, Double, Double, Double)] = [
-                            (.breakfast, 400, 25, 50, 15),  // cal, protein, carbs, fat
-                            (.lunch, 700, 45, 60, 30),
-                            (.dinner, 800, 55, 70, 35),
+
+                        // Today (dayOffset == 0): only breakfast + lunch to show partial progress (~50%)
+                        let isToday = dayOffset == 0
+
+                        // Add daily variance: some days higher, some lower (±15%)
+                        let dayMultiplier = Double.random(in: 0.85...1.15)
+
+                        // Occasionally skip breakfast (~20% of days, but not today)
+                        let skipBreakfast = !isToday && Double.random(in: 0...1) < 0.2
+
+                        // Base meals with per-meal variance (±10%)
+                        let breakfastMult = skipBreakfast ? 0.0 : Double.random(in: 0.9...1.1)
+                        let lunchMult = Double.random(in: 0.9...1.1)
+                        // Skip dinner today to show partial day progress
+                        let dinnerMult = isToday ? 0.0 : Double.random(in: 0.9...1.1)
+
+                        // Sometimes add snacks (~40% of days, but not today)
+                        let hasSnack = !isToday && Double.random(in: 0...1) < 0.4
+
+                        // Create meals with variance applied via serving size
+                        let mealConfigs: [(MealSection, Double)] = [
+                            (.breakfast, breakfastMult * dayMultiplier),
+                            (.lunch, lunchMult * dayMultiplier),
+                            (.dinner, dinnerMult * dayMultiplier),
                         ]
-                        for (section, cal, protein, carbs, fat) in meals {
+
+                        for (section, mult) in mealConfigs {
+                            guard mult > 0 else { continue }  // Skip if multiplier is 0
+
+                            // Base macros per meal type
+                            let (baseCal, protein, carbs, fat): (Double, Double, Double, Double) = {
+                                switch section {
+                                case .breakfast: return (400, 25, 50, 15)
+                                case .lunch: return (700, 45, 60, 30)
+                                case .dinner: return (800, 55, 70, 35)
+                                default: return (500, 30, 50, 20)
+                                }
+                            }()
+
                             let entry = FoodEntry(
                                 foodName: "Test \(section.rawValue)",
                                 mealSection: section,
                                 loggedAt: date,
-                                servingGrams: 100.0,
-                                caloriesPer100g: cal,
+                                servingGrams: 100.0 * mult,
+                                caloriesPer100g: baseCal,
                                 proteinPer100g: protein,
                                 carbsPer100g: carbs,
                                 fatPer100g: fat
                             )
                             context.insert(entry)
                         }
+
+                        // Add snack on some days
+                        if hasSnack {
+                            let snackEntry = FoodEntry(
+                                foodName: "Test snack",
+                                mealSection: .snacks,
+                                loggedAt: date,
+                                servingGrams: 100.0 * Double.random(in: 0.8...1.2),
+                                caloriesPer100g: 200,
+                                proteinPer100g: 10,
+                                carbsPer100g: 25,
+                                fatPer100g: 8
+                            )
+                            context.insert(snackEntry)
+                        }
                     }
+
+                    // Seed 90 days of TDEE history snapshots
+                    // Shows gradual decrease from initial (2400) to current (2350)
+                    let initialTDEE = 2400.0
+                    let currentTDEE = 2350.0
+                    let tdeeRange = initialTDEE - currentTDEE  // 50 kcal decrease over 90 days
+
+                    Self.logger.debug("🔄 Seeding 90 TDEESnapshot entries...")
+                    var snapshotCount = 0
+                    for dayOffset in 0..<90 {
+                        guard let snapshotDate = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) else {
+                            continue
+                        }
+
+                        // Calculate TDEE: gradual decrease with daily noise
+                        let progress = Double(90 - dayOffset) / 90.0  // 0 at day -90, 1 at today
+                        let baseTDEE = initialTDEE - (tdeeRange * progress)
+                        let noise = Double.random(in: -8...8)
+                        let tdeeValue = baseTDEE + noise
+
+                        // Source: initial for first week, then mix of adaptive/holding
+                        // Days 1-7 (dayOffset 83-89): initial
+                        // Days 8-60 (dayOffset 30-82): 70% adaptive, 30% holding
+                        // Days 61-90 (dayOffset 0-29): 90% adaptive, 10% holding
+                        let sourceType: TDEESourceType
+                        if dayOffset > 83 {
+                            sourceType = .initial
+                        } else if dayOffset >= 30 {
+                            // Days 8-60: 70% adaptive, 30% holding
+                            sourceType = Double.random(in: 0...1) < 0.7 ? .adaptive : .holding
+                        } else {
+                            // Days 61-90: 90% adaptive, 10% holding
+                            sourceType = Double.random(in: 0...1) < 0.9 ? .adaptive : .holding
+                        }
+
+                        // Confidence increases over time (more data = more confidence)
+                        // Holding snapshots get lower confidence
+                        // Day -90: 0.3, Day 0: 0.85, holding snapshots reduced by 20%
+                        var confidence = 0.3 + (0.55 * progress)
+                        if sourceType == .holding {
+                            confidence *= 0.8
+                        }
+
+                        let snapshot = TDEESnapshot(
+                            timestamp: snapshotDate,
+                            tdeeValue: tdeeValue,
+                            confidence: confidence,
+                            source: sourceType
+                        )
+                        context.insert(snapshot)
+                        snapshotCount += 1
+                    }
+                    Self.logger.debug("✅ Created \(snapshotCount) TDEESnapshot entries")
 
                     try context.save()
 
@@ -510,10 +653,12 @@ class AuthenticationManager: NSObject, ObservableObject {
                         ✅ Check-in ready data seeded:
                            - Goal: Weight loss (90kg → 80kg)
                            - Program: Coached/Balanced
-                           - TDEE: 2350 kcal
+                           - TDEE: 2350 kcal (from 2400 initial)
+                           - TDEE snapshots: 90 days (mixed sources: initial/adaptive/holding)
                            - Last check-in: 10 days ago (due for check-in)
-                           - Weight entries: 28 days
-                           - Food entries: 21 days (63 meals)
+                           - Weight entries: 90 days (92kg → 88kg with ±0.4kg noise)
+                           - Food entries: 90 days (with variance: ±15% daily, ±10% per meal)
+                           - Breakfast skipped ~20% of days, snacks added ~40% of days
                         """)
                 } catch {
                     Self.logger.error("❌ Check-in ready data seeding failed: \(error)")

@@ -59,7 +59,7 @@
 
 ## Next Step
 
-Phase 11 complete. Ready for `/gsd:complete-milestone` to finalize v0.2.0.
+Phase 11 complete. Ready for `/pm-complete-milestone` to finalize v0.2.0.
 
 ---
 *Phase: 11-feature-settings*

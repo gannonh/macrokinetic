@@ -456,7 +456,7 @@ struct AuthenticationManagerCoreTests {
 
 @MainActor
 @Suite("AuthenticationManager Medication Profile Seeding Tests")
-struct AuthenticationManagerMedicationProfileSeedingTests {
+struct AuthManagerMedProfileSeedingTests {
 
     @Test("Seed additional medication profiles creates correct number of profiles")
     @MainActor

@@ -1,7 +1,7 @@
 ---
 name: External Integrations
 created: 2025-12-22
-last_modified: 2026-01-04
+last_modified: 2026-01-09
 ---
 
 # External Integrations
@@ -115,5 +115,5 @@ last_modified: 2026-01-04
 
 ---
 
-*Integration audit: 2026-01-04*
+*Integration audit: 2026-01-09*
 *Update when adding/removing external services*

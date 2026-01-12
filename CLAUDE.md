@@ -1,3 +1,12 @@
+## Overview
+
+**JabTracker** - iOS app for tracking GLP-1 medication doses, nutrition, and health metrics.
+
+- SwiftUI + SwiftData with CloudKit sync
+- Pharmacokinetics engine for concentration tracking
+- Food logging with 1.7M+ foods (USDA + Open Food Facts)
+- Analytics, adherence tracking, and progress photos
+
 ## Essential Context
 
 ### Codebase Conventions & Structure
@@ -14,9 +23,9 @@
 
 - Do not run build commands when iterating with the user. The user needs to run build to see the changes. When you run build after making a change he has to wait for your build to complete before running the app.
 
-## E2E Testing R ules
+## E2E Testing Rules
 
-### ⛔️ MANDATORY: When E2E Tests Fail, Debug First
+### MANDATORY: When E2E Tests Fail, Debug First
 
 **STOP. Before changing ANY code when a test fails, you MUST run these debug steps:**
 
@@ -43,16 +52,17 @@ open logs/latest/screenshots/
 - **debugDescription shows**: What elements exist and their identifiers
 - **Together they answer**: Why can't the test find/interact with the element?
 
-### ❌ DO NOT:
+### DO NOT:
 - Guess at element types or identifiers
 - Change accessibility identifiers without seeing the hierarchy
 - Add arbitrary timeouts hoping it fixes timing
 - Modify SwiftUI views without confirming the element structure
 
-### ✅ ALWAYS:
+### ALWAYS:
 - Capture visual evidence of the failure state
 - Print the element tree to see actual identifiers
 - Compare expected vs actual element types
 - Only then make targeted fixes based on evidence
 
 **This debug-first approach is not optional. Skipping it leads to wasted effort and incorrect fixes.**
+
