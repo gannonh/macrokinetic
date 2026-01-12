@@ -113,9 +113,15 @@ struct WeeklyNutritionHeroViewModelTests {
         let monday = weekStart
         let tuesday = calendar.date(byAdding: .day, value: 1, to: monday)!
 
-        _ = createFoodEntry(in: context, calories: 500, protein: 30, carbs: 50, fat: 20, loggedAt: monday)
-        _ = createFoodEntry(in: context, calories: 600, protein: 40, carbs: 60, fat: 25, loggedAt: tuesday)
+        let mondayEntry = createFoodEntry(
+            in: context, calories: 500, protein: 30, carbs: 50, fat: 20, loggedAt: monday)
+        let tuesdayEntry = createFoodEntry(
+            in: context, calories: 600, protein: 40, carbs: 60, fat: 25, loggedAt: tuesday)
         try context.save()
+
+        // Verify entries were saved correctly
+        #expect(mondayEntry.calories == 500, "Monday entry should have 500 calories")
+        #expect(tuesdayEntry.calories == 600, "Tuesday entry should have 600 calories")
 
         let mealLogService = MealLogService(context: context)
         let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
@@ -123,10 +129,21 @@ struct WeeklyNutritionHeroViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: Data arrays have 7 elements and Monday/Tuesday have values
+        // Then: Data arrays have 7 elements
         #expect(viewModel.calories.count == 7)
-        #expect(viewModel.calories[0] == 500)  // Monday
-        #expect(viewModel.calories[1] == 600)  // Tuesday
+
+        // Find the today index to verify we're checking the right days
+        // Only days up to and including today will have been loaded
+        let todayIndex = viewModel.todayIndex
+
+        // Monday is index 0, Tuesday is index 1
+        // Both should be in range if today is Tuesday or later in the week
+        if todayIndex >= 0 {
+            #expect(viewModel.calories[0] == 500, "Monday (index 0) should have 500 calories")
+        }
+        if todayIndex >= 1 {
+            #expect(viewModel.calories[1] == 600, "Tuesday (index 1) should have 600 calories")
+        }
     }
 
     @Test("ViewModel calculates today index correctly")

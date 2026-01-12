@@ -337,4 +337,158 @@ struct EnergyBalanceHeroViewModelTests {
         let lastDate = calendar.startOfDay(for: viewModel.dailyCalories.last!.date)
         #expect(calendar.isDate(lastDate, equalTo: today, toGranularity: .day))
     }
+
+    // MARK: - DayCalories ID Getter Tests
+
+    @Test("DayCalories id getter returns date")
+    func testDayCaloriesIdGetter() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with active NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+        await viewModel.loadData()
+
+        // Then: Each DayCalories has id equal to its date
+        #expect(viewModel.dailyCalories.count > 0)
+        for dayCalories in viewModel.dailyCalories {
+            // Access the id getter - this is the key coverage point
+            let id = dayCalories.id
+            #expect(id == dayCalories.date)
+        }
+    }
+
+    @Test("DayCalories id is unique across all days")
+    func testDayCaloriesIdUniqueness() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with active NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+        await viewModel.loadData()
+
+        // Then: All ids are unique
+        let ids = viewModel.dailyCalories.map { $0.id }
+        let uniqueIds = Set(ids)
+        #expect(ids.count == uniqueIds.count)
+    }
+
+    // MARK: - Preview Support Tests
+
+    @Test("Preview instance can be created without crashing")
+    func testPreviewInstance() async {
+        // When: Creating a preview instance
+        let preview = EnergyBalanceHeroViewModel.preview
+
+        // Then: Preview is created with default state
+        #expect(preview.isLoading == false)
+        #expect(preview.dailyCalories.isEmpty)
+        #expect(preview.totalNutrition == 0)
+        #expect(preview.averageExpenditure > 0)  // Default value
+        #expect(preview.averageTargets > 0)  // Default value
+    }
+
+    // MARK: - Computed Properties Edge Cases
+
+    @Test("averageExpenditure returns default when dailyCalories is empty")
+    func testAverageExpenditureDefaultValue() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let viewModel = createViewModel(context: context)
+
+        // When: dailyCalories is empty (no loadData called or no user)
+        // Then: averageExpenditure returns default of 2000
+        #expect(viewModel.dailyCalories.isEmpty)
+        #expect(viewModel.averageExpenditure == 2000)
+    }
+
+    @Test("averageTargets returns default when dailyCalories is empty")
+    func testAverageTargetsDefaultValue() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let viewModel = createViewModel(context: context)
+
+        // When: dailyCalories is empty (no loadData called or no user)
+        // Then: averageTargets returns default of 1800
+        #expect(viewModel.dailyCalories.isEmpty)
+        #expect(viewModel.averageTargets == 1800)
+    }
+
+    @Test("ViewModel handles user with NutritionGoal but no TDEE gracefully")
+    func testHandlesNutritionGoalWithoutTDEE() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal that has no initialEstimatedTDEE or lastCalculatedTDEE
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        // Note: No TDEE values set - should use fallback of 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Uses fallback TDEE of 2000
+        #expect(viewModel.dailyCalories.count == 30)
+        #expect(viewModel.averageExpenditure == 2000)  // Fallback value
+    }
+
+    @Test("ViewModel uses lastCalculatedTDEE over initialEstimatedTDEE when both exist")
+    func testPrefersLastCalculatedTDEE() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with both initial and last calculated TDEE
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2500  // Initial
+        nutritionGoal.lastCalculatedTDEE = 1950  // Last calculated - should be used
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Uses lastCalculatedTDEE
+        #expect(viewModel.averageExpenditure == 1950)
+    }
 }

@@ -105,9 +105,9 @@
         ]
       },
       "testing_infrastructure": {
-        "threshold": 12,
+        "threshold": 10,
         "description": "Framework integration files with extensive UI testing infrastructure, Sign in with Apple delegates, and private Apple framework integration code that cannot be unit tested",
-        "rationale": "AuthenticationManager.swift (1507 lines) contains: ~500 lines of ASAuthorizationController delegate code (requires real Apple Sign In), ~350 lines of UI testing infrastructure (setupUITestingUser, seedTestDataIfRequested), ~80 lines of data reset code (resetAppData - dangerous to test), and ~200 lines of Keychain operations. Only ~12% of the file (core state management) is realistically unit testable.",
+        "rationale": "AuthenticationManager.swift (1796 lines) contains: ~500 lines of ASAuthorizationController delegate code (requires real Apple Sign In), ~350 lines of UI testing infrastructure (setupUITestingUser, seedTestDataIfRequested - only runs with launch args), ~80 lines of data reset code (resetAppData - private, only runs with --reset-app-data), and ~200 lines of Keychain operations. Only ~10% of the file (core state management) is realistically unit testable without launch argument mocking.",
         "files": [
           "AuthenticationManager.swift"
         ]

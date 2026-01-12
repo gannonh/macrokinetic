@@ -1,31 +1,12 @@
-Scope will need robust data seeding scenarios for UX validation, and tests
-1+ year of historical data
-- High quality: 
-  - food logging: complete (7 days a week)
-  - weigh-ins: daily
-- Medium quality:
-  - food logging: 4-5 days a week
-  - weigh-ins: every 2-3 days
-- Low quality:
-  - food logging: 1-2 days a week
-  - weigh-ins: weekly
+Food Libray and Search Improvements
 
-  ⎿  ☒ Workflow Config & Project State
-     ☒ Identify Next Plan to Execute
-     ☒ Parse Plan for Execution Segments
-     ☒ Determine Product Surface Area
-     ☒ Execute Plan Tasks
-     ☒ Record Completion Time and Duration
-     ☒ Create Summary Document
-     ☒ Update Current Position
-     ☒ Extract Decisions and Issues
-     ☒ Update Session Continuity
-     ☒ Issues Review
-     ☒ Update Roadmap
-     ☒ Commit Plan
-     ☒ Update Codebase Map Documentation
-     ☒ Check for Phase Issues
-     ☐ Post-Execution Smoketest
-     ☐ Quality Review
-     ☐ Run CI Checks
-     ☐ Offer Next Work
+- Barcope scanner: stays active after food detail sheet appears, cuasing possible additional scans
+- Search: 
+  - Slow and sluggish when typing quickly; why slow when 100% on device? Begins searching on first letter, synchronously, stopping typing flow.
+  - Input box shold be in focus immediately when opening search screen
+  - Header: kcals and protien remaining indicators shoud look like indicators on the food log view
+  - The docs (docs/features/food-data-layer.md) mention that we do API searching as a fallback, but this shouldnt be necessary with the OFF+USDA local DB
+- Food Detail:
+  - How are we handling units for food items from  USDA and OFF? The entry for Eggs for example doesnt have item as a unit, which would be the most common use: 2 whole eggs
+  - I can't find whole Apples when searching "Apples". I think because we limit resesults to 15 common items and the seaerch ranking needs work. If I search for Apples raw I can find them.
+  - clicking anywhere in the amount field should bring up the numpad; currently you need to carefully tap the numbers.

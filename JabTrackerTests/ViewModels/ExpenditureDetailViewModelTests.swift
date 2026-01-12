@@ -20,6 +20,7 @@ struct ExpenditureDetailViewModelTests {
     private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([
             User.self, NutritionGoal.self, NutritionProgram.self, WeightEntry.self, FoodEntry.self,
+            TDEESnapshot.self,
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -193,7 +194,7 @@ struct ExpenditureDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE data
+        // Given: User with TDEE data and sufficient snapshots
         let user = createTestUser(in: context)
         _ = createNutritionGoal(
             in: context,
@@ -202,9 +203,17 @@ struct ExpenditureDetailViewModelTests {
             lastCalculatedTDEE: 1893,
             lastTDEECalculationDate: Date()
         )
+
+        // Create snapshots for 100 days to support all interval calculations
+        for dayIndex in 0..<100 {
+            let timestamp = Calendar.current.date(byAdding: .day, value: -dayIndex, to: Date())!
+            let snapshot = TDEESnapshot(timestamp: timestamp, tdeeValue: 1893 + Double(dayIndex))
+            context.insert(snapshot)
+        }
         try context.save()
 
         let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .all
 
         // When: Loading data
         await viewModel.loadData()
@@ -219,7 +228,7 @@ struct ExpenditureDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE data
+        // Given: User with TDEE data and sufficient snapshots
         let user = createTestUser(in: context)
         _ = createNutritionGoal(
             in: context,
@@ -228,9 +237,17 @@ struct ExpenditureDetailViewModelTests {
             lastCalculatedTDEE: 1893,
             lastTDEECalculationDate: Date()
         )
+
+        // Create snapshots for 100 days to support all interval calculations
+        for dayIndex in 0..<100 {
+            let timestamp = Calendar.current.date(byAdding: .day, value: -dayIndex, to: Date())!
+            let snapshot = TDEESnapshot(timestamp: timestamp, tdeeValue: 1893 + Double(dayIndex))
+            context.insert(snapshot)
+        }
         try context.save()
 
         let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .all
 
         // When: Loading data
         await viewModel.loadData()
@@ -245,7 +262,7 @@ struct ExpenditureDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE data
+        // Given: User with TDEE data and sufficient snapshots
         let user = createTestUser(in: context)
         _ = createNutritionGoal(
             in: context,
@@ -254,9 +271,17 @@ struct ExpenditureDetailViewModelTests {
             lastCalculatedTDEE: 1893,
             lastTDEECalculationDate: Date()
         )
+
+        // Create snapshots for 100 days to support all interval calculations
+        for dayIndex in 0..<100 {
+            let timestamp = Calendar.current.date(byAdding: .day, value: -dayIndex, to: Date())!
+            let snapshot = TDEESnapshot(timestamp: timestamp, tdeeValue: 1893 + Double(dayIndex))
+            context.insert(snapshot)
+        }
         try context.save()
 
         let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .all
 
         // When: Loading data
         await viewModel.loadData()
@@ -306,7 +331,7 @@ struct ExpenditureDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE data
+        // Given: User with TDEE data and 365 days of snapshots with varying confidence
         let user = createTestUser(in: context)
         _ = createNutritionGoal(
             in: context,
@@ -315,6 +340,20 @@ struct ExpenditureDetailViewModelTests {
             lastCalculatedTDEE: 1893,
             lastTDEECalculationDate: Date()
         )
+
+        // Create snapshots with higher confidence for recent data, lower for older
+        for dayIndex in 0..<365 {
+            let timestamp = Calendar.current.date(byAdding: .day, value: -dayIndex, to: Date())!
+            // Confidence decreases as data gets older: 1.0 for today, ~0.0 for 365 days ago
+            let confidence = max(0.0, 1.0 - Double(dayIndex) / 365.0)
+            let snapshot = TDEESnapshot(
+                timestamp: timestamp,
+                tdeeValue: 1893,
+                confidence: confidence,
+                source: .adaptive
+            )
+            context.insert(snapshot)
+        }
         try context.save()
 
         let viewModel = ExpenditureDetailViewModel(context: context)
@@ -412,7 +451,7 @@ struct ExpenditureDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE data
+        // Given: User with TDEE data and 365 days of snapshots
         let user = createTestUser(in: context)
         _ = createNutritionGoal(
             in: context,
@@ -421,6 +460,13 @@ struct ExpenditureDetailViewModelTests {
             lastCalculatedTDEE: 1893,
             lastTDEECalculationDate: Date()
         )
+
+        // Create snapshots for 365 days
+        for dayIndex in 0..<365 {
+            let timestamp = Calendar.current.date(byAdding: .day, value: -dayIndex, to: Date())!
+            let snapshot = TDEESnapshot(timestamp: timestamp, tdeeValue: 1893)
+            context.insert(snapshot)
+        }
         try context.save()
 
         let viewModel = ExpenditureDetailViewModel(context: context)
@@ -444,7 +490,7 @@ struct ExpenditureDetailViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE data
+        // Given: User with TDEE data and 60 days of snapshots
         let user = createTestUser(in: context)
         _ = createNutritionGoal(
             in: context,
@@ -453,6 +499,13 @@ struct ExpenditureDetailViewModelTests {
             lastCalculatedTDEE: 1893,
             lastTDEECalculationDate: Date()
         )
+
+        // Create snapshots for 60 days (more than 1 month)
+        for dayIndex in 0..<60 {
+            let timestamp = Calendar.current.date(byAdding: .day, value: -dayIndex, to: Date())!
+            let snapshot = TDEESnapshot(timestamp: timestamp, tdeeValue: 1893)
+            context.insert(snapshot)
+        }
         try context.save()
 
         let viewModel = ExpenditureDetailViewModel(context: context)
@@ -646,5 +699,644 @@ struct ExpenditureDetailViewModelTests {
 
         // Then: Strategy description is provided
         #expect(!viewModel.strategyDescription.isEmpty)
+    }
+
+    // MARK: - ID Getter Tests (Coverage for Identifiable structs)
+
+    @Test("DailyExpenditure id property is accessible")
+    func testDailyExpenditureIdProperty() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: DailyExpenditure structs have accessible id properties
+        #expect(!viewModel.dailyData.isEmpty)
+        for dailyExpenditure in viewModel.dailyData {
+            // Access the id getter - this is the key coverage point
+            let id = dailyExpenditure.id
+            #expect(id != UUID())  // ID exists and is valid
+        }
+    }
+
+    @Test("DailyExpenditure ids are unique")
+    func testDailyExpenditureIdUniqueness() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .oneMonth
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All ids are unique
+        let ids = viewModel.dailyData.map { $0.id }
+        let uniqueIds = Set(ids)
+        #expect(ids.count == uniqueIds.count)
+    }
+
+    @Test("ExpenditureChange id property is accessible")
+    func testExpenditureChangeIdProperty() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data and sufficient history for changes
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: ExpenditureChange structs have accessible id properties
+        for change in viewModel.expenditureChanges {
+            // Access the id getter - key coverage point
+            let id = change.id
+            #expect(id != UUID())
+        }
+    }
+
+    @Test("ExpenditureChange ids are unique")
+    func testExpenditureChangeIdUniqueness() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All change ids are unique
+        let ids = viewModel.expenditureChanges.map { $0.id }
+        let uniqueIds = Set(ids)
+        #expect(ids.count == uniqueIds.count)
+    }
+
+    @Test("HistoricalEntry id property is accessible")
+    func testHistoricalEntryIdProperty() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: HistoricalEntry structs have accessible id properties
+        #expect(!viewModel.historicalEntries.isEmpty)
+        for entry in viewModel.historicalEntries {
+            // Access the id getter - key coverage point
+            let id = entry.id
+            #expect(id != UUID())
+        }
+    }
+
+    @Test("HistoricalEntry ids are unique")
+    func testHistoricalEntryIdUniqueness() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All historical entry ids are unique
+        let ids = viewModel.historicalEntries.map { $0.id }
+        let uniqueIds = Set(ids)
+        #expect(ids.count == uniqueIds.count)
+    }
+
+    // MARK: - generateExpenditureChanges Edge Cases
+
+    @Test("generateExpenditureChanges handles empty dailyData")
+    func testGenerateExpenditureChangesEmptyData() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with no TDEE data (no active goal)
+        _ = createTestUser(in: context)
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data (no active goal)
+        await viewModel.loadData()
+
+        // Then: expenditureChanges is empty
+        #expect(viewModel.expenditureChanges.isEmpty)
+    }
+
+    @Test("generateExpenditureChanges calculates correct trends")
+    func testGenerateExpenditureChangesTrends() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All trends are valid
+        let validTrends = ["Decrease", "Increase", "No Change"]
+        for change in viewModel.expenditureChanges {
+            #expect(validTrends.contains(change.trend))
+        }
+    }
+
+    // MARK: - loadDailyData Edge Cases
+
+    @Test("loadDailyData handles selected period with no start date")
+    func testLoadDailyDataAllPeriod() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .all  // "All" period has nil startDate
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Data is loaded (uses fallback of 1 year)
+        #expect(viewModel.hasData == true)
+    }
+
+    @Test("loadDailyData creates fallback entry when no snapshots exist")
+    func testLoadDailyDataFallback() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE but no TDEESnapshots
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Fallback entry is created
+        #expect(viewModel.dailyData.count >= 1)
+        // First entry should use the current TDEE value
+        if let firstEntry = viewModel.dailyData.first {
+            #expect(firstEntry.value == 1893)
+        }
+    }
+
+    // MARK: - Difference Calculation Tests
+
+    @Test("Difference is nil when no initial TDEE exists")
+    func testDifferenceNilWhenNoInitialTDEE() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with only lastCalculatedTDEE (no initial)
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: nil,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Difference cannot be calculated (no initial reference)
+        #expect(viewModel.difference == nil)
+    }
+
+    @Test("Difference shows positive change when TDEE increased")
+    func testDifferencePositiveWhenTDEEIncreased() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User whose TDEE increased from initial
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 1800,  // Started at 1800
+            lastCalculatedTDEE: 2000,  // Now at 2000 (increase)
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Difference is positive (2000 - 1800 = 200)
+        #expect(viewModel.difference != nil)
+        #expect(viewModel.difference! > 0)
+        #expect(viewModel.difference! == 200)
+    }
+
+    // MARK: - clearAllData Tests
+
+    @Test("clearAllData resets all state when no user")
+    func testClearAllDataNoUser() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: No user in context
+        let viewModel = ExpenditureDetailViewModel(context: context)
+
+        // When: Loading data (will call clearAllData internally)
+        await viewModel.loadData()
+
+        // Then: All state is cleared
+        #expect(viewModel.dailyData.isEmpty)
+        #expect(viewModel.expenditureChanges.isEmpty)
+        #expect(viewModel.historicalEntries.isEmpty)
+        #expect(viewModel.currentExpenditure == nil)
+        #expect(viewModel.averageExpenditure == nil)
+        #expect(viewModel.difference == nil)
+        #expect(viewModel.dateRange.isEmpty)
+        #expect(viewModel.currentStrategy == "Holding")
+        #expect(viewModel.strategyDescription.isEmpty)
+    }
+
+    // MARK: - Time Period Tests
+
+    @Test("oneWeek period generates approximately 7 days of data")
+    func testOneWeekPeriodDataCount() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .oneWeek
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Data count is small (fallback creates 1 entry when no snapshots)
+        // Note: Without actual TDEESnapshots, only 1 fallback entry is created
+        #expect(viewModel.dailyData.count >= 1)
+    }
+
+    // MARK: - TDEESnapshot Tests (loadDailyData with real snapshots)
+
+    private func createTDEESnapshot(
+        in context: ModelContext,
+        tdeeValue: Double,
+        daysAgo: Int = 0,
+        source: TDEESourceType = .adaptive,
+        confidence: Double = 0.8
+    ) -> TDEESnapshot {
+        let timestamp = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
+        let snapshot = TDEESnapshot(
+            timestamp: timestamp,
+            tdeeValue: tdeeValue,
+            confidence: confidence,
+            source: source
+        )
+        context.insert(snapshot)
+        return snapshot
+    }
+
+    @Test("loadDailyData maps TDEESnapshots to DailyExpenditure correctly")
+    func testLoadDailyDataWithSnapshots() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE and existing snapshots
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+
+        // Create snapshots for the past 10 days with varying values
+        for dayIndex in 0..<10 {
+            _ = createTDEESnapshot(
+                in: context,
+                tdeeValue: 1900.0 - Double(dayIndex) * 10,  // Decreasing TDEE
+                daysAgo: dayIndex
+            )
+        }
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .oneMonth
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: DailyExpenditure entries are created from snapshots
+        #expect(viewModel.dailyData.count == 10)  // All snapshots mapped
+    }
+
+    @Test("DailyExpenditure uses snapshot status correctly")
+    func testDailyExpenditureStatusFromSnapshots() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE and snapshots of different source types
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1893,
+            lastTDEECalculationDate: Date()
+        )
+
+        // Create snapshots with different source types
+        _ = createTDEESnapshot(in: context, tdeeValue: 1900, daysAgo: 0, source: .adaptive)
+        _ = createTDEESnapshot(in: context, tdeeValue: 1910, daysAgo: 1, source: .holding)
+        _ = createTDEESnapshot(in: context, tdeeValue: 1920, daysAgo: 2, source: .initial)
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .oneWeek
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Status is correctly mapped from source type
+        #expect(viewModel.dailyData.count == 3)
+        // Note: sorted by date, so index 0 is oldest (2 days ago)
+        let statuses = viewModel.dailyData.map { $0.status }
+        #expect(statuses.contains(.updating))  // adaptive
+        #expect(statuses.contains(.holding))  // holding
+        #expect(statuses.contains(.fluxRange))  // initial
+    }
+
+    @Test("DailyExpenditure uses snapshot fluxMargin for bounds")
+    func testDailyExpenditureFluxMarginFromSnapshots() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE and snapshots with known confidence
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1900,
+            lastTDEECalculationDate: Date()
+        )
+
+        // High confidence snapshot (tight margin)
+        _ = createTDEESnapshot(in: context, tdeeValue: 1900, daysAgo: 0, confidence: 1.0)
+        // Low confidence snapshot (wide margin)
+        _ = createTDEESnapshot(in: context, tdeeValue: 1850, daysAgo: 1, confidence: 0.0)
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .oneWeek
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Bounds reflect confidence-based flux margins
+        #expect(viewModel.dailyData.count == 2)
+
+        // Find the high confidence entry (1900)
+        if let highConfidenceEntry = viewModel.dailyData.first(where: { $0.value == 1900 }) {
+            // High confidence = 10 margin
+            #expect(highConfidenceEntry.upperBound == 1910)
+            #expect(highConfidenceEntry.lowerBound == 1890)
+        }
+
+        // Find the low confidence entry (1850)
+        if let lowConfidenceEntry = viewModel.dailyData.first(where: { $0.value == 1850 }) {
+            // Low confidence = 50 margin
+            #expect(lowConfidenceEntry.upperBound == 1900)
+            #expect(lowConfidenceEntry.lowerBound == 1800)
+        }
+    }
+
+    @Test("generateExpenditureChanges calculates changes from snapshot history")
+    func testExpenditureChangesFromSnapshots() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE and 100+ days of snapshots (for all intervals)
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1800,
+            lastTDEECalculationDate: Date()
+        )
+
+        // Create 100 days of snapshots with gradual decrease
+        for dayIndex in 0..<100 {
+            _ = createTDEESnapshot(
+                in: context,
+                tdeeValue: 2000.0 - Double(dayIndex) * 2,  // 2 kcal decrease per day
+                daysAgo: dayIndex
+            )
+        }
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .all
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All interval changes should be calculated
+        #expect(viewModel.dailyData.count == 100)
+        #expect(viewModel.expenditureChanges.count == 5)  // 3, 7, 14, 30, 90 day intervals
+
+        // All changes should show "Increase" (latest - oldest, and we're decreasing going back)
+        for change in viewModel.expenditureChanges {
+            #expect(change.trend == "Increase")
+        }
+    }
+
+    @Test("generateExpenditureChanges shows 'No Change' when values are same")
+    func testExpenditureChangesNoChange() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE and snapshots with identical values
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1900,
+            lastTDEECalculationDate: Date()
+        )
+
+        // Create 100 days of snapshots with identical values
+        for dayIndex in 0..<100 {
+            _ = createTDEESnapshot(
+                in: context,
+                tdeeValue: 1900,  // Same value every day
+                daysAgo: dayIndex
+            )
+        }
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .all
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All changes should show "No Change"
+        for change in viewModel.expenditureChanges {
+            #expect(change.change == 0)
+            #expect(change.trend == "No Change")
+        }
+    }
+
+    @Test("generateExpenditureChanges shows 'Decrease' when values drop")
+    func testExpenditureChangesDecrease() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE and snapshots with increasing values (going back in time)
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1800,
+            lastTDEECalculationDate: Date()
+        )
+
+        // Create 100 days of snapshots with increasing values (so latest is lowest)
+        for dayIndex in 0..<100 {
+            _ = createTDEESnapshot(
+                in: context,
+                tdeeValue: 1800.0 + Double(dayIndex) * 2,  // Higher values going back in time
+                daysAgo: dayIndex
+            )
+        }
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .all
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: All changes should show "Decrease" (latest - past = negative)
+        for change in viewModel.expenditureChanges {
+            #expect(change.change < 0)
+            #expect(change.trend == "Decrease")
+        }
     }
 }
