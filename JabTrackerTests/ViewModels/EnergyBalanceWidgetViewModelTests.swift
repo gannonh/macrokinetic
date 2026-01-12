@@ -304,4 +304,161 @@ struct EnergyBalanceWidgetViewModelTests {
         // The balance for today with 2100 consumed - 2100 TDEE = 0
         #expect(viewModel.dailyBalances.count == 7)
     }
+
+    // MARK: - Daily Intake Tests
+
+    @Test("ViewModel populates dailyIntake array with 7 values")
+    func testDailyIntakeArray() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: dailyIntake has 7 values
+        #expect(viewModel.dailyIntake.count == 7)
+    }
+
+    @Test("ViewModel stores TDEE value correctly")
+    func testTDEEProperty() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with specific TDEE
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2350)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: TDEE is stored correctly
+        #expect(viewModel.tdee == 2350)
+    }
+
+    @Test("ViewModel tracks daysWithLoadingErrors as zero when no errors")
+    func testDaysWithLoadingErrorsZero() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: No loading errors
+        #expect(viewModel.daysWithLoadingErrors == 0)
+    }
+
+    @Test("ViewModel calculates dailyIntake values correctly")
+    func testDailyIntakeValues() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE and food for today
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        _ = createFoodEntry(in: context, calories: 1500, daysAgo: 0)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Today's intake is 1500, others are 0
+        #expect(viewModel.dailyIntake.count == 7)
+        // Last entry (today) should be 1500
+        #expect(viewModel.dailyIntake.last == 1500)
+    }
+
+    @Test("ViewModel calculates balances for each day")
+    func testDailyBalancesCalculation() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE of 2000 and varying intake
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)  // -200 balance
+        _ = createFoodEntry(in: context, calories: 2200, daysAgo: 2)  // +200 balance
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Balances reflect intake - TDEE
+        #expect(viewModel.dailyBalances.count == 7)
+        // Yesterday (index 5) should be 1800 - 2000 = -200
+        #expect(viewModel.dailyBalances[5] == -200)
+        // Two days ago (index 4) should be 2200 - 2000 = 200
+        #expect(viewModel.dailyBalances[4] == 200)
+    }
+
+    @Test("ViewModel initializes TDEE to zero")
+    func testInitialTDEEValue() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // Then: TDEE starts at 0 before loading
+        #expect(viewModel.tdee == 0)
+    }
+
+    @Test("ViewModel initializes daysWithLoadingErrors to zero")
+    func testInitialDaysWithLoadingErrors() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // Then: daysWithLoadingErrors starts at 0
+        #expect(viewModel.daysWithLoadingErrors == 0)
+    }
+
+    @Test("ViewModel uses fallback to initial TDEE when no lastCalculated")
+    func testFallsBackToInitialTDEE() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: Goal with only initial TDEE
+        let user = createTestUser(in: context)
+        let goal = createNutritionGoal(in: context, user: user, tdee: 1950)
+        goal.lastCalculatedTDEE = nil
+        goal.initialEstimatedTDEE = 1950
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = EnergyBalanceWidgetViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Uses initial TDEE
+        #expect(viewModel.tdee == 1950)
+    }
 }

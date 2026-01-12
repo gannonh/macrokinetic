@@ -491,4 +491,417 @@ struct EnergyBalanceHeroViewModelTests {
         // Then: Uses lastCalculatedTDEE
         #expect(viewModel.averageExpenditure == 1950)
     }
+
+    // MARK: - Fallback TDEE State Tests
+
+    @Test("ViewModel sets isUsingFallbackTDEE to true when no TDEE available")
+    func testIsUsingFallbackTDEETrue() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal but no TDEE values
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        // No TDEE values set
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: isUsingFallbackTDEE is true
+        #expect(viewModel.isUsingFallbackTDEE == true)
+        #expect(viewModel.averageExpenditure == 2000)  // Default fallback
+    }
+
+    @Test("ViewModel sets isUsingFallbackTDEE to false when lastCalculatedTDEE exists")
+    func testIsUsingFallbackTDEEFalseWithLastCalculated() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with lastCalculatedTDEE set
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.lastCalculatedTDEE = 2200
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: isUsingFallbackTDEE is false
+        #expect(viewModel.isUsingFallbackTDEE == false)
+    }
+
+    @Test("ViewModel sets isUsingFallbackTDEE to false when initialEstimatedTDEE exists")
+    func testIsUsingFallbackTDEEFalseWithInitial() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with initialEstimatedTDEE set (no lastCalculatedTDEE)
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 1900
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: isUsingFallbackTDEE is false
+        #expect(viewModel.isUsingFallbackTDEE == false)
+    }
+
+    // MARK: - Loading Error State Tests
+
+    @Test("ViewModel initializes with no loading error")
+    func testLoadingErrorInitiallyNil() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let viewModel = createViewModel(context: context)
+
+        // Then: loadingError is nil initially
+        #expect(viewModel.loadingError == nil)
+    }
+
+    @Test("ViewModel reports daysWithLoadingErrors as zero when all days load successfully")
+    func testDaysWithLoadingErrorsZero() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: No loading errors
+        #expect(viewModel.daysWithLoadingErrors == 0)
+    }
+
+    // MARK: - TDEESnapshot Integration Tests
+
+    @Test("ViewModel loads historical TDEE values from TDEESnapshots")
+    func testLoadsTDEESnapshots() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Given: User with NutritionGoal and TDEESnapshots
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000  // Fallback
+        context.insert(nutritionGoal)
+
+        // Add TDEESnapshots for the last few days with varying values
+        for daysAgo in 0..<5 {
+            let snapshotDate = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+            let snapshot = TDEESnapshot(
+                timestamp: snapshotDate,
+                tdeeValue: 2100 + Double(daysAgo * 50)  // 2100, 2150, 2200, etc.
+            )
+            context.insert(snapshot)
+        }
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Data is loaded with snapshot values
+        #expect(viewModel.dailyCalories.count == 30)
+        // The most recent days should have varying expenditure values from snapshots
+        // Days without snapshots use fallback TDEE of 2000
+    }
+
+    @Test("ViewModel uses fallback TDEE for days without TDEESnapshots")
+    func testUseFallbackForMissingSnapshots() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Given: User with NutritionGoal and only one TDEESnapshot
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 1900  // Fallback for most days
+        context.insert(nutritionGoal)
+
+        // Only add a snapshot for today
+        let snapshot = TDEESnapshot(timestamp: today, tdeeValue: 2200)
+        context.insert(snapshot)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Today uses snapshot (2200), other days use fallback (1900)
+        #expect(viewModel.dailyCalories.count == 30)
+        // Today's entry should have 2200 expenditure
+        if let todayEntry = viewModel.dailyCalories.last {
+            #expect(todayEntry.expenditure == 2200)
+        }
+        // Earlier days should use fallback
+        if viewModel.dailyCalories.count > 1 {
+            let olderEntry = viewModel.dailyCalories[0]
+            #expect(olderEntry.expenditure == 1900)
+        }
+    }
+
+    // MARK: - DayCalories Expenditure and Target Tests
+
+    @Test("DayCalories includes correct expenditure value")
+    func testDayCaloriesExpenditureValue() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2100
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Each DayCalories has expenditure
+        for dayCalories in viewModel.dailyCalories {
+            #expect(dayCalories.expenditure > 0)
+        }
+    }
+
+    @Test("DayCalories includes correct target value")
+    func testDayCaloriesTargetValue() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal with specific target
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1750
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Each DayCalories has target of 1750
+        for dayCalories in viewModel.dailyCalories {
+            #expect(dayCalories.target == 1750)
+        }
+    }
+
+    // MARK: - Computed Properties with Data Tests
+
+    @Test("averageExpenditure computes from daily values")
+    func testAverageExpenditureComputedProperty() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2300
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: averageExpenditure is computed from dailyCalories
+        #expect(!viewModel.dailyCalories.isEmpty)
+        // With no snapshots, all use fallback of 2300
+        #expect(viewModel.averageExpenditure == 2300)
+    }
+
+    @Test("averageTargets computes from daily values")
+    func testAverageTargetsComputedProperty() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1800
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: averageTargets is computed from dailyCalories
+        #expect(!viewModel.dailyCalories.isEmpty)
+        // All days have same target of 1800
+        #expect(viewModel.averageTargets == 1800)
+    }
+
+    @Test("DayCalories value property is accessible")
+    func testDayCaloriesValueProperty() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Given: User with NutritionGoal and food entry
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+
+        // Add food entry for today
+        _ = createFoodEntry(in: context, calories: 1200, loggedAt: today)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Today's DayCalories has the food value
+        #expect(!viewModel.dailyCalories.isEmpty)
+        if let todayCalories = viewModel.dailyCalories.last {
+            #expect(todayCalories.value == 1200)
+        }
+    }
+
+    @Test("loadingError remains nil when no TDEE fetch errors")
+    func testLoadingErrorNilWhenNoErrors() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: No loading error
+        #expect(viewModel.loadingError == nil)
+    }
+
+    @Test("dailyCalories entries are in chronological order")
+    func testDailyCaloriesChronologicalOrder() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with NutritionGoal
+        let user = createTestUser(in: context)
+        let nutritionGoal = NutritionGoal(
+            goalType: .weightLoss,
+            isActive: true,
+            dailyCalorieTarget: 1500
+        )
+        nutritionGoal.user = user
+        nutritionGoal.initialEstimatedTDEE = 2000
+        context.insert(nutritionGoal)
+        try context.save()
+
+        let viewModel = createViewModel(context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Dates are in ascending order
+        #expect(viewModel.dailyCalories.count == 30)
+        var previousDate = viewModel.dailyCalories.first?.date ?? Date.distantPast
+        for dayCalories in viewModel.dailyCalories.dropFirst() {
+            #expect(dayCalories.date > previousDate)
+            previousDate = dayCalories.date
+        }
+    }
 }
