@@ -106,7 +106,7 @@ None yet.
 
 ### Pending Todos
 
-2 todos in `.planning/todos/pending/`
+3 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
