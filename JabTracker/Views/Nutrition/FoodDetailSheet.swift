@@ -182,6 +182,8 @@ struct FoodDetailSheet: View {
                 }
                 .padding()
             }
+            .scrollContentBackground(.hidden)
+            .background(DesignTokens.Colors.groupedBackground)
             .navigationTitle("Food Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -394,7 +396,7 @@ struct FoodDetailSheet: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(DesignTokens.Colors.groupedBackground)
         .onAppear {
             initializeServingInput()
         }
