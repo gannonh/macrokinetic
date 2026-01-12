@@ -1,4 +1,3 @@
-// swiftlint:disable file_length
 import XCTest
 
 /// Shared test utilities for UI testing across the JabTracker app
@@ -54,6 +53,13 @@ enum TestUtilities {
         case ninetyDays  // 90 days
         case oneYear  // 365 days (1 year)
         case twoYears  // 730 days (2 years)
+
+        // Data quality variants for dashboard widget testing
+        case oneYearHighQuality  // 365 days, complete daily logging
+        case oneYearMediumQuality  // 365 days, 4-5 days/week logging
+        case oneYearLowQuality  // 365 days, 1-2 days/week logging
+        case newUser  // Today only - fresh start scenario
+
         case custom(
             doseCount: Int,
             medicationProfiles: Int = 1,
@@ -121,6 +127,9 @@ enum TestUtilities {
                     "TEST_DATA_VARIABILITY": "true",
                     "TEST_DATA_SKIPPED": "true",
                 ]
+            // Data quality variants use launch arguments instead of environment
+            case .oneYearHighQuality, .oneYearMediumQuality, .oneYearLowQuality, .newUser:
+                return [:]  // These use launchArguments instead
             case .custom(
                 let doseCount,
                 let medicationProfiles,
@@ -153,11 +162,23 @@ enum TestUtilities {
             case .sevenDays: return 7
             case .thirtyDays: return 30
             case .ninetyDays: return 90
-            case .oneYear: return 365
+            case .oneYear, .oneYearHighQuality, .oneYearMediumQuality, .oneYearLowQuality: return 365
             case .twoYears: return 730
+            case .newUser: return 1
             case .custom(let doseCount, _, _, _, _, _, _):
                 // Weekly medication: (doseCount - 1) * 7 days to get exact dose count
                 return max(0, (doseCount - 1) * 7)
+            }
+        }
+
+        /// Launch argument for data quality presets (not used for traditional presets)
+        var launchArgument: String? {
+            switch self {
+            case .oneYearHighQuality: return "--seed-test-1y-high"
+            case .oneYearMediumQuality: return "--seed-test-1y-medium"
+            case .oneYearLowQuality: return "--seed-test-1y-low"
+            case .newUser: return "--seed-test-new-user"
+            default: return nil
             }
         }
     }
@@ -178,7 +199,7 @@ enum TestUtilities {
         // Set UI testing environment
         app.launchEnvironment["UI_TESTING"] = "true"
 
-        // Merge preset seeding environment
+        // Merge preset seeding environment (for traditional presets)
         for (key, value) in preset.launchEnvironment {
             app.launchEnvironment[key] = value
         }
@@ -188,6 +209,12 @@ enum TestUtilities {
         if resetData {
             launchArgs.append("--reset-app-data")
         }
+
+        // Add data quality launch argument if applicable
+        if let qualityArg = preset.launchArgument {
+            launchArgs.append(qualityArg)
+        }
+
         app.launchArguments = launchArgs
 
         print("🚀 Launching app with seeded data preset: \(preset) (\(preset.daysOfHistory) days)")
@@ -196,7 +223,9 @@ enum TestUtilities {
 
         // Wait for seeding to complete and app to stabilize
         // Seeding 30+ days of data can take a few seconds
-        Thread.sleep(forTimeInterval: 2.0)
+        // Data quality presets with 1 year of data need more time
+        let waitTime: TimeInterval = preset.daysOfHistory >= 365 ? 4.0 : 2.0
+        Thread.sleep(forTimeInterval: waitTime)
 
         return app
     }
