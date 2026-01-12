@@ -40,10 +40,11 @@ final class NutritionSummaryViewModel {
 
     deinit {
         // Ensure observation is stopped when ViewModel is deallocated
-        // Note: deinit cannot effectively call MainActor isolated code easily without Task which is async.
-        // However, usually observation stops are safe. But given isolation, we might need a non-isolated version for deinit
-        // or accept that deinit might leak observation if relying on MainActor.
-        // MetricsService.stopActiveEnergyObservation() is MainActor.
+        // Note: deinit cannot effectively call MainActor isolated code easily without Task
+        // which is async. However, usually observation stops are safe. But given isolation,
+        // we might need a non-isolated version for deinit or accept that deinit might leak
+        // observation if relying on MainActor. MetricsService.stopActiveEnergyObservation()
+        // is MainActor.
 
         // For now, we'll try to execute it. If it fails due to isolation, we might need to rely on onDisappear in View.
         // But let's try wrapping in MainActor.assumeIsolated or just leave as is if compiler allows.
