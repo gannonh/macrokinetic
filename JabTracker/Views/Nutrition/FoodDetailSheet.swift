@@ -215,6 +215,7 @@ struct FoodDetailSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .tint(DesignTokens.Colors.accent)
         .accessibilityIdentifier(Self.accessibilityIdentifierValue)
         .alert("Error", isPresented: $showingError) {
             Button("OK", role: .cancel) {}
