@@ -232,8 +232,24 @@ extension FoodDetailSheet {
                     defaultServingGrams: food.servingSize,
                     selectedOption: $selectedPillOption
                 )
+                .onChange(of: selectedPillOption) { oldValue, newValue in
+                    convertServingCount(from: oldValue, to: newValue)
+                }
             }
         }
+    }
+
+    /// Convert servingCount to preserve gram amount when switching pill options
+    private func convertServingCount(from oldOption: ServingPillOption?, to newOption: ServingPillOption?) {
+        guard let oldOption = oldOption, let newOption = newOption else { return }
+        guard oldOption.id != newOption.id else { return }
+        guard newOption.grams > 0 else { return }
+
+        // Calculate current grams based on old option
+        let currentGrams = servingCount * oldOption.grams
+
+        // Convert to new unit
+        servingCount = currentGrams / newOption.grams
     }
 
     func macroButton(_ macro: TargetMacro) -> some View {
