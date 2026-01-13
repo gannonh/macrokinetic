@@ -24,6 +24,7 @@ struct FoodDetailSheet: View {
 
     @State var servingCount: Double = 1.0
     @State private var selectedServing: ServingOption?
+    @State var selectedPillOption: ServingPillOption?
     @State var meal: MealSection
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -76,6 +77,16 @@ struct FoodDetailSheet: View {
         if inputMode == .target {
             return calculateGramsFromTarget()
         }
+        // Use pill option if available, otherwise fall back to unit-based calculation
+        if let pillOption = selectedPillOption {
+            if pillOption.isUnitOnly {
+                // For g/oz, multiply servingCount by the unit's gram value
+                return servingCount * pillOption.grams
+            } else {
+                // For item-based options, multiply by option's grams
+                return servingCount * pillOption.grams
+            }
+        }
         return selectedUnit.toGrams(servingCount, itemGrams: defaultServing.grams)
     }
 
@@ -110,6 +121,11 @@ struct FoodDetailSheet: View {
     /// Display string for calculated quantity when in target mode
     var calculatedQuantityDisplay: String {
         let grams = calculateGramsFromTarget()
+        // Use pill option if available
+        if let option = selectedPillOption, option.grams > 0 {
+            let unitValue = grams / option.grams
+            return String(format: "%.2f", unitValue)
+        }
         let unitValue = quantityInSelectedUnit(from: grams)
         return String(format: "%.2f", unitValue)
     }
