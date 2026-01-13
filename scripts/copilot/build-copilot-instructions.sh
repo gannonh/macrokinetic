@@ -7,13 +7,13 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 OUTPUT_FILE="$PROJECT_ROOT/.github/copilot-instructions.md"
 
 # Source files in order
 SOURCE_FILES=(
-    ".planning/project-prd.md"
+    "CLAUDE.md"
     ".planning/codebase/ARCHITECTURE.md"
     ".planning/codebase/CONCERNS.md"
     ".planning/codebase/CONVENTIONS.md"
@@ -21,6 +21,10 @@ SOURCE_FILES=(
     ".planning/codebase/STACK.md"
     ".planning/codebase/STRUCTURE.md"
     ".planning/codebase/TESTING.md"
+    ".planning/MILESTONES.md"
+    ".planning/PROJECT.md"
+    ".planning/ROADMAP.md"
+    ".planning/STATE.md"
 )
 
 echo "Building copilot-instructions.md..."
