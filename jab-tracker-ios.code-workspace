@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../../.gemini"
+		},
+		{
+			"path": "../../Library/Application Support/Code/User"
 		}
 	],
 	"settings": {
