@@ -329,9 +329,20 @@ extension FoodDetailSheet {
     }
 
     func initializeServingInput() {
-        // ServingPillPicker handles its own initialization via onAppear
-        // Just set a reasonable starting count
-        servingCount = 1
+        // Check if there are item-based serving options
+        let hasItemOptions = food.servingOptions.contains { option in
+            // Item options have format like "1.0 large (216g)" not just "100g"
+            !option.label.hasSuffix("g") || Double(option.label.dropLast()) == nil
+        }
+
+        if hasItemOptions {
+            // Start with 1 of the default item (e.g., "1 large apple")
+            servingCount = 1
+        } else {
+            // No item options - use food's serving size as grams (e.g., 100g)
+            // This prevents defaulting to 1g for foods with no serving info
+            servingCount = food.servingSize > 0 ? food.servingSize : 100
+        }
     }
 
     func toggleInputMode() {
