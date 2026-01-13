@@ -443,8 +443,8 @@ struct FoodDetailSheet: View {
                 loggedAt: selectedTime
             )
 
-            // Save to recent foods
-            foodService.saveRecentFood(foodModel)
+            // Save to recent foods (use try? since food logging already succeeded)
+            try? foodService.saveRecentFood(foodModel)
 
             // Success - dismiss and notify
             dismiss()

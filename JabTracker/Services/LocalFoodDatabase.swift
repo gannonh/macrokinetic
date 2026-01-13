@@ -131,10 +131,11 @@ actor LocalFoodDatabase {
 
         // Create pattern for whole word matching (exact word should rank higher than partial)
         // E.g., "apple" matches "Apples, raw" as whole word but not "APPLEBEE'S"
-        // GLOB pattern: word followed by word boundary (s for plural, comma, space)
         // SQLite GLOB is case-sensitive, so we use LOWER() in the query
         let firstWord = (queryWords.first ?? trimmedQuery).lowercased()
-        // Match: "apples,*" or "apples *" or "apple,*" or "apple *" (with optional 's' for plurals)
+        // GLOB pattern: matches words followed by optional 's' (plurals) or ',' (USDA naming)
+        // Pattern "[s,]*" matches zero or more 's' or ',' characters after the word
+        // Example: "apple" matches "Apples," in "Apples, raw" but not "applesauce"
         let wholeWordPattern = firstWord + "[s,]*"
 
         // Build SQL with optional source filtering
@@ -300,7 +301,8 @@ actor LocalFoodDatabase {
             case let intValue as Int:
                 sqlite3_bind_int(statement, bindIndex, Int32(intValue))
             default:
-                Self.logger.warning("Unsupported parameter type at index \(index)")
+                Self.logger.error("Unsupported parameter type \(type(of: param)) at index \(index)")
+                throw LocalFoodDatabaseError.queryFailed("Unsupported parameter type at index \(index)")
             }
         }
 

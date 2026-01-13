@@ -140,7 +140,7 @@ struct FoodServiceTests {
             fatPer100g: 5
         )
 
-        service.saveRecentFood(food)
+        try service.saveRecentFood(food)
 
         // Fetch from context
         let descriptor = FetchDescriptor<Food>()
@@ -509,6 +509,9 @@ struct FoodServiceTests {
     }
 
     // MARK: - Barcode Lookup Tests
+    // Note: Barcode tests use defensive patterns because bundled database content
+    // may vary between builds. Tests verify the lookup path works, not specific products.
+    // If a barcode test needs a guaranteed result, use the invalid barcode tests instead.
 
     @Test("Barcode lookup returns nil for unknown barcode")
     func testBarcodeLookupReturnsNilForUnknownBarcode() async throws {

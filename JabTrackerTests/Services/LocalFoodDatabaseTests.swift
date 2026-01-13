@@ -538,4 +538,33 @@ struct LocalFoodDatabaseTests {
             )
         }
     }
+
+    // MARK: - Error Propagation Tests
+
+    @Test("Search throws databaseUnavailable for invalid database path")
+    func testSearchThrowsDatabaseUnavailable() async {
+        let database = LocalFoodDatabase(databasePath: "/invalid/nonexistent/path.sqlite")
+
+        await #expect(throws: LocalFoodDatabaseError.self) {
+            _ = try await database.search(query: "chicken")
+        }
+    }
+
+    @Test("Lookup by ID throws databaseUnavailable for invalid database")
+    func testLookupByIdThrowsDatabaseUnavailable() async {
+        let database = LocalFoodDatabase(databasePath: "/invalid/path.sqlite")
+
+        await #expect(throws: LocalFoodDatabaseError.self) {
+            _ = try await database.lookup(fdcId: 12345)
+        }
+    }
+
+    @Test("Lookup barcode throws databaseUnavailable for invalid database")
+    func testLookupBarcodeThrowsDatabaseUnavailable() async {
+        let database = LocalFoodDatabase(databasePath: "/invalid/path.sqlite")
+
+        await #expect(throws: LocalFoodDatabaseError.self) {
+            _ = try await database.lookupBarcode("1234567890")
+        }
+    }
 }

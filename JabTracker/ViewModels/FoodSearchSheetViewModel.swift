@@ -192,6 +192,7 @@ final class FoodSearchSheetViewModel {
             Self.logger.debug("Remaining: \(self.remainingCalories) cal, \(self.remainingProtein)g protein")
         } catch {
             Self.logger.error("Failed to load daily totals: \(error.localizedDescription)")
+            errorMessage = "Unable to load nutrition data"
             consumedCalories = 0
             consumedProtein = 0
             remainingCalories = user.dailyCalorieGoal
@@ -204,6 +205,10 @@ final class FoodSearchSheetViewModel {
             Self.logger.debug("Loaded \(self.recentFoods.count) recent foods")
         } catch {
             Self.logger.error("Failed to load recent foods: \(error.localizedDescription)")
+            // Don't override errorMessage if already set from daily totals failure
+            if errorMessage == nil {
+                errorMessage = "Unable to load recent foods"
+            }
             recentFoods = []
         }
     }

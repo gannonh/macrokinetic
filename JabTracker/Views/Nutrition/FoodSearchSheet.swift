@@ -360,7 +360,8 @@ struct FoodSearchSheet: View {
             // Auto-focus search field when in search mode
             // Delay slightly to ensure sheet animation completes
             if viewModel.selectedMethod == .search {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(300))
                     isSearchFocused = true
                 }
             }

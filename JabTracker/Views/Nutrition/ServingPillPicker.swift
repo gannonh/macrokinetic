@@ -15,6 +15,13 @@ struct ServingPillOption: Identifiable, Equatable {
     let grams: Double  // Weight in grams for this serving
     let isUnitOnly: Bool  // True for universal units like g/oz (no quantity prefix)
 
+    // Pre-compiled regex for parsing serving labels (e.g., "1.0 large (50g)" → "large")
+    // Compiled once as static property for performance
+    // swiftlint:disable:next force_try
+    private static let labelRegex = try! NSRegularExpression(
+        pattern: #"^[\d.]+\s+(.+?)\s*\([^)]+\)$"#
+    )
+
     init(label: String, grams: Double, isUnitOnly: Bool = false) {
         self.id = "\(label)-\(grams)"
         self.label = label
@@ -41,13 +48,11 @@ struct ServingPillOption: Identifiable, Equatable {
         }
 
         // Try to extract the descriptive part: "1.0 whole without shell (50g)" → "whole without shell"
-        // Pattern: number + space + multi-word description + optional (grams)
-        let pattern = #"^[\d.]+\s+(.+?)\s*\([^)]+\)$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-            let match = regex.firstMatch(
-                in: raw,
-                range: NSRange(raw.startIndex..., in: raw)
-            ),
+        // Uses pre-compiled regex for better performance
+        if let match = labelRegex.firstMatch(
+            in: raw,
+            range: NSRange(raw.startIndex..., in: raw)
+        ),
             let descRange = Range(match.range(at: 1), in: raw)
         {
             return String(raw[descRange]).trimmingCharacters(in: .whitespaces)

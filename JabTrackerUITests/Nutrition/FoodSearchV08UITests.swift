@@ -44,10 +44,8 @@ final class FoodSearchV08UITests: XCTestCase {
         XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
 
         // The keyboard should appear automatically (auto-focus)
-        // Wait a moment for the auto-focus to trigger (300ms delay in implementation)
-        Thread.sleep(forTimeInterval: 0.5)
-
-        // Check if keyboard is visible by looking for a key
+        // Use condition-based waiting instead of Thread.sleep - keyboard waitForExistence
+        // will wait for auto-focus delay (300ms) + any animation time
         let keyboard = app.keyboards.element
         XCTAssertTrue(
             keyboard.waitForExistence(timeout: 2),
@@ -386,8 +384,6 @@ final class FoodSearchV08UITests: XCTestCase {
 
         XCTAssertTrue(hasResults, "Should have search results for 'bread'")
         XCTAssertLessThan(searchDuration, 3.0, "Search should complete within 3 seconds")
-
-        print("🚀 Search completed in \(String(format: "%.2f", searchDuration))s")
     }
 
     /// Test that whole word matches appear first (search ranking improvement)

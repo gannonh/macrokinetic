@@ -108,6 +108,8 @@ struct FoodSearchResult: Identifiable {
 
 /// Represents a serving option for a food item
 struct ServingOption: Identifiable, Equatable {
+    private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ServingOption")
+
     let id = UUID()
     let label: String  // Display label (e.g., "1 item", "100g", "1 cup")
     let grams: Double  // Equivalent weight in grams
@@ -121,13 +123,22 @@ struct ServingOption: Identifiable, Equatable {
 
     /// Parse serving options from JSON string (e.g., '["100g", "1.0 item (291g)"]')
     static func parse(from jsonString: String) -> [ServingOption] {
-        guard let data = jsonString.data(using: .utf8),
-            let options = try? JSONDecoder().decode([String].self, from: data)
-        else {
+        guard let data = jsonString.data(using: .utf8) else {
+            logger.warning("Failed to encode serving options as UTF-8, using default")
             return [ServingOption(label: "100g", grams: 100)]
         }
 
-        return options.compactMap { parseOption($0) }
+        do {
+            let options = try JSONDecoder().decode([String].self, from: data)
+            let parsed = options.compactMap { parseOption($0) }
+            if parsed.count < options.count {
+                logger.debug("Parsed \(parsed.count)/\(options.count) serving options")
+            }
+            return parsed.isEmpty ? [ServingOption(label: "100g", grams: 100)] : parsed
+        } catch {
+            logger.warning("Failed to parse serving options JSON: \(error.localizedDescription)")
+            return [ServingOption(label: "100g", grams: 100)]
+        }
     }
 
     /// Parse a single serving option string (e.g., "1.0 item (291g)" or "1.0 whole without shell (50g)")
@@ -172,7 +183,7 @@ struct CategorizedSearchResults {
     let customResults: [FoodSearchResult]
     /// USDA common foods (foundation + sr_legacy)
     let commonResults: [FoodSearchResult]
-    /// Open Food Facts branded products
+    /// Branded products from local database (Open Food Facts dump)
     let brandedResults: [FoodSearchResult]
 
     /// Whether any results exist
@@ -457,13 +468,15 @@ final class FoodService {
 
     /// Save a food to recent foods (updates lastAccessedAt)
     /// - Parameter food: Food to save
-    func saveRecentFood(_ food: Food) {
+    /// - Throws: Error if save fails (prevents phantom food that appears but doesn't persist)
+    func saveRecentFood(_ food: Food) throws {
         food.lastAccessedAt = Date()
         context.insert(food)
         do {
             try context.save()
         } catch {
-            Self.logger.warning("Failed to save recent food '\(food.name)': \(error.localizedDescription)")
+            Self.logger.error("Failed to save recent food '\(food.name)': \(error.localizedDescription)")
+            throw error
         }
     }
 
