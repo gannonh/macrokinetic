@@ -1,0 +1,5 @@
+# SwiftLint overrides for Shortcuts views
+# ShortcutButton uses tertiarySystemFill/quaternarySystemFill for button
+# backgrounds which are special fill colors for interactive elements
+disabled_rules:
+  - prefer_design_tokens_colors

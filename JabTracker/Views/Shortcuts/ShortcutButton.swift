@@ -46,6 +46,7 @@ struct ShortcutButton: View {
                     .font(.caption)
                     .foregroundColor(isEnabled ? .primary : .secondary)
             }
+            .contentShape(Rectangle())
         }
         .disabled(!isEnabled)
         .accessibilityIdentifier(accessibilityIdentifierValue)
