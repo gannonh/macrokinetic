@@ -10,52 +10,50 @@
 
 ## Current Position
 
-Phase: 37 of 38 (Unit/Serving Strategy)
+Phase: 38 of 38 (Bug Fixes & Cleanup)
 Plan: 1 of 1 complete
-Status: Phase complete
-Last activity: 2026-01-12 - Completed 37-01-PLAN.md (horizontal pill picker)
+Status: Phase complete - Milestone complete
+Last activity: 2026-01-13 - Completed 38-01-PLAN.md (barcode fix, API removal, tap target)
 
-Progress: ████████░░ 83%
+Progress: ██████████ 100%
 
 ## GitHub Tracking
 
-Issue: N/A (milestone just created)
+Issue: N/A
 PR: N/A
-Branch: main
+Branch: feat/v0.8.0-food-search-library
 
 ## Performance Metrics
 
-**v0.7.0 Velocity:**
-- Total plans completed: 14 (including 33.1 inserted phase)
-- Average duration: 21 min
-- Total execution time: 296 min (~5 hours)
+**v0.8.0 Velocity:**
+- Total plans completed: 5 (including 35.1 inserted phase)
+- Average duration: 10 min
+- Total execution time: ~50 min
 
 **By Phase:**
 
 | Phase | Plans | Total   | Avg/Plan |
 |-------|-------|---------|----------|
-| 30    | 2     | 37 min  | 18 min   |
-| 31    | 2     | 109 min | 54 min   |
-| 32    | 1     | 4 min   | 4 min    |
-| 33    | 3     | 11 min  | 3 min    |
-| 33.1  | 2     | 15 min  | 7 min    |
-| 34    | 4     | 120 min | 30 min   |
+| 35    | 1     | ~15 min | 15 min   |
+| 35.1  | 1     | ~10 min | 10 min   |
+| 36    | 0     | skipped | -        |
+| 37    | 1     | ~15 min | 15 min   |
+| 38    | 1     | 7 min   | 7 min    |
 
 ## Accumulated Context
 
 ### Decisions Made
 
-See `.planning/milestones/v0.7.0-ROADMAP.md` for v0.7.0 decisions.
-
-Key patterns established:
-- Environment-based display mode propagation for widget state sharing
-- DashboardWidget protocol for consistent widget implementation
-- TDEESnapshot model for historical expenditure tracking
+**v0.8.0 decisions:**
+- Removed ALL Open Food Facts API code - local database (1.7M foods) is sufficient
+- If barcode not found locally, user creates custom food (no API fallback)
+- Horizontal pill picker for serving unit selection
+- Header indicators in Food Search matching Food Log style
 
 ### Deferred Issues
 
-1 issue in `.planning/ISSUES.md`:
-- ISS-001: Search button tap target misaligned in ShortcutsSheet
+No open issues in `.planning/ISSUES.md`.
+- ISS-001 resolved in Phase 38-01
 
 ### Pending Todos
 
@@ -63,8 +61,9 @@ Key patterns established:
 
 ### Roadmap Evolution
 
-- Milestone v0.8.0 created: Food Search & Library, 5 phases (Phase 35-39)
-- Phase 35.1 inserted after Phase 35: Food Search Header Indicators (URGENT) - match Food Log view indicator style
+- Milestone v0.8.0 complete: Food Search & Library, 5 phases (Phase 35-38)
+- Phase 35.1 inserted after Phase 35: Food Search Header Indicators
+- Phase 36 (Search Ranking) skipped - to be revisited in future milestone
 
 ### Blockers/Concerns Carried Forward
 
@@ -72,13 +71,13 @@ None.
 
 ## Project Alignment
 
-Last checked: 2026-01-12
+Last checked: 2026-01-13
 Status: ✓ Aligned
-Assessment: v0.8.0 milestone created, ready for planning.
+Assessment: v0.8.0 milestone complete, ready for completion workflow.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-12T22:12:41Z
-Stopped at: Completed 35.1-01-PLAN.md (Food Search header indicators)
+Last session: 2026-01-13T15:25:42Z
+Stopped at: Completed 38-01-PLAN.md (barcode fix, API removal, tap target)
 Resume file: None

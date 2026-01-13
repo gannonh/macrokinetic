@@ -74,10 +74,10 @@ Plans:
 **Goal**: Fix barcode scanner bug, remove API fallback
 **Depends on**: Phase 37
 **Research**: Unlikely (internal fixes)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 38-01: TBD
+- [x] 38-01: Fix barcode scanner, remove Open Food Facts API, fix ISS-001
 
 ## Progress
 
@@ -88,9 +88,9 @@ Phases execute in numeric order within each milestone.
 | ---------------------------------- | --------- | -------------- | ----------- | ---------- |
 | 35. Search Performance & UX        | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
 | 35.1 Header Indicators (INSERTED)  | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
-| 36. Search Ranking & Recall        | v0.8.0    | 0/?            | Not started | -          |
+| 36. Search Ranking & Recall        | v0.8.0    | 0/0            | Skipped     | -          |
 | 37. Unit/Serving Strategy          | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
-| 38. Bug Fixes & Cleanup            | v0.8.0    | 0/?            | Not started | -          |
+| 38. Bug Fixes & Cleanup            | v0.8.0    | 1/1            | Complete    | 2026-01-13 |
 
 <details>
 <summary>✅ v0.7.0 Dashboard Widget UX (Phases 30-34) - SHIPPED 2026-01-12</summary>
