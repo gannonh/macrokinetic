@@ -5,15 +5,11 @@
 # Optionally includes Open Food Facts branded foods data
 #
 # Usage:
-#   ./scripts/update-food-database.sh                    # Full rebuild (USDA + OFF if available)
-#   ./scripts/update-food-database.sh --skip-download    # Rebuild from existing data
-#   ./scripts/update-food-database.sh --usda-only        # Only USDA data, skip OFF
-#   ./scripts/update-food-database.sh --verify           # Verify current database only
-#
-# Open Food Facts Data:
-#   To include branded foods, download the CSV from:
-#   https://world.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz
-#   Place it in: scripts/off_data/en.openfoodfacts.org.products.csv.gz
+#   ./scripts/update-food-database.sh                       # Full rebuild (USDA + OFF, downloads both)
+#   ./scripts/update-food-database.sh --skip-download       # Rebuild from existing data (no downloads)
+#   ./scripts/update-food-database.sh --skip-off-download   # Download USDA only, use existing OFF
+#   ./scripts/update-food-database.sh --usda-only           # Only USDA data, skip OFF entirely
+#   ./scripts/update-food-database.sh --verify              # Verify current database only
 
 set -e
 
@@ -36,6 +32,10 @@ OUTPUT_DB="$PROJECT_ROOT/JabTracker/Resources/usda_foods.sqlite"
 # Check https://fdc.nal.usda.gov/download-datasets.html for latest
 FOUNDATION_URL="https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_json_2024-04-18.zip"
 SR_LEGACY_URL="https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip"
+
+# Open Food Facts download URL
+# Check https://world.openfoodfacts.org/data for latest
+OFF_DOWNLOAD_URL="https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz"
 
 print_header() {
     echo -e "${BLUE}============================================${NC}"
@@ -61,13 +61,19 @@ print_info() {
 
 # Parse arguments
 SKIP_DOWNLOAD=false
+SKIP_OFF_DOWNLOAD=false
 VERIFY_ONLY=false
 USDA_ONLY=false
+US_ONLY=false
 
 for arg in "$@"; do
     case $arg in
         --skip-download)
             SKIP_DOWNLOAD=true
+            SKIP_OFF_DOWNLOAD=true
+            ;;
+        --skip-off-download)
+            SKIP_OFF_DOWNLOAD=true
             ;;
         --verify)
             VERIFY_ONLY=true
@@ -75,23 +81,28 @@ for arg in "$@"; do
         --usda-only)
             USDA_ONLY=true
             ;;
+        --us-only)
+            US_ONLY=true
+            ;;
         --help|-h)
             echo "Usage: $0 [options]"
             echo ""
             echo "Options:"
-            echo "  --skip-download  Skip downloading USDA data, use existing files"
-            echo "  --usda-only      Only process USDA data, skip Open Food Facts"
-            echo "  --verify         Only verify the current database"
-            echo "  --help, -h       Show this help message"
+            echo "  --skip-download      Skip all downloads, use existing files"
+            echo "  --skip-off-download  Skip Open Food Facts download only"
+            echo "  --usda-only          Only process USDA data, skip Open Food Facts entirely"
+            echo "  --us-only            Only import US products from Open Food Facts"
+            echo "  --verify             Only verify the current database"
+            echo "  --help, -h           Show this help message"
             echo ""
             echo "This script builds the local food database from:"
             echo "  1. USDA Foundation Foods + SR Legacy (~8,000 whole foods)"
             echo "  2. Open Food Facts CSV (~1.7M branded/packaged foods)"
             echo ""
             echo "Open Food Facts Data:"
-            echo "  Download from: https://world.openfoodfacts.org/data"
-            echo "  File: en.openfoodfacts.org.products.csv.gz"
-            echo "  Place in: scripts/off_data/"
+            echo "  Auto-downloaded from: $OFF_DOWNLOAD_URL"
+            echo "  Stored in: scripts/off_data/"
+            echo "  Use --skip-off-download to use existing file"
             exit 0
             ;;
     esac
@@ -236,26 +247,80 @@ USDA_COUNT=$(sqlite3 "$OUTPUT_DB" "SELECT COUNT(*) FROM foods;")
 print_info "USDA foods: $USDA_COUNT"
 
 # ============================================
-# STEP 5: Process Open Food Facts Data (Optional)
+# STEP 5: Download & Process Open Food Facts Data (Optional)
 # ============================================
 if [ "$USDA_ONLY" = false ]; then
-    print_header "Step 5: Processing Open Food Facts Data"
+    print_header "Step 5: Open Food Facts Data"
 
+    # Download OFF CSV if needed
+    if [ "$SKIP_OFF_DOWNLOAD" = false ]; then
+        print_step "Downloading Open Food Facts CSV..."
+        print_info "Source: $OFF_DOWNLOAD_URL"
+        print_info "(This is a large file ~2GB, may take several minutes)"
+
+        # Remove existing file to avoid .1.gz suffix
+        if [ -f "$OFF_CSV" ]; then
+            print_info "Removing existing file..."
+            rm -f "$OFF_CSV"
+        fi
+
+        # Use aria2c if available (much faster with multi-connection download)
+        # Otherwise fall back to curl
+        if command -v aria2c &> /dev/null; then
+            print_info "Using aria2c for faster download (16 connections)"
+            if aria2c -x 16 -s 16 -k 1M -d "$OFF_DATA_DIR" -o "$(basename "$OFF_CSV")" "$OFF_DOWNLOAD_URL"; then
+                print_success "Open Food Facts CSV downloaded"
+                OFF_SIZE=$(ls -lh "$OFF_CSV" | awk '{print $5}')
+                print_info "Size: $OFF_SIZE"
+            else
+                print_error "Failed to download Open Food Facts CSV"
+                print_info "You can manually download from: $OFF_DOWNLOAD_URL"
+                print_info "Place in: $OFF_DATA_DIR/"
+                print_info ""
+                print_info "Continuing with USDA data only..."
+            fi
+        else
+            print_info "Using curl (install aria2 for faster downloads: brew install aria2)"
+            if curl -L -C - --retry 3 --retry-delay 5 -o "$OFF_CSV" "$OFF_DOWNLOAD_URL" --progress-bar; then
+                print_success "Open Food Facts CSV downloaded"
+                OFF_SIZE=$(ls -lh "$OFF_CSV" | awk '{print $5}')
+                print_info "Size: $OFF_SIZE"
+            else
+                print_error "Failed to download Open Food Facts CSV"
+                print_info "You can manually download from: $OFF_DOWNLOAD_URL"
+                print_info "Place in: $OFF_DATA_DIR/"
+                print_info ""
+                print_info "Continuing with USDA data only..."
+            fi
+        fi
+    else
+        print_step "Skipping Open Food Facts download (--skip-off-download)"
+    fi
+
+    # Process OFF data if file exists
     if [ -f "$OFF_CSV" ]; then
         print_step "Found OFF data: $(basename "$OFF_CSV")"
+        OFF_SIZE=$(ls -lh "$OFF_CSV" | awk '{print $5}')
+        print_info "Size: $OFF_SIZE"
         print_step "Running process-off-data.py..."
         print_info "(This may take several minutes for 4M+ products)"
 
-        if python3 "$SCRIPT_DIR/process-off-data.py"; then
+        # Build OFF processing arguments
+        OFF_ARGS=""
+        if [ "$US_ONLY" = true ]; then
+            OFF_ARGS="--us-only"
+            print_info "Filtering for US products only"
+        fi
+
+        if python3 "$SCRIPT_DIR/process-off-data.py" $OFF_ARGS; then
             print_success "Open Food Facts data added"
         else
             print_error "Failed to process OFF data (continuing with USDA only)"
         fi
     else
         print_step "Open Food Facts CSV not found"
-        print_info "To include branded foods, download from:"
-        print_info "https://world.openfoodfacts.org/data"
-        print_info "File: en.openfoodfacts.org.products.csv.gz"
+        print_info "Use --skip-off-download to skip download, or run without flags to download"
+        print_info "Manual download: $OFF_DOWNLOAD_URL"
         print_info "Place in: $OFF_DATA_DIR/"
         print_info ""
         print_info "Continuing with USDA data only..."
@@ -337,10 +402,8 @@ if [ "$TOTAL_COUNT" -gt 7000 ]; then
 
     if [ "$OFF_COUNT" -eq 0 ]; then
         echo ""
-        echo "To add branded foods:"
-        echo "  1. Download: https://world.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz"
-        echo "  2. Place in: scripts/off_data/"
-        echo "  3. Re-run:   ./scripts/update-food-database.sh --skip-download"
+        echo "To add branded foods, re-run without --usda-only:"
+        echo "  ./scripts/update-food-database.sh"
     fi
 else
     print_error "Database has fewer foods than expected"
