@@ -20,7 +20,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 🚧 **v0.8.0 Food Search & Library** - Phases 35-39 (in progress)
+- 🚧 **v0.8.0 Food Search & Library** - Phases 35-38 (in progress)
 
 ## Phases
 
@@ -79,16 +79,6 @@ Plans:
 Plans:
 - [ ] 38-01: TBD
 
-#### Phase 39: Pending Todos
-
-**Goal**: Restore concentration card to Analytics view, make check-in day setting more compact
-**Depends on**: Phase 38
-**Research**: Unlikely (straightforward UI work)
-**Plans**: TBD
-
-Plans:
-- [ ] 39-01: TBD
-
 ## Progress
 
 **Execution Order:**
@@ -101,7 +91,6 @@ Phases execute in numeric order within each milestone.
 | 36. Search Ranking & Recall        | v0.8.0    | 0/?            | Not started | -          |
 | 37. Unit/Serving Strategy          | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
 | 38. Bug Fixes & Cleanup            | v0.8.0    | 0/?            | Not started | -          |
-| 39. Pending Todos                  | v0.8.0    | 0/?            | Not started | -          |
 
 <details>
 <summary>✅ v0.7.0 Dashboard Widget UX (Phases 30-34) - SHIPPED 2026-01-12</summary>
