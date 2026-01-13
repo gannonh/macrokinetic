@@ -60,6 +60,13 @@ actor LocalFoodDatabase {
         // Database opened lazily on first query
     }
 
+    deinit {
+        if let db = database {
+            sqlite3_close(db)
+            Self.logger.debug("Closed USDA foods database connection")
+        }
+    }
+
     // MARK: - Database Connection
 
     /// Opens database on first use (lazy initialization)

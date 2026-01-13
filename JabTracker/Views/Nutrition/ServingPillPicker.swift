@@ -68,7 +68,6 @@ struct ServingPillPicker: View {
     // MARK: - Properties
 
     let servingOptions: [ServingOption]  // From food.servingOptions
-    let defaultServingGrams: Double  // Food's default serving size in grams
     @Binding var selectedOption: ServingPillOption?
 
     // MARK: - Constants
@@ -185,7 +184,6 @@ struct ServingPillPicker: View {
                         ServingOption(label: "1.0 medium (44g)", grams: 44),
                         ServingOption(label: "100g", grams: 100),
                     ],
-                    defaultServingGrams: 50,
                     selectedOption: $selected
                 )
             }
@@ -207,7 +205,6 @@ struct ServingPillPicker: View {
 
                 ServingPillPicker(
                     servingOptions: [],
-                    defaultServingGrams: 100,
                     selectedOption: $selected
                 )
             }

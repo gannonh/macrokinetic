@@ -112,6 +112,13 @@ struct ServingOption: Identifiable, Equatable {
     let label: String  // Display label (e.g., "1 item", "100g", "1 cup")
     let grams: Double  // Equivalent weight in grams
 
+    // Pre-compiled regex for parsing serving options (e.g., "1.0 item (291g)")
+    // Compiled once as static property for performance
+    // swiftlint:disable:next force_try
+    private static let servingOptionRegex = try! NSRegularExpression(
+        pattern: #"^([\d.]+)\s+(.+?)\s*\((\d+(?:\.\d+)?)g\)$"#
+    )
+
     /// Parse serving options from JSON string (e.g., '["100g", "1.0 item (291g)"]')
     static func parse(from jsonString: String) -> [ServingOption] {
         guard let data = jsonString.data(using: .utf8),
@@ -132,9 +139,10 @@ struct ServingOption: Identifiable, Equatable {
 
         // Handle item format: "1.0 item (291g)" or "1.0 whole without shell (50g)"
         // Uses .+? to capture multi-word descriptions like "whole without shell"
-        let pattern = #"^([\d.]+)\s+(.+?)\s*\((\d+(?:\.\d+)?)g\)$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-            let match = regex.firstMatch(in: option, range: NSRange(option.startIndex..., in: option)),
+        if let match = servingOptionRegex.firstMatch(
+            in: option,
+            range: NSRange(option.startIndex..., in: option)
+        ),
             let quantityRange = Range(match.range(at: 1), in: option),
             let descRange = Range(match.range(at: 2), in: option),
             let gramsRange = Range(match.range(at: 3), in: option)
@@ -160,7 +168,7 @@ struct ServingOption: Identifiable, Equatable {
 struct CategorizedSearchResults {
     /// Foods the user has previously logged (from FoodEntry records)
     let historyResults: [FoodSearchResult]
-    /// User-created custom foods (backend implemented, UI pending)
+    /// User-created custom foods
     let customResults: [FoodSearchResult]
     /// USDA common foods (foundation + sr_legacy)
     let commonResults: [FoodSearchResult]
@@ -528,23 +536,6 @@ final class FoodService {
             .filter { $0.name.lowercased().contains(lowercaseQuery) }
             .prefix(limit)
             .map { $0.toSearchResult() }
-    }
-
-    /// Check if two food names are similar enough to be duplicates
-    private func areSimilarFoods(_ name1: String, _ name2: String) -> Bool {
-        let normalized1 = name1.lowercased().trimmingCharacters(in: .whitespaces)
-        let normalized2 = name2.lowercased().trimmingCharacters(in: .whitespaces)
-
-        if normalized1 == normalized2 {
-            return true
-        }
-
-        // Check if one contains the other
-        if normalized1.contains(normalized2) || normalized2.contains(normalized1) {
-            return true
-        }
-
-        return false
     }
 }
 

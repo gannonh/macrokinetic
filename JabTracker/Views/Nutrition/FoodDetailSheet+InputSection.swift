@@ -229,7 +229,6 @@ extension FoodDetailSheet {
                 // Serving pill picker for quantity mode
                 ServingPillPicker(
                     servingOptions: food.servingOptions,
-                    defaultServingGrams: food.servingSize,
                     selectedOption: $selectedPillOption
                 )
                 .onChange(of: selectedPillOption) { oldValue, newValue in
