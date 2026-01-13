@@ -179,21 +179,19 @@ struct CategorizedSearchResults {
 }
 
 /// Service that orchestrates food search across multiple sources
-/// Combines local USDA database, Open Food Facts API, and user-created foods
+/// Combines local food database (USDA + Open Food Facts dump) and user-created foods
 @MainActor
 final class FoodService {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "FoodService")
 
     private let context: ModelContext
     private let localDatabase: LocalFoodDatabase
-    private let openFoodFacts: OpenFoodFactsService
     private let customFoodService: CustomFoodService?
 
     /// Initialize with model context
     init(context: ModelContext) {
         self.context = context
         self.localDatabase = LocalFoodDatabase()
-        self.openFoodFacts = OpenFoodFactsService()
         self.customFoodService = nil
     }
 
@@ -201,7 +199,6 @@ final class FoodService {
     init(context: ModelContext, customFoodService: CustomFoodService) {
         self.context = context
         self.localDatabase = LocalFoodDatabase()
-        self.openFoodFacts = OpenFoodFactsService()
         self.customFoodService = customFoodService
     }
 
@@ -209,12 +206,10 @@ final class FoodService {
     init(
         context: ModelContext,
         localDatabase: LocalFoodDatabase,
-        openFoodFacts: OpenFoodFactsService,
         customFoodService: CustomFoodService? = nil
     ) {
         self.context = context
         self.localDatabase = localDatabase
-        self.openFoodFacts = openFoodFacts
         self.customFoodService = customFoodService
     }
 
@@ -224,31 +219,15 @@ final class FoodService {
     /// - Parameters:
     ///   - query: Search term
     ///   - limit: Maximum results to return
-    ///   - includeAPI: Whether to include Open Food Facts API results
     /// - Returns: Combined search results
-    func search(query: String, limit: Int = 20, includeAPI: Bool = false) async throws -> [FoodSearchResult] {
+    func search(query: String, limit: Int = 20) async throws -> [FoodSearchResult] {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             return []
         }
 
-        // Start with local database (fast)
+        // Search local database (1.7M+ foods from USDA + Open Food Facts dump)
         var results = try await searchLocalDatabase(query: trimmedQuery, limit: limit)
-
-        // If API is enabled, always fetch API results
-        if includeAPI {
-            let apiResults = try await searchOpenFoodFacts(query: trimmedQuery, limit: limit)
-
-            // Deduplicate by name similarity
-            for apiResult in apiResults {
-                let isDuplicate = results.contains { existing in
-                    areSimilarFoods(existing.name, apiResult.name)
-                }
-                if !isDuplicate {
-                    results.append(apiResult)
-                }
-            }
-        }
 
         // Also check user-created foods from SwiftData
         let userFoods = try await searchUserCreatedFoods(query: trimmedQuery, limit: 5)
@@ -276,16 +255,6 @@ final class FoodService {
         }
 
         return Array(results.prefix(limit))
-    }
-
-    /// Search Open Food Facts API only (slower, has branded foods)
-    func searchAPI(query: String, limit: Int = 20) async throws -> [FoodSearchResult] {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else {
-            return []
-        }
-
-        return try await searchOpenFoodFacts(query: trimmedQuery, limit: limit)
     }
 
     /// Search foods with results categorized by source type
@@ -538,32 +507,6 @@ final class FoodService {
                 servingSize: local.servingSize,
                 servingOptions: servingOptions
             )
-        }
-    }
-
-    private func searchOpenFoodFacts(query: String, limit: Int) async throws -> [FoodSearchResult] {
-        do {
-            let apiResults = try await openFoodFacts.search(query: query, limit: limit)
-
-            return apiResults.map { api in
-                FoodSearchResult(
-                    fdcId: nil,
-                    barcode: api.barcode,
-                    name: api.name,
-                    brand: api.brand,
-                    source: .openFoodFacts,
-                    caloriesPer100g: api.caloriesPer100g,
-                    proteinPer100g: api.proteinPer100g,
-                    carbsPer100g: api.carbsPer100g,
-                    fatPer100g: api.fatPer100g,
-                    fiberPer100g: api.fiberPer100g,
-                    category: nil
-                )
-            }
-        } catch {
-            // API errors are non-fatal - log and continue with local results
-            Self.logger.warning("Open Food Facts search failed: \(error.localizedDescription)")
-            return []
         }
     }
 
