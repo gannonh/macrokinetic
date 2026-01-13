@@ -225,6 +225,7 @@
 		5FDA16004A5F0176DC8D1378 /* MedicationSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EBDAF9DFA276ECE73657CF /* MedicationSelectionView.swift */; };
 		601DCD3047F7FA8E72DFAED0 /* TitrationErrorMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACB93A7DDF57479EA893C6B /* TitrationErrorMessages.swift */; };
 		6042E2021F4760B537E1D145 /* TDEECalculationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4F9DE24D47AFC2BCA78F57 /* TDEECalculationEngine.swift */; };
+		604E4C87CEA1D2E260A85D6D /* ServingPillPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9112A2E4F44474B8B4F72B9 /* ServingPillPicker.swift */; };
 		609783B1CD5967B1156840A5 /* WelcomeStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539D714FC6E7650F7CC895B7 /* WelcomeStepView.swift */; };
 		60D34BE68D5EE414AEF38A40 /* QuickDoseEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E3F259EFE01B789A8B8399 /* QuickDoseEntry.swift */; };
 		60FD14887C143C84246ACF94 /* UserAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777443E8D9A33680C4ECAB15 /* UserAnalyticsTests.swift */; };
@@ -1086,6 +1087,7 @@
 		C72F6184D9089FB2230364FF /* NotificationService+Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationService+Persistence.swift"; sourceTree = "<group>"; };
 		C7EDD54B293AC83AAD572820 /* ChartDataProcessor+Interpolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChartDataProcessor+Interpolation.swift"; sourceTree = "<group>"; };
 		C80224AFE1CDA152A307F155 /* AdherencePatternTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherencePatternTests.swift; sourceTree = "<group>"; };
+		C9112A2E4F44474B8B4F72B9 /* ServingPillPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServingPillPicker.swift; sourceTree = "<group>"; };
 		CAC38D3CC1705D3039EC26FE /* AppIcon.icon */ = {isa = PBXFileReference; path = AppIcon.icon; sourceTree = "<group>"; };
 		CAF24FAF1F65F4ED96874B2B /* ChartDataProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataProcessorTests.swift; sourceTree = "<group>"; };
 		CB13A43CB0C2E01BC2AA642B /* ScheduleServiceModificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleServiceModificationTests.swift; sourceTree = "<group>"; };
@@ -1580,6 +1582,7 @@
 				13564236920B6E14A4C69066 /* QuickAddContentView.swift */,
 				6C503FC88F78949C6306372C /* SearchMethodTabs.swift */,
 				64F40074E0501F4B8CCF6389 /* ServingInputView.swift */,
+				C9112A2E4F44474B8B4F72B9 /* ServingPillPicker.swift */,
 			);
 			path = Nutrition;
 			sourceTree = "<group>";
@@ -3010,6 +3013,7 @@
 				1AF41FBF3F3E61C8F503F30B /* SeededRNG.swift in Sources */,
 				009B46599D9B6C5FF69B6185 /* SelectionCard.swift in Sources */,
 				57DEDA3EC175AB73B93EDAAC /* ServingInputView.swift in Sources */,
+				604E4C87CEA1D2E260A85D6D /* ServingPillPicker.swift in Sources */,
 				EEFC51E9355F6D75C8BC180A /* SettingsView.swift in Sources */,
 				D251BB4D22F384F6F5E0820B /* SetupConfirmationStepView.swift in Sources */,
 				7A2CC51947857AB036DBD600 /* ShortcutButton.swift in Sources */,

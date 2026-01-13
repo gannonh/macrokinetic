@@ -32,6 +32,7 @@ struct ServingPillOption: Identifiable, Equatable {
 
     /// Format the label to be more human-readable
     /// Converts "1.0 large (50g)" → "large"
+    /// Converts "1.0 whole without shell (50g)" → "whole without shell"
     /// Keeps "100g" → "100g"
     private static func formatLabel(from raw: String) -> String {
         // If it's just grams, keep as-is
@@ -39,9 +40,9 @@ struct ServingPillOption: Identifiable, Equatable {
             return raw
         }
 
-        // Try to extract the descriptive part: "1.0 large (50g)" → "large"
-        // Pattern: number + space + description + optional (grams)
-        let pattern = #"^[\d.]+\s+(.+?)(?:\s*\([^)]+\))?$"#
+        // Try to extract the descriptive part: "1.0 whole without shell (50g)" → "whole without shell"
+        // Pattern: number + space + multi-word description + optional (grams)
+        let pattern = #"^[\d.]+\s+(.+?)\s*\([^)]+\)$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
             let match = regex.firstMatch(
                 in: raw,

@@ -123,27 +123,28 @@ struct ServingOption: Identifiable, Equatable {
         return options.compactMap { parseOption($0) }
     }
 
-    /// Parse a single serving option string (e.g., "1.0 item (291g)")
+    /// Parse a single serving option string (e.g., "1.0 item (291g)" or "1.0 whole without shell (50g)")
     private static func parseOption(_ option: String) -> ServingOption? {
         // Handle simple gram format: "100g"
         if option.hasSuffix("g"), let grams = Double(option.dropLast()) {
             return ServingOption(label: option, grams: grams)
         }
 
-        // Handle item format: "1.0 item (291g)"
-        let pattern = #"^([\d.]+)\s*(\w+)\s*\((\d+(?:\.\d+)?)g\)$"#
+        // Handle item format: "1.0 item (291g)" or "1.0 whole without shell (50g)"
+        // Uses .+? to capture multi-word descriptions like "whole without shell"
+        let pattern = #"^([\d.]+)\s+(.+?)\s*\((\d+(?:\.\d+)?)g\)$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
             let match = regex.firstMatch(in: option, range: NSRange(option.startIndex..., in: option)),
             let quantityRange = Range(match.range(at: 1), in: option),
-            let unitRange = Range(match.range(at: 2), in: option),
+            let descRange = Range(match.range(at: 2), in: option),
             let gramsRange = Range(match.range(at: 3), in: option)
         {
             let quantity = Double(option[quantityRange]) ?? 1.0
-            let unit = String(option[unitRange])
+            let description = String(option[descRange]).trimmingCharacters(in: .whitespaces)
             let grams = Double(option[gramsRange]) ?? 100.0
 
-            // Format label nicely
-            let label = quantity == 1.0 ? "1 \(unit)" : "\(Int(quantity)) \(unit)"
+            // Format label nicely - keep full description
+            let label = quantity == 1.0 ? description : "\(Int(quantity)) \(description)"
             return ServingOption(label: label, grams: grams)
         }
 
