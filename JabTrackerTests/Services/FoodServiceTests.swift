@@ -469,7 +469,8 @@ struct FoodServiceTests {
         let options = ServingOption.parse(from: "[\"1.0 item (150g)\"]")
 
         #expect(options.count == 1)
-        #expect(options.first?.label == "1 item")
+        // When quantity is 1.0, label omits the "1" prefix for cleaner display
+        #expect(options.first?.label == "item")
         #expect(options.first?.grams == 150)
     }
 

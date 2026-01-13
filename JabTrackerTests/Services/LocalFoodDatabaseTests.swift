@@ -19,13 +19,15 @@ struct LocalFoodDatabaseTests {
     @Test("Database initializes successfully")
     func testDatabaseInitializes() async throws {
         let database = LocalFoodDatabase()
-        #expect(database.isAvailable)
+        let isAvailable = await database.isAvailable
+        #expect(isAvailable)
     }
 
     @Test("Database reports unavailable if file missing")
     func testDatabaseUnavailableForMissingFile() async throws {
         let database = LocalFoodDatabase(databasePath: "/nonexistent/path.sqlite")
-        #expect(!database.isAvailable)
+        let isAvailable = await database.isAvailable
+        #expect(!isAvailable)
     }
 
     // MARK: - Search Tests
@@ -383,8 +385,7 @@ struct LocalFoodDatabaseTests {
         if let startIdx = startsWithBanana, let notStartIdx = notStartsWithBanana {
             #expect(
                 startIdx < notStartIdx,
-                "Foods starting with 'banana' should rank before others. First match: \(results[startIdx].name), "
-                    + "First non-match: \(results[notStartIdx].name)"
+                "Prefix matches should rank first: '\(results[startIdx].name)' vs '\(results[notStartIdx].name)'"
             )
         }
     }
@@ -418,9 +419,7 @@ struct LocalFoodDatabaseTests {
         if let rawIdx = rawBananaIndex, let processedIdx = processedBananaIndex {
             #expect(
                 rawIdx < processedIdx,
-                "Raw banana should rank before processed products. "
-                    + "Raw at index \(rawIdx): \(results[rawIdx].name), "
-                    + "Processed at index \(processedIdx): \(results[processedIdx].name)"
+                "Raw should rank before processed: '\(results[rawIdx].name)' vs '\(results[processedIdx].name)'"
             )
         }
     }
@@ -444,9 +443,7 @@ struct LocalFoodDatabaseTests {
         if let startIdx = startsWithEgg, let notStartIdx = notStartsWithEgg {
             #expect(
                 startIdx < notStartIdx,
-                "Foods starting with 'egg' should rank first. "
-                    + "First match: \(results[startIdx].name), "
-                    + "First non-match: \(results[notStartIdx].name)"
+                "Prefix matches should rank first: '\(results[startIdx].name)' vs '\(results[notStartIdx].name)'"
             )
         }
     }
@@ -469,8 +466,7 @@ struct LocalFoodDatabaseTests {
         // At least 3 of the top 5 should start with "chicken"
         #expect(
             topFiveStartWithChicken.count >= 3,
-            "Most top results should start with 'chicken', got \(topFiveStartWithChicken.count)/5. "
-                + "Top 5: \(results.prefix(5).map(\.name))"
+            "Most top results should start with 'chicken', got \(topFiveStartWithChicken.count)/5. Top 5: \(results.prefix(5).map(\.name))"
         )
     }
 
@@ -503,9 +499,7 @@ struct LocalFoodDatabaseTests {
         if let wholeIdx = wholeWordApple, let partialIdx = partialMatchIndex {
             #expect(
                 wholeIdx < partialIdx,
-                "Whole word 'Apple' should rank before 'APPLEBEE'S'. "
-                    + "Apple at index \(wholeIdx): \(results[wholeIdx].name), "
-                    + "APPLEBEE'S at index \(partialIdx): \(results[partialIdx].name)"
+                "Whole word should rank first: '\(results[wholeIdx].name)' vs '\(results[partialIdx].name)'"
             )
         }
     }
@@ -540,9 +534,7 @@ struct LocalFoodDatabaseTests {
         if let shortIdx = shortBananaIndex, let longIdx = longBananaIndex {
             #expect(
                 shortIdx < longIdx,
-                "Shorter 'Bananas, raw' should rank before longer names. "
-                    + "Short at index \(shortIdx): \(results[shortIdx].name) (len: \(results[shortIdx].name.count)), "
-                    + "Long at index \(longIdx): \(results[longIdx].name) (len: \(results[longIdx].name.count))"
+                "Shorter names should rank first: '\(results[shortIdx].name)' vs '\(results[longIdx].name)'"
             )
         }
     }
