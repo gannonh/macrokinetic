@@ -239,17 +239,23 @@ extension FoodDetailSheet {
         }
     }
 
-    /// Convert servingCount to preserve gram amount when switching pill options
+    /// Handle serving count when switching between pill options
+    /// - Converting TO unit-only (g/oz): preserve gram amount
+    /// - Selecting item-based option: reset to 1 (user wants "1 small apple", not "1.64 small apples")
     private func convertServingCount(from oldOption: ServingPillOption?, to newOption: ServingPillOption?) {
         guard let oldOption = oldOption, let newOption = newOption else { return }
         guard oldOption.id != newOption.id else { return }
         guard newOption.grams > 0 else { return }
 
-        // Calculate current grams based on old option
-        let currentGrams = servingCount * oldOption.grams
-
-        // Convert to new unit
-        servingCount = currentGrams / newOption.grams
+        if newOption.isUnitOnly {
+            // Switching TO g/oz: convert to preserve gram amount
+            let currentGrams = servingCount * oldOption.grams
+            servingCount = currentGrams / newOption.grams
+        } else {
+            // Switching TO item-based option: reset to 1
+            // User selecting "small apple" wants 1 small apple, not a fractional amount
+            servingCount = 1
+        }
     }
 
     func macroButton(_ macro: TargetMacro) -> some View {
