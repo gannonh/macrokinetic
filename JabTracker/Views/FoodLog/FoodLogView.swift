@@ -159,11 +159,14 @@ struct FoodLogView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingAddFood) {
-                if let currentUser = users.first {
+                if let currentUser = users.first,
+                    let foodService = AppServices.shared.foodService,
+                    let mealLogService = AppServices.shared.mealLogService
+                {
                     FoodSearchSheet(
                         user: currentUser,
-                        foodService: AppServices.shared.foodService,
-                        mealLogService: AppServices.shared.mealLogService,
+                        foodService: foodService,
+                        mealLogService: mealLogService,
                         customFoodService: AppServices.shared.customFoodService,
                         initialDate: selectedDate
                     ) {

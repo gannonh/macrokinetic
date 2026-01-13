@@ -19,8 +19,8 @@ struct FoodSearchSheet: View {
     // MARK: - Properties
 
     let user: User
-    let foodService: FoodService?
-    let mealLogService: MealLogService?
+    let foodService: FoodService
+    let mealLogService: MealLogService
     let customFoodService: CustomFoodService?
     let onComplete: () -> Void
 
@@ -63,8 +63,8 @@ struct FoodSearchSheet: View {
 
     init(
         user: User,
-        foodService: FoodService?,
-        mealLogService: MealLogService?,
+        foodService: FoodService,
+        mealLogService: MealLogService,
         customFoodService: CustomFoodService? = nil,
         initialMethod: SearchMethod? = nil,
         initialDate: Date = Date(),
@@ -77,36 +77,31 @@ struct FoodSearchSheet: View {
         self.onComplete = onComplete
 
         // Initialize ViewModel with services
-        if let fs = foodService, let mls = mealLogService {
-            let vm = FoodSearchSheetViewModel(
-                foodService: fs,
-                mealLogService: mls
-            )
-            // Set initial method if provided
-            if let method = initialMethod {
-                vm.selectedMethod = method
-            }
-            // Set initial date for logging - use current time of day on the selected date
-            // This ensures MealSection.from(date:) picks the right meal (not snacks at midnight)
-            let calendar = Calendar.current
-            let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: Date())
-            let dateComponents = calendar.dateComponents([.year, .month, .day], from: initialDate)
-            var combined = DateComponents()
-            combined.year = dateComponents.year
-            combined.month = dateComponents.month
-            combined.day = dateComponents.day
-            combined.hour = timeComponents.hour
-            combined.minute = timeComponents.minute
-            combined.second = timeComponents.second
-            vm.selectedTime = calendar.date(from: combined) ?? initialDate
-            self._viewModel = State(wrappedValue: vm)
-
-            // Initialize QuickAddViewModel
-            self._quickAddViewModel = State(wrappedValue: QuickAddViewModel(mealLogService: mls))
-        } else {
-            // Fallback for previews - will need proper DI
-            fatalError("FoodSearchSheet requires non-nil foodService and mealLogService")
+        let vm = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService
+        )
+        // Set initial method if provided
+        if let method = initialMethod {
+            vm.selectedMethod = method
         }
+        // Set initial date for logging - use current time of day on the selected date
+        // This ensures MealSection.from(date:) picks the right meal (not snacks at midnight)
+        let calendar = Calendar.current
+        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: Date())
+        let dateComponents = calendar.dateComponents([.year, .month, .day], from: initialDate)
+        var combined = DateComponents()
+        combined.year = dateComponents.year
+        combined.month = dateComponents.month
+        combined.day = dateComponents.day
+        combined.hour = timeComponents.hour
+        combined.minute = timeComponents.minute
+        combined.second = timeComponents.second
+        vm.selectedTime = calendar.date(from: combined) ?? initialDate
+        self._viewModel = State(wrappedValue: vm)
+
+        // Initialize QuickAddViewModel
+        self._quickAddViewModel = State(wrappedValue: QuickAddViewModel(mealLogService: mealLogService))
     }
 
     // MARK: - Body

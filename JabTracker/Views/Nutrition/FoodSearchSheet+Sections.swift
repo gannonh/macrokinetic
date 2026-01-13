@@ -293,7 +293,7 @@ extension FoodSearchSheet {
 
         // 2. Check local database (1.7M+ foods from USDA + Open Food Facts dump)
         do {
-            if let result = try await foodService?.lookupBarcode(barcode) {
+            if let result = try await foodService.lookupBarcode(barcode) {
                 selectedFood = result
                 isLookingUpBarcode = false
                 showingFoodDetail = true

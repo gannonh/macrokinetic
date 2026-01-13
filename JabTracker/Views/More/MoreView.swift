@@ -112,15 +112,18 @@ struct MoreView: View {
             .listStyle(.insetGrouped)
             .safeAreaInset(edge: .top, spacing: 0) {
                 PageHeader(title: "More")
-                    .background(Color(.systemGroupedBackground))
+                    .background(DesignTokens.Colors.groupedBackground)
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingFoodLibrary) {
-                if let user = currentUser {
+                if let user = currentUser,
+                    let foodService = AppServices.shared.foodService,
+                    let mealLogService = AppServices.shared.mealLogService
+                {
                     FoodSearchSheet(
                         user: user,
-                        foodService: AppServices.shared.foodService,
-                        mealLogService: AppServices.shared.mealLogService,
+                        foodService: foodService,
+                        mealLogService: mealLogService,
                         customFoodService: AppServices.shared.customFoodService,
                         initialMethod: .library,
                         onComplete: { showingFoodLibrary = false }

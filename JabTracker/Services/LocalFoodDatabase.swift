@@ -111,8 +111,8 @@ actor LocalFoodDatabase {
 
         ensureDatabaseOpen()
         guard database != nil else {
-            Self.logger.warning("Database not available for search")
-            return []
+            Self.logger.error("Database not available for search")
+            throw LocalFoodDatabaseError.databaseUnavailable
         }
 
         // Prepare FTS5 query with prefix matching
@@ -201,10 +201,11 @@ actor LocalFoodDatabase {
     /// Look up a specific food by FDC ID
     /// - Parameter fdcId: USDA FoodData Central ID
     /// - Returns: The food if found, nil otherwise
+    /// - Throws: LocalFoodDatabaseError.databaseUnavailable if database cannot be opened
     func lookup(fdcId: Int) throws -> LocalFoodResult? {
         ensureDatabaseOpen()
         guard database != nil else {
-            return nil
+            throw LocalFoodDatabaseError.databaseUnavailable
         }
 
         let sql = """
@@ -225,10 +226,11 @@ actor LocalFoodDatabase {
     /// Look up a food by barcode
     /// - Parameter barcode: Product barcode (EAN/UPC)
     /// - Returns: The food if found, nil otherwise
+    /// - Throws: LocalFoodDatabaseError.databaseUnavailable if database cannot be opened
     func lookupBarcode(_ barcode: String) throws -> LocalFoodResult? {
         ensureDatabaseOpen()
         guard database != nil else {
-            return nil
+            throw LocalFoodDatabaseError.databaseUnavailable
         }
 
         let sql = """
@@ -251,10 +253,11 @@ actor LocalFoodDatabase {
     ///   - category: Category name to filter by
     ///   - limit: Maximum number of results
     /// - Returns: Array of foods in the category
+    /// - Throws: LocalFoodDatabaseError.databaseUnavailable if database cannot be opened
     func searchByCategory(_ category: String, limit: Int = 50) throws -> [LocalFoodResult] {
         ensureDatabaseOpen()
         guard database != nil else {
-            return []
+            throw LocalFoodDatabaseError.databaseUnavailable
         }
 
         let sql = """

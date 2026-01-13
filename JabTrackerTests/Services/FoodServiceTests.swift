@@ -508,6 +508,79 @@ struct FoodServiceTests {
         #expect(options.first?.grams == 120)
     }
 
+    // MARK: - Barcode Lookup Tests
+
+    @Test("Barcode lookup returns nil for unknown barcode")
+    func testBarcodeLookupReturnsNilForUnknownBarcode() async throws {
+        let context = createTestContext()
+        let service = FoodService(context: context)
+
+        // Use a clearly fake barcode that won't exist in the database
+        let result = try await service.lookupBarcode("0000000000000")
+
+        #expect(result == nil, "Unknown barcode should return nil")
+    }
+
+    @Test("Barcode lookup handles empty barcode gracefully")
+    func testBarcodeLookupHandlesEmptyBarcode() async throws {
+        let context = createTestContext()
+        let service = FoodService(context: context)
+
+        // Empty barcode should not throw - may return result if database has foods with empty barcode field
+        let result = try await service.lookupBarcode("")
+
+        // Just verify it didn't throw and returns valid data if found
+        if let food = result {
+            #expect(!food.name.isEmpty, "If found, food should have a name")
+        }
+        // Either outcome (found or nil) is valid - test just verifies no crash
+    }
+
+    @Test("Barcode lookup handles whitespace barcode")
+    func testBarcodeLookupHandlesWhitespaceBarcode() async throws {
+        let context = createTestContext()
+        let service = FoodService(context: context)
+
+        let result = try await service.lookupBarcode("   ")
+
+        #expect(result == nil, "Whitespace barcode should return nil")
+    }
+
+    @Test("Barcode lookup returns food with nutrition data when found")
+    func testBarcodeLookupReturnsNutritionData() async throws {
+        let context = createTestContext()
+        let service = FoodService(context: context)
+
+        // Try a common barcode that might exist in the Open Food Facts dump
+        // This test documents expected behavior - actual result depends on database content
+        let result = try await service.lookupBarcode("5449000000996")  // Coca-Cola barcode
+
+        // If found, verify it has nutrition data
+        if let food = result {
+            #expect(!food.name.isEmpty, "Food should have a name")
+            #expect(food.caloriesPer100g >= 0, "Calories should be non-negative")
+            #expect(food.barcode == "5449000000996", "Barcode should match")
+        }
+        // If not found, that's also valid - the barcode might not be in the local database
+    }
+
+    @Test("Barcode lookup returns correct source type")
+    func testBarcodeLookupReturnsCorrectSource() async throws {
+        let context = createTestContext()
+        let service = FoodService(context: context)
+
+        // Try a barcode lookup - source should be appropriate for where it was found
+        let result = try await service.lookupBarcode("5449000000996")
+
+        if let food = result {
+            // Barcode lookup from local database should return local or openFoodFacts source
+            #expect(
+                food.source == .local || food.source == .openFoodFacts,
+                "Source should be local or openFoodFacts"
+            )
+        }
+    }
+
     // MARK: - Helper Methods
 
     private func createTestContext() -> ModelContext {
