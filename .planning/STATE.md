@@ -57,7 +57,7 @@ No open issues in `.planning/ISSUES.md`.
 
 ### Pending Todos
 
-5 todos in `.planning/todos/pending/`
+6 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
