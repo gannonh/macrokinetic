@@ -415,27 +415,39 @@ final class FoodService {
         return results
     }
 
-    /// Look up food by barcode via Open Food Facts API
-    /// Note: Does not search local database - API only
+    /// Look up food by barcode in local database
     /// - Parameter barcode: Product barcode
-    /// - Returns: Food if found
+    /// - Returns: Food if found in local database, nil otherwise
     func lookupBarcode(_ barcode: String) async throws -> FoodSearchResult? {
-        guard let result = try await openFoodFacts.lookup(barcode: barcode) else {
+        guard let local = try await localDatabase.lookupBarcode(barcode) else {
             return nil
         }
 
+        // Map database source string to FoodSource enum
+        let source: FoodSource =
+            switch local.source {
+            case "openFoodFacts": .openFoodFacts
+            case "foundation", "sr_legacy": .local
+            default: .local
+            }
+
+        // Parse serving options from JSON string
+        let servingOptions = ServingOption.parse(from: local.servingOptions)
+
         return FoodSearchResult(
-            fdcId: nil,
-            barcode: result.barcode,
-            name: result.name,
-            brand: result.brand,
-            source: .openFoodFacts,
-            caloriesPer100g: result.caloriesPer100g,
-            proteinPer100g: result.proteinPer100g,
-            carbsPer100g: result.carbsPer100g,
-            fatPer100g: result.fatPer100g,
-            fiberPer100g: result.fiberPer100g,
-            category: nil
+            fdcId: local.fdcId,
+            barcode: local.barcode,
+            name: local.name,
+            brand: local.brand,
+            source: source,
+            caloriesPer100g: local.caloriesPer100g,
+            proteinPer100g: local.proteinPer100g,
+            carbsPer100g: local.carbsPer100g,
+            fatPer100g: local.fatPer100g,
+            fiberPer100g: local.fiberPer100g,
+            category: local.category,
+            servingSize: local.servingSize,
+            servingOptions: servingOptions
         )
     }
 

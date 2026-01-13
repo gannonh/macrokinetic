@@ -266,7 +266,7 @@ extension FoodSearchSheet {
 
     // MARK: - Barcode Lookup
 
-    /// Handle a detected barcode by looking up in local custom foods first, then Open Food Facts
+    /// Handle a detected barcode by looking up in custom foods first, then local database
     func handleBarcodeDetected(_ barcode: String) async {
         // Prevent concurrent lookups - skip if already looking up
         guard !isLookingUpBarcode else {
@@ -277,7 +277,7 @@ extension FoodSearchSheet {
         isLookingUpBarcode = true
         lastScannedBarcode = barcode
 
-        // 1. Check custom foods first (local, fast)
+        // 1. Check custom foods first (user-created foods)
         do {
             if let customFood = try await customFoodService?.lookup(barcode: barcode) {
                 selectedFood = customFood.toSearchResult()
@@ -287,28 +287,26 @@ extension FoodSearchSheet {
                 return
             }
         } catch {
-            // Log but continue to API lookup - local lookup failure shouldn't block API
+            // Log but continue to local database lookup
             logger.error("Custom food barcode lookup failed: \(error.localizedDescription)")
         }
 
-        // 2. Check Open Food Facts API
+        // 2. Check local database (1.7M+ foods from USDA + Open Food Facts dump)
         do {
             if let result = try await foodService?.lookupBarcode(barcode) {
                 selectedFood = result
                 isLookingUpBarcode = false
                 showingFoodDetail = true
-                logger.info("Found Open Food Facts product for barcode: \(barcode)")
+                logger.info("Found food in local database for barcode: \(barcode)")
                 return
             }
         } catch {
-            // Log API lookup failure - this is more significant
-            logger.error("Open Food Facts barcode lookup failed: \(error.localizedDescription)")
-            // Don't show "not found" - this was a lookup error, not "not in database"
+            logger.error("Local database barcode lookup failed: \(error.localizedDescription)")
             isLookingUpBarcode = false
             return
         }
 
-        // 3. Not found (both lookups succeeded but returned nil)
+        // 3. Not found - user can create custom food
         isLookingUpBarcode = false
         barcodeNotFound = true
         logger.info("No product found for barcode: \(barcode)")
