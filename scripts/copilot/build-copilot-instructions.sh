@@ -25,6 +25,9 @@ SOURCE_FILES=(
     ".planning/PROJECT.md"
     ".planning/ROADMAP.md"
     ".planning/STATE.md"
+    "/Users/gannonhall/.claude/rules/development-ios.md"
+    "/Users/gannonhall/.claude/rules/e2e-testing-ios.md"
+    "/Users/gannonhall/.claude/rules/unit-testing-ios.md"
 )
 
 echo "Building copilot-instructions.md..."
@@ -33,7 +36,13 @@ echo "Building copilot-instructions.md..."
 > "$OUTPUT_FILE"
 
 for file in "${SOURCE_FILES[@]}"; do
-    full_path="$PROJECT_ROOT/$file"
+    # Use path as-is if absolute, otherwise prepend PROJECT_ROOT
+    if [[ "$file" == /* ]]; then
+        full_path="$file"
+    else
+        full_path="$PROJECT_ROOT/$file"
+    fi
+
     if [[ -f "$full_path" ]]; then
         echo "  Adding: $file"
         cat "$full_path" >> "$OUTPUT_FILE"

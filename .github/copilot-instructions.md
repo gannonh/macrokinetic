@@ -9,16 +9,6 @@
 
 ## Essential Context
 
-### Codebase Conventions & Structure
-
-1. Technical stack: @.planning/codebase/STACK.md
-2. Architecture: @.planning/codebase/ARCHITECTURE.md
-3. Project structure: @.planning/codebase/STRUCTURE.md
-4. Coding conventions: @.planning/codebase/CONVENTIONS.md
-5. Testing: @.planning/codebase/TESTING.md
-6. Integrations: @.planning/codebase/INTEGRATIONS.md
-7. Known concerns: @.planning/codebase/CONCERNS.md
-
 ## Important Reminders
 
 - Do not run build commands when iterating with the user. The user needs to run build to see the changes. When you run build after making a change he has to wait for your build to complete before running the app.
@@ -2084,5 +2074,1369 @@ Last session: 2026-01-13T15:25:42Z
 Stopped at: Completed 38-01-PLAN.md (barcode fix, API removal, tap target)
 Resume file: None
 
+
+
+---
+paths: **/*.swift
+---
+
+# iOS Development 
+
+## SwiftUI Patterns
+
+- Use `@Observable` (iOS 17+), never `ObservableObject`
+- Apply `@MainActor` to ViewModels and Services that touch UI
+- Extract reusable components to separate files
+- Keep functions under 30 lines
+- Use `NavigationStack` for navigation architecture
+
+## SwiftData Patterns
+
+- Non-optional properties with sensible defaults
+- Include `createdAt` and `updatedAt` timestamps
+- Parent declares `@Relationship(inverse:)`, child uses plain property
+- Test environment configuration:
+  ```swift
+  let configuration = ModelConfiguration(
+      isStoredInMemoryOnly: true,
+      cloudKitDatabase: .none
+  )
+  ```
+
+## Swift Naming Conventions
+
+| Type                | Convention        | Example               |
+| ------------------- | ----------------- | --------------------- |
+| Types/Classes       | PascalCase        | `UserViewModel`       |
+| Variables/Functions | camelCase         | `currentUser`         |
+| Constants           | camelCase         | `maxStreakCount`      |
+| Protocols           | -able/-ing suffix | `Trackable`           |
+| Files               | PascalCase        | `UserViewModel.swift` |
+
+## XcodeGen Workflow
+
+After adding any new Swift file, you MUST run:
+```bash
+xcodegen generate
+```
+
+New files won't appear in builds or tests until the project is regenerated.
+
+## Build & Verification Commands
+
+```bash
+# Build project
+./scripts/build.sh
+
+# Run SwiftLint
+swiftlint
+
+# Full CI check
+./scripts/check-all.sh --skip-ui
+```
+
+## iOS Test Commands
+
+```bash
+# Run unit tests
+./scripts/test.sh unit 1 <TestClassName>
+
+# Run all unit tests
+./scripts/test.sh unit 1
+
+# Run with coverage
+./scripts/test.sh unit 1 --coverage
+
+# Run E2E tests
+./scripts/test.sh ui 1 <TestClassName>
+```
+
+## iOS-Specific Critical Rules
+
+1. **NSFaceIDUsageDescription**: Required in Info.plist before using LocalAuthentication
+2. **CloudKit Test Environment**: Always disable CloudKit sync in tests
+3. **iOS 26.1 Simulators**: Required for Xcode 26 to avoid SwiftData crashes
+4. **Large Navigation Titles**: Use custom scrolling titles to avoid iOS 26.1 visual artifacts
+5. **Lint violation exceptions**: To overide siwftlint violations, update or create a .swiftlint.yml in the file's directory. This is easier to manage than inline overrides.
+
+
+
+---
+paths: **/*UITests.swift
+---
+
+# iOS UI Testing (XCUITest)
+
+**Two core principles eliminate 90% of UI test failures:**
+
+1. **Use accessibility identifiers** - Target elements by explicit identifiers, not labels or element hierarchy
+2. **Wait for conditions, not timeouts** - Use `waitForExistence(timeout:)` and predicates instead of `sleep()`
+
+---
+
+## ⛔️ MANDATORY: When Tests Fail, Debug First
+
+**STOP. Before changing ANY code when a test fails, you MUST run these debug steps:**
+
+### Step 1: Capture Screenshot
+```swift
+// Add this line RIGHT BEFORE the failing assertion
+TestUtilities.debugScreenshot(app, name: "before-failure")
+```
+
+### Step 2: Print Element Hierarchy
+```swift
+// Add this line RIGHT BEFORE the failing assertion
+print(app.debugDescription)
+```
+
+### Step 3: Run Test and Examine Output
+```bash
+./scripts/test.sh ui 1 YourTestClass/testMethod
+open logs/latest/screenshots/
+```
+
+### Step 4: Analyze BEFORE Changing Code
+- **Screenshot shows**: What the UI actually looks like
+- **debugDescription shows**: What elements exist and their identifiers
+- **Together they answer**: Why can't the test find/interact with the element?
+
+### ❌ DO NOT:
+- Guess at element types or identifiers
+- Change accessibility identifiers without seeing the hierarchy
+- Add arbitrary timeouts hoping it fixes timing
+- Modify SwiftUI views without confirming the element structure
+
+### ✅ ALWAYS:
+- Capture visual evidence of the failure state
+- Print the element tree to see actual identifiers
+- Compare expected vs actual element types
+- Only then make targeted fixes based on evidence
+
+**This debug-first approach is not optional. Skipping it leads to wasted effort and incorrect fixes.**
+
+---
+
+## Adding Accessibility Identifiers (SwiftUI)
+
+Every testable element needs an accessibility identifier in the source code.
+
+```swift
+// ✅ Add identifiers to SwiftUI views
+Button("Save") { save() }
+    .accessibilityIdentifier("saveButton")
+
+TextField("Enter name", text: $name)
+    .accessibilityIdentifier("nameTextField")
+
+Toggle("Enable notifications", isOn: $enabled)
+    .accessibilityIdentifier("notificationsToggle")
+
+Text("Welcome, \(user.name)")
+    .accessibilityIdentifier("welcomeMessage")
+
+// ✅ For List rows, add identifier to the row content
+List(items) { item in
+    ItemRow(item: item)
+        .accessibilityIdentifier("itemRow-\(item.id)")
+}
+
+// ✅ For navigation titles or screen identification
+VStack { /* content */ }
+    .accessibilityIdentifier("settingsScreen")
+```
+
+### Naming Convention
+
+Use consistent, descriptive identifiers:
+
+| Element Type | Pattern                             | Example                             |
+| ------------ | ----------------------------------- | ----------------------------------- |
+| Buttons      | `{action}Button`                    | `saveButton`, `deleteButton`        |
+| Text fields  | `{field}TextField`                  | `nameTextField`, `emailTextField`   |
+| Toggles      | `{feature}Toggle`                   | `notificationsToggle`               |
+| Static text  | `{purpose}Text` or `{purpose}Label` | `welcomeText`, `errorLabel`         |
+| Screens      | `{screen}Screen`                    | `settingsScreen`, `dashboardScreen` |
+| Rows         | `{type}Row-{id}`                    | `itemRow-123`                       |
+
+## Debugging Element Hierarchy (CRITICAL)
+
+**Before writing any test query, debug the actual element hierarchy:**
+
+### Print Element Tree
+```swift
+// In test - print entire app hierarchy
+print(app.debugDescription)
+
+// Print specific container
+print(app.otherElements["myContainer"].debugDescription)
+```
+
+### Use Accessibility Inspector
+1. Open Xcode → Open Developer Tool → Accessibility Inspector
+2. Target the simulator
+3. Hover over elements to see their type, identifier, and label
+
+### Debug Query Results
+```swift
+// See how many elements match a query
+let matches = app.descendants(matching: .any).matching(identifier: "myId")
+print("Found \(matches.count) matches")
+print(matches.debugDescription)
+```
+
+### Interpret Sparse Tree Errors
+When XCUITest reports "Multiple matching elements found", it shows a sparse tree:
+```
+StaticText, identifier: 'calendar-day-20', label: 'Dec 20'
+Other, identifier: 'calendar-day-20', label: 'Dec 20'
+```
+This means SwiftUI created duplicate accessibility elements (see below for fix).
+
+## Debug Screenshots (CRITICAL for Debugging)
+
+**Capture screenshots during test execution to see exactly what the UI looks like:**
+
+### Quick Debug Screenshot
+```swift
+// Capture at any point during test
+TestUtilities.debugScreenshot(app, name: "after-login")
+TestUtilities.debugScreenshot(app, name: "error-dialog", context: "unexpected state")
+
+// Sequential screenshots with step numbers
+TestUtilities.debugScreenshot(app, step: 1, description: "initial-state")
+TestUtilities.debugScreenshot(app, step: 2, description: "after-tap")
+TestUtilities.debugScreenshot(app, step: 3, description: "form-submitted")
+```
+
+### Capture on Test Failure
+```swift
+override func tearDown() {
+    if testRun?.hasSucceeded == false {
+        TestUtilities.captureFailureScreenshot(app, testName: name)
+    }
+    super.tearDown()
+}
+```
+
+### Viewing Screenshots
+Screenshots are saved to `logs/latest/screenshots/` as PNG files:
+```bash
+# Open screenshots folder in Finder
+open logs/latest/screenshots/
+
+# View a specific screenshot
+open logs/latest/screenshots/after-login.png
+
+# List all screenshots
+ls -la logs/latest/screenshots/
+```
+
+### When to Use Debug Screenshots
+| Scenario             | Usage                                                 |
+| -------------------- | ----------------------------------------------------- |
+| Element not found    | Capture before the failing assertion to see actual UI |
+| Wrong element tapped | Capture before and after tap to compare               |
+| Timing issues        | Capture at multiple steps to see animation state      |
+| Test flakiness       | Capture on failure to see inconsistent state          |
+| Debugging hierarchy  | Screenshot + `print(app.debugDescription)` together   |
+
+### Screenshot vs debugDescription
+- **Screenshots**: Show visual layout, actual text, colors, positioning
+- **debugDescription**: Shows accessibility hierarchy, identifiers, element types
+- **Use both together**: Screenshot for "what does it look like?" + debugDescription for "how do I target it?"
+
+## Querying Elements (XCUITest)
+
+Query elements by their accessibility identifier:
+
+```swift
+// ✅ Query by accessibility identifier
+let saveButton = app.buttons["saveButton"]
+let nameField = app.textFields["nameTextField"]
+let toggle = app.switches["notificationsToggle"]
+let welcomeText = app.staticTexts["welcomeMessage"]
+
+// ✅ Always wait for existence before interacting
+XCTAssertTrue(saveButton.waitForExistence(timeout: 5), "Save button should appear")
+saveButton.tap()
+```
+
+### SwiftUI Element Type Mapping
+
+SwiftUI components map to XCUITest element types:
+
+| SwiftUI             | XCUITest Query                             |
+| ------------------- | ------------------------------------------ |
+| Button              | `app.buttons["id"]`                        |
+| Text                | `app.staticTexts["id"]`                    |
+| TextField           | `app.textFields["id"]`                     |
+| SecureField         | `app.secureTextFields["id"]`               |
+| Toggle              | `app.switches["id"]`                       |
+| Picker              | `app.pickers["id"]` or `app.buttons["id"]` |
+| DatePicker          | `app.datePickers["id"]`                    |
+| List                | `app.collectionViews["id"]`                |
+| NavigationStack     | `app.collectionViews.firstMatch`           |
+| View + onTapGesture | `app.otherElements["id"]` ⚠️ NOT buttons    |
+
+### Views with onTapGesture are NOT Buttons
+
+**Critical:** SwiftUI views using `.onTapGesture` are exposed as `otherElements`, NOT `buttons`:
+
+```swift
+// SwiftUI source
+VStack { Text("Day 20") }
+    .onTapGesture { selectDay() }
+    .accessibilityIdentifier("calendar-day-20")
+
+// ❌ WRONG - won't find it
+let day = app.buttons["calendar-day-20"]  // Returns nothing!
+
+// ✅ CORRECT
+let day = app.otherElements["calendar-day-20"]
+```
+
+### Handling Multiple Matches with .firstMatch
+
+When a query returns multiple elements, use `.firstMatch`:
+
+```swift
+// ❌ Crashes with "Multiple matching elements found"
+let element = app.descendants(matching: .any)["myId"]
+element.tap()
+
+// ✅ Gets first match
+let element = app.descendants(matching: .any)["myId"].firstMatch
+element.tap()
+```
+
+## Condition-Based Waiting
+
+**Never use `sleep()` in UI tests.** It's unreliable and slow.
+
+### Wait for Element to Appear
+
+```swift
+// ✅ Wait for element with timeout
+let element = app.buttons["submitButton"]
+XCTAssertTrue(element.waitForExistence(timeout: 5), "Submit button should appear")
+element.tap()
+```
+
+### Wait for Element to Disappear
+
+```swift
+func waitForDisappearance(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+    let predicate = NSPredicate(format: "exists == false")
+    let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+    return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+}
+
+// Usage: Wait for loading spinner to disappear
+let spinner = app.activityIndicators["loadingSpinner"]
+XCTAssertTrue(waitForDisappearance(spinner), "Loading should complete")
+```
+
+### Wait for Specific State
+
+```swift
+func waitForEnabled(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+    let predicate = NSPredicate(format: "isEnabled == true")
+    let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+    return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+}
+
+// Usage: Wait for button to become enabled after validation
+let submitButton = app.buttons["submitButton"]
+XCTAssertTrue(waitForEnabled(submitButton), "Submit should enable after input")
+submitButton.tap()
+```
+
+### Timeout Guidelines
+
+| Operation        | Timeout |
+| ---------------- | ------- |
+| UI animations    | 2-3s    |
+| Local operations | 5s      |
+| Network requests | 10s     |
+| Complex flows    | 30s max |
+
+## Common Patterns
+
+### System Dialogs (Alerts, Action Sheets)
+
+**Exception to identifier rule:** System dialogs cannot have accessibility identifiers. Query by label text:
+
+```swift
+// ✅ Alerts - query by title text
+let alert = app.alerts["Delete Account"]  // Uses alert title
+XCTAssertTrue(alert.waitForExistence(timeout: 3))
+
+// ✅ Alert buttons - query by button label
+let cancelButton = alert.buttons["Cancel"]
+let deleteButton = alert.buttons["Delete"]
+deleteButton.tap()
+
+// ✅ Action sheets - same pattern
+let sheet = app.sheets["Choose Option"]
+sheet.buttons["Share"].tap()
+```
+
+**Why:** SwiftUI's `.alert()` and `.confirmationDialog()` don't accept `.accessibilityIdentifier()`. These are system-provided UI, so query by their visible text.
+
+### Toggle Interaction (SwiftUI Forms)
+
+SwiftUI Toggles in Forms require coordinate-based tapping:
+
+```swift
+// ✅ Tap the switch control (right side of toggle)
+let toggle = app.switches["notificationsToggle"]
+XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+```
+
+### Text Field Entry
+
+```swift
+let nameField = app.textFields["nameTextField"]
+XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+nameField.tap()
+nameField.typeText("John Doe")
+```
+
+### Verifying Element State
+
+```swift
+// ✅ Use isHittable for visibility checks (safe)
+if element.exists && element.isHittable {
+    element.tap()
+}
+
+// ❌ Avoid frame checks (can throw errors)
+// if element.frame.width > 0 { }
+```
+
+## DisclosureGroup Testing
+
+### Check Default Expansion State
+
+DisclosureGroups have a default expansion state in the ViewModel. **Don't assume they start collapsed.**
+
+```swift
+// In ViewModel - check these defaults!
+var isDailyEngagementExpanded: Bool = true   // Starts EXPANDED
+var isStreakExpanded: Bool = false           // Starts COLLAPSED
+```
+
+If section starts expanded, test collapse then expand. If starts collapsed, test expand then collapse.
+
+### Tapping DisclosureGroups
+
+**Don't tap the button directly** - tap the cell containing it:
+
+```swift
+// ❌ This often doesn't trigger expansion
+let sectionButton = app.buttons["sectionIdentifier"]
+sectionButton.tap()
+
+// ✅ Tap the cell containing the disclosure group
+let sectionCell = app.cells.containing(.button, identifier: "sectionIdentifier").firstMatch
+XCTAssertTrue(sectionCell.waitForExistence(timeout: 5))
+sectionCell.tap()
+```
+
+## SwiftUI Toggle Identifiers Often Fail
+
+SwiftUI Toggles in Forms often **don't expose their accessibility identifier**. Query by label text instead:
+
+```swift
+// ❌ Identifier may not work
+let toggle = app.switches["loveTapReminderToggle"]  // Often returns nothing
+
+// ✅ Query by the visible label text
+let toggle = app.switches["Love Tap Reminders"]
+```
+
+**Always verify in Accessibility Inspector** - actual labels may differ from what you expect:
+- Code says "Streak Notifications" but label is "Enable Streak Notifications"
+
+## Index Queries for Multiple Similar Elements
+
+When multiple elements share a parent identifier (e.g., multiple time pickers in a section):
+
+```swift
+// ❌ This might match the wrong picker
+let timePicker = app.datePickers["sectionId"]
+
+// ✅ Use index query to get specific element
+let loveTapTimePicker = app.datePickers.matching(identifier: "dailyEngagementSection").element(boundBy: 0)
+let actionTimePicker = app.datePickers.matching(identifier: "dailyEngagementSection").element(boundBy: 1)
+```
+
+## Nested Element Queries
+
+For elements inside sections, scope the query using the section identifier:
+
+```swift
+// ✅ Find toggle inside a specific section
+let intimacyToggle = app.switches["intimacyNotificationSection"].switches.firstMatch
+```
+
+## SwiftUI Duplicate Accessibility Elements (CRITICAL)
+
+SwiftUI often creates **duplicate accessibility elements** when a view contains Text and has an identifier:
+
+```
+// Error: "Multiple matching elements found"
+StaticText, identifier: 'calendar-day-20'
+Other, identifier: 'calendar-day-20'
+```
+
+### Source Code Fix
+
+Use `.accessibilityElement(children: .combine)` to create a single element:
+
+```swift
+// ❌ Creates duplicate elements
+VStack {
+    Text("20")
+    Image(systemName: "circle.fill")
+}
+.accessibilityIdentifier("calendar-day-20")
+
+// ✅ Creates single combined element
+VStack {
+    Text("20")
+    Image(systemName: "circle.fill")
+}
+.accessibilityElement(children: .combine)  // Add this!
+.accessibilityIdentifier("calendar-day-20")
+.accessibilityLabel("December 20")
+```
+
+### Options for .accessibilityElement
+
+| Option     | Behavior                                                      |
+| ---------- | ------------------------------------------------------------- |
+| `.combine` | Merges all children into one element (most common fix)        |
+| `.ignore`  | Hides children, only parent is accessible                     |
+| `.contain` | Parent and children are separate (default, causes duplicates) |
+
+## Common Mistakes
+
+| Mistake                              | Problem                         | Solution                                        |
+| ------------------------------------ | ------------------------------- | ----------------------------------------------- |
+| Using `sleep()`                      | Slow, unreliable                | `waitForExistence(timeout:)`                    |
+| Querying by label text               | Breaks with localization        | Use accessibility identifiers                   |
+| No identifier in source              | Element not findable            | Add `.accessibilityIdentifier("id")`            |
+| Not waiting before tap               | Element not ready               | Always `waitForExistence` first                 |
+| Using `.frame` checks                | Throws invalid frame errors     | Use `.isHittable` instead                       |
+| Assuming element types               | SwiftUI maps differently        | Check element type mapping table                |
+| Adding identifier to alert           | Doesn't work on system dialogs  | Query alerts/sheets by title text               |
+| Tapping DisclosureGroup button       | Doesn't expand section          | Tap the containing cell instead                 |
+| Assuming toggle identifiers work     | SwiftUI Forms don't expose them | Query by label text                             |
+| Assuming sections start collapsed    | May start expanded              | Check ViewModel defaults                        |
+| View with Text + identifier          | Creates duplicate elements      | Add `.accessibilityElement(children: .combine)` |
+| Using `app.buttons` for onTapGesture | Wrong element type              | Use `app.otherElements` instead                 |
+
+## Test Structure
+
+```swift
+func testFeatureBehavior() throws {
+    // GIVEN: Set up initial state
+    let app = XCUIApplication()
+    app.launchArguments = ["--ui-testing"]
+    app.launch()
+
+    // Navigate to screen
+    let tab = app.tabBars.buttons["Settings"]
+    XCTAssertTrue(tab.waitForExistence(timeout: 5))
+    tab.tap()
+
+    // WHEN: Perform action
+    let toggle = app.switches["notificationsToggle"]
+    XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+    toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+
+    // THEN: Verify outcome
+    let confirmation = app.staticTexts["settingsSavedText"]
+    XCTAssertTrue(confirmation.waitForExistence(timeout: 5), "Confirmation should appear")
+}
+```
+
+## Quick Reference
+
+**In SwiftUI (add identifiers):**
+```swift
+.accessibilityIdentifier("myIdentifier")
+```
+
+**In XCUITest (query elements):**
+```swift
+let element = app.buttons["myIdentifier"]
+XCTAssertTrue(element.waitForExistence(timeout: 5))
+element.tap()
+```
+
+**Two rules that prevent flaky tests:**
+1. Every testable element has an accessibility identifier
+2. Every interaction waits for condition, never sleeps
+
+
+
+## Simulator Conflicts
+
+When running tests, ensure no conflicting simulators are active. Use:
+
+```bash
+xcrun simctl list
+```
+
+Use 1 of 3 the 3 available iPhone 17 Pro simulators to avoid conflicts. E,g:
+```bash
+./scripts/scripts.sh ui 3
+```
+
+
+
+---
+paths: *Tests/**/*.swift, !*UITests/**/*.swift
+---
+
+# iOS Unit & Integration Testing (Swift Testing)
+
+## Framework Overview
+
+- **Framework**: Swift Testing (modern, preferred) + XCTest (legacy)
+- **Version**: Xcode via xcodebuild
+- **Config**: project.yml (XcodeGen) or .xcodeproj
+- **Output Formatter**: xcbeautify
+- **Unit Test Directory**: {ProjectName}Tests/
+- **Naming Pattern**: *Tests.swift
+
+## Swift Testing Framework (Modern Pattern)
+
+### Basic Test Structure
+
+```swift
+import Testing
+@testable import AppName
+
+@Test("Calculate next scheduled event time")
+@MainActor
+func testGetNextScheduledTime() async {
+    let context = createTestContext()
+    let item = createTestItem(context: context)
+
+    let viewModel = ScheduleViewModel()
+    viewModel.selectedItem = item
+
+    let nextTime = viewModel.getNextScheduledTime()
+
+    // Use #expect for modern assertions
+    #expect(nextTime != nil, "Expected getNextScheduledTime() to return a non-nil value")
+
+    // Safe unwrapping to avoid crashes
+    guard let nextTime = nextTime else {
+        #expect(Bool(false), "nextTime was nil when it shouldn't be")
+        return
+    }
+
+    // Verify timing with tolerance
+    let timeDifference = abs(nextTime.timeIntervalSinceNow)
+    #expect(timeDifference < 24 * 60 * 60, "Time difference should be within 24 hours")
+}
+```
+
+### Modern Swift Testing vs XCTest
+
+**✅ Swift Testing - Modern, cleaner syntax:**
+```swift
+@Test("User creation with valid data")
+func testUserCreation() {
+    let user = User(email: "test@example.com", name: "Test User")
+    #expect(user.email == "test@example.com")
+    #expect(user.name == "Test User")
+}
+```
+
+**❌ XCTest - Legacy syntax (avoid in new tests):**
+```swift
+func testUserCreation() throws {
+    let user = User(email: "test@example.com", name: "Test User")
+    XCTAssertEqual(user.email, "test@example.com")
+    XCTAssertEqual(user.name, "Test User")
+}
+```
+
+## Test Data Management
+
+### Unit Test Seeding (Direct SwiftData Access)
+
+Unit tests have direct access to SwiftData for fast, reliable test data:
+
+```swift
+// Unit tests have direct access to SwiftData
+@Test("Test with seeded data")
+@MainActor
+func myTest() throws {
+    let container = try TestDataSeeding.createTestContainer()
+    let context = container.mainContext
+
+    // Seed data with preset config
+    let result = try TestDataSeeding.seedData(
+        into: context,
+        config: .medium  // 30 days, ~4-5 doses, 95% adherence
+    )
+
+    // Use seeded data
+    #expect(result.doses.count > 0)
+    #expect(result.adherenceRate >= 0.90)
+}
+```
+
+### Available Preset Configurations
+
+```swift
+// Seven Days: 7 days, 100% adherence, no variability (quick tests)
+let result = try TestDataSeeding.seedData(into: context, config: .sevenDays)
+
+// Thirty Days: 30 days, 95% adherence, timing variability (standard tests)
+let result = try TestDataSeeding.seedData(into: context, config: .thirtyDays)
+
+// Ninety Days: 90 days, 93% adherence, realistic patterns (performance tests)
+let result = try TestDataSeeding.seedData(into: context, config: .ninetyDays)
+
+// One Year: 365 days, 92% adherence, realistic patterns (performance tests)
+let result = try TestDataSeeding.seedData(into: context, config: .oneYear)
+
+// Two Years: 730 days, 90% adherence (stress tests)
+let result = try TestDataSeeding.seedData(into: context, config: .twoYears)
+```
+
+### Custom Configuration
+
+```swift
+let customConfig = TestDataSeedingConfig(
+    daysOfHistory: 90,
+    medication: .tirzepatide,
+    brandName: "Mounjaro",
+    doseAmount: 5.0,
+    injectionSites: ["Abdomen", "Thigh"],
+    adherenceRate: 1.0,
+    addTimingVariability: false,
+    includeSkippedDoses: false
+)
+
+let result = try TestDataSeeding.seedData(into: context, config: customConfig)
+```
+
+### Quick Helper Methods
+
+```swift
+// Create individual entities for testing
+let user = TestDataSeeding.createTestUser()
+let profile = TestDataSeeding.createTestMedicationProfile()
+let doses = TestDataSeeding.createTestDoses(
+    count: 10,
+    amount: 0.5,
+    daysApart: 7,
+    profile: profile
+)
+```
+
+### Test Data Result Structure
+
+```swift
+struct TestDataSeedingResult {
+    let user: User
+    let medicationProfile: MedicationProfile
+    let doses: [Dose]                // Successfully taken doses
+    let skippedDoses: [Dose]         // Missed/skipped doses
+    let expectedDoseCount: Int       // Total scheduled doses
+    let actualDoseCount: Int         // Actually taken doses
+    let adherenceRate: Double        // Percentage adherence (0.0-1.0)
+}
+```
+
+### Performance Notes
+
+**Unit Test Seeding (Direct SwiftData):**
+- **Small datasets** (7 days): ~10ms generation
+- **Medium datasets** (30 days): ~30ms generation
+- **Large datasets** (365 days): ~70ms generation
+- **Extra large datasets** (730 days): ~170ms generation
+
+## SwiftData Testing Patterns
+
+### Creating Test Context
+
+```swift
+func createTestContext() -> ModelContext {
+    let schema = Schema([User.self, MedicationProfile.self, Dose.self])
+    let config = ModelConfiguration(
+        schema: schema,
+        isStoredInMemoryOnly: true,
+        cloudKitDatabase: .none  // Critical: Disable CloudKit for tests
+    )
+    let container = try! ModelContainer(for: schema, configurations: [config])
+    return ModelContext(container)
+}
+```
+
+### ⚠️ CRITICAL: SwiftData Relationship Anti-Pattern
+
+**NEVER assign arrays to SwiftData relationships in tests:**
+
+```swift
+// ❌ THIS WILL CRASH THE APP - NEVER DO THIS
+medicationProfile.doses = existingDoses
+user.medicationProfiles = [profile1, profile2]
+
+// ✅ CORRECT - Use individual property setters instead
+for dose in existingDoses {
+    dose.medication = medicationProfile  // Sets individual relationship
+}
+// OR avoid relationships entirely in test-only code
+_ = existingDoses  // Keep for test setup but don't assign to relationship
+```
+
+**Why this crashes:**
+- SwiftData uses computed properties with complex setter logic
+- Direct array assignment bypasses SwiftData's relationship management
+- Causes crashes in `@__swiftmacro_` generated code
+- Test environment makes this worse due to lack of proper ModelContext
+
+**Safe testing patterns:**
+1. **Pass arrays directly to engine methods** instead of using relationships
+2. **Use ModelContainer with proper context** when relationships are required
+3. **Comment why relationships are avoided** in test-only scenarios
+4. **Test relationship-dependent methods with empty profiles** to verify graceful handling
+
+## Async Testing Best Practices
+
+### @MainActor for UI Components
+
+```swift
+// Always mark async tests with @MainActor when testing UI components
+@Test("Verify medication profile selection updates state")
+@MainActor
+func testMedicationProfileSelection() async {
+    let viewModel = OnboardingViewModel()
+    let medication = Medication.semaglutide
+
+    // Test async state changes
+    await viewModel.selectMedication(medication)
+
+    #expect(viewModel.selectedMedication == medication)
+    #expect(viewModel.canProceedToNextStep == true)
+}
+```
+
+## Safe Unwrapping Patterns
+
+### Avoid Force Unwrapping
+
+```swift
+// ❌ Avoid force unwrapping that can crash tests
+let result = viewModel.calculateDose()!
+
+// ✅ Use safe unwrapping with explicit test failures
+guard let result = viewModel.calculateDose() else {
+    #expect(Bool(false), "calculateDose() returned nil unexpectedly")
+    return
+}
+
+// ✅ Alternative pattern with nil validation
+let result = viewModel.calculateDose()
+#expect(result != nil, "Expected calculateDose() to return a value")
+```
+
+## Tolerance-Based Assertions
+
+### Time/Date Comparisons
+
+```swift
+// ❌ Exact time comparisons can be flaky
+#expect(nextDose == expectedDate)
+
+// ✅ Use tolerance for time-based assertions
+let timeDifference = abs(nextDose.timeIntervalSince(expectedDate))
+#expect(timeDifference < 60, "Time should be within 1 minute tolerance")
+
+// ✅ For dose scheduling (more generous tolerance)
+let timeDifference = abs(nextDoseTime.timeIntervalSinceNow)
+#expect(timeDifference < 24 * 60 * 60, "Next dose should be within 24 hours")
+```
+
+## Test Organization
+
+### File-Based Organization
+
+Swift Testing uses file-based test structure for efficiency:
+
+```swift
+// File: AuthenticationManagerTests.swift
+import Testing
+@testable import AppName
+
+// All tests related to AuthenticationManager in one file
+@Test("Sign in creates user successfully")
+func testSignInCreatesUser() {
+    // Test implementation
+}
+
+@Test("Sign out clears user data")
+func testSignOutClearsData() {
+    // Test implementation
+}
+```
+
+### Test Categories
+
+**Unit & Integration Tests (Swift Testing Framework):**
+- **Authentication**: AuthenticationManager*, BiometricAuth*, Authentication*
+- **Data Management**: DataController*, MedicationManager*, Persistence*
+- **Models**: User*, Medication*, DoseTitration*, ReconstitutionCalculator*
+- **UI Components**: DesignSystem*, ButtonStyle*, UserProfileView*
+- **Business Logic**: OnboardingViewModel*, SubscriptionManager*, PricingCalculator*
+- **Medical Calculations**: Pharmacokinetics*, ProfileValidation*
+
+## Test Factories for Consistency
+
+### Extension-Based Factories
+
+```swift
+extension User {
+    static func testUser(
+        email: String = "test@example.com",
+        name: String? = "Test User",
+        weight: Double = 70.0
+    ) -> User {
+        User(email: email, name: name, weight: weight)
+    }
+}
+
+extension MedicationProfile {
+    static func testProfile(
+        genericName: String = "semaglutide",
+        brandName: String = "Ozempic",
+        currentDose: Double = 0.5
+    ) -> MedicationProfile {
+        MedicationProfile(
+            genericName: genericName,
+            brandName: brandName,
+            currentDose: currentDose
+        )
+    }
+}
+```
+
+## Coverage Policy (Tiered System)
+
+### Recommended Coverage Tiers
+
+Projects should define coverage thresholds in a `coverage-config.json` file:
+
+- **Tier 1 - Pure Business Logic (90%)**: Models, calculators, pure functions
+- **Tier 2 - Infrastructure (60%)**: Services, data management
+- **Tier 3 - Framework Integration (42%)**: Apple framework wrappers (Auth, Biometrics, Notifications)
+- **Tier 4 - View Models (85%)**: ObservableObject classes with testable logic
+- **Tier 5 - Utilities (75%)**: Helper functions, extensions
+- **SwiftUI Views (15% or exempt)**: View bodies cannot be unit tested
+- **Overall Coverage**: Informational only (SwiftUI architecture limits this)
+
+### Coverage Workflow
+
+**Step 1: Generate coverage data**
+```bash
+# Run tests with coverage enabled (saves to .coverage/coverage.xcresult)
+./scripts/check-coverage.sh
+
+# Or run tests first, then check coverage with existing data
+./scripts/test.sh unit 1 --coverage
+./scripts/check-coverage.sh --use-existing
+```
+
+**Step 2: Analyze coverage**
+```bash
+# Human-readable report (filter by file pattern)
+./scripts/coverage-detail.sh                    # Full report
+./scripts/coverage-detail.sh DateNightService   # Filter by pattern
+
+# JSON-based queries for programmatic analysis
+./scripts/coverage-json.sh --summary            # File overview sorted by %
+./scripts/coverage-json.sh --functions          # Show uncovered functions only
+./scripts/coverage-json.sh DateNightService     # JSON for specific file
+```
+
+
+### Understanding Coverage Output
+
+**Coverage JSON structure:**
+```json
+{
+  "name": "MyService.swift",
+  "lineCoverage": 0.75,
+  "coveredLines": 45,
+  "executableLines": 60,
+  "functions": [
+    {
+      "name": "myMethod()",
+      "lineCoverage": 1.0,
+      "coveredLines": 10,
+      "executableLines": 10,
+      "executionCount": 5
+    }
+  ]
+}
+```
+
+**Key metrics:**
+- `lineCoverage`: Percentage (0.0-1.0)
+- `executionCount`: How many times a function was called (0 = never tested)
+- `coveredLines / executableLines`: Line-level detail
+
+**Common Coverage Issues:**
+
+| Issue                      | Symptom                               | Solution                                                  |
+| -------------------------- | ------------------------------------- | --------------------------------------------------------- |
+| Tests pass but 0% coverage | `executionCount: 0` for all functions | Verify tests actually call production code, not mocks     |
+| Private method not covered | Can't test directly                   | Test via public methods that invoke them                  |
+| Async method low coverage  | Race conditions                       | Add `try await Task.sleep(for: .milliseconds(100))` waits |
+| Extension file 0% coverage | Swift coverage attribution            | Check if tests call the correct module/class              |
+| Result bundle not found    | Missing `.coverage/`                  | Run tests with `--coverage` or `-enableCodeCoverage YES`  |
+
+### Coverage Configuration File
+
+Create `coverage-config.json` in project root:
+
+```json
+{
+  "policy": {
+    "tiers": {
+      "pure_business_logic": {
+        "threshold": 90,
+        "files": ["Models/User.swift", "Services/Calculator.swift"]
+      },
+      "infrastructure": {
+        "threshold": 60,
+        "files": ["Services/DataService.swift", "Services/AuthService.swift"]
+      }
+    }
+  },
+  "exclusions": {
+    "files": ["Utils/TestHelpers.swift"]
+  }
+}
+```
+
+## Running Unit Tests
+
+### Using Project Scripts (Recommended)
+
+```bash
+# Quick unit test run
+./scripts/test.sh unit 1
+
+# Run specific unit test suite
+./scripts/test.sh unit 1 MyServiceTests
+
+# Run with coverage
+./scripts/test.sh unit 1 --coverage
+
+# Silent mode (log only, no console output)
+./scripts/test.sh unit 1 --coverage --log-only
+
+# View latest test results
+cat logs/latest/raw_output.txt
+```
+
+### Using xcodebuild Directly
+
+```bash
+# Run all unit tests
+xcodebuild test \
+  -scheme AppName \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
+  -only-testing:AppNameTests \
+  | xcbeautify
+
+# Run with coverage enabled
+xcodebuild test \
+  -scheme AppName \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
+  -enableCodeCoverage YES \
+  -resultBundlePath .coverage/coverage.xcresult \
+  -only-testing:AppNameTests \
+  | xcbeautify
+
+# Run specific test suite
+xcodebuild test \
+  -scheme AppName \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
+  -only-testing:AppNameTests/MyServiceTests \
+  | xcbeautify
+```
+
+### Swift Testing Framework Limitations
+
+**Unit Test Targeting Support:**
+- ✅ **Target Level**: `-only-testing:AppNameTests` (all unit tests)
+- ✅ **Suite Level**: `-only-testing:AppNameTests/MyServiceTests` (specific test suite)
+- ❌ **Method Level**: Swift Testing doesn't support individual method isolation
+
+**Note**: Unlike XCTest, Swift Testing framework doesn't support running individual unit test methods. When you specify a method name for unit tests, the entire test suite will run. For granular testing, organize tests into focused test suites/classes.
+
+## Test Execution Notes
+
+- Coverage result bundles: `.coverage/coverage.xcresult` (project convention)
+- Log files (if using scripts): `logs/latest/raw_output.txt`, `logs/latest/coverage.json`
+- Swift Testing uses `@Test` attribute, XCTest uses `func test...()` prefix
+- Always use `-enableCodeCoverage YES` when you need coverage data
+
+## Integration Testing Patterns
+
+### Testing Component Interactions
+
+```swift
+@Test("AnalyticsService coordinates User, Dose, and MedicationProfile correctly")
+@MainActor
+func testAnalyticsServiceIntegration() async throws {
+    let context = createTestContext()
+
+    // Seed realistic test data
+    let result = try TestDataSeeding.seedData(
+        into: context,
+        config: .thirtyDays
+    )
+
+    let analyticsService = AnalyticsService(context: context)
+
+    // Test cross-model analytics coordination
+    let summary = await analyticsService.generateUserSummary(for: result.user)
+
+    #expect(summary.overallAdherence >= 0.90)
+    #expect(summary.medicationEffectiveness.count > 0)
+    #expect(summary.concentrationTrends.count > 0)
+}
+```
+
+### Service Integration Testing
+
+```swift
+@Test("ChartDataProcessor integrates with PharmacokineticsEngine correctly")
+@MainActor
+func testChartProcessorIntegration() async throws {
+    let context = createTestContext()
+    let result = try TestDataSeeding.seedData(into: context, config: .ninetyDays)
+
+    let pkEngine = PharmacokineticsEngine()
+    let chartProcessor = ChartDataProcessor()
+
+    // Test integration between services
+    let chartData = chartProcessor.generateConcentrationTimeline(
+        doses: result.doses,
+        medication: result.medicationProfile.medication,
+        engine: pkEngine
+    )
+
+    #expect(chartData.points.count > 0)
+    #expect(chartData.renderTime < 100) // < 100ms for 90 days
+}
+```
+
+## Common Patterns
+
+### Testing Error Handling
+
+```swift
+@Test("Invalid dose amount throws appropriate error")
+func testInvalidDoseThrowsError() async {
+    let validator = DoseValidator()
+
+    await #expect(throws: MedicationError.invalidDose) {
+        try validator.validate(dose: -1.0, medication: .semaglutide)
+    }
+}
+```
+
+### Testing State Changes
+
+```swift
+@Test("ViewModel updates state correctly on user action")
+@MainActor
+func testViewModelStateChange() async {
+    let viewModel = OnboardingViewModel()
+
+    // Initial state
+    #expect(viewModel.currentStep == .welcome)
+    #expect(viewModel.canProceedToNextStep == true)
+
+    // Trigger state change
+    await viewModel.proceedToNextStep()
+
+    // Verify new state
+    #expect(viewModel.currentStep == .medicationSelection)
+}
+```
+
+### Testing Computed Properties
+
+```swift
+@Test("MedicationProfile computes next dose time correctly")
+func testNextDoseTimeComputation() {
+    let profile = MedicationProfile.testProfile()
+    profile.frequency = .weekly
+    profile.lastDoseDate = Date().addingTimeInterval(-7 * 24 * 60 * 60) // 1 week ago
+
+    let nextDose = profile.nextDoseTime
+
+    // Should be approximately now (within 1 hour tolerance)
+    let timeDifference = abs(nextDose.timeIntervalSinceNow)
+    #expect(timeDifference < 3600)
+}
+```
+
+## Best Practices
+
+### ✅ Do This
+
+1. **Use Swift Testing for new tests** - Modern, cleaner syntax
+2. **Use @MainActor for UI components** - Ensures proper thread safety
+3. **Safe unwrapping with guard** - Avoid force unwrapping
+4. **Tolerance-based time assertions** - Account for timing variability
+5. **Direct SwiftData access in tests** - Fast, reliable test data
+6. **Disable CloudKit in test config** - Prevents relationship crashes
+7. **Test factories for consistency** - Reusable test data creation
+8. **File-based organization** - Group related tests in same file
+9. **Coverage-driven development** - Meet tier requirements
+
+### ❌ Don't Do This
+
+1. **Don't use XCTest for new tests** - Legacy pattern, use Swift Testing
+2. **Don't assign arrays to SwiftData relationships** - Causes crashes
+3. **Don't force unwrap in tests** - Use safe unwrapping patterns
+4. **Don't use exact time comparisons** - Always use tolerance
+5. **Don't skip @MainActor** - Required for UI component testing
+6. **Don't enable CloudKit in tests** - Causes relationship validation errors
+7. **Don't duplicate test data setup** - Use factories and helpers
+8. **Don't write tests without coverage check** - Maintain tier standards
+
+## Example: Complete Unit Test
+
+```swift
+import Testing
+@testable import AppName
+
+final class PharmacokineticsEngineTests {
+
+    // MARK: - Test Data Setup
+
+    func createTestContext() -> ModelContext {
+        let schema = Schema([User.self, MedicationProfile.self, Dose.self])
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return ModelContext(container)
+    }
+
+    // MARK: - Tests
+
+    @Test("Calculate concentration for single dose")
+    @MainActor
+    func testSingleDoseConcentration() throws {
+        let context = createTestContext()
+        let engine = PharmacokineticsEngine()
+
+        // Create test dose
+        let dose = Dose(
+            amount: 1.0,
+            timestamp: Date().addingTimeInterval(-24 * 60 * 60), // 1 day ago
+            medication: .semaglutide
+        )
+
+        // Calculate concentration
+        let concentration = engine.calculateConcentration(
+            doses: [dose],
+            medication: .semaglutide,
+            at: Date()
+        )
+
+        // Verify calculation
+        #expect(concentration > 0.0)
+        #expect(concentration < 1.0) // Should have decayed
+    }
+
+    @Test("Calculate steady state progress with multiple doses")
+    @MainActor
+    func testSteadyStateProgress() throws {
+        let context = createTestContext()
+        let result = try TestDataSeeding.seedData(
+            into: context,
+            config: .thirtyDays
+        )
+
+        let engine = PharmacokineticsEngine()
+        let progress = engine.calculateSteadyStateProgress(
+            doses: result.doses,
+            medication: result.medicationProfile.medication
+        )
+
+        // Verify progress calculation
+        #expect(progress >= 0.0)
+        #expect(progress <= 1.0)
+
+        // 30 days of weekly doses should be approaching steady state
+        #expect(progress > 0.5)
+    }
+
+    @Test("Handle empty dose array gracefully")
+    @MainActor
+    func testEmptyDoseArray() {
+        let engine = PharmacokineticsEngine()
+
+        let concentration = engine.calculateConcentration(
+            doses: [],
+            medication: .semaglutide,
+            at: Date()
+        )
+
+        #expect(concentration == 0.0)
+    }
+}
+```
+
+## Summary
+
+This skill provides a comprehensive framework for unit and integration testing with Swift Testing. The key principles are:
+
+1. **Modern Swift Testing framework** - Use `@Test` and `#expect` for new tests
+2. **Direct SwiftData access** - Fast, reliable test data with proper configuration
+3. **SwiftData relationship safety** - Never assign arrays to relationships
+4. **Safe unwrapping patterns** - Avoid force unwrapping, use guard statements
+5. **Tolerance-based assertions** - Account for timing variability in tests
+6. **@MainActor compliance** - Required for UI component and ViewModel testing
+7. **5-tier coverage policy** - Meet tier requirements for different component types
+8. **Test factories** - Reusable test data creation for consistency
+9. **Integration testing** - Verify component interactions and service coordination
+
+Follow these patterns to write reliable, maintainable, and fast unit/integration tests that provide confidence in your code quality while meeting the project's coverage standards.
+
+## Simulator Conflicts
+
+When running tests, ensure no conflicting simulators are active. Use:
+
+```bash
+xcrun simctl list
+```
+
+Use 1 of 3 the 3 available iPhone 17 Pro simulators to avoid conflicts. E,g:
+```bash
+./scripts/scripts.sh unit 1
+```
 
 
