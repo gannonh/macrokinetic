@@ -10,6 +10,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Completed Milestones
 
+- ✅ [v0.8.0 Food Search & Library](milestones/v0.8.0-ROADMAP.md) (Phases 35-38) - SHIPPED 2026-01-13
 - ✅ [v0.7.0 Dashboard Widget UX](milestones/v0.7.0-ROADMAP.md) (Phases 30-34) - SHIPPED 2026-01-12
 - ✅ [v0.6.0 Onboarding Redux](milestones/v0.6.0-ROADMAP.md) (Phases 25-29) - SHIPPED 2026-01-07
 - ✅ [v0.5.0 Navigation Refinement](milestones/v0.5.0-ROADMAP.md) (Phases 22-24) - SHIPPED 2026-01-05
@@ -20,77 +21,29 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- 🚧 **v0.8.0 Food Search & Library** - Phases 35-38 (in progress)
+- ✅ **v0.8.0 Food Search & Library** - Phases 35-38 (shipped)
 
 ## Phases
 
-### 🚧 v0.8.0 Food Search & Library (In Progress)
-
-**Milestone Goal:** Dramatically improve food search UX with better performance, ranking, and serving size handling
-
-#### Phase 35: Search Performance & UX
-
-**Goal**: Fix sluggish typing, auto-focus input, expand amount field tap target, polish search header
-**Depends on**: Previous milestone complete
-**Research**: Unlikely (internal patterns)
-**Plans**: TBD
-
-Plans:
-- [x] 35-01: Search UX fixes (debounce, auto-focus, tap targets)
-
-#### Phase 35.1: Food Search Header Indicators (INSERTED)
-
-**Goal**: Update Food Search sheet header to show kcal and protein remaining indicators matching the Food Log view style (progress bars with "X left" labels)
-**Depends on**: Phase 35
-**Research**: Unlikely (internal patterns - reuse existing FoodLogView indicators)
-**Plans**: TBD
-
-Plans:
-- [x] 35.1-01: Food Search header indicators
-
-#### Phase 36: Search Ranking & Recall
-
-**Goal**: Improve FTS5 ranking so common foods surface easily (apples, eggs, etc.)
-**Depends on**: Phase 35
-**Research**: Unlikely (FTS5 optimization, internal)
-**Plans**: TBD
-
-Plans:
-- [ ] 36-01: TBD
-
-#### Phase 37: Unit/Serving Strategy
-
-**Goal**: Research competitors and implement serving size improvements (1 large egg, 1 medium apple)
-**Depends on**: Phase 36
-**Research**: Likely (competitive analysis required)
-**Research topics**: How other apps handle serving sizes, common consumption units from OFF/USDA data
-**Plans**: 1
-
-Plans:
-- [x] 37-01: Horizontal pill picker for serving unit selection
-
-#### Phase 38: Bug Fixes & Cleanup
-
-**Goal**: Fix barcode scanner bug, remove API fallback
-**Depends on**: Phase 37
-**Research**: Unlikely (internal fixes)
-**Plans**: 1
-
-Plans:
-- [x] 38-01: Fix barcode scanner, remove Open Food Facts API, fix ISS-001
+### 🎯 Next Milestone (TBD)
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
 
-| Phase                              | Milestone | Plans Complete | Status      | Completed  |
-| ---------------------------------- | --------- | -------------- | ----------- | ---------- |
-| 35. Search Performance & UX        | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
-| 35.1 Header Indicators (INSERTED)  | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
-| 36. Search Ranking & Recall        | v0.8.0    | 0/0            | Skipped     | -          |
-| 37. Unit/Serving Strategy          | v0.8.0    | 1/1            | Complete    | 2026-01-12 |
-| 38. Bug Fixes & Cleanup            | v0.8.0    | 1/1            | Complete    | 2026-01-13 |
+<details>
+<summary>✅ v0.8.0 Food Search & Library (Phases 35-38) - SHIPPED 2026-01-13</summary>
+
+| Phase                              | Plans Complete | Status      | Completed  |
+| ---------------------------------- | -------------- | ----------- | ---------- |
+| 35. Search Performance & UX        | 1/1            | Complete    | 2026-01-12 |
+| 35.1 Header Indicators (INSERTED)  | 1/1            | Complete    | 2026-01-12 |
+| 36. Search Ranking & Recall        | 0/0            | Skipped     | -          |
+| 37. Unit/Serving Strategy          | 1/1            | Complete    | 2026-01-12 |
+| 38. Bug Fixes & Cleanup            | 1/1            | Complete    | 2026-01-13 |
+
+</details>
 
 <details>
 <summary>✅ v0.7.0 Dashboard Widget UX (Phases 30-34) - SHIPPED 2026-01-12</summary>

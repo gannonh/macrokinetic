@@ -1,19 +1,18 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-12)
+## Current State (Updated: 2026-01-13)
 
-**Shipped:** v0.7.0 Dashboard Widget UX (2026-01-12)
+**Shipped:** v0.8.0 Food Search & Library (2026-01-13)
 **Status:** Development / TestFlight
 **Codebase:** ~71,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.7.0 Delivered:**
-- Unified dashboard with widget-based UI and DashboardWidget protocol
-- Hero carousel with 3 swipeable widgets (Weekly Nutrition, Daily Nutrition, Energy Balance)
-- Standard insights grid with 4 widgets (Expenditure, Weight Trend, Energy Balance, Goal Progress)
-- Detail views for Weight Trend, Expenditure, and Energy Balance with Swift Charts
-- TDEESnapshot model for historical TDEE tracking with daily backfill
-- Environment-based display mode toggles for widget state sharing
-- Live data wiring with MVVM ViewModels and comprehensive E2E test suite
+**v0.8.0 Delivered:**
+- Search UX improvements with debounce, auto-focus, and expanded tap targets
+- MacroProgressBar indicators in Food Search header matching Food Log style
+- Horizontal pill picker for serving unit selection (g, oz, item-based)
+- Local-only barcode lookup using 1.7M+ food SQLite database
+- Removed Open Food Facts API dependency - fully offline-capable
+- Code cleanup: deleted dead FoodSearchView, AddFoodSheet, MealLogView
 
 ## Next Milestone Goals
 
@@ -24,6 +23,7 @@
 - Subscription Management - StoreKit 2 integration and paywall
 - Recipe Builder - Combine foods into calculated recipes
 - GLP-1 Medication Correlation - Connect dose timing with appetite/nutrition patterns
+- Search Ranking Improvements - Revisit Phase 36 scope for better FTS5 ranking
 
 ## Vision
 

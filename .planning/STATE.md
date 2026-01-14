@@ -4,18 +4,18 @@
 
 **Building:** MacroKinetic — iOS weight management app combining precision nutrition tracking with optional GLP-1 medication management.
 
-**Last shipped:** v0.7.0 Dashboard Widget UX (2026-01-12)
+**Last shipped:** v0.8.0 Food Search & Library (2026-01-13)
 
 **Core value:** Adaptive calorie targets based on real expenditure data with unified dashboard visualization.
 
 ## Current Position
 
-Phase: 38 of 38 (Bug Fixes & Cleanup)
-Plan: 1 of 1 complete
-Status: Phase complete - Milestone complete
-Last activity: 2026-01-13 - Completed 38-01-PLAN.md (barcode fix, API removal, tap target)
+Phase: N/A (between milestones)
+Plan: N/A
+Status: Milestone v0.8.0 shipped - ready for next milestone planning
+Last activity: 2026-01-13 - Shipped v0.8.0 Food Search & Library
 
-Progress: ██████████ 100%
+Progress: Ready for next milestone
 
 ## GitHub Tracking
 
