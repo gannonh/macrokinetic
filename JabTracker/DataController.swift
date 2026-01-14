@@ -17,6 +17,57 @@ enum SyncStatus {
     case noNetwork
 }
 
+/// Encapsulates CloudKit configuration logic for DataController initialization
+private struct CloudKitConfig {
+    let inMemory: Bool
+    let shouldEnableCloudKit: Bool
+    let isTestEnvironment: Bool
+    let isUITesting: Bool
+    let isCloudKitDisabled: Bool
+    let isCloudKitTesting: Bool
+
+    static func determine(inMemory requestedInMemory: Bool) -> CloudKitConfig {
+        let isTestEnvironment =
+            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        let inMemory = requestedInMemory || ProcessInfo.processInfo.arguments.contains("-inMemory")
+        let isCloudKitDisabled = ProcessInfo.processInfo.arguments.contains("--disable-cloudkit")
+        let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
+
+        let shouldEnableCloudKit: Bool
+        if isCloudKitTesting {
+            shouldEnableCloudKit = !inMemory
+        } else if isTestEnvironment || isUITesting {
+            shouldEnableCloudKit = false
+        } else {
+            shouldEnableCloudKit = !inMemory && !isCloudKitDisabled
+        }
+
+        return CloudKitConfig(
+            inMemory: inMemory,
+            shouldEnableCloudKit: shouldEnableCloudKit,
+            isTestEnvironment: isTestEnvironment,
+            isUITesting: isUITesting,
+            isCloudKitDisabled: isCloudKitDisabled,
+            isCloudKitTesting: isCloudKitTesting
+        )
+    }
+
+    func log(with logger: Logger) {
+        logger.info(
+            """
+            ☁️ DataController CloudKit config:
+            - isTestEnvironment: \(isTestEnvironment)
+            - isUITesting: \(isUITesting)
+            - isCloudKitDisabled: \(isCloudKitDisabled)
+            - isCloudKitTesting: \(isCloudKitTesting)
+            - inMemory: \(inMemory)
+            - shouldEnableCloudKit: \(shouldEnableCloudKit)
+            """)
+    }
+}
+
 @MainActor
 class DataController: ObservableObject {
     static let shared = DataController()
@@ -97,32 +148,20 @@ class DataController: ObservableObject {
 
     init(inMemory: Bool = false) {
         let schema = Schema(Self.modelTypes)
-
-        // Configure CloudKit database for production vs in-memory/testing
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
 
-        // Enhanced test environment detection
-        let isTestEnvironment =
-            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
-
-        _ = ProcessInfo.processInfo.arguments.contains("--ui-testing")
-
-        // Override inMemory if specified in launch arguments (for E2E tests)
-        let inMemory = inMemory || ProcessInfo.processInfo.arguments.contains("-inMemory")
-
-        // CloudKit can be disabled via launch argument for local debugging
-        let isCloudKitDisabled = ProcessInfo.processInfo.arguments.contains("--disable-cloudkit")
-
-        // CloudKit enabled by default, disabled for tests or via flag
-        let shouldEnableCloudKit = !isTestEnvironment && !inMemory && !isCloudKitDisabled
+        // Determine CloudKit configuration based on environment
+        let config = CloudKitConfig.determine(inMemory: inMemory)
+        let inMemory = config.inMemory
+        let shouldEnableCloudKit = config.shouldEnableCloudKit
+        config.log(with: Self.logger)
 
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: inMemory,
-            cloudKitDatabase: (inMemory || isTestEnvironment || !shouldEnableCloudKit)
-                ? .none
-                : .private(cloudKitContainerIdentifier))
+            cloudKitDatabase: shouldEnableCloudKit
+                ? .private(cloudKitContainerIdentifier)
+                : .none)
 
         do {
             self.container = try ModelContainer(for: schema, configurations: [configuration])

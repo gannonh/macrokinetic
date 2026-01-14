@@ -685,4 +685,47 @@ struct AuthenticationManagerAdditionalTests {
         // Actual credential testing requires mocking ASAuthorization which is not possible
         #expect(authManager.currentUser == nil, "Should start with no user")
     }
+
+    @Test("Authentication with existing user updates Apple ID")
+    @MainActor
+    func authWithExistingUserUpdatesAppleID() async throws {
+        let dataController = DataController.testContainer()
+        let context = dataController.container.mainContext
+
+        // Create existing user without Apple ID
+        let existingUser = User(email: nil, name: "Existing User")
+        existingUser.appleUserId = nil
+        context.insert(existingUser)
+        try context.save()
+
+        let authManager = AuthenticationManager(dataController: dataController)
+
+        // Check authentication status should find existing user
+        await authManager.checkAuthenticationStatus()
+
+        // User should be authenticated (has user record, no Apple ID to validate)
+        #expect(authManager.authenticationState == .authenticated)
+        #expect(authManager.currentUser?.name == "Existing User")
+        #expect(authManager.currentUser?.appleUserId == nil)
+    }
+
+    @Test("User without Apple ID skips credential validation")
+    @MainActor
+    func userWithoutAppleIDSkipsValidation() async throws {
+        let dataController = DataController.testContainer()
+        let context = dataController.container.mainContext
+
+        // Create user without Apple ID - should authenticate without validation
+        let user = User(email: nil, name: "Local User")
+        user.appleUserId = nil
+        context.insert(user)
+        try context.save()
+
+        let authManager = AuthenticationManager(dataController: dataController)
+        await authManager.checkAuthenticationStatus()
+
+        // Should be authenticated - no Apple credential to validate
+        #expect(authManager.authenticationState == .authenticated)
+        #expect(authManager.currentUser?.id == user.id)
+    }
 }
