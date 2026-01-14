@@ -173,6 +173,33 @@ struct ServingOption: Identifiable, Equatable {
     static func == (lhs: ServingOption, rhs: ServingOption) -> Bool {
         lhs.label == rhs.label && lhs.grams == rhs.grams
     }
+
+    // MARK: - Serialization
+
+    /// Convert serving option to storage string format
+    /// - Returns: String like "100g" or "1.0 item (291g)"
+    func toStorageString() -> String {
+        if label.hasSuffix("g"), Double(label.dropLast()) != nil {
+            // Already in gram format, return as-is
+            return label
+        }
+        // Format as "quantity description (grams)" - include "1.0 " prefix for re-parsing
+        return "1.0 \(label) (\(Int(grams))g)"
+    }
+
+    /// Serialize array of serving options to JSON string
+    /// - Parameter options: Array of serving options
+    /// - Returns: JSON string like '["100g", "1.0 item (291g)"]'
+    static func toJSON(_ options: [ServingOption]) -> String {
+        let strings = options.map { $0.toStorageString() }
+        guard let data = try? JSONEncoder().encode(strings),
+            let json = String(data: data, encoding: .utf8)
+        else {
+            logger.warning("Failed to serialize serving options to JSON, using default")
+            return "[]"
+        }
+        return json
+    }
 }
 
 /// Categorized search results grouped by source type
@@ -390,7 +417,8 @@ final class FoodService {
                 carbsPer100g: entry.carbsPer100g,
                 fatPer100g: entry.fatPer100g,
                 fiberPer100g: entry.fiberPer100g,
-                category: nil
+                category: nil,
+                servingOptions: ServingOption.parse(from: entry.servingOptionsJSON)
             )
             results.append(result)
 
@@ -452,7 +480,9 @@ final class FoodService {
             proteinPer100g: result.proteinPer100g,
             carbsPer100g: result.carbsPer100g,
             fatPer100g: result.fatPer100g,
-            fiberPer100g: result.fiberPer100g
+            fiberPer100g: result.fiberPer100g,
+            servingSize: result.servingSize,
+            servingOptionsJSON: ServingOption.toJSON(result.servingOptions)
         )
         food.foodSource = result.source
         food.barcode = result.barcode ?? ""
@@ -572,7 +602,8 @@ extension Food {
             fatPer100g: fatPer100g,
             fiberPer100g: fiberPer100g,
             category: nil,
-            servingSize: servingSize
+            servingSize: servingSize,
+            servingOptions: ServingOption.parse(from: servingOptionsJSON)
         )
     }
 }

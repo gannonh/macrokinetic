@@ -2,7 +2,8 @@
 
 # Sync Claude Code assets to GitHub Copilot / VS Code format
 # - Agents: ~/.claude/agents/*.md -> .github/agents/*.agent.md
-# - Prompts: ~/.claude/commands/*/*.md -> ~/Library/Application Support/Code/User/prompts/{folder}-{name}.prompt.md
+# - Skills: ~/.claude/skills/*/ -> ~/Library/.../prompts/{skill-name}.prompt.md (stub files)
+# - Prompts: ~/.claude/commands/*/*.md -> ~/Library/.../prompts/{folder}-{name}.prompt.md
 
 set -e
 
@@ -64,6 +65,62 @@ sync_agents() {
 
     echo ""
     echo "  Agents: $created created, $updated updated, $skipped unchanged"
+}
+
+# =============================================================================
+# Sync Skills (Skills -> VS Code Prompts as stubs)
+# =============================================================================
+sync_skills() {
+    local source_dir="$HOME/.claude/skills"
+    local target_dir="$HOME/Library/Application Support/Code/User/prompts"
+
+    if [[ ! -d "$source_dir" ]]; then
+        echo "Warning: Skills source directory not found: $source_dir"
+        return
+    fi
+
+    mkdir -p "$target_dir"
+
+    echo "Syncing skills..."
+    echo "  Source: $source_dir"
+    echo "  Target: $target_dir"
+    echo ""
+
+    local created=0 updated=0 skipped=0
+
+    for skill_dir in "$source_dir"/*/; do
+        [[ -d "$skill_dir" ]] || continue
+
+        local skill_name=$(basename "$skill_dir")
+        [[ "$skill_name" == .* ]] && continue
+
+        local target_file="$target_dir/${skill_name}.prompt.md"
+        local stub_content="---
+description: Run skill ${skill_name}
+---
+
+Run skill: ${skill_name}
+Context (optional): \$ARGUMENTS"
+
+        if [[ -f "$target_file" ]]; then
+            local existing_content=$(cat "$target_file")
+            if [[ "$existing_content" == "$stub_content" ]]; then
+                printf "  ${YELLOW}○${NC} ${skill_name}.prompt.md (unchanged)\n"
+                ((skipped++))
+            else
+                echo "$stub_content" > "$target_file"
+                printf "  ${GREEN}↻${NC} ${skill_name}.prompt.md (updated)\n"
+                ((updated++))
+            fi
+        else
+            echo "$stub_content" > "$target_file"
+            printf "  ${GREEN}+${NC} ${skill_name}.prompt.md\n"
+            ((created++))
+        fi
+    done
+
+    echo ""
+    echo "  Skills: $created created, $updated updated, $skipped unchanged"
 }
 
 # =============================================================================
@@ -137,6 +194,7 @@ echo "========================================"
 echo ""
 
 sync_agents
+sync_skills
 sync_prompts
 
 echo ""

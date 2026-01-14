@@ -511,6 +511,49 @@ struct FoodServiceTests {
         #expect(options.first?.grams == 120)
     }
 
+    @Test("ServingOption toJSON serializes correctly")
+    func testServingOptionToJSON() {
+        let options = [
+            ServingOption(label: "100g", grams: 100),
+            ServingOption(label: "item", grams: 150),
+        ]
+
+        let json = ServingOption.toJSON(options)
+
+        // Should produce valid JSON array
+        #expect(json.contains("100g"))
+        #expect(json.contains("1.0 item (150g)"))
+    }
+
+    @Test("ServingOption round-trip serialization preserves data")
+    func testServingOptionRoundTrip() {
+        // Parse from original JSON
+        let originalJSON = "[\"100g\", \"1.0 serving (200g)\"]"
+        let options = ServingOption.parse(from: originalJSON)
+
+        // Serialize back to JSON
+        let serializedJSON = ServingOption.toJSON(options)
+
+        // Parse again
+        let roundTrippedOptions = ServingOption.parse(from: serializedJSON)
+
+        // Should preserve count and gram values
+        #expect(roundTrippedOptions.count == options.count)
+        #expect(roundTrippedOptions.first?.grams == options.first?.grams)
+        if options.count > 1 {
+            #expect(roundTrippedOptions[1].grams == options[1].grams)
+        }
+    }
+
+    @Test("ServingOption toJSON handles empty array")
+    func testServingOptionToJSONEmpty() {
+        let options: [ServingOption] = []
+
+        let json = ServingOption.toJSON(options)
+
+        #expect(json == "[]")
+    }
+
     // MARK: - Barcode Lookup Tests
     // Note: Barcode tests use defensive patterns because bundled database content
     // may vary between builds. Tests verify the lookup path works, not specific products.

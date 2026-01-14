@@ -46,6 +46,7 @@ final class FoodEntry {
 
     var servingGrams: Double = 100.0
     var servingDescription: String?  // e.g., "1 cup"
+    var servingOptionsJSON: String = "[]"  // JSON array of available serving options
 
     // MARK: - Nutrition Snapshot (per 100g at log time)
 
@@ -91,6 +92,7 @@ final class FoodEntry {
         loggedAt: Date = Date(),
         servingGrams: Double = 100.0,
         servingDescription: String? = nil,
+        servingOptionsJSON: String = "[]",
         caloriesPer100g: Double = 0.0,
         proteinPer100g: Double = 0.0,
         carbsPer100g: Double = 0.0,
@@ -105,6 +107,7 @@ final class FoodEntry {
         self.loggedAt = loggedAt
         self.servingGrams = servingGrams
         self.servingDescription = servingDescription
+        self.servingOptionsJSON = servingOptionsJSON
         self.caloriesPer100g = caloriesPer100g
         self.proteinPer100g = proteinPer100g
         self.carbsPer100g = carbsPer100g
@@ -123,6 +126,7 @@ final class FoodEntry {
             loggedAt: Date(),
             servingGrams: servingGrams,
             servingDescription: food.servingDescription,
+            servingOptionsJSON: food.servingOptionsJSON,
             caloriesPer100g: food.caloriesPer100g,
             proteinPer100g: food.proteinPer100g,
             carbsPer100g: food.carbsPer100g,
