@@ -56,6 +56,7 @@ final class Food {
     var servingSize: Double = 100.0
     var servingUnit: String = "g"
     var servingDescription: String = ""  // CloudKit requires non-optional with default
+    var servingOptionsJSON: String = "[]"  // JSON array of serving options
 
     // MARK: - Timestamps
 
@@ -86,7 +87,8 @@ final class Food {
         sodiumPer100g: Double = 0.0,
         servingSize: Double = 100.0,
         servingUnit: String = "g",
-        servingDescription: String = ""
+        servingDescription: String = "",
+        servingOptionsJSON: String = "[]"
     ) {
         self.name = name
         self.brand = brand
@@ -103,6 +105,7 @@ final class Food {
         self.servingSize = servingSize
         self.servingUnit = servingUnit
         self.servingDescription = servingDescription
+        self.servingOptionsJSON = servingOptionsJSON
         self.createdAt = Date()
         self.lastAccessedAt = Date()
     }
@@ -172,6 +175,7 @@ final class Food {
         servingSize: Double = 100.0,
         servingUnit: String = "g",
         servingDescription: String = "",
+        servingOptionsJSON: String = "[]",
         barcode: String = ""
     ) throws -> Food {
         let food = try create(
@@ -187,6 +191,7 @@ final class Food {
         food.foodSource = .userCreated
         food.servingUnit = servingUnit
         food.servingDescription = servingDescription
+        food.servingOptionsJSON = servingOptionsJSON
         food.barcode = barcode
         return food
     }
