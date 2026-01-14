@@ -455,33 +455,28 @@ struct StrategyView: View {
     private func checkInDayPicker(goal: NutritionGoal) -> some View {
         HStack {
             Text("Check-in day")
-                .font(.subheadline)
+                .font(.caption)
                 .foregroundColor(.secondary)
 
             Spacer()
 
-            Picker(
-                "Check-In Day",
-                selection: Binding(
-                    get: { goal.checkInDayOfWeek },
-                    set: { newValue in
-                        goal.checkInDayOfWeek = newValue
+            Menu {
+                ForEach(1...7, id: \.self) { day in
+                    Button(dayOfWeekName(for: day)) {
+                        goal.checkInDayOfWeek = day
                         goal.updatedAt = Date()
                         try? modelContext.save()
                     }
-                )
-            ) {
-                Text("Sunday").tag(1)
-                Text("Monday").tag(2)
-                Text("Tuesday").tag(3)
-                Text("Wednesday").tag(4)
-                Text("Thursday").tag(5)
-                Text("Friday").tag(6)
-                Text("Saturday").tag(7)
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(dayOfWeekName(for: goal.checkInDayOfWeek))
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption2)
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
             }
-            .pickerStyle(.menu)
-            .tint(.secondary)
-            .font(.subheadline)
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
