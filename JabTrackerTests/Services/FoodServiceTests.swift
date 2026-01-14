@@ -491,11 +491,14 @@ struct FoodServiceTests {
         #expect(options.first?.grams == 100)
     }
 
-    @Test("ServingOption handles empty JSON array")
+    @Test("ServingOption provides default 100g option for empty JSON array")
     func testServingOptionHandlesEmptyArray() {
         let options = ServingOption.parse(from: "[]")
 
-        #expect(options.isEmpty)
+        // Empty input returns default 100g fallback option
+        #expect(options.count == 1)
+        #expect(options.first?.label == "100g")
+        #expect(options.first?.grams == 100)
     }
 
     @Test("ServingOption parses decimal quantities")
