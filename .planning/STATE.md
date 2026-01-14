@@ -12,16 +12,16 @@
 
 Phase: N/A (between milestones)
 Plan: N/A
-Status: Milestone v0.8.0 shipped - ready for next milestone planning
-Last activity: 2026-01-13 - Shipped v0.8.0 Food Search & Library
+Status: PR Review complete - ready for merge
+Last activity: 2026-01-14 - PR Review complete (CI + reviews passed)
 
-Progress: Ready for next milestone
+Progress: PR #334 ready for merge
 
 ## GitHub Tracking
 
 Issue: N/A
-PR: N/A
-Branch: feat/v0.8.0-food-search-library
+PR: #334 - feat: persist serving units for custom and history foods
+Branch: feat/persist-serving-units
 
 ## Performance Metrics
 
