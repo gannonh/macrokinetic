@@ -243,8 +243,18 @@ struct StrategyView: View {
     @ViewBuilder
     private func currentProgramSection(goal: NutritionGoal, program: NutritionProgram?) -> some View {
         VStack(spacing: 16) {
-            // Check-in countdown (placeholder for Phase 16)
-            checkInCountdownCard(goal: goal)
+            // Check-in countdown with inline day picker
+            VStack(spacing: 0) {
+                checkInCountdownCard(goal: goal)
+
+                // Check-in day picker (only for non-Manual programs)
+                if program?.style != .manual {
+                    Divider()
+                        .padding(.horizontal)
+                    checkInDayPicker(goal: goal)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16))
 
             // Current program display
             if let program {
@@ -253,11 +263,6 @@ struct StrategyView: View {
 
             // Goal summary card
             goalSummaryCard(goal: goal)
-
-            // Check-in settings (only for non-Manual programs)
-            if program?.style != .manual {
-                checkInSettingsCard(goal: goal)
-            }
         }
     }
 
@@ -348,10 +353,7 @@ struct StrategyView: View {
                 }
             }
             .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(DesignTokens.Colors.cardBackground)
-            )
+            .background(DesignTokens.Colors.cardBackground)
 
             // Render card (tappable if check-in is available)
             if isCheckInDue && canCheckIn {
@@ -450,12 +452,11 @@ struct StrategyView: View {
         }
     }
 
-    private func checkInSettingsCard(goal: NutritionGoal) -> some View {
+    private func checkInDayPicker(goal: NutritionGoal) -> some View {
         HStack {
-            Text("Check-In Day")
-                .font(.subheadline)
-
-            Spacer()
+            Text("Check-in day")
+                .font(.caption)
+                .foregroundColor(.secondary)
 
             Picker(
                 "Check-In Day",
@@ -468,23 +469,20 @@ struct StrategyView: View {
                     }
                 )
             ) {
-                Text("Sunday").tag(1)
-                Text("Monday").tag(2)
-                Text("Tuesday").tag(3)
-                Text("Wednesday").tag(4)
-                Text("Thursday").tag(5)
-                Text("Friday").tag(6)
-                Text("Saturday").tag(7)
+                Text("Sun").tag(1)
+                Text("Mon").tag(2)
+                Text("Tue").tag(3)
+                Text("Wed").tag(4)
+                Text("Thu").tag(5)
+                Text("Fri").tag(6)
+                Text("Sat").tag(7)
             }
-            .pickerStyle(.menu)
-            .tint(.primary)
+            .pickerStyle(.segmented)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(DesignTokens.Colors.cardBackground)
-        )
-        .accessibilityIdentifier("check-in-settings-card")
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(DesignTokens.Colors.cardBackground)
+        .accessibilityIdentifier("check-in-day-picker")
     }
 
     private func dayOfWeekName(for weekday: Int) -> String {
