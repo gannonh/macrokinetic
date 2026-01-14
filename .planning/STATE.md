@@ -12,10 +12,10 @@
 
 Phase: N/A (between milestones)
 Plan: N/A
-Status: PR Review complete - ready for merge
-Last activity: 2026-01-14 - PR Review complete (CI + reviews passed)
+Status: Working on todo - compact check-in day setting
+Last activity: 2026-01-14 - Started work on UI todo
 
-Progress: PR #334 ready for merge
+Progress: Implementing compact check-in day picker
 
 ## GitHub Tracking
 
@@ -57,7 +57,7 @@ No open issues in `.planning/ISSUES.md`.
 
 ### Pending Todos
 
-8 todos in `.planning/todos/pending/`
+7 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
