@@ -303,6 +303,7 @@ extension FoodSearchSheet {
         } catch {
             logger.error("Local database barcode lookup failed: \(error.localizedDescription)")
             isLookingUpBarcode = false
+            barcodeNotFound = true
             return
         }
 

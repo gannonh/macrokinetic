@@ -31,8 +31,9 @@ struct ServingPillOption: Identifiable, Equatable {
 
     /// Create from a ServingOption
     init(from option: ServingOption) {
-        self.id = "\(option.label)-\(option.grams)"
-        self.label = ServingPillOption.formatLabel(from: option.label)
+        let formattedLabel = ServingPillOption.formatLabel(from: option.label)
+        self.id = "\(formattedLabel)-\(option.grams)"
+        self.label = formattedLabel
         self.grams = option.grams
         self.isUnitOnly = false
     }

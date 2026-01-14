@@ -55,6 +55,9 @@ final class FoodSearchV08UITests: XCTestCase {
 
     /// Test that amount input card has expanded tap target
     func testAmountInputExpandedTapTarget() throws {
+        // Navigate to Food Log tab first to ensure correct starting point
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+
         // Open food search and select a food to get to detail sheet
         TestUtilities.openShortcutsSheet(app)
 

@@ -475,6 +475,8 @@ final class FoodService {
         do {
             try context.save()
         } catch {
+            // Remove the failed insertion to keep in-memory context consistent
+            context.delete(food)
             Self.logger.error("Failed to save recent food '\(food.name)': \(error.localizedDescription)")
             throw error
         }

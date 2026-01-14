@@ -248,6 +248,8 @@ extension FoodDetailSheet {
 
         if newOption.isUnitOnly {
             // Switching TO g/oz: convert to preserve gram amount
+            // Guard against invalid oldOption.grams to avoid division issues
+            guard oldOption.grams > 0 else { return }
             let currentGrams = servingCount * oldOption.grams
             servingCount = currentGrams / newOption.grams
         } else {
