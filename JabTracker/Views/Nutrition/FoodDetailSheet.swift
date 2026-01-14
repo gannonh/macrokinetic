@@ -24,6 +24,7 @@ struct FoodDetailSheet: View {
 
     @State var servingCount: Double = 1.0
     @State private var selectedServing: ServingOption?
+    @State var selectedPillOption: ServingPillOption?
     @State var meal: MealSection
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -34,6 +35,7 @@ struct FoodDetailSheet: View {
     @State var selectedUnit: ServingUnit = .item
     @State private var notes: String = ""
     @State private var showingCreateCustom = false
+    @FocusState var isInputFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Constants
@@ -75,6 +77,16 @@ struct FoodDetailSheet: View {
         if inputMode == .target {
             return calculateGramsFromTarget()
         }
+        // Use pill option if available, otherwise fall back to unit-based calculation
+        if let pillOption = selectedPillOption {
+            if pillOption.isUnitOnly {
+                // For g/oz, multiply servingCount by the unit's gram value
+                return servingCount * pillOption.grams
+            } else {
+                // For item-based options, multiply by option's grams
+                return servingCount * pillOption.grams
+            }
+        }
         return selectedUnit.toGrams(servingCount, itemGrams: defaultServing.grams)
     }
 
@@ -109,6 +121,11 @@ struct FoodDetailSheet: View {
     /// Display string for calculated quantity when in target mode
     var calculatedQuantityDisplay: String {
         let grams = calculateGramsFromTarget()
+        // Use pill option if available
+        if let option = selectedPillOption, option.grams > 0 {
+            let unitValue = grams / option.grams
+            return String(format: "%.2f", unitValue)
+        }
         let unitValue = quantityInSelectedUnit(from: grams)
         return String(format: "%.2f", unitValue)
     }
@@ -181,6 +198,8 @@ struct FoodDetailSheet: View {
                 }
                 .padding()
             }
+            .scrollContentBackground(.hidden)
+            .background(DesignTokens.Colors.groupedBackground)
             .navigationTitle("Food Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -196,6 +215,7 @@ struct FoodDetailSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .tint(DesignTokens.Colors.accent)
         .accessibilityIdentifier(Self.accessibilityIdentifierValue)
         .alert("Error", isPresented: $showingError) {
             Button("OK", role: .cancel) {}
@@ -393,7 +413,7 @@ struct FoodDetailSheet: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(DesignTokens.Colors.groupedBackground)
         .onAppear {
             initializeServingInput()
         }
@@ -423,8 +443,8 @@ struct FoodDetailSheet: View {
                 loggedAt: selectedTime
             )
 
-            // Save to recent foods
-            foodService.saveRecentFood(foodModel)
+            // Save to recent foods (use try? since food logging already succeeded)
+            try? foodService.saveRecentFood(foodModel)
 
             // Success - dismiss and notify
             dismiss()

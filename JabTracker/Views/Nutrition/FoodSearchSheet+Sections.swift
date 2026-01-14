@@ -233,28 +233,30 @@ extension FoodSearchSheet {
 
             Spacer()
 
-            // Remaining macros display
+            // Macro progress indicators matching Food Log style
             HStack(spacing: 12) {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingCalories)) left")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(DesignTokens.Colors.calories)
-                    Text("Calories")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+                MacroProgressBar(
+                    label: "",
+                    current: viewModel.consumedCalories,
+                    target: viewModel.targetCalories,
+                    color: DesignTokens.Colors.calories,
+                    displayMode: .fraction,
+                    icon: "flame.fill",
+                    showRemainingBelow: true,
+                    accessibilityIdentifier: "search-header-calories"
+                )
+                .frame(width: 80)
 
-                Divider()
-                    .frame(height: 24)
-
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(viewModel.remainingProtein))g left")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(DesignTokens.Colors.protein)
-                    Text("Protein")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+                MacroProgressBar(
+                    label: "P",
+                    current: viewModel.consumedProtein,
+                    target: viewModel.targetProtein,
+                    color: DesignTokens.Colors.protein,
+                    displayMode: .fraction,
+                    showRemainingBelow: true,
+                    accessibilityIdentifier: "search-header-protein"
+                )
+                .frame(width: 70)
             }
         }
         .padding(.horizontal, 16)
@@ -264,7 +266,7 @@ extension FoodSearchSheet {
 
     // MARK: - Barcode Lookup
 
-    /// Handle a detected barcode by looking up in local custom foods first, then Open Food Facts
+    /// Handle a detected barcode by looking up in custom foods first, then local database
     func handleBarcodeDetected(_ barcode: String) async {
         // Prevent concurrent lookups - skip if already looking up
         guard !isLookingUpBarcode else {
@@ -275,7 +277,7 @@ extension FoodSearchSheet {
         isLookingUpBarcode = true
         lastScannedBarcode = barcode
 
-        // 1. Check custom foods first (local, fast)
+        // 1. Check custom foods first (user-created foods)
         do {
             if let customFood = try await customFoodService?.lookup(barcode: barcode) {
                 selectedFood = customFood.toSearchResult()
@@ -285,28 +287,27 @@ extension FoodSearchSheet {
                 return
             }
         } catch {
-            // Log but continue to API lookup - local lookup failure shouldn't block API
+            // Log but continue to local database lookup
             logger.error("Custom food barcode lookup failed: \(error.localizedDescription)")
         }
 
-        // 2. Check Open Food Facts API
+        // 2. Check local database (1.7M+ foods from USDA + Open Food Facts dump)
         do {
-            if let result = try await foodService?.lookupBarcode(barcode) {
+            if let result = try await foodService.lookupBarcode(barcode) {
                 selectedFood = result
                 isLookingUpBarcode = false
                 showingFoodDetail = true
-                logger.info("Found Open Food Facts product for barcode: \(barcode)")
+                logger.info("Found food in local database for barcode: \(barcode)")
                 return
             }
         } catch {
-            // Log API lookup failure - this is more significant
-            logger.error("Open Food Facts barcode lookup failed: \(error.localizedDescription)")
-            // Don't show "not found" - this was a lookup error, not "not in database"
+            logger.error("Local database barcode lookup failed: \(error.localizedDescription)")
             isLookingUpBarcode = false
+            barcodeNotFound = true
             return
         }
 
-        // 3. Not found (both lookups succeeded but returned nil)
+        // 3. Not found - user can create custom food
         isLookingUpBarcode = false
         barcodeNotFound = true
         logger.info("No product found for barcode: \(barcode)")

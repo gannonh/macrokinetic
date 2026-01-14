@@ -1,0 +1,38 @@
+Build 0.1.0 (8) - Food Search & Serving UX Improvements
+
+What's New
+- Serving pill picker in Food Detail Sheet - quickly select common serving sizes (1 slice, 2 pieces, etc.)
+- Improved food search ranking - whole word matches and shorter names now prioritized
+- Foods starting with your search term are boosted in results
+- Macro progress indicators in Food Search header show daily progress while logging
+- Search field auto-focuses when opening the Food Search sheet
+- Expanded tap target for amount input - entire card is now tappable
+- SQLite database converted to actor for thread safety (fixes rare crash during searches)
+
+Bug Fixes
+- Fixed gram amount preserved when switching between serving size pills
+- Fixed serving quantity resets to 1 when selecting item-based options (slices, pieces, etc.)
+- Fixed parsing of multi-word serving descriptions (e.g., "large slice")
+- Fixed gram-only foods now use the food's serving size instead of defaulting to 100g
+- Improved search debounce with proper task cancellation
+- Removed spinner for fast local searches (felt sluggish)
+- Improved light mode contrast in Food Detail Sheet
+- Food Detail Sheet buttons now use accent color consistently
+- Removed redundant "Shortcuts" title from shortcuts sheet
+
+Focus Areas for Testing
+- Food Search: Search for common foods and verify results are ranked sensibly
+- Serving Pills: When viewing a food, try the serving size pills (if available) and check quantities update correctly
+- Macro Indicators: Check the header shows your daily macro progress while searching
+- Search Performance: Searches should feel fast with no unnecessary spinners
+- Light Mode: Verify Food Detail Sheet is readable in light mode
+
+Feedback Needed
+- Does the serving pill picker make portion selection easier?
+- Are search results returning what you expect for common searches?
+- Any foods where the serving options don't make sense?
+
+Not Yet Implemented
+- Background notification refresh
+- Split-dose schedule UI configuration
+- Crash/error reporting service

@@ -108,42 +108,62 @@ struct FoodSearchResult: Identifiable {
 
 /// Represents a serving option for a food item
 struct ServingOption: Identifiable, Equatable {
+    private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ServingOption")
+
     let id = UUID()
     let label: String  // Display label (e.g., "1 item", "100g", "1 cup")
     let grams: Double  // Equivalent weight in grams
 
+    // Pre-compiled regex for parsing serving options (e.g., "1.0 item (291g)")
+    // Compiled once as static property for performance
+    // swiftlint:disable:next force_try
+    private static let servingOptionRegex = try! NSRegularExpression(
+        pattern: #"^([\d.]+)\s+(.+?)\s*\((\d+(?:\.\d+)?)g\)$"#
+    )
+
     /// Parse serving options from JSON string (e.g., '["100g", "1.0 item (291g)"]')
     static func parse(from jsonString: String) -> [ServingOption] {
-        guard let data = jsonString.data(using: .utf8),
-            let options = try? JSONDecoder().decode([String].self, from: data)
-        else {
+        guard let data = jsonString.data(using: .utf8) else {
+            logger.warning("Failed to encode serving options as UTF-8, using default")
             return [ServingOption(label: "100g", grams: 100)]
         }
 
-        return options.compactMap { parseOption($0) }
+        do {
+            let options = try JSONDecoder().decode([String].self, from: data)
+            let parsed = options.compactMap { parseOption($0) }
+            if parsed.count < options.count {
+                logger.debug("Parsed \(parsed.count)/\(options.count) serving options")
+            }
+            return parsed.isEmpty ? [ServingOption(label: "100g", grams: 100)] : parsed
+        } catch {
+            logger.warning("Failed to parse serving options JSON: \(error.localizedDescription)")
+            return [ServingOption(label: "100g", grams: 100)]
+        }
     }
 
-    /// Parse a single serving option string (e.g., "1.0 item (291g)")
+    /// Parse a single serving option string (e.g., "1.0 item (291g)" or "1.0 whole without shell (50g)")
     private static func parseOption(_ option: String) -> ServingOption? {
         // Handle simple gram format: "100g"
         if option.hasSuffix("g"), let grams = Double(option.dropLast()) {
             return ServingOption(label: option, grams: grams)
         }
 
-        // Handle item format: "1.0 item (291g)"
-        let pattern = #"^([\d.]+)\s*(\w+)\s*\((\d+(?:\.\d+)?)g\)$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-            let match = regex.firstMatch(in: option, range: NSRange(option.startIndex..., in: option)),
+        // Handle item format: "1.0 item (291g)" or "1.0 whole without shell (50g)"
+        // Uses .+? to capture multi-word descriptions like "whole without shell"
+        if let match = servingOptionRegex.firstMatch(
+            in: option,
+            range: NSRange(option.startIndex..., in: option)
+        ),
             let quantityRange = Range(match.range(at: 1), in: option),
-            let unitRange = Range(match.range(at: 2), in: option),
+            let descRange = Range(match.range(at: 2), in: option),
             let gramsRange = Range(match.range(at: 3), in: option)
         {
             let quantity = Double(option[quantityRange]) ?? 1.0
-            let unit = String(option[unitRange])
+            let description = String(option[descRange]).trimmingCharacters(in: .whitespaces)
             let grams = Double(option[gramsRange]) ?? 100.0
 
-            // Format label nicely
-            let label = quantity == 1.0 ? "1 \(unit)" : "\(Int(quantity)) \(unit)"
+            // Format label nicely - keep full description
+            let label = quantity == 1.0 ? description : "\(Int(quantity)) \(description)"
             return ServingOption(label: label, grams: grams)
         }
 
@@ -159,11 +179,11 @@ struct ServingOption: Identifiable, Equatable {
 struct CategorizedSearchResults {
     /// Foods the user has previously logged (from FoodEntry records)
     let historyResults: [FoodSearchResult]
-    /// User-created custom foods (backend implemented, UI pending)
+    /// User-created custom foods
     let customResults: [FoodSearchResult]
     /// USDA common foods (foundation + sr_legacy)
     let commonResults: [FoodSearchResult]
-    /// Open Food Facts branded products
+    /// Branded products from local database (Open Food Facts dump)
     let brandedResults: [FoodSearchResult]
 
     /// Whether any results exist
@@ -178,21 +198,19 @@ struct CategorizedSearchResults {
 }
 
 /// Service that orchestrates food search across multiple sources
-/// Combines local USDA database, Open Food Facts API, and user-created foods
+/// Combines local food database (USDA + Open Food Facts dump) and user-created foods
 @MainActor
 final class FoodService {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "FoodService")
 
     private let context: ModelContext
     private let localDatabase: LocalFoodDatabase
-    private let openFoodFacts: OpenFoodFactsService
     private let customFoodService: CustomFoodService?
 
     /// Initialize with model context
     init(context: ModelContext) {
         self.context = context
         self.localDatabase = LocalFoodDatabase()
-        self.openFoodFacts = OpenFoodFactsService()
         self.customFoodService = nil
     }
 
@@ -200,7 +218,6 @@ final class FoodService {
     init(context: ModelContext, customFoodService: CustomFoodService) {
         self.context = context
         self.localDatabase = LocalFoodDatabase()
-        self.openFoodFacts = OpenFoodFactsService()
         self.customFoodService = customFoodService
     }
 
@@ -208,12 +225,10 @@ final class FoodService {
     init(
         context: ModelContext,
         localDatabase: LocalFoodDatabase,
-        openFoodFacts: OpenFoodFactsService,
         customFoodService: CustomFoodService? = nil
     ) {
         self.context = context
         self.localDatabase = localDatabase
-        self.openFoodFacts = openFoodFacts
         self.customFoodService = customFoodService
     }
 
@@ -223,31 +238,15 @@ final class FoodService {
     /// - Parameters:
     ///   - query: Search term
     ///   - limit: Maximum results to return
-    ///   - includeAPI: Whether to include Open Food Facts API results
     /// - Returns: Combined search results
-    func search(query: String, limit: Int = 20, includeAPI: Bool = false) async throws -> [FoodSearchResult] {
+    func search(query: String, limit: Int = 20) async throws -> [FoodSearchResult] {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             return []
         }
 
-        // Start with local database (fast)
+        // Search local database (1.7M+ foods from USDA + Open Food Facts dump)
         var results = try await searchLocalDatabase(query: trimmedQuery, limit: limit)
-
-        // If API is enabled, always fetch API results
-        if includeAPI {
-            let apiResults = try await searchOpenFoodFacts(query: trimmedQuery, limit: limit)
-
-            // Deduplicate by name similarity
-            for apiResult in apiResults {
-                let isDuplicate = results.contains { existing in
-                    areSimilarFoods(existing.name, apiResult.name)
-                }
-                if !isDuplicate {
-                    results.append(apiResult)
-                }
-            }
-        }
 
         // Also check user-created foods from SwiftData
         let userFoods = try await searchUserCreatedFoods(query: trimmedQuery, limit: 5)
@@ -275,16 +274,6 @@ final class FoodService {
         }
 
         return Array(results.prefix(limit))
-    }
-
-    /// Search Open Food Facts API only (slower, has branded foods)
-    func searchAPI(query: String, limit: Int = 20) async throws -> [FoodSearchResult] {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else {
-            return []
-        }
-
-        return try await searchOpenFoodFacts(query: trimmedQuery, limit: limit)
     }
 
     /// Search foods with results categorized by source type
@@ -414,27 +403,39 @@ final class FoodService {
         return results
     }
 
-    /// Look up food by barcode via Open Food Facts API
-    /// Note: Does not search local database - API only
+    /// Look up food by barcode in local database
     /// - Parameter barcode: Product barcode
-    /// - Returns: Food if found
+    /// - Returns: Food if found in local database, nil otherwise
     func lookupBarcode(_ barcode: String) async throws -> FoodSearchResult? {
-        guard let result = try await openFoodFacts.lookup(barcode: barcode) else {
+        guard let local = try await localDatabase.lookupBarcode(barcode) else {
             return nil
         }
 
+        // Map database source string to FoodSource enum
+        let source: FoodSource =
+            switch local.source {
+            case "openFoodFacts": .openFoodFacts
+            case "foundation", "sr_legacy": .local
+            default: .local
+            }
+
+        // Parse serving options from JSON string
+        let servingOptions = ServingOption.parse(from: local.servingOptions)
+
         return FoodSearchResult(
-            fdcId: nil,
-            barcode: result.barcode,
-            name: result.name,
-            brand: result.brand,
-            source: .openFoodFacts,
-            caloriesPer100g: result.caloriesPer100g,
-            proteinPer100g: result.proteinPer100g,
-            carbsPer100g: result.carbsPer100g,
-            fatPer100g: result.fatPer100g,
-            fiberPer100g: result.fiberPer100g,
-            category: nil
+            fdcId: local.fdcId,
+            barcode: local.barcode,
+            name: local.name,
+            brand: local.brand,
+            source: source,
+            caloriesPer100g: local.caloriesPer100g,
+            proteinPer100g: local.proteinPer100g,
+            carbsPer100g: local.carbsPer100g,
+            fatPer100g: local.fatPer100g,
+            fiberPer100g: local.fiberPer100g,
+            category: local.category,
+            servingSize: local.servingSize,
+            servingOptions: servingOptions
         )
     }
 
@@ -467,13 +468,17 @@ final class FoodService {
 
     /// Save a food to recent foods (updates lastAccessedAt)
     /// - Parameter food: Food to save
-    func saveRecentFood(_ food: Food) {
+    /// - Throws: Error if save fails (prevents phantom food that appears but doesn't persist)
+    func saveRecentFood(_ food: Food) throws {
         food.lastAccessedAt = Date()
         context.insert(food)
         do {
             try context.save()
         } catch {
-            Self.logger.warning("Failed to save recent food '\(food.name)': \(error.localizedDescription)")
+            // Remove the failed insertion to keep in-memory context consistent
+            context.delete(food)
+            Self.logger.error("Failed to save recent food '\(food.name)': \(error.localizedDescription)")
+            throw error
         }
     }
 
@@ -528,32 +533,6 @@ final class FoodService {
         }
     }
 
-    private func searchOpenFoodFacts(query: String, limit: Int) async throws -> [FoodSearchResult] {
-        do {
-            let apiResults = try await openFoodFacts.search(query: query, limit: limit)
-
-            return apiResults.map { api in
-                FoodSearchResult(
-                    fdcId: nil,
-                    barcode: api.barcode,
-                    name: api.name,
-                    brand: api.brand,
-                    source: .openFoodFacts,
-                    caloriesPer100g: api.caloriesPer100g,
-                    proteinPer100g: api.proteinPer100g,
-                    carbsPer100g: api.carbsPer100g,
-                    fatPer100g: api.fatPer100g,
-                    fiberPer100g: api.fiberPer100g,
-                    category: nil
-                )
-            }
-        } catch {
-            // API errors are non-fatal - log and continue with local results
-            Self.logger.warning("Open Food Facts search failed: \(error.localizedDescription)")
-            return []
-        }
-    }
-
     private func searchUserCreatedFoods(query: String, limit: Int) async throws -> [FoodSearchResult] {
         let lowercaseQuery = query.lowercased()
 
@@ -572,23 +551,6 @@ final class FoodService {
             .filter { $0.name.lowercased().contains(lowercaseQuery) }
             .prefix(limit)
             .map { $0.toSearchResult() }
-    }
-
-    /// Check if two food names are similar enough to be duplicates
-    private func areSimilarFoods(_ name1: String, _ name2: String) -> Bool {
-        let normalized1 = name1.lowercased().trimmingCharacters(in: .whitespaces)
-        let normalized2 = name2.lowercased().trimmingCharacters(in: .whitespaces)
-
-        if normalized1 == normalized2 {
-            return true
-        }
-
-        // Check if one contains the other
-        if normalized1.contains(normalized2) || normalized2.contains(normalized1) {
-            return true
-        }
-
-        return false
     }
 }
 

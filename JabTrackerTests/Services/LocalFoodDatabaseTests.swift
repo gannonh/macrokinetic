@@ -19,13 +19,15 @@ struct LocalFoodDatabaseTests {
     @Test("Database initializes successfully")
     func testDatabaseInitializes() async throws {
         let database = LocalFoodDatabase()
-        #expect(database.isAvailable)
+        let isAvailable = await database.isAvailable
+        #expect(isAvailable)
     }
 
     @Test("Database reports unavailable if file missing")
     func testDatabaseUnavailableForMissingFile() async throws {
         let database = LocalFoodDatabase(databasePath: "/nonexistent/path.sqlite")
-        #expect(!database.isAvailable)
+        let isAvailable = await database.isAvailable
+        #expect(!isAvailable)
     }
 
     // MARK: - Search Tests
@@ -357,6 +359,212 @@ struct LocalFoodDatabaseTests {
         for result in results {
             let validSource = result.source == "foundation" || result.source == "sr_legacy"
             #expect(validSource, "Multi-word query should still filter by source")
+        }
+    }
+
+    // MARK: - Search Ranking Tests
+
+    @Test("Search ranks foods starting with search term higher")
+    func testSearchRanksFoodsStartingWithTermHigher() async throws {
+        let database = LocalFoodDatabase()
+
+        // Search "banana" - should rank "Bananas, ..." above "Snacks, banana chips"
+        let results = try await database.search(
+            query: "banana",
+            limit: 20,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        #expect(!results.isEmpty, "Should find banana results")
+
+        // Find first food that starts with "banana" and first that doesn't
+        let startsWithBanana = results.firstIndex { $0.name.lowercased().hasPrefix("banana") }
+        let notStartsWithBanana = results.firstIndex { !$0.name.lowercased().hasPrefix("banana") }
+
+        // If both exist, foods starting with "banana" should appear first
+        if let startIdx = startsWithBanana, let notStartIdx = notStartsWithBanana {
+            #expect(
+                startIdx < notStartIdx,
+                "Prefix matches should rank first: '\(results[startIdx].name)' vs '\(results[notStartIdx].name)'"
+            )
+        }
+    }
+
+    @Test("Search 'banana' returns 'Bananas, raw' before processed foods")
+    func testSearchBananaReturnsRawFirst() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "banana",
+            limit: 20,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        #expect(!results.isEmpty, "Should find banana results")
+
+        // Find "Bananas, raw" or similar whole banana
+        let rawBananaIndex = results.firstIndex {
+            $0.name.lowercased().contains("banana") && $0.name.lowercased().contains("raw")
+        }
+
+        // Find processed/derivative banana products (chips, pudding, etc.)
+        let processedBananaIndex = results.firstIndex {
+            let lower = $0.name.lowercased()
+            return lower.contains("banana")
+                && (lower.contains("chips") || lower.contains("pudding") || lower.contains("snack")
+                    || lower.contains("babyfood"))
+        }
+
+        // Raw banana should appear before processed products (if both exist)
+        if let rawIdx = rawBananaIndex, let processedIdx = processedBananaIndex {
+            #expect(
+                rawIdx < processedIdx,
+                "Raw should rank before processed: '\(results[rawIdx].name)' vs '\(results[processedIdx].name)'"
+            )
+        }
+    }
+
+    @Test("Search 'egg' returns whole eggs before compound products")
+    func testSearchEggReturnsWholeEggsFirst() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "egg",
+            limit: 20,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        #expect(!results.isEmpty, "Should find egg results")
+
+        // Foods starting with "egg" should appear before foods like "Bagel, egg" or compound products
+        let startsWithEgg = results.firstIndex { $0.name.lowercased().hasPrefix("egg") }
+        let notStartsWithEgg = results.firstIndex { !$0.name.lowercased().hasPrefix("egg") }
+
+        if let startIdx = startsWithEgg, let notStartIdx = notStartsWithEgg {
+            #expect(
+                startIdx < notStartIdx,
+                "Prefix matches should rank first: '\(results[startIdx].name)' vs '\(results[notStartIdx].name)'"
+            )
+        }
+    }
+
+    @Test("Search 'chicken' ranks whole chicken items first")
+    func testSearchChickenRanksWholeChickenFirst() async throws {
+        let database = LocalFoodDatabase()
+
+        let results = try await database.search(
+            query: "chicken",
+            limit: 15,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        #expect(!results.isEmpty, "Should find chicken results")
+
+        // Top results should start with "chicken" rather than "Soup, chicken" or other compounds
+        let topFiveStartWithChicken = results.prefix(5).filter { $0.name.lowercased().hasPrefix("chicken") }
+
+        // At least 3 of the top 5 should start with "chicken"
+        #expect(
+            topFiveStartWithChicken.count >= 3,
+            "Most top results should start with 'chicken', got \(topFiveStartWithChicken.count)/5. Top 5: \(results.prefix(5).map(\.name))"
+        )
+    }
+
+    @Test("Search 'apple' ranks whole word 'Apple' before 'APPLEBEE'S'")
+    func testSearchAppleRanksWholeWordFirst() async throws {
+        let database = LocalFoodDatabase()
+
+        // Search without source filtering to include Open Food Facts
+        // This tests the whole word ranking where "Apple" should rank before "APPLEBEE'S"
+        let results = try await database.search(query: "apple", limit: 30)
+
+        #expect(!results.isEmpty, "Should find apple results")
+
+        // Find first result that is a whole word match (starts with "apple" followed by word boundary)
+        let wholeWordApple = results.firstIndex { result in
+            let lower = result.name.lowercased()
+            // Matches "apples," or "apple " but not "applebee"
+            return lower.hasPrefix("apple")
+                && (lower.hasPrefix("apples") || lower.hasPrefix("apple,") || lower.hasPrefix("apple ")
+                    || lower == "apple")
+        }
+
+        // Find first result that has partial match like "APPLEBEE'S"
+        let partialMatchIndex = results.firstIndex { result in
+            let lower = result.name.lowercased()
+            return lower.hasPrefix("applebee")
+        }
+
+        // Whole word apple should appear before APPLEBEE'S if both exist
+        if let wholeIdx = wholeWordApple, let partialIdx = partialMatchIndex {
+            #expect(
+                wholeIdx < partialIdx,
+                "Whole word should rank first: '\(results[wholeIdx].name)' vs '\(results[partialIdx].name)'"
+            )
+        }
+    }
+
+    @Test("Search 'banana' ranks shorter names first")
+    func testSearchBananaRanksShorterNamesFirst() async throws {
+        let database = LocalFoodDatabase()
+
+        // Search USDA sources for cleaner banana results
+        let results = try await database.search(
+            query: "banana",
+            limit: 20,
+            sources: ["foundation", "sr_legacy"]
+        )
+
+        #expect(!results.isEmpty, "Should find banana results")
+
+        // Find "Bananas, raw" (short name) vs longer descriptive names
+        let shortBananaIndex = results.firstIndex { result in
+            let lower = result.name.lowercased()
+            // Simple raw banana entries
+            return lower.hasPrefix("banana") && lower.contains("raw") && lower.count < 30
+        }
+
+        let longBananaIndex = results.firstIndex { result in
+            let lower = result.name.lowercased()
+            // Longer descriptive banana entries
+            return lower.hasPrefix("banana") && lower.count > 35
+        }
+
+        // Shorter name should rank higher if both exist
+        if let shortIdx = shortBananaIndex, let longIdx = longBananaIndex {
+            #expect(
+                shortIdx < longIdx,
+                "Shorter names should rank first: '\(results[shortIdx].name)' vs '\(results[longIdx].name)'"
+            )
+        }
+    }
+
+    // MARK: - Error Propagation Tests
+
+    @Test("Search throws databaseUnavailable for invalid database path")
+    func testSearchThrowsDatabaseUnavailable() async {
+        let database = LocalFoodDatabase(databasePath: "/invalid/nonexistent/path.sqlite")
+
+        await #expect(throws: LocalFoodDatabaseError.self) {
+            _ = try await database.search(query: "chicken")
+        }
+    }
+
+    @Test("Lookup by ID throws databaseUnavailable for invalid database")
+    func testLookupByIdThrowsDatabaseUnavailable() async {
+        let database = LocalFoodDatabase(databasePath: "/invalid/path.sqlite")
+
+        await #expect(throws: LocalFoodDatabaseError.self) {
+            _ = try await database.lookup(fdcId: 12345)
+        }
+    }
+
+    @Test("Lookup barcode throws databaseUnavailable for invalid database")
+    func testLookupBarcodeThrowsDatabaseUnavailable() async {
+        let database = LocalFoodDatabase(databasePath: "/invalid/path.sqlite")
+
+        await #expect(throws: LocalFoodDatabaseError.self) {
+            _ = try await database.lookupBarcode("1234567890")
         }
     }
 }

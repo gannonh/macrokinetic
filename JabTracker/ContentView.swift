@@ -297,11 +297,14 @@ struct ContentView: View {
 
     @ViewBuilder
     private func foodSearchSheet(initialMethod: SearchMethod? = nil) -> some View {
-        if let currentUser = users.first {
+        if let currentUser = users.first,
+            let foodService = AppServices.shared.foodService,
+            let mealLogService = AppServices.shared.mealLogService
+        {
             FoodSearchSheet(
                 user: currentUser,
-                foodService: AppServices.shared.foodService,
-                mealLogService: AppServices.shared.mealLogService,
+                foodService: foodService,
+                mealLogService: mealLogService,
                 customFoodService: AppServices.shared.customFoodService,
                 initialMethod: initialMethod,
                 initialDate: selectedFoodLogDate

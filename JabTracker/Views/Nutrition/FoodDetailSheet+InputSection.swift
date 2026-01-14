@@ -157,15 +157,16 @@ extension FoodDetailSheet {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: 100)
+                    .focused($isInputFocused)
                     .accessibilityIdentifier(Self.quantityInputIdentifier)
 
                 Spacer()
 
-                // Show unit and gram equivalent
+                // Show pill option label and gram equivalent
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(selectedUnit.rawValue)
+                    Text(servingDisplayLabel)
                         .font(.subheadline.weight(.medium))
-                    if selectedUnit != .grams {
+                    if !isGramUnit {
                         Text("\(Int(quantityInGrams))g")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -178,13 +179,14 @@ extension FoodDetailSheet {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: 100)
+                    .focused($isInputFocused)
                     .accessibilityIdentifier("target-input")
 
                 Spacer()
 
                 // Show calculated quantity
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(calculatedQuantityDisplay) \(selectedUnit.rawValue)")
+                    Text("\(calculatedQuantityDisplay) \(targetModeUnitLabel)")
                         .font(.subheadline.weight(.medium))
                     Text("\(Int(quantityInGrams))g")
                         .font(.caption)
@@ -194,6 +196,10 @@ extension FoodDetailSheet {
         }
         .padding()
         .cardStyle(cornerRadius: 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isInputFocused = true
+        }
     }
 
     // MARK: - Mode and Unit Selector
@@ -220,13 +226,36 @@ extension FoodDetailSheet {
                     macroButton(macro)
                 }
             } else {
-                // Unit buttons
-                ForEach(ServingUnit.allCases) { unit in
-                    if unit != .item || food.hasItemServing {
-                        unitButton(unit)
-                    }
+                // Serving pill picker for quantity mode
+                ServingPillPicker(
+                    servingOptions: food.servingOptions,
+                    selectedOption: $selectedPillOption
+                )
+                .onChange(of: selectedPillOption) { oldValue, newValue in
+                    convertServingCount(from: oldValue, to: newValue)
                 }
             }
+        }
+    }
+
+    /// Handle serving count when switching between pill options
+    /// - Converting TO unit-only (g/oz): preserve gram amount
+    /// - Selecting item-based option: reset to 1 (user wants "1 small apple", not "1.64 small apples")
+    private func convertServingCount(from oldOption: ServingPillOption?, to newOption: ServingPillOption?) {
+        guard let oldOption = oldOption, let newOption = newOption else { return }
+        guard oldOption.id != newOption.id else { return }
+        guard newOption.grams > 0 else { return }
+
+        if newOption.isUnitOnly {
+            // Switching TO g/oz: convert to preserve gram amount
+            // Guard against invalid oldOption.grams to avoid division issues
+            guard oldOption.grams > 0 else { return }
+            let currentGrams = servingCount * oldOption.grams
+            servingCount = currentGrams / newOption.grams
+        } else {
+            // Switching TO item-based option: reset to 1
+            // User selecting "small apple" wants 1 small apple, not a fractional amount
+            servingCount = 1
         }
     }
 
@@ -272,13 +301,47 @@ extension FoodDetailSheet {
 // MARK: - Input Helpers
 
 extension FoodDetailSheet {
+    /// Display label for current serving (e.g., "large egg • 50g" or just "g")
+    var servingDisplayLabel: String {
+        guard let option = selectedPillOption else {
+            return selectedUnit.rawValue
+        }
+        if option.isUnitOnly {
+            return option.label
+        }
+        // For item-based, show label with grams (e.g., "large egg • 50g")
+        return "\(option.label) • \(Int(option.grams))g"
+    }
+
+    /// Whether current selection is the gram unit
+    var isGramUnit: Bool {
+        guard let option = selectedPillOption else {
+            return selectedUnit == .grams
+        }
+        return option.label == "g"
+    }
+
+    /// Unit label for target mode display
+    var targetModeUnitLabel: String {
+        guard let option = selectedPillOption else {
+            return selectedUnit.rawValue
+        }
+        return option.label
+    }
+
     func initializeServingInput() {
-        // Default to 1 item if available, otherwise 100g
-        if food.hasItemServing {
-            selectedUnit = .item
+        // Check if there are item-based serving options
+        let hasItemOptions = food.servingOptions.contains { option in
+            // Item options have format like "1.0 large (216g)" not just "100g"
+            !option.label.hasSuffix("g") || Double(option.label.dropLast()) == nil
+        }
+
+        if hasItemOptions {
+            // Start with 1 of the default item (e.g., "1 large apple")
             servingCount = 1
         } else {
-            selectedUnit = .grams
+            // No item options - use food's serving size as grams (e.g., 100g)
+            // This prevents defaulting to 1g for foods with no serving info
             servingCount = food.servingSize > 0 ? food.servingSize : 100
         }
     }
@@ -295,8 +358,17 @@ extension FoodDetailSheet {
             let grams = calculateGramsFromTarget()
             // Switch to quantity mode
             inputMode = .quantity
-            servingCount = quantityInSelectedUnit(from: grams)
+            servingCount = quantityFromGrams(grams)
         }
+    }
+
+    /// Convert grams to the current serving unit's quantity
+    private func quantityFromGrams(_ grams: Double) -> Double {
+        guard let option = selectedPillOption else {
+            return quantityInSelectedUnit(from: grams)
+        }
+        guard option.grams > 0 else { return grams }
+        return grams / option.grams
     }
 
     func switchToUnit(_ unit: ServingUnit) {

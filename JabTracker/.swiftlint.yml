@@ -1,6 +1,7 @@
 # SwiftLint Configuration for JabTracker root
 # AuthenticationManager handles complex seeding scenarios with multiple data tiers
 # ContentView handles main app navigation with TDEE backfill integration
+# DataController init handles multi-tier storage fallback (CloudKit -> local -> in-memory)
 
 file_length:
   warning: 550  # ContentView includes app launch TDEE snapshot backfill logic
@@ -17,6 +18,10 @@ large_tuple:
 cyclomatic_complexity:
   warning: 15
   error: 20
+
+function_body_length:
+  warning: 60  # DataController.init has multi-tier fallback logic
+  error: 80
 
 disabled_rules:
   - orphaned_doc_comment  # Comments explain seeding configuration

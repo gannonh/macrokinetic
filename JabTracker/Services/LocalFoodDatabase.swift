@@ -26,16 +26,20 @@ struct LocalFoodResult {
 }
 
 /// Service for searching the bundled food database (USDA + Open Food Facts) using SQLite FTS5
-@MainActor
-final class LocalFoodDatabase {
+/// Note: Actor ensures serial access to SQLite connection (required for thread safety)
+actor LocalFoodDatabase {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "LocalFoodDatabase")
 
     private var database: OpaquePointer?
     private let databasePath: String
+    private var hasOpened = false
 
     /// Whether the database is available for queries
     var isAvailable: Bool {
-        database != nil
+        get async {
+            ensureDatabaseOpen()
+            return database != nil
+        }
     }
 
     /// Initialize with the bundled database
@@ -47,24 +51,29 @@ final class LocalFoodDatabase {
             Self.logger.warning("USDA foods database not found in bundle")
             self.databasePath = ""
         }
-        openDatabase()
+        // Database opened lazily on first query
     }
 
     /// Initialize with a custom path (for testing)
     init(databasePath: String) {
         self.databasePath = databasePath
-        openDatabase()
+        // Database opened lazily on first query
     }
 
     deinit {
-        MainActor.assumeIsolated {
-            closeDatabase()
+        if let db = database {
+            sqlite3_close(db)
+            Self.logger.debug("Closed USDA foods database connection")
         }
     }
 
     // MARK: - Database Connection
 
-    private func openDatabase() {
+    /// Opens database on first use (lazy initialization)
+    private func ensureDatabaseOpen() {
+        guard !hasOpened else { return }
+        hasOpened = true
+
         guard !databasePath.isEmpty else {
             Self.logger.warning("Database path is empty, database unavailable")
             return
@@ -85,13 +94,6 @@ final class LocalFoodDatabase {
         }
     }
 
-    private func closeDatabase() {
-        if database != nil {
-            sqlite3_close(database)
-            database = nil
-        }
-    }
-
     // MARK: - Search Methods
 
     /// Search for foods matching the query using FTS5 full-text search
@@ -101,28 +103,49 @@ final class LocalFoodDatabase {
     ///   - sources: Optional array of source values to filter by (e.g., ["foundation", "sr_legacy"] for USDA,
     ///              or ["openFoodFacts"] for branded). If nil, searches all sources.
     /// - Returns: Array of matching foods
-    func search(query: String, limit: Int = 20, sources: [String]? = nil) async throws -> [LocalFoodResult] {
+    func search(query: String, limit: Int = 20, sources: [String]? = nil) throws -> [LocalFoodResult] {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             return []
         }
 
+        ensureDatabaseOpen()
         guard database != nil else {
-            Self.logger.warning("Database not available for search")
-            return []
+            Self.logger.error("Database not available for search")
+            throw LocalFoodDatabaseError.databaseUnavailable
         }
 
         // Prepare FTS5 query with prefix matching
-        let ftsQuery =
+        let queryWords =
             trimmedQuery
             .components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
+        let ftsQuery =
+            queryWords
             .map { "\($0)*" }  // Add prefix matching
             .joined(separator: " ")
 
+        // Create pattern for name prefix boosting (names starting with search term rank higher)
+        // E.g., "banana" -> "banana%" so "Bananas, raw" ranks above "Snacks, banana chips"
+        let namePrefixPattern = (queryWords.first ?? trimmedQuery).lowercased() + "%"
+
+        // Create pattern for whole word matching (exact word should rank higher than partial)
+        // E.g., "apple" matches "Apples, raw" as whole word but not "APPLEBEE'S"
+        // SQLite GLOB is case-sensitive, so we use LOWER() in the query
+        let firstWord = (queryWords.first ?? trimmedQuery).lowercased()
+        // GLOB pattern: matches words followed by optional 's' (plurals) or ',' (USDA naming)
+        // Pattern "[s,]*" matches zero or more 's' or ',' characters after the word
+        // Example: "apple" matches "Apples," in "Apples, raw" but not "applesauce"
+        let wholeWordPattern = firstWord + "[s,]*"
+
         // Build SQL with optional source filtering
+        // Ranking factors (in order of priority):
+        // 1) Names starting with search term (prefix match)
+        // 2) Whole word matches ("Apple" > "APPLEBEE'S")
+        // 3) Shorter names preferred ("Bananas, raw" > "Bananas, dehydrated, or...")
+        // 4) BM25 relevance score
         let sql: String
-        var parameters: [Any] = [ftsQuery]
+        var parameters: [Any] = []
 
         if let sources = sources, !sources.isEmpty {
             // Build placeholders for IN clause (?, ?, ...)
@@ -136,10 +159,18 @@ final class LocalFoodDatabase {
                 FROM foods_fts fts
                 JOIN foods f ON fts.rowid = f.id
                 WHERE foods_fts MATCH ? AND f.source IN (\(placeholders))
-                ORDER BY rank
+                ORDER BY
+                    CASE WHEN LOWER(f.name) LIKE ? THEN 0 ELSE 1 END,
+                    CASE WHEN LOWER(f.name) GLOB ? THEN 0 ELSE 1 END,
+                    LENGTH(f.name),
+                    bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
+            // Parameter order: ftsQuery, sources..., namePrefixPattern, wholeWordPattern, limit
+            parameters.append(ftsQuery)
             parameters.append(contentsOf: sources)
+            parameters.append(namePrefixPattern)
+            parameters.append(wholeWordPattern)
             parameters.append(limit)
         } else {
             sql = """
@@ -151,9 +182,17 @@ final class LocalFoodDatabase {
                 FROM foods_fts fts
                 JOIN foods f ON fts.rowid = f.id
                 WHERE foods_fts MATCH ?
-                ORDER BY rank
+                ORDER BY
+                    CASE WHEN LOWER(f.name) LIKE ? THEN 0 ELSE 1 END,
+                    CASE WHEN LOWER(f.name) GLOB ? THEN 0 ELSE 1 END,
+                    LENGTH(f.name),
+                    bm25(foods_fts, 10.0, 1.0)
                 LIMIT ?
                 """
+            // Parameter order: ftsQuery, namePrefixPattern, wholeWordPattern, limit
+            parameters.append(ftsQuery)
+            parameters.append(namePrefixPattern)
+            parameters.append(wholeWordPattern)
             parameters.append(limit)
         }
 
@@ -163,9 +202,11 @@ final class LocalFoodDatabase {
     /// Look up a specific food by FDC ID
     /// - Parameter fdcId: USDA FoodData Central ID
     /// - Returns: The food if found, nil otherwise
-    func lookup(fdcId: Int) async throws -> LocalFoodResult? {
+    /// - Throws: LocalFoodDatabaseError.databaseUnavailable if database cannot be opened
+    func lookup(fdcId: Int) throws -> LocalFoodResult? {
+        ensureDatabaseOpen()
         guard database != nil else {
-            return nil
+            throw LocalFoodDatabaseError.databaseUnavailable
         }
 
         let sql = """
@@ -183,14 +224,41 @@ final class LocalFoodDatabase {
         return results.first
     }
 
+    /// Look up a food by barcode
+    /// - Parameter barcode: Product barcode (EAN/UPC)
+    /// - Returns: The food if found, nil otherwise
+    /// - Throws: LocalFoodDatabaseError.databaseUnavailable if database cannot be opened
+    func lookupBarcode(_ barcode: String) throws -> LocalFoodResult? {
+        ensureDatabaseOpen()
+        guard database != nil else {
+            throw LocalFoodDatabaseError.databaseUnavailable
+        }
+
+        let sql = """
+            SELECT fdc_id, name, brand,
+                   calories_per_100g, protein_per_100g, carbs_per_100g,
+                   fat_per_100g, fiber_per_100g, category,
+                   source, barcode,
+                   serving_size, serving_unit, serving_options
+            FROM foods
+            WHERE barcode = ?
+            LIMIT 1
+            """
+
+        let results = try executeSearch(sql: sql, parameters: [barcode])
+        return results.first
+    }
+
     /// Search foods by category
     /// - Parameters:
     ///   - category: Category name to filter by
     ///   - limit: Maximum number of results
     /// - Returns: Array of foods in the category
-    func searchByCategory(_ category: String, limit: Int = 50) async throws -> [LocalFoodResult] {
+    /// - Throws: LocalFoodDatabaseError.databaseUnavailable if database cannot be opened
+    func searchByCategory(_ category: String, limit: Int = 50) throws -> [LocalFoodResult] {
+        ensureDatabaseOpen()
         guard database != nil else {
-            return []
+            throw LocalFoodDatabaseError.databaseUnavailable
         }
 
         let sql = """
@@ -233,7 +301,8 @@ final class LocalFoodDatabase {
             case let intValue as Int:
                 sqlite3_bind_int(statement, bindIndex, Int32(intValue))
             default:
-                Self.logger.warning("Unsupported parameter type at index \(index)")
+                Self.logger.error("Unsupported parameter type \(type(of: param)) at index \(index)")
+                throw LocalFoodDatabaseError.queryFailed("Unsupported parameter type at index \(index)")
             }
         }
 

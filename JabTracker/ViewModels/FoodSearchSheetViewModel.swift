@@ -72,6 +72,18 @@ final class FoodSearchSheetViewModel {
 
     // MARK: - Daily Tracking
 
+    /// Consumed calories for the day
+    var consumedCalories: Double = 0
+
+    /// Target calories for the day
+    var targetCalories: Double = 0
+
+    /// Consumed protein for the day
+    var consumedProtein: Double = 0
+
+    /// Target protein for the day
+    var targetProtein: Double = 0
+
     /// Remaining calories for the day
     var remainingCalories: Double = 0
 
@@ -165,14 +177,24 @@ final class FoodSearchSheetViewModel {
     func loadInitialData(user: User, for date: Date) async {
         Self.logger.debug("Loading initial data for food search")
 
-        // Load remaining macros
+        // Set target values from user goals
+        targetCalories = user.dailyCalorieGoal
+        targetProtein = user.dailyProteinGoal
+
+        // Load consumed and remaining macros
         do {
             let totals = try await mealLogService.getDailyTotals(for: date)
+            consumedCalories = totals.calories
+            consumedProtein = totals.protein
             remainingCalories = max(0, user.dailyCalorieGoal - totals.calories)
             remainingProtein = max(0, user.dailyProteinGoal - totals.protein)
+            Self.logger.debug("Consumed: \(self.consumedCalories) cal, \(self.consumedProtein)g protein")
             Self.logger.debug("Remaining: \(self.remainingCalories) cal, \(self.remainingProtein)g protein")
         } catch {
             Self.logger.error("Failed to load daily totals: \(error.localizedDescription)")
+            errorMessage = "Unable to load nutrition data"
+            consumedCalories = 0
+            consumedProtein = 0
             remainingCalories = user.dailyCalorieGoal
             remainingProtein = user.dailyProteinGoal
         }
@@ -183,11 +205,17 @@ final class FoodSearchSheetViewModel {
             Self.logger.debug("Loaded \(self.recentFoods.count) recent foods")
         } catch {
             Self.logger.error("Failed to load recent foods: \(error.localizedDescription)")
+            // Don't override errorMessage if already set from daily totals failure
+            if errorMessage == nil {
+                errorMessage = "Unable to load recent foods"
+            }
             recentFoods = []
         }
     }
 
     /// Perform search with the current search text
+    /// Note: Spinner is not shown for local searches since FTS5 queries complete in <50ms.
+    /// The 200ms debounce provides enough "thinking time" without visual spinner noise.
     func performSearch() async {
         // Cancel any ongoing search
         searchTask?.cancel()
@@ -201,7 +229,9 @@ final class FoodSearchSheetViewModel {
         }
 
         Self.logger.debug("Searching for: \(query)")
-        isSearching = true
+        // Note: isSearching is not set to true here - local searches are fast enough
+        // that showing a spinner causes more visual noise than benefit.
+        // The 200ms debounce in FoodSearchSheet already provides "thinking time".
         errorMessage = nil
 
         searchTask = Task {
@@ -230,8 +260,6 @@ final class FoodSearchSheetViewModel {
                 Self.logger.error("Search failed: \(error.localizedDescription)")
                 errorMessage = error.localizedDescription
             }
-
-            isSearching = false
         }
 
         await searchTask?.value

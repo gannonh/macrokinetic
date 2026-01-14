@@ -26,6 +26,10 @@ class DataController: ObservableObject {
     @Published var syncStatus: SyncStatus = .unknown
     @Published var isCloudKitEnabled: Bool = false
 
+    /// Error that occurred during initialization, if any
+    /// Views can check this to display appropriate error UI
+    @Published var initializationError: String?
+
     /// Preview container for SwiftUI previews
     static var preview: DataController = {
         let controller = DataController(inMemory: true)
@@ -139,8 +143,29 @@ class DataController: ObservableObject {
                 self.container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
                 self.isCloudKitEnabled = false
                 self.syncStatus = .unavailable
-            } catch {
-                fatalError("Failed to create ModelContainer even without CloudKit: \(error)")
+            } catch let fallbackError {
+                // Local storage also failed - try in-memory as last resort
+                Self.logger.error(
+                    "Local storage failed, attempting in-memory fallback: \(fallbackError.localizedDescription)"
+                )
+                let inMemoryConfig = ModelConfiguration(
+                    schema: schema,
+                    isStoredInMemoryOnly: true,
+                    cloudKitDatabase: .none)
+                do {
+                    self.container = try ModelContainer(for: schema, configurations: [inMemoryConfig])
+                    self.isCloudKitEnabled = false
+                    self.syncStatus = .unavailable
+                    self.initializationError =
+                        "Unable to save data. Your changes will not persist after closing the app."
+                    Self.logger.error("Running in emergency in-memory mode - data will not persist")
+                } catch let finalError {
+                    // This should never happen - in-memory containers don't require disk access
+                    Self.logger.critical("Failed to create even in-memory ModelContainer: \(finalError)")
+                    preconditionFailure(
+                        "Unable to initialize data storage. Please reinstall the app or contact support."
+                    )
+                }
             }
         }
     }

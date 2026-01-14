@@ -1,0 +1,2 @@
+mocks/**/*.png filter=lfs diff=lfs merge=lfs -text
+mocks/**/*.PNG filter=lfs diff=lfs merge=lfs -text

@@ -18,6 +18,8 @@ Output:
 
 import csv
 import gzip
+import json
+import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -37,6 +39,8 @@ COLUMNS = {
     "product_name": 10,
     "brands": 18,
     "countries_en": 40,
+    "serving_size": 50,
+    "serving_quantity": 51,
     "energy_kcal_100g": 89,
     "fat_100g": 92,
     "carbohydrates_100g": 129,
@@ -106,6 +110,43 @@ def parse_row(row: list) -> dict | None:
         if calories == 0 and (protein > 0 or carbs > 0 or fat > 0):
             calories = round(protein * 4 + carbs * 4 + fat * 9, 1)
 
+        # Extract serving info
+        serving_size_str = row[COLUMNS["serving_size"]].strip()
+        serving_quantity = parse_float(row[COLUMNS["serving_quantity"]])
+
+        # Build serving_options JSON array
+        serving_options = ["100g"]
+        if serving_quantity > 0 and serving_quantity != 100:
+            # Check if serving_size_str has meaningful descriptive text
+            # Strip parenthetical content and check what remains
+            base_str = re.sub(r"\([^)]*\)", "", serving_size_str).strip().lower()
+
+            # Remove common noise patterns
+            base_str = base_str.replace(",", ".").replace(" ", "")
+
+            # Check if it's just a weight measurement (meaningless as a serving label)
+            # Handle both abbreviated (g, mg) and full word (gram, grams) forms
+            is_just_weight = (
+                not base_str  # Empty after removing parentheticals
+                or (base_str.endswith("g") and base_str[:-1].replace(".", "").isdigit())
+                or (base_str.endswith("mg") and base_str[:-2].replace(".", "").isdigit())
+                or (base_str.endswith("ml") and base_str[:-2].replace(".", "").isdigit())
+                or (base_str.endswith("l") and base_str[:-1].replace(".", "").isdigit())
+                or (base_str.endswith("oz") and base_str[:-2].replace(".", "").isdigit())
+                or (base_str.endswith("gram") and base_str[:-4].replace(".", "").isdigit())
+                or (base_str.endswith("grams") and base_str[:-5].replace(".", "").isdigit())
+                or (base_str.endswith("grm") and base_str[:-3].replace(".", "").isdigit())
+                or base_str.replace(".", "").isdigit()  # Just a number
+            )
+
+            if serving_size_str and not is_just_weight:
+                # Has meaningful descriptive text (e.g., "1 bar", "2 cookies", "1 cup")
+                label = f"{serving_size_str} ({serving_quantity:.0f}g)"
+            else:
+                # No meaningful description - use "1 serving (Xg)"
+                label = f"1 serving ({serving_quantity:.0f}g)"
+            serving_options.append(label)
+
         return {
             "barcode": barcode,
             "name": name,
@@ -117,6 +158,8 @@ def parse_row(row: list) -> dict | None:
             "carbs_per_100g": carbs,
             "fat_per_100g": fat,
             "fiber_per_100g": fiber,
+            "serving_quantity": serving_quantity if serving_quantity > 0 else 100,
+            "serving_options": json.dumps(serving_options),
         }
     except (IndexError, ValueError):
         return None
@@ -216,7 +259,7 @@ def add_to_database(products: list) -> tuple:
                 calories_per_100g, protein_per_100g, carbs_per_100g,
                 fat_per_100g, fiber_per_100g,
                 serving_size, serving_unit, serving_options
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 100, 'g', '[]')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'g', ?)
         """, (
             next_id,
             product["barcode"],
@@ -229,6 +272,8 @@ def add_to_database(products: list) -> tuple:
             product["carbs_per_100g"],
             product["fat_per_100g"],
             product["fiber_per_100g"],
+            product["serving_quantity"],
+            product["serving_options"],
         ))
 
         existing_names.add(name_lower)
