@@ -20,6 +20,7 @@ struct EditFoodEntrySheet: View {
     @State private var servingGrams: Double
     @State private var servingCount: Double = 1.0
     @State private var selectedUnit: ServingUnit = .grams
+    @State private var selectedPillOption: ServingPillOption?
     @State private var inputMode: ServingInputMode = .quantity
     @State private var targetMacro: TargetMacro = .calories
     @State private var targetValue: Double = 0
@@ -44,6 +45,18 @@ struct EditFoodEntrySheet: View {
     }
 
     // MARK: - Computed Properties
+
+    /// Serving options parsed from the entry's persisted JSON
+    private var servingOptions: [ServingOption] {
+        ServingOption.parse(from: entry.servingOptionsJSON)
+    }
+
+    /// Whether this entry has persisted serving options beyond default 100g
+    private var hasPersistedServingOptions: Bool {
+        let options = servingOptions
+        // Has options if more than 1, or if the single option isn't just "100g"
+        return options.count > 1 || (options.count == 1 && options.first?.label != "100g")
+    }
 
     /// Item weight from serving description (if available)
     private var itemGrams: Double {
@@ -71,6 +84,16 @@ struct EditFoodEntrySheet: View {
     private var quantityInGrams: Double {
         if inputMode == .target {
             return calculateGramsFromTarget()
+        }
+        // Use pill option if available, otherwise fall back to unit-based calculation
+        if let pillOption = selectedPillOption {
+            if pillOption.isUnitOnly {
+                // For g/oz, multiply servingCount by the unit's gram value
+                return servingCount * pillOption.grams
+            } else {
+                // For item-based options, multiply by option's grams
+                return servingCount * pillOption.grams
+            }
         }
         return selectedUnit.toGrams(servingCount, itemGrams: itemGrams)
     }
@@ -204,9 +227,9 @@ struct EditFoodEntrySheet: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(selectedUnit.rawValue)
+                    Text(currentUnitLabel)
                         .font(.subheadline.weight(.medium))
-                    if selectedUnit != .grams {
+                    if !isCurrentUnitGrams {
                         Text("\(Int(quantityInGrams))g")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -223,7 +246,7 @@ struct EditFoodEntrySheet: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(calculatedQuantityDisplay) \(selectedUnit.rawValue)")
+                    Text("\(calculatedQuantityDisplay) \(currentUnitLabel)")
                         .font(.subheadline.weight(.medium))
                     Text("\(Int(quantityInGrams))g")
                         .font(.caption)
@@ -233,11 +256,28 @@ struct EditFoodEntrySheet: View {
         }
     }
 
+    /// Current unit label - from pill option or selected unit
+    private var currentUnitLabel: String {
+        if hasPersistedServingOptions, let pillOption = selectedPillOption {
+            return pillOption.label
+        }
+        return selectedUnit.rawValue
+    }
+
+    /// Whether current unit is grams (to hide redundant gram display)
+    private var isCurrentUnitGrams: Bool {
+        if hasPersistedServingOptions, let pillOption = selectedPillOption {
+            return pillOption.label == "g"
+        }
+        return selectedUnit == .grams
+    }
+
     // MARK: - Mode and Unit Selector
 
     @ViewBuilder
     private var modeAndUnitSelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        if hasPersistedServingOptions {
+            // Use ServingPillPicker for foods with persisted serving options
             HStack(spacing: 8) {
                 // Swap mode button
                 Button {
@@ -253,13 +293,46 @@ struct EditFoodEntrySheet: View {
                 .accessibilityIdentifier("swap-mode-button")
 
                 if inputMode == .target {
-                    ForEach(TargetMacro.allCases) { macro in
-                        macroButton(macro)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(TargetMacro.allCases) { macro in
+                                macroButton(macro)
+                            }
+                        }
                     }
                 } else {
-                    ForEach(ServingUnit.allCases) { unit in
-                        if unit != .item || hasItemServing {
-                            unitButton(unit)
+                    ServingPillPicker(
+                        servingOptions: servingOptions,
+                        selectedOption: $selectedPillOption
+                    )
+                }
+            }
+        } else {
+            // Fall back to legacy unit buttons
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    // Swap mode button
+                    Button {
+                        toggleInputMode()
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.title3)
+                            .foregroundColor(.primary)
+                            .frame(width: 44, height: 44)
+                            .background(Color(.tertiarySystemFill))
+                            .cornerRadius(8)
+                    }
+                    .accessibilityIdentifier("swap-mode-button")
+
+                    if inputMode == .target {
+                        ForEach(TargetMacro.allCases) { macro in
+                            macroButton(macro)
+                        }
+                    } else {
+                        ForEach(ServingUnit.allCases) { unit in
+                            if unit != .item || hasItemServing {
+                                unitButton(unit)
+                            }
                         }
                     }
                 }
@@ -323,15 +396,39 @@ struct EditFoodEntrySheet: View {
     // MARK: - Input Helpers
 
     private func initializeServingInput() {
-        // Initialize based on current entry
-        if hasItemServing && itemGrams > 0 {
+        servingGrams = entry.servingGrams
+
+        // Use persisted serving options if available
+        if hasPersistedServingOptions {
+            // Find the best pill option to match the current serving
+            let options = servingOptions
+            let pillOptions = options.map { ServingPillOption(from: $0) }
+
+            // Try to find an option that divides evenly into current grams
+            if let bestMatch = pillOptions.first(where: { option in
+                !option.isUnitOnly && option.grams > 0
+                    && entry.servingGrams.truncatingRemainder(dividingBy: option.grams) < 0.1
+            }) {
+                selectedPillOption = bestMatch
+                servingCount = entry.servingGrams / bestMatch.grams
+            } else if let firstItem = pillOptions.first(where: { !$0.isUnitOnly }) {
+                // Fall back to first item-based option
+                selectedPillOption = firstItem
+                servingCount = entry.servingGrams / firstItem.grams
+            } else {
+                // Fall back to grams
+                selectedPillOption = .grams
+                servingCount = entry.servingGrams
+            }
+        } else if hasItemServing && itemGrams > 0 {
+            // Legacy path: use item-based serving
             selectedUnit = .item
             servingCount = entry.servingGrams / itemGrams
         } else {
+            // Fall back to grams
             selectedUnit = .grams
             servingCount = entry.servingGrams
         }
-        servingGrams = entry.servingGrams
     }
 
     private func toggleInputMode() {
@@ -342,7 +439,12 @@ struct EditFoodEntrySheet: View {
         } else {
             let grams = calculateGramsFromTarget()
             inputMode = .quantity
-            servingCount = quantityInSelectedUnit(from: grams)
+            // Use pill option grams if available
+            if hasPersistedServingOptions, let option = selectedPillOption, option.grams > 0 {
+                servingCount = grams / option.grams
+            } else {
+                servingCount = quantityInSelectedUnit(from: grams)
+            }
         }
     }
 
@@ -392,6 +494,11 @@ struct EditFoodEntrySheet: View {
 
     private var calculatedQuantityDisplay: String {
         let grams = calculateGramsFromTarget()
+        // Use pill option if available
+        if hasPersistedServingOptions, let option = selectedPillOption, option.grams > 0 {
+            let unitValue = grams / option.grams
+            return String(format: "%.2f", unitValue)
+        }
         let unitValue = quantityInSelectedUnit(from: grams)
         return String(format: "%.2f", unitValue)
     }
