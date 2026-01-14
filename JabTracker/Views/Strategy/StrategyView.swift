@@ -480,6 +480,8 @@ struct StrategyView: View {
                 Text("Saturday").tag(7)
             }
             .pickerStyle(.menu)
+            .tint(.secondary)
+            .font(.subheadline)
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
