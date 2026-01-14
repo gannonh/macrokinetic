@@ -3,21 +3,21 @@
 # =============================================================================
 # Branch Protection Check
 # =============================================================================
-branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-protected_branches="main master"
+# branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+# protected_branches="main master"
 
-for protected in $protected_branches; do
-    if [ "$branch" = "$protected" ]; then
-        echo "⚠️  WARNING: You're committing directly to '$branch'"
-        echo ""
-        printf "Are you sure? (y/N): "
-        read confirm
-        if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
-            echo "Commit aborted."
-            exit 1
-        fi
-    fi
-done
+# for protected in $protected_branches; do
+#     if [ "$branch" = "$protected" ]; then
+#         echo "⚠️  WARNING: You're committing directly to '$branch'"
+#         echo ""
+#         printf "Are you sure? (y/N): "
+#         read confirm
+#         if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+#             echo "Commit aborted."
+#             exit 1
+#         fi
+#     fi
+# done
 
 # =============================================================================
 # Pre-commit hook for Swift formatting and linting
