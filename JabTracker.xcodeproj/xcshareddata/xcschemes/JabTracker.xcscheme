@@ -184,6 +184,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "--disable-cloudkit"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--force-onboarding"
             isEnabled = "NO">
          </CommandLineArgument>

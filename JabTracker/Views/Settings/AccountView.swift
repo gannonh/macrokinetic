@@ -250,9 +250,9 @@ struct AccountView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(users.first?.name ?? "Guest")
+                Text(users.first?.name ?? "User")
                     .font(.headline)
-                Text(users.first?.email ?? "Not signed in")
+                Text(authManager.authenticationState == .authenticated ? "Signed in" : "Not signed in")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }

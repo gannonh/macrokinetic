@@ -111,10 +111,11 @@ class DataController: ObservableObject {
         // Override inMemory if specified in launch arguments (for E2E tests)
         let inMemory = inMemory || ProcessInfo.processInfo.arguments.contains("-inMemory")
 
-        let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
+        // CloudKit can be disabled via launch argument for local debugging
+        let isCloudKitDisabled = ProcessInfo.processInfo.arguments.contains("--disable-cloudkit")
 
-        // CloudKit enabled ONLY for CloudKit integration tests (not regular unit tests)
-        let shouldEnableCloudKit = isCloudKitTesting && !isTestEnvironment
+        // CloudKit enabled by default, disabled for tests or via flag
+        let shouldEnableCloudKit = !isTestEnvironment && !inMemory && !isCloudKitDisabled
 
         let configuration = ModelConfiguration(
             schema: schema,

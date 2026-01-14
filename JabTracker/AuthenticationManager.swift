@@ -93,16 +93,18 @@ class AuthenticationManager: NSObject, ObservableObject {
                 )
             }
 
-            await MainActor.run {
-                if let user = users.first {
-                    self.currentUser = user
-                    self.authenticationState = .authenticated
-                    Self.logger.info("✅ AuthenticationManager: Set state to authenticated")
-                } else {
-                    self.authenticationState = .notAuthenticated
-                    Self.logger.info(
-                        "❌ AuthenticationManager: Set state to notAuthenticated - no users found")
+            if let user = users.first {
+                // Validate Apple credential and handle revoked state
+                if await self.validateAndHandleAppleCredential(for: user, context: context) == false {
+                    return
                 }
+                self.currentUser = user
+                self.authenticationState = .authenticated
+                Self.logger.info("✅ AuthenticationManager: Set state to authenticated")
+            } else {
+                self.authenticationState = .notAuthenticated
+                Self.logger.info(
+                    "❌ AuthenticationManager: Set state to notAuthenticated - no users found")
             }
         } catch {
             Self.logger.error("❌ AuthenticationManager: Fetch error: \(error, privacy: .public)")
@@ -998,26 +1000,83 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     // MARK: - Private Helper Methods
 
+    /// Validates the user's Apple credential and handles revoked state.
+    /// Returns true if credential is valid or not present, false if revoked (and sets auth state).
+    private func validateAndHandleAppleCredential(for user: User, context: ModelContext) async -> Bool {
+        guard let appleUserId = user.appleUserId else {
+            return true  // No Apple ID stored, skip validation
+        }
+
+        let credentialState = await self.checkAppleCredentialState(userId: appleUserId)
+        if credentialState != .authorized {
+            let stateDesc = String(describing: credentialState)
+            Self.logger.warning(
+                "⚠️ AuthenticationManager: Apple credential invalid (state: \(stateDesc))"
+            )
+            // Clear the invalid Apple ID but keep user data
+            user.appleUserId = nil
+            try? context.save()
+            self.authenticationState = .notAuthenticated
+            Self.logger.info(
+                "❌ AuthenticationManager: Set state to notAuthenticated - credential revoked"
+            )
+            return false
+        }
+        return true
+    }
+
+    /// Check if an Apple ID credential is still valid
+    private func checkAppleCredentialState(userId: String) async -> ASAuthorizationAppleIDProvider.CredentialState {
+        let provider = ASAuthorizationAppleIDProvider()
+        do {
+            return try await provider.credentialState(forUserID: userId)
+        } catch {
+            Self.logger.error("❌ AuthenticationManager: Failed to check credential state: \(error, privacy: .public)")
+            return .notFound
+        }
+    }
+
     private func processAppleIDCredential(_ appleIDCredential: ASAuthorizationAppleIDCredential)
         async throws -> User
     {
         // Consolidated credential processing logic
         let context = self.dataController.container.mainContext
 
-        let user = User(
-            email: appleIDCredential.email,  // Pass nil if Apple doesn't provide email
-            name: appleIDCredential.fullName?.formatted())
+        // Find existing user or create new one (single-user app)
+        let fetchDescriptor = FetchDescriptor<User>()
+        let existingUsers = try context.fetch(fetchDescriptor)
 
-        context.insert(user)
-        Self.logger.info(
-            "📝 AuthenticationManager: User inserted into context - ID: \(user.id, privacy: .public)")
+        let user: User
+        if let existingUser = existingUsers.first {
+            // Update existing user with Apple ID credentials
+            existingUser.appleUserId = appleIDCredential.user
+            if let name = appleIDCredential.fullName?.formatted(), !name.isEmpty {
+                existingUser.name = name
+            }
+            // Email only provided on first auth, update if available
+            if let email = appleIDCredential.email {
+                existingUser.email = email
+            }
+            user = existingUser
+            Self.logger.info(
+                "📝 AuthenticationManager: Updated existing user with Apple ID - ID: \(user.id, privacy: .public)")
+        } else {
+            // Create new user
+            user = User(
+                email: appleIDCredential.email,
+                name: appleIDCredential.fullName?.formatted())
+            user.appleUserId = appleIDCredential.user
+            context.insert(user)
+            Self.logger.info(
+                "📝 AuthenticationManager: Created new user - ID: \(user.id, privacy: .public)")
+        }
 
         try context.save()
         Self.logger.info("💾 AuthenticationManager: Context saved successfully")
 
         // Verify the user was actually saved
-        let fetchDescriptor = FetchDescriptor<User>()
-        let savedUsers = try context.fetch(fetchDescriptor)
+        let verifyDescriptor = FetchDescriptor<User>()
+        let savedUsers = try context.fetch(verifyDescriptor)
         Self.logger.info(
             """
             🔍 AuthenticationManager: After save, found \(savedUsers.count, privacy: .public) users in database
