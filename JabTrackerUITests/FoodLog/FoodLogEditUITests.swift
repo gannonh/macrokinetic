@@ -172,6 +172,14 @@ final class FoodLogEditUITests: XCTestCase {
                 NSPredicate(format: "identifier BEGINSWITH 'serving-pill-'")
             ).firstMatch
             XCTAssertTrue(anyPill.waitForExistence(timeout: 2), "At least one serving pill should exist")
+            anyPill.tap()
+
+            // Verify quantity input field exists after selecting serving unit
+            let quantityInput = app.textFields["quantity-input"]
+            XCTAssertTrue(
+                quantityInput.waitForExistence(timeout: 2),
+                "Quantity input should exist after selecting serving unit"
+            )
         }
     }
 
