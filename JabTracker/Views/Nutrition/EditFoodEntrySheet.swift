@@ -85,15 +85,8 @@ struct EditFoodEntrySheet: View {
         if inputMode == .target {
             return calculateGramsFromTarget()
         }
-        // Use pill option if available, otherwise fall back to unit-based calculation
         if let pillOption = selectedPillOption {
-            if pillOption.isUnitOnly {
-                // For g/oz, multiply servingCount by the unit's gram value
-                return servingCount * pillOption.grams
-            } else {
-                // For item-based options, multiply by option's grams
-                return servingCount * pillOption.grams
-            }
+            return servingCount * pillOption.grams
         }
         return selectedUnit.toGrams(servingCount, itemGrams: itemGrams)
     }
@@ -277,7 +270,6 @@ struct EditFoodEntrySheet: View {
     @ViewBuilder
     private var modeAndUnitSelector: some View {
         if hasPersistedServingOptions {
-            // Use ServingPillPicker for foods with persisted serving options
             HStack(spacing: 8) {
                 // Swap mode button
                 Button {
@@ -308,7 +300,6 @@ struct EditFoodEntrySheet: View {
                 }
             }
         } else {
-            // Fall back to legacy unit buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     // Swap mode button
@@ -398,34 +389,31 @@ struct EditFoodEntrySheet: View {
     private func initializeServingInput() {
         servingGrams = entry.servingGrams
 
-        // Use persisted serving options if available
+        // Match serving to best pill option:
+        // 1. Option that divides evenly into current grams (exact match)
+        // 2. First item-based option (approximate)
+        // 3. Grams fallback
         if hasPersistedServingOptions {
-            // Find the best pill option to match the current serving
             let options = servingOptions
             let pillOptions = options.map { ServingPillOption(from: $0) }
 
-            // Try to find an option that divides evenly into current grams
             if let bestMatch = pillOptions.first(where: { option in
                 !option.isUnitOnly && option.grams > 0
                     && entry.servingGrams.truncatingRemainder(dividingBy: option.grams) < 0.1
             }) {
                 selectedPillOption = bestMatch
                 servingCount = entry.servingGrams / bestMatch.grams
-            } else if let firstItem = pillOptions.first(where: { !$0.isUnitOnly }) {
-                // Fall back to first item-based option
+            } else if let firstItem = pillOptions.first(where: { !$0.isUnitOnly && $0.grams > 0 }) {
                 selectedPillOption = firstItem
                 servingCount = entry.servingGrams / firstItem.grams
             } else {
-                // Fall back to grams
                 selectedPillOption = .grams
                 servingCount = entry.servingGrams
             }
         } else if hasItemServing && itemGrams > 0 {
-            // Legacy path: use item-based serving
             selectedUnit = .item
             servingCount = entry.servingGrams / itemGrams
         } else {
-            // Fall back to grams
             selectedUnit = .grams
             servingCount = entry.servingGrams
         }
@@ -439,7 +427,6 @@ struct EditFoodEntrySheet: View {
         } else {
             let grams = calculateGramsFromTarget()
             inputMode = .quantity
-            // Use pill option grams if available
             if hasPersistedServingOptions, let option = selectedPillOption, option.grams > 0 {
                 servingCount = grams / option.grams
             } else {
@@ -494,7 +481,6 @@ struct EditFoodEntrySheet: View {
 
     private var calculatedQuantityDisplay: String {
         let grams = calculateGramsFromTarget()
-        // Use pill option if available
         if hasPersistedServingOptions, let option = selectedPillOption, option.grams > 0 {
             let unitValue = grams / option.grams
             return String(format: "%.2f", unitValue)
