@@ -280,7 +280,7 @@ struct StrategyView: View {
                 // Countdown ring
                 ZStack {
                     Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                        .stroke(DesignTokens.Colors.inactive.opacity(0.5), lineWidth: 6)
                         .frame(width: 64, height: 64)
 
                     Circle()
@@ -451,9 +451,11 @@ struct StrategyView: View {
     }
 
     private func checkInSettingsCard(goal: NutritionGoal) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Check-In Settings")
-                .font(.headline)
+        HStack {
+            Text("Check-In Day")
+                .font(.subheadline)
+
+            Spacer()
 
             Picker(
                 "Check-In Day",
@@ -474,11 +476,8 @@ struct StrategyView: View {
                 Text("Friday").tag(6)
                 Text("Saturday").tag(7)
             }
-
-            let dayName = dayOfWeekName(for: goal.checkInDayOfWeek)
-            Text("You'll be prompted to review and optimize your program each \(dayName).")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            .pickerStyle(.menu)
+            .tint(.primary)
         }
         .padding()
         .background(
