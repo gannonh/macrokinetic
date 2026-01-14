@@ -455,8 +455,10 @@ struct StrategyView: View {
     private func checkInDayPicker(goal: NutritionGoal) -> some View {
         HStack {
             Text("Check-in day")
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
+
+            Spacer()
 
             Picker(
                 "Check-In Day",
@@ -469,18 +471,18 @@ struct StrategyView: View {
                     }
                 )
             ) {
-                Text("Sun").tag(1)
-                Text("Mon").tag(2)
-                Text("Tue").tag(3)
-                Text("Wed").tag(4)
-                Text("Thu").tag(5)
-                Text("Fri").tag(6)
-                Text("Sat").tag(7)
+                Text("Sunday").tag(1)
+                Text("Monday").tag(2)
+                Text("Tuesday").tag(3)
+                Text("Wednesday").tag(4)
+                Text("Thursday").tag(5)
+                Text("Friday").tag(6)
+                Text("Saturday").tag(7)
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
         .background(DesignTokens.Colors.cardBackground)
         .accessibilityIdentifier("check-in-day-picker")
     }
