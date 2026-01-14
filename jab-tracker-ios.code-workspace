@@ -14,6 +14,9 @@
 		}
 	],
 	"settings": {
-		"sweetpad.testing.configuration": "Debug"
+		"sweetpad.testing.configuration": "Debug",
+		"chat.tools.terminal.autoApprove": {
+			"gh": true
+		}
 	}
 }
