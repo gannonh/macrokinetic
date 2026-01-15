@@ -13,15 +13,16 @@
 Phase: 39 of 43 (Day Status Tracking)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-01-14 - Milestone v0.9.0 created
+Last activity: 2026-01-14 - PR Review complete (CI + reviews passed)
 
 Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
 Issue: N/A
-PR: #334 - feat: persist serving units for custom and history foods
-Branch: feat/persist-serving-units
+PR: #335 - ui: make check-in day setting compact
+Branch: ui/compact-checkin-day-setting
+Status: PR Review complete - ready for merge
 
 ## Performance Metrics
 
