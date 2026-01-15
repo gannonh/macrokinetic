@@ -63,6 +63,9 @@ struct FoodLogView: View {
     @State private var activeEnergyBurned: Double = 0
     @State private var adjustmentBreakdown: CalorieAdjustmentBreakdown?
 
+    // Fasting day support
+    @State private var isFastingDay: Bool = false
+
     private let calendar = Calendar.current
 
     /// Get macro targets for the selected date, considering per-day distribution
@@ -89,6 +92,11 @@ struct FoodLogView: View {
     /// Entries for the currently selected date
     private var selectedDateEntries: [FoodEntry] {
         allEntries.filter { calendar.isDate($0.loggedAt, inSameDayAs: selectedDate) }
+    }
+
+    /// Whether the fasting toggle should be shown (only when no entries exist)
+    private var shouldShowFastingToggle: Bool {
+        selectedDateEntries.isEmpty
     }
 
     var body: some View {
@@ -124,6 +132,24 @@ struct FoodLogView: View {
                     .cardListRow()
                 }
                 .listSectionSeparator(.hidden)
+
+                // Fasting toggle (only shown when no entries exist)
+                if shouldShowFastingToggle {
+                    Section {
+                        FastingToggleCard(
+                            isFasting: Binding(
+                                get: { isFastingDay },
+                                set: { newValue in
+                                    isFastingDay = newValue
+                                    saveFastingStatus(newValue)
+                                }
+                            ),
+                            date: selectedDate
+                        )
+                        .cardListRow()
+                    }
+                    .listSectionSeparator(.hidden)
+                }
 
                 // Meal sections
                 ForEach(MealSection.allCases) { section in
@@ -202,6 +228,7 @@ struct FoodLogView: View {
         .accessibilityIdentifier("food-log-view")
         .task(id: selectedDate) {
             loadWeekEntries()
+            loadFastingStatus()
             await updateCalorieTarget()
             startEnergyObservation()
         }
@@ -448,6 +475,26 @@ struct FoodLogView: View {
         } catch {
             Self.logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - Fasting Status
+
+    /// Load fasting status for the selected date from the service
+    private func loadFastingStatus() {
+        guard let dayStatusService = AppServices.shared.dayStatusService else {
+            isFastingDay = false
+            return
+        }
+        isFastingDay = dayStatusService.isFasting(for: selectedDate)
+    }
+
+    /// Save fasting status for the selected date
+    private func saveFastingStatus(_ isFasting: Bool) {
+        guard let dayStatusService = AppServices.shared.dayStatusService else {
+            Self.logger.warning("DayStatusService unavailable - cannot save fasting status")
+            return
+        }
+        dayStatusService.setFasting(for: selectedDate, isFasting: isFasting)
     }
 }
 
