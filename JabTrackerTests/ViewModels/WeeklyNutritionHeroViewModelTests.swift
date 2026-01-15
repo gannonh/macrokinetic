@@ -295,4 +295,20 @@ struct WeeklyNutritionHeroViewModelTests {
         #expect(viewModel.carbsTarget == 150)
         #expect(viewModel.fatTarget == 50)
     }
+
+    // MARK: - Preview Tests
+
+    @Test("Preview instance can be created")
+    func testPreviewCreation() async {
+        let preview = WeeklyNutritionHeroViewModel.preview
+
+        // Verify preview has expected default state
+        #expect(preview.calories.count == 7)
+        #expect(preview.protein.count == 7)
+        #expect(preview.carbs.count == 7)
+        #expect(preview.fat.count == 7)
+        #expect(preview.caloriesTarget == 2000)
+        #expect(preview.todayIndex >= 0)
+        #expect(preview.todayIndex <= 6)
+    }
 }
