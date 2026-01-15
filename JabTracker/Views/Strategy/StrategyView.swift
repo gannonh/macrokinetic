@@ -144,7 +144,11 @@ struct StrategyView: View {
                 if let goal = createdGoal ?? users.first?.activeNutritionGoal,
                     let program = goal.program
                 {
-                    ProgramReadySheet(goal: goal, program: program) {}
+                    ProgramReadySheet(
+                        goal: goal,
+                        program: program,
+                        onDone: {}
+                    )
                 }
             }
         )

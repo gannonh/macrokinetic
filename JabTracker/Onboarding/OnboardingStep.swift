@@ -72,6 +72,10 @@ enum OnboardingStep: String, CaseIterable {
     /// Reuses ProteinLevelStepView component
     case proteinLevel
 
+    /// Collaborative mode: per-day distribution editor with lock and auto-adjust
+    /// Only shown for Collaborative programs (replaces weeklyDistribution)
+    case collaborativeDistribution
+
     /// Combined goal and program summary/confirmation
     case setupConfirmation
 
@@ -119,6 +123,8 @@ enum OnboardingStep: String, CaseIterable {
             return "Protein Level"
         case .shiftedDaySelection:
             return "High Calorie Days"
+        case .collaborativeDistribution:
+            return "Weekly Distribution"
         case .setupConfirmation:
             return "Your Personalized Plan"
         case .faceID:
@@ -159,6 +165,8 @@ enum OnboardingStep: String, CaseIterable {
             return "Higher protein helps preserve muscle"
         case .shiftedDaySelection:
             return "Which days would you like to have higher calories?"
+        case .collaborativeDistribution:
+            return "Customize calories and macros for each day"
         case .setupConfirmation:
             return "Review your customized nutrition targets"
         case .faceID:

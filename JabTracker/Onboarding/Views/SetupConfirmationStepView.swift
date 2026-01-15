@@ -25,46 +25,11 @@ struct SetupConfirmationStepView: View {
             VStack(spacing: 24) {
                 headerSection
                 weeklyMacroGrid
-
-                // Show Collaborative info card if that mode is selected
-                if viewModel.programStyle == .collaborative {
-                    collaborativeInfoCard
-                }
-
                 calculationExplanation
             }
             .padding()
         }
         .background(DesignTokens.Colors.groupedBackground)
-    }
-
-    // MARK: - Collaborative Info Card
-
-    private var collaborativeInfoCard: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "slider.horizontal.3")
-                .font(.body)
-                .foregroundColor(DesignTokens.Colors.accent)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Collaborative Mode")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-
-                Text("You can customize calories and macros for each day in Strategy settings.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(DesignTokens.Colors.accent.opacity(0.1))
-        )
-        .accessibilityIdentifier("collaborative-info-card")
     }
 
     // MARK: - Header Section

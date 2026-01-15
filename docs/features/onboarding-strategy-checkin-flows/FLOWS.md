@@ -80,7 +80,7 @@ START
   ├─────────────────────────────────────────────────┐
   │                                                 │
   │ COACHED only                                    │ COLLABORATIVE
-  │                                                 │ (skips distribution)
+  │                                                 │
   ▼                                                 │
 ┌────────────────────┐                              │
 │ weeklyDistribution │  Even / Front / Back /       │
@@ -100,12 +100,20 @@ START
   │                               │                 │
   ◄───────────────────────────────┘                 │
   │                                                 │
+  │                                                 │
+  ▼                                                 ▼
+┌──────────────┐                          ┌──────────────┐
+│ proteinLevel │  Moderate / High /       │ proteinLevel │
+└──────────────┘  Very High               └──────────────┘
+                                                  │
+                                                  ▼
+                                     ┌───────────────────────────┐
+                                     │ collaborativeDistribution │
+                                     │  Per-day editor with      │
+                                     │  lock/auto-adjust         │
+                                     └───────────────────────────┘
+  │                                                 │
   ◄─────────────────────────────────────────────────┘
-  │
-  ▼
-┌──────────────┐
-│ proteinLevel │  Moderate / High / Very High
-└──────────────┘
   │
   ▼
   │
@@ -139,11 +147,11 @@ END (dismiss onboarding, show main app)
 
 ### Onboarding Conditionals Summary
 
-| Condition                             | Steps Affected                                   |
-| ------------------------------------- | ------------------------------------------------ |
-| `hasProfileDataFromHealthKit == true` | Skip `profileCompletion`                         |
-| `programStyle == .collaborative`      | Skip `weeklyDistribution`, `shiftedDaySelection` |
-| `weeklyDistributionMode == .shifted`  | Show `shiftedDaySelection` (Coached only)        |
+| Condition                             | Steps Affected                                                        |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| `hasProfileDataFromHealthKit == true` | Skip `profileCompletion`                                              |
+| `programStyle == .collaborative`      | Skip `weeklyDistribution`, show `collaborativeDistribution` instead   |
+| `weeklyDistributionMode == .shifted`  | Show `shiftedDaySelection` (Coached only)                             |
 
 ---
 
@@ -262,35 +270,29 @@ START (isEditMode = false)
 │ training │                 │ training │                         │              │
 └──────────┘                 └──────────┘                         │              │
   │                                │                              │              │
-  ▼                                │                              │              │
-┌────────────────────┐             │                              │              │
-│ weeklyDistribution │             │                              │              │
-└────────────────────┘             │                              │              │
+  ▼                                ▼                              │              │
+┌────────────────────┐      ┌──────────────┐                      │              │
+│ weeklyDistribution │      │ proteinLevel │                      │              │
+└────────────────────┘      └──────────────┘                      │              │
   │                                │                              │              │
-  │                                │                   ┌──────────┴──────────┐   │
-  │                                │                   │                     │   │
-  │ Shifted?                       │                   │ useSameTargets      │   │
-  │                                │                   │ AllWeek?            │   │
+  │                                ▼                   ┌──────────┴──────────┐   │
+  │ Shifted?           ┌───────────────────────────┐  │                     │   │
+  │                    │ collaborativeDistribution │  │ useSameTargets      │   │
+  ▼                    │  Per-day editor with      │  │ AllWeek?            │   │
+┌──────────────────────┐│  lock/auto-adjust        │  │                     │   │
+│ shiftedDaySelection  │└───────────────────────────┘ ▼                     ▼   │
+│ (if shifted)         │           │           ┌────────────────┐  ┌────────────┐│
+└──────────────────────┘           │           │singleWeekMacros│  │perDayMacros││
+  │                                │           └────────────────┘  └────────────┘│
   ▼                                │                   │                     │   │
-┌──────────────────────┐           │                   ▼                     ▼   │
-│ shiftedDaySelection  │           │           ┌────────────────┐  ┌────────────┐│
-│ (if shifted)         │           │           │singleWeekMacros│  │perDayMacros││
-└──────────────────────┘           │           └────────────────┘  └────────────┘│
-  │                                │                   │                     │   │
-  ▼                                │                   └──────────┬──────────┘   │
-┌──────────────┐                   │                              │              │
+┌──────────────┐                   │                   └──────────┬──────────┘   │
 │ proteinLevel │                   │                              │              │
 └──────────────┘                   │                              │              │
   │                                │                              │              │
   ▼                                ▼                              ▼              │
 ┌──────────────┐             ┌──────────────┐              ┌──────────────┐      │
-│ proteinLevel │             │ confirmation │              │ confirmation │      │
+│ confirmation │             │ confirmation │              │ confirmation │      │
 └──────────────┘             └──────────────┘              └──────────────┘      │
-  │                                │                              │              │
-  ▼                                │                              │              │
-┌──────────────┐                   │                              │              │
-│ confirmation │                   │                              │              │
-└──────────────┘                   │                              │              │
   │                                │                              │              │
   ◄────────────────────────────────┴──────────────────────────────┘              │
   │                                                                              │
@@ -303,20 +305,21 @@ END                                                                             
 
 ### Program Style Step Comparison
 
-| Step                | Coached    | Collaborative | Manual               |
-| ------------------- | ---------- | ------------- | -------------------- |
-| programStyle        | ✓          | ✓             | ✓                    |
-| profileCompletion   | if needed  | if needed     | ✗                    |
-| dietPreference      | ✓          | ✓             | ✗                    |
-| calorieFloor        | ✓          | ✓             | ✗                    |
-| training            | ✓          | ✓             | ✗                    |
-| weeklyDistribution  | ✓          | ✗             | ✗                    |
-| shiftedDaySelection | if shifted | ✗             | ✗                    |
-| proteinLevel        | ✓          | ✓             | ✗                    |
-| targetMode          | ✗          | ✗             | ✓                    |
-| singleWeekMacros    | ✗          | ✗             | if same all week     |
-| perDayMacros        | ✗          | ✗             | if different per day |
-| confirmation        | ✓          | ✓             | ✓                    |
+| Step                       | Coached    | Collaborative | Manual               |
+| -------------------------- | ---------- | ------------- | -------------------- |
+| programStyle               | ✓          | ✓             | ✓                    |
+| profileCompletion          | if needed  | if needed     | ✗                    |
+| dietPreference             | ✓          | ✓             | ✗                    |
+| calorieFloor               | ✓          | ✓             | ✗                    |
+| training                   | ✓          | ✓             | ✗                    |
+| weeklyDistribution         | ✓          | ✗             | ✗                    |
+| shiftedDaySelection        | if shifted | ✗             | ✗                    |
+| proteinLevel               | ✓          | ✓             | ✗                    |
+| collaborativeDistribution  | ✗          | ✓             | ✗                    |
+| targetMode                 | ✗          | ✗             | ✓                    |
+| singleWeekMacros           | ✗          | ✗             | if same all week     |
+| perDayMacros               | ✗          | ✗             | if different per day |
+| confirmation               | ✓          | ✓             | ✓                    |
 
 ---
 

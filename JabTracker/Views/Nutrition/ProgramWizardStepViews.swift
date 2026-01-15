@@ -911,25 +911,26 @@ struct CollaborativeDistributionStepView: View {
                     Text(weekday.shortLetter)
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(
-                            viewModel.collaborativeSelectedDay == weekday.rawValue ? .blue : .secondary
+                            viewModel.collaborativeSelectedDay == weekday.rawValue
+                                ? DesignTokens.Colors.accent : .secondary
                         )
                         .frame(maxWidth: .infinity)
                 }
             }
             .padding(.bottom, 4)
 
-            // Calorie row (blue pill style)
+            // Calorie row (teal pill style)
             weeklyMacroRow(
                 label: "Cals",
                 values: Weekday.mondayFirst.map { weekday in
                     Int(viewModel.collaborativeDays[weekday.rawValue]?.calories ?? 0)
                 },
                 unit: "",
-                color: .blue,
+                color: DesignTokens.Colors.calories,
                 isPill: true
             )
 
-            // Protein row (orange)
+            // Protein row (indigo)
             weeklyMacroRow(
                 label: "P",
                 values: Weekday.mondayFirst.map { weekday in
@@ -937,11 +938,11 @@ struct CollaborativeDistributionStepView: View {
                     return Int(config?.proteinGrams(bodyWeightLb: viewModel.bodyWeightLb) ?? 0)
                 },
                 unit: "g",
-                color: .orange,
+                color: DesignTokens.Colors.protein,
                 isPill: false
             )
 
-            // Fat row (yellow)
+            // Fat row
             weeklyMacroRow(
                 label: "F",
                 values: Weekday.mondayFirst.map { weekday in
@@ -949,11 +950,11 @@ struct CollaborativeDistributionStepView: View {
                     return Int(config?.fatGrams(bodyWeightLb: viewModel.bodyWeightLb) ?? 0)
                 },
                 unit: "g",
-                color: .yellow,
+                color: DesignTokens.Colors.fat,
                 isPill: false
             )
 
-            // Carbs row (green)
+            // Carbs row (orange)
             weeklyMacroRow(
                 label: "C",
                 values: Weekday.mondayFirst.map { weekday in
@@ -961,7 +962,7 @@ struct CollaborativeDistributionStepView: View {
                     return Int(config?.carbGrams(bodyWeightLb: viewModel.bodyWeightLb) ?? 0)
                 },
                 unit: "g",
-                color: .green,
+                color: DesignTokens.Colors.carbs,
                 isPill: false
             )
 
@@ -1038,7 +1039,7 @@ struct CollaborativeDistributionStepView: View {
                             .frame(width: 36, height: 36)
                             .background(
                                 Circle()
-                                    .fill(isSelected ? Color.blue : Color.gray.opacity(0.15))
+                                    .fill(isSelected ? DesignTokens.Colors.accent : Color(.systemGray5))
                             )
                             .foregroundColor(isSelected ? .white : .primary)
 
@@ -1076,7 +1077,7 @@ struct CollaborativeDistributionStepView: View {
                 }
             }
             .font(.caption)
-            .foregroundColor(.blue)
+            .foregroundColor(DesignTokens.Colors.accent)
             .accessibilityIdentifier("collab-reset-all-button")
 
             Button {

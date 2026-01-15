@@ -91,6 +91,17 @@ final class OnboardingViewModel {
     /// Days with higher calorie targets for Shifted distribution (weekday numbers: 2=Mon through 1=Sun)
     var highCalorieDays: Set<Int> = []
 
+    // MARK: - Collaborative Distribution State
+
+    /// Selected day for editing in collaborativeDistribution step (weekday: 1=Sun, 2=Mon, ..., 7=Sat)
+    var collaborativeSelectedDay: Int = 2  // Default to Monday
+
+    /// Per-day configurations for Collaborative mode (weekday: 1=Sun, 2=Mon, ..., 7=Sat)
+    var collaborativeDays: [Int: CollaborativeDayConfigStorage] = [:]
+
+    /// Weekly calorie budget (from goal)
+    var weeklyCalorieBudget: Double = 14000
+
     // MARK: - Calculated Targets (populated after setupConfirmation)
 
     /// Calculated daily calorie target (base value)
@@ -133,7 +144,7 @@ final class OnboardingViewModel {
                 return !hasProfileDataFromHealthKit
 
             case .weeklyDistribution, .shiftedDaySelection:
-                // Skip for Collaborative - they customize per-day in Strategy
+                // Skip for Collaborative - they use collaborativeDistribution instead
                 if programStyle == .collaborative {
                     return false
                 }
@@ -142,6 +153,10 @@ final class OnboardingViewModel {
                     return weeklyDistributionMode == .shifted
                 }
                 return true
+
+            case .collaborativeDistribution:
+                // Only show for Collaborative programs
+                return programStyle == .collaborative
 
             default:
                 return true
@@ -189,6 +204,12 @@ final class OnboardingViewModel {
             return proteinLevel != nil
         case .shiftedDaySelection:
             return !highCalorieDays.isEmpty  // At least one day must be selected
+        case .collaborativeDistribution:
+            // All 7 days must have valid calories > 0
+            return WeeklyConstants.validWeekdayRange.allSatisfy { weekday in
+                guard let config = collaborativeDays[weekday] else { return false }
+                return config.calories > 0
+            }
         case .setupConfirmation:
             return true  // Summary step, always can proceed
         case .faceID, .notifications, .completion:
@@ -451,6 +472,14 @@ final class OnboardingViewModel {
             throw OnboardingError.dataCreationFailed
         }
 
+        // Deactivate any existing active goals (e.g., from CloudKit sync or previous attempt)
+        if let existingGoals = user.nutritionGoals {
+            for existingGoal in existingGoals where existingGoal.isActive {
+                existingGoal.isActive = false
+                logger.info("Deactivated existing goal: \(existingGoal.id)")
+            }
+        }
+
         let weeklyPace = goalType == .weightLoss ? -goalViewModel.weeklyRateKg : goalViewModel.weeklyRateKg
         let goal = NutritionGoal(
             goalType: goalType,
@@ -474,15 +503,180 @@ final class OnboardingViewModel {
         goal.program = program
         context.insert(program)
 
-        // Apply shifted calorie distribution if selected
+        // Apply shifted calorie distribution if selected (Coached mode)
         if weeklyDistributionMode == .shifted,
             let distribution = WeeklyCalorieDistribution.shifted(highCalorieDays: highCalorieDays)
         {
             program.setWeeklyDistribution(distribution)
         }
 
+        // Save collaborative per-day distribution if configured (Collaborative mode)
+        if programStyle == .collaborative && !collaborativeDays.isEmpty {
+            program.setCollaborativeConfig(collaborativeDays, weeklyBudget: weeklyCalorieBudget)
+
+            // Also save the weekly macros to the program
+            let weightLb = goalViewModel.currentWeightKg * 2.205
+            var dayMacros: [Int: DailyMacros] = [:]
+
+            for weekday in WeeklyConstants.validWeekdayRange {
+                guard let config = collaborativeDays[weekday] else { continue }
+
+                let proteinGrams = config.proteinGramsPerLb * weightLb
+                let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
+                let remainingCalories = config.calories - proteinCalories
+                let fatCalories = remainingCalories * (1 - config.carbFatRatio)
+                let carbCalories = remainingCalories * config.carbFatRatio
+
+                dayMacros[weekday] = DailyMacros(
+                    calories: config.calories,
+                    proteinGrams: proteinGrams,
+                    fatGrams: fatCalories / MacroCalorieConstants.fatCaloriesPerGram,
+                    carbsGrams: carbCalories / MacroCalorieConstants.carbsCaloriesPerGram,
+                    isLocked: config.isLocked
+                )
+            }
+
+            // Create default macros from the first day
+            let defaultMacros =
+                dayMacros[2]
+                ?? DailyMacros(
+                    calories: calculatedCalories,
+                    proteinGrams: calculatedProtein,
+                    fatGrams: calculatedFat,
+                    carbsGrams: calculatedCarbs
+                )
+            let weeklyMacros = WeeklyMacroDistribution(dayMacros: dayMacros, defaultMacros: defaultMacros)
+            program.setWeeklyMacros(weeklyMacros)
+        }
+
         try context.save()
         return goal
+    }
+
+    // MARK: - Collaborative Distribution Methods
+
+    /// Initialize collaborative days with even distribution based on calculated calories
+    func initializeCollaborativeDays() {
+        guard collaborativeDays.isEmpty else { return }  // Don't reinitialize if already set
+
+        // Calculate daily calories if not yet calculated
+        var dailyCals = calculatedCalories
+        if dailyCals <= 0 {
+            dailyCals = estimateDailyCalories()
+        }
+
+        weeklyCalorieBudget = dailyCals * 7
+        // Convert from g/kg to g/lb: gramsPerKg / 2.205
+        let proteinGramsPerLb = (proteinLevel ?? .moderate).gramsPerKg / 2.205
+
+        // Default carb/fat ratio of 0.5 (50% each of remaining calories after protein)
+        let carbFatRatio = 0.5
+
+        for weekday in WeeklyConstants.validWeekdayRange {
+            collaborativeDays[weekday] = CollaborativeDayConfigStorage(
+                calories: dailyCals,
+                proteinGramsPerLb: proteinGramsPerLb,
+                carbFatRatio: carbFatRatio,
+                isLocked: false
+            )
+        }
+
+        logger.info("Initialized collaborative days with \(Int(dailyCals)) cal/day")
+    }
+
+    /// Estimate daily calories using Mifflin-St Jeor formula when TDEE hasn't been calculated yet
+    private func estimateDailyCalories() -> Double {
+        let weightKg = goalViewModel.currentWeightKg
+        let heightCm = editHeightCm > 0 ? editHeightCm : 170.0  // Default height if not set
+        let age = calculateAge(from: editBirthday)
+
+        // Mifflin-St Jeor BMR formula
+        let bmr: Double
+        if editSex == "Male" {
+            bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * Double(age)) + 5
+        } else {
+            bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * Double(age)) - 161
+        }
+
+        // Apply activity multiplier based on training level (use the enum's tdeeMultiplier)
+        let activityMultiplier = trainingLevel?.tdeeMultiplier ?? 1.55  // Default to moderate
+
+        let tdee = bmr * activityMultiplier
+
+        // Apply deficit/surplus based on goal type
+        let weeklyRateKg = goalViewModel.weeklyRateKg
+        let dailyCalorieAdjustment = (weeklyRateKg * 7700) / 7  // 7700 cal per kg
+
+        var dailyTarget: Double
+        switch goalViewModel.goalType {
+        case .weightLoss:
+            dailyTarget = tdee - abs(dailyCalorieAdjustment)
+        case .muscleGain:
+            dailyTarget = tdee + abs(dailyCalorieAdjustment)
+        case .maintenance, .none:
+            dailyTarget = tdee
+        }
+
+        // Apply calorie floor if set
+        if let floor = calorieFloorType {
+            dailyTarget = max(dailyTarget, floor.minimumCalories)
+        }
+
+        return max(dailyTarget, 1200)  // Minimum 1200 cal
+    }
+
+    /// Calculate age from birthday
+    private func calculateAge(from birthday: Date?) -> Int {
+        guard let birthday else { return 30 }  // Default age if not set
+        let calendar = Calendar.current
+        let ageComponents = calendar.dateComponents([.year], from: birthday, to: Date())
+        return ageComponents.year ?? 30
+    }
+
+    /// Adjust collaborative calories for a day and redistribute delta to unlocked days
+    func adjustCollaborativeCalories(forDay weekday: Int, newCalories: Double) {
+        guard var dayConfig = collaborativeDays[weekday] else { return }
+
+        let oldCalories = dayConfig.calories
+        let delta = newCalories - oldCalories
+
+        // Update the edited day
+        dayConfig.calories = newCalories
+        collaborativeDays[weekday] = dayConfig
+
+        // Find unlocked days that aren't the edited day
+        let unlockedDays = WeeklyConstants.validWeekdayRange.filter { day in
+            day != weekday && !(collaborativeDays[day]?.isLocked ?? false)
+        }
+
+        // Distribute the negative delta across unlocked days
+        guard !unlockedDays.isEmpty else { return }
+
+        let adjustmentPerDay = -delta / Double(unlockedDays.count)
+
+        for day in unlockedDays {
+            guard var config = collaborativeDays[day] else { continue }
+            // Ensure calories don't go negative
+            config.calories = max(0, config.calories + adjustmentPerDay)
+            collaborativeDays[day] = config
+        }
+    }
+
+    /// Reset all collaborative days to even distribution
+    func resetCollaborativeDaysToEven() {
+        let dailyCals = weeklyCalorieBudget / 7
+        // Convert from g/kg to g/lb: gramsPerKg / 2.205
+        let proteinGramsPerLb = (proteinLevel ?? .moderate).gramsPerKg / 2.205
+        let carbFatRatio = 0.5
+
+        for weekday in WeeklyConstants.validWeekdayRange {
+            collaborativeDays[weekday] = CollaborativeDayConfigStorage(
+                calories: dailyCals,
+                proteinGramsPerLb: proteinGramsPerLb,
+                carbFatRatio: carbFatRatio,
+                isLocked: false
+            )
+        }
     }
 
     // MARK: - Completion

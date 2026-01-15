@@ -10,7 +10,7 @@ import SwiftUI
 
 // MARK: - Program Ready Sheet
 
-/// Sheet shown after Coached program creation with calculated targets
+/// Sheet shown after program creation with calculated targets
 struct ProgramReadySheet: View {
     // MARK: - Properties
 
@@ -23,7 +23,7 @@ struct ProgramReadySheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 16) {
                     headerSection
                     weeklyMacroGrid
                     calculationExplanation
@@ -41,22 +41,20 @@ struct ProgramReadySheet: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(.green.gradient)
+                .font(.system(size: 40))
+                .foregroundStyle(DesignTokens.Colors.success.gradient)
 
             Text("Your macro program is ready")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.headline)
                 .multilineTextAlignment(.center)
 
             Text("Personalized targets based on your goals and profile")
-                .font(.body)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(.vertical, 8)
         .accessibilityIdentifier("program-ready-header")
     }
 
@@ -136,7 +134,7 @@ struct ProgramReadySheet: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("weekly-macro-grid")
     }
@@ -197,11 +195,12 @@ struct ProgramReadySheet: View {
     // MARK: - Calculation Explanation
 
     private var calculationExplanation: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("How was your program designed?")
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.semibold)
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 explanationStep(
                     number: 1,
                     title: "Estimated Expenditure (TDEE)",
@@ -226,7 +225,7 @@ struct ProgramReadySheet: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("calculation-explanation")
     }
@@ -237,27 +236,27 @@ struct ProgramReadySheet: View {
         value: String,
         detail: String? = nil
     ) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 10) {
             // Number badge
             Text("\(number)")
-                .font(.caption)
+                .font(.caption2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-                .frame(width: 24, height: 24)
-                .background(Circle().fill(Color.accentColor))
+                .frame(width: 20, height: 20)
+                .background(Circle().fill(DesignTokens.Colors.accent))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.secondary)
 
                 Text(value)
-                    .font(.body)
+                    .font(.subheadline)
                     .fontWeight(.medium)
 
                 if let detail = detail {
                     Text(detail)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }

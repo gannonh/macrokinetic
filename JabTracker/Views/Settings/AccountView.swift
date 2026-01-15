@@ -178,8 +178,11 @@ struct AccountView: View {
                             .frame(width: 28)
                         Text("Restart Onboarding")
                             .foregroundColor(.primary)
+                        Spacer()
                     }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
                 .accessibilityIdentifier("restart-onboarding-button")
             }
         }
@@ -672,10 +675,22 @@ extension AccountView {
 
     func restartOnboarding() {
         guard let user = users.first else { return }
+        // Reset all onboarding-related flags on the user model
         user.hasCompletedOnboarding = false
         user.onboardingCompletedAt = nil
+        user.onboardingSkippedAt = nil
+
+        // Clear all onboarding-related UserDefaults keys
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
+        UserDefaults.standard.removeObject(forKey: "hasSkippedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "onboardingSkippedAt")
+
         do {
             try modelContext.save()
+            Self.logger.info("Onboarding reset successfully - triggering onboarding flow")
+            // Notify app to show onboarding immediately
+            NotificationCenter.default.post(name: .restartOnboarding, object: nil)
         } catch {
             Self.logger.error("Failed to save onboarding reset: \(error.localizedDescription)")
             errorMessage = "Could not restart onboarding: \(error.localizedDescription)"

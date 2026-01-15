@@ -276,6 +276,9 @@ struct OnboardingView: View {
         case .shiftedDaySelection:
             ShiftedDaySelectionStepView(highCalorieDays: Bindable(viewModel).highCalorieDays)
                 .accessibilityIdentifier("onboarding-shiftedDaySelection-step")
+        case .collaborativeDistribution:
+            OnboardingCollaborativeDistributionView(viewModel: viewModel)
+                .accessibilityIdentifier("onboarding-collaborativeDistribution-step")
         case .setupConfirmation:
             SetupConfirmationStepView(viewModel: viewModel)
                 .accessibilityIdentifier("onboarding-setupConfirmation-step")

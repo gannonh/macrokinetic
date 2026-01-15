@@ -34,18 +34,9 @@ struct ProgramOptimizationSheet: View {
     @State private var step: OptimizationStep = .intro
     @State private var result: ProgramOptimizationResult?
     @State private var error: String?
-    @State private var statusMessage: String = "Analyzing weight trend..."
 
     /// Minimum time to show calculation animation (seconds)
-    private let minimumCalculationDisplayTime: TimeInterval = 2.0
-
-    /// Status messages that rotate during calculation
-    private let statusMessages = [
-        "Analyzing weight trend...",
-        "Calculating metabolic rate...",
-        "Evaluating food consistency...",
-        "Optimizing macro targets...",
-    ]
+    private let minimumCalculationDisplayTime: TimeInterval = 3.0
 
     var body: some View {
         NavigationStack {
@@ -91,7 +82,7 @@ struct ProgramOptimizationSheet: View {
                 // Hero icon
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.system(size: 64))
-                    .foregroundStyle(.blue.gradient)
+                    .foregroundStyle(DesignTokens.Colors.accent.gradient)
                     .padding(.top, 40)
 
                 // Title and subtitle
@@ -121,7 +112,7 @@ struct ProgramOptimizationSheet: View {
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.green.opacity(0.1))
+                        .fill(DesignTokens.Colors.success.opacity(0.1))
                 )
 
                 Spacer()
@@ -141,33 +132,8 @@ struct ProgramOptimizationSheet: View {
     // MARK: - Calculating Content
 
     private var calculatingContent: some View {
-        VStack(spacing: 32) {
-            Spacer()
-
-            // Progress indicator
-            ProgressView()
-                .scaleEffect(1.5)
-                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-
-            // Status messages
-            VStack(spacing: 8) {
-                Text("Optimizing Your Program")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-
-                Text(statusMessage)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .animation(.easeInOut(duration: 0.3), value: statusMessage)
-            }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            startStatusMessageRotation()
-        }
-        .accessibilityIdentifier("optimization-calculating-step")
+        CalculatingOverlayView()
+            .accessibilityIdentifier("optimization-calculating-step")
     }
 
     // MARK: - Results Content
@@ -264,7 +230,7 @@ struct ProgramOptimizationSheet: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("optimization-weekly-macro-grid")
     }
@@ -314,7 +280,7 @@ struct ProgramOptimizationSheet: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("what-changed-section")
     }
@@ -334,7 +300,7 @@ struct ProgramOptimizationSheet: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(DesignTokens.Colors.cardBackground)
         )
         .accessibilityIdentifier("whats-next-section")
     }
@@ -442,19 +408,6 @@ struct ProgramOptimizationSheet: View {
         }
     }
 
-    private func startStatusMessageRotation() {
-        // Rotate through status messages
-        Task {
-            var index = 0
-            while step == .calculating {
-                await MainActor.run {
-                    statusMessage = statusMessages[index]
-                }
-                index = (index + 1) % statusMessages.count
-                try? await Task.sleep(nanoseconds: 600_000_000)  // 0.6 seconds
-            }
-        }
-    }
 }
 
 // MARK: - Preview
