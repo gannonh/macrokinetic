@@ -155,7 +155,8 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
+        // Create food entry for yesterday (today is excluded as partial data)
+        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 1)
         try context.save()
 
         let viewModel = createViewModel(context: context)
@@ -253,7 +254,8 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
+        // Create food entry for yesterday (today is excluded as partial data)
+        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 1)
         try context.save()
 
         let viewModel = createViewModel(context: context)
@@ -318,7 +320,9 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        for daysAgo in 0..<7 {
+        // Start from daysAgo: 1 (yesterday) since today is excluded as partial data
+        // Create 7 days of data (days 1-7 ago) for 7-day interval requirement
+        for daysAgo in 1...7 {
             _ = createFoodEntry(in: context, calories: 1700, daysAgo: daysAgo)
         }
         try context.save()
@@ -328,7 +332,7 @@ struct EnergyBalanceDetailViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: 7-day change is calculated
+        // Then: 7-day change is calculated (we have >= 7 days of data)
         let change7Day = viewModel.balanceChanges.first { $0.period == "7-day" }
         #expect(change7Day != nil)
     }
@@ -347,8 +351,9 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        // Log food for 90 days (enough for all interval calculations)
-        for daysAgo in 0..<90 {
+        // Log food for 90 days starting from yesterday (today excluded as partial)
+        // Use 1...90 to get 90 days of data
+        for daysAgo in 1...90 {
             _ = createFoodEntry(in: context, calories: 1700, daysAgo: daysAgo)
         }
         try context.save()
@@ -359,7 +364,7 @@ struct EnergyBalanceDetailViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: All interval changes are present
+        // Then: All interval changes are present (we have 90 days of data)
         let periods = viewModel.balanceChanges.map { $0.period }
         #expect(periods.contains("14-day"))
         #expect(periods.contains("30-day"))
@@ -755,7 +760,8 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
+        // Create food entry for yesterday (today is excluded as partial data)
+        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 1)
         try context.save()
 
         let viewModel = createViewModel(context: context)
@@ -1276,7 +1282,8 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
+        // Create food entry for yesterday (today is excluded as partial data)
+        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 1)
         try context.save()
 
         let viewModel = createViewModel(context: context)
@@ -1304,7 +1311,8 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 0)
+        // Create food entries for yesterday and 5 days ago (today is excluded)
+        _ = createFoodEntry(in: context, calories: 1700, daysAgo: 1)
         _ = createFoodEntry(in: context, calories: 1600, daysAgo: 5)
         try context.save()
 
@@ -1313,7 +1321,7 @@ struct EnergyBalanceDetailViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: dateRange shows range with separator
+        // Then: dateRange shows range with separator (we have data for 2 non-adjacent days)
         #expect(!viewModel.dateRange.isEmpty)
         #expect(viewModel.dateRange.contains(" - "))
     }
@@ -1334,20 +1342,21 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        _ = createFoodEntry(in: context, calories: 1500, daysAgo: 0)
+        // Create food entry for yesterday (today is excluded as partial data)
+        _ = createFoodEntry(in: context, calories: 1500, daysAgo: 1)
         try context.save()
 
         let viewModel = createViewModel(context: context)
         await viewModel.loadData()
 
         // Then: expenditureBalance = consumed - expenditure
-        guard let todayData = viewModel.dailyData.last else {
+        guard let yesterdayData = viewModel.dailyData.last else {
             Issue.record("Expected daily data")
             return
         }
 
-        let expectedBalance = todayData.caloriesConsumed - todayData.expenditure
-        #expect(todayData.expenditureBalance == expectedBalance)
+        let expectedBalance = yesterdayData.caloriesConsumed - yesterdayData.expenditure
+        #expect(yesterdayData.expenditureBalance == expectedBalance)
     }
 
     @Test("DailyData targetBalance computed correctly")
@@ -1364,19 +1373,20 @@ struct EnergyBalanceDetailViewModelTests {
             lastCalculatedTDEE: 2000,
             dailyCalorieTarget: 1800
         )
-        _ = createFoodEntry(in: context, calories: 1500, daysAgo: 0)
+        // Create food entry for yesterday (today is excluded as partial data)
+        _ = createFoodEntry(in: context, calories: 1500, daysAgo: 1)
         try context.save()
 
         let viewModel = createViewModel(context: context)
         await viewModel.loadData()
 
         // Then: targetBalance = consumed - target
-        guard let todayData = viewModel.dailyData.last else {
+        guard let yesterdayData = viewModel.dailyData.last else {
             Issue.record("Expected daily data")
             return
         }
 
-        let expectedBalance = todayData.caloriesConsumed - todayData.calorieTarget
-        #expect(todayData.targetBalance == expectedBalance)
+        let expectedBalance = yesterdayData.caloriesConsumed - yesterdayData.calorieTarget
+        #expect(yesterdayData.targetBalance == expectedBalance)
     }
 }
