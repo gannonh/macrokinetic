@@ -14,6 +14,7 @@
 | 1 | Make dose amount editable in QuickDoseEntrySheet | 60d88a0c | QuickDoseViewModel.swift, QuickDoseEntry.swift, 2x .swiftlint.yml |
 | 2 | Add unit tests for dose adjustment validation | 1b7d7818 | QuickDoseViewModelTests.swift |
 | 3 | Human verification (skipped per config) | - | - |
+| Fix | Resolve didSet initialization error | b282f1bc | QuickDoseViewModel.swift, QuickDoseViewModelTests.swift |
 
 ## What Was Built
 
@@ -30,7 +31,8 @@
 - `doseAmountStep`: Returns appropriate increment
   - Compounded medications: 0.25mg fine-grained steps
   - Branded medications: Discrete pen dose steps
-- Dose clamping via `didSet` prevents out-of-range values
+- `clampDoseAmount(_:)`: Public method for explicit dose clamping
+- Stepper UI enforces range constraints via `in:` parameter
 
 ### Test Coverage
 - 14 new unit tests for dose adjustment validation
@@ -44,7 +46,7 @@
 1. **Stepper over TextField**: Used Stepper for better UX with discrete dose increments
 2. **Medication-specific bounds**: Each medication type has its own therapeutic range
 3. **Compounded vs branded steps**: Compounded medications use 0.25mg steps for fine titration
-4. **Dose clamping**: Values are clamped automatically to prevent invalid doses
+4. **Explicit clamping method**: Used `clampDoseAmount(_:)` method instead of didSet observer (avoids initialization issues)
 5. **SwiftLint configs added**: Created override configs for Dashboard and DoseEntry directories
 
 ## Files Changed
