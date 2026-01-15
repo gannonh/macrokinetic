@@ -109,7 +109,7 @@ struct QuickDoseButton: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.green.opacity(0.9))
+                    .background(DesignTokens.Colors.success.opacity(0.9))
                     .cornerRadius(8)
                     .accessibilityIdentifier("dose-logged-success")
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -268,13 +268,21 @@ struct QuickDoseSheet: View {
                     .accessibilityIdentifier("quick-dose-medication-picker")
                     .accessibilityLabel("Select medication")
 
-                    // Dose Amount (from selected medication profile)
+                    // Dose Amount (editable with stepper for per-dose adjustments)
                     HStack {
                         Text("Dose Amount")
                         Spacer()
                         Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("quick-dose-amount")
+                        Stepper(
+                            "",
+                            value: self.$viewModel.doseAmount,
+                            in: self.viewModel.doseAmountRange,
+                            step: self.viewModel.doseAmountStep
+                        )
+                        .labelsHidden()
+                        .accessibilityIdentifier("quick-dose-amount-stepper")
                     }
 
                     // Injection Site Selection
