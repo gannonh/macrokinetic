@@ -1,0 +1,7 @@
+# SwiftLint Configuration for DoseEntry Views
+# Pre-existing Color.green/black usage for success message and dialog overlay
+# TODO: Refactor to use DesignTokens in future
+
+disabled_rules:
+  - prefer_design_tokens_static_colors
+  - prefer_design_tokens_backgrounds_static

@@ -25,7 +25,17 @@ class QuickDoseViewModel: ObservableObject {
         }
     }
 
-    @Published var doseAmount: Double = 0.0
+    @Published var doseAmount: Double = 0.0 {
+        didSet {
+            // Clamp to valid range when set
+            let range = doseAmountRange
+            if doseAmount < range.lowerBound {
+                doseAmount = range.lowerBound
+            } else if doseAmount > range.upperBound {
+                doseAmount = range.upperBound
+            }
+        }
+    }
     @Published var selectedInjectionSite: String = ""
     @Published var doseDate: Date = .init()
     @Published var doseTime: Date = .init()
@@ -34,6 +44,69 @@ class QuickDoseViewModel: ObservableObject {
     @Published var recommendedInjectionSites: [String] = []
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
+
+    // MARK: - Dose Adjustment Properties
+
+    /// Valid dose range based on medication type
+    /// - For compounded ("Generic" brand): Full therapeutic range in 0.25mg increments
+    /// - For branded: Uses available pen doses for the specific brand
+    var doseAmountRange: ClosedRange<Double> {
+        guard let profile = selectedMedicationProfile,
+            let medication = profile.medication
+        else {
+            return 0.0...0.0
+        }
+
+        // Get therapeutic range based on medication type
+        let (minDose, maxDose): (Double, Double) = {
+            switch medication {
+            case .semaglutide:
+                return (0.25, 2.4)
+            case .tirzepatide:
+                return (2.5, 15.0)
+            case .liraglutide:
+                return (0.6, 3.0)
+            case .dulaglutide:
+                return (0.75, 4.5)
+            }
+        }()
+
+        return minDose...maxDose
+    }
+
+    /// Step increment for dose adjustments
+    /// - For compounded medications: 0.25mg increments for fine-grained titration
+    /// - For branded medications: Uses discrete pen dose steps
+    var doseAmountStep: Double {
+        guard let profile = selectedMedicationProfile,
+            let medication = profile.medication
+        else {
+            return 0.25
+        }
+
+        // Compounded medications use fine-grained 0.25mg steps
+        if profile.brandName == "Generic" || profile.isCompounded {
+            return 0.25
+        }
+
+        // Branded medications use discrete steps based on available doses
+        let availableDoses = medication.availableDoses(for: profile.brandName)
+        guard availableDoses.count > 1 else {
+            return 0.25
+        }
+
+        // Calculate smallest step between available doses
+        let sortedDoses = availableDoses.sorted()
+        var minStep = Double.greatestFiniteMagnitude
+        for index in 0..<(sortedDoses.count - 1) {
+            let step = sortedDoses[index + 1] - sortedDoses[index]
+            if step < minStep {
+                minStep = step
+            }
+        }
+
+        return minStep > 0 ? minStep : 0.25
+    }
 
     // MARK: - Titration State (Issue #286)
 

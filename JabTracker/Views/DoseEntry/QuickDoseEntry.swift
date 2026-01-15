@@ -151,14 +151,20 @@ private struct QuickDoseEntrySheet: View {
                     }
                     .accessibilityIdentifier("quick-dose-entry-medication-picker")
 
-                    // Dose Amount (from selected medication profile)
-                    HStack {
-                        Text("Dose Amount")
-                        Spacer()
-                        Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
-                            .foregroundColor(.secondary)
-                            .accessibilityIdentifier("quick-dose-entry-amount")
+                    // Dose Amount (editable with stepper for per-dose adjustments)
+                    Stepper(
+                        value: $viewModel.doseAmount,
+                        in: self.viewModel.doseAmountRange,
+                        step: self.viewModel.doseAmountStep
+                    ) {
+                        HStack {
+                            Text("Dose Amount")
+                            Spacer()
+                            Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
+                                .foregroundColor(.secondary)
+                        }
                     }
+                    .accessibilityIdentifier("quick-dose-entry-amount-stepper")
 
                     // Injection Site Selection
                     Picker("Injection Site", selection: self.$viewModel.selectedInjectionSite) {
