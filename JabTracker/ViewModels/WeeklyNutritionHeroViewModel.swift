@@ -133,7 +133,12 @@ final class WeeklyNutritionHeroViewModel {
         let fastingDates: Set<Date>
         if let service = dayStatusService {
             let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-            fastingDates = service.getFastingDates(from: weekStart, to: weekEnd)
+            do {
+                fastingDates = try service.getFastingDates(from: weekStart, to: weekEnd)
+            } catch {
+                Self.logger.error("Failed to fetch fasting dates: \(error.localizedDescription)")
+                fastingDates = []
+            }
         } else {
             fastingDates = []
         }

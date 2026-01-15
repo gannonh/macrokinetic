@@ -14,11 +14,6 @@ struct FastingToggleCard: View {
     /// Binding to the fasting state for the current day
     @Binding var isFasting: Bool
 
-    /// The date being displayed (for context in label)
-    let date: Date
-
-    private let calendar = Calendar.current
-
     var body: some View {
         HStack(spacing: 12) {
             // Icon
@@ -75,17 +70,11 @@ struct FastingToggleCard: View {
 // MARK: - Preview
 
 #Preview("Not Fasting") {
-    FastingToggleCard(
-        isFasting: .constant(false),
-        date: Date()
-    )
-    .padding()
+    FastingToggleCard(isFasting: .constant(false))
+        .padding()
 }
 
 #Preview("Fasting") {
-    FastingToggleCard(
-        isFasting: .constant(true),
-        date: Date()
-    )
-    .padding()
+    FastingToggleCard(isFasting: .constant(true))
+        .padding()
 }

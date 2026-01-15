@@ -70,8 +70,9 @@ Without day status rules, the algorithm cannot distinguish between:
 
 **Example with day status (fasting marked):**
 - Same data, but user marked day 7 as fasting
-- Total: 12,000 kcal / 6 non-fasting days = 2,000 kcal/day average
-- The fasting day is counted as intentional 0 but excluded from calorie averaging
+- Fasting day excluded from calculations (treated as known-intentional, not unknown)
+- Average: 12,000 kcal / 6 tracked days = 2,000 kcal/day
+- Fasting marking prevents this day from being treated as "forgot to log"
 
 ### Affected Calculations
 

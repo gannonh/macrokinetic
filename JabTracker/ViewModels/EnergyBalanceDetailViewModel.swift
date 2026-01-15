@@ -261,6 +261,7 @@ final class EnergyBalanceDetailViewModel {
             return DailyData(
                 date: date, caloriesConsumed: calories, expenditure: expenditure, calorieTarget: calorieTarget)
         } catch {
+            Self.logger.error("Failed to load day data for \(date): \(error.localizedDescription)")
             return nil
         }
     }

@@ -361,7 +361,12 @@ extension TDEEService {
         // Gather data
         let weightEntries = try await metricsService.getWeightEntries(from: startDate, to: endDate)
         let foodEntries = try await getFoodEntries(from: startDate, to: endDate)
-        let fastingDates = dayStatusService?.getFastingDates(from: startDate, to: endDate) ?? []
+        let fastingDates: Set<Date>
+        if let service = dayStatusService {
+            fastingDates = try service.getFastingDates(from: startDate, to: endDate)
+        } else {
+            fastingDates = []
+        }
 
         // Calculate metrics excluding fasting days
         let intakeMetrics = calculateIntakeMetrics(

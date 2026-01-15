@@ -244,7 +244,7 @@ final class MealLogService {
         if let service = dayStatusService {
             // Adjust end date for fasting query (inclusive, so subtract 1 second from end)
             let fastingEndDate = calendar.date(byAdding: .second, value: -1, to: normalizedEnd) ?? normalizedEnd
-            fastingDates = service.getFastingDates(from: normalizedStart, to: fastingEndDate)
+            fastingDates = try service.getFastingDates(from: normalizedStart, to: fastingEndDate)
         } else {
             fastingDates = []
         }

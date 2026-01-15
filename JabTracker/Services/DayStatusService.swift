@@ -36,31 +36,34 @@ final class DayStatusService {
     /// - Parameters:
     ///   - date: The date to update
     ///   - isFasting: Whether the day should be marked as fasting
-    func setFasting(for date: Date, isFasting: Bool) {
+    /// - Throws: Error if save operation fails
+    func setFasting(for date: Date, isFasting: Bool) throws {
         let normalizedDate = Calendar.current.startOfDay(for: date)
 
+        if let existing = getDayStatus(for: normalizedDate) {
+            // Update existing status
+            existing.isFasting = isFasting
+            existing.updatedAt = Date()
+            Self.logger.debug(
+                "Updated fasting status for \(normalizedDate): isFasting=\(isFasting)"
+            )
+        } else if isFasting {
+            // Only create new entry if marking as fasting
+            // No need to store "not fasting" entries - absence means not fasting
+            let status = DayStatus(date: normalizedDate, isFasting: true)
+            context.insert(status)
+            Self.logger.debug(
+                "Created fasting status for \(normalizedDate)"
+            )
+        }
+
         do {
-            if let existing = getDayStatus(for: normalizedDate) {
-                // Update existing status
-                existing.isFasting = isFasting
-                existing.updatedAt = Date()
-                Self.logger.debug(
-                    "Updated fasting status for \(normalizedDate): isFasting=\(isFasting)"
-                )
-            } else if isFasting {
-                // Only create new entry if marking as fasting
-                // No need to store "not fasting" entries - absence means not fasting
-                let status = DayStatus(date: normalizedDate, isFasting: true)
-                context.insert(status)
-                Self.logger.debug(
-                    "Created fasting status for \(normalizedDate)"
-                )
-            }
             try context.save()
         } catch {
             Self.logger.error(
                 "Failed to save fasting status for \(normalizedDate): \(error.localizedDescription)"
             )
+            throw error
         }
     }
 
@@ -77,7 +80,8 @@ final class DayStatusService {
     ///   - startDate: Start of the date range (inclusive)
     ///   - endDate: End of the date range (inclusive)
     /// - Returns: Set of dates that are marked as fasting
-    func getFastingDates(from startDate: Date, to endDate: Date) -> Set<Date> {
+    /// - Throws: Error if fetch operation fails
+    func getFastingDates(from startDate: Date, to endDate: Date) throws -> Set<Date> {
         let calendar = Calendar.current
         let normalizedStart = calendar.startOfDay(for: startDate)
         let normalizedEnd = calendar.startOfDay(for: endDate)
@@ -100,7 +104,7 @@ final class DayStatusService {
             Self.logger.error(
                 "Failed to fetch fasting dates: \(error.localizedDescription)"
             )
-            return []
+            throw error
         }
     }
 

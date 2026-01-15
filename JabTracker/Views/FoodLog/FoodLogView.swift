@@ -143,8 +143,7 @@ struct FoodLogView: View {
                                     isFastingDay = newValue
                                     saveFastingStatus(newValue)
                                 }
-                            ),
-                            date: selectedDate
+                            )
                         )
                         .cardListRow()
                     }
@@ -494,7 +493,13 @@ struct FoodLogView: View {
             Self.logger.warning("DayStatusService unavailable - cannot save fasting status")
             return
         }
-        dayStatusService.setFasting(for: selectedDate, isFasting: isFasting)
+        do {
+            try dayStatusService.setFasting(for: selectedDate, isFasting: isFasting)
+        } catch {
+            Self.logger.error("Failed to save fasting status: \(error.localizedDescription)")
+            // Revert UI state on save failure
+            isFastingDay = !isFasting
+        }
     }
 }
 
