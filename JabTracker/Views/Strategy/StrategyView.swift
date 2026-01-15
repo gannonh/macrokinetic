@@ -454,12 +454,6 @@ struct StrategyView: View {
 
     private func checkInDayPicker(goal: NutritionGoal) -> some View {
         HStack {
-            Text("Check-in day")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
             Menu {
                 ForEach(1...7, id: \.self) { day in
                     Button(dayOfWeekName(for: day)) {
@@ -470,13 +464,15 @@ struct StrategyView: View {
                 }
             } label: {
                 HStack(spacing: 4) {
-                    Text(dayOfWeekName(for: goal.checkInDayOfWeek))
+                    Text("Check-in day: \(dayOfWeekName(for: goal.checkInDayOfWeek))")
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2)
                 }
                 .font(.caption)
                 .foregroundColor(.secondary)
             }
+
+            Spacer()
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
