@@ -104,10 +104,10 @@ struct EnergyBalanceWidgetViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE of 2000 and food logged today
+        // Given: User with TDEE of 2000 and food logged yesterday (widget excludes today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
-        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 0)  // Today: 1800 consumed
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)  // Yesterday: 1800 consumed
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -126,18 +126,18 @@ struct EnergyBalanceWidgetViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE of 2000 and food logged over 7 days
+        // Given: User with TDEE of 2000 and food logged over 7 days (excluding today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
 
-        // Log food for each of the last 7 days (varying amounts)
-        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 0)  // -200 deficit
+        // Note: Widget excludes today, so log food for daysAgo 1-7 (not 0-6)
         _ = createFoodEntry(in: context, calories: 1700, daysAgo: 1)  // -300 deficit
         _ = createFoodEntry(in: context, calories: 1900, daysAgo: 2)  // -100 deficit
         _ = createFoodEntry(in: context, calories: 1800, daysAgo: 3)  // -200 deficit
         _ = createFoodEntry(in: context, calories: 1700, daysAgo: 4)  // -300 deficit
         _ = createFoodEntry(in: context, calories: 1800, daysAgo: 5)  // -200 deficit
         _ = createFoodEntry(in: context, calories: 1900, daysAgo: 6)  // -100 deficit
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 7)  // -200 deficit
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -152,8 +152,8 @@ struct EnergyBalanceWidgetViewModelTests {
         #expect(viewModel.isDeficit == true)
     }
 
-    @Test("ViewModel handles days with no food logged as 0 calories")
-    func testHandlesNoFoodAsZeroCalories() async throws {
+    @Test("ViewModel handles days with no food logged as no meaningful data")
+    func testHandlesNoFoodAsNoData() async throws {
         let (context, container) = createTestContext()
         _ = container
 
@@ -168,11 +168,10 @@ struct EnergyBalanceWidgetViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: Balance shows full TDEE as deficit (0 - 2000 = -2000 per day)
-        #expect(viewModel.hasData == true)
-        #expect(viewModel.isDeficit == true)
-        // Average daily deficit with no food = -2000 kcal/day (signed)
-        #expect(viewModel.averageDailyBalance == -2000)
+        // Then: With Phase 39, no food = no meaningful data (days without food/fasting are excluded)
+        #expect(viewModel.hasData == false, "No food logged means no meaningful data")
+        #expect(viewModel.dailyBalances.isEmpty, "Should have no balances without food data")
+        #expect(viewModel.averageDailyBalance == 0, "Average should be 0 with no data")
     }
 
     @Test("ViewModel shows surplus when eating above TDEE consistently")
@@ -184,8 +183,8 @@ struct EnergyBalanceWidgetViewModelTests {
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
 
-        // Log surplus calories for all 7 days
-        for daysAgo in 0..<7 {
+        // Note: Widget excludes today, so log surplus calories for daysAgo 1-7
+        for daysAgo in 1...7 {
             _ = createFoodEntry(in: context, calories: 2500, daysAgo: daysAgo)  // +500 surplus each day
         }
         try context.save()
@@ -267,9 +266,10 @@ struct EnergyBalanceWidgetViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE
+        // Given: User with TDEE and food logged (widget excludes today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)  // Yesterday
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -291,7 +291,8 @@ struct EnergyBalanceWidgetViewModelTests {
         let user = createTestUser(in: context)
         let goal = createNutritionGoal(in: context, user: user, tdee: 2000)
         goal.lastCalculatedTDEE = 2100  // Updated value
-        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 0)
+        // Widget excludes today, so log food for yesterday
+        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 1)
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -300,21 +301,25 @@ struct EnergyBalanceWidgetViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: Uses lastCalculatedTDEE (2100), so today's balance is 0
-        // The balance for today with 2100 consumed - 2100 TDEE = 0
-        #expect(viewModel.dailyBalances.count == 7)
+        // Then: Uses lastCalculatedTDEE (2100)
+        #expect(viewModel.dailyBalances.count >= 1, "Should have at least one day's balance")
+        #expect(viewModel.tdee == 2100, "Should use lastCalculatedTDEE")
     }
 
     // MARK: - Daily Intake Tests
 
-    @Test("ViewModel populates dailyIntake array with 7 values")
+    @Test("ViewModel populates dailyIntake array with values for days with data")
     func testDailyIntakeArray() async throws {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE
+        // Given: User with TDEE and food for the last 7 days (excluding today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        // Note: Widget excludes today, so log food for daysAgo 1-7 (not 0-6)
+        for daysAgo in 1...7 {
+            _ = createFoodEntry(in: context, calories: 1800, daysAgo: daysAgo)
+        }
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -323,7 +328,7 @@ struct EnergyBalanceWidgetViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: dailyIntake has 7 values
+        // Then: dailyIntake has 7 values (one for each day with data, excluding today)
         #expect(viewModel.dailyIntake.count == 7)
     }
 
@@ -372,10 +377,10 @@ struct EnergyBalanceWidgetViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE and food for today
+        // Given: User with TDEE and food for yesterday (widget excludes today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
-        _ = createFoodEntry(in: context, calories: 1500, daysAgo: 0)
+        _ = createFoodEntry(in: context, calories: 1500, daysAgo: 1)  // Yesterday
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -384,10 +389,12 @@ struct EnergyBalanceWidgetViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: Today's intake is 1500, others are 0
-        #expect(viewModel.dailyIntake.count == 7)
-        // Last entry (today) should be 1500
-        #expect(viewModel.dailyIntake.last == 1500)
+        // Then: With Phase 39, only days with meaningful data are returned
+        #expect(viewModel.dailyIntake.count >= 1, "Should have at least yesterday's intake")
+        // The entry for yesterday should be 1500 (last entry in array)
+        if let yesterdayIntake = viewModel.dailyIntake.last {
+            #expect(yesterdayIntake == 1500, "Yesterday's intake should be 1500")
+        }
     }
 
     @Test("ViewModel calculates balances for each day")
@@ -395,11 +402,18 @@ struct EnergyBalanceWidgetViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE of 2000 and varying intake
+        // Given: User with TDEE of 2000 and food logged for all 7 days (excluding today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
-        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)  // -200 balance
-        _ = createFoodEntry(in: context, calories: 2200, daysAgo: 2)  // +200 balance
+        // Note: Widget excludes today, so log food for daysAgo 1-7
+        // Array is ordered oldest to newest, so index 0 = 7 days ago, index 6 = yesterday
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)  // -200 balance (yesterday) -> index 6
+        _ = createFoodEntry(in: context, calories: 2200, daysAgo: 2)  // +200 balance -> index 5
+        _ = createFoodEntry(in: context, calories: 2000, daysAgo: 3)  // 0 balance -> index 4
+        _ = createFoodEntry(in: context, calories: 2000, daysAgo: 4)  // 0 balance -> index 3
+        _ = createFoodEntry(in: context, calories: 2000, daysAgo: 5)  // 0 balance -> index 2
+        _ = createFoodEntry(in: context, calories: 2000, daysAgo: 6)  // 0 balance -> index 1
+        _ = createFoodEntry(in: context, calories: 2000, daysAgo: 7)  // 0 balance -> index 0
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -409,11 +423,11 @@ struct EnergyBalanceWidgetViewModelTests {
         await viewModel.loadData()
 
         // Then: Balances reflect intake - TDEE
-        #expect(viewModel.dailyBalances.count == 7)
-        // Yesterday (index 5) should be 1800 - 2000 = -200
-        #expect(viewModel.dailyBalances[5] == -200)
-        // Two days ago (index 4) should be 2200 - 2000 = 200
-        #expect(viewModel.dailyBalances[4] == 200)
+        #expect(viewModel.dailyBalances.count == 7, "Should have 7 days of balances")
+        // Yesterday (index 6) should be 1800 - 2000 = -200
+        #expect(viewModel.dailyBalances[6] == -200, "Yesterday's balance should be -200")
+        // Two days ago (index 5) should be 2200 - 2000 = 200
+        #expect(viewModel.dailyBalances[5] == 200, "Two days ago balance should be +200")
     }
 
     @Test("ViewModel initializes TDEE to zero")
@@ -473,17 +487,17 @@ struct EnergyBalanceWidgetViewModelTests {
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
 
-        // Log food with net deficit over 7 days
-        // Days 0-3: 1800 cal (deficit)
-        // Days 4-6: 2100 cal (surplus)
+        // Note: Widget excludes today, so log food for daysAgo 1-7
+        // Days 1-4: 1800 cal (deficit)
+        // Days 5-7: 2100 cal (surplus)
         // Net: 4*1800 + 3*2100 = 7200 + 6300 = 13500, TDEE = 14000, so deficit
-        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 0)
         _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)
         _ = createFoodEntry(in: context, calories: 1800, daysAgo: 2)
         _ = createFoodEntry(in: context, calories: 1800, daysAgo: 3)
-        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 4)
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 4)
         _ = createFoodEntry(in: context, calories: 2100, daysAgo: 5)
         _ = createFoodEntry(in: context, calories: 2100, daysAgo: 6)
+        _ = createFoodEntry(in: context, calories: 2100, daysAgo: 7)
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -507,8 +521,8 @@ struct EnergyBalanceWidgetViewModelTests {
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
 
-        // Log exactly 2000 calories each day
-        for daysAgo in 0..<7 {
+        // Note: Widget excludes today, so log exactly 2000 calories for daysAgo 1-7
+        for daysAgo in 1...7 {
             _ = createFoodEntry(in: context, calories: 2000, daysAgo: daysAgo)
         }
         try context.save()
@@ -528,9 +542,10 @@ struct EnergyBalanceWidgetViewModelTests {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE
+        // Given: User with TDEE and food logged (widget excludes today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        _ = createFoodEntry(in: context, calories: 1800, daysAgo: 1)  // Yesterday
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -548,14 +563,18 @@ struct EnergyBalanceWidgetViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("ViewModel correctly stores all 7 daily balance values")
+    @Test("ViewModel correctly stores all 7 daily balance values when all days have data")
     func testDailyBalancesCount() async throws {
         let (context, container) = createTestContext()
         _ = container
 
-        // Given: User with TDEE
+        // Given: User with TDEE and food logged for all 7 days (excluding today)
         let user = createTestUser(in: context)
         _ = createNutritionGoal(in: context, user: user, tdee: 2000)
+        // Note: Widget excludes today, so log food for daysAgo 1-7 (not 0-6)
+        for daysAgo in 1...7 {
+            _ = createFoodEntry(in: context, calories: 1800, daysAgo: daysAgo)
+        }
         try context.save()
 
         let mealLogService = MealLogService(context: context)
@@ -564,8 +583,8 @@ struct EnergyBalanceWidgetViewModelTests {
         // When: Loading data
         await viewModel.loadData()
 
-        // Then: 7 daily balances are stored
-        #expect(viewModel.dailyBalances.count == 7)
-        #expect(viewModel.dailyIntake.count == 7)
+        // Then: 7 daily balances are stored (one for each day with data)
+        #expect(viewModel.dailyBalances.count == 7, "Should have 7 daily balances")
+        #expect(viewModel.dailyIntake.count == 7, "Should have 7 daily intake values")
     }
 }

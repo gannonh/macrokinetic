@@ -22,6 +22,7 @@ final class WeeklyNutritionHeroViewModel {
     )
 
     private let mealLogService: MealLogService
+    private let dayStatusService: DayStatusService?
     private let context: ModelContext
 
     // MARK: - Published State
@@ -64,9 +65,11 @@ final class WeeklyNutritionHeroViewModel {
     /// Initialize with meal log service and model context
     /// - Parameters:
     ///   - mealLogService: Service for fetching meal log data
+    ///   - dayStatusService: Service for fasting status (optional for backward compat)
     ///   - context: ModelContext for fetching user data
-    init(mealLogService: MealLogService, context: ModelContext) {
+    init(mealLogService: MealLogService, dayStatusService: DayStatusService? = nil, context: ModelContext) {
         self.mealLogService = mealLogService
+        self.dayStatusService = dayStatusService
         self.context = context
         self.todayIndex = Self.calculateTodayIndex()
     }
@@ -113,9 +116,11 @@ final class WeeklyNutritionHeroViewModel {
     }
 
     /// Load nutrition totals for each day of the current week
+    /// - Note: Shows all days visually; fasting days display as 0 calories (intentional)
     private func loadWeekConsumption() async {
         let calendar = Calendar.current
         let weekStart = startOfWeek()
+        let todayStart = calendar.startOfDay(for: Date())
 
         // Reset arrays
         var newCalories = Array(repeating: 0.0, count: 7)
@@ -124,14 +129,41 @@ final class WeeklyNutritionHeroViewModel {
         var newFat = Array(repeating: 0.0, count: 7)
         var failedDays = 0
 
+        // Get fasting dates for the week
+        let fastingDates: Set<Date>
+        if let service = dayStatusService {
+            let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
+            do {
+                fastingDates = try service.getFastingDates(from: weekStart, to: weekEnd)
+            } catch {
+                Self.logger.error("Failed to fetch fasting dates: \(error.localizedDescription)")
+                fastingDates = []
+            }
+        } else {
+            fastingDates = []
+        }
+
         // Load data for each day up to and including today
         for dayIndex in 0...todayIndex {
             guard let dayDate = calendar.date(byAdding: .day, value: dayIndex, to: weekStart) else {
                 continue
             }
 
+            let dayStart = calendar.startOfDay(for: dayDate)
+            let isToday = dayStart == todayStart
+            let isFastingDay = fastingDates.contains(dayStart)
+
             do {
                 let totals = try await mealLogService.getDailyTotals(for: dayDate)
+
+                // For completed days: if no entries and fasting, show 0 intentionally
+                // For today: always show current logged values
+                if !isToday && totals.calories == 0 && !isFastingDay {
+                    // Blank day (no entries, not fasting) - keep zeros
+                    // Note: This day still shows in the visual but won't contribute meaningfully
+                    continue
+                }
+
                 newCalories[dayIndex] = totals.calories
                 newProtein[dayIndex] = totals.protein
                 newCarbs[dayIndex] = totals.carbs

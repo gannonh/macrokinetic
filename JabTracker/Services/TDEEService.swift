@@ -153,6 +153,7 @@ final class TDEEService {
     private let context: ModelContext
     private let engine: TDEECalculationEngine
     private let metricsService: MetricsService
+    private let dayStatusService: DayStatusService?
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -176,6 +177,7 @@ final class TDEEService {
         context: ModelContext,
         engine: TDEECalculationEngine = TDEECalculationEngine(),
         metricsService: MetricsService? = nil,
+        dayStatusService: DayStatusService? = nil,
         ewmaAlpha: Double = 0.2,
         absoluteMinimumWeightEntries: Int = 3,
         absoluteMinimumFoodConsistency: Double = 0.5,
@@ -187,6 +189,7 @@ final class TDEEService {
         self.context = context
         self.engine = engine
         self.metricsService = metricsService ?? MetricsService(context: context)
+        self.dayStatusService = dayStatusService
         self.ewmaAlpha = ewmaAlpha
         self.absoluteMinimumWeightEntries = absoluteMinimumWeightEntries
         self.absoluteMinimumFoodConsistency = absoluteMinimumFoodConsistency
@@ -347,6 +350,7 @@ extension TDEEService {
     ///   - lookbackDays: Number of days to analyze (default uses service's lookbackDays)
     /// - Returns: AdaptiveTDEEResult with calculated values and data quality
     /// - Throws: TDEEServiceError only for truly unrecoverable errors (not data thresholds)
+    /// - Note: Fasting days are excluded from calorie calculations
     func calculateAdaptiveTDEE(
         goal: NutritionGoal,
         lookbackDays: Int? = nil
@@ -354,99 +358,116 @@ extension TDEEService {
         let days = lookbackDays ?? self.lookbackDays
         let (startDate, endDate) = try getDateRange(lookbackDays: days)
 
-        // Get weight data (without throwing for threshold)
+        // Gather data
         let weightEntries = try await metricsService.getWeightEntries(from: startDate, to: endDate)
-
-        // Get food data
         let foodEntries = try await getFoodEntries(from: startDate, to: endDate)
-        let uniqueDaysWithFood = Set(foodEntries.map { Calendar.current.startOfDay(for: $0.loggedAt) }).count
-
-        // Calculate day span first (needed for food consistency)
-        let daySpan: Int
-        if let first = weightEntries.min(by: { $0.timestamp < $1.timestamp }),
-            let last = weightEntries.max(by: { $0.timestamp < $1.timestamp })
-        {
-            daySpan = max(
-                1, Calendar.current.dateComponents([.day], from: first.timestamp, to: last.timestamp).day ?? 0)
+        let fastingDates: Set<Date>
+        if let service = dayStatusService {
+            fastingDates = try service.getFastingDates(from: startDate, to: endDate)
         } else {
-            daySpan = 0
+            fastingDates = []
         }
 
-        // Calculate food consistency based on actual tracking span, not full lookback window
-        let foodConsistency = daySpan > 0 ? Double(uniqueDaysWithFood) / Double(daySpan) : 0
+        // Calculate metrics excluding fasting days
+        let intakeMetrics = calculateIntakeMetrics(
+            foodEntries: foodEntries, fastingDates: fastingDates, weightEntries: weightEntries
+        )
 
         // Assess data quality
         let dataQuality = createDataQualityAssessment(
             weightCount: weightEntries.count,
-            foodConsistency: foodConsistency,
-            daySpan: daySpan
+            foodConsistency: intakeMetrics.foodConsistency,
+            daySpan: intakeMetrics.daySpan
         )
 
-        // If insufficient, throw with helpful message
         guard dataQuality.quality != .insufficient else {
             throw TDEEServiceError.insufficientData(assessment: dataQuality)
         }
 
-        // Calculate weight trend (may still throw if data is corrupted)
+        // Calculate weight trend and TDEE
+        return try buildAdaptiveResult(
+            goal: goal, days: days, weightEntries: weightEntries, intakeMetrics: intakeMetrics, dataQuality: dataQuality
+        )
+    }
+
+    /// Metrics for intake calculations
+    private struct IntakeMetrics {
+        let averageDailyIntake: Double
+        let uniqueDaysWithFood: Int
+        let foodConsistency: Double
+        let daySpan: Int
+    }
+
+    /// Calculate intake metrics excluding fasting days
+    private func calculateIntakeMetrics(
+        foodEntries: [FoodEntry], fastingDates: Set<Date>, weightEntries: [WeightEntry]
+    ) -> IntakeMetrics {
+        let daysWithFood = Set(foodEntries.map { Calendar.current.startOfDay(for: $0.loggedAt) })
+        let daysWithFoodExcludingFasting = daysWithFood.subtracting(fastingDates)
+        let uniqueDaysWithFood = daysWithFoodExcludingFasting.count
+
+        let daySpan = calculateDaySpan(from: weightEntries)
+        let effectiveDaySpan = max(1, daySpan - fastingDates.count)
+        let foodConsistency = effectiveDaySpan > 0 ? Double(uniqueDaysWithFood) / Double(effectiveDaySpan) : 0
+
+        let nonFastingEntries = foodEntries.filter { entry in
+            !fastingDates.contains(Calendar.current.startOfDay(for: entry.loggedAt))
+        }
+        let totalCalories = nonFastingEntries.reduce(0.0) { $0 + $1.calories }
+        let averageDailyIntake = uniqueDaysWithFood > 0 ? totalCalories / Double(uniqueDaysWithFood) : 0
+
+        if !fastingDates.isEmpty {
+            Self.logger.debug("Excluded \(fastingDates.count) fasting days from TDEE calculation")
+        }
+
+        return IntakeMetrics(
+            averageDailyIntake: averageDailyIntake, uniqueDaysWithFood: uniqueDaysWithFood,
+            foodConsistency: foodConsistency, daySpan: daySpan
+        )
+    }
+
+    /// Calculate day span from weight entries
+    private func calculateDaySpan(from weightEntries: [WeightEntry]) -> Int {
+        guard let first = weightEntries.min(by: { $0.timestamp < $1.timestamp }),
+            let last = weightEntries.max(by: { $0.timestamp < $1.timestamp })
+        else { return 0 }
+        return max(1, Calendar.current.dateComponents([.day], from: first.timestamp, to: last.timestamp).day ?? 0)
+    }
+
+    /// Build the adaptive result from calculated metrics
+    private func buildAdaptiveResult(
+        goal: NutritionGoal, days: Int, weightEntries: [WeightEntry],
+        intakeMetrics: IntakeMetrics, dataQuality: DataQualityAssessment
+    ) throws -> AdaptiveTDEEResult {
         let weights = weightEntries.sorted { $0.timestamp < $1.timestamp }.map { ($0.timestamp, $0.weightKg) }
         let smoothedWeights = try engine.calculateEWMA(weights: weights, alpha: ewmaAlpha)
 
-        let changeRate: Double
-        do {
-            changeRate = try engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)
-        } catch {
-            // If we can't determine trend, use 0 (maintenance assumption)
-            Self.logger.warning("Could not determine weight trend, assuming maintenance")
-            changeRate = 0
-        }
+        let changeRate = (try? engine.calculateWeightChangeRate(smoothedWeights: smoothedWeights)) ?? 0
 
-        // Calculate average intake
-        let totalCalories = foodEntries.reduce(0.0) { $0 + $1.calories }
-        let averageDailyIntake = uniqueDaysWithFood > 0 ? totalCalories / Double(uniqueDaysWithFood) : 0
-
-        // Calculate TDEE
         guard let firstWeight = smoothedWeights.first?.smoothedWeight,
             let lastWeight = smoothedWeights.last?.smoothedWeight
-        else {
-            throw TDEEServiceError.cannotDetermineWeightTrend
-        }
+        else { throw TDEEServiceError.cannotDetermineWeightTrend }
 
         let weightChangeKg = lastWeight - firstWeight
         let tdee = try engine.calculateAdaptiveTDEE(
-            averageDailyIntake: averageDailyIntake,
-            weightChangeKg: weightChangeKg,
-            durationDays: days
+            averageDailyIntake: intakeMetrics.averageDailyIntake, weightChangeKg: weightChangeKg, durationDays: days
         )
 
-        // Calculate raw confidence, then cap by tier
         let rawConfidence = engine.calculateConfidenceScore(
-            durationDays: days,
-            daysWithData: uniqueDaysWithFood,
-            weightChangeRateKgPerWeek: changeRate
+            durationDays: days, daysWithData: intakeMetrics.uniqueDaysWithFood, weightChangeRateKgPerWeek: changeRate
         )
         let confidence = min(rawConfidence, dataQuality.quality.confidenceCeiling)
 
-        let expectedTDEE = goal.initialEstimatedTDEE ?? tdee
         let hasMetabolicAdaptation = engine.detectMetabolicAdaptation(
-            actualTDEE: tdee,
-            expectedTDEE: expectedTDEE
+            actualTDEE: tdee, expectedTDEE: goal.initialEstimatedTDEE ?? tdee
         )
 
-        Self.logger.debug(
-            """
-            Adaptive TDEE: \(Int(tdee)) kcal, confidence: \(Int(confidence * 100))%, \
-            quality: \(dataQuality.quality.displayName)
-            """
-        )
+        Self.logger.debug("Adaptive TDEE: \(Int(tdee)) kcal, confidence: \(Int(confidence * 100))%")
 
         return AdaptiveTDEEResult(
-            tdee: tdee,
-            confidence: confidence,
-            weightChangeRateKgPerWeek: changeRate,
-            averageDailyIntake: averageDailyIntake,
-            daysWithData: uniqueDaysWithFood,
-            hasMetabolicAdaptation: hasMetabolicAdaptation,
-            dataQuality: dataQuality
+            tdee: tdee, confidence: confidence, weightChangeRateKgPerWeek: changeRate,
+            averageDailyIntake: intakeMetrics.averageDailyIntake, daysWithData: intakeMetrics.uniqueDaysWithFood,
+            hasMetabolicAdaptation: hasMetabolicAdaptation, dataQuality: dataQuality
         )
     }
 

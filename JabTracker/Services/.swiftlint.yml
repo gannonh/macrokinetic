@@ -2,7 +2,7 @@
 # Allows longer files for complex service classes requiring comprehensive medical logic
 
 file_length:
-  warning: 950  # TDEEService requires comprehensive TDEE calculation + snapshot backfill logic
+  warning: 960  # TDEEService requires comprehensive TDEE calculation + snapshot backfill + fasting dates logic
   error: 1100
 
 type_body_length:

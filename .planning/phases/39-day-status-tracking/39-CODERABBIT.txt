@@ -1,0 +1,32 @@
+Connecting to review service
+Setting up
+Analyzing
+Reviewing
+
+============================================================================
+File: JabTracker/ViewModels/EnergyBalanceWidgetViewModel.swift
+Line: 117 to 133
+Type: potential_issue
+
+Prompt for AI Agent:
+In @JabTracker/ViewModels/EnergyBalanceWidgetViewModel.swift around lines 117 - 133, The loop silently skips all days when getMeaningfulDates(...) returns an empty Set, masking fetch failures; change getMeaningfulDates to return an optional Set? (or throw) so callers can distinguish "no meaningful dates" vs "error", then update EnergyBalanceWidgetViewModel.swift to check the returned value (meaningfulDates == nil) and either (a) fall back to loading every day in the range instead of skipping them, or (b) propagate an error state to the UI (increment failedDays or surface an error) rather than producing an empty dailyBalances; reference getMeaningfulDates, meaningfulDates, dailyBalances, and failedDays when making these changes.
+
+
+
+============================================================================
+File: JabTrackerUITests/FoodLog/FastingToggleUITests.swift
+Line: 153 to 157
+Type: potential_issue
+
+Prompt for AI Agent:
+In @JabTrackerUITests/FoodLog/FastingToggleUITests.swift around lines 153 - 157, The test taps previousWeekButton without asserting it exists; update the uses of findPreviousWeekButton() in this test to call waitForExistence(timeout:) (as done in testMarkDayAsFasting) before each tap to avoid flakes—i.e., locate the findPreviousWeekButton() call and add an existence check with a reasonable timeout prior to previousWeekButton.tap() (and keep the existing waitForUIUpdate() calls).
+
+
+
+============================================================================
+File: JabTracker/Services/TDEEService.swift
+Line: 401 to 427
+Type: potential_issue
+
+Prompt for AI Agent:
+In @JabTracker/Services/TDEEService.swift around lines 401 - 427, In calculateIntakeMetrics, effectiveDaySpan currently subtracts fastingDates.count from daySpan which can include fasting dates outside the weightEntries-derived span; instead compute the intersection of fastingDates with the actual tracking range (derived from calculateDaySpan or from start/end dates of weightEntries) and subtract only that intersected count. Locate calculateIntakeMetrics, calculateDaySpan, effectiveDaySpan, and fastingDates usage, compute trackingFastingCount = fastingDates.intersection(trackingDateSet) (or count fasting dates between the min/max weightEntry days) and use that value when computing effectiveDaySpan and logging.

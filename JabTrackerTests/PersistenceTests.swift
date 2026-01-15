@@ -13,7 +13,7 @@ struct DataPersistenceTests {
 
         // Verify container and context are accessible
         _ = controller.container.mainContext
-        #expect(controller.container.schema.entities.count == 14)
+        #expect(controller.container.schema.entities.count == 15)
     }
 
     @Test("SwiftData context saves successfully")
@@ -40,7 +40,7 @@ struct DataPersistenceTests {
 
         // Verify context is accessible and schema is correct
         _ = previewStyleController.container.mainContext
-        #expect(previewStyleController.container.schema.entities.count == 14)
+        #expect(previewStyleController.container.schema.entities.count == 15)
     }
 }
 

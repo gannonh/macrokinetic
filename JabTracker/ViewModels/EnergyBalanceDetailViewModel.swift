@@ -57,6 +57,7 @@ final class EnergyBalanceDetailViewModel {
 
     private let mealLogService: MealLogService
     private let tdeeService: TDEEService
+    private let dayStatusService: DayStatusService?
     private let context: ModelContext
 
     // MARK: - Published State
@@ -102,10 +103,17 @@ final class EnergyBalanceDetailViewModel {
     /// - Parameters:
     ///   - mealLogService: Service for fetching meal log data
     ///   - tdeeService: Service for fetching TDEE snapshots
+    ///   - dayStatusService: Service for fasting status (optional for backward compat)
     ///   - context: ModelContext for fetching user data
-    init(mealLogService: MealLogService, tdeeService: TDEEService, context: ModelContext) {
+    init(
+        mealLogService: MealLogService,
+        tdeeService: TDEEService,
+        dayStatusService: DayStatusService? = nil,
+        context: ModelContext
+    ) {
         self.mealLogService = mealLogService
         self.tdeeService = tdeeService
+        self.dayStatusService = dayStatusService
         self.context = context
     }
 
@@ -169,30 +177,66 @@ final class EnergyBalanceDetailViewModel {
         tdeeSnapshotLoadFailed = false
     }
 
-    /// Generate daily data for selected period (only days with actual food logged)
+    /// Generate daily data for selected period
+    /// - Note: Excludes today (partial data) and days without food entries or fasting status
     private func generateDailyData(fallbackTDEE: Int, calorieTarget: Int) async {
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
 
-        // Get start date based on selected period
-        // For "All", use nil which means no start date filter
-        let startDate: Date
-        if let periodStart = selectedPeriod.startDate {
-            startDate = calendar.startOfDay(for: periodStart)
-        } else {
-            // For "All" - fetch the earliest food entry date
-            let earliestDate = await getEarliestFoodEntryDate()
-            startDate =
-                earliestDate
-                ?? calendar.startOfDay(
-                    for: calendar.date(byAdding: .year, value: -1, to: todayStart) ?? todayStart
-                )
+        let startDate = await calculateStartDate(todayStart: todayStart, calendar: calendar)
+        let meaningfulDates = await getMeaningfulDates(from: startDate, to: todayStart)
+        let tdeeByDate = loadTDEESnapshots(from: startDate, to: todayStart, calendar: calendar)
+
+        var data: [DailyData] = []
+        var currentDate = startDate
+        while currentDate < todayStart {
+            let dayStart = calendar.startOfDay(for: currentDate)
+
+            if meaningfulDates.contains(dayStart) {
+                if let dayData = await loadDayData(
+                    date: dayStart, fallbackTDEE: fallbackTDEE, calorieTarget: calorieTarget, tdeeByDate: tdeeByDate
+                ) {
+                    data.append(dayData)
+                }
+            }
+
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+            currentDate = nextDate
         }
 
-        // Load TDEE snapshots for the period to get historical expenditure values
+        dailyData = data.sorted { $0.date < $1.date }
+        Self.logger.debug("Generated \(data.count) days from \(meaningfulDates.count) meaningful dates")
+    }
+
+    /// Calculate start date based on selected period
+    private func calculateStartDate(todayStart: Date, calendar: Calendar) async -> Date {
+        if let periodStart = selectedPeriod.startDate {
+            return calendar.startOfDay(for: periodStart)
+        }
+        let earliestDate = await getEarliestFoodEntryDate()
+        return earliestDate
+            ?? calendar.startOfDay(
+                for: calendar.date(byAdding: .year, value: -1, to: todayStart) ?? todayStart
+            )
+    }
+
+    /// Get dates with meaningful data from the service
+    private func getMeaningfulDates(from startDate: Date, to endDate: Date) async -> Set<Date> {
+        do {
+            return try await mealLogService.getDatesWithMeaningfulData(
+                from: startDate, to: endDate, dayStatusService: dayStatusService
+            )
+        } catch {
+            Self.logger.error("Failed to get meaningful dates: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    /// Load TDEE snapshots and create date-to-value mapping
+    private func loadTDEESnapshots(from startDate: Date, to endDate: Date, calendar: Calendar) -> [Date: Int] {
         var tdeeByDate: [Date: Int] = [:]
         do {
-            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: todayStart)
+            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: endDate)
             for snapshot in snapshots {
                 let dayStart = calendar.startOfDay(for: snapshot.timestamp)
                 tdeeByDate[dayStart] = Int(snapshot.tdeeValue)
@@ -203,41 +247,23 @@ final class EnergyBalanceDetailViewModel {
             tdeeSnapshotLoadFailed = true
             loadingError = "Unable to load historical expenditure data. Using current TDEE estimate."
         }
+        return tdeeByDate
+    }
 
-        var data: [DailyData] = []
-
-        // Generate data from start date to today (only include days with food logged)
-        var currentDate = startDate
-        while currentDate <= todayStart {
-            let dayStart = calendar.startOfDay(for: currentDate)
-
-            // Get calories consumed for this date
-            do {
-                let totals = try await mealLogService.getDailyTotals(for: dayStart)
-                let calories = Int(totals.calories)
-
-                // Only include days where food was actually logged
-                if calories > 0 {
-                    // Use historical TDEE if available, otherwise fallback
-                    let expenditure = tdeeByDate[dayStart] ?? fallbackTDEE
-
-                    data.append(
-                        DailyData(
-                            date: dayStart,
-                            caloriesConsumed: calories,
-                            expenditure: expenditure,
-                            calorieTarget: calorieTarget
-                        ))
-                }
-            } catch {
-                // No data for this day - skip it
-            }
-
-            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
-            currentDate = nextDate
+    /// Load data for a single day
+    private func loadDayData(
+        date: Date, fallbackTDEE: Int, calorieTarget: Int, tdeeByDate: [Date: Int]
+    ) async -> DailyData? {
+        do {
+            let totals = try await mealLogService.getDailyTotals(for: date)
+            let calories = Int(totals.calories)
+            let expenditure = tdeeByDate[date] ?? fallbackTDEE
+            return DailyData(
+                date: date, caloriesConsumed: calories, expenditure: expenditure, calorieTarget: calorieTarget)
+        } catch {
+            Self.logger.error("Failed to load day data for \(date): \(error.localizedDescription)")
+            return nil
         }
-
-        dailyData = data.sorted { $0.date < $1.date }
     }
 
     /// Get the earliest date with a food entry

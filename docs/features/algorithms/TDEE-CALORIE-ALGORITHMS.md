@@ -1,8 +1,10 @@
 # TDEE & Calorie Algorithms
 
-**Last Updated:** 2026-01-07T21:17:37Z (BiologicalSex enum integration)
+**Last Updated:** 2026-01-15T00:00:00Z (Day Status rules for fasting days)
 **Source Files:**
 - `JabTracker/Models/BiologicalSex.swift`
+- `JabTracker/Models/DayStatus.swift`
+- `JabTracker/Services/DayStatusService.swift`
 - `JabTracker/Services/TDEECalculationEngine.swift`
 - `JabTracker/Services/TDEECalculationEngine+Adaptive.swift`
 - `JabTracker/Services/TDEECalculationEngine+EWMA.swift`
@@ -11,22 +13,24 @@
 - `JabTracker/Services/WeeklyCheckInService.swift`
 - `JabTracker/Services/CalorieAdjustmentService.swift`
 - `JabTracker/Services/CalorieAdjustmentService+Adjustments.swift`
+- `JabTracker/Services/MealLogService.swift`
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Initial TDEE Estimation](#initial-tdee-estimation)
-3. [Adaptive TDEE Calculation](#adaptive-tdee-calculation)
-4. [Weight Smoothing (EWMA)](#weight-smoothing-ewma)
-5. [Confidence Scoring](#confidence-scoring)
-6. [Calorie Target Derivation](#calorie-target-derivation)
-7. [Calorie Expenditure Adjustments](#calorie-expenditure-adjustments)
-8. [Macro Calculations](#macro-calculations)
-9. [Thresholds & Configuration](#thresholds--configuration)
-10. [Weekly Check-In Logic](#weekly-check-in-logic)
-11. [Data Requirements Summary](#data-requirements-summary)
+2. [Day Status Rules](#day-status-rules)
+3. [Initial TDEE Estimation](#initial-tdee-estimation)
+4. [Adaptive TDEE Calculation](#adaptive-tdee-calculation)
+5. [Weight Smoothing (EWMA)](#weight-smoothing-ewma)
+6. [Confidence Scoring](#confidence-scoring)
+7. [Calorie Target Derivation](#calorie-target-derivation)
+8. [Calorie Expenditure Adjustments](#calorie-expenditure-adjustments)
+9. [Macro Calculations](#macro-calculations)
+10. [Thresholds & Configuration](#thresholds--configuration)
+11. [Weekly Check-In Logic](#weekly-check-in-logic)
+12. [Data Requirements Summary](#data-requirements-summary)
 
 ---
 
@@ -38,6 +42,89 @@ The app uses a two-phase TDEE (Total Daily Energy Expenditure) calculation:
 2. **Adaptive Refinement**: Data-driven refinement using actual weight changes and food intake
 
 This allows the app to provide immediate targets during onboarding, then progressively improve accuracy as user data accumulates.
+
+---
+
+## Day Status Rules
+
+The app uses day status tracking to differentiate between intentional fasting and missing data. This ensures accurate calculations across all multi-day aggregations.
+
+### Day Classification
+
+| Day Condition | Classification | Treatment in Calculations |
+| --- | --- | --- |
+| Has food entries | **Data Day** | Included with logged calories |
+| No entries + Fasting flag ON | **Fasting Day** | Included as 0-calorie day |
+| No entries + Fasting flag OFF | **Unknown Day** | Skipped entirely |
+| Today (any status) | **Partial Day** | Excluded from aggregations |
+
+### Why This Matters
+
+Without day status rules, the algorithm cannot distinguish between:
+- "I intentionally ate nothing" (should count as 0)
+- "I forgot to log" (should be skipped)
+
+**Example without day status:**
+- 7-day window: 6 days with 2000 kcal, 1 day with 0 kcal (fasting)
+- Total: 12,000 kcal / 7 days = 1,714 kcal/day average
+
+**Example with day status (fasting marked):**
+- Same data, but user marked day 7 as fasting
+- Fasting day excluded from calculations (treated as known-intentional, not unknown)
+- Average: 12,000 kcal / 6 tracked days = 2,000 kcal/day
+- Fasting marking prevents this day from being treated as "forgot to log"
+
+### Affected Calculations
+
+Day status rules apply to:
+
+1. **TDEE Calculation** (`TDEEService.calculateAdaptiveTDEE`)
+   - Fasting days excluded from average intake calculation
+   - Food consistency adjusted for fasting days
+
+2. **Energy Balance Charts** (`EnergyBalanceHeroViewModel`, `EnergyBalanceWidgetViewModel`)
+   - Only shows days with meaningful data
+   - Today excluded (partial data)
+
+3. **Weekly Nutrition Tracking** (`WeeklyNutritionHeroViewModel`)
+   - Fasting days show 0 calories (intentional)
+   - Unknown days show 0 but don't affect averages
+
+### User Interface
+
+Users can mark a day as fasting in the Food Log:
+
+1. Navigate to the day with no food entries
+2. A "Fasting Day" toggle appears
+3. Toggle ON to mark as intentional fasting
+
+The toggle only appears when there are no food entries for that day.
+
+### Data Model
+
+```swift
+// DayStatus.swift
+@Model
+final class DayStatus {
+    var id: UUID
+    var date: Date        // Normalized to start of day
+    var isFasting: Bool   // true = intentional fast
+    var createdAt: Date
+    var updatedAt: Date
+}
+```
+
+### Service Methods
+
+```swift
+// DayStatusService.swift
+func setFasting(for date: Date, isFasting: Bool)
+func isFasting(for date: Date) -> Bool
+func getFastingDates(from: Date, to: Date) -> Set<Date>
+
+// MealLogService.swift
+func getDatesWithMeaningfulData(from: Date, to: Date, dayStatusService: DayStatusService?) -> Set<Date>
+```
 
 ---
 

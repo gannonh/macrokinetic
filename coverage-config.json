@@ -37,7 +37,8 @@
           "Models/NutritionGoal.swift",
           "Models/NutritionProgram.swift",
           "Models/TDEESnapshot.swift",
-          "Models/BiologicalSex.swift"
+          "Models/BiologicalSex.swift",
+          "Models/DayStatus.swift"
         ]
       },
       "business_logic_with_logging": {
@@ -86,7 +87,8 @@
           "Services/TDEEService.swift",
           "Services/WeeklyCheckInService.swift",
           "Services/CalorieAdjustmentService.swift",
-          "Services/CalorieAdjustmentService+Adjustments.swift"
+          "Services/CalorieAdjustmentService+Adjustments.swift",
+          "Services/DayStatusService.swift"
         ]
       },
       "framework_integration": {
@@ -281,6 +283,7 @@
       "Views/DoseEntry/DoseEntrySheet.swift",
       "Views/DoseEntry/QuickDoseEntry.swift",
       "Views/DoseEntry/TitrationConfirmationDialog.swift",
+      "Views/FoodLog/FastingToggleCard.swift",
       "Views/FoodLog/FoodDayView.swift",
       "Views/FoodLog/FoodLogView.swift",
       "Views/FoodLog/MacroSummaryConsumedPage.swift",

@@ -10,19 +10,19 @@
 
 ## Current Position
 
-Phase: 39 of 43 (Day Status Tracking)
+Phase: 40 of 43 (GLP-1 Dose Adjustments)
 Plan: Not started
-Status: PR Review complete - ready for merge
-Last activity: 2026-01-15 - PR Review complete (CI + reviews passed)
+Status: Ready for planning
+Last activity: 2026-01-15 - Phase 39 complete
 
-Progress: ░░░░░░░░░░ 0%
+Progress: ██░░░░░░░░ 20%
 
 ## GitHub Tracking
 
 Issue: N/A
-PR: #335 - ui: make check-in day setting compact
-Branch: ui/compact-checkin-day-setting
-Status: PR Review complete - ready for merge
+PR: N/A
+Branch: main
+Status: Phase 39 complete on main
 
 ## Performance Metrics
 
@@ -44,6 +44,12 @@ Status: PR Review complete - ready for merge
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 39 decisions:**
+- DayStatus model stores fasting flag per day
+- Fasting toggle only shown when no food entries exist
+- Today always excluded from multi-day aggregations (partial data)
+- Fasting days excluded from TDEE calorie averaging
 
 **v0.8.0 decisions:**
 - Removed ALL Open Food Facts API code - local database (1.7M foods) is sufficient
@@ -73,13 +79,13 @@ None.
 
 ## Project Alignment
 
-Last checked: 2026-01-14
+Last checked: 2026-01-15
 Status: ✓ Aligned
-Assessment: v0.9.0 milestone created, ready to plan Phase 39.
+Assessment: Phase 39 complete, ready to plan Phase 40.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-14T16:44:00Z
-Stopped at: Milestone v0.9.0 initialization
+Last session: 2026-01-15T07:36:00Z
+Stopped at: Phase 39 execution complete
 Resume file: None
