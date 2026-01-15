@@ -230,7 +230,7 @@
       "Onboarding/Views/HealthKitStepView.swift",
       "Onboarding/Views/NotificationsStepView.swift",
       "Onboarding/Views/OnboardingStepViews.swift",
-      "Onboarding/Views/PlaceholderStepView.swift",
+      "Onboarding/Views/OnboardingCollaborativeDistributionView.swift",
       "Onboarding/Views/SetupConfirmationStepView.swift",
       "Onboarding/Views/USPShowcaseStepView.swift",
       "Onboarding/Views/WelcomeStepView.swift",

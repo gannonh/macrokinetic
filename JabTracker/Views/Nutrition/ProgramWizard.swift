@@ -265,8 +265,10 @@ final class ProgramWizardViewModel {
             steps.append(.profileCompletion)
         }
 
-        // Collaborative skips weeklyDistribution/shiftedDaySelection - customize per-day in Strategy
-        steps.append(contentsOf: [.dietPreference, .calorieFloor, .training, .proteinLevel, .confirmation])
+        // Collaborative uses collaborativeDistribution for per-day editing with lock/auto-adjust
+        steps.append(contentsOf: [
+            .dietPreference, .calorieFloor, .training, .proteinLevel, .collaborativeDistribution, .confirmation,
+        ])
         return steps
     }
 
@@ -395,6 +397,16 @@ final class ProgramWizardViewModel {
     /// Whether this is the confirmation step
     var isConfirmationStep: Bool {
         currentStep == .confirmation
+    }
+
+    /// Whether the next step is the confirmation step
+    var isNextStepConfirmation: Bool {
+        guard let currentIndex = availableSteps.firstIndex(of: currentStep),
+            currentIndex + 1 < availableSteps.count
+        else {
+            return false
+        }
+        return availableSteps[currentIndex + 1] == .confirmation
     }
 
     /// Title for edit mode navigation bar
@@ -822,6 +834,7 @@ struct ProgramWizard: View {
     @State private var showingError = false
     @State private var tdeeService: TDEEService?
     @State private var metricsService: MetricsService?
+    @State private var isCalculatingTargets = false
 
     // MARK: - Static Properties
 
@@ -840,59 +853,67 @@ struct ProgramWizard: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Progress indicator
-                ProgressView(value: viewModel.progressPercent)
-                    .tint(.blue)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .accessibilityLabel(
-                        "Step \(stepNumber) of \(viewModel.availableSteps.count)"
-                    )
-
-                // Step content
-                stepContent
-                    .transition(
-                        .asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
+            ZStack {
+                VStack(spacing: 0) {
+                    // Progress indicator
+                    ProgressView(value: viewModel.progressPercent)
+                        .tint(DesignTokens.Colors.accent)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 16)
+                        .accessibilityLabel(
+                            "Step \(stepNumber) of \(viewModel.availableSteps.count)"
                         )
-                    )
 
-                Spacer()
+                    // Step content
+                    stepContent
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            )
+                        )
 
-                // Navigation buttons
-                HStack(spacing: 12) {
-                    if !viewModel.isFirstStep {
-                        SecondaryButton(title: "Back") {
-                            withAnimation(.spring()) {
-                                viewModel.goBack()
+                    Spacer()
+
+                    // Navigation buttons
+                    HStack(spacing: 12) {
+                        if !viewModel.isFirstStep {
+                            SecondaryButton(title: "Back") {
+                                withAnimation(.spring()) {
+                                    viewModel.goBack()
+                                }
                             }
+                            .accessibilityIdentifier("program-wizard-back-button")
                         }
-                        .accessibilityIdentifier("program-wizard-back-button")
+
+                        if viewModel.isConfirmationStep {
+                            PrimaryButton(title: viewModel.isEditMode ? "Save Program" : "Create Program") {
+                                Task {
+                                    await saveProgram()
+                                }
+                            }
+                            .accessibilityIdentifier("program-wizard-save-button")
+                        } else {
+                            PrimaryButton(title: isCalculatingTargets ? "Calculating..." : "Continue") {
+                                Task {
+                                    await handleContinue()
+                                }
+                            }
+                            .disabled(!viewModel.canContinue || isCalculatingTargets)
+                            .accessibilityIdentifier("program-wizard-continue-button")
+                        }
                     }
-
-                    if viewModel.isConfirmationStep {
-                        PrimaryButton(title: viewModel.isEditMode ? "Save Program" : "Create Program") {
-                            Task {
-                                await saveProgram()
-                            }
-                        }
-                        .accessibilityIdentifier("program-wizard-save-button")
-                    } else {
-                        PrimaryButton(title: "Continue") {
-                            Task {
-                                await handleContinue()
-                            }
-                        }
-                        .disabled(!viewModel.canContinue)
-                        .accessibilityIdentifier("program-wizard-continue-button")
-                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 32)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
+
+                // Calculating overlay
+                if isCalculatingTargets {
+                    CalculatingOverlayView()
+                        .transition(.opacity)
+                }
             }
-            .background(DesignTokens.Colors.background)
+            .background(DesignTokens.Colors.groupedBackground)
             .navigationBarTitleDisplayMode(.inline)
             .navigationTitle(viewModel.isEditMode ? viewModel.editModeTitle : "New Program")
             .toolbar {
@@ -1045,7 +1066,41 @@ struct ProgramWizard: View {
             }
         }
 
+        // Check if next step is confirmation - show calculating overlay and calculate TDEE
+        if viewModel.isNextStepConfirmation && !viewModel.isEditMode {
+            await showCalculatingThenConfirmation()
+            return
+        }
+
         withAnimation(.spring()) {
+            viewModel.advance()
+        }
+    }
+
+    /// Show calculation overlay, calculate TDEE, then advance to confirmation step
+    private func showCalculatingThenConfirmation() async {
+        // Show calculating overlay
+        withAnimation(.easeIn(duration: 0.2)) {
+            isCalculatingTargets = true
+        }
+
+        // Calculate TDEE
+        await calculateAndApplyTDEE()
+
+        // If calculation failed, hide overlay and let error alert handle it
+        if showingError {
+            withAnimation(.spring()) {
+                isCalculatingTargets = false
+            }
+            return
+        }
+
+        // Show overlay long enough for user to see the animation (at least 3 seconds)
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
+
+        // Hide overlay and advance to confirmation
+        withAnimation(.spring()) {
+            isCalculatingTargets = false
             viewModel.advance()
         }
     }
@@ -1053,12 +1108,6 @@ struct ProgramWizard: View {
     private func saveProgram() async {
         do {
             try viewModel.save(context: modelContext)
-
-            // Calculate TDEE for Coached programs (await to ensure it completes before dismiss)
-            if viewModel.programStyle == .coached {
-                await calculateAndApplyTDEE()
-            }
-
             onComplete?()
             dismiss()
         } catch {
@@ -1070,6 +1119,8 @@ struct ProgramWizard: View {
     private func calculateAndApplyTDEE() async {
         guard let goal = viewModel.goal else {
             Self.logger.error("TDEE calculation skipped: goal is nil")
+            errorMessage = "Could not calculate personalized targets: Goal not found. Please restart the wizard."
+            showingError = true
             return
         }
         guard let user = goal.user else {
@@ -1080,6 +1131,8 @@ struct ProgramWizard: View {
         }
         guard let service = tdeeService else {
             Self.logger.error("TDEE calculation skipped: TDEEService not initialized")
+            errorMessage = "Could not calculate personalized targets: Service unavailable. Please try again."
+            showingError = true
             return
         }
 

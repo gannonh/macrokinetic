@@ -483,20 +483,106 @@ final class StrategyViewUITests: XCTestCase {
         XCTAssertTrue(weightLossGoalText.exists, "Should show 'Weight Loss Goal' text")
     }
 
-    // MARK: - Check-In Settings
+    // MARK: - Check-In Day Picker
 
-    func testCheckInSettingsCardVisible() throws {
+    func testCheckInDayPickerVisible() throws {
         // Seed goal with program (non-Manual)
         launchAppWithSeededGoal()
 
         // Navigate to Strategy view
         navigateToStrategy()
 
-        // Verify check-in settings card is visible (only for non-Manual programs)
-        let checkInSettingsCard = app.descendants(matching: .any)["check-in-settings-card"].firstMatch
+        // Verify check-in day picker is visible (only for non-Manual programs)
+        let checkInDayPicker = app.descendants(matching: .any)["check-in-day-picker"].firstMatch
         XCTAssertTrue(
-            checkInSettingsCard.waitForExistence(timeout: 5),
-            "Check-in settings card should be visible for Coached program")
+            checkInDayPicker.waitForExistence(timeout: 5),
+            "Check-in day picker should be visible for Coached program")
+
+        // Verify the picker shows the current check-in day
+        // The seeded data defaults to a specific day of week
+        let dayText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Check-in day:'")).firstMatch
+        XCTAssertTrue(dayText.exists, "Check-in day label should be visible")
+    }
+
+    func testCheckInDayPickerShowsAllDays() throws {
+        // Seed goal with program
+        launchAppWithSeededGoal()
+
+        // Navigate to Strategy view
+        navigateToStrategy()
+
+        // Find the check-in day picker container
+        let picker = app.descendants(matching: .any)["check-in-day-picker"].firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 5), "Check-in day picker should exist")
+
+        // The accessibility identifier on HStack captures taps but doesn't forward to Menu.
+        // The inner Menu button is positioned at the left side of the picker.
+        // Tap using normalized offset to hit the inner Menu button area (left side).
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5)).tap()
+
+        // Verify all 7 days are available in the menu
+        let monday = app.buttons["Monday"]
+        let tuesday = app.buttons["Tuesday"]
+        let wednesday = app.buttons["Wednesday"]
+        let thursday = app.buttons["Thursday"]
+        let friday = app.buttons["Friday"]
+        let saturday = app.buttons["Saturday"]
+        let sunday = app.buttons["Sunday"]
+
+        XCTAssertTrue(monday.waitForExistence(timeout: 3), "Monday should be in menu")
+        XCTAssertTrue(tuesday.exists, "Tuesday should be in menu")
+        XCTAssertTrue(wednesday.exists, "Wednesday should be in menu")
+        XCTAssertTrue(thursday.exists, "Thursday should be in menu")
+        XCTAssertTrue(friday.exists, "Friday should be in menu")
+        XCTAssertTrue(saturday.exists, "Saturday should be in menu")
+        XCTAssertTrue(sunday.exists, "Sunday should be in menu")
+    }
+
+    func testCheckInDayPickerChangesDay() throws {
+        // Seed goal with program
+        launchAppWithSeededGoal()
+
+        // Navigate to Strategy view
+        navigateToStrategy()
+
+        // Find the check-in day picker
+        let picker = app.descendants(matching: .any)["check-in-day-picker"].firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 5), "Check-in day picker should exist")
+
+        // Open the menu using coordinate tap (accessibility identifier blocks direct tap)
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5)).tap()
+
+        // Select "Friday" from the menu
+        let fridayOption = app.buttons["Friday"]
+        XCTAssertTrue(fridayOption.waitForExistence(timeout: 3), "Friday option should exist")
+        fridayOption.tap()
+
+        // Verify the picker now shows Friday
+        let fridayLabel = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Friday'")).firstMatch
+        XCTAssertTrue(
+            fridayLabel.waitForExistence(timeout: 3),
+            "Picker should show Friday after selection")
+    }
+
+    func testCheckInDayPickerBelowCountdownCard() throws {
+        // Seed goal with program
+        launchAppWithSeededGoal()
+
+        // Navigate to Strategy view
+        navigateToStrategy()
+
+        // Verify both countdown card and day picker are visible
+        let countdownCard = app.descendants(matching: .any)["check-in-countdown-card"].firstMatch
+        let dayPicker = app.descendants(matching: .any)["check-in-day-picker"].firstMatch
+
+        XCTAssertTrue(countdownCard.waitForExistence(timeout: 5), "Countdown card should exist")
+        XCTAssertTrue(dayPicker.waitForExistence(timeout: 5), "Day picker should exist")
+
+        // Verify day picker is positioned below countdown card
+        XCTAssertGreaterThan(
+            dayPicker.frame.minY,
+            countdownCard.frame.minY,
+            "Day picker should be below countdown card")
     }
 }
 
@@ -507,7 +593,8 @@ final class StrategyViewUITests: XCTestCase {
 // - "check-in-countdown-card" - Check-in countdown section
 // - "current-program-card" - Current program display
 // - "goal-summary-card" - Goal summary display
-// - "check-in-settings-card" - Check-in settings
+// - "check-in-day-picker" - Check-in day picker container (inline below countdown card)
+//   NOTE: Uses coordinate tap (.coordinate(withNormalizedOffset:)) to trigger nested Menu
 // - "no-user-section" - No user state
 // - "improvement-tips-card" - Tips when check-in unavailable
 //

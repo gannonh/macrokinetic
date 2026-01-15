@@ -144,7 +144,11 @@ struct StrategyView: View {
                 if let goal = createdGoal ?? users.first?.activeNutritionGoal,
                     let program = goal.program
                 {
-                    ProgramReadySheet(goal: goal, program: program) {}
+                    ProgramReadySheet(
+                        goal: goal,
+                        program: program,
+                        onDone: {}
+                    )
                 }
             }
         )
@@ -243,8 +247,18 @@ struct StrategyView: View {
     @ViewBuilder
     private func currentProgramSection(goal: NutritionGoal, program: NutritionProgram?) -> some View {
         VStack(spacing: 16) {
-            // Check-in countdown (placeholder for Phase 16)
-            checkInCountdownCard(goal: goal)
+            // Check-in countdown with inline day picker
+            VStack(spacing: 0) {
+                checkInCountdownCard(goal: goal)
+
+                // Check-in day picker (only for non-Manual programs)
+                if program?.style != .manual {
+                    Divider()
+                        .padding(.horizontal)
+                    checkInDayPicker(goal: goal)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16))
 
             // Current program display
             if let program {
@@ -253,11 +267,6 @@ struct StrategyView: View {
 
             // Goal summary card
             goalSummaryCard(goal: goal)
-
-            // Check-in settings (only for non-Manual programs)
-            if program?.style != .manual {
-                checkInSettingsCard(goal: goal)
-            }
         }
     }
 
@@ -280,7 +289,7 @@ struct StrategyView: View {
                 // Countdown ring
                 ZStack {
                     Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                        .stroke(DesignTokens.Colors.inactive.opacity(0.5), lineWidth: 6)
                         .frame(width: 64, height: 64)
 
                     Circle()
@@ -348,10 +357,7 @@ struct StrategyView: View {
                 }
             }
             .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(DesignTokens.Colors.cardBackground)
-            )
+            .background(DesignTokens.Colors.cardBackground)
 
             // Render card (tappable if check-in is available)
             if isCheckInDue && canCheckIn {
@@ -450,42 +456,42 @@ struct StrategyView: View {
         }
     }
 
-    private func checkInSettingsCard(goal: NutritionGoal) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Check-In Settings")
-                .font(.headline)
-
-            Picker(
-                "Check-In Day",
-                selection: Binding(
-                    get: { goal.checkInDayOfWeek },
-                    set: { newValue in
-                        goal.checkInDayOfWeek = newValue
+    private func checkInDayPicker(goal: NutritionGoal) -> some View {
+        HStack {
+            Menu {
+                ForEach(1...7, id: \.self) { day in
+                    Button(dayOfWeekName(for: day)) {
+                        let originalDay = goal.checkInDayOfWeek
+                        let originalUpdatedAt = goal.updatedAt
+                        goal.checkInDayOfWeek = day
                         goal.updatedAt = Date()
-                        try? modelContext.save()
+                        do {
+                            try modelContext.save()
+                        } catch {
+                            // Rollback on failure to maintain consistent state
+                            goal.checkInDayOfWeek = originalDay
+                            goal.updatedAt = originalUpdatedAt
+                            Self.logger.error("Failed to save check-in day: \(error.localizedDescription)")
+                            checkInError = "Unable to save check-in day. Please try again."
+                        }
                     }
-                )
-            ) {
-                Text("Sunday").tag(1)
-                Text("Monday").tag(2)
-                Text("Tuesday").tag(3)
-                Text("Wednesday").tag(4)
-                Text("Thursday").tag(5)
-                Text("Friday").tag(6)
-                Text("Saturday").tag(7)
-            }
-
-            let dayName = dayOfWeekName(for: goal.checkInDayOfWeek)
-            Text("You'll be prompted to review and optimize your program each \(dayName).")
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text("Check-in day: \(dayOfWeekName(for: goal.checkInDayOfWeek))")
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption2)
+                }
                 .font(.caption)
                 .foregroundColor(.secondary)
+            }
+
+            Spacer()
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(DesignTokens.Colors.cardBackground)
-        )
-        .accessibilityIdentifier("check-in-settings-card")
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .background(DesignTokens.Colors.cardBackground)
+        .accessibilityIdentifier("check-in-day-picker")
     }
 
     private func dayOfWeekName(for weekday: Int) -> String {
@@ -883,6 +889,7 @@ struct StrategyView: View {
             Self.logger.info("Program optimization declined")
         } catch {
             Self.logger.error("Failed to decline optimization: \(error.localizedDescription)")
+            checkInError = "Unable to save your choice. Please try again."
         }
     }
 }

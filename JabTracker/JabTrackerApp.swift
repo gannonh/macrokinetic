@@ -33,6 +33,7 @@ struct JabTrackerApp: App {
                         // Show onboarding fullscreen if needed, otherwise ContentView
                         if showingOnboarding {
                             OnboardingView(isPresented: self.$showingOnboarding, authManager: self.authManager)
+                                .modelContainer(self.dataController.container)
                                 .environmentObject(self.authManager)
                                 .transition(.opacity)
                         } else {
@@ -115,6 +116,10 @@ struct JabTrackerApp: App {
                 {
                     isAppLocked = true
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .restartOnboarding)) { _ in
+                // Show onboarding immediately when user restarts from settings
+                self.showingOnboarding = true
             }
             .onOpenURL { url in
                 DeeplinkHandler.handle(url: url)

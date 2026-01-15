@@ -10,18 +10,19 @@
 
 ## Current Position
 
-Phase: N/A (between milestones)
-Plan: N/A
+Phase: 39 of 43 (Day Status Tracking)
+Plan: Not started
 Status: PR Review complete - ready for merge
-Last activity: 2026-01-14 - PR Review complete (CI + reviews passed)
+Last activity: 2026-01-15 - PR Review complete (CI + reviews passed)
 
-Progress: PR #334 ready for merge
+Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
 Issue: N/A
-PR: #334 - feat: persist serving units for custom and history foods
-Branch: feat/persist-serving-units
+PR: #335 - ui: make check-in day setting compact
+Branch: ui/compact-checkin-day-setting
+Status: PR Review complete - ready for merge
 
 ## Performance Metrics
 
@@ -57,10 +58,11 @@ No open issues in `.planning/ISSUES.md`.
 
 ### Pending Todos
 
-8 todos in `.planning/todos/pending/`
+7 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
+- Milestone v0.9.0 created: Improvements & Fixes, 5 phases (Phase 39-43)
 - Milestone v0.8.0 complete: Food Search & Library, 5 phases (Phase 35-38)
 - Phase 35.1 inserted after Phase 35: Food Search Header Indicators
 - Phase 36 (Search Ranking) skipped - to be revisited in future milestone
@@ -71,13 +73,13 @@ None.
 
 ## Project Alignment
 
-Last checked: 2026-01-13
+Last checked: 2026-01-14
 Status: ✓ Aligned
-Assessment: v0.8.0 milestone complete, ready for completion workflow.
+Assessment: v0.9.0 milestone created, ready to plan Phase 39.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-13T15:25:42Z
-Stopped at: Completed 38-01-PLAN.md (barcode fix, API removal, tap target)
+Last session: 2026-01-14T16:44:00Z
+Stopped at: Milestone v0.9.0 initialization
 Resume file: None

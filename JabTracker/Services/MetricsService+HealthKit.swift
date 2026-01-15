@@ -111,10 +111,16 @@ extension MetricsService {
                 return hkWeight
             }
             Self.healthKitLogger.debug(
-                "HealthKit weight unavailable, falling back to user profile: \(user.weight) kg"
+                "HealthKit weight unavailable, falling back to user profile"
             )
         }
-        return user.weight
+        // user.weight is stored in user's preferred unit, convert to kg if needed
+        let weightKg =
+            user.prefersMetricWeight
+            ? user.weight
+            : user.weight / WeightEntry.kgToLbsConversion
+        Self.healthKitLogger.debug("Returning user profile weight: \(weightKg) kg")
+        return weightKg
     }
 
     // MARK: - Height (Read/Write)
