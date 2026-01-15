@@ -459,7 +459,12 @@ struct StrategyView: View {
                     Button(dayOfWeekName(for: day)) {
                         goal.checkInDayOfWeek = day
                         goal.updatedAt = Date()
-                        try? modelContext.save()
+                        do {
+                            try modelContext.save()
+                        } catch {
+                            Self.logger.error("Failed to save check-in day: \(error.localizedDescription)")
+                            checkInError = "Unable to save check-in day. Please try again."
+                        }
                     }
                 }
             } label: {
