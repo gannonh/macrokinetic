@@ -25,17 +25,7 @@ class QuickDoseViewModel: ObservableObject {
         }
     }
 
-    @Published var doseAmount: Double = 0.0 {
-        didSet {
-            // Clamp to valid range when set
-            let range = doseAmountRange
-            if doseAmount < range.lowerBound {
-                doseAmount = range.lowerBound
-            } else if doseAmount > range.upperBound {
-                doseAmount = range.upperBound
-            }
-        }
-    }
+    @Published var doseAmount: Double = 0.0
     @Published var selectedInjectionSite: String = ""
     @Published var doseDate: Date = .init()
     @Published var doseTime: Date = .init()
@@ -295,15 +285,27 @@ class QuickDoseViewModel: ObservableObject {
         }
 
         // Check if active schedule uses split-dose pattern
+        var newDose: Double
         if let schedule = profile.schedules?.first(where: { $0.isActive }),
             schedule.patternType == .splitDose
         {
             // Split-dose: Show half the weekly dose per administration
             // Example: 1.0mg weekly split → 0.5mg per dose (2x per week)
-            self.doseAmount = profile.currentDose / 2
+            newDose = profile.currentDose / 2
         } else {
-            self.doseAmount = profile.currentDose
+            newDose = profile.currentDose
         }
+
+        // Clamp to valid range
+        self.doseAmount = clampDoseAmount(newDose)
+    }
+
+    /// Clamps a dose amount to the valid range for the selected medication
+    /// - Parameter dose: The dose to clamp
+    /// - Returns: The dose clamped to the valid range
+    func clampDoseAmount(_ dose: Double) -> Double {
+        let range = doseAmountRange
+        return min(max(dose, range.lowerBound), range.upperBound)
     }
 
     /// Updates recommended injection sites and selects smart default based on dose history

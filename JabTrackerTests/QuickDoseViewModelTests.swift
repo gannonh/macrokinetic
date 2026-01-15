@@ -472,18 +472,19 @@ struct QuickDoseViewModelTests {
         #expect(viewModel.canSaveDose == true, "Should allow dose exactly 30 days in future")
     }
 
-    @Test("Negative dose amount clamps to minimum")
+    @Test("clampDoseAmount clamps negative values to minimum")
     @MainActor
     func negativeDoseAmountClampsToMinimum() async {
-        // With dose clamping, negative values are clamped to the minimum
+        // clampDoseAmount should clamp negative values to the minimum
         let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
-        viewModel.doseAmount = -1.0
 
-        // Should clamp to minimum (0.25mg for semaglutide)
-        #expect(viewModel.doseAmount == 0.25, "Negative dose should clamp to minimum")
+        // Use clampDoseAmount to verify clamping behavior (0.25 min for semaglutide)
+        let clampedValue = viewModel.clampDoseAmount(-1.0)
+
+        #expect(clampedValue == 0.25, "Negative dose should clamp to minimum")
     }
 
     // MARK: - Medication Profile Extension Tests
@@ -771,7 +772,7 @@ struct QuickDoseViewModelTests {
 
     // MARK: - Dose Bounds Clamping Tests
 
-    @Test("Dose amount clamps to minimum when set below range")
+    @Test("clampDoseAmount clamps to minimum when value below range")
     @MainActor
     func doseAmountClampsToMinimum() async {
         let profile = MedicationProfile(genericName: "tirzepatide", brandName: "Mounjaro", currentDose: 5.0)
@@ -779,13 +780,13 @@ struct QuickDoseViewModelTests {
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Try to set below minimum (2.5 for tirzepatide)
-        viewModel.doseAmount = 1.0
+        // Use clampDoseAmount to verify clamping behavior (2.5 min for tirzepatide)
+        let clampedValue = viewModel.clampDoseAmount(1.0)
 
-        #expect(viewModel.doseAmount == 2.5, "Dose should clamp to minimum (2.5mg)")
+        #expect(clampedValue == 2.5, "Dose should clamp to minimum (2.5mg)")
     }
 
-    @Test("Dose amount clamps to maximum when set above range")
+    @Test("clampDoseAmount clamps to maximum when value above range")
     @MainActor
     func doseAmountClampsToMaximum() async {
         let profile = MedicationProfile(genericName: "tirzepatide", brandName: "Mounjaro", currentDose: 5.0)
@@ -793,10 +794,10 @@ struct QuickDoseViewModelTests {
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Try to set above maximum (15.0 for tirzepatide)
-        viewModel.doseAmount = 20.0
+        // Use clampDoseAmount to verify clamping behavior (15.0 max for tirzepatide)
+        let clampedValue = viewModel.clampDoseAmount(20.0)
 
-        #expect(viewModel.doseAmount == 15.0, "Dose should clamp to maximum (15.0mg)")
+        #expect(clampedValue == 15.0, "Dose should clamp to maximum (15.0mg)")
     }
 
     @Test("Dose amount accepts valid values within range")
