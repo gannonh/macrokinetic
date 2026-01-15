@@ -9,5 +9,9 @@ New Program (Collaborative):
   - Reduce top padding of checkmark
   - reduce size of back text at bottom (eg 2837 kcal)
 ---
+Weekly Checkin
+- Strategy tab intermittedly missing badge when check-in ready: /Users/gannonhall/Desktop/Simulator Screenshot - iPhone 17 Pro - 2026-01-14 at 19.58.56.png
 
-Strategy tab now missing badge when check-in ready
+
+Weekly checkin and new program flow are missing the calculation animation from onoboarding: /Users/gannonhall/Desktop/Simulator Screenshot - iPhone 17 Pro - 2026-01-14 at 20.34.41.png
+
