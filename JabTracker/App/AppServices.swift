@@ -95,13 +95,14 @@ final class AppServices: ObservableObject {
         let progressPhotoService = ProgressPhotoService(context: modelContext)
         self.progressPhotoService = progressPhotoService
 
-        // Create TDEEService for TDEE snapshots and adaptive calculations
-        let tdeeService = TDEEService(context: modelContext)
-        self.tdeeService = tdeeService
-
-        // Create DayStatusService for fasting day tracking
+        // Create DayStatusService for fasting day tracking (before TDEEService for dependency injection)
         let dayStatusService = DayStatusService(context: modelContext)
         self.dayStatusService = dayStatusService
+
+        // Create TDEEService for TDEE snapshots and adaptive calculations
+        // Inject DayStatusService so TDEE calculations can exclude fasting days
+        let tdeeService = TDEEService(context: modelContext, dayStatusService: dayStatusService)
+        self.tdeeService = tdeeService
     }
 
     /// Reset services (useful for testing or sign-out)
