@@ -64,9 +64,9 @@ struct OnboardingStepTests {
         // Given: The OnboardingStep enum
         let allSteps = OnboardingStep.allCases
 
-        // Then: Should have exactly 17 steps in the expected order
+        // Then: Should have exactly 18 steps in the expected order
         // Full onboarding flow with goal/program configuration steps
-        #expect(allSteps.count == 17)
+        #expect(allSteps.count == 18)
         #expect(allSteps[0] == .welcome)
         #expect(allSteps[1] == .uspShowcase)
         #expect(allSteps[2] == .healthKit)
@@ -80,10 +80,11 @@ struct OnboardingStepTests {
         #expect(allSteps[10] == .weeklyDistribution)
         #expect(allSteps[11] == .shiftedDaySelection)
         #expect(allSteps[12] == .proteinLevel)
-        #expect(allSteps[13] == .setupConfirmation)
-        #expect(allSteps[14] == .faceID)
-        #expect(allSteps[15] == .notifications)
-        #expect(allSteps[16] == .completion)
+        #expect(allSteps[13] == .collaborativeDistribution)
+        #expect(allSteps[14] == .setupConfirmation)
+        #expect(allSteps[15] == .faceID)
+        #expect(allSteps[16] == .notifications)
+        #expect(allSteps[17] == .completion)
     }
 
     @Test("Each step has a title")

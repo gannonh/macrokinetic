@@ -884,6 +884,7 @@ struct StrategyView: View {
             Self.logger.info("Program optimization declined")
         } catch {
             Self.logger.error("Failed to decline optimization: \(error.localizedDescription)")
+            checkInError = "Unable to save your choice. Please try again."
         }
     }
 }

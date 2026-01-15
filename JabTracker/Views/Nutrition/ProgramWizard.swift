@@ -1111,6 +1111,8 @@ struct ProgramWizard: View {
     private func calculateAndApplyTDEE() async {
         guard let goal = viewModel.goal else {
             Self.logger.error("TDEE calculation skipped: goal is nil")
+            errorMessage = "Could not calculate personalized targets: Goal not found. Please restart the wizard."
+            showingError = true
             return
         }
         guard let user = goal.user else {
@@ -1121,6 +1123,8 @@ struct ProgramWizard: View {
         }
         guard let service = tdeeService else {
             Self.logger.error("TDEE calculation skipped: TDEEService not initialized")
+            errorMessage = "Could not calculate personalized targets: Service unavailable. Please try again."
+            showingError = true
             return
         }
 

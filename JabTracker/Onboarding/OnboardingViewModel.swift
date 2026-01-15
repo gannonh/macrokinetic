@@ -88,7 +88,7 @@ final class OnboardingViewModel {
     /// Selected protein level (moderate, high, very high)
     var proteinLevel: ProteinLevel?
 
-    /// Days with higher calorie targets for Shifted distribution (weekday numbers: 2=Mon through 1=Sun)
+    /// Days with higher calorie targets for Shifted distribution (weekday: 1=Sun, 2=Mon, ..., 7=Sat)
     var highCalorieDays: Set<Int> = []
 
     // MARK: - Collaborative Distribution State
@@ -340,7 +340,10 @@ final class OnboardingViewModel {
 
     /// Configure goal view model with user's current weight and preferences
     func configureGoalViewModel() async {
-        guard let user = authManager.currentUser else { return }
+        guard let user = authManager.currentUser else {
+            logger.warning("Cannot configure goal: no current user found")
+            return
+        }
 
         // Get current weight from MetricsService (handles HealthKit if enabled)
         let currentWeightKg: Double
@@ -627,7 +630,10 @@ final class OnboardingViewModel {
 
     /// Calculate age from birthday
     private func calculateAge(from birthday: Date?) -> Int {
-        guard let birthday else { return 30 }  // Default age if not set
+        guard let birthday else {
+            logger.warning("Birthday not set, using default age of 30 for TDEE estimation")
+            return 30
+        }
         let calendar = Calendar.current
         let ageComponents = calendar.dateComponents([.year], from: birthday, to: Date())
         return ageComponents.year ?? 30
@@ -635,7 +641,10 @@ final class OnboardingViewModel {
 
     /// Adjust collaborative calories for a day and redistribute delta to unlocked days
     func adjustCollaborativeCalories(forDay weekday: Int, newCalories: Double) {
-        guard var dayConfig = collaborativeDays[weekday] else { return }
+        guard var dayConfig = collaborativeDays[weekday] else {
+            logger.warning("Cannot adjust calories for day \(weekday): day not configured")
+            return
+        }
 
         let oldCalories = dayConfig.calories
         let delta = newCalories - oldCalories
@@ -732,6 +741,8 @@ final class OnboardingViewModel {
             try context.save()
         } catch {
             logger.error("Failed to save skip state: \(error.localizedDescription)")
+            // Don't set UserDefaults if database save failed - keeps state consistent
+            return
         }
 
         // Store skip flag in UserDefaults for fast check
