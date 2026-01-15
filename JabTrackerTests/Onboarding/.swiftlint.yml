@@ -1,0 +1,14 @@
+# SwiftLint configuration for Onboarding tests
+# Allows longer file and type names for comprehensive test suites
+
+# Disable force_try - acceptable in test setup code
+disabled_rules:
+  - force_try
+
+type_name:
+  max_length: 60  # Allow longer struct names for descriptive test suites
+
+file_length:
+  warning: 2000
+  error: 2500
+

@@ -894,3 +894,661 @@ struct OnboardingViewModelProfileDataTests {
         #expect(viewModel.canProceedToNext == true)
     }
 }
+
+// MARK: - OnboardingViewModel Collaborative Distribution Tests
+
+@Suite("OnboardingViewModel Collaborative Distribution Tests")
+struct OnboardingViewModelCollaborativeDistributionTests {
+
+    @Test("initializeCollaborativeDays creates entries for all 7 days")
+    @MainActor
+    func testInitializeCollaborativeDaysCreatesSevenDays() {
+        // Given: A ViewModel with no collaborative days set
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Set required values for calculation
+        viewModel.goalViewModel.currentWeightKg = 80.0
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.trainingLevel = .lifting
+        viewModel.proteinLevel = .moderate
+
+        #expect(viewModel.collaborativeDays.isEmpty)
+
+        // When: Initializing collaborative days
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Should have entries for days 1-7
+        #expect(viewModel.collaborativeDays.count == 7)
+        for weekday in 1...7 {
+            #expect(viewModel.collaborativeDays[weekday] != nil, "Day \(weekday) should exist")
+        }
+    }
+
+    @Test("initializeCollaborativeDays does not reinitialize if already set")
+    @MainActor
+    func testInitializeCollaborativeDaysDoesNotReinitialize() {
+        // Given: A ViewModel with collaborative days already set
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Set a custom value for day 2
+        viewModel.collaborativeDays[2] = CollaborativeDayConfigStorage(
+            calories: 1500,
+            proteinGramsPerLb: 0.8,
+            carbFatRatio: 0.5,
+            isLocked: true
+        )
+
+        // When: Calling initialize again
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Original values should be preserved
+        #expect(viewModel.collaborativeDays[2]?.calories == 1500)
+        #expect(viewModel.collaborativeDays[2]?.isLocked == true)
+    }
+
+    @Test("adjustCollaborativeCalories updates target day")
+    @MainActor
+    func testAdjustCollaborativeCaloriesUpdatesTargetDay() {
+        // Given: A ViewModel with initialized collaborative days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Initialize with equal distribution
+        viewModel.goalViewModel.currentWeightKg = 80.0
+        viewModel.proteinLevel = .moderate
+        viewModel.calculatedCalories = 2000
+        viewModel.weeklyCalorieBudget = 14000
+        for weekday in 1...7 {
+            viewModel.collaborativeDays[weekday] = CollaborativeDayConfigStorage(
+                calories: 2000,
+                proteinGramsPerLb: 0.8,
+                carbFatRatio: 0.5,
+                isLocked: false
+            )
+        }
+
+        // When: Adjusting calories for Monday (day 2)
+        viewModel.adjustCollaborativeCalories(forDay: 2, newCalories: 2500)
+
+        // Then: Monday should have new calories
+        #expect(viewModel.collaborativeDays[2]?.calories == 2500)
+    }
+
+    @Test("adjustCollaborativeCalories redistributes delta to unlocked days")
+    @MainActor
+    func testAdjustCollaborativeCaloriesRedistributesDelta() {
+        // Given: A ViewModel with initialized collaborative days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Initialize with equal distribution
+        for weekday in 1...7 {
+            viewModel.collaborativeDays[weekday] = CollaborativeDayConfigStorage(
+                calories: 2000,
+                proteinGramsPerLb: 0.8,
+                carbFatRatio: 0.5,
+                isLocked: false
+            )
+        }
+
+        // When: Increasing Monday calories by 600 (delta = +600)
+        viewModel.adjustCollaborativeCalories(forDay: 2, newCalories: 2600)
+
+        // Then: Other 6 days should have ~100 fewer calories each
+        // 600 / 6 = 100, so each should be 2000 - 100 = 1900
+        for weekday in [1, 3, 4, 5, 6, 7] {
+            let calories = viewModel.collaborativeDays[weekday]?.calories ?? 0
+            #expect(abs(calories - 1900) < 1, "Day \(weekday) should be ~1900 cal")
+        }
+    }
+
+    @Test("adjustCollaborativeCalories respects locked days")
+    @MainActor
+    func testAdjustCollaborativeCaloriesRespectsLockedDays() {
+        // Given: A ViewModel with some locked days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Initialize with day 1 (Sunday) locked
+        for weekday in 1...7 {
+            viewModel.collaborativeDays[weekday] = CollaborativeDayConfigStorage(
+                calories: 2000,
+                proteinGramsPerLb: 0.8,
+                carbFatRatio: 0.5,
+                isLocked: weekday == 1  // Only Sunday is locked
+            )
+        }
+
+        // When: Increasing Monday calories by 500
+        viewModel.adjustCollaborativeCalories(forDay: 2, newCalories: 2500)
+
+        // Then: Sunday (locked) should not change
+        #expect(viewModel.collaborativeDays[1]?.calories == 2000)
+
+        // Other unlocked days should have reduced calories
+        // 500 / 5 = 100 reduction per unlocked day
+        for weekday in [3, 4, 5, 6, 7] {
+            let calories = viewModel.collaborativeDays[weekday]?.calories ?? 0
+            #expect(abs(calories - 1900) < 1, "Day \(weekday) should be ~1900 cal")
+        }
+    }
+
+    @Test("resetCollaborativeDaysToEven distributes evenly")
+    @MainActor
+    func testResetCollaborativeDaysToEven() {
+        // Given: A ViewModel with uneven calorie distribution
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.weeklyCalorieBudget = 14000  // 2000/day average
+        viewModel.proteinLevel = .moderate
+
+        // Set uneven distribution
+        viewModel.collaborativeDays[1] = CollaborativeDayConfigStorage(
+            calories: 1500, proteinGramsPerLb: 0.8, carbFatRatio: 0.5, isLocked: true)
+        viewModel.collaborativeDays[2] = CollaborativeDayConfigStorage(
+            calories: 2500, proteinGramsPerLb: 0.8, carbFatRatio: 0.5, isLocked: false)
+
+        // When: Resetting to even distribution
+        viewModel.resetCollaborativeDaysToEven()
+
+        // Then: All days should have equal calories (2000)
+        for weekday in 1...7 {
+            let calories = viewModel.collaborativeDays[weekday]?.calories ?? 0
+            #expect(abs(calories - 2000) < 0.01, "Day \(weekday) should be 2000 cal")
+            #expect(viewModel.collaborativeDays[weekday]?.isLocked == false, "Day \(weekday) should be unlocked")
+        }
+    }
+
+    @Test("availableSteps includes collaborativeDistribution for collaborative program style")
+    @MainActor
+    func testAvailableStepsIncludesCollaborativeDistribution() {
+        // Given: A ViewModel with collaborative program style
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .collaborative
+
+        // Then: collaborativeDistribution should be in availableSteps
+        #expect(viewModel.availableSteps.contains(.collaborativeDistribution))
+    }
+
+    @Test("availableSteps excludes collaborativeDistribution for coached program style")
+    @MainActor
+    func testAvailableStepsExcludesCollaborativeDistributionForCoached() {
+        // Given: A ViewModel with coached program style
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .coached
+
+        // Then: collaborativeDistribution should not be in availableSteps
+        #expect(!viewModel.availableSteps.contains(.collaborativeDistribution))
+    }
+
+    @Test("canProceedToNext requires all days configured for collaborativeDistribution step")
+    @MainActor
+    func testCanProceedRequiresAllCollaborativeDaysConfigured() {
+        // Given: A ViewModel at collaborativeDistribution step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state for collaborative flow
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .collaborative
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.proteinLevel = .moderate
+
+        // Navigate to collaborativeDistribution step
+        var iterations = 0
+        while viewModel.currentStep != .collaborativeDistribution && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+
+        // Verify we reached the step
+        #expect(viewModel.currentStep == .collaborativeDistribution)
+
+        // Clear all collaborative days
+        viewModel.collaborativeDays = [:]
+
+        // Then: Cannot proceed without all days configured
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Setting all days with valid calories
+        for weekday in 1...7 {
+            viewModel.collaborativeDays[weekday] = CollaborativeDayConfigStorage(
+                calories: 2000,
+                proteinGramsPerLb: 0.8,
+                carbFatRatio: 0.5,
+                isLocked: false
+            )
+        }
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
+    }
+}
+
+// MARK: - OnboardingViewModel canProceed Validation Tests
+
+@Suite("OnboardingViewModel canProceed Validation Tests")
+struct OnboardingViewModelCanProceedValidationTests {
+
+    @Test("canProceedToNext requires program style at programStyle step")
+    @MainActor
+    func testCanProceedRequiresProgramStyle() {
+        // Given: A ViewModel at programStyle step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+
+        // Navigate to programStyle step
+        var iterations = 0
+        while viewModel.currentStep != .programStyle && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .programStyle)
+
+        // Clear program style
+        viewModel.programStyle = nil
+
+        // Then: Cannot proceed without program style
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Setting program style
+        viewModel.programStyle = .coached
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext requires diet preference at dietPreference step")
+    @MainActor
+    func testCanProceedRequiresDietPreference() {
+        // Given: A ViewModel at dietPreference step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+
+        // Navigate to dietPreference step
+        var iterations = 0
+        while viewModel.currentStep != .dietPreference && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .dietPreference)
+
+        // Clear diet preference
+        viewModel.dietPreference = nil
+
+        // Then: Cannot proceed without diet preference
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Setting diet preference
+        viewModel.dietPreference = .balanced
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext requires calorie floor at calorieFloor step")
+    @MainActor
+    func testCanProceedRequiresCalorieFloor() {
+        // Given: A ViewModel at calorieFloor step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+
+        // Navigate to calorieFloor step
+        var iterations = 0
+        while viewModel.currentStep != .calorieFloor && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .calorieFloor)
+
+        // Clear calorie floor
+        viewModel.calorieFloorType = nil
+
+        // Then: Cannot proceed without calorie floor
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Setting calorie floor
+        viewModel.calorieFloorType = .standard
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext requires weekly distribution at weeklyDistribution step")
+    @MainActor
+    func testCanProceedRequiresWeeklyDistribution() {
+        // Given: A ViewModel at weeklyDistribution step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+
+        // Navigate to weeklyDistribution step
+        var iterations = 0
+        while viewModel.currentStep != .weeklyDistribution && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .weeklyDistribution)
+
+        // Clear weekly distribution
+        viewModel.weeklyDistributionMode = nil
+
+        // Then: Cannot proceed without weekly distribution
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Setting weekly distribution
+        viewModel.weeklyDistributionMode = .even
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext requires protein level at proteinLevel step")
+    @MainActor
+    func testCanProceedRequiresProteinLevel() {
+        // Given: A ViewModel at proteinLevel step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+
+        // Navigate to proteinLevel step
+        var iterations = 0
+        while viewModel.currentStep != .proteinLevel && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .proteinLevel)
+
+        // Clear protein level
+        viewModel.proteinLevel = nil
+
+        // Then: Cannot proceed without protein level
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Setting protein level
+        viewModel.proteinLevel = .moderate
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext is true for setupConfirmation step")
+    @MainActor
+    func testCanProceedTrueForSetupConfirmation() {
+        // Given: A ViewModel at setupConfirmation step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
+
+        // Navigate to setupConfirmation step
+        var iterations = 0
+        while viewModel.currentStep != .setupConfirmation && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .setupConfirmation)
+
+        // Then: Can always proceed at setupConfirmation
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext is true for faceID step")
+    @MainActor
+    func testCanProceedTrueForFaceID() {
+        // Given: A ViewModel at faceID step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
+
+        // Navigate to faceID step
+        var iterations = 0
+        while viewModel.currentStep != .faceID && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .faceID)
+
+        // Then: Can always proceed at faceID
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("canProceedToNext is true for notifications step")
+    @MainActor
+    func testCanProceedTrueForNotifications() {
+        // Given: A ViewModel at notifications step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure required state
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
+
+        // Navigate to notifications step
+        var iterations = 0
+        while viewModel.currentStep != .notifications && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .notifications)
+
+        // Then: Can always proceed at notifications
+        #expect(viewModel.canProceedToNext == true)
+    }
+}
+
+// MARK: - OnboardingViewModel Computed Properties Tests
+
+@Suite("OnboardingViewModel Computed Properties Tests")
+struct OnboardingViewModelComputedPropertiesTests {
+
+    @Test("collaborativeSelectedDay defaults to Monday (weekday 2)")
+    @MainActor
+    func testCollaborativeSelectedDayDefaultsToMonday() {
+        // Given: A new ViewModel
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Then: Default selected day should be Monday (2)
+        #expect(viewModel.collaborativeSelectedDay == 2)
+    }
+
+    @Test("weeklyCalorieBudget defaults to 14000")
+    @MainActor
+    func testWeeklyCalorieBudgetDefault() {
+        // Given: A new ViewModel
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Then: Default weekly budget should be 14000
+        #expect(viewModel.weeklyCalorieBudget == 14000)
+    }
+
+    @Test("calculatedCalories starts at 0")
+    @MainActor
+    func testCalculatedCaloriesStartsAtZero() {
+        // Given: A new ViewModel
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Then: Calculated calories should start at 0
+        #expect(viewModel.calculatedCalories == 0)
+    }
+
+    @Test("calculatedDailyCalories starts empty")
+    @MainActor
+    func testCalculatedDailyCaloriesStartsEmpty() {
+        // Given: A new ViewModel
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Then: Daily calories dictionary should be empty
+        #expect(viewModel.calculatedDailyCalories.isEmpty)
+    }
+
+    @Test("highCalorieDays starts empty")
+    @MainActor
+    func testHighCalorieDaysStartsEmpty() {
+        // Given: A new ViewModel
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Then: High calorie days should be empty
+        #expect(viewModel.highCalorieDays.isEmpty)
+    }
+
+    @Test("hasProfileDataFromHealthKit starts false")
+    @MainActor
+    func testHasProfileDataFromHealthKitStartsFalse() {
+        // Given: A new ViewModel
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Then: Should start as false
+        #expect(viewModel.hasProfileDataFromHealthKit == false)
+    }
+
+    @Test("canSkip returns true for various skipAllowedSteps")
+    @MainActor
+    func testCanSkipForVariousSteps() {
+        // Given: A ViewModel
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure for navigation
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .coached
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.weeklyDistributionMode = .even
+        viewModel.proteinLevel = .moderate
+
+        // Test canSkip at various steps
+        let skipAllowedSteps: [OnboardingStep] = [
+            .goalType, .targetWeight, .profileCompletion, .programStyle,
+            .dietPreference, .calorieFloor, .activityLevel, .weeklyDistribution,
+            .proteinLevel, .setupConfirmation, .faceID, .notifications,
+        ]
+
+        for step in skipAllowedSteps where viewModel.availableSteps.contains(step) {
+            // Navigate to the step
+            var iterations = 0
+            while viewModel.currentStep != step && iterations < 50 {
+                viewModel.moveToNextStep()
+                iterations += 1
+            }
+            if viewModel.currentStep == step {
+                #expect(viewModel.canSkip == true, "canSkip should be true at \(step)")
+            }
+        }
+    }
+}
