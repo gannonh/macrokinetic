@@ -144,6 +144,7 @@ class DataController: ObservableObject {
         NutritionGoal.self,
         NutritionProgram.self,
         TDEESnapshot.self,
+        DayStatus.self,
     ]
 
     init(inMemory: Bool = false) {

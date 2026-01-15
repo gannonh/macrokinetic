@@ -43,6 +43,7 @@
 		0DADE6D238B3E8607FFC7A10 /* CalendarNavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43308032C5E6351BCCFBB56C /* CalendarNavigationUITests.swift */; };
 		0DC257D2890D53FBB5C8FBC1 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB602E699FA04416237C321 /* OnboardingView.swift */; };
 		0E2952129994D1A3224647B2 /* OnboardingPermissionsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 197FA96613E8B505E4C9B6F0 /* OnboardingPermissionsUITests.swift */; };
+		0EE6AFCE68F73F3227A06324 /* DayStatusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783EB945A5617202B5759822 /* DayStatusService.swift */; };
 		0EFED00438D0C1F93B7353FB /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312D5856F546A9FB635D52F1 /* DataController.swift */; };
 		0FF1064F45A5574ED58DB04C /* TestUtilities+ElementTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818E5E60E88A431506ACA977 /* TestUtilities+ElementTypes.swift */; };
 		10361DA34B4E6E3906F39F3F /* AdherenceInsightTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1A6A35E0935F2249EC4A8C /* AdherenceInsightTests.swift */; };
@@ -511,6 +512,7 @@
 		DC794C7815C43046B8BE2824 /* CalendarScheduledDosesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885F303830AF5C665A2B2455 /* CalendarScheduledDosesUITests.swift */; };
 		DD09578D575D43E963718987 /* AdherenceStatisticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4442B7182D0A1D85A9F16B37 /* AdherenceStatisticsTests.swift */; };
 		DD13A52D9A0D5FF6C1D46D9A /* ScheduleService+Modifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90335DF8E93AA680799FEF7 /* ScheduleService+Modifications.swift */; };
+		DD1F1D8A49367F3BCA57BF26 /* DayStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FFF1903E06283AF425B11 /* DayStatus.swift */; };
 		DE3A390860BC5E820720939E /* SubscriptionUIPlanSwitchingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C9AD909F79531B7470B5BD /* SubscriptionUIPlanSwitchingTests.swift */; };
 		DE66EDE933E24902A372FE28 /* JabTrackerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A60BD8C5C54182EA9D8B31 /* JabTrackerUITestsLaunchTests.swift */; };
 		DEF2FB92EE89D468454C3B3B /* FoodDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BDBDBAC41A81D1296354AA /* FoodDayView.swift */; };
@@ -781,6 +783,7 @@
 		4714983CEAB76E9A97FCEC51 /* NotificationServicePersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServicePersistenceTests.swift; sourceTree = "<group>"; };
 		48822924C474D2E7E3E2BD2D /* FoodSearchSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodSearchSheet.swift; sourceTree = "<group>"; };
 		492D51FC0AD7FF47E83A6ABD /* ReminderTimingPickerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTimingPickerTests.swift; sourceTree = "<group>"; };
+		495FFF1903E06283AF425B11 /* DayStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStatus.swift; sourceTree = "<group>"; };
 		49DAD9EA777212A7438F70AC /* GoalWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalWizard.swift; sourceTree = "<group>"; };
 		4A2C8F9E9DD3617629CFF423 /* LegacyOnboardingStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyOnboardingStep.swift; sourceTree = "<group>"; };
 		4A3DA5230FAB1B5A7AAAC2DC /* TDEESnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDEESnapshot.swift; sourceTree = "<group>"; };
@@ -904,6 +907,7 @@
 		76642EFC47CC4850D74DBA12 /* UnitsOfMeasureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitsOfMeasureView.swift; sourceTree = "<group>"; };
 		7704308CD9A0C2CC39551F80 /* AdherenceTrendChartTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceTrendChartTests.swift; sourceTree = "<group>"; };
 		777443E8D9A33680C4ECAB15 /* UserAnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAnalyticsTests.swift; sourceTree = "<group>"; };
+		783EB945A5617202B5759822 /* DayStatusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStatusService.swift; sourceTree = "<group>"; };
 		78475804BE3FA10B539F70D5 /* Dose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dose.swift; sourceTree = "<group>"; };
 		79562215588B5BE5446FD390 /* SelectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionCard.swift; sourceTree = "<group>"; };
 		7960D0186DBE4671EC6B18AF /* MedicationProfileCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileCalculatorUITests.swift; sourceTree = "<group>"; };
@@ -1416,6 +1420,7 @@
 				B8263198848FEF424A3543CD /* ChartDatasetCache.swift */,
 				12E043B51BE1DCC3D80AAF3D /* ChartDatasetService.swift */,
 				69F35D81E5C7FD2D03D95D30 /* CustomFoodService.swift */,
+				783EB945A5617202B5759822 /* DayStatusService.swift */,
 				211434EFA04C1DC2C79C5ABA /* DoseDataService.swift */,
 				C6B6CDF3795E3B15F9AB2AA1 /* DoseSearchService.swift */,
 				B586AE6F94F894FB215E2710 /* DoseService.swift */,
@@ -1798,6 +1803,7 @@
 				2D51E304C8E3F02B581E6570 /* ChartDataEnums.swift */,
 				40324E9BF9CFB12EEC6BA782 /* ChartDataTypes.swift */,
 				3083E45DAAD0204F1AF4B5A5 /* ConcentrationPoint.swift */,
+				495FFF1903E06283AF425B11 /* DayStatus.swift */,
 				78475804BE3FA10B539F70D5 /* Dose.swift */,
 				8A6C4151B087398F5FD4E5A0 /* DoseEvent.swift */,
 				205C07EF47CD43071FD22D75 /* DoseSchedule.swift */,
@@ -2812,6 +2818,8 @@
 				71E84087005ACF8589F70BFD /* DailyNutritionHeroWidget.swift in Sources */,
 				9F297F2264EE7A8CCBEF1F6C /* DashboardWidget.swift in Sources */,
 				0EFED00438D0C1F93B7353FB /* DataController.swift in Sources */,
+				DD1F1D8A49367F3BCA57BF26 /* DayStatus.swift in Sources */,
+				0EE6AFCE68F73F3227A06324 /* DayStatusService.swift in Sources */,
 				FCC76E46EDAFDDB5303829EC /* DeeplinkHandler.swift in Sources */,
 				25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */,
 				08B99E4F4DEA3EC161E8B2E9 /* DetailTimePeriodSelector.swift in Sources */,

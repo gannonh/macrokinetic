@@ -40,6 +40,9 @@ final class AppServices: ObservableObject {
     /// TDEE service for TDEE snapshots and adaptive calculations
     @Published private(set) var tdeeService: TDEEService?
 
+    /// Day status service for fasting day tracking
+    @Published private(set) var dayStatusService: DayStatusService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -95,6 +98,10 @@ final class AppServices: ObservableObject {
         // Create TDEEService for TDEE snapshots and adaptive calculations
         let tdeeService = TDEEService(context: modelContext)
         self.tdeeService = tdeeService
+
+        // Create DayStatusService for fasting day tracking
+        let dayStatusService = DayStatusService(context: modelContext)
+        self.dayStatusService = dayStatusService
     }
 
     /// Reset services (useful for testing or sign-out)
@@ -108,6 +115,7 @@ final class AppServices: ObservableObject {
         progressPhotoService = nil
         calorieAdjustmentService = nil
         tdeeService = nil
+        dayStatusService = nil
     }
 }
 
