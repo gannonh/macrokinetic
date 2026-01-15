@@ -4,9 +4,6 @@
 
 MacroKinetic is a comprehensive iOS weight management app combining precision nutrition tracking with optional GLP-1 medication management. See [project-prd.md](./project-prd.md) for complete product requirements.
 
-## Domain Expertise
-
-- ~/.claude/skills/ios-dev/SKILL.md
 
 ## Completed Milestones
 
@@ -101,24 +98,24 @@ Phases execute in numeric order within each milestone.
 
 ### 🚧 v0.9.0 Improvements & Fixes (Phases 39-43) - In Progress
 
-| Phase                       | Plans Complete | Status      | Completed |
-| --------------------------- | -------------- | ----------- | --------- |
-| 39. Day Status Tracking     | 0/?            | Not started | -         |
-| 40. GLP-1 Dose Adjustments  | 0/?            | Not started | -         |
-| 41. GLP-1 Analytics Fixes   | 0/?            | Not started | -         |
-| 42. Serving Unit Mapping    | 0/?            | Not started | -         |
-| 43. Integration & Polish    | 0/?            | Not started | -         |
+| Phase                      | Plans Complete | Status      | Completed |
+| -------------------------- | -------------- | ----------- | --------- |
+| 39. Day Status Tracking    | 0/?            | Not started | -         |
+| 40. GLP-1 Dose Adjustments | 0/?            | Not started | -         |
+| 41. GLP-1 Analytics Fixes  | 0/?            | Not started | -         |
+| 42. Serving Unit Mapping   | 0/?            | Not started | -         |
+| 43. Integration & Polish   | 0/?            | Not started | -         |
 
 <details>
 <summary>✅ v0.8.0 Food Search & Library (Phases 35-38) - SHIPPED 2026-01-13</summary>
 
-| Phase                              | Plans Complete | Status      | Completed  |
-| ---------------------------------- | -------------- | ----------- | ---------- |
-| 35. Search Performance & UX        | 1/1            | Complete    | 2026-01-12 |
-| 35.1 Header Indicators (INSERTED)  | 1/1            | Complete    | 2026-01-12 |
-| 36. Search Ranking & Recall        | 0/0            | Skipped     | -          |
-| 37. Unit/Serving Strategy          | 1/1            | Complete    | 2026-01-12 |
-| 38. Bug Fixes & Cleanup            | 1/1            | Complete    | 2026-01-13 |
+| Phase                             | Plans Complete | Status   | Completed  |
+| --------------------------------- | -------------- | -------- | ---------- |
+| 35. Search Performance & UX       | 1/1            | Complete | 2026-01-12 |
+| 35.1 Header Indicators (INSERTED) | 1/1            | Complete | 2026-01-12 |
+| 36. Search Ranking & Recall       | 0/0            | Skipped  | -          |
+| 37. Unit/Serving Strategy         | 1/1            | Complete | 2026-01-12 |
+| 38. Bug Fixes & Cleanup           | 1/1            | Complete | 2026-01-13 |
 
 </details>
 

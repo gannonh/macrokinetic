@@ -8,6 +8,8 @@ extension Notification.Name {
     static let showQuickDoseSheet = Notification.Name("showQuickDoseSheet")
     /// Posted when weekly check-in is completed (accept or decline)
     static let checkInCompleted = Notification.Name("checkInCompleted")
+    /// Posted when onboarding is restarted from settings
+    static let restartOnboarding = Notification.Name("restartOnboarding")
 }
 
 /// Result of deeplink parsing

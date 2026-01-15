@@ -237,6 +237,8 @@ struct ContentView: View {
         }
         .task {
             await ensureTDEESnapshots()
+            // Re-check badge after Query has had time to load
+            updateCheckInBadge()
         }
         .onChange(of: scenePhase) { _, newPhase in
             // Refresh badge when app becomes active (e.g., after completing check-in)
@@ -250,6 +252,10 @@ struct ContentView: View {
         }
         .onChange(of: users) { _, _ in
             // Refresh badge when user data loads or changes
+            updateCheckInBadge()
+        }
+        .onChange(of: selectedTab) { _, _ in
+            // Refresh badge when switching tabs (ensures sync with StrategyView)
             updateCheckInBadge()
         }
         .onReceive(NotificationCenter.default.publisher(for: .showQuickDoseSheet)) { notification in

@@ -382,7 +382,7 @@ struct GoalWizard: View {
                     wizardContent
                 }
             }
-            .background(DesignTokens.Colors.background)
+            .background(DesignTokens.Colors.groupedBackground)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
