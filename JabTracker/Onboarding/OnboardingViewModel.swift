@@ -526,7 +526,7 @@ final class OnboardingViewModel {
 
                 let proteinGrams = config.proteinGramsPerLb * weightLb
                 let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
-                let remainingCalories = config.calories - proteinCalories
+                let remainingCalories = max(0, config.calories - proteinCalories)
                 let fatCalories = remainingCalories * (1 - config.carbFatRatio)
                 let carbCalories = remainingCalories * config.carbFatRatio
 

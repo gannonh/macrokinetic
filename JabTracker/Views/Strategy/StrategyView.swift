@@ -461,11 +461,16 @@ struct StrategyView: View {
             Menu {
                 ForEach(1...7, id: \.self) { day in
                     Button(dayOfWeekName(for: day)) {
+                        let originalDay = goal.checkInDayOfWeek
+                        let originalUpdatedAt = goal.updatedAt
                         goal.checkInDayOfWeek = day
                         goal.updatedAt = Date()
                         do {
                             try modelContext.save()
                         } catch {
+                            // Rollback on failure to maintain consistent state
+                            goal.checkInDayOfWeek = originalDay
+                            goal.updatedAt = originalUpdatedAt
                             Self.logger.error("Failed to save check-in day: \(error.localizedDescription)")
                             checkInError = "Unable to save check-in day. Please try again."
                         }

@@ -12,7 +12,6 @@ import SwiftUI
 /// Allows users to customize per-day calories with lock and auto-adjust
 struct OnboardingCollaborativeDistributionView: View {
     @Bindable var viewModel: OnboardingViewModel
-    @FocusState private var isCaloriesInputFocused: Bool
 
     /// Body weight in pounds for protein calculation
     private var bodyWeightLb: Double {
@@ -46,7 +45,6 @@ struct OnboardingCollaborativeDistributionView: View {
                 .padding(.horizontal, 16)
             }
         }
-        .focused($isCaloriesInputFocused)
         .onAppear {
             viewModel.initializeCollaborativeDays()
         }
@@ -105,7 +103,7 @@ struct OnboardingCollaborativeDistributionView: View {
                     guard let config = viewModel.collaborativeDays[weekday.rawValue] else { return 0 }
                     let proteinGrams = config.proteinGramsPerLb * bodyWeightLb
                     let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
-                    let remainingCalories = config.calories - proteinCalories
+                    let remainingCalories = max(0, config.calories - proteinCalories)
                     let fatCalories = remainingCalories * (1 - config.carbFatRatio)
                     return Int(fatCalories / MacroCalorieConstants.fatCaloriesPerGram)
                 },
@@ -121,7 +119,7 @@ struct OnboardingCollaborativeDistributionView: View {
                     guard let config = viewModel.collaborativeDays[weekday.rawValue] else { return 0 }
                     let proteinGrams = config.proteinGramsPerLb * bodyWeightLb
                     let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
-                    let remainingCalories = config.calories - proteinCalories
+                    let remainingCalories = max(0, config.calories - proteinCalories)
                     let carbCalories = remainingCalories * config.carbFatRatio
                     return Int(carbCalories / MacroCalorieConstants.carbsCaloriesPerGram)
                 },

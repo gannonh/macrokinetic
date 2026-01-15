@@ -1087,6 +1087,14 @@ struct ProgramWizard: View {
         // Calculate TDEE
         await calculateAndApplyTDEE()
 
+        // If calculation failed, hide overlay and let error alert handle it
+        if showingError {
+            withAnimation(.spring()) {
+                isCalculatingTargets = false
+            }
+            return
+        }
+
         // Show overlay long enough for user to see the animation (at least 3 seconds)
         try? await Task.sleep(nanoseconds: 3_000_000_000)
 
