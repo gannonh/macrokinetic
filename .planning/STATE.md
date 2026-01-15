@@ -11,11 +11,11 @@
 ## Current Position
 
 Phase: 40 of 43 (GLP-1 Dose Adjustments)
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-15 - Phase 39 complete
+Plan: 01 complete
+Status: Plan 40-01 complete, ready for 40-02
+Last activity: 2026-01-15 - Plan 40-01 executed
 
-Progress: ██░░░░░░░░ 20%
+Progress: ██░░░░░░░░ 23%
 
 ## GitHub Tracking
 
@@ -44,6 +44,12 @@ Status: Phase 39 complete on main
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 40 decisions (Plan 01):**
+- Stepper control chosen over TextField for better UX with discrete dose increments
+- Medication-specific therapeutic bounds for dose range (varies by medication type)
+- Compounded medications use 0.25mg fine-grained steps; branded use pen dose steps
+- Dose values automatically clamped to valid range via didSet
 
 **Phase 39 decisions:**
 - DayStatus model stores fasting flag per day
@@ -86,6 +92,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-15T07:36:00Z
-Stopped at: Phase 39 execution complete
+Last session: 2026-01-15T20:45:00Z
+Stopped at: Plan 40-01 complete
 Resume file: None
