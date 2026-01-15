@@ -114,7 +114,15 @@ final class EnergyBalanceWidgetViewModel {
         }
 
         // Get dates with meaningful data (food logged or marked as fasting)
-        let meaningfulDates = await getMeaningfulDates(from: startDate, to: todayStart)
+        let meaningfulDates: Set<Date>
+        do {
+            meaningfulDates = try await getMeaningfulDates(from: startDate, to: todayStart)
+        } catch {
+            Self.logger.error("Failed to get meaningful dates: \(error.localizedDescription)")
+            // Surface error state rather than silently showing empty data
+            updateResults(intake: [], balances: [], totalBalance: 0, failedDays: dayCount)
+            return
+        }
 
         // Calculate balance for each day (excluding today)
         var intake: [Double] = []
@@ -149,15 +157,11 @@ final class EnergyBalanceWidgetViewModel {
     }
 
     /// Get dates with meaningful data from the service
-    private func getMeaningfulDates(from startDate: Date, to endDate: Date) async -> Set<Date> {
-        do {
-            return try await mealLogService.getDatesWithMeaningfulData(
-                from: startDate, to: endDate, dayStatusService: dayStatusService
-            )
-        } catch {
-            Self.logger.error("Failed to get meaningful dates: \(error.localizedDescription)")
-            return []
-        }
+    /// - Throws: Error if the underlying service call fails
+    private func getMeaningfulDates(from startDate: Date, to endDate: Date) async throws -> Set<Date> {
+        try await mealLogService.getDatesWithMeaningfulData(
+            from: startDate, to: endDate, dayStatusService: dayStatusService
+        )
     }
 
     /// Update published results from calculated values

@@ -151,8 +151,10 @@ final class FastingToggleUITests: XCTestCase {
 
         // Navigate to previous week (navigate back 2 weeks to get a fresh day without prior state)
         let previousWeekButton = findPreviousWeekButton()
+        XCTAssertTrue(previousWeekButton.waitForExistence(timeout: 3), "Previous week button should exist")
         previousWeekButton.tap()
         waitForUIUpdate()
+        XCTAssertTrue(previousWeekButton.waitForExistence(timeout: 3), "Previous week button should exist")
         previousWeekButton.tap()
         waitForUIUpdate()
 
