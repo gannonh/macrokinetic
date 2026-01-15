@@ -53,6 +53,13 @@ Mirroring MacroFactor's proven approach to data quality:
 
 </notes>
 
+<reminders>
+## Implementation Reminders
+
+- Update `docs/features/algorithms/TDEE-CALORIE-ALGORITHMS.md` at end of phase to document new day status handling
+
+</reminders>
+
 ---
 
 *Phase: 39-day-status-tracking*
