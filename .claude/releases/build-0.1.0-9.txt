@@ -1,0 +1,32 @@
+Build 0.1.0 (9) - Collaborative Onboarding & Settings UX
+
+What's New
+- Restored collaborative onboarding flow with per-day food distribution step
+- Unified calculation animation in onboarding for consistent visual feedback
+- Compact check-in day setting with inline dropdown menu (matches overall settings style)
+- Persisted serving units for custom and history foods (your preferred serving options are remembered)
+- CloudKit sync enabled by default for new installs
+- Barcode lookup now uses local database only (faster, no network dependency)
+- Removed Open Food Facts API - all food data is now fully offline
+
+Bug Fixes
+- Fixed check-in day picker error handling
+- Fixed shortcut button tap targets now span the full button area
+- Improved command line arguments for app data reset and UI testing
+
+Focus Areas for Testing
+- Onboarding: Complete the full onboarding flow and verify the per-day distribution step appears
+- Check-in Day: Go to Settings and change your check-in day using the new dropdown picker
+- CloudKit Sync: Verify data syncs across devices (if you have multiple)
+- Serving Units: Add a custom food, then edit it later - verify your serving unit preference is preserved
+- Offline Usage: Try logging foods in airplane mode
+
+Feedback Needed
+- Does the new compact check-in day picker feel intuitive?
+- Is the collaborative onboarding flow clear about what each step does?
+- Any issues with CloudKit sync?
+
+Not Yet Implemented
+- Background notification refresh
+- Split-dose schedule UI configuration
+- Crash/error reporting service
