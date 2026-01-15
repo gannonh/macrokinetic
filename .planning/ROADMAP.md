@@ -41,18 +41,18 @@ Related todos:
 Plans:
 - [x] 39-01: Day Status Tracking Implementation
 
-#### Phase 40: GLP-1 Dose Adjustments
+#### Phase 40: GLP-1 Dose Adjustments ✓
 
 **Goal**: Allow adjustable dose amount when logging shots for compounded medications
 **Depends on**: Phase 39
 **Research**: Unlikely (internal UI patterns)
-**Plans**: TBD
+**Plans**: 1
 
 Related todos:
 - Allow adjustable dose amount when logging shots
 
 Plans:
-- [ ] 40-01: TBD
+- [x] 40-01: Quick Dose Entry Adjustability
 
 #### Phase 41: GLP-1 Analytics Fixes
 
