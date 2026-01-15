@@ -36,9 +36,10 @@ final class EnergyBalanceHeroViewModel {
 
     private let mealLogService: MealLogService
     private let tdeeService: TDEEService
+    private let dayStatusService: DayStatusService?
     private let context: ModelContext
 
-    /// Number of days to display
+    /// Number of days to look back (excludes today)
     private let dayCount = 30
 
     // MARK: - Published State
@@ -79,10 +80,17 @@ final class EnergyBalanceHeroViewModel {
     /// - Parameters:
     ///   - mealLogService: Service for fetching meal log data
     ///   - tdeeService: Service for fetching TDEE snapshots
+    ///   - dayStatusService: Service for fasting status (optional for backward compat)
     ///   - context: ModelContext for fetching user data
-    init(mealLogService: MealLogService, tdeeService: TDEEService, context: ModelContext) {
+    init(
+        mealLogService: MealLogService,
+        tdeeService: TDEEService,
+        dayStatusService: DayStatusService? = nil,
+        context: ModelContext
+    ) {
         self.mealLogService = mealLogService
         self.tdeeService = tdeeService
+        self.dayStatusService = dayStatusService
         self.context = context
     }
 
@@ -129,76 +137,94 @@ final class EnergyBalanceHeroViewModel {
     }
 
     /// Load daily calorie totals for the last 30 days with per-day TDEESnapshot values
+    /// - Note: Excludes today (partial data) and days without food entries or fasting status
     private func loadDailyCalories(fallbackTDEE: Double, calorieTarget: Double) async {
         let calendar = Calendar.current
-        let today = Date()
+        let todayStart = calendar.startOfDay(for: Date())
 
-        // Calculate start date for TDEESnapshot query
-        guard let startDate = calendar.date(byAdding: .day, value: -(dayCount - 1), to: today) else {
+        guard let startDate = calendar.date(byAdding: .day, value: -dayCount, to: todayStart) else {
             return
         }
 
-        // Load TDEE snapshots for the period to get historical expenditure values
-        var tdeeByDate: [Date: Double] = [:]
-        do {
-            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: today)
-            for snapshot in snapshots {
-                let dayStart = calendar.startOfDay(for: snapshot.timestamp)
-                tdeeByDate[dayStart] = snapshot.tdeeValue
-            }
-            Self.logger.debug("Loaded \(snapshots.count) TDEE snapshots for energy balance hero")
-        } catch {
-            Self.logger.error("Failed to load TDEE snapshots: \(error.localizedDescription)")
-            loadingError = "Unable to load historical expenditure data."
-        }
+        let meaningfulDates = await getMeaningfulDates(from: startDate, to: todayStart)
+        let tdeeByDate = loadTDEESnapshots(from: startDate, to: todayStart)
 
         var newDailyCalories: [DayCalories] = []
         var newTotalNutrition = 0
         var failedDays = 0
 
-        // Load data for each day (oldest to newest)
-        for daysAgo in (0..<dayCount).reversed() {
-            guard let dayDate = calendar.date(byAdding: .day, value: -daysAgo, to: today) else {
+        // Load data for each day (oldest to newest), excluding today
+        for daysAgo in (1...dayCount).reversed() {
+            guard let dayDate = calendar.date(byAdding: .day, value: -daysAgo, to: todayStart) else {
                 continue
             }
 
             let dayStart = calendar.startOfDay(for: dayDate)
-            // Use historical TDEE if available, otherwise fallback
+            guard meaningfulDates.contains(dayStart) else { continue }
+
             let dayExpenditure = tdeeByDate[dayStart] ?? fallbackTDEE
 
             do {
                 let totals = try await mealLogService.getDailyTotals(for: dayDate)
                 let calories = totals.calories
                 newDailyCalories.append(
-                    DayCalories(
-                        date: dayDate,
-                        value: calories,
-                        expenditure: dayExpenditure,
-                        target: calorieTarget
-                    ))
+                    DayCalories(date: dayDate, value: calories, expenditure: dayExpenditure, target: calorieTarget)
+                )
                 newTotalNutrition += Int(calories)
             } catch {
                 Self.logger.error("Failed to load totals for day \(-daysAgo): \(error.localizedDescription)")
                 failedDays += 1
-                // Add zero calories for this day on error, but still include expenditure
-                // Note: This may show incorrect deficit - tracked by daysWithLoadingErrors
-                newDailyCalories.append(
-                    DayCalories(
-                        date: dayDate,
-                        value: 0,
-                        expenditure: dayExpenditure,
-                        target: calorieTarget
-                    ))
             }
         }
 
-        dailyCalories = newDailyCalories
-        totalNutrition = newTotalNutrition
-        daysWithLoadingErrors = failedDays
+        updateResults(
+            dailyCalories: newDailyCalories,
+            totalNutrition: newTotalNutrition,
+            failedDays: failedDays
+        )
+    }
+
+    /// Get dates with meaningful data from the service
+    private func getMeaningfulDates(from startDate: Date, to endDate: Date) async -> Set<Date> {
+        do {
+            return try await mealLogService.getDatesWithMeaningfulData(
+                from: startDate, to: endDate, dayStatusService: dayStatusService
+            )
+        } catch {
+            Self.logger.error("Failed to get meaningful dates: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    /// Load TDEE snapshots and create date-to-value mapping
+    private func loadTDEESnapshots(from startDate: Date, to endDate: Date) -> [Date: Double] {
+        let calendar = Calendar.current
+        var tdeeByDate: [Date: Double] = [:]
+        do {
+            let snapshots = try tdeeService.getTDEESnapshots(from: startDate, to: endDate)
+            for snapshot in snapshots {
+                let dayStart = calendar.startOfDay(for: snapshot.timestamp)
+                tdeeByDate[dayStart] = snapshot.tdeeValue
+            }
+            Self.logger.debug("Loaded \(snapshots.count) TDEE snapshots")
+        } catch {
+            Self.logger.error("Failed to load TDEE snapshots: \(error.localizedDescription)")
+            loadingError = "Unable to load historical expenditure data."
+        }
+        return tdeeByDate
+    }
+
+    /// Update published results from calculated values
+    private func updateResults(dailyCalories: [DayCalories], totalNutrition: Int, failedDays: Int) {
+        self.dailyCalories = dailyCalories
+        self.totalNutrition = totalNutrition
+        self.daysWithLoadingErrors = failedDays
 
         if failedDays > 0 {
             loadingError = "\(failedDays) day(s) could not be loaded. Data may be incomplete."
         }
+
+        Self.logger.debug("Loaded \(dailyCalories.count)/\(self.dayCount) meaningful days")
     }
 
 }

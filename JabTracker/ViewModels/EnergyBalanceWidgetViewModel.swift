@@ -22,7 +22,11 @@ final class EnergyBalanceWidgetViewModel {
     )
 
     private let mealLogService: MealLogService
+    private let dayStatusService: DayStatusService?
     private let context: ModelContext
+
+    /// Number of days to look back (excludes today)
+    private let dayCount = 7
 
     // MARK: - Published State
 
@@ -57,15 +61,18 @@ final class EnergyBalanceWidgetViewModel {
     /// Initialize with meal log service and model context
     /// - Parameters:
     ///   - mealLogService: Service for fetching meal log data
+    ///   - dayStatusService: Service for fasting status (optional for backward compat)
     ///   - context: ModelContext for fetching user data
-    init(mealLogService: MealLogService, context: ModelContext) {
+    init(mealLogService: MealLogService, dayStatusService: DayStatusService? = nil, context: ModelContext) {
         self.mealLogService = mealLogService
+        self.dayStatusService = dayStatusService
         self.context = context
     }
 
     // MARK: - Data Loading
 
     /// Load 7-day energy balance data
+    /// - Note: Excludes today (partial data) and days without food entries or fasting status
     func loadData() async {
         isLoading = true
         defer { isLoading = false }
@@ -75,58 +82,98 @@ final class EnergyBalanceWidgetViewModel {
             let activeGoal = user.activeNutritionGoal,
             let userTdee = activeGoal.lastCalculatedTDEE ?? activeGoal.initialEstimatedTDEE
         else {
-            // Cannot calculate balance without TDEE
-            dailyIntake = []
-            dailyBalances = []
-            tdee = 0
-            averageDailyBalance = 0
-            isDeficit = true
-            Self.logger.debug("No TDEE available for energy balance calculation")
+            clearData()
             return
         }
 
         // Store TDEE for reference line
         tdee = userTdee
 
-        // Calculate balance for each of the last 7 days
+        // Load daily balance data
+        await loadDailyBalances(userTdee: userTdee)
+    }
+
+    /// Clear all data when requirements not met
+    private func clearData() {
+        dailyIntake = []
+        dailyBalances = []
+        tdee = 0
+        averageDailyBalance = 0
+        isDeficit = true
+        Self.logger.debug("No TDEE available for energy balance calculation")
+    }
+
+    /// Load daily balance data for the lookback period
+    private func loadDailyBalances(userTdee: Double) async {
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: Date())
+
+        // Calculate date range: dayCount days ago up to (but not including) today
+        guard let startDate = calendar.date(byAdding: .day, value: -dayCount, to: todayStart) else {
+            return
+        }
+
+        // Get dates with meaningful data (food logged or marked as fasting)
+        let meaningfulDates = await getMeaningfulDates(from: startDate, to: todayStart)
+
+        // Calculate balance for each day (excluding today)
         var intake: [Double] = []
         var balances: [Double] = []
         var totalBalance: Double = 0
         var failedDays = 0
 
-        for daysAgo in stride(from: 6, through: 0, by: -1) {
-            let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
+        for daysAgo in (1...dayCount).reversed() {
+            guard let dayDate = calendar.date(byAdding: .day, value: -daysAgo, to: todayStart) else {
+                continue
+            }
+
+            let dayStart = calendar.startOfDay(for: dayDate)
+
+            // Skip days without meaningful data (no food entries and not fasting)
+            guard meaningfulDates.contains(dayStart) else { continue }
+
             do {
-                let totals = try await mealLogService.getDailyTotals(for: date)
+                let totals = try await mealLogService.getDailyTotals(for: dayDate)
                 let consumed = totals.calories
                 intake.append(consumed)
-                let balance = consumed - userTdee  // Negative = deficit, positive = surplus
+                let balance = consumed - userTdee
                 balances.append(balance)
                 totalBalance += balance
             } catch {
-                // Distinguish between "no data" and "fetch error"
-                // SwiftData throws when no matching records exist, but we should still log at error level
-                // to ensure actual DB errors are visible in production logs
-                Self.logger.error("Failed to load meal data for \(date): \(error.localizedDescription)")
+                Self.logger.error("Failed to load meal data for \(dayDate): \(error.localizedDescription)")
                 failedDays += 1
-                intake.append(0)
-                let balance = 0 - userTdee
-                balances.append(balance)
-                totalBalance += balance
             }
         }
 
+        updateResults(intake: intake, balances: balances, totalBalance: totalBalance, failedDays: failedDays)
+    }
+
+    /// Get dates with meaningful data from the service
+    private func getMeaningfulDates(from startDate: Date, to endDate: Date) async -> Set<Date> {
+        do {
+            return try await mealLogService.getDatesWithMeaningfulData(
+                from: startDate, to: endDate, dayStatusService: dayStatusService
+            )
+        } catch {
+            Self.logger.error("Failed to get meaningful dates: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    /// Update published results from calculated values
+    private func updateResults(intake: [Double], balances: [Double], totalBalance: Double, failedDays: Int) {
         dailyIntake = intake
         dailyBalances = balances
         daysWithLoadingErrors = failedDays
-        // Calculate average daily balance (signed: negative for deficit)
-        let averageBalance = totalBalance / Double(balances.count)
-        averageDailyBalance = Int(averageBalance)  // Keep sign for display
+
+        if !balances.isEmpty {
+            averageDailyBalance = Int(totalBalance / Double(balances.count))
+        } else {
+            averageDailyBalance = 0
+        }
         isDeficit = totalBalance < 0
 
-        Self.logger.debug(
-            "Loaded energy balance: avgDaily=\(self.averageDailyBalance), deficit=\(self.isDeficit), failedDays=\(failedDays)"
-        )
+        Self.logger.debug("Loaded \(balances.count)/\(self.dayCount) days, avgDaily=\(self.averageDailyBalance)")
     }
 }
 

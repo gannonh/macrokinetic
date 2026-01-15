@@ -202,6 +202,63 @@ final class MealLogService {
         Self.logger.info("Deleted food entry: \(name)")
     }
 
+    // MARK: - Day Status Aggregation
+
+    /// Get dates that should be included in multi-day calculations
+    ///
+    /// Returns dates that have food entries OR are marked as fasting days.
+    /// Caller should exclude today from the range for accurate calculations.
+    ///
+    /// - Parameters:
+    ///   - startDate: Range start (inclusive)
+    ///   - endDate: Range end (exclusive - typically today's start of day)
+    ///   - dayStatusService: Service for fasting status (nil = only return dates with food)
+    /// - Returns: Set of dates with food entries OR marked as fasting
+    func getDatesWithMeaningfulData(
+        from startDate: Date,
+        to endDate: Date,
+        dayStatusService: DayStatusService?
+    ) async throws -> Set<Date> {
+        let calendar = Calendar.current
+        let normalizedStart = calendar.startOfDay(for: startDate)
+        let normalizedEnd = calendar.startOfDay(for: endDate)
+
+        // Get all food entries in the date range
+        let descriptor = FetchDescriptor<FoodEntry>(
+            predicate: #Predicate { entry in
+                entry.loggedAt >= normalizedStart && entry.loggedAt < normalizedEnd
+            }
+        )
+
+        let entries = try context.fetch(descriptor)
+
+        // Extract unique dates with food entries
+        var datesWithFood = Set<Date>()
+        for entry in entries {
+            let dayStart = calendar.startOfDay(for: entry.loggedAt)
+            datesWithFood.insert(dayStart)
+        }
+
+        // Get fasting dates from service
+        let fastingDates: Set<Date>
+        if let service = dayStatusService {
+            // Adjust end date for fasting query (inclusive, so subtract 1 second from end)
+            let fastingEndDate = calendar.date(byAdding: .second, value: -1, to: normalizedEnd) ?? normalizedEnd
+            fastingDates = service.getFastingDates(from: normalizedStart, to: fastingEndDate)
+        } else {
+            fastingDates = []
+        }
+
+        // Return union of dates with food and fasting dates
+        let result = datesWithFood.union(fastingDates)
+
+        Self.logger.debug(
+            "getDatesWithMeaningfulData: \(datesWithFood.count) food, \(fastingDates.count) fasting"
+        )
+
+        return result
+    }
+
     // MARK: - Quick Add
 
     /// Log a quick add entry with manual macro values
