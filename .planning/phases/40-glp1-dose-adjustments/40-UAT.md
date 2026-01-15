@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: complete
 phase: 40-glp1-dose-adjustments
 source: 40-01-SUMMARY.md
 started: 2026-01-15T20:00:00Z
-updated: 2026-01-15T21:30:00Z
+updated: 2026-01-15T22:00:00Z
 ---
 
 ## Current Test
@@ -39,20 +39,17 @@ result: pass
 
 ### 7. Save Adjusted Dose
 expected: Adjust dose to a different value, save the dose. Check History tab - the logged dose should show the adjusted amount you entered, not the profile default.
-result: issue
-reported: "Only issue is the rounding. This dose was .75 but shows as 0.8 mg"
-severity: major
-root_cause: DoseHistoryRow.swift:73 uses "%.1f" (1 decimal) instead of dose.formattedAmount which uses "%.2f" (2 decimals)
+result: pass
+notes: Initially showed rounding issue (0.75 → 0.8), fixed in commit 9d7e761e
 
 ## Summary
 
 total: 7
-passed: 6
-issues: 1
+passed: 7
+issues: 0
 pending: 0
 skipped: 0
 
 ## Issues for /gsd:plan-fix
 
-- UAT-002: Dose display rounds incorrectly (0.75 shows as 0.8 mg) (major) - Test 7
-  root_cause: DoseHistoryRow.swift:73 uses "%.1f" instead of dose.formattedAmount
+[none - all issues resolved]
