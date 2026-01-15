@@ -22,15 +22,92 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 ## Milestones
 
 - ✅ **v0.8.0 Food Search & Library** - Phases 35-38 (shipped)
+- 🚧 **v0.9.0 Improvements & Fixes** - Phases 39-43 (in progress)
 
 ## Phases
 
-### 🎯 Next Milestone (TBD)
+### 🚧 v0.9.0 Improvements & Fixes (In Progress)
+
+**Milestone Goal:** Address analytics accuracy issues and enhance GLP-1 medication tracking UX.
+
+#### Phase 39: Day Status Tracking
+
+**Goal**: Add day completion status (logging/complete/fasting) to handle partial days and fast days in analytics
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Related todos:
+- Handle partial day calculations in dashboard
+- Mark fast days to exclude from calculations
+
+Plans:
+- [ ] 39-01: TBD (run /gsd:plan-phase 39 to break down)
+
+#### Phase 40: GLP-1 Dose Adjustments
+
+**Goal**: Allow adjustable dose amount when logging shots for compounded medications
+**Depends on**: Phase 39
+**Research**: Unlikely (internal UI patterns)
+**Plans**: TBD
+
+Related todos:
+- Allow adjustable dose amount when logging shots
+
+Plans:
+- [ ] 40-01: TBD
+
+#### Phase 41: GLP-1 Analytics Fixes
+
+**Goal**: Fix steady state progress calculation (2416% bug) and change concentration graph to histogram
+**Depends on**: Phase 40
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Related todos:
+- Fix steady state progress calculation showing 2416%
+- Change drug concentration graph to histogram
+
+Plans:
+- [ ] 41-01: TBD
+
+#### Phase 42: Serving Unit Mapping
+
+**Goal**: Investigate and fix serving unit to gram mapping for foods with unrealistic conversions
+**Depends on**: Phase 41
+**Research**: Unlikely (database/data quality)
+**Plans**: TBD
+
+Related todos:
+- Fix serving unit to gram mapping for foods
+
+Plans:
+- [ ] 42-01: TBD
+
+#### Phase 43: Integration & Polish
+
+**Goal**: Final testing, edge cases, and cleanup for v0.9.0
+**Depends on**: Phase 42
+**Research**: Unlikely (internal)
+**Plans**: TBD
+
+Plans:
+- [ ] 43-01: TBD
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
+
+### 🚧 v0.9.0 Improvements & Fixes (Phases 39-43) - In Progress
+
+| Phase                       | Plans Complete | Status      | Completed |
+| --------------------------- | -------------- | ----------- | --------- |
+| 39. Day Status Tracking     | 0/?            | Not started | -         |
+| 40. GLP-1 Dose Adjustments  | 0/?            | Not started | -         |
+| 41. GLP-1 Analytics Fixes   | 0/?            | Not started | -         |
+| 42. Serving Unit Mapping    | 0/?            | Not started | -         |
+| 43. Integration & Polish    | 0/?            | Not started | -         |
 
 <details>
 <summary>✅ v0.8.0 Food Search & Library (Phases 35-38) - SHIPPED 2026-01-13</summary>
