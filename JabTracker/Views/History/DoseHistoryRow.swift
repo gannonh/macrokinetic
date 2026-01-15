@@ -70,7 +70,7 @@ struct DoseHistoryRow: View {
     }
 
     private var doseAmountText: some View {
-        Text(String(format: "%.1f mg", self.dose.amount))
+        Text(self.dose.formattedAmount)
             .font(.headline)
             .fontWeight(.semibold)
             .foregroundColor(self.dose.skipped ? .secondary : .primary)
@@ -146,7 +146,7 @@ struct DoseHistoryRow: View {
         var components: [String] = []
 
         // Dose amount
-        components.append(String(format: "%.1f milligrams", self.dose.amount))
+        components.append(String(format: "%.2f milligrams", self.dose.amount))
 
         // Medication
         if let medication = dose.medication {
