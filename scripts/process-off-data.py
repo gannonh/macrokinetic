@@ -27,6 +27,19 @@ from pathlib import Path
 # Increase CSV field size limit for large fields in OFF data
 csv.field_size_limit(sys.maxsize)
 
+# Suspicious unit ratio validation - min/max gram ranges for volume-based units
+# If a serving's gram weight falls outside these ranges, use generic "serving" label
+SUSPICIOUS_UNIT_RATIOS = {
+    "cup": (80, 300),    # 1 cup should be 80-300g for most foods
+    "tbsp": (5, 25),     # 1 tbsp should be 5-25g
+    "tsp": (2, 10),      # 1 tsp should be 2-10g
+    "tablespoon": (5, 25),
+    "teaspoon": (2, 10),
+}
+
+# Track suspicious serving labels for monitoring
+suspicious_serving_count = 0
+
 # Paths
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -57,6 +70,30 @@ def parse_float(value: str) -> float:
         return float(value)
     except ValueError:
         return 0.0
+
+
+def is_serving_label_suspicious(serving_size_str: str, serving_grams: float) -> bool:
+    """
+    Check if a serving label's gram value is unrealistic for its unit type.
+
+    Args:
+        serving_size_str: The serving size string (e.g., "1 cup", "2 tbsp")
+        serving_grams: The gram weight for this serving
+
+    Returns:
+        True if the gram value is suspicious for the detected unit type
+    """
+    lower_str = serving_size_str.lower()
+
+    for unit, (min_grams, max_grams) in SUSPICIOUS_UNIT_RATIOS.items():
+        if unit in lower_str:
+            # Adjust ranges based on quantity prefix (e.g., "1/4 cup" = 0.25 * range)
+            # For simplicity, we use the base range - most suspicious cases are
+            # "1 cup" type entries with wildly wrong gram values
+            if serving_grams < min_grams or serving_grams > max_grams:
+                return True
+
+    return False
 
 
 def has_valid_nutrition(row: list) -> bool:
@@ -141,7 +178,14 @@ def parse_row(row: list) -> dict | None:
 
             if serving_size_str and not is_just_weight:
                 # Has meaningful descriptive text (e.g., "1 bar", "2 cookies", "1 cup")
-                label = f"{serving_size_str} ({serving_quantity:.0f}g)"
+                # Validate serving label against density thresholds
+                if is_serving_label_suspicious(serving_size_str, serving_quantity):
+                    # Suspicious - use generic "serving" instead of misleading unit
+                    global suspicious_serving_count
+                    suspicious_serving_count += 1
+                    label = f"1 serving ({serving_quantity:.0f}g)"
+                else:
+                    label = f"{serving_size_str} ({serving_quantity:.0f}g)"
             else:
                 # No meaningful description - use "1 serving (Xg)"
                 label = f"1 serving ({serving_quantity:.0f}g)"
@@ -348,6 +392,7 @@ def main():
     print("=" * 50)
     print(f"  Products added:     {added:,}")
     print(f"  Products skipped:   {skipped:,} (duplicates)")
+    print(f"  Suspicious labels:  {suspicious_serving_count:,} (sanitized to 'serving')")
     print(f"  USDA foods:         {usda_count:,}")
     print(f"  Open Food Facts:    {off_count:,}")
     print(f"  Total foods:        {total:,}")
