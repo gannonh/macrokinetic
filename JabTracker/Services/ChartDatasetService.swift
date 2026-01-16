@@ -42,7 +42,8 @@ class ChartDatasetService {
         let timeRange = calculateTimeRange(from: validProfiles)
         guard let timeRange = timeRange else { return nil }
 
-        let (concentrationCurves, allMarkers) = processProfiles(validProfiles, timeRange: timeRange)
+        let (concentrationCurves, allMarkers) = processProfiles(
+            validProfiles, timeRange: timeRange, timePeriod: timePeriod)
 
         guard !concentrationCurves.isEmpty, !allMarkers.isEmpty else {
             return nil
@@ -82,7 +83,8 @@ class ChartDatasetService {
         let timeRange = calculateTimeRange(from: validProfiles)
         guard let timeRange = timeRange else { return nil }
 
-        let (concentrationCurves, allMarkers) = processProfiles(validProfiles, timeRange: timeRange)
+        let (concentrationCurves, allMarkers) = processProfiles(
+            validProfiles, timeRange: timeRange, timePeriod: timePeriod)
 
         guard !concentrationCurves.isEmpty, !allMarkers.isEmpty else {
             return nil
@@ -168,7 +170,8 @@ class ChartDatasetService {
     /// Process all profiles to generate concentration curves and dose markers
     private func processProfiles(
         _ validProfiles: [(MedicationProfile, [Dose])],
-        timeRange: ClosedRange<Date>
+        timeRange: ClosedRange<Date>,
+        timePeriod: ChartDataProcessor.TimePeriod
     ) -> ([ConcentrationCurve], [AdvancedDoseMarker]) {
         Self.logger.debug("🔧 processProfiles() called with \(validProfiles.count, privacy: .public) profiles")
         var concentrationCurves: [ConcentrationCurve] = []
@@ -189,7 +192,9 @@ class ChartDatasetService {
             )
 
             // Use doses from tuple instead of profile.doses relationship
-            if let curve = createConcentrationCurve(for: profile, doses: doses, timeRange: timeRange) {
+            if let curve = createConcentrationCurve(
+                for: profile, doses: doses, timeRange: timeRange, timePeriod: timePeriod)
+            {
                 concentrationCurves.append(curve)
                 Self.logger.debug("  ✅ Generated curve with \(curve.points.count, privacy: .public) points")
             } else {
@@ -217,12 +222,16 @@ class ChartDatasetService {
     private func createConcentrationCurve(
         for profile: MedicationProfile,
         doses: [Dose],
-        timeRange: ClosedRange<Date>
+        timeRange: ClosedRange<Date>,
+        timePeriod: ChartDataProcessor.TimePeriod
     ) -> ConcentrationCurve? {
+        // Use dynamic interval based on time period for visible histogram bars
+        let interval = ChartDataProcessor.intervalHours(for: timePeriod)
         let concentrationPoints = chartDataProcessor.generateConcentrationTimeline(
             for: profile,
             doses: doses,  // Use explicit doses instead of profile.doses
-            timeRange: timeRange
+            timeRange: timeRange,
+            intervalHours: interval
         )
 
         let validPoints = concentrationPoints.compactMap { point -> AdvancedConcentrationPoint? in

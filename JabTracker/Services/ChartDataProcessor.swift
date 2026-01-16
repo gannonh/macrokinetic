@@ -228,6 +228,25 @@ final class ChartDataProcessor {
         return doses.filter { $0.timestamp >= cutoffDate }
     }
 
+    /// Calculate optimal interval hours for histogram bars based on time period
+    /// Fewer bars = wider individual bars that are visually distinct
+    /// - Parameter period: The time period being displayed
+    /// - Returns: Interval in hours between data points
+    static func intervalHours(for period: TimePeriod) -> Double {
+        switch period {
+        case .last7Days:
+            return 2.0  // ~84 bars over 7 days
+        case .last30Days:
+            return 6.0  // ~120 bars over 30 days
+        case .last90Days:
+            return 12.0  // ~180 bars over 90 days
+        case .lastYear:
+            return 24.0  // ~365 bars over 1 year
+        case .all:
+            return 24.0  // Default to daily for all time
+        }
+    }
+
     /// Filter data by custom date range
     /// - Parameters:
     ///   - doses: Array of doses to filter
@@ -595,7 +614,7 @@ final class ChartDataProcessor {
 
         let analyticsSummary = analyticsService.calculateUserAnalytics(user: user, context: context)
         let timeRange = calculateTimeRange(for: timePeriod, medicationProfiles: medicationProfiles)
-        let chartData = generateChartDataForProfiles(medicationProfiles, timeRange: timeRange)
+        let chartData = generateChartDataForProfiles(medicationProfiles, timeRange: timeRange, timePeriod: timePeriod)
         let optimizedData = optimizeAnalyticsChartData(chartData)
 
         return AnalyticsChartData(
@@ -730,20 +749,25 @@ final class ChartDataProcessor {
     /// - Parameters:
     ///   - medicationProfiles: Profiles to generate chart data for
     ///   - timeRange: Time range for data generation
+    ///   - timePeriod: Time period for determining optimal bar density
     /// - Returns: Combined chart data for all profiles
     private func generateChartDataForProfiles(
         _ medicationProfiles: [MedicationProfile],
-        timeRange: ClosedRange<Date>
+        timeRange: ClosedRange<Date>,
+        timePeriod: TimePeriod
     ) -> ProfileChartData {
         var allConcentrationPoints: [ConcentrationPoint] = []
         var allDoseMarkers: [DoseMarker] = []
+
+        // Use dynamic interval based on time period for visible histogram bars
+        let interval = Self.intervalHours(for: timePeriod)
 
         for profile in medicationProfiles {
             // Generate concentration timeline for this profile
             let concentrationPoints = generateConcentrationTimeline(
                 for: profile,
                 timeRange: timeRange,
-                intervalHours: 0.5
+                intervalHours: interval
             )
             allConcentrationPoints.append(contentsOf: concentrationPoints)
 
