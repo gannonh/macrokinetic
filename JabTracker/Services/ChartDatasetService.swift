@@ -51,10 +51,15 @@ class ChartDatasetService {
         // Convert TimePeriod to TimeRange for chart configuration
         let chartTimeRange = convertToTimeRange(timePeriod)
 
+        // Extract therapeutic window from first profile's medication
+        let concentrationRange = extractTherapeuticRange(from: validProfiles)
+
         return ConcentrationChartDataset(
             concentrationCurves: concentrationCurves,
             doseMarkers: allMarkers,
-            configuration: .default.withTimeRange(chartTimeRange)
+            configuration: .default
+                .withTimeRange(chartTimeRange)
+                .withConcentrationRange(concentrationRange)
         )
     }
 
@@ -86,10 +91,15 @@ class ChartDatasetService {
         // Convert TimePeriod to TimeRange for chart configuration
         let chartTimeRange = convertToTimeRange(timePeriod)
 
+        // Extract therapeutic window from first profile's medication
+        let concentrationRange = extractTherapeuticRange(from: validProfiles)
+
         return ConcentrationChartDataset(
             concentrationCurves: concentrationCurves,
             doseMarkers: allMarkers,
-            configuration: .default.withTimeRange(chartTimeRange)
+            configuration: .default
+                .withTimeRange(chartTimeRange)
+                .withConcentrationRange(concentrationRange)
         )
     }
 
@@ -107,6 +117,29 @@ class ChartDatasetService {
         case .all:
             return .automatic
         }
+    }
+
+    /// Extracts therapeutic range from first medication profile for chart configuration
+    /// - Parameter profiles: Array of medication profiles with doses
+    /// - Returns: ConcentrationRange configured with therapeutic window, or .automatic if no medication found
+    private func extractTherapeuticRange(from profiles: [(MedicationProfile, [Dose])]) -> ConcentrationRange {
+        guard let firstProfile = profiles.first?.0,
+            let medication = firstProfile.medication
+        else {
+            return .automatic
+        }
+
+        // Get therapeutic window values from medication
+        let minConcentration = medication.therapeuticMinConcentration
+        let maxConcentration = medication.therapeuticMaxConcentration
+        // Optimal is midpoint of therapeutic range
+        let optimalConcentration = (minConcentration + maxConcentration) / 2.0
+
+        return .therapeuticWindow(
+            min: minConcentration,
+            max: maxConcentration,
+            optimal: optimalConcentration
+        )
     }
 
     // MARK: - Private Helper Methods
