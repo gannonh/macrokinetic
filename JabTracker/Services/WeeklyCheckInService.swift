@@ -418,10 +418,11 @@ final class WeeklyCheckInService {
     }
 
     private func calculateProposedCalories(tdee: Double, weeklyPaceKg: Double, calorieFloor: Double) -> Double {
-        // 1 kg fat = ~7700 kcal
-        let dailyAdjustment = weeklyPaceKg * 7700 / 7
-        let proposedCalories = tdee + dailyAdjustment
-        return max(proposedCalories, calorieFloor)
+        NutritionCalculationService.dailyCalorieTarget(
+            tdee: tdee,
+            weeklyPaceKg: weeklyPaceKg,
+            calorieFloor: calorieFloor
+        )
     }
 
     private func calculateProposedMacros(
@@ -429,22 +430,27 @@ final class WeeklyCheckInService {
         program: NutritionProgram?,
         weightKg: Double
     ) -> WeeklyMacroDistribution {
-        let proteinGrams = (program?.protein.gramsPerKg ?? 1.6) * weightKg
-        let proteinCalories = MacroCalorieConstants.proteinCalories(proteinGrams)
+        let proteinLevel = program?.protein ?? .moderate
+        let proteinGrams = NutritionCalculationService.proteinGrams(
+            weightKg: weightKg,
+            proteinLevel: proteinLevel
+        )
 
-        let remainingCalories = calories - proteinCalories
+        // Calculate carb/fat ratio from diet preference
         let macroSplit = program?.diet.macroPercentages ?? DietPreference.balanced.macroPercentages
-        let fatPercent = macroSplit.fat / (macroSplit.fat + macroSplit.carbs)
-        let carbPercent = macroSplit.carbs / (macroSplit.fat + macroSplit.carbs)
+        let carbFatRatio = macroSplit.carbs / (macroSplit.fat + macroSplit.carbs)
 
-        let fatGrams = (remainingCalories * fatPercent) / MacroCalorieConstants.fatCaloriesPerGram
-        let carbsGrams = (remainingCalories * carbPercent) / MacroCalorieConstants.carbsCaloriesPerGram
+        let macros = NutritionCalculationService.macroDistribution(
+            totalCalories: calories,
+            proteinGrams: proteinGrams,
+            carbFatRatio: carbFatRatio
+        )
 
         let dailyMacros = DailyMacros(
             calories: calories,
-            proteinGrams: proteinGrams,
-            fatGrams: fatGrams,
-            carbsGrams: carbsGrams
+            proteinGrams: macros.protein,
+            fatGrams: macros.fat,
+            carbsGrams: macros.carbs
         )
 
         return WeeklyMacroDistribution.even(macros: dailyMacros)

@@ -1360,3 +1360,5 @@ struct CalorieCalculationTests {
         #expect(viewModel.highCalorieDays.isEmpty)
     }
 }
+
+// Note: Maintenance goal pace integration tests are in OnboardingMaintenanceGoalTests.swift

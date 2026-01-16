@@ -288,7 +288,10 @@ final class GoalWizardViewModel {
             goal = existing
             goal.goalTypeRaw = goalType.rawValue
             goal.targetWeightKg = targetWeightKg
-            goal.weeklyWeightChangePaceKg = goalType == .weightLoss ? -weeklyRateKg : weeklyRateKg
+            goal.weeklyWeightChangePaceKg = NutritionCalculationService.weeklyPace(
+                for: goalType,
+                weeklyRateKg: weeklyRateKg
+            )
             goal.updatedAt = Date()
         } else {
             // Deactivate existing active goals
@@ -299,7 +302,10 @@ final class GoalWizardViewModel {
             }
 
             // Create new goal
-            let weeklyPace = goalType == .weightLoss ? -weeklyRateKg : weeklyRateKg
+            let weeklyPace = NutritionCalculationService.weeklyPace(
+                for: goalType,
+                weeklyRateKg: weeklyRateKg
+            )
             goal = NutritionGoal(
                 goalType: goalType,
                 startingWeightKg: currentWeightKg,

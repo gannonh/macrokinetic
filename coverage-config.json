@@ -86,6 +86,7 @@
           "Services/ProgressPhotoService.swift",
           "Services/TDEEService.swift",
           "Services/WeeklyCheckInService.swift",
+          "Services/NutritionCalculationService.swift",
           "Services/CalorieAdjustmentService.swift",
           "Services/CalorieAdjustmentService+Adjustments.swift",
           "Services/DayStatusService.swift"

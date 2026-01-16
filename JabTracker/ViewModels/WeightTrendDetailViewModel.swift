@@ -374,8 +374,7 @@ final class WeightTrendDetailViewModel {
                 let kgPerWeek = weightChangeKg / weeks
                 weeklyChange = weightUnit == "lbs" ? kgPerWeek * WeightEntry.kgToLbsConversion : kgPerWeek
 
-                // 1 kg = 7700 kcal, so daily deficit = kg/week * 7700 / 7 = kg/week * 1100
-                let dailyDeficit = abs(kgPerWeek) * 1100
+                let dailyDeficit = abs(NutritionCalculationService.dailyCalorieAdjustment(from: kgPerWeek))
                 energyDeficit = Int(dailyDeficit)
             }
             return
@@ -400,8 +399,7 @@ final class WeightTrendDetailViewModel {
         let kgPerWeek = weightChangeKg / weeks
         weeklyChange = weightUnit == "lbs" ? kgPerWeek * WeightEntry.kgToLbsConversion : kgPerWeek
 
-        // Energy formula: kg/week * 1100 = daily deficit
-        let dailyDeficit = abs(kgPerWeek) * 1100
+        let dailyDeficit = abs(NutritionCalculationService.dailyCalorieAdjustment(from: kgPerWeek))
         energyDeficit = Int(dailyDeficit)
     }
 
