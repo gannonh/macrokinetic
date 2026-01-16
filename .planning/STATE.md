@@ -10,12 +10,12 @@
 
 ## Current Position
 
-Phase: 40 of 43 (GLP-1 Dose Adjustments) - COMPLETE
-Plan: All plans complete (1/1)
-Status: PR Review complete - ready for milestone completion
-Last activity: 2026-01-15 - PR Review complete (CI + reviews passed)
+Phase: 41 of 43 (GLP-1 Analytics Fixes)
+Plan: 2 of 2 complete
+Status: In progress
+Last activity: 2026-01-16 - Completed 41-02-PLAN.md (concentration chart histogram)
 
-Progress: ███░░░░░░░ 25%
+Progress: ███░░░░░░░ 30%
 
 ## GitHub Tracking
 
@@ -40,10 +40,16 @@ Status: PR Review complete, ready for merge
 | 36    | 0     | skipped | -        |
 | 37    | 1     | ~15 min | 15 min   |
 | 38    | 1     | 7 min   | 7 min    |
+| 41    | 2     | ~16 min | 8 min    |
 
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 41 decisions (Plan 02):**
+- Use 0.8 opacity on bars to allow therapeutic range band to show through
+- BarMark auto-determines bar width based on data density
+- Per-bar accessibility labels with date/time and concentration value
 
 **Phase 40 decisions (Plan 01):**
 - Stepper control chosen over TextField for better UX with discrete dose increments
@@ -85,13 +91,13 @@ None.
 
 ## Project Alignment
 
-Last checked: 2026-01-15
+Last checked: 2026-01-16
 Status: ✓ Aligned
-Assessment: Phase 39 complete, ready to plan Phase 40.
+Assessment: Phase 41 Plan 02 complete, concentration chart now uses histogram format.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-15T20:45:00Z
-Stopped at: Plan 40-01 complete
+Last session: 2026-01-16T02:56:00Z
+Stopped at: Completed 41-02-PLAN.md
 Resume file: None
