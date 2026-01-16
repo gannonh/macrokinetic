@@ -10,12 +10,12 @@
 
 ## Current Position
 
-Phase: 41 of 43 (GLP-1 Analytics Fixes) - COMPLETE
-Plan: All plans complete (3/3 including FIX plan)
-Status: PR Review complete - ready for CodeRabbit review or merge
-Last activity: 2026-01-16 - PR Review complete (all critical/important issues fixed)
+Phase: 42 of 43 (Serving Unit Mapping)
+Plan: 1 of 1 complete
+Status: Phase complete
+Last activity: 2026-01-16 - Completed 42-01-PLAN.md
 
-Progress: ██████░░░░ 60%
+Progress: ███████░░░ 70%
 
 ## GitHub Tracking
 
@@ -45,6 +45,11 @@ Status: PR Review complete - ready for CodeRabbit review or merge
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 42 decisions (Plan 01):**
+- Use density thresholds (cup: 80-300g, tbsp: 5-25g, tsp: 2-10g) to detect suspicious unit labels
+- Sanitize suspicious labels to generic 'serving' instead of removing them
+- Apply validation both at data import time AND at UI display time (defense in depth)
 
 **Phase 41 decisions (FIX plan):**
 - Use 0.5-hour sampling interval for histogram (4x increase from 2.0 hours)
@@ -86,7 +91,7 @@ No open issues in `.planning/ISSUES.md`.
 
 ### Pending Todos
 
-7 todos in `.planning/todos/pending/`
+5 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
@@ -108,6 +113,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-16T14:44:52Z
-Stopped at: Completed 41-FIX-PLAN.md (3 UAT fixes applied)
+Last session: 2026-01-16T21:14:56Z
+Stopped at: Completed 42-01-PLAN.md (serving unit mapping)
 Resume file: None
