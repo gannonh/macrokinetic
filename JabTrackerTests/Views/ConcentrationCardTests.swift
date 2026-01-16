@@ -226,10 +226,10 @@ struct ConcentrationCardTests {
         self.context.insert(user)
         self.context.insert(newMedicationProfile)
 
-        // Test with no doses (brand new profile) - returns percentage
+        // Test with no doses (brand new profile) - returns decimal (0.0-1.0)
         var steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
         #expect(
-            steadyStateProgress < 5.0, "New medication should have minimal steady state progress (< 5%)")
+            steadyStateProgress < 0.05, "New medication should have minimal steady state progress (< 5%)")
 
         // Add doses over time to simulate progress
         let testTime = Date()
@@ -247,13 +247,13 @@ struct ConcentrationCardTests {
         // When: Calculating steady state progress
         steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
 
-        // Then: Progress should be between 0 and 100 (percentage)
+        // Then: Progress should be between 0.0 and 1.0 (decimal)
         #expect(
-            steadyStateProgress >= 0.0 && steadyStateProgress <= 100.0,
-            "Steady state progress should be between 0 and 100%")
+            steadyStateProgress >= 0.0 && steadyStateProgress <= 1.0,
+            "Steady state progress should be between 0.0 and 1.0")
 
         // And: 8 weeks should show significant progress (semaglutide ~5 half-lives to steady state)
-        #expect(steadyStateProgress > 50.0, "8 weeks should show substantial steady state progress")
+        #expect(steadyStateProgress > 0.50, "8 weeks should show substantial steady state progress")
     }
 
     @Test("ConcentrationCard handles multiple medications independently")
