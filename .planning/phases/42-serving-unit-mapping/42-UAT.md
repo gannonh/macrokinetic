@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 42-serving-unit-mapping
 source: [42-01-SUMMARY.md]
 started: 2026-01-16T21:30:00Z
-updated: 2026-01-16T21:38:00Z
+updated: 2026-01-16T21:40:00Z
 ---
 
 ## Current Test
@@ -45,7 +45,13 @@ skipped: 0
   reason: "User reported: Rice product shows 'serving' instead of 'cup' but the 49g amount is reasonable for 0.25 cups. MacroFactor (also uses OFF) shows 'cup' for the same product. Expected cup to be available as a unit option."
   severity: major
   test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Validation assumes all cup labels represent 1 full cup. For '0.25 cup (49g)', validation checks 49g against [80,300] range and incorrectly marks as suspicious. Should scale range by fractional quantity."
+  artifacts:
+    - path: "JabTracker/Views/Nutrition/ServingPillPicker.swift"
+      issue: "isServingLabelSuspicious() ignores fractional quantities (lines 56-71)"
+    - path: "scripts/process-off-data.py"
+      issue: "is_serving_label_suspicious() has same flaw (lines 75-96)"
+  missing:
+    - "Parse numeric quantity prefix (e.g., 0.25) from serving label"
+    - "Scale acceptable gram range by quantity: [80*0.25, 300*0.25] = [20, 75]"
+  debug_session: ".planning/debug/42-cup-serving-missing.md"
