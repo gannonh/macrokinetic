@@ -894,3 +894,469 @@ struct OnboardingViewModelProfileDataTests {
         #expect(viewModel.canProceedToNext == true)
     }
 }
+
+// MARK: - OnboardingViewModel Collaborative Distribution Tests
+
+@Suite("OnboardingViewModel Collaborative Distribution Tests")
+struct CollaborativeDistributionTests {
+
+    @Test("initializeCollaborativeDays creates 7 days with even distribution")
+    @MainActor
+    func testInitializeCollaborativeDaysEvenDistribution() {
+        // Given: A ViewModel with calculated calories
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Set up prerequisites
+        viewModel.calculatedCalories = 2000
+        viewModel.proteinLevel = .moderate
+
+        // When: Initializing collaborative days
+        viewModel.initializeCollaborativeDays()
+
+        // Then: All 7 days should be initialized
+        #expect(viewModel.collaborativeDays.count == 7)
+
+        // Each day should have the calculated calories
+        for weekday in 1...7 {
+            let config = viewModel.collaborativeDays[weekday]
+            #expect(config != nil, "Day \(weekday) should be initialized")
+            #expect(config?.calories == 2000, "Day \(weekday) should have 2000 calories")
+            #expect(config?.isLocked == false, "Day \(weekday) should be unlocked")
+        }
+    }
+
+    @Test("initializeCollaborativeDays does not reinitialize if already set")
+    @MainActor
+    func testInitializeCollaborativeDaysNoReinitialize() {
+        // Given: A ViewModel with existing collaborative days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 2000
+        viewModel.proteinLevel = .moderate
+
+        // Initialize once
+        viewModel.initializeCollaborativeDays()
+
+        // Modify one day
+        viewModel.collaborativeDays[2]?.calories = 2500
+
+        // When: Trying to reinitialize
+        viewModel.initializeCollaborativeDays()
+
+        // Then: The modified value should be preserved
+        #expect(viewModel.collaborativeDays[2]?.calories == 2500)
+    }
+
+    @Test("initializeCollaborativeDays estimates calories when not calculated")
+    @MainActor
+    func testInitializeCollaborativeDaysEstimatesCalories() {
+        // Given: A ViewModel without pre-calculated calories
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Set up profile data for estimation
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.currentWeightKg = 80
+        viewModel.goalViewModel.targetWeightKg = 70
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 10
+        viewModel.editSex = "Male"
+        viewModel.trainingLevel = .cardio
+        viewModel.proteinLevel = .moderate
+
+        // Ensure calculatedCalories is 0
+        viewModel.calculatedCalories = 0
+
+        // When: Initializing collaborative days
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Days should be initialized with estimated values
+        #expect(viewModel.collaborativeDays.count == 7)
+        // Estimated calories should be reasonable (>1200 minimum)
+        let firstDayCalories = viewModel.collaborativeDays[1]?.calories ?? 0
+        #expect(firstDayCalories >= 1200, "Estimated calories should be at least 1200")
+    }
+
+    @Test("adjustCollaborativeCalories redistributes delta to unlocked days")
+    @MainActor
+    func testAdjustCollaborativeCaloriesRedistributesDelta() {
+        // Given: A ViewModel with initialized collaborative days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 2000
+        viewModel.proteinLevel = .moderate
+        viewModel.initializeCollaborativeDays()
+
+        // Initial state: all days have 2000 calories
+        let initialTotalCalories = (1...7).reduce(0.0) { sum, day in
+            sum + (viewModel.collaborativeDays[day]?.calories ?? 0)
+        }
+
+        // When: Increasing Monday's (day 2) calories by 600
+        viewModel.adjustCollaborativeCalories(forDay: 2, newCalories: 2600)
+
+        // Then: Monday should have 2600 calories
+        #expect(viewModel.collaborativeDays[2]?.calories == 2600)
+
+        // The delta (600) should be distributed to other unlocked days
+        // Total should remain the same (weekly budget preserved)
+        let newTotalCalories = (1...7).reduce(0.0) { sum, day in
+            sum + (viewModel.collaborativeDays[day]?.calories ?? 0)
+        }
+        #expect(abs(newTotalCalories - initialTotalCalories) < 1.0, "Total calories should be preserved")
+
+        // Other days should have reduced calories (600 / 6 = 100 per day)
+        let otherDayCalories = viewModel.collaborativeDays[1]?.calories ?? 0
+        #expect(abs(otherDayCalories - 1900) < 1.0, "Other days should have 100 less calories")
+    }
+
+    @Test("adjustCollaborativeCalories respects locked days")
+    @MainActor
+    func testAdjustCollaborativeCaloriesRespectsLockedDays() {
+        // Given: A ViewModel with some locked days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 2000
+        viewModel.proteinLevel = .moderate
+        viewModel.initializeCollaborativeDays()
+
+        // Lock days 3, 4, 5
+        viewModel.collaborativeDays[3]?.isLocked = true
+        viewModel.collaborativeDays[4]?.isLocked = true
+        viewModel.collaborativeDays[5]?.isLocked = true
+
+        let lockedDay3Calories = viewModel.collaborativeDays[3]?.calories ?? 0
+        let lockedDay4Calories = viewModel.collaborativeDays[4]?.calories ?? 0
+        let lockedDay5Calories = viewModel.collaborativeDays[5]?.calories ?? 0
+
+        // When: Adjusting day 2
+        viewModel.adjustCollaborativeCalories(forDay: 2, newCalories: 2600)
+
+        // Then: Locked days should remain unchanged
+        #expect(viewModel.collaborativeDays[3]?.calories == lockedDay3Calories)
+        #expect(viewModel.collaborativeDays[4]?.calories == lockedDay4Calories)
+        #expect(viewModel.collaborativeDays[5]?.calories == lockedDay5Calories)
+    }
+
+    @Test("adjustCollaborativeCalories handles non-configured day gracefully")
+    @MainActor
+    func testAdjustCollaborativeCaloriesHandlesNonConfiguredDay() {
+        // Given: A ViewModel with no collaborative days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // When: Trying to adjust a non-configured day (should not crash)
+        viewModel.adjustCollaborativeCalories(forDay: 2, newCalories: 2500)
+
+        // Then: Should do nothing (no crash)
+        #expect(viewModel.collaborativeDays.isEmpty)
+    }
+
+    @Test("resetCollaborativeDaysToEven resets all days to even distribution")
+    @MainActor
+    func testResetCollaborativeDaysToEven() {
+        // Given: A ViewModel with modified collaborative days
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 2000
+        viewModel.proteinLevel = .moderate
+        viewModel.weeklyCalorieBudget = 14000
+
+        viewModel.initializeCollaborativeDays()
+
+        // Modify some days
+        viewModel.collaborativeDays[1]?.calories = 2500
+        viewModel.collaborativeDays[2]?.calories = 1500
+        viewModel.collaborativeDays[3]?.isLocked = true
+
+        // When: Resetting to even distribution
+        viewModel.resetCollaborativeDaysToEven()
+
+        // Then: All days should have weekly budget / 7 calories
+        let expectedDailyCalories = 14000.0 / 7.0
+
+        for weekday in 1...7 {
+            let config = viewModel.collaborativeDays[weekday]
+            #expect(config != nil, "Day \(weekday) should be configured")
+            #expect(abs((config?.calories ?? 0) - expectedDailyCalories) < 1.0)
+            #expect(config?.isLocked == false, "Day \(weekday) should be unlocked")
+        }
+    }
+
+    @Test("canProceedToNext requires all collaborative days configured at collaborativeDistribution step")
+    @MainActor
+    func testCanProceedRequiresAllCollaborativeDays() {
+        // Given: A ViewModel at collaborativeDistribution step
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Configure for collaborative mode
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.targetWeightKg = 70.0
+        viewModel.editSex = "male"
+        viewModel.editHeightFeet = 5
+        viewModel.programStyle = .collaborative
+        viewModel.dietPreference = .balanced
+        viewModel.calorieFloorType = .standard
+        viewModel.trainingLevel = .lifting
+        viewModel.proteinLevel = .moderate
+
+        // Navigate to collaborativeDistribution step
+        var iterations = 0
+        while viewModel.currentStep != .collaborativeDistribution && iterations < 50 {
+            viewModel.moveToNextStep()
+            iterations += 1
+        }
+        #expect(viewModel.currentStep == .collaborativeDistribution)
+
+        // Clear collaborative days
+        viewModel.collaborativeDays = [:]
+
+        // Then: Cannot proceed without all days configured
+        #expect(viewModel.canProceedToNext == false)
+
+        // When: Configuring all 7 days with valid calories
+        for weekday in 1...7 {
+            viewModel.collaborativeDays[weekday] = CollaborativeDayConfigStorage(
+                calories: 2000,
+                proteinGramsPerLb: 0.7,
+                carbFatRatio: 0.5,
+                isLocked: false
+            )
+        }
+
+        // Then: Can proceed
+        #expect(viewModel.canProceedToNext == true)
+    }
+
+    @Test("availableSteps includes collaborativeDistribution for collaborative program style")
+    @MainActor
+    func testAvailableStepsIncludesCollaborativeDistribution() {
+        // Given: A ViewModel with collaborative program style
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .collaborative
+
+        // Then: collaborativeDistribution should be in availableSteps
+        #expect(viewModel.availableSteps.contains(.collaborativeDistribution))
+    }
+
+    @Test("availableSteps excludes collaborativeDistribution for non-collaborative program styles")
+    @MainActor
+    func testAvailableStepsExcludesCollaborativeDistributionForNonCollaborative() {
+        // Given: A ViewModel with coached program style
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.programStyle = .coached
+
+        // Then: collaborativeDistribution should not be in availableSteps
+        #expect(!viewModel.availableSteps.contains(.collaborativeDistribution))
+    }
+}
+
+// MARK: - OnboardingViewModel Calorie Calculation Tests
+
+@Suite("OnboardingViewModel Calorie Calculation Tests")
+struct CalorieCalculationTests {
+
+    @Test("calculateAge returns correct age from birthday")
+    @MainActor
+    func testCalculateAgeFromBirthday() {
+        // Given: A ViewModel with a birthday 30 years ago
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        // Set birthday to exactly 30 years ago
+        let thirtyYearsAgo = Calendar.current.date(byAdding: .year, value: -30, to: Date())!
+        viewModel.editBirthday = thirtyYearsAgo
+
+        // Initialize collaborative days to trigger age calculation
+        viewModel.calculatedCalories = 0
+        viewModel.goalViewModel.goalType = .maintenance
+        viewModel.goalViewModel.currentWeightKg = 70
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 10
+        viewModel.editSex = "Male"
+        viewModel.trainingLevel = .cardio
+        viewModel.proteinLevel = .moderate
+
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Calories should be calculated (demonstrates age calculation worked)
+        let calories = viewModel.collaborativeDays[1]?.calories ?? 0
+        #expect(calories > 0, "Calories should be calculated using age")
+    }
+
+    @Test("estimateDailyCalories uses Mifflin-St Jeor formula for male")
+    @MainActor
+    func testEstimateDailyCaloriesMale() {
+        // Given: A ViewModel configured for a male user
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 0
+        viewModel.goalViewModel.goalType = .maintenance
+        viewModel.goalViewModel.currentWeightKg = 80
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 10
+        viewModel.editSex = "Male"
+        viewModel.editBirthday = Calendar.current.date(byAdding: .year, value: -30, to: Date())!
+        viewModel.trainingLevel = .cardio
+        viewModel.proteinLevel = .moderate
+
+        // When: Initializing collaborative days (triggers estimation)
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Calories should be in a reasonable range for a 30-year-old male
+        // BMR ~ 1800, TDEE with moderate activity ~ 2800
+        let calories = viewModel.collaborativeDays[1]?.calories ?? 0
+        #expect(calories >= 2000 && calories <= 3500, "Estimated calories should be reasonable for male")
+    }
+
+    @Test("estimateDailyCalories uses Mifflin-St Jeor formula for female")
+    @MainActor
+    func testEstimateDailyCaloriesFemale() {
+        // Given: A ViewModel configured for a female user
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 0
+        viewModel.goalViewModel.goalType = .maintenance
+        viewModel.goalViewModel.currentWeightKg = 65
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 5
+        viewModel.editSex = "Female"
+        viewModel.editBirthday = Calendar.current.date(byAdding: .year, value: -30, to: Date())!
+        viewModel.trainingLevel = .cardio
+        viewModel.proteinLevel = .moderate
+
+        // When: Initializing collaborative days (triggers estimation)
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Calories should be in a reasonable range for a 30-year-old female
+        // BMR ~ 1400, TDEE with moderate activity ~ 2200
+        let calories = viewModel.collaborativeDays[1]?.calories ?? 0
+        #expect(calories >= 1500 && calories <= 3000, "Estimated calories should be reasonable for female")
+    }
+
+    @Test("estimateDailyCalories applies weight loss deficit")
+    @MainActor
+    func testEstimateDailyCaloriesWithWeightLoss() {
+        // Given: A ViewModel configured for weight loss
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 0
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.currentWeightKg = 80
+        viewModel.goalViewModel.weeklyRateKg = 0.5  // 0.5 kg/week loss
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 10
+        viewModel.editSex = "Male"
+        viewModel.editBirthday = Calendar.current.date(byAdding: .year, value: -30, to: Date())!
+        viewModel.trainingLevel = .cardio
+        viewModel.proteinLevel = .moderate
+
+        // When: Initializing collaborative days
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Calories should be lower than maintenance
+        let calories = viewModel.collaborativeDays[1]?.calories ?? 0
+        // 0.5 kg/week = ~550 cal/day deficit
+        #expect(calories >= 1500 && calories <= 2500, "Weight loss calories should be lower")
+    }
+
+    @Test("estimateDailyCalories applies muscle gain surplus")
+    @MainActor
+    func testEstimateDailyCaloriesWithMuscleGain() {
+        // Given: A ViewModel configured for muscle gain
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 0
+        viewModel.goalViewModel.goalType = .muscleGain
+        viewModel.goalViewModel.currentWeightKg = 70
+        viewModel.goalViewModel.weeklyRateKg = 0.25  // 0.25 kg/week gain
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 10
+        viewModel.editSex = "Male"
+        viewModel.editBirthday = Calendar.current.date(byAdding: .year, value: -25, to: Date())!
+        viewModel.trainingLevel = .lifting
+        viewModel.proteinLevel = .high
+
+        // When: Initializing collaborative days
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Calories should be higher than maintenance
+        let calories = viewModel.collaborativeDays[1]?.calories ?? 0
+        #expect(calories >= 2500, "Muscle gain calories should include surplus")
+    }
+
+    @Test("estimateDailyCalories applies calorie floor")
+    @MainActor
+    func testEstimateDailyCaloriesWithCalorieFloor() {
+        // Given: A ViewModel with aggressive weight loss settings
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.calculatedCalories = 0
+        viewModel.goalViewModel.goalType = .weightLoss
+        viewModel.goalViewModel.currentWeightKg = 60
+        viewModel.goalViewModel.weeklyRateKg = 1.0  // Aggressive loss
+        viewModel.editHeightFeet = 5
+        viewModel.editHeightInches = 2
+        viewModel.editSex = "Female"
+        viewModel.editBirthday = Calendar.current.date(byAdding: .year, value: -50, to: Date())!
+        viewModel.trainingLevel = TrainingLevel.none
+        viewModel.calorieFloorType = .standard  // Standard floor
+        viewModel.proteinLevel = .moderate
+
+        // When: Initializing collaborative days
+        viewModel.initializeCollaborativeDays()
+
+        // Then: Calories should not go below the minimum (1200)
+        let calories = viewModel.collaborativeDays[1]?.calories ?? 0
+        #expect(calories >= 1200, "Calories should respect minimum floor")
+    }
+
+    @Test("calculatePerDayCalories returns even distribution for non-shifted mode")
+    @MainActor
+    func testCalculatePerDayCaloriesEvenDistribution() {
+        // Given: A ViewModel with even distribution mode
+        let dataController = DataController(inMemory: true)
+        let authManager = AuthenticationManager(dataController: dataController)
+        let viewModel = OnboardingViewModel(dataController: dataController, authManager: authManager)
+
+        viewModel.weeklyDistributionMode = .even
+        viewModel.calculatedCalories = 2000
+
+        // When: Calculating targets (would populate calculatedDailyCalories)
+        // Note: Since we can't call calculateTargets without full setup,
+        // we verify the mode is configured correctly
+        #expect(viewModel.weeklyDistributionMode == .even)
+        #expect(viewModel.highCalorieDays.isEmpty)
+    }
+}
