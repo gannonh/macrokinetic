@@ -314,7 +314,7 @@ struct QuickDoseSheet: View {
                         if let errorMessage = viewModel.errorMessage {
                             Text(errorMessage)
                                 .foregroundColor(.red)
-                                .accessibilityIdentifier("no-medication-profiles-error")
+                                .accessibilityIdentifier("quick-dose-view-model-error")
                         }
                         if let serviceError = doseService.lastError {
                             Text(serviceError.localizedDescription)
