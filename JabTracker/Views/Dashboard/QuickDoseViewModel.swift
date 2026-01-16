@@ -126,6 +126,11 @@ class QuickDoseViewModel: ObservableObject {
     var canSaveDose: Bool {
         guard self.selectedMedicationProfile != nil else { return false }
         guard self.doseAmount > 0 else { return false }
+
+        // Validate dose is within therapeutic range for selected medication
+        let range = doseAmountRange
+        guard range.lowerBound > 0, range.contains(doseAmount) else { return false }
+
         guard !self.selectedInjectionSite.isEmpty else { return false }
 
         // Allow dates within reasonable range (30 days past to 30 days future)
@@ -331,11 +336,7 @@ class QuickDoseViewModel: ObservableObject {
             preferredSites: profile.preferredInjectionSites)
     }
 
-    // MARK: - Dose Saving
-
-    // NOTE: Dose saving is now handled by DoseService for PK integration
-    // This method is deprecated in favor of DoseService.saveDose()
-    // Keeping the form reset method for convenience
+    // MARK: - Form Management
 
     /// Resets form to initial state after successful save
     func resetForm() {

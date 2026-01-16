@@ -818,4 +818,48 @@ struct QuickDoseViewModelTests {
         viewModel.doseAmount = 2.4
         #expect(viewModel.doseAmount == 2.4)
     }
+
+    // MARK: - Dose Step for Multi-Step Branded Medications
+
+    @Test("doseAmountStep calculates minimum step for Mounjaro (2.5mg)")
+    @MainActor
+    func doseAmountStepMounjaroMinStep() async {
+        let profile = MedicationProfile(
+            genericName: "tirzepatide",
+            brandName: "Mounjaro",
+            currentDose: 5.0,
+            isCompounded: false
+        )
+
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+
+        let step = viewModel.doseAmountStep
+        // Mounjaro doses: [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] - smallest step is 2.5
+        #expect(step == 2.5, "Mounjaro should have 2.5mg step (smallest increment between available doses)")
+    }
+
+    // MARK: - canSaveDose Range Validation
+
+    @Test("canSaveDose returns false when dose is outside therapeutic range")
+    @MainActor
+    func canSaveDoseFailsForOutOfRangeDose() async {
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
+
+        let viewModel = QuickDoseViewModel()
+        viewModel.selectedMedicationProfile = profile
+        viewModel.selectedInjectionSite = "Thigh"
+
+        // Set dose below minimum (0.25 for semaglutide)
+        viewModel.doseAmount = 0.1
+        #expect(viewModel.canSaveDose == false, "Should not allow dose below therapeutic range")
+
+        // Set dose above maximum (2.4 for semaglutide)
+        viewModel.doseAmount = 3.0
+        #expect(viewModel.canSaveDose == false, "Should not allow dose above therapeutic range")
+
+        // Set dose within range
+        viewModel.doseAmount = 1.0
+        #expect(viewModel.canSaveDose == true, "Should allow dose within therapeutic range")
+    }
 }
