@@ -52,17 +52,19 @@ skipped: 1
     - "Delete and reinstall app to trigger fresh data seeding with medicationType fix"
   debug_session: ""
 
-- truth: "Concentration chart displays as histogram with vertical bars"
+- truth: "Concentration chart displays as histogram with discrete, separated bars"
   status: failed
-  reason: "User reported: Chart displays as area/line chart with fill, not vertical histogram bars"
+  reason: "User reported: Chart displays as area/line chart with fill, not discrete histogram bars like Google Popular Times"
   severity: major
   test: 2
-  root_cause: "Code IS using BarMark correctly, but 0.5-hour intervals over 30 days = 1440 bars that visually blend together. High-resolution time series with BarMark inherently looks like area fill. Either increase bar width or accept this is the expected visual rendering."
+  root_cause: "BarMark is used but with 0.5-hour intervals = 1440 bars that blend together with no visible gaps. Need fewer data points with explicit bar width and spacing to achieve discrete bar appearance."
   artifacts:
     - path: "JabTracker/Views/Analytics/ConcentrationTimelineChart.swift"
-      issue: "Line 183 uses BarMark correctly, visual result is dense bars that blend"
+      issue: "BarMark has no explicit width or corner radius"
     - path: "JabTracker/Models/ChartData.swift"
-      issue: "Line 162: intervalHours 0.5 creates 1440+ data points for 30-day view"
+      issue: "intervalHours 0.5 creates too many data points - need to scale with time range"
   missing:
-    - "Either accept current rendering OR increase intervalHours for wider bars OR add explicit bar width"
+    - "Scale intervalHours based on time range (e.g., 6-hour for 30d, 2-hour for 7d)"
+    - "Add explicit bar width to BarMark with gaps between bars"
+    - "Add cornerRadius to BarMark for rounded tops"
   debug_session: ""
