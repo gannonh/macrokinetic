@@ -41,7 +41,7 @@ struct ConcentrationTimelineChart: View {
 
     /// Accessibility label for the chart
     var accessibilityLabel: String? {
-        "Concentration Timeline Chart showing medication concentration over time"
+        "Concentration Bar Chart showing medication concentration levels over time"
     }
 
     /// Accessibility value describing current chart data
@@ -178,14 +178,17 @@ struct ConcentrationTimelineChart: View {
                 )
             }
 
-            // Concentration line series
+            // Concentration bar series
             ForEach(processedConcentrationPoints) { point in
-                LineMark(
+                BarMark(
                     x: .value("Time", point.date),
                     y: .value("Concentration", point.concentration)
                 )
-                .foregroundStyle(DesignTokens.Colors.primary)
-                .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
+                .foregroundStyle(DesignTokens.Colors.primary.opacity(0.8))
+                .accessibilityLabel(
+                    "Concentration at \(point.date.formatted(date: .abbreviated, time: .shortened))"
+                )
+                .accessibilityValue("\(String(format: "%.2f", point.concentration))")
             }
 
             // Dose markers - dots on the concentration line at dose times
@@ -242,7 +245,7 @@ struct ConcentrationTimelineChart: View {
     @ViewBuilder
     private func emptyChartView() -> some View {
         VStack(spacing: 16) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
+            Image(systemName: "chart.bar.xaxis")
                 .font(.system(size: 64))
                 .foregroundColor(.secondary)
 
