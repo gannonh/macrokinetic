@@ -158,59 +158,49 @@ struct ConcentrationTimelineChart: View {
             .accessibilityAddTraits(.allowsDirectInteraction)
     }
 
+    /// Maximum Y value for the chart, based on actual data with padding
+    private var chartYMax: Double {
+        let maxConcentration = processedConcentrationPoints.map(\.concentration).max() ?? 1.0
+        // Add 20% padding above the max value, minimum of 1.0
+        return max(maxConcentration * 1.2, 1.0)
+    }
+
     /// Core chart content without gestures
     @ViewBuilder
     private var chartContent: some View {
         Chart {
-            // Therapeutic range band (drawn first, behind everything)
-            if case .therapeuticWindow(let minConc, let maxConc, _) = configuration.concentrationRange {
-                RectangleMark(
-                    yStart: .value("Min", minConc),
-                    yEnd: .value("Max", maxConc)
-                )
-                .foregroundStyle(DesignTokens.Colors.success.opacity(0.15))
-                .accessibilityLabel("Therapeutic range")
-                .accessibilityValue(
-                    """
-                    Optimal concentration between \(String(format: "%.1f", minConc)) \
-                    and \(String(format: "%.1f", maxConc))
-                    """
-                )
-            }
-
-            // Concentration bar series
+            // Filled area showing concentration over time
             ForEach(processedConcentrationPoints) { point in
-                BarMark(
+                AreaMark(
                     x: .value("Time", point.date),
                     y: .value("Concentration", point.concentration)
                 )
-                .foregroundStyle(DesignTokens.Colors.primary.opacity(0.8))
-                .accessibilityLabel(
-                    "Concentration at \(point.date.formatted(date: .abbreviated, time: .shortened))"
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [
+                            DesignTokens.Colors.primary.opacity(0.6),
+                            DesignTokens.Colors.primary.opacity(0.2),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 )
-                .accessibilityValue("\(String(format: "%.2f", point.concentration))")
+                .interpolationMethod(.catmullRom)
             }
 
-            // Dose markers - dots on the concentration line at dose times
-            ForEach(processedDoseMarkers) { marker in
-                // Find the concentration at this dose time
-                if let concentrationAtDose = processedConcentrationPoints.first(where: {
-                    abs($0.date.timeIntervalSince(marker.date)) < 1800  // Within 30 min
-                }) {
-                    PointMark(
-                        x: .value("Time", concentrationAtDose.date),
-                        y: .value("Concentration", concentrationAtDose.concentration)
-                    )
-                    .foregroundStyle(DesignTokens.Colors.success)
-                    .symbolSize(100)
-                    .symbol(.circle)
-                    .accessibilityLabel("Dose administered")
-                    .accessibilityValue(
-                        "Dose: \(String(format: "%.1f", marker.amount)) mg at \(marker.date.formatted())")
-                }
+            // Line on top edge for clarity
+            ForEach(processedConcentrationPoints) { point in
+                LineMark(
+                    x: .value("Time", point.date),
+                    y: .value("Concentration", point.concentration)
+                )
+                .foregroundStyle(DesignTokens.Colors.primary)
+                .lineStyle(StrokeStyle(lineWidth: 2))
+                .interpolationMethod(.catmullRom)
             }
         }
         .frame(height: 200)
+        .chartYScale(domain: 0...chartYMax)
         .chartXAxis {
             AxisMarks(values: .automatic) { _ in
                 AxisValueLabel(format: .dateTime.month(.narrow).day())
