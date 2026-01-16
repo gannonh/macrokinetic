@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 41-glp1-analytics-fixes
 source: [41-FIX-SUMMARY.md, 41-FIX2-SUMMARY.md]
 started: 2026-01-16T17:00:00Z
-updated: 2026-01-16T17:05:00Z
+updated: 2026-01-16T17:10:00Z
 ---
 
 ## Current Test
@@ -42,7 +42,11 @@ skipped: 0
   reason: "User reported: Still shows 0% with --seed-test-90d"
   severity: major
   test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "TestDataSeeding.swift:170-178 creates MedicationProfile without startDate parameter, so it defaults to Date() (now). This makes timeOnMedicationHours ≈ 0, causing steadyStateProgress to return 0%."
+  artifacts:
+    - path: "JabTracker/Utils/TestDataSeeding.swift"
+      issue: "Lines 170-178 - MedicationProfile init missing startDate"
+    - path: "JabTracker/Models/MedicationProfile.swift"
+      issue: "Line 15 - startDate defaults to Date()"
+  missing:
+    - "Set startDate to match first dose timestamp in generated dose history"
