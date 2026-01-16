@@ -199,23 +199,38 @@ final class PKEngineUITests: XCTestCase {
             progressValue.contains("percent"),
             "Progress value should contain 'percent' for accessibility")
 
-        // AND: Steady-state explanation text exists
+        // AND: Steady-state explanation or achievement text exists
+        // With 90 days of data, steady state may be achieved, so check for either state
         let steadyStateExplanation = app.staticTexts["steady-state-explanation"]
-        XCTAssertTrue(
-            steadyStateExplanation.exists,
-            "Steady-state explanation should be displayed")
+        let steadyStateAchieved = app.staticTexts["steady-state-achieved"]
 
-        // 8. Verify explanation contains helpful timeframe information
-        let explanationText = steadyStateExplanation.label
-        XCTAssertFalse(
-            explanationText.isEmpty,
-            "Steady-state explanation should not be empty")
+        // Either the explanation (if < 95%) or achieved message (if >= 95%) should be visible
+        let hasExplanationOrAchieved = steadyStateExplanation.exists || steadyStateAchieved.exists
         XCTAssertTrue(
-            explanationText.contains("4-5 weeks") || explanationText.contains("achieved"),
-            "Explanation should mention timeframe or achievement status")
+            hasExplanationOrAchieved,
+            "Either steady-state explanation or achieved message should be displayed")
+
+        // 8. Verify explanation or achievement text has appropriate content
+        if steadyStateExplanation.exists {
+            let explanationText = steadyStateExplanation.label
+            XCTAssertFalse(
+                explanationText.isEmpty,
+                "Steady-state explanation should not be empty")
+            XCTAssertTrue(
+                explanationText.contains("4-5 weeks"),
+                "Explanation should mention timeframe")
+        } else if steadyStateAchieved.exists {
+            let achievedText = steadyStateAchieved.label
+            XCTAssertFalse(
+                achievedText.isEmpty,
+                "Steady-state achieved message should not be empty")
+            XCTAssertTrue(
+                achievedText.lowercased().contains("achieved"),
+                "Achievement message should indicate steady state achieved")
+        }
 
         // 9. Verify steady-state progress percentage is valid
-        // With 3 doses, progress should be 0% or greater but less than 100%
+        // With 90 days of data, progress should be high (close to or at 100%)
         let percentageText = steadyStatePercentage.label
         XCTAssertTrue(
             percentageText.contains("%"),

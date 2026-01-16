@@ -403,6 +403,49 @@ enum TestUtilities {
         adherenceSegment.tap()
     }
 
+    /// Navigate to GLP-1 Analytics (via More tab -> GLP-1 Programs -> Analytics)
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance
+    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    static func navigateToGLP1Analytics(_ app: XCUIApplication, timeout: TimeInterval = 5) {
+        // Navigate to More tab
+        self.navigateToTab(app, tabName: "More")
+
+        // Tap GLP-1 Programs row (NavigationLink exposes as Button in List)
+        let glp1Row = app.buttons["glp1-programs-row"].firstMatch
+        if !glp1Row.waitForExistence(timeout: 3) {
+            // Debug: capture screenshot if element not found
+            debugScreenshot(app, name: "more-menu-before-glp1")
+            print(app.debugDescription)
+        }
+        XCTAssertTrue(
+            glp1Row.waitForExistence(timeout: timeout),
+            "GLP-1 Programs row should exist in More menu")
+        glp1Row.tap()
+
+        // Wait for GLP-1 Programs view to load
+        // The segmented control has identifier 'glp1-programs-view'
+        let sectionPicker = app.segmentedControls["glp1-programs-view"].firstMatch
+        if !sectionPicker.waitForExistence(timeout: 3) {
+            // Debug: capture screenshot if picker not found
+            debugScreenshot(app, name: "glp1-programs-before-picker")
+            print(app.debugDescription)
+        }
+        XCTAssertTrue(
+            sectionPicker.waitForExistence(timeout: timeout),
+            "GLP-1 section picker should exist")
+
+        // Select Analytics if not already selected
+        let analyticsButton = sectionPicker.buttons["Analytics"]
+        if analyticsButton.exists && !analyticsButton.isSelected {
+            analyticsButton.tap()
+        }
+
+        // Wait for concentration section to load
+        let concentrationSection = app.otherElements["concentration-section"].firstMatch
+        _ = concentrationSection.waitForExistence(timeout: 5)
+    }
+
     // MARK: - ShortcutsSheet Helpers
 
     /// Open ShortcutsSheet by tapping the floating Add button

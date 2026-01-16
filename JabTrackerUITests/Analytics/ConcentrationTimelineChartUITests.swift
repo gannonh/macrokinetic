@@ -61,7 +61,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         )
 
         // THEN: Chart renders with concentration line over time
-        let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+        let chartElement = app.otherElements["concentration-section"].firstMatch
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5),
             "ConcentrationTimelineChart should display with dose data")
@@ -90,7 +90,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
         // Wait for chart to load
 
-        let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+        let chartElement = app.otherElements["concentration-section"].firstMatch
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should exist for interaction testing")
 
@@ -131,7 +131,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
         // Wait for chart to load
 
-        let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+        let chartElement = app.otherElements["concentration-section"].firstMatch
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should display for time period testing")
 
@@ -188,7 +188,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         // Wait for chart to load
 
         // WHEN: User navigates chart with VoiceOver enabled
-        let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+        let chartElement = app.otherElements["concentration-section"].firstMatch
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5), "Chart should display for accessibility testing")
 
@@ -246,7 +246,7 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         analyticsTab.tap()
 
         // Wait for chart to load
-        let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+        let chartElement = app.otherElements["concentration-section"].firstMatch
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 10),
             "Chart should load with large dataset within reasonable time")
@@ -302,11 +302,15 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // WHEN: User navigates to Shots tab and views concentration section
-        TestUtilities.navigateToConcentration(app)
+        // Wait for app to fully load and tab bar to be ready
+        let tabBar = app.tabBars.element
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist after app launch")
+
+        // WHEN: User navigates to concentration chart via More -> GLP-1 Programs -> Analytics
+        TestUtilities.navigateToGLP1Analytics(app)
 
         // Wait for chart to load
-        let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+        let chartElement = app.otherElements["concentration-section"].firstMatch
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5),
             "Concentration timeline chart should display"
@@ -356,11 +360,15 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // WHEN: User navigates to Shots tab and views concentration section
-        TestUtilities.navigateToConcentration(app)
+        // Wait for app to fully load and tab bar to be ready
+        let tabBar = app.tabBars.element
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist after app launch")
+
+        // WHEN: User navigates to concentration chart via More -> GLP-1 Programs -> Analytics
+        TestUtilities.navigateToGLP1Analytics(app)
 
         // Wait for chart to load
-        let chartElement = app.otherElements["concentration-timeline-chart"].firstMatch
+        let chartElement = app.otherElements["concentration-section"].firstMatch
         XCTAssertTrue(
             chartElement.waitForExistence(timeout: 5),
             "Concentration timeline chart should display"
