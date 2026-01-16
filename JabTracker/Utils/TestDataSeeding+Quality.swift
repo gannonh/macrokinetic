@@ -103,36 +103,49 @@
             let today = Date()
 
             // Use existing user or create new user
+            // Ensure biometrics are set for TDEE calculation testing
+            var birthComponents = DateComponents()
+            birthComponents.year = 1970
+            birthComponents.month = 3
+            birthComponents.day = 12
+            let birthDate = Calendar.current.date(from: birthComponents)
+
             let user: User
             if let existingUser = existingUser {
                 user = existingUser
+                // Fill in missing biometrics on existing user
+                if user.heightCm == nil { user.heightCm = 188.0 }
+                if user.gender.isEmpty { user.gender = "male" }
+                if user.dateOfBirth == nil { user.dateOfBirth = birthDate }
             } else {
                 user = User(
                     email: "test@example.com",
                     name: "Test User",
-                    weight: 90.0
+                    dateOfBirth: birthDate,
+                    heightCm: 188.0,  // 6'2"
+                    gender: "male",
+                    weight: 185.0,
+                    weightUnit: "lbs"
                 )
-                user.heightCm = 175.0
-                user.gender = "male"
-                user.dateOfBirth = calendar.date(byAdding: .year, value: -30, to: today)
                 context.insert(user)
             }
 
             // Create nutrition goal
+            // 185 lbs = 84 kg, target 175 lbs = 79 kg
             let goal = NutritionGoal(
                 goalType: .weightLoss,
                 isActive: true,
-                startingWeightKg: 90.0,
-                targetWeightKg: 80.0,
+                startingWeightKg: 84.0,
+                targetWeightKg: 79.0,
                 targetDate: calendar.date(byAdding: .month, value: 6, to: today) ?? today,
                 weeklyWeightChangePaceKg: -0.5,
-                dailyCalorieTarget: 2000.0,
-                dailyProteinTargetGrams: 150.0,
-                dailyCarbTargetGrams: 200.0,
-                dailyFatTargetGrams: 65.0
+                dailyCalorieTarget: 2200.0,
+                dailyProteinTargetGrams: 170.0,
+                dailyCarbTargetGrams: 220.0,
+                dailyFatTargetGrams: 75.0
             )
-            goal.initialEstimatedTDEE = 2400.0
-            goal.lastCalculatedTDEE = 2350.0
+            goal.initialEstimatedTDEE = 2700.0
+            goal.lastCalculatedTDEE = 2650.0
             goal.lastTDEECalculationDate = calendar.date(byAdding: .day, value: -7, to: today)
             goal.lastCheckInDate = calendar.date(byAdding: .day, value: -10, to: today)
             goal.checkInDayOfWeek = calendar.component(.weekday, from: today)
@@ -219,9 +232,10 @@
             let today = Date()
             var count = 0
 
-            // Starting and ending weights for trend
-            let startWeight = 92.0  // kg
-            let endWeight = 88.0  // kg
+            // Starting and ending weights for trend (kg)
+            // 185 lbs = 84 kg start, 175 lbs = 79 kg end (realistic 1-year weight loss)
+            let startWeight = 84.0  // kg (185 lbs)
+            let endWeight = 79.0  // kg (175 lbs)
 
             for dayOffset in 0..<daysOfHistory {
                 guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
@@ -419,8 +433,8 @@
             let today = Date()
             var count = 0
 
-            let initialTDEE = 2400.0
-            let currentTDEE = 2350.0
+            let initialTDEE = 2700.0
+            let currentTDEE = 2650.0
             let tdeeRange = initialTDEE - currentTDEE
 
             for dayOffset in 0..<daysOfHistory {

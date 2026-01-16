@@ -176,7 +176,7 @@ struct ConcentrationTimelineChartTests {
 
         // THEN: Chart should provide meaningful accessibility information
         #expect(
-            accessibilityLabel?.contains("Concentration Timeline") == true,
+            accessibilityLabel?.contains("Concentration Area Chart") == true,
             "Should include chart type in accessibility label")
         #expect(
             accessibilityValue?.contains("concentration") == true,

@@ -226,10 +226,10 @@ struct ConcentrationCardTests {
         self.context.insert(user)
         self.context.insert(newMedicationProfile)
 
-        // Test with no doses (brand new profile) - returns percentage
+        // Test with no doses (brand new profile) - returns decimal (0.0-1.0)
         var steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
         #expect(
-            steadyStateProgress < 5.0, "New medication should have minimal steady state progress (< 5%)")
+            steadyStateProgress < 0.05, "New medication should have minimal steady state progress (< 5%)")
 
         // Add doses over time to simulate progress
         let testTime = Date()
@@ -247,13 +247,13 @@ struct ConcentrationCardTests {
         // When: Calculating steady state progress
         steadyStateProgress = self.pkEngine.calculateSteadyStateProgress(for: newMedicationProfile)
 
-        // Then: Progress should be between 0 and 100 (percentage)
+        // Then: Progress should be between 0.0 and 1.0 (decimal)
         #expect(
-            steadyStateProgress >= 0.0 && steadyStateProgress <= 100.0,
-            "Steady state progress should be between 0 and 100%")
+            steadyStateProgress >= 0.0 && steadyStateProgress <= 1.0,
+            "Steady state progress should be between 0.0 and 1.0")
 
         // And: 8 weeks should show significant progress (semaglutide ~5 half-lives to steady state)
-        #expect(steadyStateProgress > 50.0, "8 weeks should show substantial steady state progress")
+        #expect(steadyStateProgress > 0.50, "8 weeks should show substantial steady state progress")
     }
 
     @Test("ConcentrationCard handles multiple medications independently")
@@ -410,6 +410,116 @@ struct ConcentrationCardTests {
         #expect(
             accessibilityLabel.contains("concentration"),
             "Accessibility label should include 'concentration' for context")
+    }
+
+    // MARK: - Steady State Progress Edge Case Tests
+
+    @Test("Steady state progress is clamped to 0.0-1.0 range")
+    func steadyStateProgressClampedToValidRange() async throws {
+        // Test 1: Brand new medication (startDate = now) should be near 0
+        let user = self.createTestUser()
+        let brandNewProfile = MedicationProfile(
+            genericName: Medication.semaglutide.displayName,
+            brandName: "Test Brand",
+            currentDose: 1.0,
+            startDate: Date(),  // Started right now
+            medicationType: Medication.semaglutide.rawValue)
+        brandNewProfile.user = user
+
+        self.context.insert(user)
+        self.context.insert(brandNewProfile)
+        try self.context.save()
+
+        let newProgress = self.pkEngine.calculateSteadyStateProgress(for: brandNewProfile)
+
+        // Brand new medication should have minimal progress (< 1%)
+        #expect(newProgress >= 0.0, "Progress should not be negative")
+        #expect(newProgress < 0.01, "Brand new medication should have < 1% progress")
+
+        // Test 2: Medication started 1 year ago should be capped at 1.0
+        let veryOldProfile = MedicationProfile(
+            genericName: Medication.semaglutide.displayName,
+            brandName: "Test Brand",
+            currentDose: 1.0,
+            startDate: Date().addingTimeInterval(-365 * 24 * 3600),  // 1 year ago
+            medicationType: Medication.semaglutide.rawValue)
+        veryOldProfile.user = user
+
+        self.context.insert(veryOldProfile)
+        try self.context.save()
+
+        let oldProgress = self.pkEngine.calculateSteadyStateProgress(for: veryOldProfile)
+
+        // 1 year should result in exactly 1.0 (capped, not exceeding)
+        #expect(oldProgress == 1.0, "Very old medication should have 100% progress (capped at 1.0)")
+
+        // Test 3: Tirzepatide (5-day half-life) vs Semaglutide (7-day half-life)
+        // Tirzepatide reaches steady state faster (5 * 5 = 25 days vs 5 * 7 = 35 days)
+        let thirtyDaysAgo = Date().addingTimeInterval(-30 * 24 * 3600)
+
+        let semaglutideProfile = MedicationProfile(
+            genericName: Medication.semaglutide.displayName,
+            brandName: "Ozempic",
+            currentDose: 1.0,
+            startDate: thirtyDaysAgo,
+            medicationType: Medication.semaglutide.rawValue)
+        semaglutideProfile.user = user
+
+        let tirzepatideProfile = MedicationProfile(
+            genericName: Medication.tirzepatide.displayName,
+            brandName: "Mounjaro",
+            currentDose: 5.0,
+            startDate: thirtyDaysAgo,
+            medicationType: Medication.tirzepatide.rawValue)
+        tirzepatideProfile.user = user
+
+        self.context.insert(semaglutideProfile)
+        self.context.insert(tirzepatideProfile)
+        try self.context.save()
+
+        let semaglutideProgress = self.pkEngine.calculateSteadyStateProgress(for: semaglutideProfile)
+        let tirzepatideProgress = self.pkEngine.calculateSteadyStateProgress(for: tirzepatideProfile)
+
+        // Tirzepatide should have higher progress at 30 days due to shorter half-life
+        // Semaglutide: 30 / (7 * 5 * 24) = 30 / 840 hours ~ 0.857 (85.7%)
+        // Tirzepatide: 30 / (5 * 5 * 24) = 30 / 600 hours = 1.0 (100%, capped)
+        #expect(
+            tirzepatideProgress >= semaglutideProgress,
+            "Tirzepatide (shorter half-life) should reach steady state faster than semaglutide")
+
+        // Verify both are within valid bounds
+        #expect(
+            semaglutideProgress >= 0.0 && semaglutideProgress <= 1.0,
+            "Semaglutide progress should be in valid 0.0-1.0 range")
+        #expect(
+            tirzepatideProgress >= 0.0 && tirzepatideProgress <= 1.0,
+            "Tirzepatide progress should be in valid 0.0-1.0 range")
+
+        // Verify tirzepatide at 30 days should be at or near 100%
+        // timeToSteadyStateDays = 5 * 5 = 25 days, so 30 days > 100%
+        #expect(tirzepatideProgress == 1.0, "Tirzepatide at 30 days should be at steady state (100%)")
+    }
+
+    @Test("Steady state progress handles negative time gracefully")
+    func steadyStateProgressHandlesNegativeTime() async throws {
+        let user = self.createTestUser()
+        // Create profile with future start date (edge case - user sets future date by mistake)
+        let futureProfile = MedicationProfile(
+            genericName: Medication.semaglutide.displayName,
+            brandName: "Test Brand",
+            currentDose: 1.0,
+            startDate: Date().addingTimeInterval(7 * 24 * 3600),  // 1 week in the future
+            medicationType: Medication.semaglutide.rawValue)
+        futureProfile.user = user
+
+        self.context.insert(user)
+        self.context.insert(futureProfile)
+        try self.context.save()
+
+        let futureProgress = self.pkEngine.calculateSteadyStateProgress(for: futureProfile)
+
+        // Negative time on medication should return 0, not negative
+        #expect(futureProgress == 0.0, "Future start date should return 0% progress")
     }
 
     // MARK: - Helper Methods

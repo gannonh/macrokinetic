@@ -148,30 +148,45 @@
             if let existingUser = existingUser {
                 user = existingUser
             } else {
+                // Create user with realistic biometrics for TDEE calculation testing
+                var birthComponents = DateComponents()
+                birthComponents.year = 1970
+                birthComponents.month = 3
+                birthComponents.day = 12
+                let birthDate = Calendar.current.date(from: birthComponents)
+
                 user = User(
                     email: "test@example.com",
                     name: "Test User",
-                    weight: 80.0
+                    dateOfBirth: birthDate,
+                    heightCm: 188.0,  // 6'2"
+                    gender: "male",
+                    weight: 185.0,
+                    weightUnit: "lbs"
                 )
                 context.insert(user)
             }
 
-            // Create medication profile
-            let profile = MedicationProfile(
-                genericName: config.medication.rawValue,
-                brandName: config.brandName,
-                currentDose: config.doseAmount,
-                medicationType: config.medication.rawValue
-            )
-            profile.user = user
-            context.insert(profile)
-
             // Generate doses based on medication frequency
+            // NOTE: Generate dose schedule FIRST to calculate proper startDate
             let doseSchedule = generateDoseSchedule(
                 for: config.medication,
                 daysOfHistory: config.daysOfHistory,
                 targetDoseCount: targetDoseCount
             )
+
+            // Create medication profile with startDate set to earliest dose date
+            // This is crucial for steady-state progress calculation (timeOnMedication)
+            let earliestDoseDate = doseSchedule.first ?? Date()
+            let profile = MedicationProfile(
+                genericName: config.medication.rawValue,
+                brandName: config.brandName,
+                currentDose: config.doseAmount,
+                startDate: earliestDoseDate,
+                medicationType: config.medication.rawValue
+            )
+            profile.user = user
+            context.insert(profile)
 
             var createdDoses: [Dose] = []
             let skippedDoses: [Dose] = []
@@ -358,13 +373,28 @@
         // MARK: - Quick Helpers
 
         /// Create a test user with default properties
+        /// Includes realistic biometrics for TDEE calculation testing
         @MainActor
         static func createTestUser(
             email: String = "test@example.com",
             name: String = "Test User",
-            weight: Double = 80.0
+            weight: Double = 185.0
         ) -> User {
-            User(email: email, name: name, weight: weight)
+            var birthComponents = DateComponents()
+            birthComponents.year = 1970
+            birthComponents.month = 3
+            birthComponents.day = 12
+            let birthDate = Calendar.current.date(from: birthComponents)
+
+            return User(
+                email: email,
+                name: name,
+                dateOfBirth: birthDate,
+                heightCm: 188.0,  // 6'2"
+                gender: "male",
+                weight: weight,
+                weightUnit: "lbs"
+            )
         }
 
         /// Create a test medication profile

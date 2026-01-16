@@ -221,7 +221,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-high"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-low"
@@ -237,11 +237,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-7d"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-new-user"

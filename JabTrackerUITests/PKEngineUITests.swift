@@ -150,16 +150,9 @@ final class PKEngineUITests: XCTestCase {
     /// And: Typical timeframe to reach steady-state is indicated
     @MainActor
     func testSteadyStateProgressDisplay() throws {
-        // GIVEN: User has 3 doses logged (simulates regular dosing pattern)
-        let app = TestUtilities.launchAppWithSeededData(
-            preset: .custom(
-                doseCount: 3,
-                medicationProfiles: 1,
-                medication: "semaglutide",
-                brand: "Ozempic",
-                dose: "1.0"
-            )
-        )
+        // GIVEN: User has 90 days of data (approximately 13 weekly doses)
+        // Using ninetyDays preset which sets MedicationProfile.startDate correctly
+        let app = TestUtilities.launchAppWithSeededData(preset: .ninetyDays)
 
         // WHEN: User views the dashboard
         TestUtilities.navigateToTab(app, tabName: "Dashboard")
@@ -206,23 +199,38 @@ final class PKEngineUITests: XCTestCase {
             progressValue.contains("percent"),
             "Progress value should contain 'percent' for accessibility")
 
-        // AND: Steady-state explanation text exists
+        // AND: Steady-state explanation or achievement text exists
+        // With 90 days of data, steady state may be achieved, so check for either state
         let steadyStateExplanation = app.staticTexts["steady-state-explanation"]
-        XCTAssertTrue(
-            steadyStateExplanation.exists,
-            "Steady-state explanation should be displayed")
+        let steadyStateAchieved = app.staticTexts["steady-state-achieved"]
 
-        // 8. Verify explanation contains helpful timeframe information
-        let explanationText = steadyStateExplanation.label
-        XCTAssertFalse(
-            explanationText.isEmpty,
-            "Steady-state explanation should not be empty")
+        // Either the explanation (if < 95%) or achieved message (if >= 95%) should be visible
+        let hasExplanationOrAchieved = steadyStateExplanation.exists || steadyStateAchieved.exists
         XCTAssertTrue(
-            explanationText.contains("4-5 weeks") || explanationText.contains("achieved"),
-            "Explanation should mention timeframe or achievement status")
+            hasExplanationOrAchieved,
+            "Either steady-state explanation or achieved message should be displayed")
+
+        // 8. Verify explanation or achievement text has appropriate content
+        if steadyStateExplanation.exists {
+            let explanationText = steadyStateExplanation.label
+            XCTAssertFalse(
+                explanationText.isEmpty,
+                "Steady-state explanation should not be empty")
+            XCTAssertTrue(
+                explanationText.contains("4-5 weeks"),
+                "Explanation should mention timeframe")
+        } else if steadyStateAchieved.exists {
+            let achievedText = steadyStateAchieved.label
+            XCTAssertFalse(
+                achievedText.isEmpty,
+                "Steady-state achieved message should not be empty")
+            XCTAssertTrue(
+                achievedText.lowercased().contains("achieved"),
+                "Achievement message should indicate steady state achieved")
+        }
 
         // 9. Verify steady-state progress percentage is valid
-        // With 3 doses, progress should be 0% or greater but less than 100%
+        // With 90 days of data, progress should be high (close to or at 100%)
         let percentageText = steadyStatePercentage.label
         XCTAssertTrue(
             percentageText.contains("%"),
@@ -243,6 +251,12 @@ final class PKEngineUITests: XCTestCase {
             XCTAssertLessThanOrEqual(
                 percentage, 100,
                 "Steady-state percentage should not exceed 100%")
+
+            // UAT REQUIREMENT: With 90 days of data, steady state should show meaningful progress
+            // Expected: ~100% for 90 days (5+ half-lives of semaglutide at ~7 days each)
+            XCTAssertGreaterThan(
+                percentage, 0,
+                "With 90 days of dose history, steady-state progress should be > 0%")
         }
     }
 

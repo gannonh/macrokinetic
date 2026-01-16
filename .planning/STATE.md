@@ -10,19 +10,19 @@
 
 ## Current Position
 
-Phase: 40 of 43 (GLP-1 Dose Adjustments) - COMPLETE
-Plan: All plans complete (1/1)
-Status: PR Review complete - ready for milestone completion
-Last activity: 2026-01-15 - PR Review complete (CI + reviews passed)
+Phase: 41 of 43 (GLP-1 Analytics Fixes) - COMPLETE
+Plan: All plans complete (3/3 including FIX plan)
+Status: PR Review complete - ready for CodeRabbit review or merge
+Last activity: 2026-01-16 - PR Review complete (all critical/important issues fixed)
 
-Progress: ███░░░░░░░ 25%
+Progress: ██████░░░░ 60%
 
 ## GitHub Tracking
 
 Issue: N/A
-PR: #337
-Branch: feat/v0.9.0-improvements-fixes
-Status: PR Review complete, ready for merge
+PR: #339
+Branch: feat/41-glp1-analytics-fixes
+Status: PR Review complete - ready for CodeRabbit review or merge
 
 ## Performance Metrics
 
@@ -40,10 +40,26 @@ Status: PR Review complete, ready for merge
 | 36    | 0     | skipped | -        |
 | 37    | 1     | ~15 min | 15 min   |
 | 38    | 1     | 7 min   | 7 min    |
+| 41    | 3     | ~20 min | 7 min    |
 
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 41 decisions (FIX plan):**
+- Use 0.5-hour sampling interval for histogram (4x increase from 2.0 hours)
+- Calculate optimal therapeutic concentration as midpoint of min/max
+- Disable design token lint rules for chart-specific color constants (internal implementation)
+
+**Phase 41 decisions (Plan 01):**
+- Changed steadyStateProgress return type from percentage (0-100) to decimal (0.0-1.0)
+- UI code already expected decimal and multiplied by 100, so only API change needed
+- Pharmacokinetics progress values should always return decimals (0.0-1.0), let UI format as percentage
+
+**Phase 41 decisions (Plan 02):**
+- Use 0.8 opacity on bars to allow therapeutic range band to show through
+- BarMark auto-determines bar width based on data density
+- Per-bar accessibility labels with date/time and concentration value
 
 **Phase 40 decisions (Plan 01):**
 - Stepper control chosen over TextField for better UX with discrete dose increments
@@ -85,13 +101,13 @@ None.
 
 ## Project Alignment
 
-Last checked: 2026-01-15
+Last checked: 2026-01-16
 Status: ✓ Aligned
-Assessment: Phase 39 complete, ready to plan Phase 40.
+Assessment: Phase 41-FIX complete. UAT issues resolved: medicationType param, 0.5hr sampling, therapeuticWindow config.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-15T20:45:00Z
-Stopped at: Plan 40-01 complete
+Last session: 2026-01-16T14:44:52Z
+Stopped at: Completed 41-FIX-PLAN.md (3 UAT fixes applied)
 Resume file: None

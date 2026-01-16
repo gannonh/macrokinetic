@@ -8,7 +8,7 @@ file_length:
   error: 650
 
 type_body_length:
-  warning: 900  # AuthenticationManager seeding logic + Apple credential validation
+  warning: 920  # AuthenticationManager seeding logic + Apple credential validation + biometrics
   error: 1000
 
 large_tuple:

@@ -362,15 +362,15 @@ struct PharmacokineticsEngineTests {
 
         let progress = self.engine.calculateSteadyStateProgress(for: medicationProfile)
 
-        // After 1 week with 7-day half-life, should be 1/5 = 20% toward steady state
-        let expectedProgress = (7.0 / (7.0 * 5)) * 100  // 20%
-        let tolerance = 5.0  // 5% tolerance
+        // After 1 week with 7-day half-life, should be 1/5 = 0.20 toward steady state
+        let expectedProgress = 7.0 / (7.0 * 5)  // 0.20 (20% as decimal)
+        let tolerance = 0.05  // 5% tolerance as decimal
 
         #expect(
             abs(progress - expectedProgress) < tolerance,
-            "Steady state progress after 1 week should be ~20%, got \(progress)")
+            "Steady state progress after 1 week should be ~0.20 (20%), got \(progress)")
         #expect(progress >= 0, "Progress should be non-negative")
-        #expect(progress <= 100, "Progress should not exceed 100%")
+        #expect(progress <= 1.0, "Progress should not exceed 1.0")
     }
 
     @Test("Calculate steady state progress at steady state")
@@ -382,8 +382,8 @@ struct PharmacokineticsEngineTests {
 
         let progress = self.engine.calculateSteadyStateProgress(for: medicationProfile)
 
-        #expect(progress >= 95.0, "After 40 days (>5 half-lives), should be at steady state")
-        #expect(progress <= 100.0, "Progress should not exceed 100%")
+        #expect(progress >= 0.95, "After 40 days (>5 half-lives), should be at steady state")
+        #expect(progress <= 1.0, "Progress should not exceed 1.0")
     }
 
     @Test("Calculate steady state progress different medications")
@@ -398,13 +398,13 @@ struct PharmacokineticsEngineTests {
 
             let progress = self.engine.calculateSteadyStateProgress(for: medicationProfile)
 
-            // After 1 half-life, should be 20% toward steady state for all medications
-            let expectedProgress = 20.0
-            let tolerance = 5.0
+            // After 1 half-life, should be 0.20 toward steady state for all medications
+            let expectedProgress = 0.20  // 20% as decimal
+            let tolerance = 0.05  // 5% tolerance as decimal
 
             #expect(
                 abs(progress - expectedProgress) < tolerance,
-                "\(medication.displayName) steady state progress after 1 half-life should be ~20%, got \(progress)"
+                "\(medication.displayName) steady state progress after 1 half-life should be ~0.20 (20%), got \(progress)"
             )
         }
     }
@@ -671,8 +671,8 @@ struct PharmacokineticsEngineTests {
             let progress = self.engine.calculateSteadyStateProgress(for: medicationProfile)
 
             #expect(
-                progress >= 95.0,
-                "\(medication.displayName) should be at steady state after 5 half-lives, got \(progress)%")
+                progress >= 0.95,
+                "\(medication.displayName) should be at steady state after 5 half-lives, got \(progress)")
         }
     }
 

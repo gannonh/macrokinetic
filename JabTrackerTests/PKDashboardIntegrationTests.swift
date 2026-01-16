@@ -261,11 +261,11 @@ struct PKDashboardIntegrationTests {
             for: liraglutideProfile)
 
         #expect(
-            semaglutideSteadyState >= 0.0 && semaglutideSteadyState <= 100.0,
-            "Semaglutide steady state should be valid percentage (0-100)")
+            semaglutideSteadyState >= 0.0 && semaglutideSteadyState <= 1.0,
+            "Semaglutide steady state should be valid decimal (0.0-1.0)")
         #expect(
-            liraglutideSteadyState >= 0.0 && liraglutideSteadyState <= 100.0,
-            "Liraglutide steady state should be valid percentage (0-100)")
+            liraglutideSteadyState >= 0.0 && liraglutideSteadyState <= 1.0,
+            "Liraglutide steady state should be valid decimal (0.0-1.0)")
     }
 
     // MARK: - Test: Dose Editing Updates Calculations

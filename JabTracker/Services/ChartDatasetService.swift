@@ -37,24 +37,41 @@ class ChartDatasetService {
         timePeriod: ChartDataProcessor.TimePeriod = .last30Days
     ) -> ConcentrationChartDataset? {
         let validProfiles = extractValidProfiles(from: profiles)
-        guard !validProfiles.isEmpty else { return nil }
+        guard !validProfiles.isEmpty else {
+            Self.logger.info("generateChartDataset: No valid profiles with doses found")
+            return nil
+        }
 
         let timeRange = calculateTimeRange(from: validProfiles)
-        guard let timeRange = timeRange else { return nil }
+        guard let timeRange = timeRange else {
+            Self.logger.warning(
+                "generateChartDataset: Could not calculate time range from \(validProfiles.count) profiles"
+            )
+            return nil
+        }
 
-        let (concentrationCurves, allMarkers) = processProfiles(validProfiles, timeRange: timeRange)
+        let (concentrationCurves, allMarkers) = processProfiles(
+            validProfiles, timeRange: timeRange, timePeriod: timePeriod)
 
         guard !concentrationCurves.isEmpty, !allMarkers.isEmpty else {
+            Self.logger.warning(
+                "generateChartDataset: Generated empty curves/markers for \(validProfiles.count) profiles"
+            )
             return nil
         }
 
         // Convert TimePeriod to TimeRange for chart configuration
         let chartTimeRange = convertToTimeRange(timePeriod)
 
+        // Extract therapeutic window from first profile's medication
+        let concentrationRange = extractTherapeuticRange(from: validProfiles)
+
         return ConcentrationChartDataset(
             concentrationCurves: concentrationCurves,
             doseMarkers: allMarkers,
-            configuration: .default.withTimeRange(chartTimeRange)
+            configuration: .default
+                .withTimeRange(chartTimeRange)
+                .withConcentrationRange(concentrationRange)
         )
     }
 
@@ -72,24 +89,38 @@ class ChartDatasetService {
     ) -> ConcentrationChartDataset? {
         // Filter out profiles with no doses
         let validProfiles = profilesWithDoses.filter { !$0.1.isEmpty }
-        guard !validProfiles.isEmpty else { return nil }
+        guard !validProfiles.isEmpty else {
+            Self.logger.info("generateChartDataset(profilesWithDoses:): No profiles with doses provided")
+            return nil
+        }
 
         let timeRange = calculateTimeRange(from: validProfiles)
-        guard let timeRange = timeRange else { return nil }
+        guard let timeRange = timeRange else {
+            Self.logger.warning("generateChartDataset(profilesWithDoses:): Could not calculate time range")
+            return nil
+        }
 
-        let (concentrationCurves, allMarkers) = processProfiles(validProfiles, timeRange: timeRange)
+        let (concentrationCurves, allMarkers) = processProfiles(
+            validProfiles, timeRange: timeRange, timePeriod: timePeriod)
 
         guard !concentrationCurves.isEmpty, !allMarkers.isEmpty else {
+            let count = validProfiles.count
+            Self.logger.warning("generateChartDataset(profilesWithDoses:): Generated empty curves/markers for \(count)")
             return nil
         }
 
         // Convert TimePeriod to TimeRange for chart configuration
         let chartTimeRange = convertToTimeRange(timePeriod)
 
+        // Extract therapeutic window from first profile's medication
+        let concentrationRange = extractTherapeuticRange(from: validProfiles)
+
         return ConcentrationChartDataset(
             concentrationCurves: concentrationCurves,
             doseMarkers: allMarkers,
-            configuration: .default.withTimeRange(chartTimeRange)
+            configuration: .default
+                .withTimeRange(chartTimeRange)
+                .withConcentrationRange(concentrationRange)
         )
     }
 
@@ -107,6 +138,39 @@ class ChartDatasetService {
         case .all:
             return .automatic
         }
+    }
+
+    /// Extracts therapeutic range from first medication profile for chart configuration
+    ///
+    /// Note: When multiple medications are present, only the first profile's therapeutic
+    /// window is used. This may not be ideal for users tracking multiple GLP-1 medications
+    /// with different therapeutic ranges.
+    ///
+    /// - Parameter profiles: Array of medication profiles with doses
+    /// - Returns: ConcentrationRange configured with therapeutic window, or .automatic if no medication found
+    private func extractTherapeuticRange(from profiles: [(MedicationProfile, [Dose])]) -> ConcentrationRange {
+        guard let firstProfile = profiles.first?.0 else {
+            Self.logger.info("extractTherapeuticRange: No profiles provided, using automatic range")
+            return .automatic
+        }
+
+        guard let medication = firstProfile.medication else {
+            let name = firstProfile.genericName
+            Self.logger.warning("extractTherapeuticRange: Profile '\(name)' has no medication - using automatic range")
+            return .automatic
+        }
+
+        // Get therapeutic window values from medication
+        let minConcentration = medication.therapeuticMinConcentration
+        let maxConcentration = medication.therapeuticMaxConcentration
+        // Optimal is midpoint of therapeutic range
+        let optimalConcentration = (minConcentration + maxConcentration) / 2.0
+
+        return .therapeuticWindow(
+            min: minConcentration,
+            max: maxConcentration,
+            optimal: optimalConcentration
+        )
     }
 
     // MARK: - Private Helper Methods
@@ -135,7 +199,8 @@ class ChartDatasetService {
     /// Process all profiles to generate concentration curves and dose markers
     private func processProfiles(
         _ validProfiles: [(MedicationProfile, [Dose])],
-        timeRange: ClosedRange<Date>
+        timeRange: ClosedRange<Date>,
+        timePeriod: ChartDataProcessor.TimePeriod
     ) -> ([ConcentrationCurve], [AdvancedDoseMarker]) {
         Self.logger.debug("🔧 processProfiles() called with \(validProfiles.count, privacy: .public) profiles")
         var concentrationCurves: [ConcentrationCurve] = []
@@ -156,7 +221,9 @@ class ChartDatasetService {
             )
 
             // Use doses from tuple instead of profile.doses relationship
-            if let curve = createConcentrationCurve(for: profile, doses: doses, timeRange: timeRange) {
+            if let curve = createConcentrationCurve(
+                for: profile, doses: doses, timeRange: timeRange, timePeriod: timePeriod)
+            {
                 concentrationCurves.append(curve)
                 Self.logger.debug("  ✅ Generated curve with \(curve.points.count, privacy: .public) points")
             } else {
@@ -184,12 +251,16 @@ class ChartDatasetService {
     private func createConcentrationCurve(
         for profile: MedicationProfile,
         doses: [Dose],
-        timeRange: ClosedRange<Date>
+        timeRange: ClosedRange<Date>,
+        timePeriod: ChartDataProcessor.TimePeriod
     ) -> ConcentrationCurve? {
+        // Use dynamic interval based on time period for appropriate data density
+        let interval = ChartDataProcessor.intervalHours(for: timePeriod)
         let concentrationPoints = chartDataProcessor.generateConcentrationTimeline(
             for: profile,
             doses: doses,  // Use explicit doses instead of profile.doses
-            timeRange: timeRange
+            timeRange: timeRange,
+            intervalHours: interval
         )
 
         let validPoints = concentrationPoints.compactMap { point -> AdvancedConcentrationPoint? in

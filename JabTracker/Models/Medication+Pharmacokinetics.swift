@@ -66,14 +66,14 @@ extension Medication {
         return exp(-self.eliminationRateConstant * timeElapsedHours)
     }
 
-    /// Calculate steady-state progress as a percentage
+    /// Calculate steady-state progress as a decimal fraction
     /// Based on the principle that steady state is reached after ~5 half-lives
     /// - Parameter timeOnMedicationHours: Total time user has been on this medication
-    /// - Returns: Percentage toward steady state (0.0 to 100.0)
+    /// - Returns: Decimal progress toward steady state (0.0 to 1.0)
     func steadyStateProgress(timeOnMedicationHours: Double) -> Double {
         guard timeOnMedicationHours >= 0 else { return 0.0 }
         let progress = min(timeOnMedicationHours / self.timeToSteadyStateHours, 1.0)
-        return progress * 100.0
+        return progress
     }
 
     /// Expected peak time after subcutaneous injection (hours)

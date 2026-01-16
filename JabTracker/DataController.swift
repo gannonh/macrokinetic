@@ -93,10 +93,20 @@ class DataController: ObservableObject {
         let previewMedicationID = UUID(uuidString: "12345678-1234-1234-1234-123456789001") ?? UUID()
         let previewDoseID = UUID(uuidString: "12345678-1234-1234-1234-123456789002") ?? UUID()
 
+        // Create user with realistic biometrics for TDEE calculation testing
+        var birthComponents = DateComponents()
+        birthComponents.year = 1970
+        birthComponents.month = 3
+        birthComponents.day = 12
+        let birthDate = Calendar.current.date(from: birthComponents)
+
         let sampleUser = User(
             email: "preview@example.com",
             name: "Preview User",
-            weight: 70.0,
+            dateOfBirth: birthDate,
+            heightCm: 188.0,  // 6'2"
+            gender: "male",
+            weight: 185.0,
             weightUnit: "lbs",
             timezone: "UTC")
 

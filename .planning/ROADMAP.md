@@ -54,20 +54,20 @@ Related todos:
 Plans:
 - [x] 40-01: Quick Dose Entry Adjustability
 
-#### Phase 41: GLP-1 Analytics Fixes
+#### Phase 41: GLP-1 Analytics Fixes ✅
 
 **Goal**: Fix steady state progress calculation (2416% bug) and change concentration graph to histogram
 **Depends on**: Phase 40
 **Research**: Unlikely (internal patterns)
-**Plans**: 2
+**Completed**: 2026-01-15
 
 Related todos:
 - Fix steady state progress calculation showing 2416%
 - Change drug concentration graph to histogram
 
 Plans:
-- [ ] 41-01: Fix Steady State Progress Calculation
-- [ ] 41-02: Change Concentration Chart to Histogram
+- [x] 41-01: Fix Steady State Progress Calculation
+- [x] 41-02: Change Concentration Chart to Histogram
 
 #### Phase 42: Serving Unit Mapping
 
@@ -103,7 +103,7 @@ Phases execute in numeric order within each milestone.
 | -------------------------- | -------------- | ----------- | ---------- |
 | 39. Day Status Tracking    | 1/1            | Complete    | 2026-01-15 |
 | 40. GLP-1 Dose Adjustments | 1/1            | Complete    | 2026-01-15 |
-| 41. GLP-1 Analytics Fixes  | 0/2            | Planned     | -          |
+| 41. GLP-1 Analytics Fixes  | 2/2            | Complete    | 2026-01-15 |
 | 42. Serving Unit Mapping   | 0/?            | Not started | -          |
 | 43. Integration & Polish   | 0/?            | Not started | -          |
 

@@ -1,0 +1,7 @@
+# SwiftLint Configuration for Analytics Views
+# ChartConfiguration.swift uses chart-specific color constants that
+# intentionally don't use DesignTokens (internal chart implementation)
+
+disabled_rules:
+  - prefer_design_tokens_colors
+  - prefer_design_tokens_backgrounds

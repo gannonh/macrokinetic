@@ -483,7 +483,10 @@ final class OnboardingViewModel {
             }
         }
 
-        let weeklyPace = goalType == .weightLoss ? -goalViewModel.weeklyRateKg : goalViewModel.weeklyRateKg
+        let weeklyPace = NutritionCalculationService.weeklyPace(
+            for: goalType,
+            weeklyRateKg: goalViewModel.weeklyRateKg
+        )
         let goal = NutritionGoal(
             goalType: goalType,
             startingWeightKg: goalViewModel.currentWeightKg,
@@ -606,26 +609,17 @@ final class OnboardingViewModel {
 
         let tdee = bmr * activityMultiplier
 
-        // Apply deficit/surplus based on goal type
-        let weeklyRateKg = goalViewModel.weeklyRateKg
-        let dailyCalorieAdjustment = (weeklyRateKg * 7700) / 7  // 7700 cal per kg
+        // Apply deficit/surplus based on goal type using centralized service
+        // NutritionCalculationService handles the calorie floor internally
+        let goalType = goalViewModel.goalType ?? .maintenance
+        let dailyTarget = NutritionCalculationService.dailyCalorieTarget(
+            tdee: tdee,
+            goalType: goalType,
+            weeklyRateKg: goalViewModel.weeklyRateKg,
+            calorieFloor: calorieFloorType?.minimumCalories ?? NutritionConstants.defaultCalorieFloor
+        )
 
-        var dailyTarget: Double
-        switch goalViewModel.goalType {
-        case .weightLoss:
-            dailyTarget = tdee - abs(dailyCalorieAdjustment)
-        case .muscleGain:
-            dailyTarget = tdee + abs(dailyCalorieAdjustment)
-        case .maintenance, .none:
-            dailyTarget = tdee
-        }
-
-        // Apply calorie floor if set
-        if let floor = calorieFloorType {
-            dailyTarget = max(dailyTarget, floor.minimumCalories)
-        }
-
-        return max(dailyTarget, 1200)  // Minimum 1200 cal
+        return dailyTarget
     }
 
     /// Calculate age from birthday

@@ -140,7 +140,7 @@ final class PharmacokineticsEngine {
     /// Calculate progress toward steady-state concentration
     /// Steady state is typically reached after 5 half-lives
     /// - Parameter medicationProfile: The medication profile to analyze
-    /// - Returns: Percentage progress toward steady state (0-100)
+    /// - Returns: Decimal progress toward steady state (0.0-1.0)
     func calculateSteadyStateProgress(
         for medicationProfile: MedicationProfile
     ) -> Double {

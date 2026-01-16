@@ -24,6 +24,22 @@ extension ConcentrationChartConfiguration {
         )
     }
 
+    /// Creates a new configuration with updated concentration range
+    /// - Parameter concentrationRange: New concentration range to apply
+    /// - Returns: New configuration instance with updated concentration range
+    func withConcentrationRange(_ concentrationRange: ConcentrationRange) -> ConcentrationChartConfiguration {
+        ConcentrationChartConfiguration(
+            timeRange: self.timeRange,
+            concentrationRange: concentrationRange,
+            interpolationSettings: self.interpolationSettings,
+            theme: self.theme,
+            gridSettings: self.gridSettings,
+            axisSettings: self.axisSettings,
+            interactionSettings: self.interactionSettings,
+            animationSettings: self.animationSettings
+        )
+    }
+
     /// Creates a new configuration with updated theme
     /// - Parameter theme: New chart theme to apply
     /// - Returns: New configuration instance with updated theme

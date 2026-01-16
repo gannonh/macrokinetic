@@ -683,8 +683,9 @@ extension TDEEService {
         }
 
         // Calculate daily calorie target from TDEE and weekly pace
-        // 1 kg fat = ~7700 kcal, so daily adjustment = weeklyPaceKg * 7700 / 7 = weeklyPaceKg * 1100
-        let dailyCalorieAdjustment = goal.weeklyWeightChangePaceKg * 1100
+        let dailyCalorieAdjustment = NutritionCalculationService.dailyCalorieAdjustment(
+            from: goal.weeklyWeightChangePaceKg
+        )
         let dailyCalorieTarget = tdee + dailyCalorieAdjustment
 
         // Apply calorie floor if configured in program

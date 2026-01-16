@@ -8,5 +8,6 @@
     "context7",
     "perplexity-server",
     "XcodeBuildMCP"
-  ]
+  ],
+  "plansDirectory": ".claude/plans"
 }

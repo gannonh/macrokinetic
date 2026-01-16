@@ -271,10 +271,8 @@ struct SetupConfirmationStepView: View {
     }
 
     private var weeklyDeficit: Double {
-        // Estimate TDEE from daily target + weekly pace
         let pace = viewModel.goalViewModel.weeklyRateKg
-        // 7700 kcal per kg of body weight
-        return abs(pace) * 7700 / 7
+        return Double(NutritionCalculationService.dailyCalorieAdjustmentDisplay(weeklyPaceKg: pace))
     }
 
     private var weeklyPaceDetail: String {
