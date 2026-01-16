@@ -1296,7 +1296,8 @@ extension AuthenticationManager {
             let profile = MedicationProfile(
                 genericName: config.medication.displayName,
                 brandName: config.brand,
-                currentDose: config.dose
+                currentDose: config.dose,
+                medicationType: config.medication.rawValue
             )
             profile.user = user
             context.insert(profile)
