@@ -44,12 +44,12 @@ skipped: 1
   reason: "User reported: Still shows 0% with 90 days of seeded medication history (--seed-test-90d flag)"
   severity: blocker
   test: 1
-  root_cause: "User has persisted data from BEFORE the 41-FIX was applied. The old MedicationProfile lacks medicationType field. Fix is correct but requires app reinstall to get fresh seeded data."
+  root_cause: "User has persisted data from BEFORE the 41-FIX was applied. The old MedicationProfile lacks medicationType field. Fix is correct but requires data reset to get fresh seeded data."
   artifacts:
     - path: "JabTracker/AuthenticationManager.swift"
       issue: "Lines 277-281: isNewUser check skips seeding for existing users"
   missing:
-    - "Delete and reinstall app to trigger fresh data seeding with medicationType fix"
+    - "Add --reset-app-data flag to scheme alongside --seed-test-90d to clear old data"
   debug_session: ""
 
 - truth: "Concentration chart displays as histogram with discrete, separated bars"
