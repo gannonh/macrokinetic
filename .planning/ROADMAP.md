@@ -69,19 +69,19 @@ Plans:
 - [x] 41-01: Fix Steady State Progress Calculation
 - [x] 41-02: Change Concentration Chart to Histogram
 
-#### Phase 42: Serving Unit Mapping
+#### Phase 42: Serving Unit Mapping ✅
 
 **Goal**: Fix serving unit to gram mapping for foods with unrealistic conversions and unit conversion when editing
 **Depends on**: Phase 41
 **Research**: Unlikely (database/data quality)
-**Plans**: 1
+**Completed**: 2026-01-16
 
 Related todos:
 - Fix serving unit to gram mapping for foods
 - Fix food entry unit conversion when editing
 
 Plans:
-- [ ] 42-01-PLAN.md — Serving label validation and unit conversion fixes
+- [x] 42-01: Serving label validation and unit conversion fixes
 
 #### Phase 43: Integration & Polish
 
@@ -105,7 +105,7 @@ Phases execute in numeric order within each milestone.
 | 39. Day Status Tracking    | 1/1            | Complete    | 2026-01-15 |
 | 40. GLP-1 Dose Adjustments | 1/1            | Complete    | 2026-01-15 |
 | 41. GLP-1 Analytics Fixes  | 2/2            | Complete    | 2026-01-15 |
-| 42. Serving Unit Mapping   | 0/1            | Not started | -          |
+| 42. Serving Unit Mapping   | 1/1            | Complete    | 2026-01-16 |
 | 43. Integration & Polish   | 0/?            | Not started | -          |
 
 <details>
