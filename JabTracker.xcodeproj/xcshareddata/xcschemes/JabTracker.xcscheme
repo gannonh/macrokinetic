@@ -193,7 +193,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--reset-app-data"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-check-in-good"
@@ -221,7 +221,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-high"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-low"
@@ -237,7 +237,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-7d"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
@@ -253,7 +253,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--ui-testing"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
       <StoreKitConfigurationFileReference
