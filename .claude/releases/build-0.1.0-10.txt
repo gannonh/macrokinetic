@@ -1,0 +1,35 @@
+Build 0.1.0 (10) - Critical Maintenance Goal Fix & GLP-1 Improvements
+
+What's New
+- Fasting day toggle: Mark days as fasting to exclude from nutrition calculations
+- Adjustable GLP-1 dose: Stepper controls in Quick Dose sheet for compounded medications
+- Concentration chart histogram: Drug concentration now shows as bars instead of line graph
+- Centralized nutrition calculations: New NutritionCalculationService as single source of truth
+
+Critical Bug Fixes
+- FIXED: Maintenance goal calorie bug - was incorrectly adding 550 kcal surplus (weeklyPace was +0.5 instead of 0). Maintenance goals now correctly target TDEE with no surplus/deficit.
+- Fixed steady state progress showing 2416% - now displays accurate decimal values (0-100%)
+- Fixed dose amount display rounding to 2 decimal places
+
+Other Fixes
+- Improved error handling for meaningful dates fetch
+- Fixed CodeRabbit review issues for error handling and edge cases
+- Added 39 new tests for nutrition calculation service
+
+Focus Areas for Testing
+- CRITICAL - Maintenance Goal: Create or edit a goal to "Maintenance" and verify daily target equals your TDEE (NOT TDEE + 550)
+- Fasting Toggle: Go to Food Log and tap the fasting toggle - verify the day is excluded from weekly averages
+- GLP-1 Dose Entry: Log a dose and use the stepper to adjust the amount
+- Concentration Chart: View GLP-1 analytics - confirm bars display instead of lines
+- Weekly Check-In: If you have a check-in due, verify the proposed calories match your goal type
+
+Feedback Needed
+- If you were on a maintenance goal, are your calorie targets now lower (correct)?
+- Does the fasting toggle workflow feel natural?
+- Is the dose stepper easy to use for your typical adjustments?
+
+Not Yet Implemented
+- Background notification refresh
+- Split-dose schedule UI configuration
+- Crash/error reporting service
+- Serving unit to gram mapping fixes
