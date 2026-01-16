@@ -86,7 +86,7 @@ No open issues in `.planning/ISSUES.md`.
 
 ### Pending Todos
 
-12 todos in `.planning/todos/pending/`
+7 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
