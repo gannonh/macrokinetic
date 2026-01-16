@@ -365,18 +365,21 @@ class AuthenticationManager: NSObject, ObservableObject {
                         Self.logger.error("❌ Data quality seeding failed: \(error)")
                     }
                 }
-                return  // Data quality seeding is comprehensive, skip other seeding
+                // Continue to medication seeding if requested (don't return early)
             }
 
             // Seed check-in data based on requested tier (only one tier at a time)
-            if shouldSeedCheckInReady {
-                await seedCheckInReadyData(for: user, context: context, programStyle: programStyle)
-            } else if shouldSeedCheckInGood {
-                await seedCheckInGoodData(for: user, context: context, programStyle: programStyle)
-            } else if shouldSeedCheckInMinimum {
-                await seedCheckInMinimumData(for: user, context: context, programStyle: programStyle)
-            } else if shouldSeedCheckInInsufficient {
-                await seedCheckInInsufficientData(for: user, context: context, programStyle: programStyle)
+            // Skip if data quality seeding already created goals/programs
+            if !hasDataQualitySeeding {
+                if shouldSeedCheckInReady {
+                    await seedCheckInReadyData(for: user, context: context, programStyle: programStyle)
+                } else if shouldSeedCheckInGood {
+                    await seedCheckInGoodData(for: user, context: context, programStyle: programStyle)
+                } else if shouldSeedCheckInMinimum {
+                    await seedCheckInMinimumData(for: user, context: context, programStyle: programStyle)
+                } else if shouldSeedCheckInInsufficient {
+                    await seedCheckInInsufficientData(for: user, context: context, programStyle: programStyle)
+                }
             }
 
             // Skip dose seeding if only check-in-ready was requested
