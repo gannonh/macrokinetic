@@ -159,7 +159,7 @@ public struct InterpolationSettings: Codable {
     /// Pharmacokinetic-optimized interpolation settings
     static let pharmacokinetic = InterpolationSettings(
         type: .pharmacokinetic,
-        intervalHours: 2.0,
+        intervalHours: 0.5,
         smoothingFactor: 0.8,
         confidenceIntervals: false
     )

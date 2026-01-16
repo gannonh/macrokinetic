@@ -743,7 +743,7 @@ final class ChartDataProcessor {
             let concentrationPoints = generateConcentrationTimeline(
                 for: profile,
                 timeRange: timeRange,
-                intervalHours: 2.0
+                intervalHours: 0.5
             )
             allConcentrationPoints.append(contentsOf: concentrationPoints)
 
