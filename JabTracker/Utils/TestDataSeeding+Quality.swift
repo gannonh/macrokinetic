@@ -433,8 +433,8 @@
             let today = Date()
             var count = 0
 
-            let initialTDEE = 2400.0
-            let currentTDEE = 2350.0
+            let initialTDEE = 2700.0
+            let currentTDEE = 2650.0
             let tdeeRange = initialTDEE - currentTDEE
 
             for dayOffset in 0..<daysOfHistory {
