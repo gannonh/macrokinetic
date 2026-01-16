@@ -11,9 +11,9 @@
 ## Current Position
 
 Phase: 42 of 43 (Serving Unit Mapping) - COMPLETE
-Plan: All plans complete (1/1)
-Status: Phase verified, ready for Phase 43
-Last activity: 2026-01-16 - Phase 42 execution complete
+Plan: All plans complete (1/1 + FIX)
+Status: Phase verified with gap closure, ready for Phase 43
+Last activity: 2026-01-16 - Completed 42-FIX-PLAN.md (fractional cup validation)
 
 Progress: ████████░░ 80%
 
@@ -45,6 +45,11 @@ Status: PR Review complete - ready for CodeRabbit review or merge
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 42 decisions (FIX plan):**
+- Parse quantity prefix from original label before formatting strips it
+- Support both decimal (0.25) and fraction (1/4) quantity formats
+- Scale gram ranges by quantity (e.g., 0.25 cup uses [20, 75] instead of [80, 300])
 
 **Phase 42 decisions (Plan 01):**
 - Use density thresholds (cup: 80-300g, tbsp: 5-25g, tsp: 2-10g) to detect suspicious unit labels
@@ -113,6 +118,6 @@ Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-16T21:14:56Z
-Stopped at: Completed 42-01-PLAN.md (serving unit mapping)
+Last session: 2026-01-16T21:56:00Z
+Stopped at: Completed 42-FIX-PLAN.md (fractional cup validation gap closure)
 Resume file: None
