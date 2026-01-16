@@ -167,22 +167,26 @@
                 context.insert(user)
             }
 
-            // Create medication profile
-            let profile = MedicationProfile(
-                genericName: config.medication.rawValue,
-                brandName: config.brandName,
-                currentDose: config.doseAmount,
-                medicationType: config.medication.rawValue
-            )
-            profile.user = user
-            context.insert(profile)
-
             // Generate doses based on medication frequency
+            // NOTE: Generate dose schedule FIRST to calculate proper startDate
             let doseSchedule = generateDoseSchedule(
                 for: config.medication,
                 daysOfHistory: config.daysOfHistory,
                 targetDoseCount: targetDoseCount
             )
+
+            // Create medication profile with startDate set to earliest dose date
+            // This is crucial for steady-state progress calculation (timeOnMedication)
+            let earliestDoseDate = doseSchedule.first ?? Date()
+            let profile = MedicationProfile(
+                genericName: config.medication.rawValue,
+                brandName: config.brandName,
+                currentDose: config.doseAmount,
+                startDate: earliestDoseDate,
+                medicationType: config.medication.rawValue
+            )
+            profile.user = user
+            context.insert(profile)
 
             var createdDoses: [Dose] = []
             let skippedDoses: [Dose] = []
