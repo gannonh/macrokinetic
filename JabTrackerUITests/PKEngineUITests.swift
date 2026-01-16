@@ -150,16 +150,9 @@ final class PKEngineUITests: XCTestCase {
     /// And: Typical timeframe to reach steady-state is indicated
     @MainActor
     func testSteadyStateProgressDisplay() throws {
-        // GIVEN: User has 3 doses logged (simulates regular dosing pattern)
-        let app = TestUtilities.launchAppWithSeededData(
-            preset: .custom(
-                doseCount: 3,
-                medicationProfiles: 1,
-                medication: "semaglutide",
-                brand: "Ozempic",
-                dose: "1.0"
-            )
-        )
+        // GIVEN: User has 90 days of data (approximately 13 weekly doses)
+        // Using ninetyDays preset which sets MedicationProfile.startDate correctly
+        let app = TestUtilities.launchAppWithSeededData(preset: .ninetyDays)
 
         // WHEN: User views the dashboard
         TestUtilities.navigateToTab(app, tabName: "Dashboard")
@@ -243,6 +236,12 @@ final class PKEngineUITests: XCTestCase {
             XCTAssertLessThanOrEqual(
                 percentage, 100,
                 "Steady-state percentage should not exceed 100%")
+
+            // UAT REQUIREMENT: With 90 days of data, steady state should show meaningful progress
+            // Expected: ~100% for 90 days (5+ half-lives of semaglutide at ~7 days each)
+            XCTAssertGreaterThan(
+                percentage, 0,
+                "With 90 days of dose history, steady-state progress should be > 0%")
         }
     }
 
