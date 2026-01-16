@@ -230,10 +230,20 @@ class AuthenticationManager: NSObject, ObservableObject {
             Self.logger.info("✅ AuthenticationManager: Found existing UI testing user, reusing with persisted data")
         } else {
             // Create new user on first launch
+            // Uses realistic biometrics for TDEE calculation testing
+            var birthComponents = DateComponents()
+            birthComponents.year = 1970
+            birthComponents.month = 3
+            birthComponents.day = 12
+            let birthDate = Calendar.current.date(from: birthComponents)
+
             mockUser = User(
                 email: "test@uitesting.com",
                 name: "UI Test User",
-                weight: 70.0,
+                dateOfBirth: birthDate,
+                heightCm: 188.0,  // 6'2"
+                gender: "male",
+                weight: 185.0,
                 weightUnit: "lbs")
             context.insert(mockUser)
             isNewUser = true
@@ -1107,11 +1117,21 @@ class AuthenticationManager: NSObject, ObservableObject {
             try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
 
             // Create mock user for manual testing
+            // Uses realistic biometrics for TDEE calculation testing
             let context = self.dataController.container.mainContext
+            var birthComponents = DateComponents()
+            birthComponents.year = 1970
+            birthComponents.month = 3
+            birthComponents.day = 12
+            let birthDate = Calendar.current.date(from: birthComponents)
+
             let mockUser = User(
                 email: "manual@uitesting.com",
                 name: "Manual UI Test User",
-                weight: 75.0,
+                dateOfBirth: birthDate,
+                heightCm: 188.0,  // 6'2"
+                gender: "male",
+                weight: 185.0,
                 weightUnit: "lbs")
 
             context.insert(mockUser)

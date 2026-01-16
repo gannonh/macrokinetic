@@ -148,10 +148,21 @@
             if let existingUser = existingUser {
                 user = existingUser
             } else {
+                // Create user with realistic biometrics for TDEE calculation testing
+                var birthComponents = DateComponents()
+                birthComponents.year = 1970
+                birthComponents.month = 3
+                birthComponents.day = 12
+                let birthDate = Calendar.current.date(from: birthComponents)
+
                 user = User(
                     email: "test@example.com",
                     name: "Test User",
-                    weight: 80.0
+                    dateOfBirth: birthDate,
+                    heightCm: 188.0,  // 6'2"
+                    gender: "male",
+                    weight: 185.0,
+                    weightUnit: "lbs"
                 )
                 context.insert(user)
             }
@@ -358,13 +369,28 @@
         // MARK: - Quick Helpers
 
         /// Create a test user with default properties
+        /// Includes realistic biometrics for TDEE calculation testing
         @MainActor
         static func createTestUser(
             email: String = "test@example.com",
             name: String = "Test User",
-            weight: Double = 80.0
+            weight: Double = 185.0
         ) -> User {
-            User(email: email, name: name, weight: weight)
+            var birthComponents = DateComponents()
+            birthComponents.year = 1970
+            birthComponents.month = 3
+            birthComponents.day = 12
+            let birthDate = Calendar.current.date(from: birthComponents)
+
+            return User(
+                email: email,
+                name: name,
+                dateOfBirth: birthDate,
+                heightCm: 188.0,  // 6'2"
+                gender: "male",
+                weight: weight,
+                weightUnit: "lbs"
+            )
         }
 
         /// Create a test medication profile

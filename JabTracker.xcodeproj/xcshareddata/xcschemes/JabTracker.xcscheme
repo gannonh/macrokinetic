@@ -209,7 +209,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-check-in-ready"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-collaborative"
@@ -221,7 +221,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-high"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-low"
