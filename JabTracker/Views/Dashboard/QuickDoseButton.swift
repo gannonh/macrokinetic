@@ -8,7 +8,7 @@ import SwiftData
 import SwiftUI
 
 /// Self-contained SwiftUI component for quick dose entry with smart defaults
-/// Presents as a sheet from the Add tab button for streamlined dose logging
+/// Presents a sheet for streamlined dose logging when tapped
 /// Enhanced with pharmacokinetics integration for automatic dashboard updates
 struct QuickDoseButton: View {
     @Environment(\.modelContext) private var modelContext
@@ -109,7 +109,7 @@ struct QuickDoseButton: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.green.opacity(0.9))
+                    .background(DesignTokens.Colors.success.opacity(0.9))
                     .cornerRadius(8)
                     .accessibilityIdentifier("dose-logged-success")
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -185,7 +185,7 @@ struct QuickDoseButton: View {
 
     private func handleTitrationRemindLater() {
         // Set flag to skip titration dialog for this dose entry
-        // Note: Flag will be reset in saveDose() after successful dose entry (line 393)
+        // Note: Flag will be reset in saveDose() after successful dose entry
         // This ensures single source of truth and avoids race conditions
         viewModel.setTitrationRemindLater(true)
         logger.debug("Titration reminder deferred - flag will reset after dose save")
@@ -200,6 +200,8 @@ struct QuickDoseButton: View {
 struct QuickDoseSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+
+    private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "QuickDoseSheet")
 
     @ObservedObject var viewModel: QuickDoseViewModel
     let doseService: DoseService
@@ -268,13 +270,21 @@ struct QuickDoseSheet: View {
                     .accessibilityIdentifier("quick-dose-medication-picker")
                     .accessibilityLabel("Select medication")
 
-                    // Dose Amount (from selected medication profile)
+                    // Dose Amount (editable with stepper for per-dose adjustments)
                     HStack {
                         Text("Dose Amount")
                         Spacer()
                         Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("quick-dose-amount")
+                        Stepper(
+                            "",
+                            value: self.$viewModel.doseAmount,
+                            in: self.viewModel.doseAmountRange,
+                            step: self.viewModel.doseAmountStep
+                        )
+                        .labelsHidden()
+                        .accessibilityIdentifier("quick-dose-amount-stepper")
                     }
 
                     // Injection Site Selection
@@ -300,10 +310,17 @@ struct QuickDoseSheet: View {
                 } header: {
                     Text("Dose Details")
                 } footer: {
-                    if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .accessibilityIdentifier("no-medication-profiles-error")
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let errorMessage = viewModel.errorMessage {
+                            Text(errorMessage)
+                                .foregroundColor(.red)
+                                .accessibilityIdentifier("quick-dose-view-model-error")
+                        }
+                        if let serviceError = doseService.lastError {
+                            Text(serviceError.localizedDescription)
+                                .foregroundColor(.red)
+                                .accessibilityIdentifier("dose-save-error")
+                        }
                     }
                 }
 
@@ -364,7 +381,11 @@ struct QuickDoseSheet: View {
         guard let editData = editingDose,
             let onSave,
             let selectedProfile = self.viewModel.selectedMedicationProfile
-        else { return }
+        else {
+            logger.error("Edit save failed: missing editData, onSave callback, or selectedProfile")
+            viewModel.errorMessage = "Unable to save changes. Please try again."
+            return
+        }
 
         // Create updated dose data from current view model state
         let updatedDose = DoseEditData(
@@ -418,8 +439,8 @@ struct QuickDoseSheet: View {
             self.dismiss()
 
         } catch {
-            // Error is handled by doseService and displayed in UI
-            print("Error saving dose with PK integration: \(error)")
+            // Error is stored in doseService.lastError and displayed in form footer
+            logger.error("Failed to save dose: \(error.localizedDescription)")
         }
     }
 }

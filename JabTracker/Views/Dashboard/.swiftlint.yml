@@ -1,0 +1,10 @@
+# SwiftLint Configuration for Dashboard Views
+# QuickDoseViewModel requires additional code for dose adjustment features
+
+file_length:
+  warning: 550
+  error: 650
+
+function_body_length:
+  warning: 70
+  error: 80

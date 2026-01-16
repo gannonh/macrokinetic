@@ -281,7 +281,6 @@
       "Views/DoseEntry/DoseEntryPKSection.swift",
       "Views/DoseEntry/DoseEntryPhotoSection.swift",
       "Views/DoseEntry/DoseEntrySheet.swift",
-      "Views/DoseEntry/QuickDoseEntry.swift",
       "Views/DoseEntry/TitrationConfirmationDialog.swift",
       "Views/FoodLog/FastingToggleCard.swift",
       "Views/FoodLog/FoodDayView.swift",

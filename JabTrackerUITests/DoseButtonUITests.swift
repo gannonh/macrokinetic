@@ -121,7 +121,7 @@ final class DoseButtonUITests: XCTestCase {
 
         // When: No medication profiles exist (test condition)
         // Then: Should show appropriate error message and disable save button
-        let errorMessage = app.staticTexts["no-medication-profiles-error"]
+        let errorMessage = app.staticTexts["quick-dose-view-model-error"]
         let saveButton = app.buttons["quick-dose-save-button"]
 
         // Error message should appear if no medication profiles

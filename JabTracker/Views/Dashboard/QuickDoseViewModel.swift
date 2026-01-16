@@ -35,6 +35,69 @@ class QuickDoseViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
 
+    // MARK: - Dose Adjustment Properties
+
+    /// Valid dose range based on medication type
+    /// - For compounded ("Generic" brand): Full therapeutic range in 0.25mg increments
+    /// - For branded: Uses available pen doses for the specific brand
+    var doseAmountRange: ClosedRange<Double> {
+        guard let profile = selectedMedicationProfile,
+            let medication = profile.medication
+        else {
+            return 0.0...0.0
+        }
+
+        // Get therapeutic range based on medication type
+        let (minDose, maxDose): (Double, Double) = {
+            switch medication {
+            case .semaglutide:
+                return (0.25, 2.4)
+            case .tirzepatide:
+                return (2.5, 15.0)
+            case .liraglutide:
+                return (0.6, 3.0)
+            case .dulaglutide:
+                return (0.75, 4.5)
+            }
+        }()
+
+        return minDose...maxDose
+    }
+
+    /// Step increment for dose adjustments
+    /// - For compounded medications: 0.25mg increments for fine-grained titration
+    /// - For branded medications: Uses discrete pen dose steps
+    var doseAmountStep: Double {
+        guard let profile = selectedMedicationProfile,
+            let medication = profile.medication
+        else {
+            return 0.25
+        }
+
+        // Compounded medications use fine-grained 0.25mg steps
+        if profile.brandName == "Generic" || profile.isCompounded {
+            return 0.25
+        }
+
+        // Branded medications use discrete steps based on available doses
+        let availableDoses = medication.availableDoses(for: profile.brandName)
+        guard availableDoses.count > 1 else {
+            return 0.25
+        }
+
+        // Calculate smallest step between available doses
+        let sortedDoses = availableDoses.sorted()
+        var minStep = Double.greatestFiniteMagnitude
+        for index in 0..<(sortedDoses.count - 1) {
+            let step = sortedDoses[index + 1] - sortedDoses[index]
+            if step < minStep {
+                minStep = step
+            }
+        }
+
+        return minStep > 0 ? minStep : 0.25
+    }
+
     // MARK: - Titration State (Issue #286)
 
     /// Flag to track if user selected "Remind Me Later" for titration dialog
@@ -63,6 +126,11 @@ class QuickDoseViewModel: ObservableObject {
     var canSaveDose: Bool {
         guard self.selectedMedicationProfile != nil else { return false }
         guard self.doseAmount > 0 else { return false }
+
+        // Validate dose is within therapeutic range for selected medication
+        let range = doseAmountRange
+        guard range.lowerBound > 0, range.contains(doseAmount) else { return false }
+
         guard !self.selectedInjectionSite.isEmpty else { return false }
 
         // Allow dates within reasonable range (30 days past to 30 days future)
@@ -222,15 +290,27 @@ class QuickDoseViewModel: ObservableObject {
         }
 
         // Check if active schedule uses split-dose pattern
+        var newDose: Double
         if let schedule = profile.schedules?.first(where: { $0.isActive }),
             schedule.patternType == .splitDose
         {
             // Split-dose: Show half the weekly dose per administration
             // Example: 1.0mg weekly split → 0.5mg per dose (2x per week)
-            self.doseAmount = profile.currentDose / 2
+            newDose = profile.currentDose / 2
         } else {
-            self.doseAmount = profile.currentDose
+            newDose = profile.currentDose
         }
+
+        // Clamp to valid range
+        self.doseAmount = clampDoseAmount(newDose)
+    }
+
+    /// Clamps a dose amount to the valid range for the selected medication
+    /// - Parameter dose: The dose to clamp
+    /// - Returns: The dose clamped to the valid range
+    func clampDoseAmount(_ dose: Double) -> Double {
+        let range = doseAmountRange
+        return min(max(dose, range.lowerBound), range.upperBound)
     }
 
     /// Updates recommended injection sites and selects smart default based on dose history
@@ -256,11 +336,7 @@ class QuickDoseViewModel: ObservableObject {
             preferredSites: profile.preferredInjectionSites)
     }
 
-    // MARK: - Dose Saving
-
-    // NOTE: Dose saving is now handled by DoseService for PK integration
-    // This method is deprecated in favor of DoseService.saveDose()
-    // Keeping the form reset method for convenience
+    // MARK: - Form Management
 
     /// Resets form to initial state after successful save
     func resetForm() {

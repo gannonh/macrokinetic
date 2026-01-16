@@ -237,7 +237,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-7d"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
