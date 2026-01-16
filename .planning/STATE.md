@@ -10,10 +10,10 @@
 
 ## Current Position
 
-Phase: 41 of 43 (GLP-1 Analytics Fixes)
-Plan: 2 of 2 complete
-Status: In progress
-Last activity: 2026-01-16 - Completed 41-02-PLAN.md (concentration chart histogram)
+Phase: 41 of 43 (GLP-1 Analytics Fixes) - COMPLETE
+Plan: All plans complete (2/2)
+Status: Phase complete
+Last activity: 2026-01-16 - Completed 41-01-PLAN.md (steady state progress fix)
 
 Progress: ███░░░░░░░ 30%
 
@@ -45,6 +45,11 @@ Status: PR Review complete, ready for merge
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 41 decisions (Plan 01):**
+- Changed steadyStateProgress return type from percentage (0-100) to decimal (0.0-1.0)
+- UI code already expected decimal and multiplied by 100, so only API change needed
+- Pharmacokinetics progress values should always return decimals (0.0-1.0), let UI format as percentage
 
 **Phase 41 decisions (Plan 02):**
 - Use 0.8 opacity on bars to allow therapeutic range band to show through
@@ -93,11 +98,11 @@ None.
 
 Last checked: 2026-01-16
 Status: ✓ Aligned
-Assessment: Phase 41 Plan 02 complete, concentration chart now uses histogram format.
+Assessment: Phase 41 complete. Steady state progress fixed (2416% -> correct 0-100%), chart uses histogram format.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-16T02:56:00Z
-Stopped at: Completed 41-02-PLAN.md
+Last session: 2026-01-16T02:59:00Z
+Stopped at: Completed 41-01-PLAN.md (Phase 41 fully complete)
 Resume file: None
