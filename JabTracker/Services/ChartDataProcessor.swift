@@ -228,8 +228,8 @@ final class ChartDataProcessor {
         return doses.filter { $0.timestamp >= cutoffDate }
     }
 
-    /// Calculate optimal interval hours for histogram bars based on time period
-    /// Fewer bars = wider individual bars that are visually distinct
+    /// Calculate optimal interval hours for data point density based on time period
+    /// Fewer points = smoother curves with better performance
     /// - Parameter period: The time period being displayed
     /// - Returns: Interval in hours between data points
     static func intervalHours(for period: TimePeriod) -> Double {
@@ -471,9 +471,14 @@ final class ChartDataProcessor {
         timeRange: ClosedRange<Date>,
         intervalHours: Double = 6.0  // 6 hours provides smooth curves with ~12x better performance
     ) -> [ConcentrationPoint] {
-        guard medicationProfile.medication != nil,
-            let doses = medicationProfile.doses
-        else {
+        guard medicationProfile.medication != nil else {
+            Self.logger.error("generateConcentrationTimeline: No medication for '\(medicationProfile.genericName)'")
+            return []
+        }
+
+        guard let doses = medicationProfile.doses else {
+            let name = medicationProfile.genericName
+            Self.logger.warning("generateConcentrationTimeline: No doses loaded for profile '\(name)'")
             return []
         }
 
@@ -759,7 +764,7 @@ final class ChartDataProcessor {
         var allConcentrationPoints: [ConcentrationPoint] = []
         var allDoseMarkers: [DoseMarker] = []
 
-        // Use dynamic interval based on time period for visible histogram bars
+        // Use dynamic interval based on time period for appropriate data density
         let interval = Self.intervalHours(for: timePeriod)
 
         for profile in medicationProfiles {

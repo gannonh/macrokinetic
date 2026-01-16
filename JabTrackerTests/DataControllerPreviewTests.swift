@@ -126,7 +126,7 @@ struct DataControllerPreviewTests {
 
         #expect(user.email == "preview@example.com", "Preview user should have expected email")
         #expect(user.name == "Preview User", "Preview user should have expected name")
-        #expect(user.weight == 70.0, "Preview user should have expected weight")
+        #expect(user.weight == 185.0, "Preview user should have expected weight (in lbs)")
 
         // Verify medication has expected values
         let medicationDescriptor = FetchDescriptor<MedicationProfile>()

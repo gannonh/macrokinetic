@@ -610,15 +610,16 @@ final class OnboardingViewModel {
         let tdee = bmr * activityMultiplier
 
         // Apply deficit/surplus based on goal type using centralized service
+        // NutritionCalculationService handles the calorie floor internally
         let goalType = goalViewModel.goalType ?? .maintenance
         let dailyTarget = NutritionCalculationService.dailyCalorieTarget(
             tdee: tdee,
             goalType: goalType,
             weeklyRateKg: goalViewModel.weeklyRateKg,
-            calorieFloor: calorieFloorType?.minimumCalories
+            calorieFloor: calorieFloorType?.minimumCalories ?? NutritionConstants.defaultCalorieFloor
         )
 
-        return max(dailyTarget, 1200)  // Minimum 1200 cal
+        return dailyTarget
     }
 
     /// Calculate age from birthday

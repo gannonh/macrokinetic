@@ -41,7 +41,7 @@ struct ConcentrationTimelineChart: View {
 
     /// Accessibility label for the chart
     var accessibilityLabel: String? {
-        "Concentration Bar Chart showing medication concentration levels over time"
+        "Concentration Area Chart showing medication concentration levels over time"
     }
 
     /// Accessibility value describing current chart data
@@ -235,7 +235,7 @@ struct ConcentrationTimelineChart: View {
     @ViewBuilder
     private func emptyChartView() -> some View {
         VStack(spacing: 16) {
-            Image(systemName: "chart.bar.xaxis")
+            Image(systemName: "chart.xyaxis.line")
                 .font(.system(size: 64))
                 .foregroundColor(.secondary)
 
