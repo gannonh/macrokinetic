@@ -32,10 +32,42 @@ struct ServingPillOption: Identifiable, Equatable {
     /// Create from a ServingOption
     init(from option: ServingOption) {
         let formattedLabel = ServingPillOption.formatLabel(from: option.label)
-        self.id = "\(formattedLabel)-\(option.grams)"
-        self.label = formattedLabel
+
+        // Sanitize suspicious labels at runtime for existing database data
+        let sanitizedLabel =
+            ServingPillOption.isServingLabelSuspicious(formattedLabel, grams: option.grams)
+            ? "serving"
+            : formattedLabel
+
+        self.id = "\(sanitizedLabel)-\(option.grams)"
+        self.label = sanitizedLabel
         self.grams = option.grams
         self.isUnitOnly = false
+    }
+
+    // MARK: - Serving Label Validation
+
+    /// Check if a serving label's gram value is unrealistic for its unit type.
+    /// Used to sanitize suspicious labels from existing database data.
+    /// - Parameters:
+    ///   - label: The serving label (e.g., "cup", "tbsp")
+    ///   - grams: The gram weight for this serving
+    /// - Returns: True if the gram value is suspicious for the detected unit type
+    private static func isServingLabelSuspicious(_ label: String, grams: Double) -> Bool {
+        let lowerLabel = label.lowercased()
+
+        // Check for common unit keywords and validate gram ranges
+        if lowerLabel.contains("cup") {
+            return grams < 80 || grams > 300
+        }
+        if lowerLabel.contains("tbsp") || lowerLabel.contains("tablespoon") {
+            return grams < 5 || grams > 25
+        }
+        if lowerLabel.contains("tsp") || lowerLabel.contains("teaspoon") {
+            return grams < 2 || grams > 10
+        }
+        // "oz" alone might be ambiguous - be lenient
+        return false
     }
 
     /// Format the label to be more human-readable
