@@ -34,10 +34,13 @@ struct ServingPillOption: Identifiable, Equatable {
         let formattedLabel = ServingPillOption.formatLabel(from: option.label)
 
         // Sanitize suspicious labels at runtime for existing database data
+        // Pass original label to support fractional quantity parsing (e.g., "0.25 cup (49g)")
         let sanitizedLabel =
-            ServingPillOption.isServingLabelSuspicious(formattedLabel, grams: option.grams)
-            ? "serving"
-            : formattedLabel
+            ServingPillOption.isServingLabelSuspicious(
+                formattedLabel,
+                originalLabel: option.label,
+                grams: option.grams
+            ) ? "serving" : formattedLabel
 
         self.id = "\(sanitizedLabel)-\(option.grams)"
         self.label = sanitizedLabel
@@ -47,24 +50,74 @@ struct ServingPillOption: Identifiable, Equatable {
 
     // MARK: - Serving Label Validation
 
+    /// Parse a quantity prefix from a serving label (e.g., "0.25 cup" -> 0.25, "1/4 cup" -> 0.25)
+    /// - Parameter label: The original serving label
+    /// - Returns: The quantity multiplier, or nil if no quantity found (defaults to 1.0)
+    private static func parseQuantityPrefix(_ label: String) -> Double? {
+        let trimmed = label.trimmingCharacters(in: .whitespaces)
+
+        // Pattern 1: Decimal format (e.g., "0.25", "1.5", "2")
+        // swiftlint:disable:next force_try
+        let decimalRegex = try! NSRegularExpression(pattern: #"^(\d+\.?\d*)\s"#)
+        if let match = decimalRegex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
+            let range = Range(match.range(at: 1), in: trimmed),
+            let value = Double(trimmed[range])
+        {
+            return value
+        }
+
+        // Pattern 2: Fraction format (e.g., "1/4", "1/2", "1/3")
+        // swiftlint:disable:next force_try
+        let fractionRegex = try! NSRegularExpression(pattern: #"^(\d+)/(\d+)\s"#)
+        if let match = fractionRegex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
+            let numRange = Range(match.range(at: 1), in: trimmed),
+            let denRange = Range(match.range(at: 2), in: trimmed),
+            let numerator = Double(trimmed[numRange]),
+            let denominator = Double(trimmed[denRange]),
+            denominator != 0
+        {
+            return numerator / denominator
+        }
+
+        return nil
+    }
+
     /// Check if a serving label's gram value is unrealistic for its unit type.
     /// Used to sanitize suspicious labels from existing database data.
+    ///
+    /// For fractional servings (e.g., "0.25 cup"), the acceptable gram range is
+    /// scaled by the quantity. For example, "0.25 cup" checks against [80*0.25, 300*0.25] = [20, 75].
+    ///
     /// - Parameters:
-    ///   - label: The serving label (e.g., "cup", "tbsp")
+    ///   - formattedLabel: The formatted serving label (e.g., "cup", "tbsp")
+    ///   - originalLabel: The original label with quantity prefix (e.g., "0.25 cup (49g)")
     ///   - grams: The gram weight for this serving
     /// - Returns: True if the gram value is suspicious for the detected unit type
-    private static func isServingLabelSuspicious(_ label: String, grams: Double) -> Bool {
-        let lowerLabel = label.lowercased()
+    private static func isServingLabelSuspicious(
+        _ formattedLabel: String,
+        originalLabel: String,
+        grams: Double
+    ) -> Bool {
+        let lowerLabel = formattedLabel.lowercased()
 
-        // Check for common unit keywords and validate gram ranges
+        // Parse quantity from original label, default to 1.0
+        let quantity = parseQuantityPrefix(originalLabel) ?? 1.0
+
+        // Check for common unit keywords and validate gram ranges (scaled by quantity)
         if lowerLabel.contains("cup") {
-            return grams < 80 || grams > 300
+            let minGrams = 80.0 * quantity
+            let maxGrams = 300.0 * quantity
+            return grams < minGrams || grams > maxGrams
         }
         if lowerLabel.contains("tbsp") || lowerLabel.contains("tablespoon") {
-            return grams < 5 || grams > 25
+            let minGrams = 5.0 * quantity
+            let maxGrams = 25.0 * quantity
+            return grams < minGrams || grams > maxGrams
         }
         if lowerLabel.contains("tsp") || lowerLabel.contains("teaspoon") {
-            return grams < 2 || grams > 10
+            let minGrams = 2.0 * quantity
+            let maxGrams = 10.0 * quantity
+            return grams < minGrams || grams > maxGrams
         }
         // "oz" alone might be ambiguous - be lenient
         return false
