@@ -72,12 +72,49 @@ def parse_float(value: str) -> float:
         return 0.0
 
 
+def parse_quantity_prefix(serving_size_str: str) -> float:
+    """
+    Parse a quantity prefix from a serving label (e.g., "0.25 cup" -> 0.25, "1/4 cup" -> 0.25).
+
+    Args:
+        serving_size_str: The serving size string (e.g., "0.25 cup", "1/4 cup", "1 cup")
+
+    Returns:
+        The quantity multiplier, or 1.0 if no quantity prefix found
+    """
+    trimmed = serving_size_str.strip()
+
+    # Pattern 1: Decimal format (e.g., "0.25 cup", "1.5 cups", "2 tbsp")
+    decimal_match = re.match(r"^(\d+\.?\d*)\s", trimmed)
+    if decimal_match:
+        try:
+            return float(decimal_match.group(1))
+        except ValueError:
+            pass
+
+    # Pattern 2: Fraction format (e.g., "1/4 cup", "1/2 cup", "1/3 tbsp")
+    fraction_match = re.match(r"^(\d+)/(\d+)\s", trimmed)
+    if fraction_match:
+        try:
+            numerator = float(fraction_match.group(1))
+            denominator = float(fraction_match.group(2))
+            if denominator != 0:
+                return numerator / denominator
+        except ValueError:
+            pass
+
+    return 1.0
+
+
 def is_serving_label_suspicious(serving_size_str: str, serving_grams: float) -> bool:
     """
     Check if a serving label's gram value is unrealistic for its unit type.
 
+    For fractional servings (e.g., "0.25 cup", "1/4 cup"), the acceptable gram range
+    is scaled by the quantity. For example, "0.25 cup" checks against [80*0.25, 300*0.25] = [20, 75].
+
     Args:
-        serving_size_str: The serving size string (e.g., "1 cup", "2 tbsp")
+        serving_size_str: The serving size string (e.g., "1 cup", "0.25 cup", "1/4 cup")
         serving_grams: The gram weight for this serving
 
     Returns:
@@ -85,11 +122,14 @@ def is_serving_label_suspicious(serving_size_str: str, serving_grams: float) -> 
     """
     lower_str = serving_size_str.lower()
 
-    for unit, (min_grams, max_grams) in SUSPICIOUS_UNIT_RATIOS.items():
+    # Parse quantity from serving string, default to 1.0
+    quantity = parse_quantity_prefix(serving_size_str)
+
+    for unit, (base_min, base_max) in SUSPICIOUS_UNIT_RATIOS.items():
         if unit in lower_str:
-            # Adjust ranges based on quantity prefix (e.g., "1/4 cup" = 0.25 * range)
-            # For simplicity, we use the base range - most suspicious cases are
-            # "1 cup" type entries with wildly wrong gram values
+            # Scale gram range by quantity (e.g., 0.25 cup uses [20, 75] instead of [80, 300])
+            min_grams = base_min * quantity
+            max_grams = base_max * quantity
             if serving_grams < min_grams or serving_grams > max_grams:
                 return True
 
