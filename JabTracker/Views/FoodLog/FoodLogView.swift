@@ -185,6 +185,29 @@ struct FoodLogView: View {
                                 triggerPaste()
                             }
                         )
+                        .confirmationDialog(
+                            "Paste Foods",
+                            isPresented: $showingPasteDialog,
+                            titleVisibility: .visible
+                        ) {
+                            Button("Add to Existing") {
+                                Task {
+                                    await performPaste(replacing: false)
+                                }
+                            }
+                            Button("Replace Existing", role: .destructive) {
+                                Task {
+                                    await performPaste(replacing: true)
+                                }
+                            }
+                            Button("Cancel", role: .cancel) {}
+                        } message: {
+                            if let content = AppServices.shared.foodClipboardService?.content {
+                                let itemText = content.entryCount == 1 ? "item" : "items"
+                                let dateText = selectedDate.formatted(date: .abbreviated, time: .omitted)
+                                Text("Paste \(content.entryCount) \(itemText) to \(dateText)?")
+                            }
+                        }
 
                         // Add button
                         Button {
@@ -251,29 +274,6 @@ struct FoodLogView: View {
             } message: {
                 if let entry = entryToDelete {
                     Text("This will remove \(entry.foodName) from your log.")
-                }
-            }
-            .confirmationDialog(
-                "Paste Foods",
-                isPresented: $showingPasteDialog,
-                titleVisibility: .visible
-            ) {
-                Button("Add to Existing") {
-                    Task {
-                        await performPaste(replacing: false)
-                    }
-                }
-                Button("Replace Existing", role: .destructive) {
-                    Task {
-                        await performPaste(replacing: true)
-                    }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                if let content = AppServices.shared.foodClipboardService?.content {
-                    let itemText = content.entryCount == 1 ? "item" : "items"
-                    let dateText = selectedDate.formatted(date: .abbreviated, time: .omitted)
-                    Text("Paste \(content.entryCount) \(itemText) to \(dateText)?")
                 }
             }
         }
