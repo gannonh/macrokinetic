@@ -115,10 +115,11 @@ struct ServingOption: Identifiable, Equatable {
     let grams: Double  // Equivalent weight in grams
 
     // Pre-compiled regex for parsing serving options (e.g., "1.0 item (291g)")
+    // Uses [^(]+ to capture description up to FIRST parenthesis (handles double-parens like "(49 g) (49g)")
     // Compiled once as static property for performance
     // swiftlint:disable:next force_try
     private static let servingOptionRegex = try! NSRegularExpression(
-        pattern: #"^([\d.]+)\s+(.+?)\s*\((\d+(?:\.\d+)?)g\)$"#
+        pattern: #"^([\d./]+)\s+([^(]+).*\((\d+(?:\.\d+)?)g\)$"#
     )
 
     /// Parse serving options from JSON string (e.g., '["100g", "1.0 item (291g)"]')
@@ -148,8 +149,8 @@ struct ServingOption: Identifiable, Equatable {
             return ServingOption(label: option, grams: grams)
         }
 
-        // Handle item format: "1.0 item (291g)" or "1.0 whole without shell (50g)"
-        // Uses .+? to capture multi-word descriptions like "whole without shell"
+        // Handle item format: "1.0 item (291g)" or "1.0 whole without shell (50g)" or "1/4 cup (49g)"
+        // Uses [^(]+ to capture description up to first parenthesis
         if let match = servingOptionRegex.firstMatch(
             in: option,
             range: NSRange(option.startIndex..., in: option)
@@ -158,12 +159,45 @@ struct ServingOption: Identifiable, Equatable {
             let descRange = Range(match.range(at: 2), in: option),
             let gramsRange = Range(match.range(at: 3), in: option)
         {
-            let quantity = Double(option[quantityRange]) ?? 1.0
+            // Parse quantity - handle both decimal (0.25) and fraction (1/4) formats
+            let quantityStr = String(option[quantityRange])
+            let quantity: Double
+            if quantityStr.contains("/") {
+                // Fraction format: "1/4" -> 0.25
+                let parts = quantityStr.split(separator: "/")
+                if parts.count == 2,
+                    let numerator = Double(parts[0]),
+                    let denominator = Double(parts[1]),
+                    denominator != 0
+                {
+                    quantity = numerator / denominator
+                } else {
+                    quantity = 1.0
+                }
+            } else {
+                quantity = Double(quantityStr) ?? 1.0
+            }
+
             let description = String(option[descRange]).trimmingCharacters(in: .whitespaces)
             let grams = Double(option[gramsRange]) ?? 100.0
 
-            // Format label nicely - keep full description
-            let label = quantity == 1.0 ? description : "\(Int(quantity)) \(description)"
+            // Format label nicely:
+            // - quantity == 1.0: just the description (e.g., "cup", "item")
+            // - quantity is whole number > 1: "2 cookies"
+            // - quantity is fractional: just the description (the quantity is implied by the grams)
+            //   This allows ServingPillPicker to parse quantity from original label
+            let label: String
+            if quantity == 1.0 || quantity < 1.0 {
+                // For 1.0 or fractional amounts, just use description
+                // Fractional amounts (0.25 cup) show as "cup" - the quantity is in the grams
+                label = description
+            } else if quantity == Double(Int(quantity)) {
+                // Whole number quantity > 1: "2 cookies"
+                label = "\(Int(quantity)) \(description)"
+            } else {
+                // Non-integer quantity > 1 (rare): just use description
+                label = description
+            }
             return ServingOption(label: label, grams: grams)
         }
 

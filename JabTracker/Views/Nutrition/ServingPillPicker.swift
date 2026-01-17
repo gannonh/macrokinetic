@@ -85,12 +85,12 @@ struct ServingPillOption: Identifiable, Equatable {
     /// Check if a serving label's gram value is unrealistic for its unit type.
     /// Used to sanitize suspicious labels from existing database data.
     ///
-    /// For fractional servings (e.g., "0.25 cup"), the acceptable gram range is
-    /// scaled by the quantity. For example, "0.25 cup" checks against [80*0.25, 300*0.25] = [20, 75].
+    /// Uses extended ranges that cover fractional servings (0.25x to 1x of base).
+    /// For example, "cup" checks against [20, 300] to allow anything from quarter cup to full cup.
     ///
     /// - Parameters:
     ///   - formattedLabel: The formatted serving label (e.g., "cup", "tbsp")
-    ///   - originalLabel: The original label with quantity prefix (e.g., "0.25 cup (49g)")
+    ///   - originalLabel: The original label (deprecated, no longer used for quantity parsing)
     ///   - grams: The gram weight for this serving
     /// - Returns: True if the gram value is suspicious for the detected unit type
     private static func isServingLabelSuspicious(
@@ -100,24 +100,19 @@ struct ServingPillOption: Identifiable, Equatable {
     ) -> Bool {
         let lowerLabel = formattedLabel.lowercased()
 
-        // Parse quantity from original label, default to 1.0
-        let quantity = parseQuantityPrefix(originalLabel) ?? 1.0
-
-        // Check for common unit keywords and validate gram ranges (scaled by quantity)
+        // Use extended ranges to cover fractional servings (0.25x to 1x of base range)
+        // This allows quarter cups through full cups, etc.
         if lowerLabel.contains("cup") {
-            let minGrams = 80.0 * quantity
-            let maxGrams = 300.0 * quantity
-            return grams < minGrams || grams > maxGrams
+            // 1 cup: 80-300g, but allow down to ~0.25 cup (~20g)
+            return grams < 20.0 || grams > 300.0
         }
         if lowerLabel.contains("tbsp") || lowerLabel.contains("tablespoon") {
-            let minGrams = 5.0 * quantity
-            let maxGrams = 25.0 * quantity
-            return grams < minGrams || grams > maxGrams
+            // 1 tbsp: 5-25g, but allow down to ~0.25 tbsp (~1.25g)
+            return grams < 1.25 || grams > 25.0
         }
         if lowerLabel.contains("tsp") || lowerLabel.contains("teaspoon") {
-            let minGrams = 2.0 * quantity
-            let maxGrams = 10.0 * quantity
-            return grams < minGrams || grams > maxGrams
+            // 1 tsp: 2-10g, but allow down to ~0.25 tsp (~0.5g)
+            return grams < 0.5 || grams > 10.0
         }
         // "oz" alone might be ambiguous - be lenient
         return false
