@@ -1,0 +1,1 @@
+/Users/gannonhall/.claude/agents/gsd-research-synthesizer.md
