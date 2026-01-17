@@ -515,4 +515,156 @@ struct DoseScheduleTests {
         #expect(schedule.pausedUntil == nil)  // Default should be nil
         #expect(schedule.customScheduleData == nil)  // Default should be nil
     }
+
+    // MARK: - lastTakenDose Tests
+
+    @Test("lastTakenDose returns nil when no scheduled doses exist")
+    func testLastTakenDoseEmpty() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        #expect(schedule.lastTakenDose == nil)
+    }
+
+    @Test("lastTakenDose returns nil when only pending doses exist")
+    func testLastTakenDoseOnlyPending() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+
+        // Create pending dose (no actual dose linked)
+        let pendingDose = ScheduledDose(
+            scheduledTime: tomorrow,
+            doseAmount: 0.5,
+            windowStart: tomorrow.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: tomorrow.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(pendingDose)
+        pendingDose.schedule = schedule
+
+        try context.save()
+
+        #expect(schedule.lastTakenDose == nil)
+    }
+
+    @Test("lastTakenDose returns most recent taken dose")
+    func testLastTakenDoseReturnsNewest() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        let now = Date()
+        let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now)!
+        let twoWeeksAgo = Calendar.current.date(byAdding: .day, value: -14, to: now)!
+
+        // Create older taken dose
+        let olderDose = ScheduledDose(
+            scheduledTime: twoWeeksAgo,
+            doseAmount: 0.5,
+            windowStart: twoWeeksAgo.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: twoWeeksAgo.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(olderDose)
+        olderDose.schedule = schedule
+        let olderActualDose = Dose(amount: 0.5, timestamp: twoWeeksAgo)
+        context.insert(olderActualDose)
+        olderActualDose.scheduledDose = olderDose
+
+        // Create newer taken dose
+        let newerDose = ScheduledDose(
+            scheduledTime: oneWeekAgo,
+            doseAmount: 0.5,
+            windowStart: oneWeekAgo.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: oneWeekAgo.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(newerDose)
+        newerDose.schedule = schedule
+        let newerActualDose = Dose(amount: 0.5, timestamp: oneWeekAgo)
+        context.insert(newerActualDose)
+        newerActualDose.scheduledDose = newerDose
+
+        try context.save()
+
+        let lastTaken = schedule.lastTakenDose
+        #expect(lastTaken != nil)
+        #expect(lastTaken?.id == newerDose.id)
+    }
+
+    @Test("lastTakenDose ignores skipped doses")
+    func testLastTakenDoseIgnoresSkipped() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        let now = Date()
+        let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now)!
+        let twoWeeksAgo = Calendar.current.date(byAdding: .day, value: -14, to: now)!
+
+        // Create taken dose (older)
+        let takenDose = ScheduledDose(
+            scheduledTime: twoWeeksAgo,
+            doseAmount: 0.5,
+            windowStart: twoWeeksAgo.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: twoWeeksAgo.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(takenDose)
+        takenDose.schedule = schedule
+        let actualDose = Dose(amount: 0.5, timestamp: twoWeeksAgo)
+        context.insert(actualDose)
+        actualDose.scheduledDose = takenDose
+
+        // Create skipped dose (newer - should be ignored)
+        let skippedDose = ScheduledDose(
+            scheduledTime: oneWeekAgo,
+            doseAmount: 0.5,
+            windowStart: oneWeekAgo.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: oneWeekAgo.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(skippedDose)
+        skippedDose.schedule = schedule
+        skippedDose.skippedAt = oneWeekAgo  // Mark as skipped
+
+        try context.save()
+
+        let lastTaken = schedule.lastTakenDose
+        #expect(lastTaken != nil)
+        #expect(lastTaken?.id == takenDose.id)
+    }
+
+    @Test("lastTakenDose returns nil when only skipped doses exist")
+    func testLastTakenDoseOnlySkipped() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let schedule = DoseSchedule()
+        context.insert(schedule)
+
+        let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+
+        // Create skipped dose
+        let skippedDose = ScheduledDose(
+            scheduledTime: oneWeekAgo,
+            doseAmount: 0.5,
+            windowStart: oneWeekAgo.addingTimeInterval(-2 * 60 * 60),
+            windowEnd: oneWeekAgo.addingTimeInterval(2 * 60 * 60)
+        )
+        context.insert(skippedDose)
+        skippedDose.schedule = schedule
+        skippedDose.skippedAt = oneWeekAgo
+
+        try context.save()
+
+        #expect(schedule.lastTakenDose == nil)
+    }
 }

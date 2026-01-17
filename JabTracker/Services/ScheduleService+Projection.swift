@@ -11,6 +11,9 @@
 
 import Foundation
 import SwiftData
+import os
+
+private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ScheduleService")
 
 // MARK: - Schedule Projection Extension
 
@@ -47,7 +50,16 @@ extension ScheduleService {
         }
 
         // Decode schedule configuration
-        guard let config = try? decodeScheduleConfiguration(schedule) else {
+        guard
+            let config: ScheduleConfiguration = {
+                do {
+                    return try decodeScheduleConfiguration(schedule)
+                } catch {
+                    logger.error("Failed to decode schedule configuration for schedule \(schedule.id): \(error)")
+                    return nil
+                }
+            }()
+        else {
             return []
         }
 
@@ -148,22 +160,32 @@ extension ScheduleService {
         // If there's a taken dose, calculate next from that
         if let lastTaken = schedule.lastTakenDose {
             // Get the interval from config
-            guard let config = try? decodeScheduleConfiguration(schedule) else {
+            guard
+                let config: ScheduleConfiguration = {
+                    do {
+                        return try decodeScheduleConfiguration(schedule)
+                    } catch {
+                        logger.error("Failed to decode schedule configuration for schedule \(schedule.id): \(error)")
+                        return nil
+                    }
+                }()
+            else {
                 return nil
             }
 
-            // Calculate next dose: last taken time + interval days
-            // For split dose, use splitIntervalMinutes; otherwise use interval in days
-            let intervalDays =
+            // Calculate next dose: last taken time + interval
+            // Use minutes for split dose (supports fractional days like 3.5 days = 5040 minutes)
+            // Use days for other patterns
+            let intervalMinutes =
                 schedule.patternType == .splitDose
-                ? (config.splitIntervalMinutes ?? 0) / (24 * 60)  // Convert minutes to days
-                : config.interval
+                ? (config.splitIntervalMinutes ?? 0)
+                : config.interval * 24 * 60  // Convert days to minutes
 
             var nextDoseDate = lastTaken.scheduledTime
 
             // Keep adding intervals until we're past now
             while nextDoseDate <= now {
-                nextDoseDate = calendar.date(byAdding: .day, value: intervalDays, to: nextDoseDate)!
+                nextDoseDate = calendar.date(byAdding: .minute, value: intervalMinutes, to: nextDoseDate)!
             }
 
             // Create the scheduled dose for this time

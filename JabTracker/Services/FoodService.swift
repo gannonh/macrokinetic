@@ -172,20 +172,29 @@ struct ServingOption: Identifiable, Equatable {
                 {
                     quantity = numerator / denominator
                 } else {
+                    logger.warning(
+                        "Failed to parse fraction quantity '\(quantityStr)' in '\(option)', defaulting to 1.0")
                     quantity = 1.0
                 }
             } else {
+                if Double(quantityStr) == nil {
+                    logger.warning(
+                        "Failed to parse decimal quantity '\(quantityStr)' in '\(option)', defaulting to 1.0")
+                }
                 quantity = Double(quantityStr) ?? 1.0
             }
 
             let description = String(option[descRange]).trimmingCharacters(in: .whitespaces)
-            let grams = Double(option[gramsRange]) ?? 100.0
+            let gramsStr = String(option[gramsRange])
+            if Double(gramsStr) == nil {
+                logger.warning("Failed to parse grams '\(gramsStr)' in '\(option)', defaulting to 100.0")
+            }
+            let grams = Double(gramsStr) ?? 100.0
 
             // Format label nicely:
             // - quantity == 1.0: just the description (e.g., "cup", "item")
             // - quantity is whole number > 1: "2 cookies"
             // - quantity is fractional: just the description (the quantity is implied by the grams)
-            //   This allows ServingPillPicker to parse quantity from original label
             let label: String
             if quantity == 1.0 || quantity < 1.0 {
                 // For 1.0 or fractional amounts, just use description

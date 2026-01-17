@@ -14,7 +14,6 @@ enum AuthenticationState: String, CaseIterable {
 }
 
 @MainActor
-// swiftlint:disable:next type_body_length
 class AuthenticationManager: NSObject, ObservableObject {
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",

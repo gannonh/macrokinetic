@@ -501,14 +501,63 @@ struct FoodServiceTests {
         #expect(options.first?.grams == 100)
     }
 
-    @Test("ServingOption parses decimal quantities")
+    @Test("ServingOption parses decimal quantities correctly")
     func testServingOptionParsesDecimalQuantities() {
         let options = ServingOption.parse(from: "[\"0.5 cup (120g)\"]")
 
-        // Note: current implementation formats as "0 cup" for decimal quantities
-        // This is a known limitation - the test documents current behavior
         #expect(options.count == 1)
+        // For fractional amounts (< 1.0), label is just the description
+        #expect(options.first?.label == "cup")
         #expect(options.first?.grams == 120)
+    }
+
+    @Test("ServingOption parses fraction format 1/4")
+    func testServingOptionParsesFractionQuarter() {
+        let options = ServingOption.parse(from: "[\"1/4 cup (49g)\"]")
+
+        #expect(options.count == 1)
+        // Fractional amounts show just the description, quantity is in grams
+        #expect(options.first?.label == "cup")
+        #expect(options.first?.grams == 49)
+    }
+
+    @Test("ServingOption parses fraction format 1/2")
+    func testServingOptionParsesFractionHalf() {
+        let options = ServingOption.parse(from: "[\"1/2 item (100g)\"]")
+
+        #expect(options.count == 1)
+        #expect(options.first?.label == "item")
+        #expect(options.first?.grams == 100)
+    }
+
+    @Test("ServingOption parses fraction format 1/3")
+    func testServingOptionParsesFractionThird() {
+        let options = ServingOption.parse(from: "[\"1/3 serving (75g)\"]")
+
+        #expect(options.count == 1)
+        #expect(options.first?.label == "serving")
+        #expect(options.first?.grams == 75)
+    }
+
+    @Test("ServingOption handles double parentheses format")
+    func testServingOptionHandlesDoubleParentheses() {
+        // Some Open Food Facts entries have format like "(49 g) (49g)"
+        let options = ServingOption.parse(from: "[\"1/4 cup (49 g) (49g)\"]")
+
+        #expect(options.count == 1)
+        // Uses [^(]+ to capture description up to first parenthesis
+        #expect(options.first?.label == "cup")
+        #expect(options.first?.grams == 49)
+    }
+
+    @Test("ServingOption handles whole number quantity greater than 1")
+    func testServingOptionParsesWholeNumberQuantity() {
+        let options = ServingOption.parse(from: "[\"2 cookies (30g)\"]")
+
+        #expect(options.count == 1)
+        // Whole number > 1 shows as "2 cookies"
+        #expect(options.first?.label == "2 cookies")
+        #expect(options.first?.grams == 30)
     }
 
     @Test("ServingOption toJSON serializes correctly")

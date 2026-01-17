@@ -187,7 +187,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
                 varyingReferenceLine(in: geometry, barWidth: barWidth, spacing: spacing)
             }
         }
-        .accessibilityLabel("Energy balance chart showing last 30 days")
+        .accessibilityLabel("Energy balance chart showing last \(dayCount) days")
     }
 
     /// Draw a varying reference line that follows per-day expenditure or target values

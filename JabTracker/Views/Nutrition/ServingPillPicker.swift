@@ -34,11 +34,9 @@ struct ServingPillOption: Identifiable, Equatable {
         let formattedLabel = ServingPillOption.formatLabel(from: option.label)
 
         // Sanitize suspicious labels at runtime for existing database data
-        // Pass original label to support fractional quantity parsing (e.g., "0.25 cup (49g)")
         let sanitizedLabel =
             ServingPillOption.isServingLabelSuspicious(
                 formattedLabel,
-                originalLabel: option.label,
                 grams: option.grams
             ) ? "serving" : formattedLabel
 
@@ -50,38 +48,6 @@ struct ServingPillOption: Identifiable, Equatable {
 
     // MARK: - Serving Label Validation
 
-    /// Parse a quantity prefix from a serving label (e.g., "0.25 cup" -> 0.25, "1/4 cup" -> 0.25)
-    /// - Parameter label: The original serving label
-    /// - Returns: The quantity multiplier, or nil if no quantity found (defaults to 1.0)
-    private static func parseQuantityPrefix(_ label: String) -> Double? {
-        let trimmed = label.trimmingCharacters(in: .whitespaces)
-
-        // Pattern 1: Decimal format (e.g., "0.25", "1.5", "2")
-        // swiftlint:disable:next force_try
-        let decimalRegex = try! NSRegularExpression(pattern: #"^(\d+\.?\d*)\s"#)
-        if let match = decimalRegex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
-            let range = Range(match.range(at: 1), in: trimmed),
-            let value = Double(trimmed[range])
-        {
-            return value
-        }
-
-        // Pattern 2: Fraction format (e.g., "1/4", "1/2", "1/3")
-        // swiftlint:disable:next force_try
-        let fractionRegex = try! NSRegularExpression(pattern: #"^(\d+)/(\d+)\s"#)
-        if let match = fractionRegex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
-            let numRange = Range(match.range(at: 1), in: trimmed),
-            let denRange = Range(match.range(at: 2), in: trimmed),
-            let numerator = Double(trimmed[numRange]),
-            let denominator = Double(trimmed[denRange]),
-            denominator != 0
-        {
-            return numerator / denominator
-        }
-
-        return nil
-    }
-
     /// Check if a serving label's gram value is unrealistic for its unit type.
     /// Used to sanitize suspicious labels from existing database data.
     ///
@@ -90,12 +56,10 @@ struct ServingPillOption: Identifiable, Equatable {
     ///
     /// - Parameters:
     ///   - formattedLabel: The formatted serving label (e.g., "cup", "tbsp")
-    ///   - originalLabel: The original label (deprecated, no longer used for quantity parsing)
     ///   - grams: The gram weight for this serving
     /// - Returns: True if the gram value is suspicious for the detected unit type
     private static func isServingLabelSuspicious(
         _ formattedLabel: String,
-        originalLabel: String,
         grams: Double
     ) -> Bool {
         let lowerLabel = formattedLabel.lowercased()
