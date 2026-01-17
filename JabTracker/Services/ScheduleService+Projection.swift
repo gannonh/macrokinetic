@@ -157,8 +157,15 @@ extension ScheduleService {
         let calendar = Calendar.current
         let now = Date()
 
+        // Find the last taken dose from actual Dose records
+        // (ScheduledDose records are not persisted, so use Dose model directly)
+        let lastTakenDoseTimestamp: Date? = schedule.medicationProfile?.doses?
+            .filter { !$0.skipped }
+            .map { $0.timestamp }
+            .max()
+
         // If there's a taken dose, calculate next from that
-        if let lastTaken = schedule.lastTakenDose {
+        if let lastTakenTime = lastTakenDoseTimestamp {
             // Get the interval from config
             guard
                 let config: ScheduleConfiguration = {
@@ -186,7 +193,7 @@ extension ScheduleService {
                 return nil
             }
 
-            var nextDoseDate = lastTaken.scheduledTime
+            var nextDoseDate = lastTakenTime
 
             // Keep adding intervals until we're past now
             while nextDoseDate <= now {
@@ -256,11 +263,35 @@ extension ScheduleService {
         var doses: [ScheduledDose] = []
         let calendar = Calendar.current
 
+        // Check for actual dose history to anchor projections correctly
+        // This ensures future doses align with actual dosing behavior, not stored patterns
+        let lastActualDoseTime: Date? = schedule.medicationProfile?.doses?
+            .filter { !$0.skipped }
+            .map { $0.timestamp }
+            .max()
+
         // Start from the requested start date
         var currentDate = startDate
 
-        // If dayOfWeek is specified, find the first occurrence of that weekday
-        if let targetWeekday = config.dayOfWeek {
+        // If we have actual dose history, calculate future doses from the last dose
+        if let lastDoseTime = lastActualDoseTime {
+            // Start from last dose and add intervals until we're past startDate
+            var projectedDate = lastDoseTime
+
+            // Set the time of day from config
+            var components = calendar.dateComponents([.year, .month, .day], from: projectedDate)
+            components.hour = config.timeOfDay.hour
+            components.minute = config.timeOfDay.minute
+            components.second = 0
+            projectedDate = calendar.date(from: components) ?? projectedDate
+
+            // Keep adding intervals until we reach or pass startDate
+            while projectedDate < startDate {
+                projectedDate = calendar.date(byAdding: .day, value: config.interval, to: projectedDate)!
+            }
+            currentDate = projectedDate
+        } else if let targetWeekday = config.dayOfWeek {
+            // No dose history - use pattern-based calculation
             // Find next occurrence of target weekday from currentDate
             var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: currentDate)
             components.weekday = targetWeekday

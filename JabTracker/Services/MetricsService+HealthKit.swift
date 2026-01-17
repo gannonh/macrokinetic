@@ -100,6 +100,126 @@ extension MetricsService {
         }
     }
 
+    // MARK: - Weight Import from HealthKit
+
+    /// Import historical weight data from HealthKit into SwiftData
+    /// - Parameters:
+    ///   - days: Number of days of history to import (nil for all time)
+    ///   - user: The user to check sync status
+    /// - Returns: Number of new entries imported
+    func importWeightHistoryFromHealthKit(days: Int? = nil, for user: User) async throws -> Int {
+        guard user.healthSyncEnabled else {
+            Self.healthKitLogger.info("HealthKit sync not enabled, skipping weight import")
+            return 0
+        }
+
+        guard Self.isHealthKitAvailable else {
+            Self.healthKitLogger.info("HealthKit not available, skipping weight import")
+            return 0
+        }
+
+        // Calculate date range
+        let endDate = Date()
+        let startDate: Date
+        if let days = days {
+            startDate = Calendar.current.date(byAdding: .day, value: -days, to: endDate) ?? endDate
+        } else {
+            // Default to 10 years of history if no limit specified
+            startDate = Calendar.current.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+        }
+
+        Self.healthKitLogger.info("Importing weight history from \(startDate) to \(endDate)")
+
+        // Fetch weight samples from HealthKit
+        let samples = await fetchWeightSamplesFromHealthKit(from: startDate, to: endDate)
+
+        guard !samples.isEmpty else {
+            Self.healthKitLogger.info("No weight samples found in HealthKit")
+            return 0
+        }
+
+        Self.healthKitLogger.info("Found \(samples.count) weight samples in HealthKit")
+
+        // Get existing entries to avoid duplicates (check by timestamp within 1 minute tolerance)
+        let existingEntries = try await getAllWeightEntries()
+        let existingTimestamps = Set(
+            existingEntries.map { entry in
+                // Round to nearest minute to handle minor timestamp differences
+                Int(entry.timestamp.timeIntervalSince1970 / 60)
+            })
+
+        var importedCount = 0
+
+        for sample in samples {
+            let timestampMinute = Int(sample.startDate.timeIntervalSince1970 / 60)
+
+            // Skip if we already have an entry at this time
+            if existingTimestamps.contains(timestampMinute) {
+                continue
+            }
+
+            let weightKg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
+
+            // Validate weight range
+            guard weightKg >= WeightEntry.minWeightKg && weightKg <= WeightEntry.maxWeightKg else {
+                Self.healthKitLogger.debug("Skipping invalid weight: \(weightKg) kg")
+                continue
+            }
+
+            let entry = WeightEntry(
+                timestamp: sample.startDate,
+                weightKg: weightKg,
+                bodyFatPercentage: nil,
+                source: "healthkit",
+                notes: nil
+            )
+
+            context.insert(entry)
+            importedCount += 1
+        }
+
+        if importedCount > 0 {
+            try context.save()
+            Self.healthKitLogger.info("Imported \(importedCount) weight entries from HealthKit")
+        }
+
+        return importedCount
+    }
+
+    /// Fetch weight samples from HealthKit within a date range
+    private func fetchWeightSamplesFromHealthKit(from startDate: Date, to endDate: Date) async -> [HKQuantitySample] {
+        guard Self.isHealthKitAvailable else { return [] }
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: startDate,
+                end: endDate,
+                options: .strictStartDate
+            )
+
+            let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+
+            let query = HKSampleQuery(
+                sampleType: Self.weightType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, error in
+                if let error {
+                    Self.healthKitLogger.error("Failed to fetch weight history: \(error.localizedDescription)")
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                let quantitySamples = (samples as? [HKQuantitySample]) ?? []
+                Self.healthKitLogger.debug("Fetched \(quantitySamples.count) weight samples from HealthKit")
+                continuation.resume(returning: quantitySamples)
+            }
+
+            Self.healthStore.execute(query)
+        }
+    }
+
     // MARK: - Weight (Read from HealthKit)
 
     /// Get current weight - reads from HealthKit if sync enabled, otherwise from User profile
@@ -211,6 +331,11 @@ extension MetricsService {
                 user.healthSyncEnabled = true
                 try context.save()
                 Self.healthKitLogger.info("HealthKit sync enabled")
+
+                // Import historical weight data from HealthKit
+                let importedCount = try await importWeightHistoryFromHealthKit(for: user)
+                Self.healthKitLogger.info("Imported \(importedCount) historical weight entries")
+
                 return true
             } else {
                 Self.healthKitLogger.info("HealthKit authorization denied")
