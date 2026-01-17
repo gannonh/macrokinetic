@@ -66,6 +66,9 @@ struct FoodLogView: View {
     // Fasting day support
     @State private var isFastingDay: Bool = false
 
+    // Copy/paste state
+    @State private var showingPasteDialog = false
+
     private let calendar = Calendar.current
 
     /// Get macro targets for the selected date, considering per-day distribution
@@ -130,6 +133,10 @@ struct FoodLogView: View {
                         adjustmentBreakdown: adjustmentBreakdown
                     )
                     .cardListRow()
+                    .contentShape(Rectangle())
+                    .contextMenu {
+                        copyPasteMenuContent(entries: selectedDateEntries, section: nil)
+                    }
                 }
                 .listSectionSeparator(.hidden)
 
@@ -221,6 +228,29 @@ struct FoodLogView: View {
             } message: {
                 if let entry = entryToDelete {
                     Text("This will remove \(entry.foodName) from your log.")
+                }
+            }
+            .confirmationDialog(
+                "Paste Foods",
+                isPresented: $showingPasteDialog,
+                titleVisibility: .visible
+            ) {
+                Button("Add to Existing") {
+                    Task {
+                        await performPaste(replacing: false)
+                    }
+                }
+                Button("Replace Existing", role: .destructive) {
+                    Task {
+                        await performPaste(replacing: true)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                if let content = AppServices.shared.foodClipboardService?.content {
+                    let itemText = content.entryCount == 1 ? "item" : "items"
+                    let dateText = selectedDate.formatted(date: .abbreviated, time: .omitted)
+                    Text("Paste \(content.entryCount) \(itemText) to \(dateText)?")
                 }
             }
         }
@@ -388,7 +418,9 @@ struct FoodLogView: View {
     }
 
     private func mealSectionHeader(section: MealSection, totals: MealTotals) -> some View {
-        HStack {
+        let entries = selectedDateEntries.filter { $0.meal == section }
+
+        return HStack {
             HStack(spacing: 4) {
                 Image(systemName: section.icon)
                     .font(.caption)
@@ -400,30 +432,75 @@ struct FoodLogView: View {
 
             Spacer()
 
-            if totals.calories > 0 {
-                HStack(spacing: 6) {
-                    HStack(spacing: 3) {
-                        Text("\(Int(totals.protein))P")
-                            .foregroundColor(DesignTokens.Colors.protein)
-                        Text("\(Int(totals.fat))F")
-                            .foregroundColor(DesignTokens.Colors.fat)
-                        Text("\(Int(totals.carbs))C")
-                            .foregroundColor(DesignTokens.Colors.carbs)
-                    }
-                    .font(.caption2)
+            mealTotalsView(totals: totals)
+        }
+        .textCase(nil)
+        .contentShape(Rectangle())
+        .contextMenu {
+            copyPasteMenuContent(entries: entries, section: section)
+        }
+    }
 
-                    HStack(spacing: 2) {
-                        Text("\(Int(totals.calories))")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                        Image(systemName: "flame.fill")
-                            .font(.caption2)
-                    }
-                    .foregroundColor(DesignTokens.Colors.calories)
+    @ViewBuilder
+    private func mealTotalsView(totals: MealTotals) -> some View {
+        if totals.calories > 0 {
+            HStack(spacing: 6) {
+                HStack(spacing: 3) {
+                    Text("\(Int(totals.protein))P")
+                        .foregroundColor(DesignTokens.Colors.protein)
+                    Text("\(Int(totals.fat))F")
+                        .foregroundColor(DesignTokens.Colors.fat)
+                    Text("\(Int(totals.carbs))C")
+                        .foregroundColor(DesignTokens.Colors.carbs)
+                }
+                .font(.caption2)
+
+                HStack(spacing: 2) {
+                    Text("\(Int(totals.calories))")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                    Image(systemName: "flame.fill")
+                        .font(.caption2)
+                }
+                .foregroundColor(DesignTokens.Colors.calories)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func copyPasteMenuContent(entries: [FoodEntry], section: MealSection?) -> some View {
+        // Copy option (only when there are entries)
+        if !entries.isEmpty {
+            Button {
+                if let section = section {
+                    AppServices.shared.foodClipboardService?.copyMeal(
+                        date: selectedDate,
+                        meal: section,
+                        entries: entries
+                    )
+                } else {
+                    AppServices.shared.foodClipboardService?.copyDay(
+                        date: selectedDate,
+                        entries: entries
+                    )
+                }
+            } label: {
+                if let section = section {
+                    Label("Copy \(section.displayName)", systemImage: "doc.on.doc")
+                } else {
+                    Label("Copy All Foods", systemImage: "doc.on.doc")
                 }
             }
         }
-        .textCase(nil)
+
+        // Paste (only when clipboard has content)
+        if AppServices.shared.foodClipboardService?.hasContent == true {
+            Button {
+                showingPasteDialog = true
+            } label: {
+                Label("Paste", systemImage: "doc.on.clipboard")
+            }
+        }
     }
 
     // MARK: - Helpers
@@ -473,6 +550,34 @@ struct FoodLogView: View {
             )
         } catch {
             Self.logger.error("Failed to duplicate entry '\(entry.foodName)': \(error.localizedDescription)")
+        }
+    }
+
+    private func performPaste(replacing: Bool) async {
+        guard let clipboardService = AppServices.shared.foodClipboardService,
+            let content = clipboardService.content,
+            let mealLogService = AppServices.shared.mealLogService
+        else {
+            return
+        }
+
+        let entries: [ClipboardEntry]
+        switch content {
+        case .day(_, let clipboardEntries):
+            entries = clipboardEntries
+        case .meal(_, _, let clipboardEntries):
+            entries = clipboardEntries
+        }
+
+        do {
+            try await mealLogService.pasteEntries(
+                entries,
+                to: selectedDate,
+                targetMeal: nil,  // Preserve original meal sections
+                replacing: replacing
+            )
+        } catch {
+            Self.logger.error("Failed to paste entries: \(error.localizedDescription)")
         }
     }
 
