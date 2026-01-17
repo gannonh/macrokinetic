@@ -167,4 +167,14 @@ final class DoseSchedule {
 
         return nextDose.scheduledTime
     }
+
+    /// Returns the most recent dose that was actually taken
+    ///
+    /// Used to calculate next dose projections from the actual dosing pattern
+    /// rather than the schedule creation date.
+    var lastTakenDose: ScheduledDose? {
+        scheduledDoses?
+            .filter { $0.status == .taken }
+            .max(by: { $0.scheduledTime < $1.scheduledTime })
+    }
 }
