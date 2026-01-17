@@ -135,7 +135,12 @@ struct FoodLogView: View {
                     .cardListRow()
                     .contentShape(Rectangle())
                     .contextMenu {
-                        copyPasteMenuContent(entries: selectedDateEntries, section: nil)
+                        FoodLogCopyPasteMenu(
+                            entries: selectedDateEntries,
+                            section: nil,
+                            selectedDate: selectedDate,
+                            onPaste: { triggerPaste() }
+                        )
                     }
                 }
                 .listSectionSeparator(.hidden)
@@ -165,26 +170,44 @@ struct FoodLogView: View {
             .cardListStyle()
             .safeAreaInset(edge: .top, spacing: 0) {
                 PageHeader(title: "Food Log") {
-                    Button {
-                        showingAddFood = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(
-                                .system(
-                                    size: DesignTokens.HeaderButton.iconSize,
-                                    weight: DesignTokens.HeaderButton.iconWeight
+                    HStack(spacing: 12) {
+                        // Copy/Paste segmented control
+                        CopyPasteSegmentedControl(
+                            hasEntries: !selectedDateEntries.isEmpty,
+                            hasClipboard: AppServices.shared.foodClipboardService?.hasContent == true,
+                            onCopy: {
+                                AppServices.shared.foodClipboardService?.copyDay(
+                                    date: selectedDate,
+                                    entries: selectedDateEntries
                                 )
-                            )
-                            .foregroundColor(DesignTokens.HeaderButton.iconColor)
-                            .frame(
-                                width: DesignTokens.HeaderButton.buttonSize,
-                                height: DesignTokens.HeaderButton.buttonSize
-                            )
-                            .background(DesignTokens.HeaderButton.backgroundColor)
-                            .clipShape(Circle())
+                            },
+                            onPaste: {
+                                triggerPaste()
+                            }
+                        )
+
+                        // Add button
+                        Button {
+                            showingAddFood = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(
+                                    .system(
+                                        size: DesignTokens.HeaderButton.iconSize,
+                                        weight: DesignTokens.HeaderButton.iconWeight
+                                    )
+                                )
+                                .foregroundColor(DesignTokens.HeaderButton.iconColor)
+                                .frame(
+                                    width: DesignTokens.HeaderButton.buttonSize,
+                                    height: DesignTokens.HeaderButton.buttonSize
+                                )
+                                .background(DesignTokens.HeaderButton.backgroundColor)
+                                .clipShape(Circle())
+                        }
+                        .frame(minWidth: 44, minHeight: 44)  // Apple HIG touch target
+                        .accessibilityIdentifier("add-food-button")
                     }
-                    .frame(minWidth: 44, minHeight: 44)  // Apple HIG touch target
-                    .accessibilityIdentifier("add-food-button")
                 }
                 .padding(.bottom, 14)
                 .background(DesignTokens.Colors.groupedBackground)
@@ -437,7 +460,12 @@ struct FoodLogView: View {
         .textCase(nil)
         .contentShape(Rectangle())
         .contextMenu {
-            copyPasteMenuContent(entries: entries, section: section)
+            FoodLogCopyPasteMenu(
+                entries: entries,
+                section: section,
+                selectedDate: selectedDate,
+                onPaste: { triggerPaste() }
+            )
         }
     }
 
@@ -467,39 +495,16 @@ struct FoodLogView: View {
         }
     }
 
-    @ViewBuilder
-    private func copyPasteMenuContent(entries: [FoodEntry], section: MealSection?) -> some View {
-        // Copy option (only when there are entries)
-        if !entries.isEmpty {
-            Button {
-                if let section = section {
-                    AppServices.shared.foodClipboardService?.copyMeal(
-                        date: selectedDate,
-                        meal: section,
-                        entries: entries
-                    )
-                } else {
-                    AppServices.shared.foodClipboardService?.copyDay(
-                        date: selectedDate,
-                        entries: entries
-                    )
-                }
-            } label: {
-                if let section = section {
-                    Label("Copy \(section.displayName)", systemImage: "doc.on.doc")
-                } else {
-                    Label("Copy All Foods", systemImage: "doc.on.doc")
-                }
+    /// Trigger paste action - skip dialog if day is empty
+    private func triggerPaste() {
+        if selectedDateEntries.isEmpty {
+            // Day is empty, paste directly (no need to ask add vs replace)
+            Task {
+                await performPaste(replacing: false)
             }
-        }
-
-        // Paste (only when clipboard has content)
-        if AppServices.shared.foodClipboardService?.hasContent == true {
-            Button {
-                showingPasteDialog = true
-            } label: {
-                Label("Paste", systemImage: "doc.on.clipboard")
-            }
+        } else {
+            // Day has entries, show confirmation dialog
+            showingPasteDialog = true
         }
     }
 
