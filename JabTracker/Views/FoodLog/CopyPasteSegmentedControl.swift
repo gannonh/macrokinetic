@@ -25,8 +25,8 @@ struct CopyPasteSegmentedControl: View {
                     Image(systemName: "doc.on.doc")
                         .font(.system(size: DesignTokens.HeaderButton.iconSize, weight: .semibold))
                         .foregroundColor(hasEntries ? DesignTokens.HeaderButton.iconColor : .secondary.opacity(0.4))
-                        .frame(
-                            width: DesignTokens.HeaderButton.buttonSize, height: DesignTokens.HeaderButton.buttonSize)
+                        .frame(height: DesignTokens.HeaderButton.buttonSize)
+                        .padding(.horizontal, 12)
                 }
                 .disabled(!hasEntries)
                 .accessibilityIdentifier("copy-day-button")
@@ -42,8 +42,8 @@ struct CopyPasteSegmentedControl: View {
                     Image(systemName: "doc.on.clipboard")
                         .font(.system(size: DesignTokens.HeaderButton.iconSize, weight: .semibold))
                         .foregroundColor(hasClipboard ? DesignTokens.HeaderButton.iconColor : .secondary.opacity(0.4))
-                        .frame(
-                            width: DesignTokens.HeaderButton.buttonSize, height: DesignTokens.HeaderButton.buttonSize)
+                        .frame(height: DesignTokens.HeaderButton.buttonSize)
+                        .padding(.horizontal, 12)
                 }
                 .disabled(!hasClipboard)
                 .accessibilityIdentifier("paste-button")

@@ -87,13 +87,13 @@ enum DesignTokens {
 
     enum HeaderButton {
         /// Icon size for header action buttons
-        static let iconSize: CGFloat = 17
+        static let iconSize: CGFloat = 20
         /// Icon weight for header action buttons
         static let iconWeight: Font.Weight = .semibold
         /// Icon color for header action buttons
         static let iconColor = Color(.secondaryLabel)
         /// Button size (circular background)
-        static let buttonSize: CGFloat = 36
+        static let buttonSize: CGFloat = 44
         /// Button background color (visible in both light and dark modes)
         static let backgroundColor = Color(.tertiarySystemBackground)
         /// Shadow radius (diffuse)
