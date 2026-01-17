@@ -23,7 +23,11 @@ This roadmap delivers two complementary features to reduce repetitive food loggi
 3. User can paste clipboard contents to current day with add/replace choice
 4. Clipboard contents persist across navigation until app termination or new copy
 
-**Plans:** (created by /gsd:plan-phase)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 44-01-PLAN.md — Clipboard service and data model
+- [ ] 44-02-PLAN.md — Context menus and paste dialog in FoodLogView
 
 ---
 
@@ -80,7 +84,7 @@ This roadmap delivers two complementary features to reduce repetitive food loggi
 
 | Phase | Status | Completed |
 |-------|--------|-----------|
-| 44 - Copy/Paste | Not started | — |
+| 44 - Copy/Paste | Planned | — |
 | 45 - Schedule Model | Not started | — |
 | 46 - Schedule UX | Not started | — |
 | 47 - Auto-Population | Not started | — |
