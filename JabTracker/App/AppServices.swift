@@ -43,6 +43,9 @@ final class AppServices: ObservableObject {
     /// Day status service for fasting day tracking
     @Published private(set) var dayStatusService: DayStatusService?
 
+    /// Food clipboard service for copy/paste operations (session-only, no ModelContext needed)
+    @Published private(set) var foodClipboardService: FoodClipboardService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -103,6 +106,10 @@ final class AppServices: ObservableObject {
         // Inject DayStatusService so TDEE calculations can exclude fasting days
         let tdeeService = TDEEService(context: modelContext, dayStatusService: dayStatusService)
         self.tdeeService = tdeeService
+
+        // Create FoodClipboardService for copy/paste (no ModelContext needed - session state only)
+        let foodClipboardService = FoodClipboardService()
+        self.foodClipboardService = foodClipboardService
     }
 
     /// Reset services (useful for testing or sign-out)
@@ -117,6 +124,7 @@ final class AppServices: ObservableObject {
         calorieAdjustmentService = nil
         tdeeService = nil
         dayStatusService = nil
+        foodClipboardService = nil
     }
 }
 
