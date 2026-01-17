@@ -11,30 +11,30 @@
 ## Current Position
 
 Phase: 44 of 47 (Copy/Paste)
-Plan: 1 of 4
+Plan: 2 of 4
 Status: In progress
-Last activity: 2026-01-17 — Completed 44-01-PLAN.md (Clipboard Foundation)
+Last activity: 2026-01-17 — Completed 44-02-PLAN.md (Copy Actions)
 
-Progress: ██░░░░░░░░ 25%
+Progress: ████░░░░░░ 50%
 
 ## GitHub Tracking
 
 Issue: N/A
 PR: N/A
 Branch: feat/44-copy-paste
-Status: Plan 44-01 complete, ready for 44-02
+Status: Plan 44-02 complete, ready for 44-03
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v0.10.0)
-- Average duration: 6min
+- Total plans completed: 2 (v0.10.0)
+- Average duration: 9min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 44 | 1 | 6min | 6min |
+| 44 | 2 | 18min | 9min |
 
 **Historical (v0.9.0):**
 - 8 plans completed (+4 FIX plans)
@@ -50,6 +50,9 @@ Status: Plan 44-01 complete, ready for 44-02
 | Value types for clipboard | 44-01 | Avoid SwiftData context invalidation when navigating |
 | Session-only clipboard | 44-01 | Per COPY-05 requirement, cleared on app termination |
 | Single clipboard (no history) | 44-01 | Simplicity, new copy replaces existing |
+| Segmented control in header | 44-02 | User enhancement for quick copy/paste access in toolbar |
+| Skip confirmation on empty day | 44-02 | Streamline common workflow when no entries to replace |
+| Insert before delete on paste | 44-02 | Prevent data loss if operation fails midway |
 
 ### Pending Todos
 
@@ -62,9 +65,9 @@ Status: Plan 44-01 complete, ready for 44-02
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 44-01-PLAN.md
+Stopped at: Completed 44-02-PLAN.md
 Resume file: None
 
 ---
 
-**Next Step:** Execute 44-02-PLAN.md (Copy Actions)
+**Next Step:** Execute 44-03-PLAN.md (Visual Feedback)
