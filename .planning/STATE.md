@@ -10,12 +10,12 @@
 
 ## Current Position
 
-Phase: 42 of 43 (Serving Unit Mapping) - COMPLETE
-Plan: All plans complete (1/1 + FIX)
-Status: Phase verified with gap closure, ready for Phase 43
-Last activity: 2026-01-16 - Completed 42-FIX-PLAN.md (fractional cup validation)
+Phase: 43 of 43 (Integration Polish)
+Plan: 1 of 2
+Status: In progress
+Last activity: 2026-01-16 - Completed 43-01-PLAN.md (energy balance hero average fix)
 
-Progress: ████████░░ 80%
+Progress: █████████░ 90%
 
 ## GitHub Tracking
 
@@ -45,6 +45,11 @@ Status: PR Review complete - ready for CodeRabbit review or merge
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 43 decisions (Plan 01):**
+- Use actualDayCount accessor on ViewModel rather than exposing dailyCalories.count directly
+- Dynamic label shows "Last N Days" for partial data, "Last 30 Days" for full data
+- Widget average calculations should use actual data count, not max lookback period
 
 **Phase 42 decisions (FIX plan):**
 - Parse quantity prefix from original label before formatting strips it
@@ -113,11 +118,11 @@ None.
 
 Last checked: 2026-01-16
 Status: ✓ Aligned
-Assessment: Phase 42 complete. Serving label validation and unit conversion fixes verified.
+Assessment: Phase 43 in progress. Energy balance hero average fix complete, ready for plan 02.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-16T21:56:00Z
-Stopped at: Completed 42-FIX-PLAN.md (fractional cup validation gap closure)
+Last session: 2026-01-16T~UTC
+Stopped at: Completed 43-01-PLAN.md (energy balance hero average fix)
 Resume file: None
