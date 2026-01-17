@@ -1,0 +1,35 @@
+Build 0.9.0 (11) - Improvements & Fixes Release
+
+What's New
+- Serving unit validation: Fractional cup measurements (1/4, 1/2, 3/4 cup) now properly convert to grams
+- Food entry editing: Unit conversion now works correctly when editing existing food log entries
+- Energy balance hero: 30-day averages now use actual logged day count instead of calendar days
+- Next dose scheduling: Improved calculation using lastTakenDose tracking for accurate timing
+
+Bug Fixes
+- Fixed fractional cup servings showing incorrect gram conversions in food log
+- Fixed energy balance widget showing inflated averages for users with partial week data
+- Fixed next dose schedule calculation for medications taken on irregular schedules
+- Defensive serving label validation prevents invalid serving data from reaching the UI
+
+Technical Improvements
+- Python data processor now validates and fixes fractional cup serving patterns
+- Added serving label validation at data import layer
+- Unit conversion handler added to EditFoodEntrySheet for consistent behavior
+- Added active user data seeding scenarios for improved testing
+
+Focus Areas for Testing
+- Food Logging: Search for foods with cup servings (yogurt, rice, vegetables) and verify gram amounts look correct
+- Edit Entries: Edit an existing food entry's serving size and confirm the nutrition updates properly
+- Energy Balance: If you've logged food for less than 30 days, check the dashboard averages reflect your actual days
+- GLP-1 Users: Check your next dose timing - it should reflect when you actually last took medication
+
+Feedback Needed
+- Do cup-based serving sizes now show reasonable gram weights?
+- Is the energy balance widget helpful for understanding your weekly trends?
+- For GLP-1 users: Does the next dose timing feel accurate?
+
+Not Yet Implemented
+- Background notification refresh
+- Split-dose schedule UI configuration
+- Crash/error reporting service
