@@ -297,6 +297,9 @@ struct EditFoodEntrySheet: View {
                         servingOptions: servingOptions,
                         selectedOption: $selectedPillOption
                     )
+                    .onChange(of: selectedPillOption) { oldValue, newValue in
+                        convertServingCount(from: oldValue, to: newValue)
+                    }
                 }
             }
         } else {
@@ -445,6 +448,27 @@ struct EditFoodEntrySheet: View {
         let currentGrams = calculateGramsFromTarget()
         targetMacro = macro
         targetValue = macroValueForGrams(currentGrams, macro: macro)
+    }
+
+    /// Handle serving count when switching between pill options
+    /// - Converting TO unit-only (g/oz): preserve gram amount
+    /// - Selecting item-based option: reset to 1 (user wants "1 small apple", not "1.64 small apples")
+    private func convertServingCount(from oldOption: ServingPillOption?, to newOption: ServingPillOption?) {
+        guard let oldOption = oldOption, let newOption = newOption else { return }
+        guard oldOption.id != newOption.id else { return }
+        guard newOption.grams > 0 else { return }
+
+        if newOption.isUnitOnly {
+            // Switching TO g/oz: convert to preserve gram amount
+            // Guard against invalid oldOption.grams to avoid division issues
+            guard oldOption.grams > 0 else { return }
+            let currentGrams = servingCount * oldOption.grams
+            servingCount = currentGrams / newOption.grams
+        } else {
+            // Switching TO item-based option: reset to 1
+            // User selecting "small apple" wants 1 small apple, not a fractional amount
+            servingCount = 1
+        }
     }
 
     private func calculateGramsFromTarget() -> Double {

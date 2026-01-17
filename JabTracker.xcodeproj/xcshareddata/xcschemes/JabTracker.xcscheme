@@ -105,6 +105,26 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--seed-1-month-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-2-week-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-3-day-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-5-day-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-90-day-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--seed-check-in-good"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -196,6 +216,26 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--seed-1-month-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-2-week-active"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-3-day-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-5-day-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-90-day-active"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--seed-check-in-good"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -209,7 +249,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-check-in-ready"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-collaborative"
@@ -221,7 +261,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-high"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-1y-low"
@@ -241,7 +281,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-90d"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-test-new-user"

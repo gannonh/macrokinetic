@@ -32,10 +32,54 @@ struct ServingPillOption: Identifiable, Equatable {
     /// Create from a ServingOption
     init(from option: ServingOption) {
         let formattedLabel = ServingPillOption.formatLabel(from: option.label)
-        self.id = "\(formattedLabel)-\(option.grams)"
-        self.label = formattedLabel
+
+        // Sanitize suspicious labels at runtime for existing database data
+        let sanitizedLabel =
+            ServingPillOption.isServingLabelSuspicious(
+                formattedLabel,
+                grams: option.grams
+            ) ? "serving" : formattedLabel
+
+        self.id = "\(sanitizedLabel)-\(option.grams)"
+        self.label = sanitizedLabel
         self.grams = option.grams
         self.isUnitOnly = false
+    }
+
+    // MARK: - Serving Label Validation
+
+    /// Check if a serving label's gram value is unrealistic for its unit type.
+    /// Used to sanitize suspicious labels from existing database data.
+    ///
+    /// Uses extended ranges that cover fractional servings (0.25x to 1x of base).
+    /// For example, "cup" checks against [20, 300] to allow anything from quarter cup to full cup.
+    ///
+    /// - Parameters:
+    ///   - formattedLabel: The formatted serving label (e.g., "cup", "tbsp")
+    ///   - grams: The gram weight for this serving
+    /// - Returns: True if the gram value is suspicious for the detected unit type
+    private static func isServingLabelSuspicious(
+        _ formattedLabel: String,
+        grams: Double
+    ) -> Bool {
+        let lowerLabel = formattedLabel.lowercased()
+
+        // Use extended ranges to cover fractional servings (0.25x to 1x of base range)
+        // This allows quarter cups through full cups, etc.
+        if lowerLabel.contains("cup") {
+            // 1 cup: 80-300g, but allow down to ~0.25 cup (~20g)
+            return grams < 20.0 || grams > 300.0
+        }
+        if lowerLabel.contains("tbsp") || lowerLabel.contains("tablespoon") {
+            // 1 tbsp: 5-25g, but allow down to ~0.25 tbsp (~1.25g)
+            return grams < 1.25 || grams > 25.0
+        }
+        if lowerLabel.contains("tsp") || lowerLabel.contains("teaspoon") {
+            // 1 tsp: 2-10g, but allow down to ~0.25 tsp (~0.5g)
+            return grams < 0.5 || grams > 10.0
+        }
+        // "oz" alone might be ambiguous - be lenient
+        return false
     }
 
     /// Format the label to be more human-readable

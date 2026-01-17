@@ -86,10 +86,10 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
             energyBalanceChart
                 .frame(height: 140)
 
-            // "Last 30 Days" label - right aligned
+            // "Last N Days" label - right aligned (reflects actual data range)
             HStack {
                 Spacer()
-                Text("Last 30 Days")
+                Text(dayCount == 0 ? "No data" : (dayCount == 1 ? "Last 1 Day" : "Last \(dayCount) Days"))
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -144,6 +144,11 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
         useMockData ? EnergyBalanceMockData.sample.totalNutrition : (viewModel?.totalNutrition ?? 0)
     }
 
+    /// Actual number of days with data (for average calculations and label)
+    private var dayCount: Int {
+        useMockData ? dailyCalories.count : (viewModel?.actualDayCount ?? 0)
+    }
+
     /// Maximum Y value for fixed chart scale (prevents axis animation)
     private var chartYMax: Double {
         let maxCalories = dailyCalories.map(\.value).max() ?? 0
@@ -182,7 +187,11 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
                 varyingReferenceLine(in: geometry, barWidth: barWidth, spacing: spacing)
             }
         }
-        .accessibilityLabel("Energy balance chart showing last 30 days")
+        .accessibilityLabel(
+            dayCount == 0
+                ? "Energy balance chart with no data"
+                : (dayCount == 1
+                    ? "Energy balance chart showing last 1 day" : "Energy balance chart showing last \(dayCount) days"))
     }
 
     /// Draw a varying reference line that follows per-day expenditure or target values
@@ -222,8 +231,8 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     // MARK: - Summary Equation Row
 
     private var summaryEquationRow: some View {
-        // All values are daily averages
-        let avgNutrition = totalNutrition / 30
+        // All values are daily averages (using actual day count, not hardcoded 30)
+        let avgNutrition = dayCount > 0 ? totalNutrition / dayCount : 0
         let avgReference =
             displayMode == .expenditure
             ? Int(averageExpenditure)

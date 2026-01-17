@@ -335,8 +335,19 @@ class AuthenticationManager: NSObject, ObservableObject {
                 shouldSeedHighQuality || shouldSeedMediumQuality
                 || shouldSeedLowQuality || shouldSeedNewUser
 
+            // Check for active user seeding flags
+            let shouldSeed3DayActive = arguments.contains("--seed-3-day-active")
+            let shouldSeed5DayActive = arguments.contains("--seed-5-day-active")
+            let shouldSeed2WeekActive = arguments.contains("--seed-2-week-active")
+            let shouldSeed1MonthActive = arguments.contains("--seed-1-month-active")
+            let shouldSeed90DayActive = arguments.contains("--seed-90-day-active")
+
+            let hasActiveUserSeeding =
+                shouldSeed3DayActive || shouldSeed5DayActive || shouldSeed2WeekActive
+                || shouldSeed1MonthActive || shouldSeed90DayActive
+
             // If neither flag is present, skip seeding
-            if daysOfHistory == 0 && !hasCheckInSeeding && !hasDataQualitySeeding {
+            if daysOfHistory == 0 && !hasCheckInSeeding && !hasDataQualitySeeding && !hasActiveUserSeeding {
                 return  // No seeding requested
             }
 
@@ -366,6 +377,36 @@ class AuthenticationManager: NSObject, ObservableObject {
                     }
                 }
                 // Continue to medication seeding if requested (don't return early)
+            }
+
+            // Seed active user scenarios (specific days of food/weight + doses)
+            if hasActiveUserSeeding {
+                let scenario: ActiveUserScenario
+                if shouldSeed3DayActive {
+                    scenario = .threeDay
+                } else if shouldSeed5DayActive {
+                    scenario = .fiveDay
+                } else if shouldSeed2WeekActive {
+                    scenario = .twoWeek
+                } else if shouldSeed1MonthActive {
+                    scenario = .oneMonth
+                } else {
+                    scenario = .ninetyDay
+                }
+
+                Self.logger.info("🎯 Seeding active user scenario: \(scenario.rawValue)")
+                await MainActor.run {
+                    do {
+                        _ = try TestDataSeeding.seedActiveUserData(
+                            into: context,
+                            scenario: scenario,
+                            existingUser: user
+                        )
+                    } catch {
+                        Self.logger.error("❌ Active user seeding failed: \(error)")
+                    }
+                }
+                return  // Active user seeding includes doses, so return early
             }
 
             // Seed check-in data based on requested tier (only one tier at a time)

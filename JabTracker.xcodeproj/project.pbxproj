@@ -247,6 +247,7 @@
 		68F5BF5B644D2B1A97ADB866 /* SubscriptionUIAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94967D5A71A48961EAC7C149 /* SubscriptionUIAccessibilityTests.swift */; };
 		691E3606502F2B1EB6508ED8 /* CreateFoodViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99234A94DDA7AD9A89878536 /* CreateFoodViewModelTests.swift */; };
 		6987A1D4EF21586531C4FE0E /* ConcentrationTimelineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240B04AE5BF1245C25DDF8DE /* ConcentrationTimelineChart.swift */; };
+		6AA8290CDEC82899C7B5BD5C /* TestDataSeeding+ActiveUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203B15D7D648F8BA4076425A /* TestDataSeeding+ActiveUser.swift */; };
 		6B58365598CAC977D5C86F3A /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B7AE2951FEA60931B228ACB /* AnalyticsService.swift */; };
 		6BB9D67171AE216B5744936F /* NotificationDeeplinkUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F81719ADFAC87574C14B861 /* NotificationDeeplinkUITests.swift */; };
 		6C215A97DF5A5E8A881AE8C8 /* ContentViewChartDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7221B7F59FA69A911F5BBCF8 /* ContentViewChartDataTests.swift */; };
@@ -689,6 +690,7 @@
 		1E85D71DEA9A2FD064F16C0B /* DoseCalendarViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseCalendarViewTests.swift; sourceTree = "<group>"; };
 		1ED772CA0C6C4452DE5A4901 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
 		1F7CF957925F9C87FDA1339E /* DoseEntryPhotoSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseEntryPhotoSection.swift; sourceTree = "<group>"; };
+		203B15D7D648F8BA4076425A /* TestDataSeeding+ActiveUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TestDataSeeding+ActiveUser.swift"; sourceTree = "<group>"; };
 		2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationUITests.swift; sourceTree = "<group>"; };
 		205C07EF47CD43071FD22D75 /* DoseSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseSchedule.swift; sourceTree = "<group>"; };
 		211434EFA04C1DC2C79C5ABA /* DoseDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseDataService.swift; sourceTree = "<group>"; };
@@ -2100,6 +2102,7 @@
 				89F2F17A6910B53D3C7274E5 /* PreviewHelpers.swift */,
 				E0DD385076B17502B720F566 /* ProfileValidation.swift */,
 				9F09C8437E50CB42D0FAD5DD /* TestDataSeeding.swift */,
+				203B15D7D648F8BA4076425A /* TestDataSeeding+ActiveUser.swift */,
 				F0C4228BBE2A18864F21A401 /* TestDataSeeding+Quality.swift */,
 			);
 			path = Utils;
@@ -3046,6 +3049,7 @@
 				B00D28AE84A51EC284CD9653 /* TDEEService.swift in Sources */,
 				D734D0485A2D4ABEA89BF937 /* TDEESnapshot.swift in Sources */,
 				3C3201FF56466E9027707F7C /* Tab.swift in Sources */,
+				6AA8290CDEC82899C7B5BD5C /* TestDataSeeding+ActiveUser.swift in Sources */,
 				683A5D6ECD91170E5FFBCF4F /* TestDataSeeding+Quality.swift in Sources */,
 				F03D98EBAB3A375CA80C21A6 /* TestDataSeeding.swift in Sources */,
 				F05249E24C3261BE478DCCF8 /* TimeConstants.swift in Sources */,

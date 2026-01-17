@@ -243,6 +243,7 @@
       "Utilities/SeededRNG.swift",
       "Utils/ModelContext+CurrentUser.swift",
       "Utils/PreviewHelpers.swift",
+      "Utils/TestDataSeeding+ActiveUser.swift",
       "Utils/TestDataSeeding+Quality.swift",
       "Utils/TestDataSeeding.swift",
       "Views/Analytics/AdherenceMetricsCard.swift",

@@ -10,18 +10,18 @@
 
 ## Current Position
 
-Phase: 41 of 43 (GLP-1 Analytics Fixes) - COMPLETE
-Plan: All plans complete (3/3 including FIX plan)
-Status: PR Review complete - ready for CodeRabbit review or merge
-Last activity: 2026-01-16 - PR Review complete (all critical/important issues fixed)
+Phase: 43 of 43 (Integration Polish)
+Plan: 2 of 2 complete
+Status: PR review complete - ready for CodeRabbit review or merge
+Last activity: 2026-01-17 - PR Review complete (all issues addressed)
 
-Progress: ██████░░░░ 60%
+Progress: ██████████ 100%
 
 ## GitHub Tracking
 
 Issue: N/A
-PR: #339
-Branch: feat/41-glp1-analytics-fixes
+PR: #340
+Branch: feat/42-serving-unit-mapping
 Status: PR Review complete - ready for CodeRabbit review or merge
 
 ## Performance Metrics
@@ -45,6 +45,26 @@ Status: PR Review complete - ready for CodeRabbit review or merge
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 43 decisions (Plan 02):**
+- Calculate next dose as interval days after last taken dose, not schedule creation date
+- Fall back to original projection when no doses have been taken yet
+- For split-dose patterns, convert splitIntervalMinutes to days for consistent calculation
+
+**Phase 43 decisions (Plan 01):**
+- Use actualDayCount accessor on ViewModel rather than exposing dailyCalories.count directly
+- Dynamic label shows "Last N Days" for partial data, "Last 30 Days" for full data
+- Widget average calculations should use actual data count, not max lookback period
+
+**Phase 42 decisions (FIX plan):**
+- Parse quantity prefix from original label before formatting strips it
+- Support both decimal (0.25) and fraction (1/4) quantity formats
+- Scale gram ranges by quantity (e.g., 0.25 cup uses [20, 75] instead of [80, 300])
+
+**Phase 42 decisions (Plan 01):**
+- Use density thresholds (cup: 80-300g, tbsp: 5-25g, tsp: 2-10g) to detect suspicious unit labels
+- Sanitize suspicious labels to generic 'serving' instead of removing them
+- Apply validation both at data import time AND at UI display time (defense in depth)
 
 **Phase 41 decisions (FIX plan):**
 - Use 0.5-hour sampling interval for histogram (4x increase from 2.0 hours)
@@ -86,7 +106,7 @@ No open issues in `.planning/ISSUES.md`.
 
 ### Pending Todos
 
-7 todos in `.planning/todos/pending/`
+5 todos in `.planning/todos/pending/`
 
 ### Roadmap Evolution
 
@@ -103,11 +123,11 @@ None.
 
 Last checked: 2026-01-16
 Status: ✓ Aligned
-Assessment: Phase 41-FIX complete. UAT issues resolved: medicationType param, 0.5hr sampling, therapeuticWindow config.
+Assessment: Phase 43 complete. Both plans executed successfully. Milestone v0.9.0 complete.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-16T14:44:52Z
-Stopped at: Completed 41-FIX-PLAN.md (3 UAT fixes applied)
+Last session: 2026-01-16T22:16:00Z
+Stopped at: Completed 43-02-PLAN.md (fix next dose schedule calculation)
 Resume file: None

@@ -27,6 +27,19 @@ from pathlib import Path
 # Increase CSV field size limit for large fields in OFF data
 csv.field_size_limit(sys.maxsize)
 
+# Suspicious unit ratio validation - min/max gram ranges for volume-based units
+# If a serving's gram weight falls outside these ranges, use generic "serving" label
+SUSPICIOUS_UNIT_RATIOS = {
+    "cup": (80, 300),    # 1 cup should be 80-300g for most foods
+    "tbsp": (5, 25),     # 1 tbsp should be 5-25g
+    "tsp": (2, 10),      # 1 tsp should be 2-10g
+    "tablespoon": (5, 25),
+    "teaspoon": (2, 10),
+}
+
+# Track suspicious serving labels for monitoring
+suspicious_serving_count = 0
+
 # Paths
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -57,6 +70,70 @@ def parse_float(value: str) -> float:
         return float(value)
     except ValueError:
         return 0.0
+
+
+def parse_quantity_prefix(serving_size_str: str) -> float:
+    """
+    Parse a quantity prefix from a serving label (e.g., "0.25 cup" -> 0.25, "1/4 cup" -> 0.25).
+
+    Args:
+        serving_size_str: The serving size string (e.g., "0.25 cup", "1/4 cup", "1 cup")
+
+    Returns:
+        The quantity multiplier, or 1.0 if no quantity prefix found
+    """
+    trimmed = serving_size_str.strip()
+
+    # Pattern 1: Decimal format (e.g., "0.25 cup", "1.5 cups", "2 tbsp")
+    decimal_match = re.match(r"^(\d+\.?\d*)\s", trimmed)
+    if decimal_match:
+        try:
+            return float(decimal_match.group(1))
+        except ValueError:
+            pass
+
+    # Pattern 2: Fraction format (e.g., "1/4 cup", "1/2 cup", "1/3 tbsp")
+    fraction_match = re.match(r"^(\d+)/(\d+)\s", trimmed)
+    if fraction_match:
+        try:
+            numerator = float(fraction_match.group(1))
+            denominator = float(fraction_match.group(2))
+            if denominator != 0:
+                return numerator / denominator
+        except ValueError:
+            pass
+
+    return 1.0
+
+
+def is_serving_label_suspicious(serving_size_str: str, serving_grams: float) -> bool:
+    """
+    Check if a serving label's gram value is unrealistic for its unit type.
+
+    For fractional servings (e.g., "0.25 cup", "1/4 cup"), the acceptable gram range
+    is scaled by the quantity. For example, "0.25 cup" checks against [80*0.25, 300*0.25] = [20, 75].
+
+    Args:
+        serving_size_str: The serving size string (e.g., "1 cup", "0.25 cup", "1/4 cup")
+        serving_grams: The gram weight for this serving
+
+    Returns:
+        True if the gram value is suspicious for the detected unit type
+    """
+    lower_str = serving_size_str.lower()
+
+    # Parse quantity from serving string, default to 1.0
+    quantity = parse_quantity_prefix(serving_size_str)
+
+    for unit, (base_min, base_max) in SUSPICIOUS_UNIT_RATIOS.items():
+        if unit in lower_str:
+            # Scale gram range by quantity (e.g., 0.25 cup uses [20, 75] instead of [80, 300])
+            min_grams = base_min * quantity
+            max_grams = base_max * quantity
+            if serving_grams < min_grams or serving_grams > max_grams:
+                return True
+
+    return False
 
 
 def has_valid_nutrition(row: list) -> bool:
@@ -141,7 +218,14 @@ def parse_row(row: list) -> dict | None:
 
             if serving_size_str and not is_just_weight:
                 # Has meaningful descriptive text (e.g., "1 bar", "2 cookies", "1 cup")
-                label = f"{serving_size_str} ({serving_quantity:.0f}g)"
+                # Validate serving label against density thresholds
+                if is_serving_label_suspicious(serving_size_str, serving_quantity):
+                    # Suspicious - use generic "serving" instead of misleading unit
+                    global suspicious_serving_count
+                    suspicious_serving_count += 1
+                    label = f"1 serving ({serving_quantity:.0f}g)"
+                else:
+                    label = f"{serving_size_str} ({serving_quantity:.0f}g)"
             else:
                 # No meaningful description - use "1 serving (Xg)"
                 label = f"1 serving ({serving_quantity:.0f}g)"
@@ -348,6 +432,7 @@ def main():
     print("=" * 50)
     print(f"  Products added:     {added:,}")
     print(f"  Products skipped:   {skipped:,} (duplicates)")
+    print(f"  Suspicious labels:  {suspicious_serving_count:,} (sanitized to 'serving')")
     print(f"  USDA foods:         {usda_count:,}")
     print(f"  Open Food Facts:    {off_count:,}")
     print(f"  Total foods:        {total:,}")

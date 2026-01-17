@@ -11,6 +11,9 @@
 
 import Foundation
 import SwiftData
+import os
+
+private let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "ScheduleService")
 
 // MARK: - Schedule Projection Extension
 
@@ -47,7 +50,16 @@ extension ScheduleService {
         }
 
         // Decode schedule configuration
-        guard let config = try? decodeScheduleConfiguration(schedule) else {
+        guard
+            let config: ScheduleConfiguration = {
+                do {
+                    return try decodeScheduleConfiguration(schedule)
+                } catch {
+                    logger.error("Failed to decode schedule configuration for schedule \(schedule.id): \(error)")
+                    return nil
+                }
+            }()
+        else {
             return []
         }
 
@@ -129,6 +141,10 @@ extension ScheduleService {
     /**
      * Gets the next scheduled dose for a specific schedule.
      *
+     * Calculates the next dose based on the last actually taken dose when available,
+     * ensuring projections align with actual dosing behavior rather than schedule
+     * creation date.
+     *
      * - Parameter schedule: The schedule to find next dose for
      * - Returns: Next ScheduledDose after current time, or nil if none
      */
@@ -138,12 +154,83 @@ extension ScheduleService {
             return nil
         }
 
+        let calendar = Calendar.current
         let now = Date()
-        let lookAheadDate = Calendar.current.date(byAdding: .day, value: 90, to: now)!
 
+        // If there's a taken dose, calculate next from that
+        if let lastTaken = schedule.lastTakenDose {
+            // Get the interval from config
+            guard
+                let config: ScheduleConfiguration = {
+                    do {
+                        return try decodeScheduleConfiguration(schedule)
+                    } catch {
+                        logger.error("Failed to decode schedule configuration for schedule \(schedule.id): \(error)")
+                        return nil
+                    }
+                }()
+            else {
+                return nil
+            }
+
+            // Calculate next dose: last taken time + interval
+            // Use minutes for split dose (supports fractional days like 3.5 days = 5040 minutes)
+            // Use days for other patterns
+            let intervalMinutes =
+                schedule.patternType == .splitDose
+                ? (config.splitIntervalMinutes ?? 0)
+                : config.interval * 24 * 60  // Convert days to minutes
+
+            // Guard against infinite loop if interval is 0
+            guard intervalMinutes > 0 else {
+                return nil
+            }
+
+            var nextDoseDate = lastTaken.scheduledTime
+
+            // Keep adding intervals until we're past now
+            while nextDoseDate <= now {
+                nextDoseDate = calendar.date(byAdding: .minute, value: intervalMinutes, to: nextDoseDate)!
+            }
+
+            // Handle pause state: if next dose falls within paused period, advance or return nil
+            if let pausedAt = schedule.pausedAt, nextDoseDate >= pausedAt {
+                if let pausedUntil = schedule.pausedUntil {
+                    // Finite pause: advance to pausedUntil if needed
+                    if nextDoseDate < pausedUntil {
+                        nextDoseDate = pausedUntil
+                    }
+                } else {
+                    // Indefinite pause: no next dose
+                    return nil
+                }
+            }
+
+            // Create the scheduled dose for this time
+            let windowStart = calendar.date(
+                byAdding: .minute,
+                value: -config.windowMinutesBefore,
+                to: nextDoseDate
+            )!
+            let windowEnd = calendar.date(
+                byAdding: .minute,
+                value: config.windowMinutesAfter,
+                to: nextDoseDate
+            )!
+
+            let scheduledDose = ScheduledDose(
+                scheduledTime: nextDoseDate,
+                doseAmount: config.doseAmount,
+                windowStart: windowStart,
+                windowEnd: windowEnd
+            )
+            scheduledDose.schedule = schedule
+            return scheduledDose
+        }
+
+        // No doses taken yet - fall back to original projection logic
+        let lookAheadDate = calendar.date(byAdding: .day, value: 90, to: now)!
         let upcomingDoses = generateScheduledDoses(for: schedule, from: now, to: lookAheadDate)
-
-        // Return first dose in future
         return upcomingDoses.first { $0.scheduledTime > now }
     }
 
