@@ -84,12 +84,17 @@ struct ConcentrationChartControls: View {
     @ViewBuilder
     private func chartActionButtons() -> some View {
         Button(
-            action: resetAction,
+            action: {
+                resetAction()
+            },
             label: {
                 Image(systemName: "arrow.clockwise")
                     .font(.caption)
+                    .foregroundColor(DesignTokens.Colors.primary)
             }
         )
+        .buttonStyle(.plain)
+        .padding(8)
         .accessibilityLabel("Reset chart view")
         .accessibilityIdentifier("reset-chart-button")
     }

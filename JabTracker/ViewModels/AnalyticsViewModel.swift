@@ -34,18 +34,56 @@ class AnalyticsViewModel {
     /// Full chart dataset (all time) - generated once and cached in memory + disk
     var fullChartDataset: ConcentrationChartDataset?
 
+    /// Clears the disk cache and in-memory dataset, forcing regeneration
+    func clearCache() {
+        Self.logger.info("🗑️ Clearing chart cache (user requested refresh)")
+        cache.clear()
+        fullChartDataset = nil
+        chartDataset = nil
+    }
+
     /// Filtered chart dataset for current time period
     var chartDataset: ConcentrationChartDataset?
 
     // MARK: - Chart Data Management
 
     /// Try to load cached dataset from disk (instant vs 80s generation)
-    /// - Parameter selectedPeriod: Initial time period to filter to
-    /// - Returns: true if loaded from cache, false if cache miss or corrupted
-    func loadFromCache(selectedPeriod: ChartDataProcessor.TimePeriod) -> Bool {
+    /// - Parameters:
+    ///   - selectedPeriod: Initial time period to filter to
+    ///   - expectedDoseCount: Expected number of doses (for staleness check)
+    /// - Returns: true if loaded from cache, false if cache miss, corrupted, or stale
+    func loadFromCache(selectedPeriod: ChartDataProcessor.TimePeriod, expectedDoseCount: Int = 0) -> Bool {
+        Self.logger.debug("🔍 loadFromCache: expectedDoseCount=\(expectedDoseCount)")
+
         switch cache.load() {
         case .success(let cached):
+            Self.logger.debug(
+                """
+                🔍 Staleness check: cache markers=\(cached.doseMarkers.count), expected doses=\(expectedDoseCount)
+                """
+            )
+
+            // Staleness check: if cache has fewer markers than expected doses, regenerate
+            if expectedDoseCount > 0 && cached.doseMarkers.count < expectedDoseCount {
+                Self.logger.info(
+                    """
+                    📅 Cache is stale (markers: \(cached.doseMarkers.count), expected: \(expectedDoseCount)) - \
+                    will regenerate
+                    """
+                )
+                cache.clear()
+                return false
+            }
+
+            // Also check if cache has no data but we expect some
+            if cached.doseMarkers.isEmpty && expectedDoseCount > 0 {
+                Self.logger.info("📅 Cache is empty but doses exist - will regenerate")
+                cache.clear()
+                return false
+            }
+
             fullChartDataset = cached
+            logCachedDatasetDetails(cached)
             filterChartDataset(to: selectedPeriod)
             Self.logger.info("✅ Loaded from cache - instant startup")
             return true
@@ -67,15 +105,46 @@ class AnalyticsViewModel {
         }
     }
 
+    /// Log cached dataset details for debugging
+    private func logCachedDatasetDetails(_ cached: ConcentrationChartDataset) {
+        let totalCachedPoints = cached.concentrationCurves.reduce(0) { $0 + $1.points.count }
+        Self.logger.debug(
+            """
+            📦 Cached dataset details:
+               - Curves: \(cached.concentrationCurves.count)
+               - Total points: \(totalCachedPoints)
+               - Markers: \(cached.doseMarkers.count)
+            """
+        )
+        for (index, curve) in cached.concentrationCurves.enumerated() {
+            if let firstPoint = curve.points.first, let lastPoint = curve.points.last {
+                Self.logger.debug(
+                    """
+                       - Curve \(index) '\(curve.medication)': \(curve.points.count) pts
+                          First: \(firstPoint.date.formatted()), conc: \(String(format: "%.3f", firstPoint.concentration))
+                          Last: \(lastPoint.date.formatted()), conc: \(String(format: "%.3f", lastPoint.concentration))
+                    """
+                )
+            }
+        }
+        for marker in cached.doseMarkers {
+            Self.logger.debug("   - Marker: \(marker.date.formatted()), amount: \(marker.amount)")
+        }
+    }
+
     /// Refresh full chart dataset (all time) - only happens once per session
     /// - Parameter config: Configuration containing user, profiles, services, context, and selected period
     @MainActor
     func refreshChartDataset(config: RefreshConfig) async {
         Self.logger.info("🔄 Generating FULL chart dataset (all time)...")
+        Self.logger.debug("  📋 Profiles count: \(config.profiles.count)")
         let refreshStartTime = Date()
 
         let profilesWithDoses = await fetchAllDoses(config: config)
+        Self.logger.debug("  📊 profilesWithDoses count: \(profilesWithDoses.count)")
+
         guard !profilesWithDoses.isEmpty else {
+            Self.logger.warning("  ⚠️ No profiles with doses found - chart will be empty")
             await MainActor.run {
                 self.fullChartDataset = nil
                 self.chartDataset = nil
@@ -83,11 +152,28 @@ class AnalyticsViewModel {
             return
         }
 
+        for (profile, doses) in profilesWithDoses {
+            Self.logger.debug(
+                """
+                  📍 Profile '\(profile.genericName)': \(doses.count) doses
+                     - medicationType: '\(profile.medicationType)'
+                     - medication: \(profile.medication?.displayName ?? "nil")
+                """
+            )
+        }
+
         let fullDataset = await generateFullDataset(
             user: config.user,
             profilesWithDoses: profilesWithDoses,
             chartService: config.chartService
         )
+
+        Self.logger.debug("  📈 Generated dataset: \(fullDataset != nil ? "success" : "nil")")
+        if let dataset = fullDataset {
+            Self.logger.debug("    - Curves: \(dataset.concentrationCurves.count)")
+            Self.logger.debug("    - Markers: \(dataset.doseMarkers.count)")
+            Self.logger.debug("    - Total points: \(dataset.concentrationCurves.reduce(0) { $0 + $1.points.count })")
+        }
 
         await updateAndPersistDataset(
             fullDataset,
@@ -198,6 +284,36 @@ class AnalyticsViewModel {
 
         let filterTime = Date().timeIntervalSince(filterStart) * 1000
         Self.logger.info("  ⚡ Filtered to \(timeRange.displayName): \(String(format: "%.1f", filterTime))ms")
+
+        // Debug: Log filtered data details
+        if let filtered = chartDataset {
+            let totalPoints = filtered.concentrationCurves.reduce(0) { $0 + $1.points.count }
+            Self.logger.debug(
+                """
+                  📊 Filtered dataset:
+                     - Curves: \(filtered.concentrationCurves.count)
+                     - Total points: \(totalPoints)
+                     - Markers: \(filtered.doseMarkers.count)
+                """
+            )
+            // Log curve details
+            for (index, curve) in filtered.concentrationCurves.enumerated() {
+                if let firstPoint = curve.points.first, let lastPoint = curve.points.last {
+                    Self.logger.debug(
+                        """
+                           - Curve \(index): \(curve.points.count) pts, \
+                        \(firstPoint.date.formatted()) to \(lastPoint.date.formatted())
+                        """
+                    )
+                } else {
+                    Self.logger.debug("     - Curve \(index): 0 points (empty after filter)")
+                }
+            }
+            // Log marker details
+            for marker in filtered.doseMarkers {
+                Self.logger.debug("     - Marker: \(marker.date.formatted()), amount: \(marker.amount)")
+            }
+        }
     }
 
     /// Async version of filterChartDataset for responsive UI during time period changes

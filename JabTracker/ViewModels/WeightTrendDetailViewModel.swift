@@ -123,6 +123,9 @@ final class WeightTrendDetailViewModel {
         // Load user preferences
         loadUserPreferences()
 
+        // Import from HealthKit if sync is enabled (ensures we have historical data)
+        await importFromHealthKitIfNeeded()
+
         // Load weight entries for selected period
         let entries = await loadWeightEntries()
         guard !entries.isEmpty else {
@@ -171,6 +174,24 @@ final class WeightTrendDetailViewModel {
         }
     }
 
+    /// Import weight data from HealthKit if sync is enabled
+    private func importFromHealthKitIfNeeded() async {
+        guard let user = context.fetchCurrentUser(logger: Self.logger),
+            user.healthSyncEnabled
+        else {
+            return
+        }
+
+        do {
+            let importedCount = try await metricsService.importWeightHistoryFromHealthKit(for: user)
+            if importedCount > 0 {
+                Self.logger.info("Imported \(importedCount) weight entries from HealthKit")
+            }
+        } catch {
+            Self.logger.error("Failed to import from HealthKit: \(error.localizedDescription)")
+        }
+    }
+
     /// Load weight entries for selected time period
     private func loadWeightEntries() async -> [WeightEntry] {
         let endDate = Date()
@@ -205,9 +226,24 @@ final class WeightTrendDetailViewModel {
         loadingError = nil
     }
 
-    /// Generate actual weight data points
+    /// Generate actual weight data points (deduplicated by day)
     private func generateDataPoints(from entries: [WeightEntry]) {
-        let actualPoints = entries.map { entry in
+        let calendar = Calendar.current
+
+        // Group entries by day and keep the first entry of each day
+        // This prevents chart jumps from multiple HealthKit sources (e.g., scale + watch)
+        var entriesByDay: [DateComponents: WeightEntry] = [:]
+
+        for entry in entries {
+            let dayComponents = calendar.dateComponents([.year, .month, .day], from: entry.timestamp)
+            // Keep the first entry for each day (typically morning weigh-in)
+            if entriesByDay[dayComponents] == nil {
+                entriesByDay[dayComponents] = entry
+            }
+        }
+
+        // Convert deduplicated entries to data points
+        let actualPoints = entriesByDay.values.map { entry in
             let weight = weightUnit == "lbs" ? entry.weightInLbs : entry.weightKg
             return WeightPoint(date: entry.timestamp, weight: weight, isTrendLine: false)
         }

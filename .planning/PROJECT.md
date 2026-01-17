@@ -6,26 +6,15 @@
 **Status:** Development / TestFlight
 **Codebase:** ~178,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.9.0 Delivered:**
-- Day status tracking with fasting toggle and TDEE exclusion rules
-- Adjustable GLP-1 dose amounts with Stepper and medication-specific therapeutic bounds
-- Fixed steady state progress calculation (2416% bug)
-- Concentration chart changed from line to histogram (BarMark)
-- Density-based serving unit validation for suspicious gram mappings
-- Fixed energy balance hero widget averages for new users
-- Fixed next dose schedule calculation to project from last taken dose
+## Current Milestone: v0.10.0 Food Log Enhancements
 
-## Next Milestone Goals
+**Goal:** Reduce repetitive food logging through copy/paste and scheduled meals.
 
-**Vision:** See PRD for planned features - Protein Alerts, Analytics, or Subscription
-
-**Candidates:**
-- Protein Preservation Alerts - Minimum protein thresholds and notifications
-- Subscription Management - StoreKit 2 integration and paywall
-- Recipe Builder - Combine foods into calculated recipes
-- GLP-1 Medication Correlation - Connect dose timing with appetite/nutrition patterns
-- Search Ranking Improvements - Revisit Phase 36 scope for better FTS5 ranking
-- TestFlight Beta Testing - User feedback collection and iteration
+**Target features:**
+- Copy/paste full days of food to other days
+- Copy/paste individual meals (breakfast, lunch, etc.) to other days
+- Food scheduling: auto-populate meals at midnight based on day/meal rules
+- Scheduled foods filter in Food Library
 
 ## Vision
 
@@ -110,4 +99,4 @@ How we know this worked:
 ---
 *Initialized: 2025-12-22*
 *v0.1.0 Shipped: 2025-12-24*
-*Last updated: 2026-01-17 after v0.9.0 milestone*
+*Last updated: 2026-01-17 after starting v0.10.0 milestone*

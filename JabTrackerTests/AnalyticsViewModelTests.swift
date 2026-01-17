@@ -697,4 +697,211 @@ struct AnalyticsViewModelTests {
             #expect(viewModel.chartDataset != nil, "Should filter to \(period)")
         }
     }
+
+    // MARK: - Clear Cache Tests
+
+    @Test("clearCache clears both disk cache and in-memory dataset")
+    @MainActor func clearCacheClearsAllData() async throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        let dose = self.createTestDose(
+            amount: 1.0, medicationProfile: profile, user: user, daysAgo: 5)
+        dose.user = user
+        dose.medication = profile
+        context.insert(dose)
+
+        try context.save()
+
+        let doseService = DoseDataService()
+        let chartService = ChartDatasetService()
+        let viewModel = AnalyticsViewModel()
+
+        let config = AnalyticsViewModel.RefreshConfig(
+            user: user,
+            profiles: [profile],
+            doseService: doseService,
+            chartService: chartService,
+            context: context,
+            selectedPeriod: .last30Days
+        )
+
+        // First generate dataset so cache exists
+        await viewModel.refreshChartDataset(config: config)
+        #expect(viewModel.fullChartDataset != nil, "Should have full dataset before clear")
+        #expect(viewModel.chartDataset != nil, "Should have filtered dataset before clear")
+
+        // Clear the cache
+        viewModel.clearCache()
+
+        // Verify in-memory datasets are cleared
+        #expect(viewModel.fullChartDataset == nil, "Full dataset should be nil after clear")
+        #expect(viewModel.chartDataset == nil, "Filtered dataset should be nil after clear")
+
+        // Verify disk cache is also cleared (loadFromCache should return false)
+        let loadResult = viewModel.loadFromCache(selectedPeriod: .last30Days)
+        #expect(loadResult == false, "loadFromCache should return false after clear")
+    }
+
+    @Test("clearCache on empty cache does not crash")
+    @MainActor func clearCacheEmptyViewModel() {
+        let viewModel = AnalyticsViewModel()
+
+        // Should not crash when clearing empty cache
+        viewModel.clearCache()
+
+        #expect(viewModel.fullChartDataset == nil)
+        #expect(viewModel.chartDataset == nil)
+    }
+
+    // MARK: - Load From Cache with Expected Dose Count Tests
+
+    @Test("loadFromCache with expectedDoseCount detects stale cache")
+    @MainActor func loadFromCacheDetectsStaleness() async throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        // Create a single dose and generate cache
+        let dose = self.createTestDose(
+            amount: 1.0, medicationProfile: profile, user: user, daysAgo: 5)
+        dose.user = user
+        dose.medication = profile
+        context.insert(dose)
+
+        try context.save()
+
+        let doseService = DoseDataService()
+        let chartService = ChartDatasetService()
+        let viewModel = AnalyticsViewModel()
+
+        let config = AnalyticsViewModel.RefreshConfig(
+            user: user,
+            profiles: [profile],
+            doseService: doseService,
+            chartService: chartService,
+            context: context,
+            selectedPeriod: .last30Days
+        )
+
+        // Generate cache with 1 dose
+        await viewModel.refreshChartDataset(config: config)
+        viewModel.fullChartDataset = nil  // Clear in-memory to test loading from disk
+        viewModel.chartDataset = nil
+
+        // Try loading with expectedDoseCount = 5 (more than cached 1)
+        let result = viewModel.loadFromCache(selectedPeriod: .last30Days, expectedDoseCount: 5)
+
+        // Should detect staleness and return false
+        #expect(result == false, "Should detect cache is stale when expected doses exceed cached markers")
+    }
+
+    @Test("loadFromCache with expectedDoseCount loads valid cache")
+    @MainActor func loadFromCacheLoadsValidCache() async throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        // Create doses
+        for daysAgo in [1, 3, 5, 7] {
+            let dose = self.createTestDose(
+                amount: 1.0, medicationProfile: profile, user: user, daysAgo: daysAgo)
+            dose.user = user
+            dose.medication = profile
+            context.insert(dose)
+        }
+
+        try context.save()
+
+        let doseService = DoseDataService()
+        let chartService = ChartDatasetService()
+        let viewModel = AnalyticsViewModel()
+
+        let config = AnalyticsViewModel.RefreshConfig(
+            user: user,
+            profiles: [profile],
+            doseService: doseService,
+            chartService: chartService,
+            context: context,
+            selectedPeriod: .last30Days
+        )
+
+        // Generate cache with 4 doses
+        await viewModel.refreshChartDataset(config: config)
+
+        // Create a new viewModel to simulate fresh load
+        let freshViewModel = AnalyticsViewModel()
+
+        // Try loading with expectedDoseCount = 4 (equal to cached)
+        let result = freshViewModel.loadFromCache(selectedPeriod: .last30Days, expectedDoseCount: 4)
+
+        // Should load successfully since cache has sufficient markers
+        #expect(result == true, "Should load valid cache when expected doses match")
+        #expect(freshViewModel.chartDataset != nil, "Should have filtered dataset after load")
+    }
+
+    @Test("loadFromCache with zero expectedDoseCount skips staleness check")
+    @MainActor func loadFromCacheZeroExpectedDoses() async throws {
+        let container = self.createTestContainer()
+        let context = container.mainContext
+
+        let user = self.createTestUser()
+        let profile = self.createTestMedicationProfile(medication: .semaglutide, user: user)
+
+        context.insert(user)
+        profile.user = user
+        context.insert(profile)
+
+        let dose = self.createTestDose(
+            amount: 1.0, medicationProfile: profile, user: user, daysAgo: 5)
+        dose.user = user
+        dose.medication = profile
+        context.insert(dose)
+
+        try context.save()
+
+        let doseService = DoseDataService()
+        let chartService = ChartDatasetService()
+        let viewModel = AnalyticsViewModel()
+
+        let config = AnalyticsViewModel.RefreshConfig(
+            user: user,
+            profiles: [profile],
+            doseService: doseService,
+            chartService: chartService,
+            context: context,
+            selectedPeriod: .last30Days
+        )
+
+        // Generate cache
+        await viewModel.refreshChartDataset(config: config)
+
+        // Create fresh viewModel
+        let freshViewModel = AnalyticsViewModel()
+
+        // Load with expectedDoseCount = 0 (skips staleness check)
+        let result = freshViewModel.loadFromCache(selectedPeriod: .last30Days, expectedDoseCount: 0)
+
+        // Should load without staleness check
+        #expect(result == true, "Should load cache when expectedDoseCount is 0")
+    }
 }

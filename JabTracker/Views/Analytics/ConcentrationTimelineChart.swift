@@ -21,12 +21,17 @@ struct ConcentrationTimelineChart: View {
     }
 
     /// Indicates whether to show empty state when no data is available
+    /// Checks for actual points, not just curve existence (curves can have 0 points after filtering)
+    /// Shows empty state if there are no concentration points to render, even if markers exist
     var showsEmptyState: Bool {
-        dataset.concentrationCurves.isEmpty && dataset.doseMarkers.isEmpty
+        let hasPoints = dataset.concentrationCurves.contains { !$0.points.isEmpty }
+        // Show empty state if no concentration points to render
+        // Markers alone without concentration data don't make a useful chart
+        return !hasPoints
     }
 
     /// Processed concentration points ready for chart display
-    /// NOTE: No filtering here - parent view (AnalyticsView) filters dataset before passing it
+    /// NOTE: No filtering here - parent view filters dataset before passing it
     var processedConcentrationPoints: [AdvancedConcentrationPoint] {
         dataset.concentrationCurves.flatMap { curve in
             curve.points
@@ -34,7 +39,7 @@ struct ConcentrationTimelineChart: View {
     }
 
     /// Processed dose markers ready for chart display
-    /// NOTE: No filtering here - parent view (AnalyticsView) filters dataset before passing it
+    /// NOTE: No filtering here - parent view filters dataset before passing it
     var processedDoseMarkers: [AdvancedDoseMarker] {
         dataset.doseMarkers
     }
@@ -97,8 +102,13 @@ struct ConcentrationTimelineChart: View {
 
                 ConcentrationChartControls(
                     configuration: $chartState.currentConfiguration,
-                    resetAction: resetChartView,
-                    showTimePeriodSelector: false  // Parent view (AnalyticsView) controls time period
+                    resetAction: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            gestureHandler.resetZoomAndPan()
+                            chartState.resetConfiguration()
+                        }
+                    },
+                    showTimePeriodSelector: false  // Parent view controls time period
                 )
             }
         }

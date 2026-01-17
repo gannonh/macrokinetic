@@ -1,0 +1,1 @@
+/Users/gannonhall/.claude/agents/gsd-plan-checker.md

@@ -94,6 +94,20 @@ struct GLP1ProgramsView: View {
                     .accessibilityIdentifier("add-medication-button")
                 }
             }
+            if selectedSection == .analytics && selectedAnalyticsSection == .concentration {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Self.logger.info("🔄 Toolbar refresh button tapped - clearing cache")
+                        viewModel.clearCache()
+                        loadData()
+                        forceRegenerateChartDataset()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .accessibilityLabel("Refresh chart data")
+                    .accessibilityIdentifier("toolbar-refresh-button")
+                }
+            }
         }
         .onAppear {
             loadData()
@@ -403,11 +417,40 @@ struct GLP1ProgramsView: View {
             return
         }
 
-        if viewModel.loadFromCache(selectedPeriod: selectedTimePeriod) {
+        // Count total doses for staleness check
+        var totalDoses = 0
+        for profile in medicationProfiles {
+            let doses = doseDataService.fetchDoses(for: profile, within: .all, context: modelContext)
+            totalDoses += doses.count
+        }
+        Self.logger.info("📊 refreshChartDataset: Found \(totalDoses) total doses")
+
+        if viewModel.loadFromCache(selectedPeriod: selectedTimePeriod, expectedDoseCount: totalDoses) {
             return
         }
 
         viewModel.chartDataset = nil
+
+        Task {
+            await viewModel.refreshChartDataset(
+                config: AnalyticsViewModel.RefreshConfig(
+                    user: user,
+                    profiles: medicationProfiles,
+                    doseService: doseDataService,
+                    chartService: chartDatasetService,
+                    context: modelContext,
+                    selectedPeriod: selectedTimePeriod
+                )
+            )
+        }
+    }
+
+    /// Force regenerate chart dataset (bypasses cache)
+    /// Called when user taps refresh button to manually clear stale data
+    private func forceRegenerateChartDataset() {
+        guard let user = currentUser else { return }
+
+        Self.logger.info("🔄 Force regenerating chart dataset (user requested)")
 
         Task {
             await viewModel.refreshChartDataset(
@@ -461,8 +504,8 @@ private struct MedicationProfileRowContent: View {
                             .font(DesignTokens.Typography.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
-                            .background(Color.gray.opacity(0.1))
-                            .foregroundColor(.gray)
+                            .background(DesignTokens.Colors.secondaryBackground)
+                            .foregroundColor(.secondary)
                             .cornerRadius(4)
                     }
                 }

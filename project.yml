@@ -15,8 +15,8 @@ settings:
     # Version numbering for TestFlight and App Store - 
     # MARKETING_VERSION: User-facing version (e.g., 1.0.0, 1.1.0)
     # CURRENT_PROJECT_VERSION: Build number -- increment with each upload (1, 2, 3...)
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "10"
+    MARKETING_VERSION: "0.9.0"
+    CURRENT_PROJECT_VERSION: "12"
     IPHONEOS_DEPLOYMENT_TARGET: "17.5"
     TARGETED_DEVICE_FAMILY: "1"
     SUPPORTS_MACCATALYST: false

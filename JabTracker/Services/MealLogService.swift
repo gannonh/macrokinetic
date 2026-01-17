@@ -259,6 +259,65 @@ final class MealLogService {
         return result
     }
 
+    // MARK: - Paste Operations
+
+    /// Paste clipboard entries to a target date
+    /// - Parameters:
+    ///   - entries: Clipboard entries to paste
+    ///   - targetDate: Date to log entries on
+    ///   - targetMeal: Optional meal section override (nil = preserve original meal sections)
+    ///   - replacing: Whether to delete existing entries first
+    func pasteEntries(
+        _ entries: [ClipboardEntry],
+        to targetDate: Date,
+        targetMeal: MealSection? = nil,
+        replacing: Bool
+    ) async throws {
+        // If replacing, get existing entries to delete
+        var entriesToDelete: [FoodEntry] = []
+        if replacing {
+            if let meal = targetMeal {
+                // Replacing specific meal
+                let existing = try await getEntries(for: targetDate)
+                entriesToDelete = existing.filter { $0.meal == meal }
+            } else {
+                // Replacing entire day
+                entriesToDelete = try await getEntries(for: targetDate)
+            }
+        }
+
+        // Create new entries from clipboard (insert first to prevent data loss)
+        for clipboardEntry in entries {
+            let newEntry = FoodEntry(
+                foodId: clipboardEntry.foodId,
+                foodName: clipboardEntry.foodName,
+                foodBrand: clipboardEntry.foodBrand,
+                mealSection: targetMeal ?? clipboardEntry.mealSection,
+                loggedAt: targetDate,
+                servingGrams: clipboardEntry.servingGrams,
+                servingDescription: clipboardEntry.servingDescription,
+                servingOptionsJSON: clipboardEntry.servingOptionsJSON,
+                caloriesPer100g: clipboardEntry.caloriesPer100g,
+                proteinPer100g: clipboardEntry.proteinPer100g,
+                carbsPer100g: clipboardEntry.carbsPer100g,
+                fatPer100g: clipboardEntry.fatPer100g,
+                fiberPer100g: clipboardEntry.fiberPer100g,
+                notes: clipboardEntry.notes
+            )
+            context.insert(newEntry)
+        }
+
+        // Delete old entries AFTER inserts to prevent data loss on failure
+        for entry in entriesToDelete {
+            context.delete(entry)
+        }
+
+        try context.save()
+        notifyDataChanged()
+
+        Self.logger.info("Pasted \(entries.count) entries, deleted \(entriesToDelete.count)")
+    }
+
     // MARK: - Quick Add
 
     /// Log a quick add entry with manual macro values
