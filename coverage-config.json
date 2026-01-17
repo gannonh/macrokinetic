@@ -90,7 +90,8 @@
           "Services/NutritionCalculationService.swift",
           "Services/CalorieAdjustmentService.swift",
           "Services/CalorieAdjustmentService+Adjustments.swift",
-          "Services/DayStatusService.swift"
+          "Services/DayStatusService.swift",
+          "Services/FoodClipboardService.swift"
         ]
       },
       "framework_integration": {
