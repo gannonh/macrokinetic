@@ -56,7 +56,7 @@ Status: Phase 44 complete, ready for Phase 45
 
 ### Pending Todos
 
-8 todos in `.planning/todos/pending/`
+9 todos in `.planning/todos/pending/`
 
 ### Blockers/Concerns
 
