@@ -6,78 +6,61 @@
 
 **Last shipped:** v0.9.0 Improvements & Fixes (2026-01-17)
 
-**Core value:** Adaptive calorie targets based on real expenditure data with unified dashboard visualization.
+**Core value:** Reduce repetitive food logging through copy/paste and scheduled meals.
 
 ## Current Position
 
-Phase: None active
-Plan: N/A
-Status: Ready to start next milestone
-Last activity: 2026-01-17 — v0.9.0 milestone complete
+Phase: 44 of 47 (Copy/Paste)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-17 — Roadmap created for v0.10.0
 
-Progress: ██████████ 100% (v0.9.0)
+Progress: ░░░░░░░░░░ 0%
 
 ## GitHub Tracking
 
 Issue: N/A
 PR: N/A
 Branch: main
-Status: v0.9.0 shipped, ready for next milestone
+Status: Ready to start Phase 44
 
 ## Performance Metrics
 
-**v0.9.0 Velocity:**
-- Total plans completed: 8 (+4 FIX plans)
-- Timeline: 3 days (Jan 15-17, 2026)
-- Files modified: 140
-- Lines changed: +9,342 / -1,530
+**Velocity:**
+- Total plans completed: 0 (v0.10.0)
+- Average duration: —
 
 **By Phase:**
 
-| Phase | Plans | Status   | Completed  |
-|-------|-------|----------|------------|
-| 39    | 1     | Complete | 2026-01-15 |
-| 40    | 1+FIX | Complete | 2026-01-15 |
-| 41    | 2+2FIX| Complete | 2026-01-15 |
-| 42    | 1+FIX | Complete | 2026-01-16 |
-| 43    | 2     | Complete | 2026-01-16 |
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| — | — | — | — |
+
+**Historical (v0.9.0):**
+- 8 plans completed (+4 FIX plans)
+- Timeline: 3 days
+- Files modified: 140
 
 ## Accumulated Context
 
-### Decisions Made
+### Decisions
 
-See PROJECT.md for full decision log with v0.9.0 additions.
-
-### Deferred Issues
-
-No open issues in `.planning/ISSUES.md`.
+(None yet for v0.10.0)
 
 ### Pending Todos
 
 8 todos in `.planning/todos/pending/`
 
-### Roadmap Evolution
+### Blockers/Concerns
 
-- Milestone v0.9.0 complete: Improvements & Fixes, 5 phases (Phase 39-43)
-- Next milestone: TBD (run `/gsd:new-milestone`)
-
-### Blockers/Concerns Carried Forward
-
-None.
-
-## Project Alignment
-
-Last checked: 2026-01-17
-Status: ✓ Aligned
-Assessment: Milestone v0.9.0 shipped. Ready for next milestone.
-Drift notes: None
+(None yet)
 
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Milestone v0.9.0 complete
+Stopped at: Roadmap creation for v0.10.0
 Resume file: None
 
 ---
 
-**Next Step:** Run `/gsd:new-milestone` to plan the next milestone.
+**Next Step:** Run `/gsd:plan-phase 44` to plan Copy/Paste phase.

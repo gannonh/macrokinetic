@@ -46,28 +46,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COPY-01 | TBD | Pending |
-| COPY-02 | TBD | Pending |
-| COPY-03 | TBD | Pending |
-| COPY-04 | TBD | Pending |
-| COPY-05 | TBD | Pending |
-| SCHED-01 | TBD | Pending |
-| SCHED-02 | TBD | Pending |
-| SCHED-03 | TBD | Pending |
-| SCHED-04 | TBD | Pending |
-| SCHED-05 | TBD | Pending |
-| SCHED-06 | TBD | Pending |
-| SCHED-07 | TBD | Pending |
-| SCHED-08 | TBD | Pending |
-| SCHED-09 | TBD | Pending |
-| SCHED-10 | TBD | Pending |
-| SCHED-11 | TBD | Pending |
+| COPY-01 | Phase 44 | Pending |
+| COPY-02 | Phase 44 | Pending |
+| COPY-03 | Phase 44 | Pending |
+| COPY-04 | Phase 44 | Pending |
+| COPY-05 | Phase 44 | Pending |
+| SCHED-01 | Phase 46 | Pending |
+| SCHED-02 | Phase 46 | Pending |
+| SCHED-03 | Phase 46 | Pending |
+| SCHED-04 | Phase 45 | Pending |
+| SCHED-05 | Phase 45 | Pending |
+| SCHED-06 | Phase 45 | Pending |
+| SCHED-07 | Phase 45 | Pending |
+| SCHED-08 | Phase 46 | Pending |
+| SCHED-09 | Phase 46 | Pending |
+| SCHED-10 | Phase 47 | Pending |
+| SCHED-11 | Phase 47 | Pending |
 
 **Coverage:**
 - v1 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-17 after initial definition*
+*Last updated: 2026-01-17 after roadmap creation*
