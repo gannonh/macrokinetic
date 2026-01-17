@@ -23,32 +23,32 @@ struct CopyPasteSegmentedControl: View {
                     onCopy()
                 } label: {
                     Image(systemName: "doc.on.doc")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 17, weight: .medium))
                         .foregroundColor(hasEntries ? .primary : .secondary.opacity(0.5))
-                        .frame(width: 36, height: 28)
+                        .frame(width: 44, height: 36)
                 }
                 .disabled(!hasEntries)
                 .accessibilityIdentifier("copy-day-button")
                 .accessibilityLabel("Copy all foods")
 
                 Divider()
-                    .frame(height: 16)
+                    .frame(height: 22)
 
                 // Paste button
                 Button {
                     onPaste()
                 } label: {
                     Image(systemName: "doc.on.clipboard")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 17, weight: .medium))
                         .foregroundColor(hasClipboard ? .primary : .secondary.opacity(0.5))
-                        .frame(width: 36, height: 28)
+                        .frame(width: 44, height: 36)
                 }
                 .disabled(!hasClipboard)
                 .accessibilityIdentifier("paste-button")
                 .accessibilityLabel("Paste foods")
             }
             .background(DesignTokens.HeaderButton.backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 }
