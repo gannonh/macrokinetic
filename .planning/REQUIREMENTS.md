@@ -9,11 +9,11 @@ Requirements for v0.10.0 release. Each maps to roadmap phases.
 
 ### Copy/Paste
 
-- [ ] **COPY-01**: User can copy all foods from a day to clipboard
-- [ ] **COPY-02**: User can copy all foods from a single meal to clipboard
-- [ ] **COPY-03**: User can paste clipboard contents to current day/meal
-- [ ] **COPY-04**: On paste, user is prompted to add to existing or replace existing foods
-- [ ] **COPY-05**: Clipboard persists during session (until app terminates or new copy)
+- [x] **COPY-01**: User can copy all foods from a day to clipboard
+- [x] **COPY-02**: User can copy all foods from a single meal to clipboard
+- [x] **COPY-03**: User can paste clipboard contents to current day/meal
+- [x] **COPY-04**: On paste, user is prompted to add to existing or replace existing foods
+- [x] **COPY-05**: Clipboard persists during session (until app terminates or new copy)
 
 ### Food Scheduling
 
@@ -46,11 +46,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COPY-01 | Phase 44 | Pending |
-| COPY-02 | Phase 44 | Pending |
-| COPY-03 | Phase 44 | Pending |
-| COPY-04 | Phase 44 | Pending |
-| COPY-05 | Phase 44 | Pending |
+| COPY-01 | Phase 44 | Complete |
+| COPY-02 | Phase 44 | Complete |
+| COPY-03 | Phase 44 | Complete |
+| COPY-04 | Phase 44 | Complete |
+| COPY-05 | Phase 44 | Complete |
 | SCHED-01 | Phase 46 | Pending |
 | SCHED-02 | Phase 46 | Pending |
 | SCHED-03 | Phase 46 | Pending |

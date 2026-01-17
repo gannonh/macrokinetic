@@ -26,8 +26,8 @@ This roadmap delivers two complementary features to reduce repetitive food loggi
 **Plans:** 2 plans
 
 Plans:
-- [ ] 44-01-PLAN.md — Clipboard service and data model
-- [ ] 44-02-PLAN.md — Context menus and paste dialog in FoodLogView
+- [x] 44-01-PLAN.md — Clipboard service and data model
+- [x] 44-02-PLAN.md — Context menus and paste dialog in FoodLogView
 
 ---
 
@@ -84,7 +84,7 @@ Plans:
 
 | Phase | Status | Completed |
 |-------|--------|-----------|
-| 44 - Copy/Paste | Planned | — |
+| 44 - Copy/Paste | ✓ Complete | 2026-01-17 |
 | 45 - Schedule Model | Not started | — |
 | 46 - Schedule UX | Not started | — |
 | 47 - Auto-Population | Not started | — |
