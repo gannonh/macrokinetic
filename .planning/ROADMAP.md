@@ -7,6 +7,7 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Completed Milestones
 
+- ✅ [v0.9.0 Improvements & Fixes](milestones/v0.9.0-ROADMAP.md) (Phases 39-43) - SHIPPED 2026-01-17
 - ✅ [v0.8.0 Food Search & Library](milestones/v0.8.0-ROADMAP.md) (Phases 35-38) - SHIPPED 2026-01-13
 - ✅ [v0.7.0 Dashboard Widget UX](milestones/v0.7.0-ROADMAP.md) (Phases 30-34) - SHIPPED 2026-01-12
 - ✅ [v0.6.0 Onboarding Redux](milestones/v0.6.0-ROADMAP.md) (Phases 25-29) - SHIPPED 2026-01-07
@@ -18,96 +19,20 @@ MacroKinetic is a comprehensive iOS weight management app combining precision nu
 
 ## Milestones
 
-- ✅ **v0.8.0 Food Search & Library** - Phases 35-38 (shipped)
-- ✅ **v0.9.0 Improvements & Fixes** - Phases 39-43 (complete)
+- ✅ **v0.9.0 Improvements & Fixes** - Phases 39-43 (shipped 2026-01-17)
+- ✅ **v0.8.0 Food Search & Library** - Phases 35-38 (shipped 2026-01-13)
 
-## Phases
+## Next Milestone
 
-### ✅ v0.9.0 Improvements & Fixes (Complete)
-
-**Milestone Goal:** Address analytics accuracy issues and enhance GLP-1 medication tracking UX.
-**Completed:** 2026-01-16
-
-#### Phase 39: Day Status Tracking ✅
-
-**Goal**: Add day completion status (logging/complete/fasting) to handle partial days and fast days in analytics
-**Depends on**: Previous milestone complete
-**Research**: Unlikely (internal patterns)
-**Completed**: 2026-01-15
-
-Related todos:
-- Handle partial day calculations in dashboard
-- Mark fast days to exclude from calculations
-
-Plans:
-- [x] 39-01: Day Status Tracking Implementation
-
-#### Phase 40: GLP-1 Dose Adjustments ✓
-
-**Goal**: Allow adjustable dose amount when logging shots for compounded medications
-**Depends on**: Phase 39
-**Research**: Unlikely (internal UI patterns)
-**Plans**: 1
-
-Related todos:
-- Allow adjustable dose amount when logging shots
-
-Plans:
-- [x] 40-01: Quick Dose Entry Adjustability
-
-#### Phase 41: GLP-1 Analytics Fixes ✅
-
-**Goal**: Fix steady state progress calculation (2416% bug) and change concentration graph to histogram
-**Depends on**: Phase 40
-**Research**: Unlikely (internal patterns)
-**Completed**: 2026-01-15
-
-Related todos:
-- Fix steady state progress calculation showing 2416%
-- Change drug concentration graph to histogram
-
-Plans:
-- [x] 41-01: Fix Steady State Progress Calculation
-- [x] 41-02: Change Concentration Chart to Histogram
-
-#### Phase 42: Serving Unit Mapping ✅
-
-**Goal**: Fix serving unit to gram mapping for foods with unrealistic conversions and unit conversion when editing
-**Depends on**: Phase 41
-**Research**: Unlikely (database/data quality)
-**Plans**: 2
-**Completed**: 2026-01-16
-
-Related todos:
-- Fix serving unit to gram mapping for foods
-- Fix food entry unit conversion when editing
-
-Plans:
-- [x] 42-01: Serving label validation and unit conversion fixes
-- [x] 42-FIX: Fix fractional cup validation (UAT gap closure)
-
-#### Phase 43: Integration & Polish ✅
-
-**Goal**: Fix remaining v0.9.0 bugs (energy balance hero calculation, next dose schedule calculation) before release
-**Depends on**: Phase 42
-**Research**: Unlikely (internal)
-**Plans**: 2
-**Completed**: 2026-01-16
-
-Related todos:
-- Fix energy balance hero 30-day calculation bug
-- Fix next dose schedule calculation off by 10 days
-
-Plans:
-- [x] 43-01: Fix energy balance hero daily average calculation
-- [x] 43-02: Fix next dose schedule calculation
+*Run `/gsd:new-milestone` to plan the next milestone.*
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order within each milestone.
 
-### ✅ v0.9.0 Improvements & Fixes (Phases 39-43) - Complete
+<details>
+<summary>✅ v0.9.0 Improvements & Fixes (Phases 39-43) - SHIPPED 2026-01-17</summary>
 
 | Phase                      | Plans Complete | Status   | Completed  |
 | -------------------------- | -------------- | -------- | ---------- |
@@ -116,6 +41,8 @@ Phases execute in numeric order within each milestone.
 | 41. GLP-1 Analytics Fixes  | 2/2            | Complete | 2026-01-15 |
 | 42. Serving Unit Mapping   | 2/2            | Complete | 2026-01-16 |
 | 43. Integration & Polish   | 2/2            | Complete | 2026-01-16 |
+
+</details>
 
 <details>
 <summary>✅ v0.8.0 Food Search & Library (Phases 35-38) - SHIPPED 2026-01-13</summary>

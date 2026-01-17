@@ -1,5 +1,61 @@
 # Project Milestones: MacroKinetic
 
+## v0.9.0 Improvements & Fixes (Shipped: 2026-01-17)
+
+**Delivered:** Analytics accuracy improvements and GLP-1 UX enhancements — day status tracking for fasting days, adjustable dose amounts, fixed steady state calculation (2416% bug), histogram concentration charts, serving unit validation, and correct widget averages.
+
+**Phases completed:** 39-43 (8 plans + 4 FIX plans total)
+
+**Key accomplishments:**
+
+- Day status tracking with fasting toggle and rules for excluding partial/unknown days from TDEE calculations
+- Adjustable GLP-1 dose amounts with Stepper control and medication-specific therapeutic bounds
+- Fixed steady state progress calculation (2416% bug) by changing API to return decimal (0.0-1.0)
+- Concentration chart changed from line to histogram (BarMark) with enhanced accessibility
+- Density-based serving unit validation detecting suspicious gram mappings (e.g., "1 cup = 1,300g")
+- Fixed energy balance hero widget to use actual day count instead of hardcoded 30
+- Fixed next dose schedule calculation to project from last taken dose
+
+**Stats:**
+
+- 140 files modified
+- +9,342 / -1,530 lines (net +7,812)
+- 5 phases, 8 plans (+4 FIX plans), 108 commits
+- 3 days from start to ship (Jan 15-17, 2026)
+
+**Git range:** `feat(39-01)` → `feat(43-02)`
+
+**What's next:** Protein Alerts, Analytics, Subscription, or Recipe Builder
+
+---
+
+## v0.8.0 Food Search & Library (Shipped: 2026-01-13)
+
+**Delivered:** Dramatically improved food search UX with debounce, auto-focus, expanded tap targets, horizontal pill picker for serving units, MacroProgressBar header indicators, and local-only barcode lookup (removed Open Food Facts API).
+
+**Phases completed:** 35-38 (4 plans total, including decimal phase 35.1, phase 36 skipped)
+
+**Key accomplishments:**
+
+- Search UX fixes with debounce, auto-focus, and expanded amount field tap targets
+- MacroProgressBar header indicators in Food Search matching Food Log style
+- Horizontal pill picker (ServingPillPicker) for serving unit selection (g, oz, item-based)
+- Local-only barcode lookup using 1.7M+ food SQLite database
+- Removed ALL Open Food Facts API code — fully offline-capable
+- Code cleanup: deleted dead FoodSearchView, AddFoodSheet, MealLogView
+
+**Stats:**
+
+- 100+ files modified
+- 5 phases (including 1 decimal phase), 4 plans
+- 3 days from start to ship (Jan 11-13, 2026)
+
+**Git range:** `feat(35-01)` → `feat(38-01)`
+
+**What's next:** Analytics accuracy improvements and GLP-1 UX enhancements (v0.9.0)
+
+---
+
 ## v0.7.0 Dashboard Widget UX (Shipped: 2026-01-12)
 
 **Delivered:** Unified dashboard with widget-based UI featuring hero carousel (Weekly Nutrition, Daily Nutrition, Energy Balance), standard insights grid (4 widgets), detail views with time filtering and Swift Charts, and TDEE history tracking infrastructure.

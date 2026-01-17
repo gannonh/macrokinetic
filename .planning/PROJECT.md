@@ -1,18 +1,19 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-13)
+## Current State (Updated: 2026-01-17)
 
-**Shipped:** v0.8.0 Food Search & Library (2026-01-13)
+**Shipped:** v0.9.0 Improvements & Fixes (2026-01-17)
 **Status:** Development / TestFlight
-**Codebase:** ~71,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+**Codebase:** ~178,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
-**v0.8.0 Delivered:**
-- Search UX improvements with debounce, auto-focus, and expanded tap targets
-- MacroProgressBar indicators in Food Search header matching Food Log style
-- Horizontal pill picker for serving unit selection (g, oz, item-based)
-- Local-only barcode lookup using 1.7M+ food SQLite database
-- Removed Open Food Facts API dependency - fully offline-capable
-- Code cleanup: deleted dead FoodSearchView, AddFoodSheet, MealLogView
+**v0.9.0 Delivered:**
+- Day status tracking with fasting toggle and TDEE exclusion rules
+- Adjustable GLP-1 dose amounts with Stepper and medication-specific therapeutic bounds
+- Fixed steady state progress calculation (2416% bug)
+- Concentration chart changed from line to histogram (BarMark)
+- Density-based serving unit validation for suspicious gram mappings
+- Fixed energy balance hero widget averages for new users
+- Fixed next dose schedule calculation to project from last taken dose
 
 ## Next Milestone Goals
 
@@ -24,6 +25,7 @@
 - Recipe Builder - Combine foods into calculated recipes
 - GLP-1 Medication Correlation - Connect dose timing with appetite/nutrition patterns
 - Search Ranking Improvements - Revisit Phase 36 scope for better FTS5 ranking
+- TestFlight Beta Testing - User feedback collection and iteration
 
 ## Vision
 
@@ -41,7 +43,7 @@ How we know this worked:
 
 - [x] Custom food creation and barcode scanning for personalized entries
 - [x] Complete nutrition tracking with macro goals and progress tracking
-- [ ] GLP-1 medication tracking with pharmacokinetics modeling
+- [x] GLP-1 medication tracking with pharmacokinetics modeling — v0.9.0
 - [ ] Medication-nutrition correlation insights
 - [x] CloudKit sync across all user devices
 - [x] Offline-first functionality
@@ -93,6 +95,11 @@ How we know this worked:
 | Food Database | SQLite FTS5 with 1.7M+ foods | Fast full-text search, offline-first, includes barcodes |
 | Medication Modeling | Exponential decay pharmacokinetics | Accurate concentration tracking for GLP-1 medications |
 | Barcode Scanning | AVFoundation with debouncing | Native performance, 2-second debounce prevents duplicates |
+| Day Status | DayStatus model per day | Differentiates fasting vs unknown days for TDEE accuracy — v0.9.0 |
+| Dose Adjustment | Stepper with therapeutic bounds | Medication-specific ranges prevent invalid doses — v0.9.0 |
+| Progress API | Decimals (0.0-1.0) not percentages | UI formats display; API stays clean — v0.9.0 |
+| Serving Validation | Density thresholds (cup: 80-300g) | Detects suspicious unit-to-gram mappings — v0.9.0 |
+| Schedule Projection | From last taken dose | Accurate next dose for actual usage patterns — v0.9.0 |
 
 ## Open Questions
 
@@ -103,3 +110,4 @@ How we know this worked:
 ---
 *Initialized: 2025-12-22*
 *v0.1.0 Shipped: 2025-12-24*
+*Last updated: 2026-01-17 after v0.9.0 milestone*
