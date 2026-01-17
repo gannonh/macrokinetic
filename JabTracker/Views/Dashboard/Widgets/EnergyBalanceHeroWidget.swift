@@ -86,10 +86,10 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
             energyBalanceChart
                 .frame(height: 140)
 
-            // "Last 30 Days" label - right aligned
+            // "Last N Days" label - right aligned (reflects actual data range)
             HStack {
                 Spacer()
-                Text("Last 30 Days")
+                Text(dayCount == 30 ? "Last 30 Days" : "Last \(dayCount) Days")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -142,6 +142,11 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
 
     private var totalNutrition: Int {
         useMockData ? EnergyBalanceMockData.sample.totalNutrition : (viewModel?.totalNutrition ?? 0)
+    }
+
+    /// Actual number of days with data (for average calculations and label)
+    private var dayCount: Int {
+        useMockData ? dailyCalories.count : (viewModel?.actualDayCount ?? 0)
     }
 
     /// Maximum Y value for fixed chart scale (prevents axis animation)
@@ -222,8 +227,8 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
     // MARK: - Summary Equation Row
 
     private var summaryEquationRow: some View {
-        // All values are daily averages
-        let avgNutrition = totalNutrition / 30
+        // All values are daily averages (using actual day count, not hardcoded 30)
+        let avgNutrition = dayCount > 0 ? totalNutrition / dayCount : 0
         let avgReference =
             displayMode == .expenditure
             ? Int(averageExpenditure)
