@@ -69,12 +69,13 @@ Plans:
 - [x] 41-01: Fix Steady State Progress Calculation
 - [x] 41-02: Change Concentration Chart to Histogram
 
-#### Phase 42: Serving Unit Mapping 🚧
+#### Phase 42: Serving Unit Mapping ✅
 
 **Goal**: Fix serving unit to gram mapping for foods with unrealistic conversions and unit conversion when editing
 **Depends on**: Phase 41
 **Research**: Unlikely (database/data quality)
 **Plans**: 2
+**Completed**: 2026-01-16
 
 Related todos:
 - Fix serving unit to gram mapping for foods
@@ -82,17 +83,22 @@ Related todos:
 
 Plans:
 - [x] 42-01: Serving label validation and unit conversion fixes
-- [ ] 42-FIX: Fix fractional cup validation (UAT gap closure)
+- [x] 42-FIX: Fix fractional cup validation (UAT gap closure)
 
-#### Phase 43: Integration & Polish
+#### Phase 43: Integration & Polish 🚧
 
-**Goal**: Final testing, edge cases, and cleanup for v0.9.0
+**Goal**: Fix remaining v0.9.0 bugs (energy balance hero calculation, next dose schedule calculation) before release
 **Depends on**: Phase 42
 **Research**: Unlikely (internal)
-**Plans**: TBD
+**Plans**: 2
+
+Related todos:
+- Fix energy balance hero 30-day calculation bug
+- Fix next dose schedule calculation off by 10 days
 
 Plans:
-- [ ] 43-01: TBD
+- [ ] 43-01-PLAN.md — Fix energy balance hero daily average calculation
+- [ ] 43-02-PLAN.md — Fix next dose schedule calculation
 
 ## Progress
 
@@ -106,8 +112,8 @@ Phases execute in numeric order within each milestone.
 | 39. Day Status Tracking    | 1/1            | Complete    | 2026-01-15 |
 | 40. GLP-1 Dose Adjustments | 1/1            | Complete    | 2026-01-15 |
 | 41. GLP-1 Analytics Fixes  | 2/2            | Complete    | 2026-01-15 |
-| 42. Serving Unit Mapping   | 1/2            | In Progress | -          |
-| 43. Integration & Polish   | 0/?            | Not started | -          |
+| 42. Serving Unit Mapping   | 2/2            | Complete    | 2026-01-16 |
+| 43. Integration & Polish   | 0/2            | Not started | -          |
 
 <details>
 <summary>✅ v0.8.0 Food Search & Library (Phases 35-38) - SHIPPED 2026-01-13</summary>
