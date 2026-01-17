@@ -89,7 +89,7 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
             // "Last N Days" label - right aligned (reflects actual data range)
             HStack {
                 Spacer()
-                Text(dayCount == 30 ? "Last 30 Days" : "Last \(dayCount) Days")
+                Text(dayCount == 0 ? "No data" : (dayCount == 1 ? "Last 1 Day" : "Last \(dayCount) Days"))
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -187,7 +187,11 @@ struct EnergyBalanceHeroWidget: View, DashboardWidget {
                 varyingReferenceLine(in: geometry, barWidth: barWidth, spacing: spacing)
             }
         }
-        .accessibilityLabel("Energy balance chart showing last \(dayCount) days")
+        .accessibilityLabel(
+            dayCount == 0
+                ? "Energy balance chart with no data"
+                : (dayCount == 1
+                    ? "Energy balance chart showing last 1 day" : "Energy balance chart showing last \(dayCount) days"))
     }
 
     /// Draw a varying reference line that follows per-day expenditure or target values

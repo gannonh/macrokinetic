@@ -181,11 +181,29 @@ extension ScheduleService {
                 ? (config.splitIntervalMinutes ?? 0)
                 : config.interval * 24 * 60  // Convert days to minutes
 
+            // Guard against infinite loop if interval is 0
+            guard intervalMinutes > 0 else {
+                return nil
+            }
+
             var nextDoseDate = lastTaken.scheduledTime
 
             // Keep adding intervals until we're past now
             while nextDoseDate <= now {
                 nextDoseDate = calendar.date(byAdding: .minute, value: intervalMinutes, to: nextDoseDate)!
+            }
+
+            // Handle pause state: if next dose falls within paused period, advance or return nil
+            if let pausedAt = schedule.pausedAt, nextDoseDate >= pausedAt {
+                if let pausedUntil = schedule.pausedUntil {
+                    // Finite pause: advance to pausedUntil if needed
+                    if nextDoseDate < pausedUntil {
+                        nextDoseDate = pausedUntil
+                    }
+                } else {
+                    // Indefinite pause: no next dose
+                    return nil
+                }
             }
 
             // Create the scheduled dose for this time
