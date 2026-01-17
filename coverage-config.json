@@ -38,7 +38,8 @@
           "Models/NutritionProgram.swift",
           "Models/TDEESnapshot.swift",
           "Models/BiologicalSex.swift",
-          "Models/DayStatus.swift"
+          "Models/DayStatus.swift",
+          "Models/ClipboardContent.swift"
         ]
       },
       "business_logic_with_logging": {
