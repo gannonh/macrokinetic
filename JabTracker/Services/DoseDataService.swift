@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 import Observation
 import SwiftData
 
@@ -14,6 +15,11 @@ import SwiftData
 /// Uses manual FetchDescriptor to avoid eager loading of all relationships
 @Observable
 final class DoseDataService {
+
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
+        category: "DoseDataService"
+    )
 
     // MARK: - Initialization
 
@@ -187,9 +193,18 @@ final class DoseDataService {
         within timePeriod: ChartDataProcessor.TimePeriod,
         context: ModelContext
     ) -> [Dose] {
+        Self.logger.debug(
+            """
+            🔍 fetchDoses(profile:) - profile '\(profile.genericName)' id=\(profile.id), \
+            period=\(String(describing: timePeriod))
+            """
+        )
+
         guard let cutoff = cutoffDate(for: timePeriod) else {
             // All time
-            return fetchAllDoses(for: profile, context: context)
+            let doses = fetchAllDoses(for: profile, context: context)
+            Self.logger.debug("   → All time: found \(doses.count) doses")
+            return doses
         }
 
         let predicate = profileDateRangePredicate(
@@ -203,7 +218,9 @@ final class DoseDataService {
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
 
-        return (try? context.fetch(descriptor)) ?? []
+        let doses = (try? context.fetch(descriptor)) ?? []
+        Self.logger.debug("   → Date range: found \(doses.count) doses")
+        return doses
     }
 
     /// Fetch all doses for a medication profile
@@ -222,6 +239,29 @@ final class DoseDataService {
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
 
-        return (try? context.fetch(descriptor)) ?? []
+        let doses = (try? context.fetch(descriptor)) ?? []
+
+        // Debug: Also try fetching ALL doses to see if the predicate is the issue
+        let allDosesDescriptor = FetchDescriptor<Dose>(sortBy: [SortDescriptor(\.timestamp, order: .reverse)])
+        let allDoses = (try? context.fetch(allDosesDescriptor)) ?? []
+        Self.logger.info(
+            """
+            🔍 fetchAllDoses(profile:):
+               - Looking for profile id: \(profile.id)
+               - Found \(doses.count) doses matching predicate
+               - Total doses in database: \(allDoses.count)
+            """
+        )
+        if doses.count == 0 && allDoses.count > 0 {
+            // Log info about the doses that exist but don't match
+            Self.logger.warning("⚠️ Doses exist but none match profile - checking medication IDs:")
+            for dose in allDoses.prefix(5) {
+                Self.logger.info(
+                    "   - Dose: \(dose.timestamp.formatted()), medication.id=\(dose.medication?.id.uuidString ?? "nil")"
+                )
+            }
+        }
+
+        return doses
     }
 }

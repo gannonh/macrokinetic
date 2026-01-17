@@ -252,7 +252,6 @@
       "Views/Analytics/AdherenceProgressIndicator.swift",
       "Views/Analytics/AdherenceSection.swift",
       "Views/Analytics/AdherenceTrendChart.swift",
-      "Views/Analytics/AnalyticsView.swift",
       "Views/Analytics/ChartConfiguration.swift",
       "Views/Analytics/ChartControlsView.swift",
       "Views/Analytics/ChartExportView.swift",

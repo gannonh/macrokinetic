@@ -518,8 +518,6 @@ struct ConcentrationList: View {
 
 // HistoryView moved to JabTracker/Views/History/HistoryView.swift
 
-// AnalyticsView moved to JabTracker/Views/Analytics/AnalyticsView.swift
-
 // SettingsView moved to JabTracker/Views/Settings/SettingsView.swift
 
 #Preview {
