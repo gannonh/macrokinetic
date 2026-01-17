@@ -65,6 +65,11 @@ final class EnergyBalanceHeroViewModel {
     /// Total nutrition (sum of all daily calories)
     private(set) var totalNutrition: Int = 0
 
+    /// Number of days with meaningful data (for average calculations)
+    var actualDayCount: Int {
+        dailyCalories.count
+    }
+
     /// Number of days that failed to load (data may be incomplete)
     private(set) var daysWithLoadingErrors: Int = 0
 
