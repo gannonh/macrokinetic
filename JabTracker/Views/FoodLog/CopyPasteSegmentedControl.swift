@@ -23,32 +23,34 @@ struct CopyPasteSegmentedControl: View {
                     onCopy()
                 } label: {
                     Image(systemName: "doc.on.doc")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(hasEntries ? .primary : .secondary.opacity(0.5))
-                        .frame(width: 44, height: 36)
+                        .font(.system(size: DesignTokens.HeaderButton.iconSize, weight: .semibold))
+                        .foregroundColor(hasEntries ? DesignTokens.HeaderButton.iconColor : .secondary.opacity(0.4))
+                        .frame(
+                            width: DesignTokens.HeaderButton.buttonSize, height: DesignTokens.HeaderButton.buttonSize)
                 }
                 .disabled(!hasEntries)
                 .accessibilityIdentifier("copy-day-button")
                 .accessibilityLabel("Copy all foods")
 
                 Divider()
-                    .frame(height: 22)
+                    .frame(height: DesignTokens.HeaderButton.buttonSize * 0.5)
 
                 // Paste button
                 Button {
                     onPaste()
                 } label: {
                     Image(systemName: "doc.on.clipboard")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(hasClipboard ? .primary : .secondary.opacity(0.5))
-                        .frame(width: 44, height: 36)
+                        .font(.system(size: DesignTokens.HeaderButton.iconSize, weight: .semibold))
+                        .foregroundColor(hasClipboard ? DesignTokens.HeaderButton.iconColor : .secondary.opacity(0.4))
+                        .frame(
+                            width: DesignTokens.HeaderButton.buttonSize, height: DesignTokens.HeaderButton.buttonSize)
                 }
                 .disabled(!hasClipboard)
                 .accessibilityIdentifier("paste-button")
                 .accessibilityLabel("Paste foods")
             }
             .background(DesignTokens.HeaderButton.backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(Capsule())
         }
     }
 }
