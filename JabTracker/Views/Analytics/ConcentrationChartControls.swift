@@ -85,7 +85,6 @@ struct ConcentrationChartControls: View {
     private func chartActionButtons() -> some View {
         Button(
             action: {
-                print("🔘 Refresh button tapped")
                 resetAction()
             },
             label: {

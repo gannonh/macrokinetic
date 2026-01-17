@@ -70,8 +70,8 @@ final class FoodLogCopyPasteUITests: XCTestCase {
 
     // MARK: - Test 2: Copy via Header Button
 
-    /// Verifies that copying foods works via the header toolbar button.
-    func testCopyMealViaContextMenu() throws {
+    /// Verifies that copying all foods for the day works via the header toolbar button.
+    func testCopyDayViaHeaderButton() throws {
         // GIVEN: App launched with seeded food data
         TestUtilities.navigateToTab(app, tabName: "Food Log")
         let foodLogView = app.otherElements["food-log-view"]

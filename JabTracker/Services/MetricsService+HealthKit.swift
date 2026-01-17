@@ -142,7 +142,7 @@ extension MetricsService {
 
         // Get existing entries to avoid duplicates (check by timestamp within 1 minute tolerance)
         let existingEntries = try await getAllWeightEntries()
-        let existingTimestamps = Set(
+        var existingTimestamps = Set(
             existingEntries.map { entry in
                 // Round to nearest minute to handle minor timestamp differences
                 Int(entry.timestamp.timeIntervalSince1970 / 60)
@@ -175,6 +175,8 @@ extension MetricsService {
             )
 
             context.insert(entry)
+            // Update set to prevent duplicates within the same batch
+            existingTimestamps.insert(timestampMinute)
             importedCount += 1
         }
 

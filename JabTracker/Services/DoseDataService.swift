@@ -241,26 +241,27 @@ final class DoseDataService {
 
         let doses = (try? context.fetch(descriptor)) ?? []
 
-        // Debug: Also try fetching ALL doses to see if the predicate is the issue
-        let allDosesDescriptor = FetchDescriptor<Dose>(sortBy: [SortDescriptor(\.timestamp, order: .reverse)])
-        let allDoses = (try? context.fetch(allDosesDescriptor)) ?? []
-        Self.logger.info(
-            """
-            🔍 fetchAllDoses(profile:):
-               - Looking for profile id: \(profile.id)
-               - Found \(doses.count) doses matching predicate
-               - Total doses in database: \(allDoses.count)
-            """
-        )
-        if doses.count == 0 && allDoses.count > 0 {
-            // Log info about the doses that exist but don't match
-            Self.logger.warning("⚠️ Doses exist but none match profile - checking medication IDs:")
-            for dose in allDoses.prefix(5) {
-                Self.logger.info(
-                    "   - Dose: \(dose.timestamp.formatted()), medication.id=\(dose.medication?.id.uuidString ?? "nil")"
-                )
+        #if DEBUG
+            // Debug: Also try fetching ALL doses to see if the predicate is the issue
+            let allDosesDescriptor = FetchDescriptor<Dose>(sortBy: [SortDescriptor(\.timestamp, order: .reverse)])
+            let allDoses = (try? context.fetch(allDosesDescriptor)) ?? []
+            Self.logger.info(
+                """
+                🔍 fetchAllDoses(profile:):
+                   - Looking for profile id: \(profile.id)
+                   - Found \(doses.count) doses matching predicate
+                   - Total doses in database: \(allDoses.count)
+                """
+            )
+            if doses.count == 0 && allDoses.count > 0 {
+                // Log info about the doses that exist but don't match
+                Self.logger.warning("⚠️ Doses exist but none match profile - checking medication IDs:")
+                for dose in allDoses.prefix(5) {
+                    let medId = dose.medication?.id.uuidString ?? "nil"
+                    Self.logger.info("   - Dose: \(dose.timestamp.formatted()), medication.id=\(medId)")
+                }
             }
-        }
+        #endif
 
         return doses
     }
