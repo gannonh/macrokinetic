@@ -366,7 +366,6 @@
 		9A7B5F0EDD9BB56AE4E1E008 /* WeightTrendDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFA6BD8BC9AC1A045647909 /* WeightTrendDetailViewModel.swift */; };
 		9A80D2F63089CFA184D79F52 /* TDEEServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22573DFF03D9A577876F87C /* TDEEServiceTests.swift */; };
 		9AD22939A4FCB9B8418CF882 /* ScheduledDoseIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84DBE2037D1CC46F582F191 /* ScheduledDoseIndicator.swift */; };
-		9B9EDA190CF036CB45002BC0 /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 745E37943162A0628E39FD92 /* AnalyticsView.swift */; };
 		9BB32F07FC25E272BEE7E011 /* DoseEntryFormSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDA4E8CB2855FD463FD7A2E /* DoseEntryFormSections.swift */; };
 		9C2F8196C57A8273FC2911FD /* Medication+Pharmacokinetics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C84C7D36DA80599EBECFF5 /* Medication+Pharmacokinetics.swift */; };
 		9C3F026C487546E098FA9EE2 /* ProgramSummarySheetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620A62A1FE3AA4F964C05946 /* ProgramSummarySheetUITests.swift */; };
@@ -917,7 +916,6 @@
 		730C909A8E9D99EAE1FAA3D9 /* StreakCounterViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCounterViewTests.swift; sourceTree = "<group>"; };
 		73E19FC2EE1ABF5D64ED76E5 /* DoseServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseServiceTests.swift; sourceTree = "<group>"; };
 		73E2AEB8B2D7270CBDA42825 /* SubscriptionProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionProducts.swift; sourceTree = "<group>"; };
-		745E37943162A0628E39FD92 /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		74D8C044A2DF71109F0464EF /* MetricsEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsEntryTests.swift; sourceTree = "<group>"; };
 		75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerCloudKitTests.swift; sourceTree = "<group>"; };
 		75C8E5789A19EFDB900D4476 /* DoseArrayExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseArrayExtensionTests.swift; sourceTree = "<group>"; };
@@ -1282,7 +1280,6 @@
 				4C45AF287FCA564EF5A70F3D /* AdherenceProgressIndicator.swift */,
 				AB1FCC7D1B42A7FF667684F8 /* AdherenceSection.swift */,
 				D3CA02B55B914A61D48A6D42 /* AdherenceTrendChart.swift */,
-				745E37943162A0628E39FD92 /* AnalyticsView.swift */,
 				BBCA595772284A25EDAD3BA2 /* ChartConfiguration.swift */,
 				106421FCA575BB46D42EEA98 /* ChartControlsView.swift */,
 				B646DFE39FF9073CB28E972A /* ChartExportView.swift */,
@@ -2805,7 +2802,6 @@
 				FDE9CB93940AD6DDEF341837 /* AdherenceTrendChart.swift in Sources */,
 				0647F301F805168D4392827B /* AdherenceTrendData.swift in Sources */,
 				6B58365598CAC977D5C86F3A /* AnalyticsService.swift in Sources */,
-				9B9EDA190CF036CB45002BC0 /* AnalyticsView.swift in Sources */,
 				C9BAC3E9933212061591C96F /* AnalyticsViewModel.swift in Sources */,
 				00A80D024903B351EB8A464D /* AppServices.swift in Sources */,
 				3BACAC6358628D191F57BFB9 /* Array+Unique.swift in Sources */,
