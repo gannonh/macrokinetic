@@ -11,11 +11,11 @@
 ## Current Position
 
 Phase: 43 of 43 (Integration Polish)
-Plan: 1 of 2
-Status: In progress
-Last activity: 2026-01-16 - Completed 43-01-PLAN.md (energy balance hero average fix)
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-01-16 - Completed 43-02-PLAN.md (fix next dose schedule calculation)
 
-Progress: █████████░ 90%
+Progress: ██████████ 100%
 
 ## GitHub Tracking
 
@@ -45,6 +45,11 @@ Status: PR Review complete - ready for CodeRabbit review or merge
 ## Accumulated Context
 
 ### Decisions Made
+
+**Phase 43 decisions (Plan 02):**
+- Calculate next dose as interval days after last taken dose, not schedule creation date
+- Fall back to original projection when no doses have been taken yet
+- For split-dose patterns, convert splitIntervalMinutes to days for consistent calculation
 
 **Phase 43 decisions (Plan 01):**
 - Use actualDayCount accessor on ViewModel rather than exposing dailyCalories.count directly
@@ -118,11 +123,11 @@ None.
 
 Last checked: 2026-01-16
 Status: ✓ Aligned
-Assessment: Phase 43 in progress. Energy balance hero average fix complete, ready for plan 02.
+Assessment: Phase 43 complete. Both plans executed successfully. Milestone v0.9.0 complete.
 Drift notes: None
 
 ## Session Continuity
 
-Last session: 2026-01-16T~UTC
-Stopped at: Completed 43-01-PLAN.md (energy balance hero average fix)
+Last session: 2026-01-16T22:16:00Z
+Stopped at: Completed 43-02-PLAN.md (fix next dose schedule calculation)
 Resume file: None
