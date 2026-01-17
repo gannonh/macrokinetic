@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 44-copy-paste
 source: 44-01-SUMMARY.md, 44-02-SUMMARY.md
 started: 2026-01-17T21:30:00Z
-updated: 2026-01-17T21:40:00Z
+updated: 2026-01-17T21:45:00Z
 ---
 
 ## Current Test
@@ -61,7 +61,10 @@ skipped: 0
   reason: "User reported: When using the paste button the confirmation dialog is near the bottom of the view, no where near the button. Should be higher up in the ui when pasting from the button. Context menu pasting dialog is fine"
   severity: minor
   test: 6
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "The .confirmationDialog modifier is attached to the NavigationStack (lines 256-278), causing it to position relative to the bottom of the entire navigation view. Confirmation dialogs anchor to their parent view's position."
+  artifacts:
+    - path: "JabTracker/Views/FoodLog/FoodLogView.swift"
+      issue: ".confirmationDialog attached to NavigationStack instead of header area"
+  missing:
+    - "Move .confirmationDialog attachment to the header HStack or CopyPasteSegmentedControl to anchor near paste button"
+  debug_session: "a1e0ba6"
