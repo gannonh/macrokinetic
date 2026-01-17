@@ -459,6 +459,7 @@ struct FoodLogView: View {
         }
         .textCase(nil)
         .contentShape(Rectangle())
+        .accessibilityIdentifier("meal-section-header-\(section.rawValue)")
         .contextMenu {
             FoodLogCopyPasteMenu(
                 entries: entries,
