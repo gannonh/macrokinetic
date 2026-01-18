@@ -142,6 +142,19 @@ struct FoodScheduleTests {
         #expect(schedule.scheduleConfigData.isEmpty)
     }
 
+    @Test("scheduleConfig getter handles corrupted JSON data gracefully")
+    func testScheduleConfigCorruptedData() {
+        let schedule = FoodSchedule()
+
+        // Set corrupted JSON data that will fail to decode
+        let invalidJSON = Data("{invalid json".utf8)
+        schedule.scheduleConfigData = invalidJSON
+
+        // Should return nil and log error instead of crashing
+        let config = schedule.scheduleConfig
+        #expect(config == nil)
+    }
+
     // MARK: - appliesTo Tests
 
     @Test("appliesTo returns false when isActive is false")

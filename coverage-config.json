@@ -40,8 +40,7 @@
           "Models/BiologicalSex.swift",
           "Models/DayStatus.swift",
           "Models/ClipboardContent.swift",
-          "Models/ScheduleConfiguration.swift",
-          "Models/FoodSchedule.swift"
+          "Models/ScheduleConfiguration.swift"
         ]
       },
       "business_logic_with_logging": {
@@ -57,9 +56,10 @@
       },
       "infrastructure": {
         "threshold": 62,
-        "description": "Data management with some framework dependencies",
+        "description": "Data management with some framework dependencies - includes models with JSON encoding/decoding and OSLog error handling",
         "files": [
           "DataController.swift",
+          "Models/FoodSchedule.swift",
           "Models/ChartData.swift",
           "Models/ChartDataEnums.swift",
           "Models/ChartDataTypes.swift",
