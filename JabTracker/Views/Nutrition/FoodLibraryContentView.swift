@@ -32,6 +32,10 @@ struct FoodLibraryContentView: View {
     @State private var customFoods: [Food] = []
     @State private var showingComingSoon = false
     @State private var comingSoonFeature = ""
+    @State private var schedulingFood: Food?
+    @State private var existingScheduleForFood: FoodSchedule?
+    @State private var scheduledFoods: [FoodSchedule] = []
+    @State private var selectedScheduleForEdit: FoodSchedule?
 
     // MARK: - Body
 
@@ -40,12 +44,26 @@ struct FoodLibraryContentView: View {
             // Tab bar
             tabBarSection
 
-            // Foods tab content
+            // Tab content
             if selectedTab == .foods {
                 foodsTabContent
+            } else if selectedTab == .scheduled {
+                scheduledTabContent
             }
         }
         .accessibilityIdentifier("food-library-content")
+        .sheet(item: $schedulingFood) { food in
+            if let scheduleService = AppServices.shared.foodScheduleService {
+                ScheduleConfigSheet(
+                    food: food,
+                    scheduleService: scheduleService,
+                    existingSchedule: existingScheduleForFood,
+                    onComplete: {
+                        Task { await loadCustomFoods() }
+                    }
+                )
+            }
+        }
         .task {
             await loadCustomFoods()
         }
@@ -209,6 +227,16 @@ struct FoodLibraryContentView: View {
             }
             .tint(.blue)
             .accessibilityIdentifier("edit-food-library-button")
+
+            Button {
+                Task {
+                    await loadScheduleAndPresent(for: food)
+                }
+            } label: {
+                Label("Schedule", systemImage: "calendar.badge.plus")
+            }
+            .tint(.purple)
+            .accessibilityIdentifier("schedule-food-library-button")
         }
     }
 
@@ -319,6 +347,18 @@ struct FoodLibraryContentView: View {
             customFoods.sort { $0.createdAt > $1.createdAt }
         case .name:
             customFoods.sort { $0.name.lowercased() < $1.name.lowercased() }
+        }
+    }
+
+    private func loadScheduleAndPresent(for food: Food) async {
+        guard let scheduleService = AppServices.shared.foodScheduleService else { return }
+        do {
+            existingScheduleForFood = try await scheduleService.getSchedule(for: food.id)
+            schedulingFood = food
+        } catch {
+            logger.error("Failed to load schedule: \(error.localizedDescription)")
+            existingScheduleForFood = nil
+            schedulingFood = food
         }
     }
 }
