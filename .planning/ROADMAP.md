@@ -67,9 +67,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 46-01-PLAN.md — Register FoodScheduleService, create ScheduleConfigSheet and ScheduleDayMealGrid
-- [ ] 46-02-PLAN.md — Add Schedule swipe actions and button to entry points
-- [ ] 46-03-PLAN.md — Add Scheduled tab to Food Library
+- [x] 46-01-PLAN.md — Register FoodScheduleService, create ScheduleConfigSheet and ScheduleDayMealGrid
+- [x] 46-02-PLAN.md — Add Schedule swipe actions and button to entry points
+- [x] 46-03-PLAN.md — Add Scheduled tab to Food Library
 
 ---
 
@@ -95,7 +95,7 @@ Plans:
 |-------|--------|-----------|
 | 44 - Copy/Paste | ✓ Complete | 2026-01-17 |
 | 45 - Schedule Model | ✓ Complete | 2026-01-18 |
-| 46 - Schedule UX | Planned | — |
+| 46 - Schedule UX | ✓ Complete | 2026-01-18 |
 | 47 - Auto-Population | Not started | — |
 
 ---
