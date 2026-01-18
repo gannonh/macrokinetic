@@ -64,8 +64,26 @@ struct FoodLibraryContentView: View {
                 )
             }
         }
+        .sheet(item: $selectedScheduleForEdit) { schedule in
+            if let scheduleService = AppServices.shared.foodScheduleService {
+                ScheduleEditSheetWrapper(
+                    schedule: schedule,
+                    scheduleService: scheduleService,
+                    customFoodService: customFoodService,
+                    onComplete: {
+                        Task { await loadScheduledFoods() }
+                    }
+                )
+            }
+        }
         .task {
             await loadCustomFoods()
+            await loadScheduledFoods()
+        }
+        .onChange(of: selectedTab) { _, newTab in
+            if newTab == .scheduled {
+                Task { await loadScheduledFoods() }
+            }
         }
         .onChange(of: editingCustomFood) { _, newValue in
             // Reload when edit sheet is dismissed (food was nil, then set, then nil again)
@@ -359,6 +377,240 @@ struct FoodLibraryContentView: View {
             logger.error("Failed to load schedule: \(error.localizedDescription)")
             existingScheduleForFood = nil
             schedulingFood = food
+        }
+    }
+
+    private func loadScheduledFoods() async {
+        guard let scheduleService = AppServices.shared.foodScheduleService else {
+            scheduledFoods = []
+            return
+        }
+        do {
+            scheduledFoods = try await scheduleService.getAllActiveSchedules()
+        } catch {
+            logger.error("Failed to load scheduled foods: \(error.localizedDescription)")
+            scheduledFoods = []
+        }
+    }
+
+    private func deleteSchedule(_ schedule: FoodSchedule) async {
+        guard let scheduleService = AppServices.shared.foodScheduleService else { return }
+        do {
+            try await scheduleService.deleteSchedule(schedule)
+            await loadScheduledFoods()
+        } catch {
+            logger.error("Failed to delete schedule: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Scheduled Tab Content
+
+    private var scheduledTabContent: some View {
+        VStack(spacing: 0) {
+            scheduledHeaderSection
+
+            if scheduledFoods.isEmpty {
+                emptyScheduledStateView
+            } else {
+                scheduledFoodsList
+            }
+        }
+    }
+
+    private var scheduledHeaderSection: some View {
+        HStack {
+            Text("Scheduled Foods")
+                .font(.headline)
+            Spacer()
+            Text("\(scheduledFoods.count)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.systemBackground))
+    }
+
+    private var scheduledFoodsList: some View {
+        List {
+            ForEach(scheduledFoods) { schedule in
+                scheduledFoodRow(schedule)
+                    .accessibilityIdentifier("scheduled-food-row-\(schedule.id)")
+            }
+        }
+        .listStyle(.plain)
+    }
+
+    private func scheduledFoodRow(_ schedule: FoodSchedule) -> some View {
+        Button {
+            selectedScheduleForEdit = schedule
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.purple)
+                    .frame(width: 24, height: 24)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(schedule.foodName)
+                        .font(DesignTokens.Typography.body)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+
+                    if !schedule.foodBrand.isEmpty {
+                        Text(schedule.foodBrand)
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    // Schedule summary
+                    Text(scheduleSummary(for: schedule))
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+
+                    // Serving info
+                    HStack(spacing: 4) {
+                        Text("\(Int(schedule.servingGrams))g")
+                        if !schedule.servingDescription.isEmpty {
+                            Text("(\(schedule.servingDescription))")
+                        }
+                    }
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button("Stop", role: .destructive) {
+                Task { await deleteSchedule(schedule) }
+            }
+            .accessibilityIdentifier("stop-schedule-button")
+        }
+    }
+
+    private func scheduleSummary(for schedule: FoodSchedule) -> String {
+        guard let config = schedule.scheduleConfig else { return "No schedule" }
+
+        let days = config.scheduledDays.sorted { $0.rawValue < $1.rawValue }
+        let meals = config.scheduledMeals.sorted { $0.rawValue < $1.rawValue }
+
+        let dayText: String
+        if days.count == 7 {
+            dayText = "Every day"
+        } else if days.count == 5 && !days.contains(.saturday) && !days.contains(.sunday) {
+            dayText = "Weekdays"
+        } else if days.count == 2 && days.contains(.saturday) && days.contains(.sunday) {
+            dayText = "Weekends"
+        } else {
+            dayText = days.map { $0.shortName }.joined(separator: ", ")
+        }
+
+        let mealText = meals.map { $0.displayName }.joined(separator: ", ")
+
+        return "\(dayText) - \(mealText)"
+    }
+
+    private var emptyScheduledStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "calendar.badge.plus")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+
+            Text("No scheduled foods")
+                .font(DesignTokens.Typography.headline)
+
+            Text("Swipe a food and tap Schedule to auto-populate it in your log.")
+                .font(DesignTokens.Typography.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+}
+
+// MARK: - Schedule Edit Sheet Wrapper
+
+/// Wrapper to load Food model before presenting ScheduleConfigSheet
+private struct ScheduleEditSheetWrapper: View {
+    let schedule: FoodSchedule
+    let scheduleService: FoodScheduleService
+    let customFoodService: CustomFoodService
+    let onComplete: () -> Void
+
+    @State private var food: Food?
+
+    var body: some View {
+        Group {
+            if let food = food {
+                ScheduleConfigSheet(
+                    food: food,
+                    scheduleService: scheduleService,
+                    existingSchedule: schedule,
+                    onComplete: onComplete
+                )
+            } else {
+                ProgressView("Loading...")
+                    .task {
+                        await loadFood()
+                    }
+            }
+        }
+    }
+
+    private func loadFood() async {
+        // Try to find the custom food by ID
+        do {
+            let foods = try await customFoodService.getAllCustomFoods(limit: 1000)
+            food = foods.first { $0.id == schedule.foodId }
+
+            // If not found, create a placeholder Food from schedule data
+            if food == nil {
+                let placeholder = Food(
+                    name: schedule.foodName,
+                    brand: schedule.foodBrand,
+                    source: .userCreated,
+                    caloriesPer100g: schedule.caloriesPer100g,
+                    proteinPer100g: schedule.proteinPer100g,
+                    carbsPer100g: schedule.carbsPer100g,
+                    fatPer100g: schedule.fatPer100g,
+                    fiberPer100g: schedule.fiberPer100g,
+                    servingSize: schedule.servingGrams,
+                    servingUnit: "g",
+                    servingDescription: schedule.servingDescription
+                )
+                placeholder.id = schedule.foodId
+                food = placeholder
+            }
+        } catch {
+            // Create placeholder from schedule data
+            let placeholder = Food(
+                name: schedule.foodName,
+                brand: schedule.foodBrand,
+                source: .userCreated,
+                caloriesPer100g: schedule.caloriesPer100g,
+                proteinPer100g: schedule.proteinPer100g,
+                carbsPer100g: schedule.carbsPer100g,
+                fatPer100g: schedule.fatPer100g,
+                fiberPer100g: schedule.fiberPer100g,
+                servingSize: schedule.servingGrams,
+                servingUnit: "g",
+                servingDescription: schedule.servingDescription
+            )
+            placeholder.id = schedule.foodId
+            food = placeholder
         }
     }
 }
