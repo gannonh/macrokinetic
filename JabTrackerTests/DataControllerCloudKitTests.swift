@@ -100,8 +100,8 @@ struct DataControllerBusinessLogicTests {
 
         // Test that container has correct schema regardless of CloudKit state
         #expect(
-            controller.container.schema.entities.count == 15,
-            "Container should have 15 entities")
+            controller.container.schema.entities.count == 16,
+            "Container should have 16 entities")
 
         let entityNames = controller.container.schema.entities.map(\.name)
         #expect(entityNames.contains("User"), "Schema should contain User entity")

@@ -43,7 +43,11 @@ Plans:
 3. One schedule per food enforced at data layer (update existing if schedule exists)
 4. Schedule data syncs across devices via CloudKit
 
-**Plans:** (created by /gsd:plan-phase)
+**Plans:** 2 plans
+
+Plans:
+- [x] 45-01-PLAN.md — FoodSchedule model and ScheduleConfiguration value types
+- [x] 45-02-PLAN.md — FoodScheduleService CRUD and DataController registration
 
 ---
 
@@ -60,7 +64,12 @@ Plans:
 4. Food Detail view shows current schedule status and allows edit/stop
 5. Food Library "Scheduled" filter shows all foods with active schedules
 
-**Plans:** (created by /gsd:plan-phase)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 46-01-PLAN.md — Register FoodScheduleService, create ScheduleConfigSheet and ScheduleDayMealGrid
+- [ ] 46-02-PLAN.md — Add Schedule swipe actions and button to entry points
+- [ ] 46-03-PLAN.md — Add Scheduled tab to Food Library
 
 ---
 
@@ -85,8 +94,8 @@ Plans:
 | Phase | Status | Completed |
 |-------|--------|-----------|
 | 44 - Copy/Paste | ✓ Complete | 2026-01-17 |
-| 45 - Schedule Model | Not started | — |
-| 46 - Schedule UX | Not started | — |
+| 45 - Schedule Model | ✓ Complete | 2026-01-18 |
+| 46 - Schedule UX | Planned | — |
 | 47 - Auto-Population | Not started | — |
 
 ---

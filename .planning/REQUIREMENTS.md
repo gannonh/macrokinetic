@@ -20,10 +20,10 @@ Requirements for v0.10.0 release. Each maps to roadmap phases.
 - [ ] **SCHED-01**: User can schedule a food from Food Library (swipe action)
 - [ ] **SCHED-02**: User can schedule a food from search results (swipe action)
 - [ ] **SCHED-03**: User can schedule a food from Food Detail view (action button)
-- [ ] **SCHED-04**: Non-custom foods are auto-converted to custom when scheduling
-- [ ] **SCHED-05**: Schedule configuration includes: days of week, meal types, quantity
-- [ ] **SCHED-06**: Schedule configuration includes optional start/end dates
-- [ ] **SCHED-07**: One schedule per food, supporting multiple day/meal combinations
+- [x] **SCHED-04**: Non-custom foods are auto-converted to custom when scheduling
+- [x] **SCHED-05**: Schedule configuration includes: days of week, meal types, quantity
+- [x] **SCHED-06**: Schedule configuration includes optional start/end dates
+- [x] **SCHED-07**: One schedule per food, supporting multiple day/meal combinations
 - [ ] **SCHED-08**: Schedule displays on Food Detail view and can be edited/stopped there
 - [ ] **SCHED-09**: Food Library has "Scheduled" filter showing all scheduled foods
 - [ ] **SCHED-10**: Scheduled foods auto-populate at midnight for applicable days
@@ -54,10 +54,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHED-01 | Phase 46 | Pending |
 | SCHED-02 | Phase 46 | Pending |
 | SCHED-03 | Phase 46 | Pending |
-| SCHED-04 | Phase 45 | Pending |
-| SCHED-05 | Phase 45 | Pending |
-| SCHED-06 | Phase 45 | Pending |
-| SCHED-07 | Phase 45 | Pending |
+| SCHED-04 | Phase 45 | Complete |
+| SCHED-05 | Phase 45 | Complete |
+| SCHED-06 | Phase 45 | Complete |
+| SCHED-07 | Phase 45 | Complete |
 | SCHED-08 | Phase 46 | Pending |
 | SCHED-09 | Phase 46 | Pending |
 | SCHED-10 | Phase 47 | Pending |

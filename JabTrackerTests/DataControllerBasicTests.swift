@@ -19,7 +19,7 @@ struct DataControllerBasicTests {
 
         // Test that shared instance has valid container
         _ = shared1.container.mainContext
-        #expect(shared1.container.schema.entities.count == 15)
+        #expect(shared1.container.schema.entities.count == 16)
     }
 
     @Test("DataController test container creation")
@@ -32,7 +32,7 @@ struct DataControllerBasicTests {
         _ = context  // ModelContext is never nil, just verify we can access it
 
         // Test container should have correct schema
-        #expect(testController.container.schema.entities.count == 15, "Should have 15 entities")
+        #expect(testController.container.schema.entities.count == 16, "Should have 16 entities")
 
         // Test that it's isolated from shared instance
         #expect(
@@ -57,7 +57,7 @@ struct DataControllerBasicTests {
 
         // Should attempt CloudKit setup
         #expect(
-            productionStyleController.container.schema.entities.count == 15, "Should have 15 entities")
+            productionStyleController.container.schema.entities.count == 16, "Should have 16 entities")
 
         // CloudKit status should be set
         let validStatuses: [SyncStatus] = [
@@ -82,7 +82,7 @@ struct DataControllerBasicTests {
         #expect(entityNames.contains("DoseTitration"), "Schema should contain DoseTitration entity")
 
         // Test schema has correct number of entities
-        #expect(schema.entities.count == 15, "Should have exactly 15 entities in schema")
+        #expect(schema.entities.count == 16, "Should have exactly 16 entities in schema")
     }
 
     @Test("DataController published properties")
