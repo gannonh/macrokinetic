@@ -119,14 +119,15 @@ extension FoodSchedule {
             if let config = newValue {
                 do {
                     scheduleConfigData = try JSONEncoder().encode(config)
+                    updatedAt = Date()
                 } catch {
-                    Self.logger.error("Failed to encode scheduleConfig - data lost: \(error)")
-                    scheduleConfigData = Data()
+                    Self.logger.error("Failed to encode scheduleConfig - preserving existing data: \(error)")
+                    // Preserve existing data on encoding failure to prevent data loss
                 }
             } else {
                 scheduleConfigData = Data()
+                updatedAt = Date()
             }
-            updatedAt = Date()
         }
     }
 
