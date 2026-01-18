@@ -43,7 +43,11 @@ Plans:
 3. One schedule per food enforced at data layer (update existing if schedule exists)
 4. Schedule data syncs across devices via CloudKit
 
-**Plans:** (created by /gsd:plan-phase)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 45-01-PLAN.md — FoodSchedule model and ScheduleConfiguration value types
+- [ ] 45-02-PLAN.md — FoodScheduleService CRUD and DataController registration
 
 ---
 
