@@ -11,19 +11,21 @@ import Foundation
 enum LibraryTab: String, CaseIterable {
     case recipes
     case foods
+    case scheduled
     case favorites
 
     var displayName: String {
         switch self {
         case .recipes: return "Recipes"
         case .foods: return "Foods"
+        case .scheduled: return "Scheduled"
         case .favorites: return "Favorites"
         }
     }
 
     var isEnabled: Bool {
         switch self {
-        case .foods: return true
+        case .foods, .scheduled: return true
         default: return false
         }
     }
