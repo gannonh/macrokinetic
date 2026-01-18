@@ -26,6 +26,7 @@ enum CustomFoodTestHelpers {
             ScheduledDose.self,
             Food.self,
             FoodEntry.self,
+            FoodSchedule.self,
         ])
         let configuration = ModelConfiguration(
             schema: schema,

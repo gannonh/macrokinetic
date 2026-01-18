@@ -138,12 +138,12 @@ final class FoodScheduleService {
         return try context.fetch(descriptor)
     }
 
-    /// Get schedules that apply to a specific date
+    /// Get schedules that apply to a specific date (checks date range and day of week)
     /// - Parameter date: The date to check
-    /// - Returns: Array of schedules that apply to the given date
+    /// - Returns: Array of schedules that have meals scheduled for the given date
     func getSchedules(for date: Date) async throws -> [FoodSchedule] {
         let activeSchedules = try await getAllActiveSchedules()
-        return activeSchedules.filter { $0.appliesTo(date: date) }
+        return activeSchedules.filter { !$0.scheduledMeals(for: date).isEmpty }
     }
 
     // MARK: - Update
