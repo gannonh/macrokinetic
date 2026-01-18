@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import OSLog
 import SwiftData
 
-/// Scheduled food for automatic population
-/// One schedule per food enforced at service layer
+/// Represents a recurring food schedule that defines when a food should appear in the meal plan.
+/// The one-schedule-per-food constraint is enforced by FoodScheduleService (SCHED-07).
 @Model
 final class FoodSchedule {
     // MARK: - Identity
@@ -100,15 +101,28 @@ final class FoodSchedule {
 // MARK: - Schedule Config Accessor
 
 extension FoodSchedule {
-    /// Decoded schedule configuration
+    private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "FoodSchedule")
+
+    /// Decoded schedule configuration. Setting this property automatically updates `updatedAt`.
     var scheduleConfig: ScheduleConfig? {
         get {
             guard !scheduleConfigData.isEmpty else { return nil }
-            return try? JSONDecoder().decode(ScheduleConfig.self, from: scheduleConfigData)
+            do {
+                return try JSONDecoder().decode(ScheduleConfig.self, from: scheduleConfigData)
+            } catch {
+                let scheduleId = self.id
+                Self.logger.error("Failed to decode scheduleConfig for schedule \(scheduleId): \(error)")
+                return nil
+            }
         }
         set {
             if let config = newValue {
-                scheduleConfigData = (try? JSONEncoder().encode(config)) ?? Data()
+                do {
+                    scheduleConfigData = try JSONEncoder().encode(config)
+                } catch {
+                    Self.logger.error("Failed to encode scheduleConfig - data lost: \(error)")
+                    scheduleConfigData = Data()
+                }
             } else {
                 scheduleConfigData = Data()
             }
@@ -116,12 +130,10 @@ extension FoodSchedule {
         }
     }
 
-    /// Whether schedule applies to a given date
+    /// Whether schedule applies to a given date (considering active status and date range)
     func appliesTo(date: Date) -> Bool {
-        // Check active state
         guard isActive else { return false }
 
-        // Check date range if specified
         let calendar = Calendar.current
         let startOfDate = calendar.startOfDay(for: date)
 
@@ -135,14 +147,18 @@ extension FoodSchedule {
         return true
     }
 
-    /// Meals scheduled for a specific date (considering day of week and date range)
+    /// Returns meals scheduled for a specific date, considering day of week, date range, and active status.
+    /// Returns an empty array if the schedule does not apply to the given date.
     func scheduledMeals(for date: Date) -> [MealSection] {
         guard appliesTo(date: date),
             let config = scheduleConfig
         else { return [] }
 
         let weekday = Calendar.current.component(.weekday, from: date)
-        guard let scheduleDay = ScheduleDay(rawValue: weekday) else { return [] }
+        guard let scheduleDay = ScheduleDay(rawValue: weekday) else {
+            Self.logger.error("Unexpected weekday value \(weekday) for date \(date) - cannot determine schedule day")
+            return []
+        }
 
         return config.meals(for: scheduleDay)
     }

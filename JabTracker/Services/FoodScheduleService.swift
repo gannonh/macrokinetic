@@ -12,20 +12,19 @@ import SwiftData
 /// Errors that can occur during food schedule operations
 enum FoodScheduleError: LocalizedError, Equatable {
     case invalidConfiguration
-    case foodNotFound
 
     var errorDescription: String? {
         switch self {
         case .invalidConfiguration:
             return "Schedule configuration is invalid"
-        case .foodNotFound:
-            return "Food not found"
         }
     }
 }
 
-/// Service for managing food schedules
-/// Provides CRUD operations with one-per-food constraint enforcement and auto-conversion to custom foods
+/// Service for managing food schedules.
+/// Provides CRUD operations with:
+/// - One-schedule-per-food constraint enforcement (SCHED-07)
+/// - Auto-conversion of non-custom foods to custom foods before scheduling (SCHED-04)
 @MainActor
 final class FoodScheduleService {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "FoodScheduleService")
@@ -53,6 +52,8 @@ final class FoodScheduleService {
     ///   - endDate: Optional schedule end date
     /// - Returns: The created or updated FoodSchedule
     /// - Throws: FoodScheduleError if configuration is invalid
+    /// - Note: When auto-conversion occurs, the returned schedule references the newly created custom food,
+    ///   not the original food parameter. The original food remains unchanged.
     func createOrUpdateSchedule(
         for food: Food,
         config: ScheduleConfig,
@@ -61,12 +62,11 @@ final class FoodScheduleService {
         startDate: Date? = nil,
         endDate: Date? = nil
     ) async throws -> FoodSchedule {
-        // Validate configuration
         guard config.isValid else {
+            Self.logger.error("Invalid schedule configuration attempted for food: \(food.name)")
             throw FoodScheduleError.invalidConfiguration
         }
 
-        // Convert to custom food if not already (SCHED-04)
         let targetFood: Food
         if food.isCustomFood {
             targetFood = food
@@ -167,8 +167,8 @@ final class FoodScheduleService {
         startDate: Date?,
         endDate: Date?
     ) async throws -> FoodSchedule {
-        // Validate configuration
         guard config.isValid else {
+            Self.logger.error("Invalid schedule configuration in update for food: \(schedule.foodName)")
             throw FoodScheduleError.invalidConfiguration
         }
 

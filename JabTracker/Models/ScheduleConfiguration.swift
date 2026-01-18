@@ -48,7 +48,7 @@ enum ScheduleDay: Int, Codable, CaseIterable, Identifiable {
 
 /// A single day+meal combination for the schedule
 struct ScheduleDayMealConfig: Codable, Equatable, Identifiable {
-    var id: UUID
+    let id: UUID
     var day: ScheduleDay
     var meal: MealSection
 

@@ -49,7 +49,7 @@ struct FoodScheduleTests {
     func testDefaultInit() {
         let schedule = FoodSchedule()
 
-        #expect(schedule.id != UUID())  // Has a UUID
+        #expect(schedule.id.uuidString.isEmpty == false)  // Has a valid UUID
         #expect(schedule.foodName == "")
         #expect(schedule.foodBrand == "")
         #expect(schedule.servingGrams == 100.0)

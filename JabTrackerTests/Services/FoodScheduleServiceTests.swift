@@ -285,17 +285,9 @@ struct FoodScheduleServiceTests {
             servingDescription: ""
         )
 
-        // Find a Monday
-        let calendar = Calendar.current
-        var components = DateComponents()
-        components.year = 2026
-        components.month = 1
-        components.day = 19  // A Monday
-        let monday = calendar.date(from: components)!
-
-        // Find a Tuesday
-        components.day = 20  // A Tuesday
-        let tuesday = calendar.date(from: components)!
+        // Find a Monday and Tuesday dynamically
+        let monday = findDate(dayOfWeek: ScheduleDay.monday)
+        let tuesday = findDate(dayOfWeek: ScheduleDay.tuesday)
 
         // Schedule should apply to Monday
         let mondaySchedules = try await services.scheduleService.getSchedules(for: monday)
@@ -442,5 +434,17 @@ struct FoodScheduleServiceTests {
             customFoodService: customFoodService,
             scheduleService: scheduleService
         )
+    }
+
+    /// Find the next occurrence of a specific day of week
+    private func findDate(dayOfWeek: ScheduleDay) -> Date {
+        let calendar = Calendar.current
+        var date = Date()
+
+        while calendar.component(.weekday, from: date) != dayOfWeek.rawValue {
+            date = date.addingTimeInterval(24 * 60 * 60)
+        }
+
+        return date
     }
 }

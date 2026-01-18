@@ -66,7 +66,7 @@ struct ScheduleDayMealConfigTests {
 
         #expect(config.day == .monday)
         #expect(config.meal == .breakfast)
-        #expect(config.id != UUID())  // Has a UUID
+        #expect(config.id.uuidString.isEmpty == false)  // Has a valid UUID
     }
 
     @Test("encodes and decodes correctly via JSON round-trip")
