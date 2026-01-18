@@ -1,0 +1,32 @@
+Build 0.10.0 (14) - Copy/Paste Food Log Entries
+
+What's New
+- Copy/Paste meals: Copy all food entries from one day and paste them to another day using the new header control
+- HealthKit weight import: Automatically sync weight data from Apple Health for improved tracking
+- Dose projections: Enhanced projections on the GLP-1 analytics chart
+
+How Copy/Paste Works
+- In Food Log view, tap the copy/paste segmented control in the header
+- Switch to Copy mode, tap on a day to copy its entries
+- Switch to Paste mode, tap on a target day to paste
+- Quick way to replicate similar meal days
+
+Bug Fixes
+- Fixed analytics refresh button not working
+- Improved paste dialog positioning to anchor below header control
+
+Focus Areas for Testing
+- Copy/Paste: Try copying a day's meals and pasting to another day - does it work smoothly?
+- HealthKit: If you have weight data in Apple Health, check if it syncs to JabTracker
+- Food Log: Verify existing food logging still works correctly after copy/paste changes
+
+Feedback Needed
+- Is the copy/paste workflow intuitive?
+- Would you prefer different copy/paste UI (long press, swipe, etc.)?
+- Any issues with meal data after pasting?
+
+Not Yet Implemented
+- Quick Add for frequent meals
+- Meal templates/favorites
+- Barcode scanner for packaged foods
+- Background notification refresh
