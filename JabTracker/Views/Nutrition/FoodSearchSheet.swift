@@ -44,6 +44,8 @@ struct FoodSearchSheet: View {
     @State var barcodeNotFound = false
     @State var lastScannedBarcode: String?
     @State private var searchTask: Task<Void, Never>?
+    @State var schedulingFood: Food?
+    @State var existingScheduleForFood: FoodSchedule?
     @FocusState private var isSearchFocused: Bool
 
     // MARK: - Constants
@@ -228,6 +230,9 @@ struct FoodSearchSheet: View {
                     }
                 )
             }
+        }
+        .sheet(item: $schedulingFood) { food in
+            scheduleSheetContent(for: food)
         }
         .alert("Delete Failed", isPresented: $showingDeleteError) {
             Button("OK", role: .cancel) {}
@@ -447,6 +452,37 @@ struct FoodSearchSheet: View {
         }
     }
 
+    /// Schedule sheet content extracted to help compiler type-checking
+    @ViewBuilder
+    private func scheduleSheetContent(for food: Food) -> some View {
+        if let scheduleService = AppServices.shared.foodScheduleService {
+            ScheduleConfigSheet(
+                food: food,
+                scheduleService: scheduleService,
+                existingSchedule: existingScheduleForFood,
+                onComplete: {
+                    Task { await self.viewModel.performSearch() }
+                }
+            )
+        }
+    }
+
+    /// Prepare schedule sheet by converting search result to Food and loading existing schedule
+    func prepareScheduleSheet(for result: FoodSearchResult) async {
+        guard let scheduleService = AppServices.shared.foodScheduleService else { return }
+
+        // Convert search result to Food model
+        let food = foodService.createFood(from: result)
+
+        // Check for existing schedule
+        do {
+            existingScheduleForFood = try await scheduleService.getSchedule(for: food.id)
+        } catch {
+            existingScheduleForFood = nil
+        }
+
+        schedulingFood = food
+    }
 }
 
 // MARK: - Preview
