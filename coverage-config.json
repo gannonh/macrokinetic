@@ -40,7 +40,8 @@
           "Models/BiologicalSex.swift",
           "Models/DayStatus.swift",
           "Models/ClipboardContent.swift",
-          "Models/ScheduleConfiguration.swift"
+          "Models/ScheduleConfiguration.swift",
+          "Models/FoodSchedule.swift"
         ]
       },
       "business_logic_with_logging": {
