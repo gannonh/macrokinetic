@@ -335,6 +335,8 @@
       "Views/Nutrition/ProgramWizard.swift",
       "Views/Nutrition/ProgramWizardStepViews.swift",
       "Views/Nutrition/QuickAddContentView.swift",
+      "Views/Nutrition/ScheduleConfigSheet.swift",
+      "Views/Nutrition/ScheduleDayMealGrid.swift",
       "Views/Nutrition/SearchMethodTabs.swift",
       "Views/Nutrition/ServingInputView.swift",
       "Views/Photos/QuickPhotoSheet.swift",
