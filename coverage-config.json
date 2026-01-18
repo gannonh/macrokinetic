@@ -39,7 +39,8 @@
           "Models/TDEESnapshot.swift",
           "Models/BiologicalSex.swift",
           "Models/DayStatus.swift",
-          "Models/ClipboardContent.swift"
+          "Models/ClipboardContent.swift",
+          "Models/ScheduleConfiguration.swift"
         ]
       },
       "business_logic_with_logging": {
