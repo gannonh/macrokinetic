@@ -254,9 +254,12 @@ struct ContentView: View {
             updateCheckInBadge()
         }
         .onChange(of: scenePhase) { _, newPhase in
-            // Refresh badge when app becomes active (e.g., after completing check-in)
+            // Refresh badge and populate scheduled foods when app becomes active
             if newPhase == .active {
                 updateCheckInBadge()
+                Task {
+                    await ensureScheduledFoodsPopulated()
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .checkInCompleted)) { _ in

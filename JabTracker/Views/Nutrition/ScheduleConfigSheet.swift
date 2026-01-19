@@ -229,6 +229,10 @@ struct ScheduleConfigSheet: View {
             )
 
             logger.info("Saved schedule for: \(food.name)")
+
+            // Immediately populate today if schedule applies (no app restart needed)
+            await AppServices.shared.foodAutoPopulationService?.populateToday()
+
             dismiss()
             onComplete()
         } catch {

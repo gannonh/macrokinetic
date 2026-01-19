@@ -43,6 +43,20 @@ final class FoodAutoPopulationService {
 
     // MARK: - Public Methods
 
+    /// Populate food entries for today only (skips lastPopulatedDate check).
+    /// Use when a schedule is created mid-session and needs immediate population.
+    func populateToday() async {
+        let today = Calendar.current.startOfDay(for: Date())
+        do {
+            let count = try await populateDay(today)
+            if count > 0 {
+                Self.logger.info("Populated \(count) entries for today")
+            }
+        } catch {
+            Self.logger.error("Failed to populate today: \(error.localizedDescription)")
+        }
+    }
+
     /// Populate food entries for any missed days since last population.
     /// Skips if already ran today. Backfills from (lastPopulated + 1) through today.
     func populateMissedDays() async {
