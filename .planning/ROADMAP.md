@@ -85,7 +85,11 @@ Plans:
 3. User can delete auto-populated entries (deletes entry, not schedule)
 4. Missed days (app not opened) backfill when app launches
 
-**Plans:** (created by /gsd:plan-phase)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 47-01-PLAN.md — FoodAutoPopulationService and AppServices registration
+- [ ] 47-02-PLAN.md — ContentView integration for app launch trigger
 
 ---
 
