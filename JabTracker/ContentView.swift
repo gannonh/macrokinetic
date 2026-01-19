@@ -78,6 +78,18 @@ struct ContentView: View {
         }
     }
 
+    /// Ensure scheduled foods are populated for today and any missed days
+    /// Runs once per day on app launch, backfilling any missed days
+    private func ensureScheduledFoodsPopulated() async {
+        guard let autoPopService = AppServices.shared.foodAutoPopulationService else {
+            logger.debug("FoodAutoPopulationService unavailable, skipping auto-population")
+            return
+        }
+
+        await autoPopService.populateMissedDays()
+        logger.debug("Food auto-population completed")
+    }
+
     init() {
         let pkEngine = PharmacokineticsEngine()
         self._pkEngine = State(wrappedValue: pkEngine)
@@ -237,6 +249,7 @@ struct ContentView: View {
         }
         .task {
             await ensureTDEESnapshots()
+            await ensureScheduledFoodsPopulated()
             // Re-check badge after Query has had time to load
             updateCheckInBadge()
         }
