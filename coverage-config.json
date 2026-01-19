@@ -94,7 +94,8 @@
           "Services/CalorieAdjustmentService+Adjustments.swift",
           "Services/DayStatusService.swift",
           "Services/FoodClipboardService.swift",
-          "Services/FoodScheduleService.swift"
+          "Services/FoodScheduleService.swift",
+          "Services/FoodAutoPopulationService.swift"
         ]
       },
       "framework_integration": {
