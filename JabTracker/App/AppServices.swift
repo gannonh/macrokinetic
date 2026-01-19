@@ -49,6 +49,9 @@ final class AppServices: ObservableObject {
     /// Food schedule service for food schedule CRUD operations
     @Published private(set) var foodScheduleService: FoodScheduleService?
 
+    /// Food auto-population service for populating scheduled foods
+    @Published private(set) var foodAutoPopulationService: FoodAutoPopulationService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -120,6 +123,14 @@ final class AppServices: ObservableObject {
             customFoodService: customFoodService
         )
         self.foodScheduleService = foodScheduleService
+
+        // Create FoodAutoPopulationService for auto-populating scheduled foods
+        let foodAutoPopulationService = FoodAutoPopulationService(
+            context: modelContext,
+            scheduleService: foodScheduleService,
+            mealLogService: mealLogService
+        )
+        self.foodAutoPopulationService = foodAutoPopulationService
     }
 
     /// Reset services (useful for testing or sign-out)
@@ -136,6 +147,7 @@ final class AppServices: ObservableObject {
         dayStatusService = nil
         foodClipboardService = nil
         foodScheduleService = nil
+        foodAutoPopulationService = nil
     }
 }
 
