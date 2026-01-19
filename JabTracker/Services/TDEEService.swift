@@ -778,6 +778,64 @@ extension TDEEService {
     }
 }
 
+// MARK: - Snapshot Maintenance
+
+extension TDEEService {
+
+    /// Remove TDEE snapshots that are statistical outliers (>20% from median)
+    /// Call this on app startup to clean up any bad historical data
+    /// - Returns: Count of deleted snapshots
+    @discardableResult
+    func cleanupOutlierSnapshots() throws -> Int {
+        // Fetch all snapshots sorted by date
+        let descriptor = FetchDescriptor<TDEESnapshot>(
+            sortBy: [SortDescriptor(\.timestamp, order: .forward)]
+        )
+        let snapshots = try context.fetch(descriptor)
+
+        // Need at least 5 snapshots to determine outliers reliably
+        guard snapshots.count >= 5 else {
+            Self.logger.debug("Skipping outlier cleanup - only \(snapshots.count) snapshots (need 5+)")
+            return 0
+        }
+
+        // Calculate median TDEE value
+        let sortedValues = snapshots.map(\.tdeeValue).sorted()
+        let median: Double
+        if sortedValues.count % 2 == 0 {
+            let midIndex = sortedValues.count / 2
+            median = (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2.0
+        } else {
+            median = sortedValues[sortedValues.count / 2]
+        }
+
+        // Find snapshots that deviate more than 20% from median
+        let outlierThreshold = 0.20
+        var deletedCount = 0
+
+        for snapshot in snapshots {
+            let deviation = abs(snapshot.tdeeValue - median) / median
+            if deviation > outlierThreshold {
+                Self.logger.info(
+                    """
+                    🗑️ Removing outlier TDEE snapshot: \(Int(snapshot.tdeeValue)) kcal \
+                    (median: \(Int(median)), deviation: \(String(format: "%.1f%%", deviation * 100)))
+                    """
+                )
+                context.delete(snapshot)
+                deletedCount += 1
+            }
+        }
+
+        if deletedCount > 0 {
+            try context.save()
+            Self.logger.info("✅ Cleaned up \(deletedCount) outlier TDEE snapshot(s)")
+        }
+
+        return deletedCount
+    }
+}
+
 // MARK: - Daily Snapshot Backfill
 
 extension TDEEService {

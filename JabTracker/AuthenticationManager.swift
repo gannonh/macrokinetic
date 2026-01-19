@@ -101,6 +101,9 @@ class AuthenticationManager: NSObject, ObservableObject {
                 self.currentUser = user
                 self.authenticationState = .authenticated
                 Self.logger.info("✅ AuthenticationManager: Set state to authenticated")
+
+                // Clean up any outlier TDEE snapshots from bad historical data
+                await self.cleanupOutlierTDEESnapshots(context: context)
             } else {
                 self.authenticationState = .notAuthenticated
                 Self.logger.info(
@@ -1053,6 +1056,20 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
 
     // MARK: - Private Helper Methods
+
+    /// Clean up any outlier TDEE snapshots that may have been saved with incorrect values
+    /// This runs on app startup to fix any bad historical data from previous bugs
+    private func cleanupOutlierTDEESnapshots(context: ModelContext) async {
+        do {
+            let tdeeService = TDEEService(context: context)
+            let deletedCount = try tdeeService.cleanupOutlierSnapshots()
+            if deletedCount > 0 {
+                Self.logger.info("🧹 Cleaned up \(deletedCount) outlier TDEE snapshot(s) on startup")
+            }
+        } catch {
+            Self.logger.error("Failed to cleanup outlier TDEE snapshots: \(error.localizedDescription)")
+        }
+    }
 
     /// Validates the user's Apple credential and handles revoked state.
     /// Returns true if credential is valid or not present, false if revoked (and sets auth state).
