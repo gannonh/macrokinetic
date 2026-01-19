@@ -75,8 +75,8 @@ struct FoodAutoPopulationServiceTests {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
         UserDefaults.standard.set(yesterday, forKey: Self.lastPopulatedDateKey)
 
-        // Run population
-        await services.autoPopulationService.populateMissedDays()
+        // Run population (populateToday handles single day population)
+        await services.autoPopulationService.populateToday()
 
         // Verify entry was created
         let entries = try await services.mealLogService.getEntries(for: today)
@@ -134,11 +134,11 @@ struct FoodAutoPopulationServiceTests {
         UserDefaults.standard.set(yesterday, forKey: Self.lastPopulatedDateKey)
 
         // Run population twice
-        await services.autoPopulationService.populateMissedDays()
+        await services.autoPopulationService.populateToday()
 
         // Reset last populated to yesterday again so second run would try to populate
         UserDefaults.standard.set(yesterday, forKey: Self.lastPopulatedDateKey)
-        await services.autoPopulationService.populateMissedDays()
+        await services.autoPopulationService.populateToday()
 
         // Verify only one entry exists (not duplicated)
         let entries = try await services.mealLogService.getEntries(for: today)
@@ -188,8 +188,8 @@ struct FoodAutoPopulationServiceTests {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
         UserDefaults.standard.set(yesterday, forKey: Self.lastPopulatedDateKey)
 
-        // Run population
-        await services.autoPopulationService.populateMissedDays()
+        // Run population (populateToday handles single day population)
+        await services.autoPopulationService.populateToday()
 
         // Verify no entries created (schedule hasn't started yet)
         let entries = try await services.mealLogService.getEntries(for: today)
@@ -236,8 +236,8 @@ struct FoodAutoPopulationServiceTests {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
         UserDefaults.standard.set(yesterday, forKey: Self.lastPopulatedDateKey)
 
-        // Run population
-        await services.autoPopulationService.populateMissedDays()
+        // Run population (populateToday handles single day population)
+        await services.autoPopulationService.populateToday()
 
         // Verify two entries created (one per meal)
         let entries = try await services.mealLogService.getEntries(for: today)
@@ -248,8 +248,8 @@ struct FoodAutoPopulationServiceTests {
         #expect(meals.contains(.lunch))
     }
 
-    @Test("Populate missed days backfills multiple days")
-    func testPopulateMissedDays_BackfillsMultipleDays() async throws {
+    @Test("Populate today does NOT backfill missed days")
+    func testPopulateToday_DoesNotBackfillMissedDays() async throws {
         resetUserDefaults()
         let services = createTestServices()
         _ = services.container
@@ -277,26 +277,26 @@ struct FoodAutoPopulationServiceTests {
             servingDescription: ""
         )
 
-        // Set last populated date to 2 days ago
+        // Set last populated date to 2 days ago (simulating app wasn't opened)
         let today = Calendar.current.startOfDay(for: Date())
         let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: today)!
         UserDefaults.standard.set(twoDaysAgo, forKey: Self.lastPopulatedDateKey)
 
-        // Run population
-        await services.autoPopulationService.populateMissedDays()
+        // Run population (populateToday only populates today - no backfill)
+        await services.autoPopulationService.populateToday()
 
-        // Verify entries exist for yesterday and today
+        // Verify NO entries for yesterday (no backfill per UAT requirement)
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
-
         let yesterdayEntries = try await services.mealLogService.getEntries(for: yesterday)
-        let todayEntries = try await services.mealLogService.getEntries(for: today)
+        #expect(yesterdayEntries.count == 0, "Should NOT backfill missed days")
 
-        #expect(yesterdayEntries.count == 1)
-        #expect(todayEntries.count == 1)
+        // Verify today's entry was created
+        let todayEntries = try await services.mealLogService.getEntries(for: today)
+        #expect(todayEntries.count == 1, "Should populate today")
     }
 
-    @Test("Populate missed days skips if already ran today")
-    func testPopulateMissedDays_SkipsIfAlreadyRanToday() async throws {
+    @Test("Populate today creates entry regardless of last populated date")
+    func testPopulateToday_CreatesEntryRegardlessOfLastPopulatedDate() async throws {
         resetUserDefaults()
         let services = createTestServices()
         _ = services.container
@@ -330,15 +330,17 @@ struct FoodAutoPopulationServiceTests {
             servingDescription: ""
         )
 
-        // Set last populated date to today (already ran)
+        // Set last populated date to today (simulating already ran)
+        // Note: populateToday() uses duplicate prevention via existing entries,
+        // not date tracking, so this flag doesn't prevent population
         UserDefaults.standard.set(today, forKey: Self.lastPopulatedDateKey)
 
-        // Run population
-        await services.autoPopulationService.populateMissedDays()
+        // Run population - should still create entry (duplicate prevention checks existing entries)
+        await services.autoPopulationService.populateToday()
 
-        // Verify no entries created (should have skipped)
+        // Verify entry was created (1 entry)
         let entries = try await services.mealLogService.getEntries(for: today)
-        #expect(entries.count == 0)
+        #expect(entries.count == 1, "Should create entry - duplicate prevention checks existing entries, not dates")
     }
 
     // MARK: - Helper Types
