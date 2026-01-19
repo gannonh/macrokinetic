@@ -73,7 +73,7 @@ Status: Phase 47 Plan 2 complete, Plan 3 remaining
 
 ### Pending Todos
 
-10 todos in `.planning/todos/pending/`
+9 todos in `.planning/todos/pending/`
 
 ### Blockers/Concerns
 
