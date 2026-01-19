@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 46-schedule-ux
 source: [46-01-SUMMARY.md, 46-02-SUMMARY.md, 46-03-SUMMARY.md]
 started: 2026-01-18T19:50:00Z
@@ -61,7 +61,11 @@ skipped: 0
   reason: "User reported: schedule button just shows as schedule - clicking it opens an empty schedule. Swipe also shows 'schedule'. But Scheduled tab correctly shows populated schedule."
   severity: major
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "FoodService.createFood(from:) creates new Food with new UUID instead of preserving FoodSearchResult.id. checkScheduleStatus() uses this fresh UUID to query schedules, which never matches the stored schedule's foodId."
+  artifacts:
+    - path: "JabTracker/Services/FoodService.swift"
+      issue: "createFood(from:) doesn't preserve result.id"
+      lines: "518-538"
+  missing:
+    - "Add food.id = result.id after Food creation in createFood(from:)"
+  debug_session: "inline diagnosis"
