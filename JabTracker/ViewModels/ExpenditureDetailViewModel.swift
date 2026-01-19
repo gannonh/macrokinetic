@@ -331,18 +331,32 @@ final class ExpenditureDetailViewModel {
         }
     }
 
-    /// Generate historical entries for data sources section
+    /// Generate historical entries for data sources section from actual snapshot data
     private func generateHistoricalEntries(baseTDEE: Double) {
-        let calendar = Calendar.current
-        let today = Date()
+        // Use actual daily data from snapshots, limited to most recent 7 entries
+        let recentData = dailyData.suffix(7).reversed()
 
-        historicalEntries = (0..<7).compactMap { dayOffset in
-            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { return nil }
-            return HistoricalEntry(
-                expenditure: Int(baseTDEE),
-                date: date,
-                status: .holding
-            )
+        if recentData.isEmpty {
+            // Fallback if no snapshot data exists
+            let calendar = Calendar.current
+            let today = Date()
+            historicalEntries = (0..<7).compactMap { dayOffset in
+                guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { return nil }
+                return HistoricalEntry(
+                    expenditure: Int(baseTDEE),
+                    date: date,
+                    status: .holding
+                )
+            }
+        } else {
+            // Use actual snapshot data with correct status
+            historicalEntries = recentData.map { daily in
+                HistoricalEntry(
+                    expenditure: daily.value,
+                    date: daily.date,
+                    status: daily.status
+                )
+            }
         }
     }
 

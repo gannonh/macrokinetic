@@ -137,8 +137,11 @@ final class WeeklyCheckInService {
         }
 
         // Check if enough time has passed since last check-in
+        // Normalize to start of day to avoid time-of-day affecting the calculation
         let referenceDate = goal.lastCheckInDate ?? goal.createdAt
-        let daysSinceReference = calendar.dateComponents([.day], from: referenceDate, to: date).day ?? 0
+        let referenceStartOfDay = calendar.startOfDay(for: referenceDate)
+        let dateStartOfDay = calendar.startOfDay(for: date)
+        let daysSinceReference = calendar.dateComponents([.day], from: referenceStartOfDay, to: dateStartOfDay).day ?? 0
 
         let isDue = daysSinceReference >= checkInIntervalDays
         Self.logger.debug("Check-in due: \(isDue) (\(daysSinceReference) days since reference)")
@@ -160,8 +163,12 @@ final class WeeklyCheckInService {
         var daysUntilDay = (checkInDay - currentWeekday + 7) % 7
         if daysUntilDay == 0 {
             // Same day - check if we've already done check-in this week
+            // Normalize to start of day to avoid time-of-day affecting the calculation
             let referenceDate = goal.lastCheckInDate ?? goal.createdAt
-            let daysSinceReference = calendar.dateComponents([.day], from: referenceDate, to: today).day ?? 0
+            let referenceStartOfDay = calendar.startOfDay(for: referenceDate)
+            let todayStartOfDay = calendar.startOfDay(for: today)
+            let daysSinceReference =
+                calendar.dateComponents([.day], from: referenceStartOfDay, to: todayStartOfDay).day ?? 0
             if daysSinceReference < checkInIntervalDays {
                 daysUntilDay = 7  // Next week
             }
