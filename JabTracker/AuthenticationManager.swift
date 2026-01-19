@@ -174,6 +174,8 @@ class AuthenticationManager: NSObject, ObservableObject {
         let scheduledDoseCount = try deleteAll(ScheduledDose.self, from: context)
         let foodCount = try deleteAll(Food.self, from: context)
         let foodEntryCount = try deleteAll(FoodEntry.self, from: context)
+        let foodScheduleCount = try deleteAll(FoodSchedule.self, from: context)
+        let dayStatusCount = try deleteAll(DayStatus.self, from: context)
         let weightEntryCount = try deleteAll(WeightEntry.self, from: context)
         let metricsEntryCount = try deleteAll(MetricsEntry.self, from: context)
         let progressPhotoCount = try deleteAll(ProgressPhoto.self, from: context)
@@ -187,7 +189,8 @@ class AuthenticationManager: NSObject, ObservableObject {
             ✅ AuthenticationManager: App data reset successfully - \
             Deleted \(userCount) users, \(profileCount) profiles, \(doseCount) doses, \
             \(titrationCount) titrations, \(doseScheduleCount) schedules, \(scheduledDoseCount) scheduled doses, \
-            \(foodCount) foods, \(foodEntryCount) food entries, \(weightEntryCount) weight entries, \
+            \(foodCount) foods, \(foodEntryCount) food entries, \(foodScheduleCount) food schedules, \
+            \(dayStatusCount) day statuses, \(weightEntryCount) weight entries, \
             \(metricsEntryCount) metrics entries, \(progressPhotoCount) progress photos, \
             \(nutritionGoalCount) goals, \(nutritionProgramCount) programs, \(tdeeSnapshotCount) TDEE snapshots
             """)
@@ -208,6 +211,8 @@ class AuthenticationManager: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
         UserDefaults.standard.removeObject(forKey: "notificationsEnabled")
         UserDefaults.standard.removeObject(forKey: "reminderMinutesBefore")
+        UserDefaults.standard.removeObject(forKey: "lastFoodAutoPopulationDate")
+        UserDefaults.standard.removeObject(forKey: "lastTDEEBackfillDate")
     }
 
     private func clearNotificationsForReset() {

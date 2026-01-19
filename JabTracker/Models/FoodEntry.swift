@@ -34,6 +34,7 @@ final class FoodEntry {
     // MARK: - Food Reference (Denormalized)
 
     var foodId: UUID = UUID()  // Reference to original Food if exists
+    var scheduleId: UUID?  // Reference to FoodSchedule if auto-populated, nil for manual entries
     var foodName: String = ""  // Snapshot at log time
     var foodBrand: String?  // Snapshot at log time
 
@@ -86,6 +87,7 @@ final class FoodEntry {
 
     init(
         foodId: UUID = UUID(),
+        scheduleId: UUID? = nil,
         foodName: String = "",
         foodBrand: String? = nil,
         mealSection: MealSection = .breakfast,
@@ -101,6 +103,7 @@ final class FoodEntry {
         notes: String? = nil
     ) {
         self.foodId = foodId
+        self.scheduleId = scheduleId
         self.foodName = foodName
         self.foodBrand = foodBrand
         self.mealSection = mealSection.rawValue

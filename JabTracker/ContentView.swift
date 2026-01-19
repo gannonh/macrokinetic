@@ -78,16 +78,16 @@ struct ContentView: View {
         }
     }
 
-    /// Ensure scheduled foods are populated for today and any missed days
-    /// Runs once per day on app launch, backfilling any missed days
+    /// Ensure scheduled foods are populated for the current week
+    /// Checks if we've entered a new week and populates entries if needed
     private func ensureScheduledFoodsPopulated() async {
         guard let autoPopService = AppServices.shared.foodAutoPopulationService else {
             logger.debug("FoodAutoPopulationService unavailable, skipping auto-population")
             return
         }
 
-        await autoPopService.populateMissedDays()
-        logger.debug("Food auto-population completed")
+        await autoPopService.checkAndPopulateNewWeek()
+        logger.debug("Food auto-population check completed")
     }
 
     init() {

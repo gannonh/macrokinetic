@@ -219,7 +219,14 @@ struct ScheduleConfigSheet: View {
         let scheduleConfig = ScheduleConfig(dayMealConfigs: configs)
 
         do {
-            _ = try await scheduleService.createOrUpdateSchedule(
+            // If editing, delete old scheduled entries first (they'll be recreated)
+            if let existingSchedule = existingSchedule {
+                try await AppServices.shared.foodAutoPopulationService?.deleteScheduledEntries(
+                    for: existingSchedule.id
+                )
+            }
+
+            let schedule = try await scheduleService.createOrUpdateSchedule(
                 for: food,
                 config: scheduleConfig,
                 servingGrams: servingGrams,
@@ -230,8 +237,8 @@ struct ScheduleConfigSheet: View {
 
             logger.info("Saved schedule for: \(food.name)")
 
-            // Immediately populate today if schedule applies (no app restart needed)
-            await AppServices.shared.foodAutoPopulationService?.populateToday()
+            // Populate entries for the remainder of the current week
+            try await AppServices.shared.foodAutoPopulationService?.populateWeek(for: schedule)
 
             dismiss()
             onComplete()
@@ -249,6 +256,12 @@ struct ScheduleConfigSheet: View {
         defer { isSaving = false }
 
         do {
+            // Delete all future scheduled entries for this schedule
+            try await AppServices.shared.foodAutoPopulationService?.deleteScheduledEntries(
+                for: schedule.id
+            )
+
+            // Then delete the schedule itself
             try await scheduleService.deleteSchedule(schedule)
             logger.info("Deleted schedule for: \(food.name)")
             dismiss()

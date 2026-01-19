@@ -10,7 +10,7 @@ import OSLog
 import SwiftData
 
 /// Service for auto-populating food entries from schedules.
-/// Runs on app launch to create FoodEntry records for any missed days.
+/// Creates entries for the entire current week when schedules are saved.
 @MainActor
 @Observable
 final class FoodAutoPopulationService {
@@ -23,14 +23,10 @@ final class FoodAutoPopulationService {
     private let scheduleService: FoodScheduleService
     private let mealLogService: MealLogService
 
-    /// UserDefaults key for tracking last populated date
-    private static let lastPopulatedDateKey = "lastFoodAutoPopulationDate"
+    /// UserDefaults key for tracking last populated week start
+    private static let lastPopulatedWeekKey = "lastFoodAutoPopulationWeekStart"
 
     /// Initialize with required dependencies
-    /// - Parameters:
-    ///   - context: ModelContext for inserting FoodEntry records
-    ///   - scheduleService: Service for fetching applicable schedules
-    ///   - mealLogService: Service for checking existing entries (duplicate prevention)
     init(
         context: ModelContext,
         scheduleService: FoodScheduleService,
@@ -43,8 +39,108 @@ final class FoodAutoPopulationService {
 
     // MARK: - Public Methods
 
-    /// Populate food entries for today only (skips lastPopulatedDate check).
-    /// Use when a schedule is created mid-session and needs immediate population.
+    /// Populate food entries for the remainder of the current week for a specific schedule.
+    /// Called when a schedule is created or updated.
+    /// - Parameter schedule: The schedule to populate entries for
+    /// - Returns: Number of entries created
+    @discardableResult
+    func populateWeek(for schedule: FoodSchedule) async throws -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let endOfWeek = getEndOfWeek(for: today)
+
+        var entriesCreated = 0
+        var currentDate = today
+
+        while currentDate <= endOfWeek {
+            let count = try await populateDayForSchedule(schedule, date: currentDate)
+            entriesCreated += count
+
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
+            }
+            currentDate = nextDate
+        }
+
+        if entriesCreated > 0 {
+            try context.save()
+            Self.logger.info(
+                "Populated \(entriesCreated) entries for schedule '\(schedule.foodName)' through end of week"
+            )
+        }
+
+        return entriesCreated
+    }
+
+    /// Delete all scheduled entries for a schedule after a given date.
+    /// Used when a schedule is deleted or modified.
+    /// - Parameters:
+    ///   - scheduleId: The schedule ID to delete entries for
+    ///   - afterDate: Delete entries on or after this date (default: today)
+    func deleteScheduledEntries(for scheduleId: UUID, after afterDate: Date? = nil) async throws {
+        let calendar = Calendar.current
+        let cutoffDate = afterDate ?? calendar.startOfDay(for: Date())
+
+        // Fetch all entries with this scheduleId on or after the cutoff date
+        let descriptor = FetchDescriptor<FoodEntry>(
+            predicate: #Predicate { entry in
+                entry.scheduleId == scheduleId && entry.loggedAt >= cutoffDate
+            }
+        )
+
+        let entries = try context.fetch(descriptor)
+
+        for entry in entries {
+            context.delete(entry)
+        }
+
+        if !entries.isEmpty {
+            try context.save()
+            Self.logger.info("Deleted \(entries.count) scheduled entries for schedule \(scheduleId)")
+        }
+    }
+
+    /// Check if new week has started and populate entries for all active schedules.
+    /// Should be called on app activation to handle week rollover.
+    func checkAndPopulateNewWeek() async {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let currentWeekStart = getStartOfWeek(for: today)
+
+        // Get last populated week start
+        let lastWeekStart: Date
+        if let stored = UserDefaults.standard.object(forKey: Self.lastPopulatedWeekKey) as? Date {
+            lastWeekStart = calendar.startOfDay(for: stored)
+        } else {
+            // First run - set to beginning of last week so we populate this week
+            lastWeekStart = calendar.date(byAdding: .day, value: -7, to: currentWeekStart) ?? currentWeekStart
+        }
+
+        // If we're in a new week, populate for all active schedules
+        if currentWeekStart > lastWeekStart {
+            Self.logger.info("New week detected - populating entries for all active schedules")
+
+            do {
+                let schedules = try await scheduleService.getAllActiveSchedules()
+                var totalEntries = 0
+
+                for schedule in schedules {
+                    let count = try await populateWeek(for: schedule)
+                    totalEntries += count
+                }
+
+                // Update last populated week
+                UserDefaults.standard.set(currentWeekStart, forKey: Self.lastPopulatedWeekKey)
+
+                Self.logger.info("New week population complete: \(totalEntries) entries created")
+            } catch {
+                Self.logger.error("Failed to populate new week: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Legacy method - populate entries for today only.
+    /// Kept for backward compatibility but prefer populateWeek().
     func populateToday() async {
         let today = Calendar.current.startOfDay(for: Date())
         do {
@@ -57,78 +153,32 @@ final class FoodAutoPopulationService {
         }
     }
 
-    /// Populate food entries for any missed days since last population.
-    /// Skips if already ran today. Backfills from (lastPopulated + 1) through today.
-    func populateMissedDays() async {
-        let today = Calendar.current.startOfDay(for: Date())
-
-        // Get last populated date (default to yesterday if first run)
-        let lastPopulated: Date
-        if let stored = UserDefaults.standard.object(forKey: Self.lastPopulatedDateKey) as? Date {
-            lastPopulated = Calendar.current.startOfDay(for: stored)
-        } else {
-            // First run: default to yesterday so we populate today
-            lastPopulated = Calendar.current.date(byAdding: .day, value: -1, to: today) ?? today
-        }
-
-        // Skip if already populated today
-        if lastPopulated >= today {
-            Self.logger.debug("Auto-population already ran today, skipping")
-            return
-        }
-
-        // Backfill from (lastPopulated + 1) through today
-        var currentDate = Calendar.current.date(byAdding: .day, value: 1, to: lastPopulated) ?? today
-
-        var daysPopulated = 0
-        var entriesCreated = 0
-
-        while currentDate <= today {
-            do {
-                let count = try await populateDay(currentDate)
-                entriesCreated += count
-                daysPopulated += 1
-            } catch {
-                Self.logger.error(
-                    "Failed to populate day \(currentDate): \(error.localizedDescription)"
-                )
-            }
-
-            guard let nextDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate)
-            else {
-                break
-            }
-            currentDate = nextDate
-        }
-
-        // Update last populated date on success
-        UserDefaults.standard.set(today, forKey: Self.lastPopulatedDateKey)
-
-        Self.logger.info(
-            "Auto-population complete: \(entriesCreated) entries created across \(daysPopulated) days"
-        )
-    }
-
     // MARK: - Private Methods
 
-    /// Populate food entries for a specific date from applicable schedules.
-    /// - Parameter date: The date to populate
-    /// - Returns: Number of entries created
-    private func populateDay(_ date: Date) async throws -> Int {
+    /// Get the start of the week (Sunday) for a given date
+    private func getStartOfWeek(for date: Date) -> Date {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        return calendar.date(from: components) ?? date
+    }
+
+    /// Get the end of the week (Saturday) for a given date
+    private func getEndOfWeek(for date: Date) -> Date {
+        let calendar = Calendar.current
+        let startOfWeek = getStartOfWeek(for: date)
+        return calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? date
+    }
+
+    /// Populate entries for a single schedule on a specific date
+    private func populateDayForSchedule(_ schedule: FoodSchedule, date: Date) async throws -> Int {
         let normalizedDate = Calendar.current.startOfDay(for: date)
 
-        // Get schedules that apply to this date
-        let schedules = try await scheduleService.getSchedules(for: normalizedDate)
+        // Check if schedule applies to this date
+        let meals = schedule.scheduledMeals(for: normalizedDate)
+        guard !meals.isEmpty else { return 0 }
 
-        guard !schedules.isEmpty else {
-            Self.logger.debug("No schedules apply to \(normalizedDate)")
-            return 0
-        }
-
-        // Get existing entries for this date
+        // Check for existing entries to avoid duplicates
         let existingEntries = try await mealLogService.getEntries(for: normalizedDate)
-
-        // Build Set of FoodMealKey for O(1) duplicate lookup
         var existingKeys = Set<FoodMealKey>()
         for entry in existingEntries {
             existingKeys.insert(FoodMealKey(foodId: entry.foodId, meal: entry.meal))
@@ -136,47 +186,44 @@ final class FoodAutoPopulationService {
 
         var entriesCreated = 0
 
-        // For each schedule, create entries for each scheduled meal
-        for schedule in schedules {
-            let meals = schedule.scheduledMeals(for: normalizedDate)
+        for meal in meals {
+            let key = FoodMealKey(foodId: schedule.foodId, meal: meal)
 
-            for meal in meals {
-                let key = FoodMealKey(foodId: schedule.foodId, meal: meal)
-
-                // Skip if entry already exists (duplicate prevention)
-                if existingKeys.contains(key) {
-                    Self.logger.debug(
-                        "Skipping duplicate: \(schedule.foodName) for \(meal.displayName)"
-                    )
-                    continue
-                }
-
-                // Create FoodEntry from schedule
-                let entry = createFoodEntry(from: schedule, meal: meal, date: normalizedDate)
-                context.insert(entry)
-                existingKeys.insert(key)  // Track newly created entries
-                entriesCreated += 1
-
-                Self.logger.debug(
-                    "Created entry: \(schedule.foodName) for \(meal.displayName) on \(normalizedDate)"
-                )
+            // Skip if entry already exists
+            if existingKeys.contains(key) {
+                continue
             }
-        }
 
-        // Save all entries for this day
-        if entriesCreated > 0 {
-            try context.save()
+            let entry = createFoodEntry(from: schedule, meal: meal, date: normalizedDate)
+            context.insert(entry)
+            existingKeys.insert(key)
+            entriesCreated += 1
         }
 
         return entriesCreated
     }
 
+    /// Populate food entries for a specific date from ALL applicable schedules.
+    private func populateDay(_ date: Date) async throws -> Int {
+        let normalizedDate = Calendar.current.startOfDay(for: date)
+        let schedules = try await scheduleService.getSchedules(for: normalizedDate)
+
+        guard !schedules.isEmpty else { return 0 }
+
+        var totalCreated = 0
+        for schedule in schedules {
+            let count = try await populateDayForSchedule(schedule, date: normalizedDate)
+            totalCreated += count
+        }
+
+        if totalCreated > 0 {
+            try context.save()
+        }
+
+        return totalCreated
+    }
+
     /// Create a FoodEntry from a FoodSchedule for a specific meal and date.
-    /// - Parameters:
-    ///   - schedule: The FoodSchedule to create entry from
-    ///   - meal: The meal section for the entry
-    ///   - date: The date for the entry (start of day)
-    /// - Returns: A new FoodEntry with all properties mapped from the schedule
     private func createFoodEntry(
         from schedule: FoodSchedule,
         meal: MealSection,
@@ -184,6 +231,7 @@ final class FoodAutoPopulationService {
     ) -> FoodEntry {
         FoodEntry(
             foodId: schedule.foodId,
+            scheduleId: schedule.id,  // Link to schedule for cascade operations
             foodName: schedule.foodName,
             foodBrand: schedule.foodBrand.isEmpty ? nil : schedule.foodBrand,
             mealSection: meal,
