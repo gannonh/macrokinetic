@@ -1,0 +1,30 @@
+Build 0.10.0 (15) - Food Scheduling
+
+What's New
+- Food Scheduling: Plan your meals ahead of time with a new scheduling system
+- Schedule entry points: Access scheduling from the Food Log header and individual meal entries
+- Schedule management: View, edit, and delete scheduled meals from a central management screen
+- Meal planning: Create schedules that repeat daily, on specific weekdays, or on custom dates
+
+How Scheduling Works
+- In Food Log view, tap the calendar icon in the header to access Schedule Management
+- Long-press on any food entry to schedule it for future dates
+- Choose frequency: daily, specific days of the week, or one-time
+- Scheduled meals appear automatically on their target dates
+
+Focus Areas for Testing
+- Schedule Creation: Try scheduling a meal from the Food Log - does the flow work smoothly?
+- Schedule Management: Can you view and edit your scheduled meals easily?
+- Schedule Appearance: Do scheduled meals show up on the correct dates?
+- Edge Cases: What happens if you schedule for today? For a past date?
+
+Feedback Needed
+- Is the scheduling workflow intuitive?
+- Would you prefer different ways to access scheduling?
+- What other scheduling features would be useful (meal prep days, batch cooking)?
+
+Not Yet Implemented
+- Schedule notifications/reminders
+- Recurring schedule templates
+- Barcode scanner for packaged foods
+- Background notification refresh
