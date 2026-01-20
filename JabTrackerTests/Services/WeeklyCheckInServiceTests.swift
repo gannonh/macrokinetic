@@ -145,7 +145,7 @@ struct IsCheckInDueTests {
 
         let calendar = Calendar.current
 
-        // Create a Monday at 10:00 PM for the "today" date
+        // Create a Monday at 9:00 AM for the "today" date
         let mondayMorning = createMondayDate()
         var components = calendar.dateComponents([.year, .month, .day], from: mondayMorning)
         components.hour = 9

@@ -17,16 +17,20 @@ import Testing
 @MainActor
 struct FoodAutoPopulationServiceTests {
 
-    // MARK: - UserDefaults Key
+    // MARK: - UserDefaults Keys
 
-    /// UserDefaults key used by the service (must match service's key)
+    /// UserDefaults key used by the service for date tracking (must match service's key)
     private static let lastPopulatedDateKey = "lastFoodAutoPopulationDate"
+
+    /// UserDefaults key used by the service for week tracking (must match service's key)
+    private static let lastPopulatedWeekKey = "lastFoodAutoPopulationWeekStart"
 
     // MARK: - Test Setup/Teardown
 
     /// Reset UserDefaults before each test
     private func resetUserDefaults() {
         UserDefaults.standard.removeObject(forKey: Self.lastPopulatedDateKey)
+        UserDefaults.standard.removeObject(forKey: Self.lastPopulatedWeekKey)
     }
 
     // MARK: - Create Tests
@@ -548,9 +552,6 @@ struct FoodAutoPopulationServiceTests {
 
     // MARK: - Check and Populate New Week Tests
 
-    /// UserDefaults key for week start tracking (must match service's key)
-    private static let lastPopulatedWeekKey = "lastFoodAutoPopulationWeekStart"
-
     @Test("Check and populate new week populates on week change")
     func testCheckAndPopulateNewWeek_PopulatesOnWeekChange() async throws {
         resetUserDefaults()
@@ -650,8 +651,8 @@ struct FoodAutoPopulationServiceTests {
         #expect(result.entriesCreated == 0, "Should create no entries when same week")
     }
 
-    @Test("Check and populate new week returns error on failure")
-    func testCheckAndPopulateNewWeek_ReturnsErrorOnFailure() async throws {
+    @Test("Check and populate new week succeeds with no schedules")
+    func testCheckAndPopulateNewWeek_SucceedsWithNoSchedules() async throws {
         resetUserDefaults()
         let services = createTestServices()
         _ = services.container
@@ -661,14 +662,13 @@ struct FoodAutoPopulationServiceTests {
         let lastWeekStart = Calendar.current.date(byAdding: .day, value: -7, to: today)!
         UserDefaults.standard.set(lastWeekStart, forKey: Self.lastPopulatedWeekKey)
 
-        // Create a schedule (even without a food, the schedule fetch should work)
-        // The result type allows us to verify error handling works
+        // Without any schedules, population should succeed but create no entries
         let result = await services.autoPopulationService.checkAndPopulateNewWeek()
 
-        // With no schedules, it should succeed with 0 entries
-        // This test verifies the error handling path works
-        // (We can't easily force an error without mocking, but we verify the result type works)
-        #expect(result.error == nil || result.error != nil, "Result should capture any error state")
+        // With no schedules, it should succeed with 0 entries (no error)
+        #expect(result.isSuccess, "Should succeed even with no schedules")
+        #expect(result.error == nil, "Should have no error")
+        #expect(result.entriesCreated == 0, "Should create no entries when no schedules exist")
     }
 
     // MARK: - Helper Types

@@ -813,6 +813,12 @@ extension TDEEService {
         let outlierThreshold = 0.20
         var deletedCount = 0
 
+        // Guard against division by zero (shouldn't happen with valid TDEE values)
+        guard median > 0 else {
+            Self.logger.warning("⚠️ Cannot clean outliers: median TDEE is 0")
+            return 0
+        }
+
         for snapshot in snapshots {
             let deviation = abs(snapshot.tdeeValue - median) / median
             if deviation > outlierThreshold {
