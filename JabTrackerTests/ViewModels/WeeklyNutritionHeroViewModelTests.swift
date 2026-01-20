@@ -311,4 +311,159 @@ struct WeeklyNutritionHeroViewModelTests {
         #expect(preview.todayIndex >= 0)
         #expect(preview.todayIndex <= 6)
     }
+
+    // MARK: - Edge Case Tests
+
+    @Test("ViewModel handles blank day with no entries and no fasting flag")
+    func testHandlesBlankDayNotFasting() async throws {
+        // Need to add DayStatus to schema for this test
+        let schema = Schema([
+            User.self, Dose.self, Food.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
+            DayStatus.self,
+        ])
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(for: schema, configurations: [config])
+        let context = container.mainContext
+
+        let calendar = Calendar.current
+        let weekStart = startOfWeek()
+
+        // Given: Today is at least Wednesday (index 2+)
+        // We'll add food for Monday but leave Tuesday blank (not fasting)
+        let monday = weekStart
+        let tuesday = calendar.date(byAdding: .day, value: 1, to: monday)!
+
+        // Add food for Monday only
+        _ = createFoodEntry(in: context, calories: 500, protein: 30, carbs: 50, fat: 20, loggedAt: monday)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let dayStatusService = DayStatusService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(
+            mealLogService: mealLogService,
+            dayStatusService: dayStatusService,
+            context: context
+        )
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Monday should have data, Tuesday (blank day, not fasting) should be 0
+        // and the code path for blank days should be exercised
+        if viewModel.todayIndex >= 0 {
+            #expect(viewModel.calories[0] == 500, "Monday should have 500 calories")
+        }
+        if viewModel.todayIndex >= 1 {
+            // Tuesday is blank (no entries, not marked as fasting)
+            // The code continues past it, leaving it at 0
+            #expect(viewModel.calories[1] == 0, "Blank Tuesday should have 0 calories")
+        }
+
+        // Verify DayStatus service was used (Tuesday not fasting)
+        let isTuesdayFasting = try dayStatusService.isFasting(for: calendar.startOfDay(for: tuesday))
+        #expect(isTuesdayFasting == false, "Tuesday should not be marked as fasting")
+    }
+
+    @Test("ViewModel uses DayStatusService to identify fasting days")
+    func testUsesDayStatusServiceForFastingDays() async throws {
+        // Need to add DayStatus to schema for this test
+        let schema = Schema([
+            User.self, Dose.self, Food.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
+            DayStatus.self,
+        ])
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(for: schema, configurations: [config])
+        let context = container.mainContext
+
+        let calendar = Calendar.current
+        let weekStart = startOfWeek()
+
+        // Given: Monday has food, Tuesday is marked as fasting (no entries)
+        let monday = weekStart
+        let tuesday = calendar.date(byAdding: .day, value: 1, to: monday)!
+
+        _ = createFoodEntry(in: context, calories: 600, protein: 40, carbs: 60, fat: 25, loggedAt: monday)
+
+        // Mark Tuesday as fasting
+        let dayStatusService = DayStatusService(context: context)
+        try dayStatusService.setFasting(for: calendar.startOfDay(for: tuesday), isFasting: true)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(
+            mealLogService: mealLogService,
+            dayStatusService: dayStatusService,
+            context: context
+        )
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Fasting day Tuesday should have 0 but still be "valid" (not skipped as blank)
+        if viewModel.todayIndex >= 0 {
+            #expect(viewModel.calories[0] == 600, "Monday should have 600 calories")
+        }
+        if viewModel.todayIndex >= 1 {
+            // Tuesday is fasting - shows as 0 intentionally
+            #expect(viewModel.calories[1] == 0, "Fasting Tuesday should have 0 calories")
+        }
+
+        // Verify the fasting flag is set
+        let isTuesdayFasting = try dayStatusService.isFasting(for: calendar.startOfDay(for: tuesday))
+        #expect(isTuesdayFasting == true, "Tuesday should be marked as fasting")
+    }
+
+    @Test("ViewModel handles daysWithLoadingErrors counter")
+    func testTracksDaysWithLoadingErrors() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: No food entries (empty data)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = WeeklyNutritionHeroViewModel(mealLogService: mealLogService, context: context)
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: daysWithLoadingErrors should be 0 (no actual errors, just empty data)
+        #expect(viewModel.daysWithLoadingErrors == 0, "Should have no loading errors with empty data")
+    }
+
+    @Test("ViewModel without DayStatusService still loads data")
+    func testLoadsDataWithoutDayStatusService() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+        let weekStart = startOfWeek()
+        let monday = weekStart
+
+        // Given: Food entries but no DayStatusService provided (nil)
+        _ = createFoodEntry(in: context, calories: 400, protein: 25, carbs: 40, fat: 15, loggedAt: monday)
+        try context.save()
+
+        let mealLogService = MealLogService(context: context)
+        // Initialize without dayStatusService (uses nil default)
+        let viewModel = WeeklyNutritionHeroViewModel(
+            mealLogService: mealLogService,
+            dayStatusService: nil,
+            context: context
+        )
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Data should still load correctly (fastingDates = empty set)
+        if viewModel.todayIndex >= 0 {
+            #expect(viewModel.calories[0] == 400, "Monday should have 400 calories without DayStatusService")
+        }
+    }
 }

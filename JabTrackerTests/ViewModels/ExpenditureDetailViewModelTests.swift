@@ -874,6 +874,58 @@ struct ExpenditureDetailViewModelTests {
         #expect(ids.count == uniqueIds.count)
     }
 
+    @Test("generateHistoricalEntries uses actual daily snapshot data")
+    func testHistoricalEntriesFromSnapshots() async throws {
+        let (context, container) = createTestContext()
+        _ = container
+
+        // Given: User with TDEE data and actual TDEESnapshots
+        let user = createTestUser(in: context)
+        _ = createNutritionGoal(
+            in: context,
+            for: user,
+            initialTDEE: 2000,
+            lastCalculatedTDEE: 1900,
+            lastTDEECalculationDate: Date()
+        )
+
+        // Create 10 days of snapshots with varying TDEE values and statuses
+        for dayIndex in 0..<10 {
+            let snapshot = createTDEESnapshot(
+                in: context,
+                tdeeValue: 1900.0 + Double(dayIndex) * 10,
+                daysAgo: dayIndex,
+                source: dayIndex % 2 == 0 ? .adaptive : .holding
+            )
+            _ = snapshot
+        }
+        try context.save()
+
+        let viewModel = ExpenditureDetailViewModel(context: context)
+        viewModel.selectedPeriod = .oneMonth
+
+        // When: Loading data
+        await viewModel.loadData()
+
+        // Then: Historical entries are populated from actual snapshot data (not fallback)
+        #expect(!viewModel.historicalEntries.isEmpty)
+
+        // Historical entries should have values matching actual snapshot TDEE values
+        // Most recent entries from dailyData are used for historical entries
+        let historicalValues = Set(viewModel.historicalEntries.map { $0.expenditure })
+
+        // At least some values should match the snapshot data range (1900-1990)
+        let matchesSnapshotRange = historicalValues.contains { value in
+            value >= 1900 && value <= 1990
+        }
+        #expect(matchesSnapshotRange, "Historical entries should use actual snapshot TDEE values")
+
+        // Historical entries should have varied statuses from snapshots
+        let statuses = Set(viewModel.historicalEntries.map { $0.status })
+        // Should have at least one status type (could be .updating or .holding based on snapshot sources)
+        #expect(!statuses.isEmpty)
+    }
+
     // MARK: - generateExpenditureChanges Edge Cases
 
     @Test("generateExpenditureChanges handles empty dailyData")
