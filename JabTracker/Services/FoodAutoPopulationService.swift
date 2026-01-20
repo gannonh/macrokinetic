@@ -9,6 +9,21 @@ import Foundation
 import OSLog
 import SwiftData
 
+/// Result of a week population operation
+struct WeekPopulationResult {
+    let entriesCreated: Int
+    let schedulesProcessed: Int
+    let error: Error?
+    var isSuccess: Bool { error == nil }
+}
+
+/// Result of a day population operation
+struct DayPopulationResult {
+    let entriesCreated: Int
+    let error: Error?
+    var isSuccess: Bool { error == nil }
+}
+
 /// Service for auto-populating food entries from schedules.
 /// Creates entries for the entire current week when schedules are saved.
 @MainActor
@@ -102,7 +117,9 @@ final class FoodAutoPopulationService {
 
     /// Check if new week has started and populate entries for all active schedules.
     /// Should be called on app activation to handle week rollover.
-    func checkAndPopulateNewWeek() async {
+    /// - Returns: Result containing entries created, schedules processed, and any error
+    @discardableResult
+    func checkAndPopulateNewWeek() async -> WeekPopulationResult {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let currentWeekStart = getStartOfWeek(for: today)
@@ -117,52 +134,67 @@ final class FoodAutoPopulationService {
         }
 
         // If we're in a new week, populate for all active schedules
-        if currentWeekStart > lastWeekStart {
-            Self.logger.info("New week detected - populating entries for all active schedules")
+        guard currentWeekStart > lastWeekStart else {
+            // Same week, nothing to populate
+            return WeekPopulationResult(entriesCreated: 0, schedulesProcessed: 0, error: nil)
+        }
 
-            do {
-                let schedules = try await scheduleService.getAllActiveSchedules()
-                var totalEntries = 0
+        Self.logger.info("New week detected - populating entries for all active schedules")
 
-                for schedule in schedules {
-                    let count = try await populateWeek(for: schedule)
-                    totalEntries += count
-                }
+        do {
+            let schedules = try await scheduleService.getAllActiveSchedules()
+            var totalEntries = 0
 
-                // Update last populated week
-                UserDefaults.standard.set(currentWeekStart, forKey: Self.lastPopulatedWeekKey)
-
-                Self.logger.info("New week population complete: \(totalEntries) entries created")
-            } catch {
-                Self.logger.error("Failed to populate new week: \(error.localizedDescription)")
+            for schedule in schedules {
+                let count = try await populateWeek(for: schedule)
+                totalEntries += count
             }
+
+            // Update last populated week
+            UserDefaults.standard.set(currentWeekStart, forKey: Self.lastPopulatedWeekKey)
+
+            Self.logger.info("New week population complete: \(totalEntries) entries created")
+            return WeekPopulationResult(
+                entriesCreated: totalEntries,
+                schedulesProcessed: schedules.count,
+                error: nil
+            )
+        } catch {
+            Self.logger.error("Failed to populate new week: \(error.localizedDescription)")
+            return WeekPopulationResult(entriesCreated: 0, schedulesProcessed: 0, error: error)
         }
     }
 
     /// Legacy method - populate entries for today only.
     /// Kept for backward compatibility but prefer populateWeek().
-    func populateToday() async {
+    /// - Returns: Result containing entries created and any error
+    @discardableResult
+    func populateToday() async -> DayPopulationResult {
         let today = Calendar.current.startOfDay(for: Date())
         do {
             let count = try await populateDay(today)
             if count > 0 {
                 Self.logger.info("Populated \(count) entries for today")
             }
+            return DayPopulationResult(entriesCreated: count, error: nil)
         } catch {
             Self.logger.error("Failed to populate today: \(error.localizedDescription)")
+            return DayPopulationResult(entriesCreated: 0, error: error)
         }
     }
 
     // MARK: - Private Methods
 
-    /// Get the start of the week (Sunday) for a given date
+    /// Get the start of the week for a given date.
+    /// Uses the device's calendar settings to determine week start (Sunday in US, Monday in most of Europe).
     private func getStartOfWeek(for date: Date) -> Date {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
         return calendar.date(from: components) ?? date
     }
 
-    /// Get the end of the week (Saturday) for a given date
+    /// Get the end of the week for a given date.
+    /// Uses the device's calendar settings to determine week boundaries (locale-dependent).
     private func getEndOfWeek(for date: Date) -> Date {
         let calendar = Calendar.current
         let startOfWeek = getStartOfWeek(for: date)

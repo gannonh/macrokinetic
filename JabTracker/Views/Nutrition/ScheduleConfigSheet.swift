@@ -14,6 +14,18 @@ private let logger = Logger(
     category: "ScheduleConfigSheet"
 )
 
+/// Errors specific to schedule configuration
+private enum ScheduleConfigError: LocalizedError {
+    case autoPopulationServiceUnavailable
+
+    var errorDescription: String? {
+        switch self {
+        case .autoPopulationServiceUnavailable:
+            return "Unable to manage scheduled entries. Please try again."
+        }
+    }
+}
+
 /// Sheet for configuring a food schedule
 struct ScheduleConfigSheet: View {
     // MARK: - Properties
@@ -221,9 +233,11 @@ struct ScheduleConfigSheet: View {
         do {
             // If editing, delete old scheduled entries first (they'll be recreated)
             if let existingSchedule = existingSchedule {
-                try await AppServices.shared.foodAutoPopulationService?.deleteScheduledEntries(
-                    for: existingSchedule.id
-                )
+                guard let autoPopService = AppServices.shared.foodAutoPopulationService else {
+                    logger.error("FoodAutoPopulationService unavailable when editing schedule")
+                    throw ScheduleConfigError.autoPopulationServiceUnavailable
+                }
+                try await autoPopService.deleteScheduledEntries(for: existingSchedule.id)
             }
 
             let schedule = try await scheduleService.createOrUpdateSchedule(
@@ -238,7 +252,11 @@ struct ScheduleConfigSheet: View {
             logger.info("Saved schedule for: \(food.name)")
 
             // Populate entries for the remainder of the current week
-            try await AppServices.shared.foodAutoPopulationService?.populateWeek(for: schedule)
+            guard let autoPopService = AppServices.shared.foodAutoPopulationService else {
+                logger.error("FoodAutoPopulationService unavailable when populating week")
+                throw ScheduleConfigError.autoPopulationServiceUnavailable
+            }
+            try await autoPopService.populateWeek(for: schedule)
 
             dismiss()
             onComplete()
@@ -257,9 +275,11 @@ struct ScheduleConfigSheet: View {
 
         do {
             // Delete all future scheduled entries for this schedule
-            try await AppServices.shared.foodAutoPopulationService?.deleteScheduledEntries(
-                for: schedule.id
-            )
+            guard let autoPopService = AppServices.shared.foodAutoPopulationService else {
+                logger.error("FoodAutoPopulationService unavailable when deleting schedule")
+                throw ScheduleConfigError.autoPopulationServiceUnavailable
+            }
+            try await autoPopService.deleteScheduledEntries(for: schedule.id)
 
             // Then delete the schedule itself
             try await scheduleService.deleteSchedule(schedule)

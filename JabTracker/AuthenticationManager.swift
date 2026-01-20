@@ -211,7 +211,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
         UserDefaults.standard.removeObject(forKey: "notificationsEnabled")
         UserDefaults.standard.removeObject(forKey: "reminderMinutesBefore")
-        UserDefaults.standard.removeObject(forKey: "lastFoodAutoPopulationDate")
+        UserDefaults.standard.removeObject(forKey: "lastFoodAutoPopulationWeekStart")
         UserDefaults.standard.removeObject(forKey: "lastTDEEBackfillDate")
     }
 
