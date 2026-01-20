@@ -400,6 +400,7 @@ struct FoodLogView: View {
                             entryToDelete = entry
                             showingDeleteConfirmation = true
                         }
+                        .tint(.red)
                         .accessibilityIdentifier("delete-entry-button")
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
