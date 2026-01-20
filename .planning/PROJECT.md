@@ -1,20 +1,10 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-17)
+## Current State (Updated: 2026-01-19)
 
-**Shipped:** v0.9.0 Improvements & Fixes (2026-01-17)
+**Shipped:** v0.10.0 Food Log Enhancements (2026-01-19)
 **Status:** Development / TestFlight
-**Codebase:** ~178,000 lines Swift, SwiftUI/SwiftData, iOS 17+
-
-## Current Milestone: v0.10.0 Food Log Enhancements
-
-**Goal:** Reduce repetitive food logging through copy/paste and scheduled meals.
-
-**Target features:**
-- Copy/paste full days of food to other days
-- Copy/paste individual meals (breakfast, lunch, etc.) to other days
-- Food scheduling: auto-populate meals at midnight based on day/meal rules
-- Scheduled foods filter in Food Library
+**Codebase:** ~190,000 lines Swift, SwiftUI/SwiftData, iOS 17+
 
 ## Vision
 
@@ -89,6 +79,9 @@ How we know this worked:
 | Progress API | Decimals (0.0-1.0) not percentages | UI formats display; API stays clean — v0.9.0 |
 | Serving Validation | Density thresholds (cup: 80-300g) | Detects suspicious unit-to-gram mappings — v0.9.0 |
 | Schedule Projection | From last taken dose | Accurate next dose for actual usage patterns — v0.9.0 |
+| Food Clipboard | In-memory session-only | Simple, no sync needed, cleared on app termination — v0.10.0 |
+| Food Scheduling | FoodSchedule SwiftData model | One schedule per food, CloudKit sync, flexible day/meal config — v0.10.0 |
+| Auto-Population | App launch trigger | Backfill missed days, runs once per day via UserDefaults tracking — v0.10.0 |
 
 ## Open Questions
 
@@ -99,4 +92,4 @@ How we know this worked:
 ---
 *Initialized: 2025-12-22*
 *v0.1.0 Shipped: 2025-12-24*
-*Last updated: 2026-01-17 after starting v0.10.0 milestone*
+*Last updated: 2026-01-19 after completing v0.10.0 milestone*

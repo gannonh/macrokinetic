@@ -1,5 +1,34 @@
 # Project Milestones: MacroKinetic
 
+## v0.10.0 Food Log Enhancements (Shipped: 2026-01-19)
+
+**Delivered:** Copy/paste food entries and food scheduling for reducing repetitive logging — copy entire days or individual meals to other days, schedule recurring foods with configurable day/meal combinations, auto-populate scheduled foods on app launch with backfill for missed days.
+
+**Phases completed:** 44-47 (9 plans total)
+
+**Key accomplishments:**
+
+- Copy/paste entire days or individual meals via context menu or header toolbar segmented control
+- FoodClipboardService with in-memory session-only storage (no sync complexity)
+- FoodSchedule model with configurable days of week, meal types, quantity, and optional date ranges
+- Auto-conversion of non-custom foods to custom when scheduling (preserves food data)
+- Food Library "Scheduled" tab showing all active schedules with edit/stop actions
+- FoodAutoPopulationService creating entries on app launch with missed-days backfill
+- 16 requirements (COPY-01 through COPY-05, SCHED-01 through SCHED-11) all satisfied
+
+**Stats:**
+
+- 118 files modified
+- +13,911 / -557 lines (net +13,354)
+- 4 phases, 9 plans, 55 commits
+- 3 days from start to ship (Jan 17-19, 2026)
+
+**Git range:** `docs(44): research` → `feat(46): Schedule UX`
+
+**What's next:** Protein Alerts, Analytics, Subscription, or Recipe Builder
+
+---
+
 ## v0.9.0 Improvements & Fixes (Shipped: 2026-01-17)
 
 **Delivered:** Analytics accuracy improvements and GLP-1 UX enhancements — day status tracking for fasting days, adjustable dose amounts, fixed steady state calculation (2416% bug), histogram concentration charts, serving unit validation, and correct widget averages.
