@@ -13,7 +13,7 @@ Minor polish release addressing UI refinements in the Food Log.
 **Plans:** 1 plan
 
 Plans:
-- [ ] 48-01-PLAN.md — Clear Day context menu, delete button color fix, Monday week start
+- [x] 48-01-PLAN.md — Clear Day context menu, delete button color fix, Monday week start
 
 **Scope:**
 - Add "Clear Day" to context menu with confirmation dialog
@@ -24,11 +24,14 @@ Plans:
 - `JabTracker/Views/FoodLog/FoodLogView.swift`
 - `JabTracker/Views/FoodLog/FoodLogCopyPasteMenu.swift`
 - `JabTracker/Views/FoodLog/WeekCalendarStrip.swift`
+- `JabTracker/Views/FoodLog/FoodLogView+MealSection.swift` (created)
+
+**Completed:** 2026-01-20
 
 **Success Criteria:**
-- [ ] Clear Day option in context menu with confirmation
-- [ ] Red delete button on swipe actions
-- [ ] Monday-Sunday week boundaries in calendar
+- [x] Clear Day option in context menu with confirmation
+- [x] Red delete button on swipe actions
+- [x] Monday-Sunday week boundaries in calendar
 - [ ] All changes verified in TestFlight build
 
 ---
