@@ -32,7 +32,7 @@ Plans:
 - [x] Clear Day option in context menu with confirmation
 - [x] Red delete button on swipe actions
 - [x] Monday-Sunday week boundaries in calendar
-- [ ] All changes verified in TestFlight build
+- [x] All changes verified (UAT 6/6 passed)
 
 ---
 
