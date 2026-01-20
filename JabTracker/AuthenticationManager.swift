@@ -101,6 +101,9 @@ class AuthenticationManager: NSObject, ObservableObject {
                 self.currentUser = user
                 self.authenticationState = .authenticated
                 Self.logger.info("✅ AuthenticationManager: Set state to authenticated")
+
+                // Clean up any outlier TDEE snapshots from bad historical data
+                await self.cleanupOutlierTDEESnapshots(context: context)
             } else {
                 self.authenticationState = .notAuthenticated
                 Self.logger.info(
@@ -171,6 +174,8 @@ class AuthenticationManager: NSObject, ObservableObject {
         let scheduledDoseCount = try deleteAll(ScheduledDose.self, from: context)
         let foodCount = try deleteAll(Food.self, from: context)
         let foodEntryCount = try deleteAll(FoodEntry.self, from: context)
+        let foodScheduleCount = try deleteAll(FoodSchedule.self, from: context)
+        let dayStatusCount = try deleteAll(DayStatus.self, from: context)
         let weightEntryCount = try deleteAll(WeightEntry.self, from: context)
         let metricsEntryCount = try deleteAll(MetricsEntry.self, from: context)
         let progressPhotoCount = try deleteAll(ProgressPhoto.self, from: context)
@@ -184,7 +189,8 @@ class AuthenticationManager: NSObject, ObservableObject {
             ✅ AuthenticationManager: App data reset successfully - \
             Deleted \(userCount) users, \(profileCount) profiles, \(doseCount) doses, \
             \(titrationCount) titrations, \(doseScheduleCount) schedules, \(scheduledDoseCount) scheduled doses, \
-            \(foodCount) foods, \(foodEntryCount) food entries, \(weightEntryCount) weight entries, \
+            \(foodCount) foods, \(foodEntryCount) food entries, \(foodScheduleCount) food schedules, \
+            \(dayStatusCount) day statuses, \(weightEntryCount) weight entries, \
             \(metricsEntryCount) metrics entries, \(progressPhotoCount) progress photos, \
             \(nutritionGoalCount) goals, \(nutritionProgramCount) programs, \(tdeeSnapshotCount) TDEE snapshots
             """)
@@ -205,6 +211,8 @@ class AuthenticationManager: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: "onboardingCompletedAt")
         UserDefaults.standard.removeObject(forKey: "notificationsEnabled")
         UserDefaults.standard.removeObject(forKey: "reminderMinutesBefore")
+        UserDefaults.standard.removeObject(forKey: "lastFoodAutoPopulationWeekStart")
+        UserDefaults.standard.removeObject(forKey: "lastTDEEBackfillDate")
     }
 
     private func clearNotificationsForReset() {
@@ -1053,6 +1061,20 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
 
     // MARK: - Private Helper Methods
+
+    /// Clean up any outlier TDEE snapshots that may have been saved with incorrect values
+    /// This runs on app startup to fix any bad historical data from previous bugs
+    private func cleanupOutlierTDEESnapshots(context: ModelContext) async {
+        do {
+            let tdeeService = TDEEService(context: context)
+            let deletedCount = try tdeeService.cleanupOutlierSnapshots()
+            if deletedCount > 0 {
+                Self.logger.info("🧹 Cleaned up \(deletedCount) outlier TDEE snapshot(s) on startup")
+            }
+        } catch {
+            Self.logger.error("Failed to cleanup outlier TDEE snapshots: \(error.localizedDescription)")
+        }
+    }
 
     /// Validates the user's Apple credential and handles revoked state.
     /// Returns true if credential is valid or not present, false if revoked (and sets auth state).

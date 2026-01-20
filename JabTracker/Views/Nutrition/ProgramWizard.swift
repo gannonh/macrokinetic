@@ -1138,7 +1138,9 @@ struct ProgramWizard: View {
 
         do {
             // Use TDEEService for all calculations (TDEE, calories, macros)
-            try await service.calculateAndApplyFullTDEE(for: user, goal: goal)
+            // Pass trainingLevel explicitly since goal.program may not exist yet in New Goal flow
+            try await service.calculateAndApplyFullTDEE(
+                for: user, goal: goal, trainingLevelOverride: viewModel.trainingLevel)
         } catch {
             // Log error and show user feedback - they need to know why targets aren't calculated
             Self.logger.error("TDEE calculation failed: \(error.localizedDescription)")

@@ -136,6 +136,39 @@ struct IsCheckInDueTests {
 
         #expect(result == true)
     }
+
+    @Test("Returns true when exactly 7 days since last check-in regardless of time-of-day")
+    @MainActor
+    func testCheckInDueIgnoresTimeOfDay() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let calendar = Calendar.current
+
+        // Create a Monday at 9:00 AM for the "today" date
+        let mondayMorning = createMondayDate()
+        var components = calendar.dateComponents([.year, .month, .day], from: mondayMorning)
+        components.hour = 9
+        components.minute = 0
+        let mondayAt9AM = calendar.date(from: components)!
+
+        // Last check-in was exactly 7 days ago at 10:00 PM (later in the day)
+        // Without normalization, this would calculate as 6 days due to time difference
+        var lastCheckInComponents = calendar.dateComponents([.year, .month, .day], from: mondayAt9AM)
+        lastCheckInComponents.day! -= 7
+        lastCheckInComponents.hour = 22  // 10:00 PM
+        lastCheckInComponents.minute = 0
+        let lastMonday10PM = calendar.date(from: lastCheckInComponents)!
+
+        let goal = createTestGoal(in: context, checkInDayOfWeek: 2, lastCheckInDate: lastMonday10PM)
+
+        let service = WeeklyCheckInService(context: context)
+        let result = service.isCheckInDue(for: goal, on: mondayAt9AM)
+
+        // Should be true because 7 calendar days have passed, even though
+        // the time difference is less than 7 * 24 hours
+        #expect(result == true)
+    }
 }
 
 // MARK: - generateOptimization Tests

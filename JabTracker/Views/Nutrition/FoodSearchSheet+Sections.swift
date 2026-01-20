@@ -121,30 +121,41 @@ extension FoodSearchSheet {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("food-result-\(result.name.lowercased().replacingOccurrences(of: " ", with: "-"))")
-        .if(result.source == .userCreated) { view in
-            view
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button("Delete", role: .destructive) {
-                        if let food = findCustomFood(for: result) {
-                            foodToDelete = food
-                            showingDeleteConfirmation = true
-                        } else {
-                            logger.warning("Could not find custom food for delete: \(result.name)")
-                        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            if result.source == .userCreated {
+                Button("Delete", role: .destructive) {
+                    if let food = findCustomFood(for: result) {
+                        foodToDelete = food
+                        showingDeleteConfirmation = true
+                    } else {
+                        logger.warning("Could not find custom food for delete: \(result.name)")
                     }
-                    .accessibilityIdentifier("delete-custom-food-button")
                 }
-                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                    Button("Edit") {
-                        if let food = findCustomFood(for: result) {
-                            editingCustomFood = food
-                        } else {
-                            logger.warning("Could not find custom food for edit: \(result.name)")
-                        }
+                .accessibilityIdentifier("delete-custom-food-button")
+            }
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            if result.source == .userCreated {
+                Button("Edit") {
+                    if let food = findCustomFood(for: result) {
+                        editingCustomFood = food
+                    } else {
+                        logger.warning("Could not find custom food for edit: \(result.name)")
                     }
-                    .tint(.blue)
-                    .accessibilityIdentifier("edit-custom-food-button")
                 }
+                .tint(.blue)
+                .accessibilityIdentifier("edit-custom-food-button")
+            }
+
+            Button {
+                Task {
+                    await prepareScheduleSheet(for: result)
+                }
+            } label: {
+                Label("Schedule", systemImage: "calendar.badge.plus")
+            }
+            .tint(.purple)
+            .accessibilityIdentifier("schedule-food-search-button")
         }
     }
 

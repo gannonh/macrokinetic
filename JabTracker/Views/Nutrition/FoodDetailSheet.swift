@@ -35,6 +35,9 @@ struct FoodDetailSheet: View {
     @State var selectedUnit: ServingUnit = .item
     @State private var notes: String = ""
     @State private var showingCreateCustom = false
+    @State private var showingScheduleSheet = false
+    @State private var existingSchedule: FoodSchedule?
+    @State private var hasSchedule = false
     @FocusState var isInputFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -256,6 +259,31 @@ struct FoodDetailSheet: View {
                 .padding()
             }
         }
+        .sheet(isPresented: $showingScheduleSheet) {
+            scheduleSheetContent
+        }
+        .task {
+            await checkScheduleStatus()
+        }
+    }
+
+    // MARK: - Schedule Sheet Content
+
+    @ViewBuilder
+    private var scheduleSheetContent: some View {
+        if let foodService = foodService,
+            let scheduleService = AppServices.shared.foodScheduleService
+        {
+            let foodModel = foodService.createFood(from: food)
+            ScheduleConfigSheet(
+                food: foodModel,
+                scheduleService: scheduleService,
+                existingSchedule: existingSchedule,
+                onComplete: {
+                    Task { await checkScheduleStatus() }
+                }
+            )
+        }
     }
 
     // MARK: - Food Header
@@ -349,6 +377,20 @@ struct FoodDetailSheet: View {
             }
             .buttonStyle(.bordered)
             .accessibilityIdentifier(Self.toCustomButtonIdentifier)
+
+            Button {
+                showingScheduleSheet = true
+            } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: hasSchedule ? "calendar.badge.checkmark" : "calendar.badge.plus")
+                        .font(.title3)
+                    Text(hasSchedule ? "Scheduled" : "Schedule")
+                        .font(.caption)
+                }
+            }
+            .buttonStyle(.bordered)
+            .tint(hasSchedule ? .green : nil)
+            .accessibilityIdentifier("schedule-food-button")
 
             Button {
                 // Placeholder - future feature
@@ -455,6 +497,24 @@ struct FoodDetailSheet: View {
         }
 
         isSaving = false
+    }
+
+    /// Check if the food has an existing schedule and update state
+    private func checkScheduleStatus() async {
+        guard let foodService = foodService,
+            let scheduleService = AppServices.shared.foodScheduleService
+        else { return }
+
+        let foodModel = foodService.createFood(from: food)
+
+        do {
+            let schedule = try await scheduleService.getSchedule(for: foodModel.id)
+            existingSchedule = schedule
+            hasSchedule = schedule?.isActive ?? false
+        } catch {
+            existingSchedule = nil
+            hasSchedule = false
+        }
     }
 }
 

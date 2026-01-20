@@ -77,9 +77,10 @@ struct LibraryTabTests {
     @Test("allCases contains all tabs")
     func testAllCases() {
         let allCases = LibraryTab.allCases
-        #expect(allCases.count == 3)
+        #expect(allCases.count == 4)
         #expect(allCases.contains(.recipes))
         #expect(allCases.contains(.foods))
+        #expect(allCases.contains(.scheduled))
         #expect(allCases.contains(.favorites))
     }
 

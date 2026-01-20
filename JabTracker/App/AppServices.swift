@@ -46,6 +46,12 @@ final class AppServices: ObservableObject {
     /// Food clipboard service for copy/paste operations (session-only, no ModelContext needed)
     @Published private(set) var foodClipboardService: FoodClipboardService?
 
+    /// Food schedule service for food schedule CRUD operations
+    @Published private(set) var foodScheduleService: FoodScheduleService?
+
+    /// Food auto-population service for populating scheduled foods
+    @Published private(set) var foodAutoPopulationService: FoodAutoPopulationService?
+
     private nonisolated init() {
         // Services will be initialized when ModelContext becomes available
     }
@@ -110,6 +116,21 @@ final class AppServices: ObservableObject {
         // Create FoodClipboardService for copy/paste (no ModelContext needed - session state only)
         let foodClipboardService = FoodClipboardService()
         self.foodClipboardService = foodClipboardService
+
+        // Create FoodScheduleService for food scheduling
+        let foodScheduleService = FoodScheduleService(
+            context: modelContext,
+            customFoodService: customFoodService
+        )
+        self.foodScheduleService = foodScheduleService
+
+        // Create FoodAutoPopulationService for auto-populating scheduled foods
+        let foodAutoPopulationService = FoodAutoPopulationService(
+            context: modelContext,
+            scheduleService: foodScheduleService,
+            mealLogService: mealLogService
+        )
+        self.foodAutoPopulationService = foodAutoPopulationService
     }
 
     /// Reset services (useful for testing or sign-out)
@@ -125,6 +146,8 @@ final class AppServices: ObservableObject {
         tdeeService = nil
         dayStatusService = nil
         foodClipboardService = nil
+        foodScheduleService = nil
+        foodAutoPopulationService = nil
     }
 }
 

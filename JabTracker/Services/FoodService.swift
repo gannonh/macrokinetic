@@ -527,6 +527,7 @@ final class FoodService {
             servingSize: result.servingSize,
             servingOptionsJSON: ServingOption.toJSON(result.servingOptions)
         )
+        food.id = result.id
         food.foodSource = result.source
         food.barcode = result.barcode ?? ""
 

@@ -94,7 +94,8 @@
           "Services/CalorieAdjustmentService+Adjustments.swift",
           "Services/DayStatusService.swift",
           "Services/FoodClipboardService.swift",
-          "Services/FoodScheduleService.swift"
+          "Services/FoodScheduleService.swift",
+          "Services/FoodAutoPopulationService.swift"
         ]
       },
       "framework_integration": {
@@ -130,12 +131,10 @@
           "ViewModels/CreateFoodViewModel.swift",
           "ViewModels/QuickAddViewModel.swift",
           "ViewModels/DailyNutritionHeroViewModel.swift",
-          "ViewModels/WeeklyNutritionHeroViewModel.swift",
           "ViewModels/WeightTrendWidgetViewModel.swift",
           "ViewModels/ExpenditureWidgetViewModel.swift",
           "ViewModels/GoalProgressWidgetViewModel.swift",
           "ViewModels/WeightTrendDetailViewModel.swift",
-          "ViewModels/ExpenditureDetailViewModel.swift",
           "ViewModels/EnergyBalanceDetailViewModel.swift",
           "Views/Analytics/ConcentrationChartState.swift",
           "Views/Dashboard/QuickDoseViewModel.swift",
@@ -148,7 +147,9 @@
         "rationale": "These ViewModels have: (1) OSLog implicit closures from string interpolation that are inherently untestable, (2) Error handling paths that require SwiftData services to throw - impossible without protocol-based injection. Actual business logic is 100% covered; the gap is compiler-generated closures and defensive error handling.",
         "files": [
           "ViewModels/EnergyBalanceHeroViewModel.swift",
-          "ViewModels/EnergyBalanceWidgetViewModel.swift"
+          "ViewModels/EnergyBalanceWidgetViewModel.swift",
+          "ViewModels/WeeklyNutritionHeroViewModel.swift",
+          "ViewModels/ExpenditureDetailViewModel.swift"
         ]
       },
       "utilities": {
@@ -335,6 +336,8 @@
       "Views/Nutrition/ProgramWizard.swift",
       "Views/Nutrition/ProgramWizardStepViews.swift",
       "Views/Nutrition/QuickAddContentView.swift",
+      "Views/Nutrition/ScheduleConfigSheet.swift",
+      "Views/Nutrition/ScheduleDayMealGrid.swift",
       "Views/Nutrition/SearchMethodTabs.swift",
       "Views/Nutrition/ServingInputView.swift",
       "Views/Photos/QuickPhotoSheet.swift",

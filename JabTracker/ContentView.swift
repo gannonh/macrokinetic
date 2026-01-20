@@ -78,6 +78,18 @@ struct ContentView: View {
         }
     }
 
+    /// Ensure scheduled foods are populated for the current week
+    /// Checks if we've entered a new week and populates entries if needed
+    private func ensureScheduledFoodsPopulated() async {
+        guard let autoPopService = AppServices.shared.foodAutoPopulationService else {
+            logger.debug("FoodAutoPopulationService unavailable, skipping auto-population")
+            return
+        }
+
+        await autoPopService.checkAndPopulateNewWeek()
+        logger.debug("Food auto-population check completed")
+    }
+
     init() {
         let pkEngine = PharmacokineticsEngine()
         self._pkEngine = State(wrappedValue: pkEngine)
@@ -237,13 +249,17 @@ struct ContentView: View {
         }
         .task {
             await ensureTDEESnapshots()
+            await ensureScheduledFoodsPopulated()
             // Re-check badge after Query has had time to load
             updateCheckInBadge()
         }
         .onChange(of: scenePhase) { _, newPhase in
-            // Refresh badge when app becomes active (e.g., after completing check-in)
+            // Refresh badge and populate scheduled foods when app becomes active
             if newPhase == .active {
                 updateCheckInBadge()
+                Task {
+                    await ensureScheduledFoodsPopulated()
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .checkInCompleted)) { _ in

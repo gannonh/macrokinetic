@@ -17,15 +17,15 @@ Requirements for v0.10.0 release. Each maps to roadmap phases.
 
 ### Food Scheduling
 
-- [ ] **SCHED-01**: User can schedule a food from Food Library (swipe action)
-- [ ] **SCHED-02**: User can schedule a food from search results (swipe action)
-- [ ] **SCHED-03**: User can schedule a food from Food Detail view (action button)
+- [x] **SCHED-01**: User can schedule a food from Food Library (swipe action)
+- [x] **SCHED-02**: User can schedule a food from search results (swipe action)
+- [x] **SCHED-03**: User can schedule a food from Food Detail view (action button)
 - [x] **SCHED-04**: Non-custom foods are auto-converted to custom when scheduling
 - [x] **SCHED-05**: Schedule configuration includes: days of week, meal types, quantity
 - [x] **SCHED-06**: Schedule configuration includes optional start/end dates
 - [x] **SCHED-07**: One schedule per food, supporting multiple day/meal combinations
-- [ ] **SCHED-08**: Schedule displays on Food Detail view and can be edited/stopped there
-- [ ] **SCHED-09**: Food Library has "Scheduled" filter showing all scheduled foods
+- [x] **SCHED-08**: Schedule displays on Food Detail view and can be edited/stopped there
+- [x] **SCHED-09**: Food Library has "Scheduled" filter showing all scheduled foods
 - [ ] **SCHED-10**: Scheduled foods auto-populate at midnight for applicable days
 - [ ] **SCHED-11**: User can delete auto-populated scheduled entries like normal food entries
 
@@ -51,15 +51,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COPY-03 | Phase 44 | Complete |
 | COPY-04 | Phase 44 | Complete |
 | COPY-05 | Phase 44 | Complete |
-| SCHED-01 | Phase 46 | Pending |
-| SCHED-02 | Phase 46 | Pending |
-| SCHED-03 | Phase 46 | Pending |
+| SCHED-01 | Phase 46 | Complete |
+| SCHED-02 | Phase 46 | Complete |
+| SCHED-03 | Phase 46 | Complete |
 | SCHED-04 | Phase 45 | Complete |
 | SCHED-05 | Phase 45 | Complete |
 | SCHED-06 | Phase 45 | Complete |
 | SCHED-07 | Phase 45 | Complete |
-| SCHED-08 | Phase 46 | Pending |
-| SCHED-09 | Phase 46 | Pending |
+| SCHED-08 | Phase 46 | Complete |
+| SCHED-09 | Phase 46 | Complete |
 | SCHED-10 | Phase 47 | Pending |
 | SCHED-11 | Phase 47 | Pending |
 
@@ -70,4 +70,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-17 after roadmap creation*
+*Last updated: 2026-01-18 after Phase 46 completion*
