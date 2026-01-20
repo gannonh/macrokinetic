@@ -294,6 +294,7 @@
       "Views/FoodLog/FoodDayView.swift",
       "Views/FoodLog/FoodLogCopyPasteMenu.swift",
       "Views/FoodLog/FoodLogView.swift",
+      "Views/FoodLog/FoodLogView+MealSection.swift",
       "Views/FoodLog/MacroSummaryConsumedPage.swift",
       "Views/FoodLog/MacroSummarySwipeCard.swift",
       "Views/FoodLog/WeekCalendarStrip.swift",

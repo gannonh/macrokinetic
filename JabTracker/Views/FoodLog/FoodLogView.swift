@@ -17,30 +17,6 @@ struct DailyTotals {
     let fat: Double
 }
 
-/// Meal section totals for headers
-private struct MealTotals {
-    let calories: Double
-    let protein: Double
-    let carbs: Double
-    let fat: Double
-
-    static let zero = MealTotals(calories: 0, protein: 0, carbs: 0, fat: 0)
-
-    init(from entries: [FoodEntry]) {
-        self.calories = entries.reduce(0) { $0 + $1.calories }
-        self.protein = entries.reduce(0) { $0 + $1.protein }
-        self.carbs = entries.reduce(0) { $0 + $1.carbs }
-        self.fat = entries.reduce(0) { $0 + $1.fat }
-    }
-
-    init(calories: Double, protein: Double, carbs: Double, fat: Double) {
-        self.calories = calories
-        self.protein = protein
-        self.carbs = carbs
-        self.fat = fat
-    }
-}
-
 struct FoodLogView: View {
     // MARK: - Properties
 
@@ -55,6 +31,7 @@ struct FoodLogView: View {
     @State private var showingAddFood = false
     @State private var entryToDelete: FoodEntry?
     @State private var showingDeleteConfirmation = false
+    @State private var showingClearDayConfirmation = false
     @State private var editingEntry: FoodEntry?
     @State private var entriesGroupedByDate: [Date: Int] = [:]
 
@@ -139,7 +116,8 @@ struct FoodLogView: View {
                             entries: selectedDateEntries,
                             section: nil,
                             selectedDate: selectedDate,
-                            onPaste: { triggerPaste() }
+                            onPaste: { triggerPaste() },
+                            onClearDay: { showingClearDayConfirmation = true }
                         )
                     }
                 }
@@ -275,6 +253,14 @@ struct FoodLogView: View {
                 if let entry = entryToDelete {
                     Text("This will remove \(entry.foodName) from your log.")
                 }
+            }
+            .alert("Clear All Foods?", isPresented: $showingClearDayConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Clear Day", role: .destructive) {
+                    Task { await clearAllEntriesForDay() }
+                }
+            } message: {
+                Text("This will remove \(selectedDateEntries.count) items from your log.")
             }
         }
         .accessibilityIdentifier("food-log-view")
@@ -455,7 +441,7 @@ struct FoodLogView: View {
 
             Spacer()
 
-            mealTotalsView(totals: totals)
+            MealTotalsView(totals: totals)
         }
         .textCase(nil)
         .contentShape(Rectangle())
@@ -467,32 +453,6 @@ struct FoodLogView: View {
                 selectedDate: selectedDate,
                 onPaste: { triggerPaste() }
             )
-        }
-    }
-
-    @ViewBuilder
-    private func mealTotalsView(totals: MealTotals) -> some View {
-        if totals.calories > 0 {
-            HStack(spacing: 6) {
-                HStack(spacing: 3) {
-                    Text("\(Int(totals.protein))P")
-                        .foregroundColor(DesignTokens.Colors.protein)
-                    Text("\(Int(totals.fat))F")
-                        .foregroundColor(DesignTokens.Colors.fat)
-                    Text("\(Int(totals.carbs))C")
-                        .foregroundColor(DesignTokens.Colors.carbs)
-                }
-                .font(.caption2)
-
-                HStack(spacing: 2) {
-                    Text("\(Int(totals.calories))")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                    Image(systemName: "flame.fill")
-                        .font(.caption2)
-                }
-                .foregroundColor(DesignTokens.Colors.calories)
-            }
         }
     }
 
@@ -527,6 +487,17 @@ struct FoodLogView: View {
             entryToDelete = nil
         } catch {
             Self.logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
+        }
+    }
+
+    private func clearAllEntriesForDay() async {
+        guard let mealLogService = AppServices.shared.mealLogService else { return }
+        for entry in selectedDateEntries {
+            do {
+                try await mealLogService.deleteEntry(entry)
+            } catch {
+                Self.logger.error("Failed to delete entry '\(entry.foodName)': \(error.localizedDescription)")
+            }
         }
     }
 
@@ -611,21 +582,6 @@ struct FoodLogView: View {
             // Revert UI state on save failure
             isFastingDay = !isFasting
         }
-    }
-}
-
-// MARK: - Empty Meal Row
-
-/// Styled empty state row for meal sections
-private struct EmptyMealRow: View {
-    var body: some View {
-        Text("No items logged")
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .cardStyle()
     }
 }
 
