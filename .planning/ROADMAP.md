@@ -10,17 +10,20 @@ Minor polish release addressing UI refinements in the Food Log.
 
 **Requirements:** FLOG-01, FLOG-02, FLOG-03
 
+**Plans:** 1 plan
+
+Plans:
+- [ ] 48-01-PLAN.md — Clear Day context menu, delete button color fix, Monday week start
+
 **Scope:**
 - Add "Clear Day" to context menu with confirmation dialog
-- Fix swipe-to-delete button color (teal → red)
+- Fix swipe-to-delete button color (teal -> red)
 - Change calendar week start to Monday
 
 **Key Files:**
 - `JabTracker/Views/FoodLog/FoodLogView.swift`
-- `JabTracker/Views/FoodLog/FoodLogViewModel.swift`
-- `JabTracker/Views/FoodLog/WeekCalendarView.swift` (or similar)
-
-**Estimated Plans:** 1-2
+- `JabTracker/Views/FoodLog/FoodLogCopyPasteMenu.swift`
+- `JabTracker/Views/FoodLog/WeekCalendarStrip.swift`
 
 **Success Criteria:**
 - [ ] Clear Day option in context menu with confirmation
@@ -32,9 +35,9 @@ Minor polish release addressing UI refinements in the Food Log.
 
 ## Milestone Summary
 
-| Phase | Name | Requirements | Est. Plans |
-|-------|------|--------------|------------|
-| 48 | Food Log Polish | FLOG-01, FLOG-02, FLOG-03 | 1-2 |
+| Phase | Name | Requirements | Plans |
+|-------|------|--------------|-------|
+| 48 | Food Log Polish | FLOG-01, FLOG-02, FLOG-03 | 1 |
 
 **Total Phases:** 1
 **Total Requirements:** 3
