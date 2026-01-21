@@ -344,6 +344,7 @@
 		8DC3CEC3E2ACF9A265BCB6E2 /* TDEESnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E5F434FF75A50E3683B4F63 /* TDEESnapshotTests.swift */; };
 		8E1116D69F3C3E462D781C0F /* NotificationServiceRemindersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FD7A1789EEF4CD14EAE566E /* NotificationServiceRemindersTests.swift */; };
 		8E9A35A6F456DE93965D45DD /* ScheduleConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91F456949293AD6E27B97AE2 /* ScheduleConfigurationTests.swift */; };
+		8EB81D7EA727FD38A06833A1 /* FoodLogPolishUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3EC5FFE4BDF042095877B6 /* FoodLogPolishUITests.swift */; };
 		8F43AF893184756B069B8809 /* OnboardingError.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21FDD8957D644E99A10687D /* OnboardingError.swift */; };
 		8F7C30BD58237BFD5F15FA82 /* AdherenceSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1FCC7D1B42A7FF667684F8 /* AdherenceSection.swift */; };
 		8F9F03AF55B47BABABED2803 /* MacroProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B2FBF70ECFADBEC94B0785 /* MacroProgressBar.swift */; };
@@ -434,6 +435,7 @@
 		B004EE5A150C67A4495A9283 /* FoodSearchSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64027F9ACE9EEDCD9D58DFBF /* FoodSearchSheetTests.swift */; };
 		B00D28AE84A51EC284CD9653 /* TDEEService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2844CA71024844ABBDEB5F28 /* TDEEService.swift */; };
 		B06AAAD38B5E24A34C4CAA54 /* QuickDoseStepperUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADD3C207FA19C66928E2CBE /* QuickDoseStepperUITests.swift */; };
+		B109B6D2A4E339221E542D4C /* FoodLogView+MealSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E82647A182BD5D4EA24785 /* FoodLogView+MealSection.swift */; };
 		B187CAEBB2E8D47A0733E3DE /* DoseScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016E375D5A98FE61081A7935 /* DoseScheduleTests.swift */; };
 		B2E0ABE1D28EF272884F040B /* AdherenceSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4D8579CA46AE9BC816223BD /* AdherenceSectionTests.swift */; };
 		B309C0C8A3D10EF6A3D29181 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37ACF21E9EFEA5E217BE6385 /* SubscriptionManager.swift */; };
@@ -1156,6 +1158,7 @@
 		D648F0B29707CC8E563B4003 /* TDEECalculationEngine+Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TDEECalculationEngine+Validation.swift"; sourceTree = "<group>"; };
 		D72C377F30F091F203828A17 /* BiometricEnumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricEnumTests.swift; sourceTree = "<group>"; };
 		D7555944AFEE8D8A52747A45 /* NotificationService+Reminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationService+Reminders.swift"; sourceTree = "<group>"; };
+		D7E82647A182BD5D4EA24785 /* FoodLogView+MealSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FoodLogView+MealSection.swift"; sourceTree = "<group>"; };
 		D84DBE2037D1CC46F582F191 /* ScheduledDoseIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledDoseIndicator.swift; sourceTree = "<group>"; };
 		D8C03C73B4313BAEA2D43E85 /* SubscriptionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerTests.swift; sourceTree = "<group>"; };
 		D9B22BCA329135634E72DB80 /* ShortcutsSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsSheetTests.swift; sourceTree = "<group>"; };
@@ -1204,6 +1207,7 @@
 		EE484FB7F258AAAE56D232B2 /* FoodScheduleServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodScheduleServiceTests.swift; sourceTree = "<group>"; };
 		EE66B10C09A23B18DE262674 /* CardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardComponents.swift; sourceTree = "<group>"; };
 		EF29E42C5E33386197C1BEFF /* ProgramStyleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramStyleUITests.swift; sourceTree = "<group>"; };
+		EF3EC5FFE4BDF042095877B6 /* FoodLogPolishUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodLogPolishUITests.swift; sourceTree = "<group>"; };
 		EF5486756E163374C18E8696 /* NotificationServiceActivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceActivationTests.swift; sourceTree = "<group>"; };
 		EFAC98568E2B6DDACE02702F /* ShortcutRowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRowButton.swift; sourceTree = "<group>"; };
 		EFF8B252630E402BBA4F704A /* LibraryTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryTab.swift; sourceTree = "<group>"; };
@@ -1332,6 +1336,7 @@
 				2490BE8C769D104C3ED3295B /* FoodLogCalendarUITests.swift */,
 				B7CCD08369DC2C2914A38132 /* FoodLogCopyPasteUITests.swift */,
 				8C052E48C2E6F30131FBBB6B /* FoodLogEditUITests.swift */,
+				EF3EC5FFE4BDF042095877B6 /* FoodLogPolishUITests.swift */,
 				797CADC44F34C4219E5C3E0F /* FoodScheduleAutoPopulationUITests.swift */,
 			);
 			path = FoodLog;
@@ -2001,6 +2006,7 @@
 				52BDBDBAC41A81D1296354AA /* FoodDayView.swift */,
 				707B3D9D18FF4DDDD7414FAE /* FoodLogCopyPasteMenu.swift */,
 				E759D10DA617CDBB98EAD371 /* FoodLogView.swift */,
+				D7E82647A182BD5D4EA24785 /* FoodLogView+MealSection.swift */,
 				982247CA489EF4BCB3B59244 /* MacroSummaryConsumedPage.swift */,
 				6722953935F6023CB9B87585 /* MacroSummarySwipeCard.swift */,
 				3E0A42EE3A52EA876B97F096 /* WeekCalendarStrip.swift */,
@@ -2570,6 +2576,7 @@
 				7BD5015A4B27C9CEA05C7126 /* FoodLogCalendarUITests.swift in Sources */,
 				08DB043271B3A093B8777CD9 /* FoodLogCopyPasteUITests.swift in Sources */,
 				3831FB3602E7ADC771D07861 /* FoodLogEditUITests.swift in Sources */,
+				8EB81D7EA727FD38A06833A1 /* FoodLogPolishUITests.swift in Sources */,
 				FDF56715A60F5D2AF7995FC6 /* FoodScheduleAutoPopulationUITests.swift in Sources */,
 				0D87F5D69FADE93C6C2B9F70 /* FoodSearchV08UITests.swift in Sources */,
 				2C540DED3BEE1D4B72A74DD4 /* GoalWizardUITests.swift in Sources */,
@@ -2974,6 +2981,7 @@
 				EE8A85E03A1DC19281CCBC31 /* FoodLibraryContentView.swift in Sources */,
 				5C1E742081B679CFA2F088C7 /* FoodLibrarySortOption.swift in Sources */,
 				9D6F8414A8F65CD4C47BFFF5 /* FoodLogCopyPasteMenu.swift in Sources */,
+				B109B6D2A4E339221E542D4C /* FoodLogView+MealSection.swift in Sources */,
 				70AAA0232C307BFC1E6D876A /* FoodLogView.swift in Sources */,
 				E0F4523D862F9E0A64EC3173 /* FoodSchedule.swift in Sources */,
 				8CC1F11947637A7AE08ABEBB /* FoodScheduleService.swift in Sources */,
