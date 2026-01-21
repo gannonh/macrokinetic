@@ -13,6 +13,7 @@ struct FoodLogCopyPasteMenu: View {
     let section: MealSection?
     let selectedDate: Date
     let onPaste: () -> Void
+    var onClearDay: (() -> Void)?
 
     var body: some View {
         // Copy option (only when there are entries)
@@ -45,6 +46,15 @@ struct FoodLogCopyPasteMenu: View {
                 onPaste()
             } label: {
                 Label("Paste", systemImage: "doc.on.clipboard")
+            }
+        }
+
+        // Clear Day option (only for day-level menu with entries)
+        if section == nil && !entries.isEmpty {
+            Button(role: .destructive) {
+                onClearDay?()
+            } label: {
+                Label("Clear Day (\(entries.count) items)", systemImage: "trash")
             }
         }
     }

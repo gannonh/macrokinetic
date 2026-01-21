@@ -18,7 +18,11 @@ struct WeekCalendarStrip: View {
     /// Whether the view has been initialized
     @State private var hasInitialized = false
 
-    private let calendar = Calendar.current
+    private let calendar: Calendar = {
+        var cal = Calendar.current
+        cal.firstWeekday = 2  // Monday = 2 (Sunday = 1)
+        return cal
+    }()
 
     // MARK: - Static Formatters (cached for performance)
 

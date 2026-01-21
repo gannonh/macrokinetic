@@ -1,10 +1,18 @@
 # MacroKinetic
 
-## Current State (Updated: 2026-01-19)
+## Current State (Updated: 2026-01-20)
 
 **Shipped:** v0.10.0 Food Log Enhancements (2026-01-19)
+**Active:** v0.10.1 Food Log Polish
 **Status:** Development / TestFlight
 **Codebase:** ~190,000 lines Swift, SwiftUI/SwiftData, iOS 17+
+
+## Current Milestone: v0.10.1 Food Log Polish
+
+Minor polish release addressing UI refinements in the Food Log:
+- Clear day context menu for bulk deletion
+- Delete button color fix (teal → red)
+- Calendar week start alignment (Monday)
 
 ## Vision
 
