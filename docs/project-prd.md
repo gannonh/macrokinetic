@@ -1081,7 +1081,7 @@ AI-powered food recognition from photos with portion estimation and macro calcul
 
 Unified dashboard with nutrition tracking, energy balance, body metrics, and weight analytics.
 
-@.planning/project-prd+dashboard.md
+[Dashboard product requirements](./project-prd+dashboard.md)
 
 ---
 

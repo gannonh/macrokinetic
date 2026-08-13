@@ -74,7 +74,6 @@ argument-hint: feature description (required)
 **Your Additional Scripts** (not in template):
 - `build.sh`, `docs.sh`, `coverage-detail.sh`, `coverage-json.sh`
 - `check-all.sh`, `test.sh`, `check-coverage.sh`
-- `update-agent-context.sh`
 
 ### 4. Templates Directory
 

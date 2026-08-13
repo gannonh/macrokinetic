@@ -203,4 +203,3 @@ Test these searches in the app:
 ## Related Documents
 
 - [Food Data Layer](./food-data-layer.md) - Overall food search architecture
-- [Phase 36-01 Summary](/.planning/phases/36-search-ranking-recall/36-01-SUMMARY.md) - Implementation details

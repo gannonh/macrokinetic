@@ -2,26 +2,36 @@
 
 **JabTracker** - iOS app for tracking GLP-1 medication doses, nutrition, and health metrics.
 
-- SwiftUI + SwiftData with CloudKit sync
+- SwiftUI + SwiftData targeting iOS 17.5+, with CloudKit sync
 - Pharmacokinetics engine for concentration tracking
-- Food logging with 1.7M+ foods (USDA + Open Food Facts)
+- Offline-first food logging with a local SQLite FTS5 database containing 1.7M+ foods
 - Analytics, adherence tracking, and progress photos
 
-## Essential Context
+## Current State
 
-### Codebase Conventions & Structure
+- Version 0.10.1, build 16; development/TestFlight.
+- Latest completed work: Food Log clear-day deletion, destructive delete styling, and Monday-first weeks.
+- Manual custom-food creation from the Food Library is the likely next focused feature.
+- Open product decisions: medication-nutrition correlation insights, subscription tiers, and paywall placement.
 
-1. Technical stack: @planning/codebase/STACK.md
-2. Architecture: @planning/codebase/ARCHITECTURE.md
-3. Project structure: @planning/codebase/STRUCTURE.md
-4. Coding conventions: @planning/codebase/CONVENTIONS.md
-5. Testing: @planning/codebase/TESTING.md
-6. Integrations: @planning/codebase/INTEGRATIONS.md
-7. Known concerns: @planning/codebase/CONCERNS.md
+## Architectural Invariants
+
+- User data must remain CloudKit-compatible and sync across devices.
+- Core flows must continue to work offline.
+- Use `@Observable` for new stateful types and follow the established service-layer/MVVM structure.
+- Nutrition must work as a standalone experience; GLP-1 tracking remains optional.
+- `project.yml` is the source of truth for the generated Xcode project.
+
+## Source of Truth
+
+- `AGENTS.md` contains repository working conventions and durable product context.
+- GitHub Issues and `.agents/skills/plan-build-verify/` contain specs, the backlog, and the Plan/Build/Verify workflow.
+- Focused files under `docs/features/` contain complex domain behavior.
+- Git history, tags, and release notes contain historical work.
 
 ### Important Documentation
 
-Its important to understand the more complex aspects of the app. Please read these documents carefully:
+Read these documents when working in the corresponding domain:
 
 @docs/features/algorithms/TDEE-CALORIE-ALGORITHMS.md
 @docs/features/onboarding-strategy-checkin-flows/FLOWS.md
@@ -73,4 +83,3 @@ open logs/latest/screenshots/
 - Only then make targeted fixes based on evidence
 
 **This debug-first approach is not optional. Skipping it leads to wasted effort and incorrect fixes.**
-
