@@ -74,6 +74,20 @@ class DeltaTests(unittest.TestCase):
                 self.assertEqual(selection.cursor, cursor)
                 self.assertTrue(selection.reason)
 
+    def test_selects_full_rebuild_for_overlap_even_when_cursor_is_current(self):
+        selection = select_delta_chain(
+            "\n".join(
+                [
+                    "openfoodfacts_products_100_200.json.gz",
+                    "openfoodfacts_products_150_200.json.gz",
+                ]
+            ),
+            cursor=200,
+        )
+
+        self.assertEqual(selection.mode, "full")
+        self.assertIn("overlap", selection.reason.lower())
+
     def test_delta_updates_inserts_and_removes_by_barcode_transactionally(self):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory) / "foods.sqlite"

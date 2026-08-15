@@ -71,6 +71,12 @@ def select_delta_chain(index_text: str, *, cursor: int) -> DeltaSelection:
         return _full_selection(cursor, "Delta index contains no usable intervals")
 
     intervals.sort(key=lambda interval: (interval.start, interval.end, interval.filename))
+    furthest_end = intervals[0].end
+    for interval in intervals[1:]:
+        if interval.start < furthest_end:
+            return _full_selection(cursor, "Overlapping delta intervals detected")
+        furthest_end = max(furthest_end, interval.end)
+
     max_end = max(interval.end for interval in intervals)
     if cursor > max_end:
         return _full_selection(cursor, "Snapshot cursor is newer than the delta index")
