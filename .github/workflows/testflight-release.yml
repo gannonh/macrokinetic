@@ -183,7 +183,8 @@ jobs:
           unzip -q "$RUNNER_TEMP/foundation.zip" -d "$RUNNER_TEMP/food-data/usda/foundation"
           unzip -q "$RUNNER_TEMP/sr-legacy.zip" -d "$RUNNER_TEMP/food-data/usda/sr-legacy"
           curl --fail --location --retry 3 "$OFF_FULL_EXPORT_URL" -o "$RUNNER_TEMP/food-data/off/products.csv.gz"
-          curl --fail --location --retry 3 --header "Authorization: Bearer $GH_TOKEN" "$OFF_FULL_EXPORT_METADATA_URL" -o "$RUNNER_TEMP/food-data/off/full-export-metadata.json"
+          gh api "repos/$GITHUB_REPOSITORY/contents/docs/operations/openfoodfacts-full-export-metadata.json?ref=$GITHUB_SHA" \
+            --jq '.content' | tr -d '\n' | base64 --decode > "$RUNNER_TEMP/food-data/off/full-export-metadata.json"
       - name: Build and package the run-scoped candidate
         run: |
           foundation=$(find "$RUNNER_TEMP/food-data/usda/foundation" -name '*.json' -type f | head -1)
