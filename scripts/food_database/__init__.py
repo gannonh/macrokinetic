@@ -17,6 +17,9 @@ from .delta import (
 )
 from .schema import SCHEMA_VERSION, create_schema
 from .full_build import FullBuildError, FullBuildResult, build_full_database, iter_json_array_records
+from .manifest import build_manifest, verify_manifest, write_manifest
+from .packaging import CandidatePackage, PackagingError, package_candidate
+from .snapshots import SnapshotSelection, SnapshotSelectionError, select_snapshot, snapshot_tag
 
 __all__ = [
     "FoodRecord",
@@ -37,4 +40,14 @@ __all__ = [
     "FullBuildResult",
     "build_full_database",
     "iter_json_array_records",
+    "build_manifest",
+    "verify_manifest",
+    "write_manifest",
+    "CandidatePackage",
+    "PackagingError",
+    "package_candidate",
+    "SnapshotSelection",
+    "SnapshotSelectionError",
+    "select_snapshot",
+    "snapshot_tag",
 ]
