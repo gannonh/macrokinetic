@@ -15,6 +15,8 @@ from .delta import (
     parse_delta_filename,
     select_delta_chain,
 )
+from .schema import SCHEMA_VERSION, create_schema
+from .full_build import FullBuildError, FullBuildResult, build_full_database, iter_json_array_records
 
 __all__ = [
     "FoodRecord",
@@ -29,4 +31,10 @@ __all__ = [
     "apply_delta_chain",
     "parse_delta_filename",
     "select_delta_chain",
+    "SCHEMA_VERSION",
+    "create_schema",
+    "FullBuildError",
+    "FullBuildResult",
+    "build_full_database",
+    "iter_json_array_records",
 ]

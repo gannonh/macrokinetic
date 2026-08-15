@@ -53,6 +53,9 @@ def create_fixture_database(path: Path) -> None:
             CREATE INDEX idx_foods_name ON foods(name);
             CREATE INDEX idx_foods_category ON foods(category);
             CREATE INDEX idx_foods_calories ON foods(calories_per_100g);
+            CREATE UNIQUE INDEX idx_foods_off_barcode
+                ON foods(barcode)
+                WHERE source = 'openFoodFacts' AND barcode <> '';
             """
         )
         connection.executemany(
@@ -101,6 +104,7 @@ class ValidationTests(unittest.TestCase):
             database = Path(directory) / "foods.sqlite"
             create_fixture_database(database)
             with closing(sqlite3.connect(database)) as connection, connection:
+                connection.execute("DROP INDEX idx_foods_off_barcode")
                 connection.execute(
                     "UPDATE foods SET barcode = '001' WHERE barcode = '002'"
                 )

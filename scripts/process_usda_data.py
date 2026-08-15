@@ -122,6 +122,13 @@ def create_database(foods: list):
     cursor.execute("CREATE INDEX idx_foods_name ON foods(name)")
     cursor.execute("CREATE INDEX idx_foods_category ON foods(category)")
     cursor.execute("CREATE INDEX idx_foods_calories ON foods(calories_per_100g)")
+    cursor.execute(
+        """
+        CREATE UNIQUE INDEX idx_foods_off_barcode
+        ON foods(barcode)
+        WHERE source = 'openFoodFacts' AND barcode <> ''
+        """
+    )
 
     conn.commit()
 

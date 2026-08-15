@@ -10,8 +10,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
 
+from .schema import SCHEMA_VERSION
 
-SCHEMA_VERSION = 1
+
 BUILD_MODES = frozenset({"full", "delta"})
 
 

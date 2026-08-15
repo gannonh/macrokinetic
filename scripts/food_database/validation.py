@@ -31,6 +31,7 @@ REQUIRED_INDEXES = {
     "idx_foods_name",
     "idx_foods_category",
     "idx_foods_calories",
+    "idx_foods_off_barcode",
 }
 REQUIRED_TRIGGERS = {"foods_ai", "foods_ad", "foods_au"}
 PRODUCTION_SEARCHES = {"chicken": 1, "oreo": 1}
