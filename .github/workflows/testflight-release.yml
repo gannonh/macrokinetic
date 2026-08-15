@@ -123,14 +123,14 @@ jobs:
     if: needs.resolve.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      OFF_FULL_EXPORT_METADATA_URL: ${{ vars.OFF_FULL_EXPORT_METADATA_URL }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ needs.resolve.outputs.commit_sha }}
           fetch-depth: 1
       - name: Download pinned source inputs
-        env:
-          OFF_FULL_EXPORT_METADATA_URL: ${{ vars.OFF_FULL_EXPORT_METADATA_URL }}
         run: |
           mkdir -p "$RUNNER_TEMP/food-data/usda/foundation" "$RUNNER_TEMP/food-data/usda/sr-legacy" "$RUNNER_TEMP/food-data/off/delta" "$RUNNER_TEMP/food-data/artifacts"
           curl --fail --location --retry 3 "$OFF_DELTA_INDEX_URL" -o "$RUNNER_TEMP/food-data/off/delta/index.txt"
@@ -153,14 +153,32 @@ jobs:
             echo "snapshot_dir=$RUNNER_TEMP/food-data/snapshot/$tag" >> "$GITHUB_OUTPUT"
           else
             echo "No usable snapshot; preparing an authoritative full rebuild"
-            curl --fail --location --retry 3 "$USDA_FOUNDATION_URL" -o "$RUNNER_TEMP/foundation.zip"
-            curl --fail --location --retry 3 "$USDA_SR_LEGACY_URL" -o "$RUNNER_TEMP/sr-legacy.zip"
-            unzip -q "$RUNNER_TEMP/foundation.zip" -d "$RUNNER_TEMP/food-data/usda/foundation"
-            unzip -q "$RUNNER_TEMP/sr-legacy.zip" -d "$RUNNER_TEMP/food-data/usda/sr-legacy"
-            curl --fail --location --retry 3 "$OFF_FULL_EXPORT_URL" -o "$RUNNER_TEMP/food-data/off/products.csv.gz"
-            test -n "$OFF_FULL_EXPORT_METADATA_URL" || { echo "Repository variable OFF_FULL_EXPORT_METADATA_URL is required for authoritative full rebuilds" >&2; exit 1; }
-            curl --fail --location --retry 3 "$OFF_FULL_EXPORT_METADATA_URL" -o "$RUNNER_TEMP/food-data/off/full-export-metadata.json"
           fi
+      - name: Decide whether full rebuild inputs are needed
+        id: plan
+        env:
+          SNAPSHOT_DIR: ${{ steps.snapshot.outputs.snapshot_dir }}
+        run: |
+          plan_args=(
+            --off-index "$RUNNER_TEMP/food-data/off/delta/index.txt"
+            --now-epoch "$(date +%s)"
+          )
+          if [[ -n "$SNAPSHOT_DIR" ]]; then
+            plan_args+=(--snapshot-manifest "$SNAPSHOT_DIR/food-db-manifest.json")
+          fi
+          mode=$(python3 scripts/release/plan-food-database.py "${plan_args[@]}")
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Food database refresh mode: $mode"
+      - name: Download full rebuild inputs
+        if: steps.plan.outputs.mode == 'full'
+        run: |
+          test -n "$OFF_FULL_EXPORT_METADATA_URL" || { echo "Repository variable OFF_FULL_EXPORT_METADATA_URL is required for authoritative full rebuilds" >&2; exit 1; }
+          curl --fail --location --retry 3 "$USDA_FOUNDATION_URL" -o "$RUNNER_TEMP/foundation.zip"
+          curl --fail --location --retry 3 "$USDA_SR_LEGACY_URL" -o "$RUNNER_TEMP/sr-legacy.zip"
+          unzip -q "$RUNNER_TEMP/foundation.zip" -d "$RUNNER_TEMP/food-data/usda/foundation"
+          unzip -q "$RUNNER_TEMP/sr-legacy.zip" -d "$RUNNER_TEMP/food-data/usda/sr-legacy"
+          curl --fail --location --retry 3 "$OFF_FULL_EXPORT_URL" -o "$RUNNER_TEMP/food-data/off/products.csv.gz"
+          curl --fail --location --retry 3 "$OFF_FULL_EXPORT_METADATA_URL" -o "$RUNNER_TEMP/food-data/off/full-export-metadata.json"
       - name: Build and package the run-scoped candidate
         run: |
           foundation=$(find "$RUNNER_TEMP/food-data/usda/foundation" -name '*.json' -type f | head -1)
@@ -198,8 +216,8 @@ jobs:
 
   build:
     name: Test, archive, and export
-    needs: resolve
-    if: needs.resolve.result == 'success'
+    needs: [resolve, database]
+    if: needs.resolve.result == 'success' && needs.database.result == 'success'
     runs-on: macos-26-intel
     timeout-minutes: 180
     environment: testflight-release

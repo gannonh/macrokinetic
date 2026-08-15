@@ -40,9 +40,9 @@ class ReleaseToolTests(unittest.TestCase):
 
     def test_snapshot_tags_are_sorted_and_malformed_tags_fail(self):
         releases = [
-            {"tagName": "food-db-20-aaaaaaaaaaaa"},
-            {"tagName": "food-db-30-bbbbbbbbbbbb"},
-            {"tagName": "food-db-10-cccccccccccc", "isDraft": True},
+            {"tag_name": "food-db-20-aaaaaaaaaaaa"},
+            {"tag_name": "food-db-30-bbbbbbbbbbbb"},
+            {"tag_name": "food-db-10-cccccccccccc", "draft": True},
         ]
         result = subprocess.run(
             ["python3", "scripts/release/snapshot-tags.py"],
@@ -57,11 +57,60 @@ class ReleaseToolTests(unittest.TestCase):
         malformed = subprocess.run(
             ["python3", "scripts/release/snapshot-tags.py"],
             cwd=ROOT,
-            input=json.dumps([{"tagName": "food-db-invalid"}]),
+            input=json.dumps([{"tag_name": "food-db-invalid"}]),
             text=True,
             capture_output=True,
         )
         self.assertNotEqual(malformed.returncode, 0)
+
+    def test_food_database_planner_requires_full_inputs_for_stale_or_disconnected_snapshots(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            index = root / "index.txt"
+            index.write_text("openfoodfacts_products_100_200.json.gz\n")
+            manifest = root / "food-db-manifest.json"
+            manifest.write_text(json.dumps({"created_epoch": 1_000, "off_cursor": 100}))
+
+            delta = self.run_tool(
+                "scripts/release/plan-food-database.py",
+                "--off-index",
+                str(index),
+                "--snapshot-manifest",
+                str(manifest),
+                "--now-epoch",
+                "1000",
+            )
+            self.assertEqual(delta.stdout.strip(), "delta")
+
+            stale = self.run_tool(
+                "scripts/release/plan-food-database.py",
+                "--off-index",
+                str(index),
+                "--snapshot-manifest",
+                str(manifest),
+                "--now-epoch",
+                str(1_000 + 30 * 24 * 60 * 60),
+            )
+            self.assertEqual(stale.stdout.strip(), "full")
+
+            index.write_text("openfoodfacts_products_200_300.json.gz\n")
+            gap = self.run_tool(
+                "scripts/release/plan-food-database.py",
+                "--off-index",
+                str(index),
+                "--snapshot-manifest",
+                str(manifest),
+                "--now-epoch",
+                "1000",
+            )
+            self.assertEqual(gap.stdout.strip(), "full")
+
+            no_snapshot = self.run_tool(
+                "scripts/release/plan-food-database.py",
+                "--off-index",
+                str(index),
+            )
+            self.assertEqual(no_snapshot.stdout.strip(), "full")
 
     def test_wrapper_validates_before_invoking_gh(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -12,9 +12,9 @@ TAG = re.compile(r"^food-db-(\d+)-([0-9a-fA-F]{12})$")
 releases = json.load(sys.stdin)
 tags = []
 for release in releases:
-    if release.get("isDraft") or release.get("isPrerelease"):
+    if release.get("draft") or release.get("prerelease"):
         continue
-    tag = str(release.get("tagName", ""))
+    tag = str(release.get("tag_name", ""))
     if tag.startswith("food-db-") and TAG.fullmatch(tag) is None:
         raise SystemExit(f"invalid promoted snapshot tag: {tag}")
     match = TAG.fullmatch(tag)

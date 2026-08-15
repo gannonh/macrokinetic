@@ -23,6 +23,7 @@ from .snapshots import (
     SnapshotSelection,
     SnapshotSelectionError,
     select_snapshot,
+    select_snapshot_delta,
     snapshot_requires_full_rebuild,
     snapshot_tag,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "SnapshotSelection",
     "SnapshotSelectionError",
     "select_snapshot",
+    "select_snapshot_delta",
     "snapshot_tag",
     "snapshot_requires_full_rebuild",
     "FullExportMetadata",

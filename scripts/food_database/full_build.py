@@ -7,6 +7,7 @@ import gzip
 import json
 import os
 import sqlite3
+import sys
 import tempfile
 from collections.abc import Iterator, Mapping
 from contextlib import closing
@@ -90,6 +91,7 @@ def build_full_database(
                     rows_by_source[source] += 1
 
             with gzip.open(off_csv, "rt", encoding="utf-8", errors="replace") as source_file:
+                csv.field_size_limit(sys.maxsize)
                 reader = csv.reader(source_file, delimiter="\t")
                 try:
                     next(reader)

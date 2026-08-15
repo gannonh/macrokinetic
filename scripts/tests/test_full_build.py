@@ -39,7 +39,9 @@ def off_row(code: str, name: str, calories: str = "400") -> list[str]:
     return row
 
 
-def write_sources(directory: Path) -> tuple[Path, Path, Path]:
+def write_sources(
+    directory: Path, *, large_off_field: bool = False
+) -> tuple[Path, Path, Path]:
     foundation = directory / "foundation.json"
     sr_legacy = directory / "sr_legacy.json"
     off_csv = directory / "products.csv.gz"
@@ -55,6 +57,10 @@ def write_sources(directory: Path) -> tuple[Path, Path, Path]:
         writer.writerow(off_row("0001", "Cookie fixture"))
         writer.writerow(off_row("0002", "Cookie fixture", "410"))
         writer.writerow(off_row("0001", "Duplicate barcode should be ignored", "999"))
+        if large_off_field:
+            large_row = off_row("0003", "Large field fixture")
+            large_row[140] = "x" * (128 * 1024 + 1)
+            writer.writerow(large_row)
     return foundation, sr_legacy, off_csv
 
 
@@ -105,6 +111,23 @@ class FullBuildTests(unittest.TestCase):
                 )
 
         self.assertFalse(output.exists())
+
+    def test_build_accepts_open_food_facts_fields_larger_than_python_csv_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            foundation, sr_legacy, off_csv = write_sources(root, large_off_field=True)
+            output = root / "foods.sqlite"
+
+            result = build_full_database(
+                output,
+                foundation_json=foundation,
+                sr_legacy_json=sr_legacy,
+                off_csv_gzip=off_csv,
+                off_cursor=123,
+            )
+            self.assertTrue(output.exists())
+
+        self.assertEqual(result.rows_by_source["openFoodFacts"], 3)
 
     def test_malformed_source_does_not_publish_partial_candidate(self):
         with tempfile.TemporaryDirectory() as directory:

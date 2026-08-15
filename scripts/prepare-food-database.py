@@ -12,12 +12,12 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from food_database.delta import apply_delta_chain, select_delta_chain
+from food_database.delta import apply_delta_chain
 from food_database.full_build import build_full_database
 from food_database.manifest import verify_manifest
 from food_database.metadata import load_full_export_metadata
 from food_database.packaging import package_candidate
-from food_database.snapshots import snapshot_requires_full_rebuild
+from food_database.snapshots import select_snapshot_delta
 from food_database.validation import validate_database
 
 
@@ -67,14 +67,12 @@ def main() -> None:
             if manifest_errors:
                 raise SystemExit("Snapshot manifest verification failed: " + "; ".join(manifest_errors))
 
-            snapshot_is_stale = snapshot_requires_full_rebuild(
-                int(snapshot_manifest["created_epoch"]), now_epoch=now
-            )
-            selection = select_delta_chain(
+            selection = select_snapshot_delta(
+                snapshot_manifest,
                 args.off_index.read_text(encoding="utf-8"),
-                cursor=int(snapshot_manifest["off_cursor"]),
+                now_epoch=now,
             )
-            if not snapshot_is_stale and selection.mode == "delta":
+            if selection is not None:
                 delta_files = []
                 for interval in selection.intervals:
                     path = args.delta_directory / interval.filename

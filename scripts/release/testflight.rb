@@ -46,10 +46,18 @@ def encode(value)
   Base64.urlsafe_encode64(JSON.generate(value), padding: false)
 end
 
-def builds(version, build)
+def builds_for_version(version)
   query = URI.encode_www_form_component(version)
-  data = api_request("get", "/apps/#{APP_ID}/builds?filter[version]=#{query}&limit=200")["data"] || []
-  data.select { |item| item.dig("attributes", "version") == version && item.dig("attributes", "buildNumber").to_s == build.to_s }
+  api_request(
+    "get",
+    "/apps/#{APP_ID}/builds?filter[preReleaseVersion.version]=#{query}&limit=200",
+  )["data"] || []
+end
+
+def builds(version, build)
+  builds_for_version(version).select do |item|
+    item.dig("attributes", "version").to_s == build.to_s
+  end
 end
 
 def write_immutable(path, payload)
@@ -67,8 +75,9 @@ command = ARGV.shift
 case command
 when "next-build"
   version = ARGV.fetch(0)
-  response = api_request("get", "/apps/#{APP_ID}/builds?filter[version]=#{URI.encode_www_form_component(version)}&limit=200")
-  numbers = (response["data"] || []).filter_map { |item| Integer(item.dig("attributes", "buildNumber"), exception: false) }
+  numbers = builds_for_version(version).filter_map do |item|
+    Integer(item.dig("attributes", "version"), exception: false)
+  end
   puts(numbers.empty? ? 1 : numbers.max + 1)
 when "assert-unique"
   version, build = ARGV

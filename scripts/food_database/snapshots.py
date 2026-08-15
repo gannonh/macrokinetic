@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from .delta import DeltaSelection, select_delta_chain
 from .manifest import BUILD_MODES
 from .schema import SCHEMA_VERSION
 
@@ -45,6 +46,19 @@ def snapshot_requires_full_rebuild(
     if created_epoch < 0 or now_epoch < 0 or max_age_seconds < 0:
         raise ValueError("snapshot age inputs must be non-negative")
     return now_epoch - created_epoch >= max_age_seconds
+
+
+def select_snapshot_delta(
+    manifest: Mapping[str, Any],
+    index_text: str,
+    *,
+    now_epoch: int,
+) -> DeltaSelection | None:
+    """Return a usable delta chain, or ``None`` when a full rebuild is required."""
+    if snapshot_requires_full_rebuild(int(manifest["created_epoch"]), now_epoch=now_epoch):
+        return None
+    selection = select_delta_chain(index_text, cursor=int(manifest["off_cursor"]))
+    return selection if selection.mode == "delta" else None
 
 
 def select_snapshot(
