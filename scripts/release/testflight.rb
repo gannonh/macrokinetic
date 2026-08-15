@@ -48,10 +48,17 @@ end
 
 def builds_for_version(version)
   query = URI.encode_www_form_component(version)
-  api_request(
+  pre_release_versions = api_request(
     "get",
-    "/apps/#{APP_ID}/builds?filter[preReleaseVersion.version]=#{query}&limit=200",
+    "/preReleaseVersions?filter[app]=#{APP_ID}&filter[version]=#{query}&filter[platform]=IOS&limit=200",
   )["data"] || []
+
+  pre_release_versions.flat_map do |pre_release_version|
+    api_request(
+      "get",
+      "/preReleaseVersions/#{pre_release_version.fetch("id")}/builds?limit=200",
+    )["data"] || []
+  end
 end
 
 def builds(version, build)
