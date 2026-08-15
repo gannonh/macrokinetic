@@ -117,6 +117,29 @@ class DeltaTests(unittest.TestCase):
             [("001", "Updated chocolate cookie", 510.0), ("003", "New granola", 380.0)],
         )
 
+    def test_delta_ignores_products_without_a_valid_barcode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "foods.sqlite"
+            delta = Path(directory) / "openfoodfacts_products_100_200.json.gz"
+            create_fixture_database(database)
+            write_delta(
+                delta,
+                [
+                    valid_product("", "No identity"),
+                    valid_product("not-a-barcode", "Still no identity"),
+                    valid_product("003", "Valid product"),
+                ],
+            )
+
+            cursor = apply_delta_chain(database, [(100, delta)], cursor=100)
+            with closing(sqlite3.connect(database)) as connection:
+                rows = connection.execute(
+                    "SELECT barcode FROM foods WHERE source = 'openFoodFacts' ORDER BY barcode"
+                ).fetchall()
+
+        self.assertEqual(cursor, 200)
+        self.assertEqual(rows, [("001",), ("002",), ("003",)])
+
     def test_malformed_delta_rolls_back_without_partial_mutation(self):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory) / "foods.sqlite"

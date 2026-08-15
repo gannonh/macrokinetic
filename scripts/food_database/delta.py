@@ -132,9 +132,7 @@ def apply_delta_chain(
             for product in products:
                 barcode = normalize_barcode(product.get("code", product.get("barcode", "")))
                 if not barcode:
-                    raise DeltaPayloadError(
-                        f"Delta {interval.filename} contains a product without a valid barcode"
-                    )
+                    continue
 
                 existing = connection.execute(
                     """
