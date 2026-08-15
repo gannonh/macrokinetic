@@ -253,12 +253,12 @@ jobs:
       - name: Generate project and install exact database
         run: |
           command -v xcodegen >/dev/null || brew install xcodegen
-          xcodegen generate
           mkdir -p JabTracker/Resources
           cp candidate/usda_foods.sqlite JabTracker/Resources/usda_foods.sqlite
           expected=$(jq -r .database_sha256 candidate/food-db-manifest.json)
           actual=$(shasum -a 256 JabTracker/Resources/usda_foods.sqlite | awk '{print $1}')
           test "$expected" = "$actual"
+          xcodegen generate
       - name: Import signing assets and validate entitlements
         env:
           APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
