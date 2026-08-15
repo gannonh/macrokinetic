@@ -283,7 +283,7 @@ scripts/
 
 JabTracker/
 └── Resources/
-    └── usda_foods.sqlite     # Output database (~322 MB, committed via LFS)
+    └── usda_foods.sqlite     # Local generated output; promoted snapshots live in GitHub Releases
 ```
 
 ### Database Schema
@@ -322,6 +322,38 @@ CREATE INDEX idx_foods_name ON foods(name);
 CREATE INDEX idx_foods_category ON foods(category);
 CREATE INDEX idx_foods_calories ON foods(calories_per_100g);
 ```
+
+## Reproducible Snapshot Pipeline
+
+Release tooling treats the food database as a verified, immutable artifact rather than a Git or Git LFS file.
+
+- USDA Foundation and SR Legacy inputs are pinned repository configuration; changing a revision or URL is an intentional code review.
+- Open Food Facts full CSV ingestion and delta ingestion share `scripts/food_database/normalization.py`.
+- OFF identity is the normalized non-empty barcode. Duplicate display names are valid; duplicate OFF barcodes are not.
+- Delta filenames are half-open integer intervals. A gap, overlap, malformed payload, missing cursor, or cursor newer than the index selects a full rebuild.
+- A full rebuild requires an authoritative full-export cursor; download time and the live index watermark are never used as a substitute.
+- Promoted snapshots are non-draft GitHub Releases tagged `food-db-<created_epoch>-<sha12>` with `usda_foods.sqlite.gz` and `food-db-manifest.json` assets.
+- Candidate artifacts are run-scoped as `food-db-candidate-<GITHUB_RUN_ID>`, and are published only after SQLite integrity, schema, FTS parity, source counts, identity, search, and checksum validation pass.
+- Because public OFF deltas do not provide durable tombstones, the release pipeline must force a full rebuild when the promoted snapshot is at least 30 days old.
+
+Fixture-only verification for the pipeline is available without production downloads:
+
+```bash
+python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+python3 -m py_compile scripts/build-food-database.py scripts/food_database/*.py
+```
+
+The production build entry point requires explicit source paths and cursor metadata:
+
+```bash
+python3 scripts/build-food-database.py \
+  --foundation-json scripts/usda_data/foundation/foundationDownload.json \
+  --sr-legacy-json scripts/usda_data/sr_legacy/FoodData_Central_sr_legacy_food_json_2018-04.json \
+  --off-csv-gzip scripts/off_data/en.openfoodfacts.org.products.csv.gz \
+  --off-cursor <authoritative-full-export-cursor>
+```
+
+The generated SQLite file remains local and ignored. The CI release workflow packages it with the manifest and promotes the exact validated candidate as a GitHub Release asset.
 
 ## Data Sources
 

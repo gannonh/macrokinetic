@@ -14,6 +14,7 @@ from .schema import SCHEMA_VERSION
 
 
 SNAPSHOT_TAG = re.compile(r"^food-db-(\d+)-([0-9a-fA-F]{12})$")
+FULL_REBUILD_AFTER_SECONDS = 30 * 24 * 60 * 60
 
 
 class SnapshotSelectionError(ValueError):
@@ -32,6 +33,18 @@ def snapshot_tag(created_epoch: int, commit_sha: str) -> str:
     if created_epoch < 0 or not re.fullmatch(r"[0-9a-fA-F]{40}", commit_sha):
         raise ValueError("snapshot tags require a non-negative epoch and 40-character commit SHA")
     return f"food-db-{created_epoch}-{commit_sha[:12].lower()}"
+
+
+def snapshot_requires_full_rebuild(
+    created_epoch: int,
+    *,
+    now_epoch: int,
+    max_age_seconds: int = FULL_REBUILD_AFTER_SECONDS,
+) -> bool:
+    """Return whether a snapshot is too old for delta-only maintenance."""
+    if created_epoch < 0 or now_epoch < 0 or max_age_seconds < 0:
+        raise ValueError("snapshot age inputs must be non-negative")
+    return now_epoch - created_epoch >= max_age_seconds
 
 
 def select_snapshot(

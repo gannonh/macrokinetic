@@ -7,6 +7,7 @@ from scripts.food_database.packaging import package_candidate
 from scripts.food_database.snapshots import (
     SnapshotSelectionError,
     select_snapshot,
+    snapshot_requires_full_rebuild,
     snapshot_tag,
 )
 from scripts.tests.test_validation import create_fixture_database
@@ -34,6 +35,14 @@ def release_from_package(package):
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_snapshots_at_least_thirty_days_old_require_a_full_rebuild(self):
+        self.assertFalse(
+            snapshot_requires_full_rebuild(1_000, now_epoch=1_000 + 30 * 24 * 60 * 60 - 1)
+        )
+        self.assertTrue(
+            snapshot_requires_full_rebuild(1_000, now_epoch=1_000 + 30 * 24 * 60 * 60)
+        )
+
     def test_selects_greatest_epoch_from_valid_promoted_releases(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

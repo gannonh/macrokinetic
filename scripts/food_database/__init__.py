@@ -19,7 +19,13 @@ from .schema import SCHEMA_VERSION, create_schema
 from .full_build import FullBuildError, FullBuildResult, build_full_database, iter_json_array_records
 from .manifest import build_manifest, verify_manifest, write_manifest
 from .packaging import CandidatePackage, PackagingError, package_candidate
-from .snapshots import SnapshotSelection, SnapshotSelectionError, select_snapshot, snapshot_tag
+from .snapshots import (
+    SnapshotSelection,
+    SnapshotSelectionError,
+    select_snapshot,
+    snapshot_requires_full_rebuild,
+    snapshot_tag,
+)
 
 __all__ = [
     "FoodRecord",
@@ -50,4 +56,5 @@ __all__ = [
     "SnapshotSelectionError",
     "select_snapshot",
     "snapshot_tag",
+    "snapshot_requires_full_rebuild",
 ]
