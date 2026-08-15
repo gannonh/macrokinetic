@@ -13,6 +13,7 @@ import csv
 import gzip
 import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 
 from food_database.normalization import normalize_off_product
@@ -86,7 +87,7 @@ def add_to_database(products: list[dict[str, object]]) -> tuple[int, int]:
         print(f"Error: Database not found at {OUTPUT_DB}")
         return 0, 0
 
-    with sqlite3.connect(OUTPUT_DB) as connection:
+    with closing(sqlite3.connect(OUTPUT_DB)) as connection, connection:
         cursor = connection.cursor()
         cursor.execute("SELECT MAX(fdc_id) FROM foods")
         max_id = cursor.fetchone()[0] or 0
@@ -147,7 +148,7 @@ def main() -> None:
     products = process_csv(limit=args.limit, us_only=args.us_only)
     added, skipped = add_to_database(products)
 
-    with sqlite3.connect(OUTPUT_DB) as connection:
+    with closing(sqlite3.connect(OUTPUT_DB)) as connection:
         cursor = connection.cursor()
         total = cursor.execute("SELECT COUNT(*) FROM foods").fetchone()[0]
         off_count = cursor.execute(

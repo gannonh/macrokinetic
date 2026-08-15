@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
@@ -75,7 +76,7 @@ def write_manifest(path: str | Path, manifest: dict[str, Any]) -> None:
 
 
 def _row_counts(database: Path) -> dict[str, int]:
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection:
         counts = {
             "total": connection.execute("SELECT COUNT(*) FROM foods").fetchone()[0]
         }

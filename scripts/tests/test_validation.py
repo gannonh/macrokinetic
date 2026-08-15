@@ -3,6 +3,7 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from scripts.food_database.manifest import build_manifest, write_manifest
@@ -10,7 +11,7 @@ from scripts.food_database.validation import validate_database
 
 
 def create_fixture_database(path: Path) -> None:
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection, connection:
         connection.executescript(
             """
             CREATE TABLE foods (
@@ -99,7 +100,7 @@ class ValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory) / "foods.sqlite"
             create_fixture_database(database)
-            with sqlite3.connect(database) as connection:
+            with closing(sqlite3.connect(database)) as connection, connection:
                 connection.execute(
                     "UPDATE foods SET barcode = '001' WHERE barcode = '002'"
                 )

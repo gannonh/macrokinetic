@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
@@ -64,7 +65,7 @@ def validate_database(
     integrity_check = "unknown"
 
     try:
-        with sqlite3.connect(path) as connection:
+        with closing(sqlite3.connect(path)) as connection:
             connection.row_factory = sqlite3.Row
             objects = {
                 row["name"]: row["type"]

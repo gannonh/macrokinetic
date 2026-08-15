@@ -7,6 +7,14 @@ from .normalization import (
     normalize_usda_food,
 )
 from .validation import ValidationResult, validate_database
+from .delta import (
+    DeltaInterval,
+    DeltaPayloadError,
+    DeltaSelection,
+    apply_delta_chain,
+    parse_delta_filename,
+    select_delta_chain,
+)
 
 __all__ = [
     "FoodRecord",
@@ -15,4 +23,10 @@ __all__ = [
     "normalize_usda_food",
     "ValidationResult",
     "validate_database",
+    "DeltaInterval",
+    "DeltaPayloadError",
+    "DeltaSelection",
+    "apply_delta_chain",
+    "parse_delta_filename",
+    "select_delta_chain",
 ]
