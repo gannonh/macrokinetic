@@ -14,17 +14,9 @@ Output:
 
 import json
 import sqlite3
-import os
 from pathlib import Path
 
-# Nutrient IDs from USDA
-NUTRIENT_IDS = {
-    1008: "calories",   # Energy (kcal)
-    1003: "protein",    # Protein (g)
-    1005: "carbs",      # Carbohydrate (g)
-    1004: "fat",        # Total Fat (g)
-    1079: "fiber",      # Fiber (g)
-}
+from food_database.normalization import normalize_usda_food
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent
@@ -37,100 +29,10 @@ FOUNDATION_JSON = DATA_DIR / "foundation" / "foundationDownload.json"
 SR_LEGACY_JSON = DATA_DIR / "sr_legacy" / "FoodData_Central_sr_legacy_food_json_2018-04.json"
 
 
-def extract_nutrients(food_nutrients: list) -> dict:
-    """Extract the nutrients we care about from the food's nutrient list."""
-    nutrients = {
-        "calories": 0.0,
-        "protein": 0.0,
-        "carbs": 0.0,
-        "fat": 0.0,
-        "fiber": 0.0,
-    }
-
-    for fn in food_nutrients:
-        nutrient = fn.get("nutrient", {})
-        nutrient_id = nutrient.get("id")
-
-        if nutrient_id in NUTRIENT_IDS:
-            key = NUTRIENT_IDS[nutrient_id]
-            amount = fn.get("amount", 0.0)
-            if amount is not None:
-                nutrients[key] = float(amount)
-
-    # Calculate calories from macros if not provided
-    # (Foundation Foods often lacks the Energy nutrient)
-    # Formula: protein 4 cal/g, carbs 4 cal/g, fat 9 cal/g
-    if nutrients["calories"] == 0.0:
-        calculated_calories = (
-            nutrients["protein"] * 4.0 +
-            nutrients["carbs"] * 4.0 +
-            nutrients["fat"] * 9.0
-        )
-        if calculated_calories > 0:
-            nutrients["calories"] = round(calculated_calories, 1)
-
-    return nutrients
-
-
-def extract_serving_info(food_portions: list) -> tuple:
-    """Extract default serving size and available options."""
-    serving_size = 100.0
-    serving_unit = "g"
-    serving_options = []
-
-    for portion in food_portions:
-        gram_weight = portion.get("gramWeight", 0)
-        modifier = portion.get("modifier", "")
-        amount = portion.get("amount", 1)
-
-        if gram_weight > 0:
-            if modifier:
-                option = f"{amount} {modifier} ({int(gram_weight)}g)"
-            else:
-                option = f"{int(gram_weight)}g"
-            serving_options.append(option)
-
-            # Use first portion as default if reasonable
-            if serving_size == 100.0 and 10 < gram_weight < 500:
-                serving_size = gram_weight
-
-    # Always include 100g as an option
-    if "100g" not in serving_options:
-        serving_options.insert(0, "100g")
-
-    # Limit to 5 options
-    serving_options = serving_options[:5]
-
-    return serving_size, serving_unit, json.dumps(serving_options)
-
-
-def process_food(food: dict, source: str) -> dict:
-    """Process a single food item into our schema."""
-    nutrients = extract_nutrients(food.get("foodNutrients", []))
-    serving_size, serving_unit, serving_options = extract_serving_info(
-        food.get("foodPortions", [])
-    )
-
-    # Get category for potential filtering
-    category = food.get("foodCategory", {})
-    category_name = category.get("description", "") if isinstance(category, dict) else ""
-
-    return {
-        "fdc_id": food.get("fdcId", 0),
-        "barcode": "",  # USDA foods don't have barcodes
-        "name": food.get("description", "").strip(),
-        "brand": "",  # Foundation/SR Legacy don't have brands
-        "category": category_name,
-        "source": source,
-        "calories_per_100g": nutrients["calories"],
-        "protein_per_100g": nutrients["protein"],
-        "carbs_per_100g": nutrients["carbs"],
-        "fat_per_100g": nutrients["fat"],
-        "fiber_per_100g": nutrients["fiber"],
-        "serving_size": serving_size,
-        "serving_unit": serving_unit,
-        "serving_options": serving_options,
-    }
+def process_food(food: dict, source: str) -> dict | None:
+    """Normalize one USDA food through the shared source boundary."""
+    record = normalize_usda_food(food, source)
+    return record.to_database_row() if record is not None else None
 
 
 def create_database(foods: list):
@@ -220,6 +122,13 @@ def create_database(foods: list):
     cursor.execute("CREATE INDEX idx_foods_name ON foods(name)")
     cursor.execute("CREATE INDEX idx_foods_category ON foods(category)")
     cursor.execute("CREATE INDEX idx_foods_calories ON foods(calories_per_100g)")
+    cursor.execute(
+        """
+        CREATE UNIQUE INDEX idx_foods_off_barcode
+        ON foods(barcode)
+        WHERE source = 'openFoodFacts' AND barcode <> ''
+        """
+    )
 
     conn.commit()
 
@@ -250,7 +159,7 @@ def main():
 
     for food in foundation_foods:
         processed = process_food(food, "foundation")
-        if processed["name"]:  # Skip empty names
+        if processed is not None:
             all_foods.append(processed)
 
     print(f"  Processed {len([f for f in all_foods if f['source'] == 'foundation'])} foods")
@@ -265,7 +174,7 @@ def main():
 
     for food in sr_foods:
         processed = process_food(food, "sr_legacy")
-        if processed["name"]:  # Skip empty names
+        if processed is not None:
             all_foods.append(processed)
 
     print(f"  Processed {len([f for f in all_foods if f['source'] == 'sr_legacy'])} foods")
