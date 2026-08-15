@@ -17,6 +17,9 @@ class PackagingError(ValueError):
     """Raised when a candidate cannot be safely packaged."""
 
 
+MAX_COMPRESSED_DATABASE_BYTES = 2 * 1024 * 1024 * 1024
+
+
 @dataclass(frozen=True)
 class CandidatePackage:
     directory: Path
@@ -62,6 +65,8 @@ def package_candidate(
         shutil.copyfile(database, database_copy)
         compressed = temporary_directory / "usda_foods.sqlite.gz"
         _gzip_database(database, compressed)
+        if compressed.stat().st_size >= MAX_COMPRESSED_DATABASE_BYTES:
+            raise PackagingError("Compressed database exceeds the 2 GiB release limit")
         manifest_data = build_manifest(
             database,
             compressed,
