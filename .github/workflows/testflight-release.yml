@@ -254,6 +254,7 @@ jobs:
         run: |
           command -v xcodegen >/dev/null || brew install xcodegen
           xcodegen generate
+          mkdir -p JabTracker/Resources
           cp candidate/usda_foods.sqlite JabTracker/Resources/usda_foods.sqlite
           expected=$(jq -r .database_sha256 candidate/food-db-manifest.json)
           actual=$(shasum -a 256 JabTracker/Resources/usda_foods.sqlite | awk '{print $1}')
