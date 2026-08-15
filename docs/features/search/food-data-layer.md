@@ -80,6 +80,12 @@ The local food database can be updated using the automated script:
 
 ### Full Update Workflow
 
+For TestFlight releases, use the GitHub Actions workflow documented in
+[`docs/operations/testflight-releases.md`](../../operations/testflight-releases.md).
+The local commands below are development-only database maintenance commands;
+they are not the release or signing path, and the generated SQLite file is
+ignored rather than committed.
+
 ```bash
 # 1. Run the update script (downloads USDA + OFF automatically)
 ./scripts/update-food-database.sh
@@ -90,9 +96,7 @@ The local food database can be updated using the automated script:
 # 3. Test in simulator
 # Build and run app, search for various foods
 
-# 4. Commit the updated database
-git add JabTracker/Resources/usda_foods.sqlite
-git commit -m "chore: Update USDA food database"
+# 4. Run the app locally and inspect representative searches
 ```
 
 ### Incremental Updates
@@ -333,7 +337,7 @@ Release tooling treats the food database as a verified, immutable artifact rathe
 - Delta filenames are half-open integer intervals. A gap, overlap, malformed payload, missing cursor, or cursor newer than the index selects a full rebuild.
 - A full rebuild requires an authoritative full-export cursor; download time and the live index watermark are never used as a substitute.
 - Promoted snapshots are non-draft GitHub Releases tagged `food-db-<created_epoch>-<sha12>` with `usda_foods.sqlite.gz` and `food-db-manifest.json` assets.
-- Candidate artifacts are run-scoped as `food-db-candidate-<GITHUB_RUN_ID>`, and are published only after SQLite integrity, schema, FTS parity, source counts, identity, search, and checksum validation pass.
+- Candidate artifacts are run-scoped as `food-db-candidate-<GITHUB_RUN_ID>` and contain the exact SQLite file, its compressed copy, and manifest; they are published only after SQLite integrity, schema, FTS parity, source counts, identity, search, and checksum validation pass.
 - Because public OFF deltas do not provide durable tombstones, the release pipeline must force a full rebuild when the promoted snapshot is at least 30 days old.
 
 Fixture-only verification for the pipeline is available without production downloads:

@@ -1,0 +1,446 @@
+name: TestFlight Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      group:
+        description: Internal TestFlight group
+        required: true
+        type: choice
+        options:
+          - dev
+          - internal
+      marketing_version:
+        description: Optional marketing version; blank uses project.yml
+        required: false
+        type: string
+        default: ""
+      build_number:
+        description: Optional positive build number; blank auto-numbers
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: testflight-release
+  cancel-in-progress: false
+
+env:
+  APP_ID: "6757370520"
+  BUNDLE_ID: com.gannonhall.JabTracker
+  TEAM_ID: ZBZKKWF95G
+  USDA_FOUNDATION_URL: https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_json_2024-04-18.zip
+  USDA_SR_LEGACY_URL: https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip
+  OFF_FULL_EXPORT_URL: https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz
+  OFF_DELTA_INDEX_URL: https://static.openfoodfacts.org/data/delta/index.txt
+  OFF_DELTA_BASE_URL: https://static.openfoodfacts.org/data/delta
+
+jobs:
+  preflight:
+    name: Resolve and preflight inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      group: ${{ steps.inputs.outputs.group }}
+      marketing_version: ${{ steps.inputs.outputs.marketing_version }}
+      explicit_build: ${{ steps.inputs.outputs.build_number }}
+      commit_sha: ${{ steps.inputs.outputs.commit_sha }}
+    steps:
+      - name: Reject non-main refs before secrets or external writes
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main" || {
+            echo "TestFlight releases must run from refs/heads/main" >&2
+            exit 1
+          }
+      - name: Check out immutable commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Validate operator inputs
+        run: scripts/release/validate-inputs.sh '${{ inputs.group }}' '${{ inputs.marketing_version }}' '${{ inputs.build_number }}'
+      - id: inputs
+        name: Resolve non-secret inputs
+        shell: bash
+        run: |
+          version='${{ inputs.marketing_version }}'
+          if [[ -z "$version" ]]; then
+            version=$(scripts/release/resolve-project-version.sh project.yml)
+          fi
+          {
+            echo "group=${{ inputs.group }}"
+            echo "marketing_version=$version"
+            echo "build_number=${{ inputs.build_number }}"
+            echo "commit_sha=$GITHUB_SHA"
+          } >> "$GITHUB_OUTPUT"
+
+  resolve:
+    name: Resolve TestFlight build number
+    needs: preflight
+    if: needs.preflight.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: testflight-release
+    outputs:
+      group: ${{ steps.resolved.outputs.group }}
+      marketing_version: ${{ steps.resolved.outputs.marketing_version }}
+      build_number: ${{ steps.resolved.outputs.build_number }}
+      commit_sha: ${{ steps.resolved.outputs.commit_sha }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.preflight.outputs.commit_sha }}
+          fetch-depth: 1
+      - name: Install pinned Fastlane
+        run: bundle install --jobs 4 --retry 3 --path vendor/bundle
+      - id: resolved
+        name: Resolve and reject an existing version/build
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+        run: |
+          version='${{ needs.preflight.outputs.marketing_version }}'
+          build='${{ needs.preflight.outputs.explicit_build }}'
+          if [[ -z "$build" ]]; then
+            build=$(bundle exec ruby scripts/release/testflight.rb next-build "$version")
+          fi
+          bundle exec ruby scripts/release/testflight.rb assert-unique "$version" "$build"
+          {
+            echo "group=${{ needs.preflight.outputs.group }}"
+            echo "marketing_version=$version"
+            echo "build_number=$build"
+            echo "commit_sha=${{ needs.preflight.outputs.commit_sha }}"
+          } >> "$GITHUB_OUTPUT"
+
+  database:
+    name: Refresh and validate food database
+    needs: resolve
+    if: needs.resolve.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.resolve.outputs.commit_sha }}
+          fetch-depth: 1
+      - name: Download pinned source inputs
+        env:
+          OFF_FULL_EXPORT_METADATA_URL: ${{ vars.OFF_FULL_EXPORT_METADATA_URL }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/food-data/usda/foundation" "$RUNNER_TEMP/food-data/usda/sr-legacy" "$RUNNER_TEMP/food-data/off/delta" "$RUNNER_TEMP/food-data/artifacts"
+          curl --fail --location --retry 3 "$OFF_DELTA_INDEX_URL" -o "$RUNNER_TEMP/food-data/off/delta/index.txt"
+          while read -r filename; do
+            [[ -n "$filename" ]] || continue
+            curl --fail --location --retry 3 "$OFF_DELTA_BASE_URL/$filename" -o "$RUNNER_TEMP/food-data/off/delta/$filename"
+          done < <(tr ' ' '\n' < "$RUNNER_TEMP/food-data/off/delta/index.txt" | grep '^openfoodfacts_products_')
+      - name: Download newest valid promoted snapshot
+        id: snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set +e
+          tag=$(scripts/release/fetch-snapshot.sh "$RUNNER_TEMP/food-data/snapshot")
+          status=$?
+          set -e
+          if [[ $status -eq 0 ]]; then
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "snapshot_dir=$RUNNER_TEMP/food-data/snapshot/$tag" >> "$GITHUB_OUTPUT"
+          else
+            echo "No usable snapshot; preparing an authoritative full rebuild"
+            curl --fail --location --retry 3 "$USDA_FOUNDATION_URL" -o "$RUNNER_TEMP/foundation.zip"
+            curl --fail --location --retry 3 "$USDA_SR_LEGACY_URL" -o "$RUNNER_TEMP/sr-legacy.zip"
+            unzip -q "$RUNNER_TEMP/foundation.zip" -d "$RUNNER_TEMP/food-data/usda/foundation"
+            unzip -q "$RUNNER_TEMP/sr-legacy.zip" -d "$RUNNER_TEMP/food-data/usda/sr-legacy"
+            curl --fail --location --retry 3 "$OFF_FULL_EXPORT_URL" -o "$RUNNER_TEMP/food-data/off/products.csv.gz"
+            test -n "$OFF_FULL_EXPORT_METADATA_URL" || { echo "Repository variable OFF_FULL_EXPORT_METADATA_URL is required for authoritative full rebuilds" >&2; exit 1; }
+            curl --fail --location --retry 3 "$OFF_FULL_EXPORT_METADATA_URL" -o "$RUNNER_TEMP/food-data/off/full-export-metadata.json"
+          fi
+      - name: Build and package the run-scoped candidate
+        run: |
+          foundation=$(find "$RUNNER_TEMP/food-data/usda/foundation" -name '*.json' -type f | head -1)
+          sr_legacy=$(find "$RUNNER_TEMP/food-data/usda/sr-legacy" -name '*.json' -type f | head -1)
+          args=(
+            --foundation-json "$foundation"
+            --sr-legacy-json "$sr_legacy"
+            --off-csv-gzip "$RUNNER_TEMP/food-data/off/products.csv.gz"
+            --off-full-export-metadata "$RUNNER_TEMP/food-data/off/full-export-metadata.json"
+            --off-full-export-url "$OFF_FULL_EXPORT_URL"
+            --off-index "$RUNNER_TEMP/food-data/off/delta/index.txt"
+            --delta-directory "$RUNNER_TEMP/food-data/off/delta"
+            --output "$RUNNER_TEMP/food-data/usda_foods.sqlite"
+            --artifact-parent "$RUNNER_TEMP/food-data/artifacts"
+            --run-id "$GITHUB_RUN_ID"
+            --commit-sha "$GITHUB_SHA"
+            --marketing-version "${{ needs.resolve.outputs.marketing_version }}"
+            --build-number "${{ needs.resolve.outputs.build_number }}"
+            --production
+          )
+          if [[ -n '${{ steps.snapshot.outputs.snapshot_dir }}' ]]; then
+            args+=(--snapshot-gzip '${{ steps.snapshot.outputs.snapshot_dir }}/usda_foods.sqlite.gz')
+            args+=(--snapshot-manifest '${{ steps.snapshot.outputs.snapshot_dir }}/food-db-manifest.json')
+          fi
+          python3 scripts/prepare-food-database.py "${args[@]}" | tee "$RUNNER_TEMP/food-data/summary.json"
+          manifest="$RUNNER_TEMP/food-data/artifacts/food-db-candidate-$GITHUB_RUN_ID/food-db-manifest.json"
+          jq -r '"### Food database\\n- mode: `" + .build_mode + "`\\n- cursor: `" + (.off_cursor|tostring) + "`\\n- rows: `" + (.total_rows|tostring) + "`\\n- SHA-256: `" + .database_sha256 + "`"' "$manifest" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload run-scoped candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: food-db-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/food-data/artifacts/food-db-candidate-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 14
+
+  build:
+    name: Test, archive, and export
+    needs: resolve
+    if: needs.resolve.result == 'success'
+    runs-on: macos-26-intel
+    timeout-minutes: 180
+    environment: testflight-release
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.resolve.outputs.commit_sha }}
+          fetch-depth: 1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: food-db-candidate-${{ github.run_id }}
+          path: candidate
+      - name: Verify candidate provenance
+        run: |
+          python3 scripts/release/verify-artifact.py \
+            --directory candidate \
+            --run-id '${{ github.run_id }}' \
+            --commit-sha '${{ needs.resolve.outputs.commit_sha }}' \
+            --marketing-version '${{ needs.resolve.outputs.marketing_version }}' \
+            --build-number '${{ needs.resolve.outputs.build_number }}'
+      - name: Select Xcode 26.5 and required simulator
+        run: |
+          test -d /Applications/Xcode_26.5.app/Contents/Developer || { ls -d /Applications/Xcode*.app; exit 1; }
+          sudo xcode-select -s /Applications/Xcode_26.5.app/Contents/Developer
+          xcodebuild -version
+          xcrun simctl list runtimes | grep -q 'iOS 26' || { xcrun simctl list runtimes; exit 1; }
+      - name: Generate project and install exact database
+        run: |
+          command -v xcodegen >/dev/null || brew install xcodegen
+          xcodegen generate
+          cp candidate/usda_foods.sqlite JabTracker/Resources/usda_foods.sqlite
+          expected=$(jq -r .database_sha256 candidate/food-db-manifest.json)
+          actual=$(shasum -a 256 JabTracker/Resources/usda_foods.sqlite | awk '{print $1}')
+          test "$expected" = "$actual"
+      - name: Import signing assets and validate entitlements
+        env:
+          APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+        run: scripts/release/signing-preflight.sh
+      - name: Run the complete unit-test suite
+        run: |
+          xcodebuild test -project JabTracker.xcodeproj -scheme JabTracker \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
+            -only-testing:JabTrackerTests -resultBundlePath "$RUNNER_TEMP/unit-tests.xcresult" | tee "$RUNNER_TEMP/unit-tests.log"
+          grep -q 'LocalFoodDatabaseTests' "$RUNNER_TEMP/unit-tests.log"
+      - name: Archive signed Release build
+        run: |
+          xcodebuild archive -project JabTracker.xcodeproj -scheme JabTracker \
+            -configuration Release -destination generic/platform=iOS \
+            -archivePath "$RUNNER_TEMP/JabTracker.xcarchive" \
+            MARKETING_VERSION='${{ needs.resolve.outputs.marketing_version }}' \
+            CURRENT_PROJECT_VERSION='${{ needs.resolve.outputs.build_number }}' \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" DEVELOPMENT_TEAM="$TEAM_ID" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH"
+      - name: Export TestFlight-internal IPA
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+          <key>method</key><string>app-store-connect</string>
+          <key>destination</key><string>export</string>
+          <key>signingStyle</key><string>manual</string>
+          <key>teamID</key><string>${TEAM_ID}</string>
+          <key>provisioningProfiles</key><dict><key>${BUNDLE_ID}</key><string>${PROFILE_NAME}</string></dict>
+          <key>manageAppVersionAndBuildNumber</key><false/>
+          <key>uploadSymbols</key><true/>
+          <key>testFlightInternalTestingOnly</key><true/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/JabTracker.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+      - name: Verify archive and IPA provenance
+        run: |
+          scripts/release/inspect-release-bundle.sh \
+            "$RUNNER_TEMP/JabTracker.xcarchive/Products/Applications/JabTracker.app" \
+            "$RUNNER_TEMP/export/JabTracker.ipa" \
+            '${{ needs.resolve.outputs.marketing_version }}' \
+            '${{ needs.resolve.outputs.build_number }}' \
+            "$(jq -r .database_sha256 candidate/food-db-manifest.json)"
+          mkdir -p build-artifact
+          cp "$RUNNER_TEMP/export/JabTracker.ipa" build-artifact/JabTracker.ipa
+          cp candidate/food-db-manifest.json build-artifact/food-db-manifest.json
+          shasum -a 256 build-artifact/JabTracker.ipa > build-artifact/JabTracker.ipa.sha256
+      - name: Upload exact build artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: testflight-build-${{ github.run_id }}
+          path: build-artifact
+          if-no-files-found: error
+          retention-days: 14
+
+  distribute:
+    name: Upload, process, and assign one group
+    needs: [resolve, build]
+    if: needs.build.result == 'success'
+    runs-on: macos-26-intel
+    timeout-minutes: 65
+    environment: testflight-release
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.resolve.outputs.commit_sha }}
+          fetch-depth: 1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: testflight-build-${{ github.run_id }}
+          path: build-artifact
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        continue-on-error: true
+        with:
+          pattern: testflight-*-receipt-${{ github.run_id }}
+          path: receipts
+          merge-multiple: true
+      - name: Install pinned Fastlane and API key
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+        run: |
+          bundle install --jobs 4 --retry 3 --path vendor/bundle
+          scripts/release/write-api-key.sh "$RUNNER_TEMP/app-store-connect-api-key.json"
+      - name: Validate both internal groups
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+        run: bundle exec ruby scripts/release/testflight.rb assert-groups '${{ needs.resolve.outputs.group }}'
+      - name: Upload once or resume this run
+        id: delivery
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+        run: |
+          mkdir -p receipts
+          delivery_receipt="receipts/delivery-receipt.json"
+          if [[ -f "$delivery_receipt" ]]; then
+            jq -e --arg run "$GITHUB_RUN_ID" --arg sha '${{ needs.resolve.outputs.commit_sha }}' \
+              '.github_run_id == $run and .github_sha == $sha and .marketing_version == "${{ needs.resolve.outputs.marketing_version }}" and .build_number == "${{ needs.resolve.outputs.build_number }}"' "$delivery_receipt"
+            echo "resume=true" >> "$GITHUB_OUTPUT"
+          else
+            bundle exec ruby scripts/release/testflight.rb assert-unique '${{ needs.resolve.outputs.marketing_version }}' '${{ needs.resolve.outputs.build_number }}'
+            delivery_id=$(scripts/release/upload-ipa.sh build-artifact/JabTracker.ipa "$RUNNER_TEMP/app-store-connect-api-key.json" "$RUNNER_TEMP/transporter.log")
+            bundle exec ruby scripts/release/testflight.rb write-delivery-receipt \
+              build-artifact/JabTracker.ipa "$delivery_receipt" "$delivery_id" \
+              '${{ needs.resolve.outputs.marketing_version }}' '${{ needs.resolve.outputs.build_number }}' \
+              "$GITHUB_RUN_ID" '${{ needs.resolve.outputs.commit_sha }}'
+            echo "resume=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Persist delivery receipt before processing polling
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: testflight-delivery-receipt-${{ github.run_id }}
+          path: receipts/delivery-receipt.json
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 14
+      - name: Poll exact build and write binding receipt
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+        run: |
+          binding_receipt="receipts/binding-receipt.json"
+          if [[ -f "$binding_receipt" ]]; then
+            jq -e --arg run "$GITHUB_RUN_ID" --arg sha '${{ needs.resolve.outputs.commit_sha }}' \
+              '.github_run_id == $run and .github_sha == $sha and .marketing_version == "${{ needs.resolve.outputs.marketing_version }}" and .build_number == "${{ needs.resolve.outputs.build_number }}"' "$binding_receipt"
+          else
+            bundle exec ruby scripts/release/testflight.rb poll-and-bind \
+              '${{ needs.resolve.outputs.marketing_version }}' '${{ needs.resolve.outputs.build_number }}' \
+              receipts/delivery-receipt.json "$binding_receipt" "$GITHUB_RUN_ID" '${{ needs.resolve.outputs.commit_sha }}'
+          fi
+      - name: Persist binding receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: testflight-binding-receipt-${{ github.run_id }}
+          path: receipts/binding-receipt.json
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 14
+      - name: Assign and assert exclusive group membership
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+        run: bundle exec ruby scripts/release/testflight.rb assign-exclusive receipts/binding-receipt.json '${{ needs.resolve.outputs.group }}' "$GITHUB_RUN_ID" '${{ needs.resolve.outputs.commit_sha }}'
+      - name: Write release summary
+        run: |
+          {
+            echo "### TestFlight release"
+            echo "- commit: `${{ needs.resolve.outputs.commit_sha }}`"
+            echo "- version/build: `${{ needs.resolve.outputs.marketing_version }} (${{ needs.resolve.outputs.build_number }})`"
+            echo "- group: `${{ needs.resolve.outputs.group }}`"
+            echo "- resume: `${{ steps.delivery.outputs.resume }}`"
+            echo "- App Store Connect: https://appstoreconnect.apple.com/apps/${APP_ID}/testflight"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  promote:
+    name: Promote exact tested database snapshot
+    needs: [resolve, database, distribute]
+    if: needs.distribute.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.resolve.outputs.commit_sha }}
+          fetch-depth: 1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: food-db-candidate-${{ github.run_id }}
+          path: candidate
+      - name: Verify candidate before promotion
+        run: |
+          python3 scripts/release/verify-artifact.py \
+            --directory candidate \
+            --run-id '${{ github.run_id }}' \
+            --commit-sha '${{ needs.resolve.outputs.commit_sha }}' \
+            --marketing-version '${{ needs.resolve.outputs.marketing_version }}' \
+            --build-number '${{ needs.resolve.outputs.build_number }}'
+      - name: Publish immutable snapshot release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          manifest=candidate/food-db-manifest.json
+          epoch=$(jq -r .created_epoch "$manifest")
+          sha_prefix=$(jq -r .commit_sha "$manifest" | cut -c1-12 | tr '[:upper:]' '[:lower:]')
+          tag="food-db-${epoch}-${sha_prefix}"
+          gh release create "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target '${{ needs.resolve.outputs.commit_sha }}' \
+            --title "$tag" \
+            --notes "Verified food database snapshot for ${{ needs.resolve.outputs.marketing_version }} (${{ needs.resolve.outputs.build_number }}), run $GITHUB_RUN_ID." \
+            candidate/usda_foods.sqlite.gz candidate/food-db-manifest.json
+          {
+            echo "### Promoted food snapshot"
+            echo "- tag: `$tag`"
+            echo "- database SHA-256: `$(jq -r .database_sha256 "$manifest")`"
+            echo "- release: https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag"
+          } >> "$GITHUB_STEP_SUMMARY"

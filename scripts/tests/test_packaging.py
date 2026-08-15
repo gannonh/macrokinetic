@@ -34,10 +34,16 @@ class PackagingTests(unittest.TestCase):
             )
             directory_name = package.directory.name
             asset_names = sorted(path.name for path in package.directory.iterdir())
+            packaged_database = package.database.read_bytes()
+            source_database = database.read_bytes()
 
         self.assertEqual(errors, ())
         self.assertEqual(directory_name, "food-db-candidate-123")
-        self.assertEqual(asset_names, ["food-db-manifest.json", "usda_foods.sqlite.gz"])
+        self.assertEqual(
+            asset_names,
+            ["food-db-manifest.json", "usda_foods.sqlite", "usda_foods.sqlite.gz"],
+        )
+        self.assertEqual(packaged_database, source_database)
 
     def test_run_scoped_candidate_cannot_be_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:

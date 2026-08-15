@@ -42,3 +42,7 @@ scripts/off_data/
 JabTracker/Resources/usda_foods.sqlite
 
 .coverage/**/*
+
+# Python test and release-tool bytecode
+__pycache__/
+*.py[cod]

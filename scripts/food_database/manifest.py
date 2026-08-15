@@ -29,6 +29,8 @@ def build_manifest(
     build_mode: str,
     applied_delta_files: Sequence[str],
     schema_version: int = SCHEMA_VERSION,
+    marketing_version: str | None = None,
+    build_number: str | None = None,
 ) -> dict[str, Any]:
     """Build the complete manifest from the exact database artifacts."""
     database = Path(database_path)
@@ -42,7 +44,7 @@ def build_manifest(
 
     created_epoch = _created_epoch(created_at)
     counts = _row_counts(database)
-    return {
+    manifest = {
         "schema_version": schema_version,
         "created_at": created_at,
         "created_epoch": created_epoch,
@@ -64,6 +66,11 @@ def build_manifest(
         "build_mode": build_mode,
         "applied_delta_files": list(applied_delta_files),
     }
+    if marketing_version is not None:
+        manifest["marketing_version"] = marketing_version
+    if build_number is not None:
+        manifest["build_number"] = str(build_number)
+    return manifest
 
 
 def write_manifest(path: str | Path, manifest: dict[str, Any]) -> None:

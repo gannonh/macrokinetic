@@ -20,6 +20,7 @@ class PackagingError(ValueError):
 @dataclass(frozen=True)
 class CandidatePackage:
     directory: Path
+    database: Path
     compressed_database: Path
     manifest: Path
 
@@ -36,6 +37,8 @@ def package_candidate(
     off_cursor: int,
     build_mode: str,
     applied_delta_files: list[str],
+    marketing_version: str | None = None,
+    build_number: str | None = None,
 ) -> CandidatePackage:
     """Create ``food-db-candidate-<run_id>`` without overwriting prior runs."""
     database = Path(database_path)
@@ -55,6 +58,8 @@ def package_candidate(
         tempfile.mkdtemp(prefix=f".food-db-candidate-{run_id}-", dir=parent)
     )
     try:
+        database_copy = temporary_directory / "usda_foods.sqlite"
+        shutil.copyfile(database, database_copy)
         compressed = temporary_directory / "usda_foods.sqlite.gz"
         _gzip_database(database, compressed)
         manifest_data = build_manifest(
@@ -68,6 +73,8 @@ def package_candidate(
             off_cursor=off_cursor,
             build_mode=build_mode,
             applied_delta_files=applied_delta_files,
+            marketing_version=marketing_version,
+            build_number=build_number,
         )
         manifest = temporary_directory / "food-db-manifest.json"
         write_manifest(manifest, manifest_data)
@@ -81,6 +88,7 @@ def package_candidate(
 
     return CandidatePackage(
         final_directory,
+        final_directory / "usda_foods.sqlite",
         final_directory / "usda_foods.sqlite.gz",
         final_directory / "food-db-manifest.json",
     )

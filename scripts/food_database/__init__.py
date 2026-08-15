@@ -26,6 +26,7 @@ from .snapshots import (
     snapshot_requires_full_rebuild,
     snapshot_tag,
 )
+from .metadata import FullExportMetadata, FullExportMetadataError, load_full_export_metadata
 
 __all__ = [
     "FoodRecord",
@@ -57,4 +58,7 @@ __all__ = [
     "select_snapshot",
     "snapshot_tag",
     "snapshot_requires_full_rebuild",
+    "FullExportMetadata",
+    "FullExportMetadataError",
+    "load_full_export_metadata",
 ]
