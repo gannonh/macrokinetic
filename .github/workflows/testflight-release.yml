@@ -98,7 +98,7 @@ jobs:
       - name: Set up Ruby and install pinned Fastlane
         uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
-          ruby-version: "3.3"
+          ruby-version: "3.1"
           bundler-cache: true
       - id: resolved
         name: Resolve and reject an existing version/build
@@ -338,14 +338,17 @@ jobs:
           pattern: testflight-*-receipt-${{ github.run_id }}
           path: receipts
           merge-multiple: true
-      - name: Install pinned Fastlane and API key
+      - name: Set up Ruby and install pinned Fastlane
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: "3.1"
+          bundler-cache: true
+      - name: Write App Store Connect API key
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
-        run: |
-          bundle install --jobs 4 --retry 3 --path vendor/bundle
-          scripts/release/write-api-key.sh "$RUNNER_TEMP/app-store-connect-api-key.json"
+        run: scripts/release/write-api-key.sh "$RUNNER_TEMP/app-store-connect-api-key.json"
       - name: Validate both internal groups
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
