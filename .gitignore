@@ -47,3 +47,8 @@ JabTracker/Resources/usda_foods.sqlite
 __pycache__/
 *.py[cod]
 .env
+AuthKey_K4H6V4SS6J.p8
+Certificates.p12
+distribution.cer
+JabTracker_App_Store_Distribution.mobileprovision
+jabtracker-distribution.p12
