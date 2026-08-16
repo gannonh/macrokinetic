@@ -14,6 +14,7 @@ require "uri"
 APP_ID = ENV.fetch("ASC_APP_ID", "6757370520")
 TEAM_ID = ENV.fetch("APPLE_TEAM_ID", "ZBZKKWF95G")
 API_BASE = "https://api.appstoreconnect.apple.com/v1"
+INTERNAL_TESTABLE_STATES = %w[READY_FOR_BETA_TESTING IN_BETA_TESTING].freeze
 
 def api_request(method, path, body = nil)
   uri = URI("#{API_BASE}#{path}")
@@ -67,9 +68,10 @@ def builds(version, build)
   end
 end
 
-def internally_testable_build(item)
-  attributes = item.fetch("attributes")
-  attributes["processingState"] == "VALID" && attributes["buildAudienceType"] == "INTERNAL_ONLY"
+def internal_build_state(item)
+  return nil unless item
+
+  api_request("get", "/builds/#{item.fetch("id")}/buildBetaDetail").dig("data", "attributes", "internalBuildState")
 end
 
 def write_immutable(path, payload)
@@ -127,12 +129,18 @@ when "poll-and-bind"
     failed = found.find { |item| item.dig("attributes", "processingState") == "FAILED" }
     abort "App Store Connect processing failed for #{version} (#{build})" if failed
 
-    internally_testable = found.find { |item| internally_testable_build(item) }
+    candidate = found.find do |item|
+      attributes = item.fetch("attributes")
+      attributes["processingState"] == "VALID" && attributes["buildAudienceType"] == "INTERNAL_ONLY"
+    end
+    beta_state = internal_build_state(candidate)
+    internally_testable = candidate if candidate && INTERNAL_TESTABLE_STATES.include?(beta_state)
     current_state = if found.empty?
       "not visible"
     else
       attributes = found.first.fetch("attributes")
-      "#{attributes["processingState"] || "unknown"}/#{attributes["buildAudienceType"] || "unknown"}"
+      state = "#{attributes["processingState"] || "unknown"}/#{attributes["buildAudienceType"] || "unknown"}"
+      beta_state ? "#{state}/#{beta_state}" : state
     end
     if current_state != observed_state
       warn "App Store Connect build #{version} (#{build}) state: #{current_state}"
