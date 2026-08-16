@@ -67,6 +67,11 @@ def builds(version, build)
   end
 end
 
+def internally_testable_build(item)
+  attributes = item.fetch("attributes")
+  attributes["processingState"] == "VALID" && attributes["buildAudienceType"] == "INTERNAL_ONLY"
+end
+
 def write_immutable(path, payload)
   abort "receipt already exists: #{path}" if File.exist?(path)
   File.write(path, JSON.pretty_generate(payload) + "\n", mode: "wx")
@@ -115,13 +120,29 @@ when "poll-and-bind"
   abort "delivery receipt provenance mismatch" unless delivery["github_run_id"] == run_id && delivery["github_sha"] == commit_sha
   deadline = Time.now + 60 * 60
   found = []
+  internally_testable = nil
+  observed_state = nil
   loop do
     found = builds(version, build)
-    break unless found.empty? || Time.now >= deadline
+    failed = found.find { |item| item.dig("attributes", "processingState") == "FAILED" }
+    abort "App Store Connect processing failed for #{version} (#{build})" if failed
+
+    internally_testable = found.find { |item| internally_testable_build(item) }
+    current_state = if found.empty?
+      "not visible"
+    else
+      attributes = found.first.fetch("attributes")
+      "#{attributes["processingState"] || "unknown"}/#{attributes["buildAudienceType"] || "unknown"}"
+    end
+    if current_state != observed_state
+      warn "App Store Connect build #{version} (#{build}) state: #{current_state}"
+      observed_state = current_state
+    end
+    break if internally_testable || Time.now >= deadline
     sleep 30
   end
-  abort "App Store Connect processing timed out for #{version} (#{build})" if found.empty?
-  build_id = found.first["id"]
+  abort "App Store Connect processing timed out for #{version} (#{build})" unless internally_testable
+  build_id = internally_testable.fetch("id")
   write_immutable(output, {
     "stage" => "binding",
     "delivery_identifier" => delivery["delivery_identifier"],
