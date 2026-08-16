@@ -124,6 +124,7 @@
 		2ADE941214A65E26DE3C6475 /* ConcentrationChartAccessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D38B10476C3C86B9505C93C /* ConcentrationChartAccessibility.swift */; };
 		2BD0C5857F9BEA4145E59AD6 /* MedicationProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AB2321B5132205A1E1FEAC /* MedicationProfileSettingsView.swift */; };
 		2C540DED3BEE1D4B72A74DD4 /* GoalWizardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A742546FDB3DEF116E8E0B4 /* GoalWizardUITests.swift */; };
+		2C73ADF69E8B39630FFBCFCB /* FoodSearchReleaseBenchmarkUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B0C845395C5C98EC04A770 /* FoodSearchReleaseBenchmarkUITests.swift */; };
 		2CBFEBDCA8E027FBC56CC429 /* DoseDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEEA60C4530256FA7EC7E4D /* DoseDefaults.swift */; };
 		2CFB6AA5A74D3B2C392BD381 /* FaceIDStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F79C90B589449F4A203DDF /* FaceIDStepView.swift */; };
 		2D314577754AB8CF5C07244D /* ConcentrationChartGestureHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9929AD449C5CF2680B3657E /* ConcentrationChartGestureHandler.swift */; };
@@ -239,6 +240,7 @@
 		6178053060910F86379782CA /* ScheduleService+Projection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3443A4B8538123D7A62D22 /* ScheduleService+Projection.swift */; };
 		619C6365E9A22425A2DEA445 /* ExpenditureWidgetViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D29C9D454BE96CE1CF5492 /* ExpenditureWidgetViewModelTests.swift */; };
 		61B7EF1EBD8EDAE78BEE2C24 /* BarcodeScannerContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E6D96F0305AE0FEDEFCD6A /* BarcodeScannerContentView.swift */; };
+		6285FF8617EC2AC0EAF82DEF /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5951BDD41F83832C99DE40C4 /* TestUtilities.swift */; };
 		630623555F0BB76E631F82C0 /* SubscriptionManagerRestoreIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424211E18A1C53CD1D5791D8 /* SubscriptionManagerRestoreIntegrationTests.swift */; };
 		63F4433C742946E110C65453 /* QuickDoseViewModelTitrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4EE8B97A327C645FA90405D /* QuickDoseViewModelTitrationTests.swift */; };
 		63FE123CBC142FF333AEB9F4 /* ShotsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4322997DF3D1A4E1B64689E3 /* ShotsView.swift */; };
@@ -366,6 +368,7 @@
 		9797845E47F6FDF1C702E322 /* AdherenceInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1F0F4BA63832CABDA576D3 /* AdherenceInsight.swift */; };
 		97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */; };
 		98502D00C8E2AD581E8E9E87 /* DoseActionSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2BBEA50E8B882B058BD94D /* DoseActionSheetTests.swift */; };
+		98884F830CF074A2CBB25C45 /* TestUtilities+ElementTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818E5E60E88A431506ACA977 /* TestUtilities+ElementTypes.swift */; };
 		98C67807527D9AA71E082C3C /* QuickPhotoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B1FF44486600C6E250472F /* QuickPhotoSheet.swift */; };
 		98ED0F382937A86CC3F7C7FB /* FoodSearchSheetViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B382F118842ADDDC5ACAE4 /* FoodSearchSheetViewModelTests.swift */; };
 		99133DB3B673F129F771D8E4 /* ScreenshotCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0163698824BFDAF5363CEEB /* ScreenshotCapture.swift */; };
@@ -619,6 +622,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		23A0C4AC23146C1D87D43D9C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CF2D92B71850FD31EE723A56 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C7A0EA69BE8F86B301F96F40;
+			remoteInfo = JabTracker;
+		};
 		92C5097A818D343DBF21C6BF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CF2D92B71850FD31EE723A56 /* Project object */;
@@ -1120,6 +1130,7 @@
 		C60A2CA8AACCC96B986D3D4D /* ClipboardContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardContent.swift; sourceTree = "<group>"; };
 		C61376CB4609257C05EEA60D /* MonthlyStatsView+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MonthlyStatsView+Helpers.swift"; sourceTree = "<group>"; };
 		C61ED948C00260AB6E5D777B /* StreakCounterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCounterView.swift; sourceTree = "<group>"; };
+		C649F93FE2BD4AE81D7BFC94 /* JabTrackerFoodSearchBenchmarkTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerFoodSearchBenchmarkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C674E4765D92902550F3421B /* AuthenticationManagerCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManagerCoreTests.swift; sourceTree = "<group>"; };
 		C69716C0F961F4C16B0D08D6 /* JabTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JabTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6B6CDF3795E3B15F9AB2AA1 /* DoseSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseSearchService.swift; sourceTree = "<group>"; };
@@ -1230,6 +1241,7 @@
 		F873BD389DC87FD7D6CEBACF /* MedicationProfileHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileHeader.swift; sourceTree = "<group>"; };
 		F8EBF7C29C3F5819C09A0195 /* AdherenceMetricsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceMetricsCard.swift; sourceTree = "<group>"; };
 		F982741B9F86B6638532AD44 /* MonthlyStatsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyStatsViewTests.swift; sourceTree = "<group>"; };
+		F9B0C845395C5C98EC04A770 /* FoodSearchReleaseBenchmarkUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodSearchReleaseBenchmarkUITests.swift; sourceTree = "<group>"; };
 		F9B2FBF70ECFADBEC94B0785 /* MacroProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroProgressBar.swift; sourceTree = "<group>"; };
 		F9F4B65A13EE6B244F3FA972 /* PendingNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingNotification.swift; sourceTree = "<group>"; };
 		FA95A6F9F8CF36777846684C /* ProgramWizardStepViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWizardStepViews.swift; sourceTree = "<group>"; };
@@ -1544,6 +1556,7 @@
 			isa = PBXGroup;
 			children = (
 				C69716C0F961F4C16B0D08D6 /* JabTracker.app */,
+				C649F93FE2BD4AE81D7BFC94 /* JabTrackerFoodSearchBenchmarkTests.xctest */,
 				64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */,
 				E27D5ACAC4996BC70713166E /* JabTrackerUITests.xctest */,
 			);
@@ -2091,6 +2104,7 @@
 				899445BC2BC7653CF8FDFA91 /* BarcodeScanningUITests.swift */,
 				96942730BC822DB04101E58F /* CreateFoodUITests.swift */,
 				FC7156F56C9133F03E7BBD5F /* FoodLibraryUITests.swift */,
+				F9B0C845395C5C98EC04A770 /* FoodSearchReleaseBenchmarkUITests.swift */,
 				B010A5AAB9AA924FB9CD3D68 /* FoodSearchV08UITests.swift */,
 			);
 			path = Nutrition;
@@ -2442,6 +2456,24 @@
 			productReference = 64E683B7B51B8427B88E3017 /* JabTrackerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		A6FA734BA85FA56FE465D859 /* JabTrackerFoodSearchBenchmarkTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EEC1DF6629C47E01E9688FCF /* Build configuration list for PBXNativeTarget "JabTrackerFoodSearchBenchmarkTests" */;
+			buildPhases = (
+				EEADE1BB55A0C9DF05205207 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F70ED0AEADD690DED6C8474C /* PBXTargetDependency */,
+			);
+			name = JabTrackerFoodSearchBenchmarkTests;
+			packageProductDependencies = (
+			);
+			productName = JabTrackerFoodSearchBenchmarkTests;
+			productReference = C649F93FE2BD4AE81D7BFC94 /* JabTrackerFoodSearchBenchmarkTests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		C7A0EA69BE8F86B301F96F40 /* JabTracker */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE1EE4C2A3515203C694BE7F /* Build configuration list for PBXNativeTarget "JabTracker" */;
@@ -2478,6 +2510,11 @@
 						DevelopmentTeam = ZBZKKWF95G;
 						ProvisioningStyle = Automatic;
 					};
+					A6FA734BA85FA56FE465D859 = {
+						DevelopmentTeam = ZBZKKWF95G;
+						ProvisioningStyle = Automatic;
+						TestTargetID = C7A0EA69BE8F86B301F96F40;
+					};
 					C7A0EA69BE8F86B301F96F40 = {
 						DevelopmentTeam = ZBZKKWF95G;
 						ProvisioningStyle = Automatic;
@@ -2499,6 +2536,7 @@
 			projectRoot = "";
 			targets = (
 				C7A0EA69BE8F86B301F96F40 /* JabTracker */,
+				A6FA734BA85FA56FE465D859 /* JabTrackerFoodSearchBenchmarkTests */,
 				333C61C80CB435D02EDE87C5 /* JabTrackerTests */,
 				0EAE947DED48D0D345FE2DDA /* JabTrackerUITests */,
 			);
@@ -3160,6 +3198,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EEADE1BB55A0C9DF05205207 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C73ADF69E8B39630FFBCFCB /* FoodSearchReleaseBenchmarkUITests.swift in Sources */,
+				98884F830CF074A2CBB25C45 /* TestUtilities+ElementTypes.swift in Sources */,
+				6285FF8617EC2AC0EAF82DEF /* TestUtilities.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -3172,6 +3220,11 @@
 			isa = PBXTargetDependency;
 			target = C7A0EA69BE8F86B301F96F40 /* JabTracker */;
 			targetProxy = 92C5097A818D343DBF21C6BF /* PBXContainerItemProxy */;
+		};
+		F70ED0AEADD690DED6C8474C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C7A0EA69BE8F86B301F96F40 /* JabTracker */;
+			targetProxy = 23A0C4AC23146C1D87D43D9C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -3240,6 +3293,24 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
+		};
+		3C80636E6EC991F4B7F168DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTrackerFoodSearchBenchmarkTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = JabTracker;
+			};
+			name = Debug;
 		};
 		4BB8A9181E24C2CA4D7E226B /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -3349,6 +3420,24 @@
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7404126A2CFE36EADC0C0ECF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTrackerFoodSearchBenchmarkTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = JabTracker;
 			};
 			name = Release;
 		};
@@ -3462,6 +3551,15 @@
 			buildConfigurations = (
 				A36137E11319B8A5178B6D7D /* Debug */,
 				5AD4377EBE94B41A725CAD17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EEC1DF6629C47E01E9688FCF /* Build configuration list for PBXNativeTarget "JabTrackerFoodSearchBenchmarkTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C80636E6EC991F4B7F168DE /* Debug */,
+				7404126A2CFE36EADC0C0ECF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

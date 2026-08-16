@@ -28,6 +28,13 @@ final class FoodSearchSheetViewModel {
                 return query
             }
         }
+
+        var isExecuting: Bool {
+            if case .searching = self {
+                return true
+            }
+            return false
+        }
     }
 
     typealias SearchProvider = (String, Int) async throws -> CategorizedSearchResults
@@ -53,6 +60,7 @@ final class FoodSearchSheetViewModel {
 
     /// Current lifecycle state for the active search query.
     var searchState: SearchState = .idle
+    var searchStartedAt: Date?
 
     // MARK: - Results (Grouped by Source)
 
@@ -241,6 +249,7 @@ final class FoodSearchSheetViewModel {
     func searchTextDidChange() {
         searchTask?.cancel()
         searchGeneration += 1
+        searchStartedAt = nil
         clearResults()
 
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -277,12 +286,14 @@ final class FoodSearchSheetViewModel {
         // Clear results if query is empty
         guard !query.isEmpty else {
             clearResults()
+            searchStartedAt = nil
             searchState = .idle
             return
         }
 
         Self.logger.debug("Searching for: \(query)")
         clearResults()
+        searchStartedAt = Date()
         searchState = .searching(query: query)
 
         let task = Task { [weak self] in
@@ -299,6 +310,7 @@ final class FoodSearchSheetViewModel {
         searchText = ""
         searchTask?.cancel()
         searchGeneration += 1
+        searchStartedAt = nil
         clearResults()
         searchState = .idle
     }
@@ -306,6 +318,14 @@ final class FoodSearchSheetViewModel {
     // MARK: - Private Methods
 
     private func runSearch(query: String, generation: Int) async {
+        guard !Task.isCancelled,
+            searchGeneration == generation,
+            searchText.trimmingCharacters(in: .whitespacesAndNewlines) == query
+        else { return }
+
+        searchStartedAt = Date()
+        searchState = .searching(query: query)
+
         do {
             // Search with categorized results (each source gets its own limit).
             // This ensures USDA common foods aren't drowned out by 1.7M OFF branded products.

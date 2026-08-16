@@ -287,6 +287,39 @@ struct FoodServiceTests {
         #expect(results.totalCount == expectedTotal)
     }
 
+    @Test("Categorized search preserves category order and per-category limits")
+    func testCategorizedSearchPreservesOrderAndLimits() async throws {
+        let (context, _) = createTestContextWithContainer()
+        let commonDatabase = LocalFoodDatabase()
+        let brandedDatabase = LocalFoodDatabase()
+        let service = FoodService(
+            context: context,
+            localDatabase: commonDatabase,
+            brandedDatabase: brandedDatabase
+        )
+
+        let limit = 3
+        let expectedCommon = try await commonDatabase.search(
+            query: "chicken",
+            limit: limit,
+            sources: ["foundation", "sr_legacy"]
+        )
+        let expectedBranded = try await brandedDatabase.search(
+            query: "chicken",
+            limit: limit,
+            sources: ["openFoodFacts"]
+        )
+
+        let results = try await service.searchCategorized(query: "chicken", limit: limit)
+
+        #expect(results.historyResults.count <= limit)
+        #expect(results.customResults.count <= limit)
+        #expect(results.commonResults.count <= limit)
+        #expect(results.brandedResults.count <= limit)
+        #expect(results.commonResults.map(\.name) == expectedCommon.map(\.name))
+        #expect(results.brandedResults.map(\.name) == expectedBranded.map(\.name))
+    }
+
     // MARK: - Food History Search Tests
 
     @Test("Food history search returns logged foods matching query")

@@ -62,6 +62,8 @@ struct FoodSearchSheetTests {
     @MainActor
     func exposesLifecycleStateAccessibilityIdentifiers() {
         #expect(FoodSearchSheet.searchLoadingIdentifier == "food-search-loading")
+        #expect(FoodSearchSheet.searchExecutingIdentifier == "food-search-searching")
+        #expect(FoodSearchSheet.searchExecutionStartIdentifier == "food-search-execution-start")
         #expect(FoodSearchSheet.searchEmptyIdentifier == "food-search-empty")
         #expect(FoodSearchSheet.searchErrorIdentifier == "food-search-error")
         #expect(FoodSearchSheet.searchRetryIdentifier == "food-search-retry-button")

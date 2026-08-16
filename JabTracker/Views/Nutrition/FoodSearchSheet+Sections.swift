@@ -168,7 +168,11 @@ extension FoodSearchSheet {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityIdentifier(FoodSearchSheet.searchLoadingIdentifier)
+        .accessibilityIdentifier(
+            viewModel.searchState.isExecuting
+                ? FoodSearchSheet.searchExecutingIdentifier
+                : FoodSearchSheet.searchLoadingIdentifier
+        )
     }
 
     @ViewBuilder

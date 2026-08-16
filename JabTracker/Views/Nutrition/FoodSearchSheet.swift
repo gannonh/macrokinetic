@@ -53,6 +53,8 @@ struct FoodSearchSheet: View {
     static let searchFieldIdentifier = "food-search-field"
     static let timePickerIdentifier = "time-picker-button"
     static let searchLoadingIdentifier = "food-search-loading"
+    static let searchExecutingIdentifier = "food-search-searching"
+    static let searchExecutionStartIdentifier = "food-search-execution-start"
     static let searchEmptyIdentifier = "food-search-empty"
     static let searchErrorIdentifier = "food-search-error"
     static let searchRetryIdentifier = "food-search-retry-button"
@@ -169,6 +171,7 @@ struct FoodSearchSheet: View {
                 } else {
                     // Search field
                     searchFieldSection
+                    searchExecutionMarker
 
                     // Content: Recent foods or search results
                     contentSection
@@ -361,6 +364,17 @@ struct FoodSearchSheet: View {
                 }
             }
         }
+    }
+
+    private var searchExecutionMarker: some View {
+        Text("Search execution")
+            .frame(width: 1, height: 1)
+            .opacity(0.01)
+            .accessibilityElement(children: .ignore)
+            .accessibilityIdentifier(Self.searchExecutionStartIdentifier)
+            .accessibilityValue(
+                viewModel.searchStartedAt.map { String($0.timeIntervalSince1970) } ?? ""
+            )
     }
 
     // MARK: - Content Section

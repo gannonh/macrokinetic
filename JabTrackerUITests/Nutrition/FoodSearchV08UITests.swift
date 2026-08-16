@@ -406,7 +406,9 @@ final class FoodSearchV08UITests: XCTestCase {
         searchField.tap()
         searchField.typeText("bread")
 
-        let pendingState = app.staticTexts["food-search-loading"]
+        let pendingState = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier IN %@", ["food-search-loading", "food-search-searching"])
+        ).firstMatch
         XCTAssertTrue(
             pendingState.exists,
             "Search should expose a loading state during debounce/execution"

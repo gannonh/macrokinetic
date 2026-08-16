@@ -275,12 +275,14 @@ final class FoodService {
 
     private let context: ModelContext
     private let localDatabase: LocalFoodDatabase
+    private let brandedDatabase: LocalFoodDatabase
     private let customFoodService: CustomFoodService?
 
     /// Initialize with model context
     init(context: ModelContext) {
         self.context = context
         self.localDatabase = LocalFoodDatabase()
+        self.brandedDatabase = LocalFoodDatabase()
         self.customFoodService = nil
     }
 
@@ -288,6 +290,7 @@ final class FoodService {
     init(context: ModelContext, customFoodService: CustomFoodService) {
         self.context = context
         self.localDatabase = LocalFoodDatabase()
+        self.brandedDatabase = LocalFoodDatabase()
         self.customFoodService = customFoodService
     }
 
@@ -295,10 +298,12 @@ final class FoodService {
     init(
         context: ModelContext,
         localDatabase: LocalFoodDatabase,
+        brandedDatabase: LocalFoodDatabase,
         customFoodService: CustomFoodService? = nil
     ) {
         self.context = context
         self.localDatabase = localDatabase
+        self.brandedDatabase = brandedDatabase
         self.customFoodService = customFoodService
     }
 
@@ -316,7 +321,11 @@ final class FoodService {
         }
 
         // Search local database (1.7M+ foods from USDA + Open Food Facts dump)
-        var results = try await searchLocalDatabase(query: trimmedQuery, limit: limit)
+        var results = try await searchLocalDatabase(
+            query: trimmedQuery,
+            limit: limit,
+            database: localDatabase
+        )
 
         // Also check user-created foods from SwiftData
         let userFoods = try await searchUserCreatedFoods(query: trimmedQuery, limit: 5)
@@ -335,7 +344,11 @@ final class FoodService {
         }
 
         // Search local database
-        var results = try await searchLocalDatabase(query: trimmedQuery, limit: limit)
+        var results = try await searchLocalDatabase(
+            query: trimmedQuery,
+            limit: limit,
+            database: localDatabase
+        )
 
         // Also check user-created foods
         let userFoods = try await searchUserCreatedFoods(query: trimmedQuery, limit: 5)
@@ -363,8 +376,21 @@ final class FoodService {
             )
         }
 
-        // Search each source separately with its own limit
-        // This ensures that large sources (like OFF with 1.7M items) don't dominate results
+        // Search each source separately with its own limit. The two local FTS queries use
+        // independent read-only connections so the large common and branded tables can be
+        // searched concurrently without changing either category's ranking or limit.
+        async let commonTask = searchLocalDatabase(
+            query: trimmedQuery,
+            limit: limit,
+            sources: ["foundation", "sr_legacy"],
+            database: localDatabase
+        )
+        async let brandedTask = searchLocalDatabase(
+            query: trimmedQuery,
+            limit: limit,
+            sources: ["openFoodFacts"],
+            database: brandedDatabase
+        )
 
         // 1. History: foods user has previously logged (from FoodEntry records)
         let history = try await searchFoodHistory(query: trimmedQuery, limit: limit)
@@ -372,19 +398,9 @@ final class FoodService {
         // 2. Custom: user-created foods
         let custom = try await searchCustomFoods(query: trimmedQuery, limit: limit)
 
-        // 3. Common: USDA foods (foundation + sr_legacy)
-        let common = try await searchLocalDatabase(
-            query: trimmedQuery,
-            limit: limit,
-            sources: ["foundation", "sr_legacy"]
-        )
-
-        // 4. Branded: Open Food Facts products
-        let branded = try await searchLocalDatabase(
-            query: trimmedQuery,
-            limit: limit,
-            sources: ["openFoodFacts"]
-        )
+        // Await in presentation order even though both queries started together.
+        let common = try await commonTask
+        let branded = try await brandedTask
 
         Self.logger.debug(
             """
@@ -573,9 +589,10 @@ final class FoodService {
     private func searchLocalDatabase(
         query: String,
         limit: Int,
-        sources: [String]? = nil
+        sources: [String]? = nil,
+        database: LocalFoodDatabase
     ) async throws -> [FoodSearchResult] {
-        let localResults = try await localDatabase.search(query: query, limit: limit, sources: sources)
+        let localResults = try await database.search(query: query, limit: limit, sources: sources)
 
         return localResults.map { local in
             // Map database source string to FoodSource enum

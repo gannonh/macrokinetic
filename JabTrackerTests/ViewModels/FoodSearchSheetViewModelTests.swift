@@ -641,29 +641,37 @@ struct FoodSearchSheetViewModelTests {
         #expect(viewModel.hasResults == false)
     }
 
-    @Test("Search stays searching until the current query completes")
+    @Test("Debounced search stays searching until the current query completes")
     @MainActor
     func searchStaysSearchingUntilCurrentQueryCompletes() async {
-        let viewModel = makeViewModel { _, _ in
-            try await Task.sleep(for: .milliseconds(50))
-            return CategorizedSearchResults(
-                historyResults: [],
-                customResults: [],
-                commonResults: [],
-                brandedResults: []
-            )
+        let gate = SearchResultGate()
+        let viewModel = makeViewModel { query, _ in
+            await gate.wait(for: query)
         }
 
         viewModel.searchText = "Pizza"
         viewModel.searchTextDidChange()
         #expect(viewModel.searchState == .debouncing(query: "Pizza"))
 
-        let searchTask = Task { await viewModel.performSearch() }
-        await Task.yield()
+        while !(await gate.hasPending(for: "Pizza")) {
+            await Task.yield()
+        }
 
         #expect(viewModel.searchState == .searching(query: "Pizza"))
 
-        await searchTask.value
+        await gate.release(
+            query: "Pizza",
+            with: CategorizedSearchResults(
+                historyResults: [],
+                customResults: [],
+                commonResults: [],
+                brandedResults: []
+            )
+        )
+
+        while viewModel.searchState != .completed(query: "Pizza") {
+            await Task.yield()
+        }
 
         #expect(viewModel.searchState == .completed(query: "Pizza"))
         #expect(viewModel.hasResults == false)
