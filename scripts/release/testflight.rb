@@ -27,7 +27,7 @@ def api_request(method, path, body = nil)
     warn "App Store Connect #{method.upcase} #{path} failed: #{response.code} #{response.body}"
     exit 1
   end
-  response.body.empty? ? {} : JSON.parse(response.body)
+  response.body.to_s.empty? ? {} : JSON.parse(response.body)
 end
 
 def jwt
