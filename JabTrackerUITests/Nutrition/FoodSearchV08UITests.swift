@@ -352,7 +352,8 @@ final class FoodSearchV08UITests: XCTestCase {
         // Verify search field appears
         let searchField = app.textFields["food-search-field"]
         XCTAssertTrue(
-            searchField.waitForExistence(timeout: 3), "Search field should appear after switching to search mode")
+            searchField.waitForExistence(timeout: 3), "Search field should appear after switching to search mode"
+        )
     }
 
     // MARK: - Search Performance
@@ -422,6 +423,69 @@ final class FoodSearchV08UITests: XCTestCase {
         ).element(boundBy: 0)
         XCTAssertTrue(firstResult.waitForExistence(timeout: 10), "Final search results should appear")
         XCTAssertFalse(pendingState.exists, "Loading state should end when results render")
+    }
+
+    /// Test that the empty state appears only after a completed zero-result query.
+    func testSearchShowsCompletedEmptyState() throws {
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
+        searchField.tap()
+        searchField.typeText("xyznonexistent123")
+
+        let emptyState = app.descendants(matching: .any)["food-search-empty"].firstMatch
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 10), "Completed zero-result search should show No Results")
+        XCTAssertTrue(app.staticTexts["No Results"].exists, "No Results title should be visible")
+        XCTAssertTrue(
+            app.staticTexts["No foods found for \"xyznonexistent123\""].exists,
+            "Empty state should name the completed query"
+        )
+    }
+
+    /// Test that replacing a query clears stale results before the replacement completes.
+    func testSearchReplacementClearsStaleResultsAndPreservesCategoryOrder() throws {
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
+        searchField.tap()
+        searchField.typeText("bread")
+
+        let firstBreadResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstBreadResult.waitForExistence(timeout: 10), "Bread results should appear")
+
+        let existingQuery = (searchField.value as? String) ?? "bread"
+        searchField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existingQuery.count))
+        searchField.typeText("chicken")
+
+        let staleBreadResults = app.buttons.matching(
+            NSPredicate(format: "identifier CONTAINS[c] 'bread'")
+        )
+        XCTAssertEqual(staleBreadResults.count, 0, "Replacement query must clear stale bread results")
+
+        let firstChickenResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstChickenResult.waitForExistence(timeout: 10), "Chicken results should appear")
+
+        let commonHeader = app.staticTexts["Common"]
+        let brandedHeader = app.staticTexts["Branded"]
+        XCTAssertTrue(commonHeader.waitForExistence(timeout: 5), "Common category should appear")
+        XCTAssertTrue(brandedHeader.waitForExistence(timeout: 10), "Branded category should appear")
+        XCTAssertLessThan(commonHeader.frame.minY, brandedHeader.frame.minY, "Common should precede Branded")
     }
 
     /// Test that a database failure shows a retryable error instead of No Results.
