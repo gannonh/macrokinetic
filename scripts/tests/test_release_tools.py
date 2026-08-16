@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import subprocess
@@ -22,10 +23,79 @@ class ReleaseToolTests(unittest.TestCase):
 
     def test_input_validation_rejects_invalid_values_before_dispatch(self):
         self.run_tool("scripts/release/validate-inputs.sh", "internal", "0.10.2", "17")
-        result = self.run_tool(
-            "scripts/release/validate-inputs.sh", "dev", "10", "0", check=False
-        )
+        self.run_tool("scripts/release/validate-inputs.sh", "dev", "0.10.2", "18")
+        result = self.run_tool("scripts/release/validate-inputs.sh", "staging", "10", "0", check=False)
         self.assertNotEqual(result.returncode, 0)
+
+    def test_delivery_receipt_records_release_notes_provenance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ipa = root / "JabTracker.ipa"
+            notes = root / "what-to-test.txt"
+            receipt = root / "delivery-receipt.json"
+            ipa.write_bytes(b"ipa")
+            notes.write_text("JabTracker 0.10.2 (18)\n\nPlease test:\n- Search\n")
+            self.run_tool(
+                "scripts/release/testflight.rb",
+                "write-delivery-receipt",
+                str(ipa),
+                str(receipt),
+                "delivery-123",
+                "0.10.2",
+                "18",
+                "run-123",
+                "sha-123",
+                "internal",
+                str(notes),
+            )
+            payload = json.loads(receipt.read_text())
+            self.assertEqual(payload["delivery_identifier"], "delivery-123")
+            self.assertEqual(payload["selected_group"], "internal")
+            self.assertEqual(
+                payload["what_to_test_sha256"],
+                hashlib.sha256(notes.read_bytes()).hexdigest(),
+            )
+
+    def test_upload_passes_generated_notes_to_fastlane(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fake_bundle = root / "bundle"
+            args_file = root / "bundle-args"
+            ipa = root / "JabTracker.ipa"
+            api_key = root / "api-key.json"
+            log = root / "transporter.log"
+            notes = root / "what-to-test.txt"
+            ipa.write_bytes(b"ipa")
+            api_key.write_text("{}")
+            notes.write_text("JabTracker 0.10.2 (18)\n\nPlease test:\n- Search\n")
+            expected_notes = notes.read_text()
+            fake_bundle.write_text(
+                "#!/bin/sh\nprintf '%s\\0' \"$@\" > \"$ARGS_FILE\"\nprintf '%s\\n' 'Delivery Identifier: delivery-123'\n"
+            )
+            fake_bundle.chmod(0o755)
+            environment = os.environ | {
+                "PATH": f"{root}:{os.environ['PATH']}",
+                "ARGS_FILE": str(args_file),
+            }
+            result = self.run_tool(
+                "scripts/release/upload-ipa.sh",
+                str(ipa),
+                str(api_key),
+                str(log),
+                str(notes),
+                env=environment,
+            )
+            arguments = [item.decode() for item in args_file.read_bytes().split(b"\0") if item]
+
+        self.assertEqual(result.stdout.strip(), "delivery-123")
+        changelog_index = arguments.index("--changelog")
+        self.assertEqual(arguments[changelog_index + 1], expected_notes.rstrip("\n"))
+
+    def test_release_workflow_keeps_summary_metadata_literal(self):
+        workflow = (ROOT / ".github/workflows/testflight-release.yml").read_text()
+        self.assertIn("- dev\n          - internal", workflow)
+        self.assertIn("printf '%s\\n' \"- commit:", workflow)
+        self.assertNotIn('echo "- commit: `${{', workflow)
 
     def test_project_version_resolution_ignores_commented_setting(self):
         with tempfile.TemporaryDirectory() as directory:

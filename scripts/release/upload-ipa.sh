@@ -5,10 +5,18 @@ set -euo pipefail
 ipa="${1:?IPA path is required}"
 api_key_path="${2:?Fastlane API-key JSON path is required}"
 log_path="${3:?Transporter log path is required}"
+what_to_test_path="${4:?TestFlight What-to-Test path is required}"
+
+test -s "$what_to_test_path" || {
+    echo "TestFlight What-to-Test file is missing or empty: $what_to_test_path" >&2
+    exit 1
+}
+what_to_test="$(<"$what_to_test_path")"
 
 bundle exec fastlane pilot upload \
     --ipa "$ipa" \
     --api_key_path "$api_key_path" \
+    --changelog "$what_to_test" \
     --skip_waiting_for_build_processing true \
     --distribute_external false \
     2>&1 | tee "$log_path" >&2

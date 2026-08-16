@@ -2,7 +2,10 @@
 
 The supported release path is GitHub Actions. A maintainer uses **Actions →
 TestFlight Release → Run workflow**, selects exactly one internal group
-(`internal`), and optionally supplies a marketing version and build number.
+(`dev` or `internal`), and optionally supplies a marketing version and build
+number. Both groups must be configured as internal explicit-access groups; the
+selected group receives the build and the other group must not already contain
+it.
 The workflow only accepts the `main` branch and never edits
 `project.yml`.
 
@@ -59,8 +62,10 @@ it never substitutes download time or the current delta-index endpoint.
 6. Runs the full unit-test suite, archives and exports the exact validated
    database with manual signing, and checks the archive and IPA versions and
    database SHA-256.
-7. Uploads once through pinned Fastlane/Transporter, waits up to 60 minutes
-   for the exact build, and assigns it to the explicit-access `internal` group.
+7. Generates release notes from the commits since the previous app release,
+   submits them to TestFlight as the build’s **What to Test** text, uploads
+   once through pinned Fastlane/Transporter, waits up to 60 minutes for the
+   exact build, and assigns it to the selected explicit-access group.
 8. Publishes the exact tested database as a new immutable GitHub Release only
    after TestFlight assertions pass.
 
@@ -80,6 +85,8 @@ build, sign, or upload locally:
 
 ```bash
 scripts/upload-testflight.sh --group internal --version 0.10.2 --build 17 --watch
+# The same workflow can target the dev group:
+scripts/upload-testflight.sh --group dev --version 0.10.2 --build 18 --watch
 ```
 
 It requires `gh` authentication with Actions access. It rejects invalid group,
@@ -95,10 +102,15 @@ version, build, and non-`main` ref values before dispatch.
   rebuild rather than applying an unsafe chain.
 - **Signing preflight:** rotate the certificate/profile together and confirm
   the team, bundle ID, entitlements, and expiry.
-- **Group preflight:** the `internal` group must exist exactly once, be an
-  internal group, and have `hasAccessToAllBuilds=false`. The App Store Connect
-  `dev` group is configured for automatic access to all builds and is not a
-  valid exclusive release target.
+- **Group preflight:** both `dev` and `internal` must exist exactly once, be
+  internal groups, and have `hasAccessToAllBuilds=false`. The selected group
+  receives the build; if the non-selected group already contains that build,
+  the workflow fails without removing the relationship. Inspect and correct
+  the relationship in App Store Connect before retrying.
+- **Missing Test Details:** the workflow generates notes with the local
+  [`testflight-release-notes`](../../.agents/skills/testflight-release-notes/SKILL.md)
+  skill and sends them through Fastlane’s `--changelog` option. A missing or
+  empty generated file stops the upload before Transporter runs.
 - **Ownership collision:** do not reuse a version/build from another run;
   choose the next automatic build or an unused explicit build.
 - **Missing authoritative metadata:** publish the metadata document with the

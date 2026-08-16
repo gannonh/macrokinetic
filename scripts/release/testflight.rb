@@ -13,21 +13,37 @@ require "uri"
 
 APP_ID = ENV.fetch("ASC_APP_ID", "6757370520")
 TEAM_ID = ENV.fetch("APPLE_TEAM_ID", "ZBZKKWF95G")
-API_BASE = "https://api.appstoreconnect.apple.com/v1"
+API_BASE = ENV.fetch("ASC_API_BASE", "https://api.appstoreconnect.apple.com/v1")
 INTERNAL_TESTABLE_STATES = %w[READY_FOR_BETA_TESTING IN_BETA_TESTING].freeze
+SUPPORTED_INTERNAL_GROUPS = %w[dev internal].freeze
 
 def api_request(method, path, body = nil)
-  uri = URI("#{API_BASE}#{path}")
+  uri = URI(path.start_with?("http://", "https://") ? path : "#{API_BASE}#{path}")
   request = Net::HTTP.const_get(method.capitalize).new(uri)
   request["Authorization"] = "Bearer #{jwt}"
   request["Content-Type"] = "application/json"
   request.body = JSON.generate(body) if body
-  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(request) }
+  response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") { |http| http.request(request) }
   unless response.is_a?(Net::HTTPSuccess)
     warn "App Store Connect #{method.upcase} #{path} failed: #{response.code} #{response.body}"
     exit 1
   end
   response.body.to_s.empty? ? {} : JSON.parse(response.body)
+end
+
+def api_collection(path)
+  records = []
+  next_path = path
+  seen_paths = {}
+
+  while next_path && !seen_paths[next_path]
+    seen_paths[next_path] = true
+    page = api_request("get", next_path)
+    records.concat(page["data"] || [])
+    next_path = page.dig("links", "next")
+  end
+
+  records
 end
 
 def jwt
@@ -49,16 +65,12 @@ end
 
 def builds_for_version(version)
   query = URI.encode_www_form_component(version)
-  pre_release_versions = api_request(
-    "get",
+  pre_release_versions = api_collection(
     "/preReleaseVersions?filter[app]=#{APP_ID}&filter[version]=#{query}&filter[platform]=IOS&limit=200",
-  )["data"] || []
+  )
 
   pre_release_versions.flat_map do |pre_release_version|
-    api_request(
-      "get",
-      "/preReleaseVersions/#{pre_release_version.fetch("id")}/builds?limit=200",
-    )["data"] || []
+    api_collection("/preReleaseVersions/#{pre_release_version.fetch("id")}/builds?limit=200")
   end
 end
 
@@ -85,6 +97,38 @@ def sha256(path)
   digest.hexdigest
 end
 
+def internal_group_info(selected)
+  abort "group must be one of: #{SUPPORTED_INTERNAL_GROUPS.join(", ")}" unless SUPPORTED_INTERNAL_GROUPS.include?(selected)
+
+  groups = api_collection("/apps/#{APP_ID}/betaGroups?limit=200")
+  resolved = SUPPORTED_INTERNAL_GROUPS.to_h do |name|
+    matches = groups.select { |group| group.dig("attributes", "name") == name }
+    abort "#{name} must resolve to exactly one group" unless matches.one?
+
+    group = matches.first
+    attributes = group.fetch("attributes")
+    unless attributes["isInternalGroup"] == true && attributes["hasAccessToAllBuilds"] == false
+      abort "#{name} is not an internal explicit-access group"
+    end
+
+    [name, group.fetch("id")]
+  end
+
+  excluded = (SUPPORTED_INTERNAL_GROUPS - [selected]).fetch(0)
+  {
+    "selected" => selected,
+    "selected_id" => resolved.fetch(selected),
+    "excluded" => excluded,
+    "excluded_id" => resolved.fetch(excluded),
+  }
+end
+
+def group_contains_build?(group_id, build_id)
+  api_collection("/betaGroups/#{group_id}/relationships/builds?limit=200").any? do |item|
+    item["id"] == build_id
+  end
+end
+
 command = ARGV.shift
 case command
 when "next-build"
@@ -102,8 +146,10 @@ when "existing-build"
   found = builds(version, build)
   puts(found.first && found.first["id"])
 when "write-delivery-receipt"
-  ipa, output, delivery_id, version, build, run_id, commit_sha = ARGV
+  ipa, output, delivery_id, version, build, run_id, commit_sha, selected_group, what_to_test = ARGV
   abort "delivery identifier is required" if delivery_id.to_s.empty?
+  abort "group must be one of: #{SUPPORTED_INTERNAL_GROUPS.join(", ")}" unless SUPPORTED_INTERNAL_GROUPS.include?(selected_group)
+  abort "TestFlight what-to-test file is required" if what_to_test.to_s.empty? || !File.file?(what_to_test)
   write_immutable(output, {
     "stage" => "delivery",
     "delivery_identifier" => delivery_id,
@@ -111,9 +157,11 @@ when "write-delivery-receipt"
     "team_id" => TEAM_ID,
     "marketing_version" => version,
     "build_number" => build,
+    "selected_group" => selected_group,
     "github_run_id" => run_id,
     "github_sha" => commit_sha,
     "ipa_sha256" => sha256(ipa),
+    "what_to_test_sha256" => sha256(what_to_test),
     "created_at" => Time.now.utc.iso8601,
   })
 when "poll-and-bind"
@@ -158,34 +206,45 @@ when "poll-and-bind"
     "app_id" => APP_ID,
     "marketing_version" => version,
     "build_number" => build,
+    "selected_group" => delivery.fetch("selected_group"),
     "github_run_id" => run_id,
     "github_sha" => commit_sha,
     "ipa_sha256" => delivery["ipa_sha256"],
     "created_at" => Time.now.utc.iso8601,
   })
-when "assert-group"
+when "assert-groups", "assert-group"
   selected = ARGV.fetch(0)
-  abort "only the internal group is supported" unless selected == "internal"
-  groups = api_request("get", "/apps/#{APP_ID}/betaGroups?limit=200")["data"] || []
-  matches = groups.select { |group| group.dig("attributes", "name") == selected }
-  abort "#{selected} must resolve to exactly one group" unless matches.one?
-  attributes = matches.first["attributes"]
-  abort "#{selected} is not an internal explicit-access group" unless attributes["isInternalGroup"] == true && attributes["hasAccessToAllBuilds"] == false
-  puts JSON.generate("selected" => selected, "selected_id" => matches.first.fetch("id"))
+  puts JSON.generate(internal_group_info(selected))
 when "assign-group"
   binding_path, selected, run_id, commit_sha = ARGV
   binding = JSON.parse(File.read(binding_path))
   abort "binding receipt provenance mismatch" unless binding["github_run_id"] == run_id && binding["github_sha"] == commit_sha
-  group_info = JSON.parse(`#{File.expand_path(__FILE__)} assert-group #{selected}`)
+  abort "binding receipt group mismatch" unless binding["selected_group"] == selected
+  group_info = internal_group_info(selected)
   build_id = binding.fetch("build_resource_id")
   selected_group_id = group_info.fetch("selected_id")
-  selected_membership = (api_request("get", "/betaGroups/#{selected_group_id}/relationships/builds?limit=200")["data"] || []).any? { |item| item["id"] == build_id }
+  excluded_group_id = group_info.fetch("excluded_id")
+  if group_contains_build?(excluded_group_id, build_id)
+    abort "TestFlight build #{build_id} already belongs to non-selected group #{group_info.fetch("excluded")}; remove that relationship before retrying"
+  end
+
+  selected_membership = group_contains_build?(selected_group_id, build_id)
   unless selected_membership
     api_request("post", "/betaGroups/#{selected_group_id}/relationships/builds", { data: [{ type: "builds", id: build_id }] })
   end
-  final_selected = (api_request("get", "/betaGroups/#{selected_group_id}/relationships/builds?limit=200")["data"] || []).any? { |item| item["id"] == build_id }
-  abort "TestFlight group assignment assertion failed" unless final_selected
-  puts JSON.generate("selected_group" => selected, "build_resource_id" => build_id)
+  final_selected = group_contains_build?(selected_group_id, build_id)
+  final_excluded = group_contains_build?(excluded_group_id, build_id)
+  abort "TestFlight selected-group assignment assertion failed" unless final_selected
+  abort "TestFlight non-selected group assertion failed" if final_excluded
+  puts JSON.generate(
+    "selected_group" => selected,
+    "selected_group_id" => selected_group_id,
+    "excluded_group" => group_info.fetch("excluded"),
+    "excluded_group_id" => excluded_group_id,
+    "build_resource_id" => build_id,
+    "selected_membership" => true,
+    "excluded_membership" => false,
+  )
 else
   abort "unknown command: #{command}"
 end
