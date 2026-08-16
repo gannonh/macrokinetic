@@ -33,6 +33,7 @@ actor LocalFoodDatabase {
     private var database: OpaquePointer?
     private let databasePath: String
     private var hasOpened = false
+    private var shouldFailNextSearch = false
 
     /// Whether the database is available for queries
     var isAvailable: Bool {
@@ -44,6 +45,11 @@ actor LocalFoodDatabase {
 
     /// Initialize with the bundled database
     init() {
+        let arguments = ProcessInfo.processInfo.arguments
+        self.shouldFailNextSearch =
+            arguments.contains("--ui-testing")
+            && arguments.contains("--food-search-fail-once")
+
         // Find bundled database in app bundle
         if let bundlePath = Bundle.main.path(forResource: "usda_foods", ofType: "sqlite") {
             self.databasePath = bundlePath
@@ -107,6 +113,11 @@ actor LocalFoodDatabase {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             return []
+        }
+
+        if shouldFailNextSearch {
+            shouldFailNextSearch = false
+            throw LocalFoodDatabaseError.queryFailed("Forced UI test search failure")
         }
 
         ensureDatabaseOpen()

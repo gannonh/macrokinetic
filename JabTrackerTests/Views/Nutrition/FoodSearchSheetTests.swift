@@ -58,6 +58,15 @@ struct FoodSearchSheetTests {
         #expect(FoodSearchSheet.timePickerIdentifier == "time-picker-button")
     }
 
+    @Test("FoodSearchSheet exposes lifecycle state accessibility identifiers")
+    @MainActor
+    func exposesLifecycleStateAccessibilityIdentifiers() {
+        #expect(FoodSearchSheet.searchLoadingIdentifier == "food-search-loading")
+        #expect(FoodSearchSheet.searchEmptyIdentifier == "food-search-empty")
+        #expect(FoodSearchSheet.searchErrorIdentifier == "food-search-error")
+        #expect(FoodSearchSheet.searchRetryIdentifier == "food-search-retry-button")
+    }
+
     // MARK: - Initialization Tests
 
     @Test("FoodSearchSheet initializes with required parameters")
