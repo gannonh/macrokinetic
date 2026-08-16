@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
     cat <<'USAGE'
-Usage: scripts/upload-testflight.sh --group dev|internal [options]
+Usage: scripts/upload-testflight.sh --group internal [options]
 
 Options:
   --group GROUP       Required TestFlight internal group.
@@ -56,8 +56,8 @@ while (($#)); do
     esac
 done
 
-if [[ "$group" != "dev" && "$group" != "internal" ]]; then
-    echo "--group must be exactly dev or internal" >&2
+if [[ "$group" != "internal" ]]; then
+    echo "--group must be exactly internal" >&2
     exit 2
 fi
 if [[ -n "$version" && ! "$version" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; then

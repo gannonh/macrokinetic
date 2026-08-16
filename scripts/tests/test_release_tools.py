@@ -21,7 +21,7 @@ class ReleaseToolTests(unittest.TestCase):
         )
 
     def test_input_validation_rejects_invalid_values_before_dispatch(self):
-        self.run_tool("scripts/release/validate-inputs.sh", "dev", "0.10.2", "17")
+        self.run_tool("scripts/release/validate-inputs.sh", "internal", "0.10.2", "17")
         result = self.run_tool(
             "scripts/release/validate-inputs.sh", "dev", "10", "0", check=False
         )

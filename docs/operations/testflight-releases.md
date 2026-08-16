@@ -2,8 +2,8 @@
 
 The supported release path is GitHub Actions. A maintainer uses **Actions →
 TestFlight Release → Run workflow**, selects exactly one internal group
-(`dev` or `internal`), and optionally supplies a marketing version and build
-number. The workflow only accepts the `main` branch and never edits
+(`internal`), and optionally supplies a marketing version and build number.
+The workflow only accepts the `main` branch and never edits
 `project.yml`.
 
 ## One-time setup
@@ -60,8 +60,7 @@ it never substitutes download time or the current delta-index endpoint.
    database with manual signing, and checks the archive and IPA versions and
    database SHA-256.
 7. Uploads once through pinned Fastlane/Transporter, waits up to 60 minutes
-   for the exact build, and assigns it to exactly one explicit-access internal
-   group.
+   for the exact build, and assigns it to the explicit-access `internal` group.
 8. Publishes the exact tested database as a new immutable GitHub Release only
    after TestFlight assertions pass.
 
@@ -80,7 +79,6 @@ The repository-owned wrapper only dispatches the GitHub workflow; it does not
 build, sign, or upload locally:
 
 ```bash
-scripts/upload-testflight.sh --group dev --watch
 scripts/upload-testflight.sh --group internal --version 0.10.2 --build 17 --watch
 ```
 
@@ -97,8 +95,10 @@ version, build, and non-`main` ref values before dispatch.
   rebuild rather than applying an unsafe chain.
 - **Signing preflight:** rotate the certificate/profile together and confirm
   the team, bundle ID, entitlements, and expiry.
-- **Group preflight:** both `dev` and `internal` must exist exactly once,
-  resolve to internal groups, and have `hasAccessToAllBuilds=false`.
+- **Group preflight:** the `internal` group must exist exactly once, be an
+  internal group, and have `hasAccessToAllBuilds=false`. The App Store Connect
+  `dev` group is configured for automatic access to all builds and is not a
+  valid exclusive release target.
 - **Ownership collision:** do not reuse a version/build from another run;
   choose the next automatic build or an unused explicit build.
 - **Missing authoritative metadata:** publish the metadata document with the

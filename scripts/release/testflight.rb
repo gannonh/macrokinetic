@@ -134,37 +134,28 @@ when "poll-and-bind"
     "ipa_sha256" => delivery["ipa_sha256"],
     "created_at" => Time.now.utc.iso8601,
   })
-when "assert-groups"
+when "assert-group"
   selected = ARGV.fetch(0)
+  abort "only the internal group is supported" unless selected == "internal"
   groups = api_request("get", "/apps/#{APP_ID}/betaGroups?limit=200")["data"] || []
-  targets = {}
-  ["dev", "internal"].each do |name|
-    matches = groups.select { |group| group.dig("attributes", "name") == name }
-    abort "#{name} must resolve to exactly one group" unless matches.one?
-    attributes = matches.first["attributes"]
-    abort "#{name} is not an internal explicit-access group" unless attributes["isInternalGroup"] == true && attributes["hasAccessToAllBuilds"] == false
-    targets[name] = matches.first["id"]
-  end
-  puts JSON.generate("selected" => selected, "selected_id" => targets.fetch(selected), "nonselected_id" => targets.fetch(selected == "dev" ? "internal" : "dev"))
-when "assign-exclusive"
+  matches = groups.select { |group| group.dig("attributes", "name") == selected }
+  abort "#{selected} must resolve to exactly one group" unless matches.one?
+  attributes = matches.first["attributes"]
+  abort "#{selected} is not an internal explicit-access group" unless attributes["isInternalGroup"] == true && attributes["hasAccessToAllBuilds"] == false
+  puts JSON.generate("selected" => selected, "selected_id" => matches.first.fetch("id"))
+when "assign-group"
   binding_path, selected, run_id, commit_sha = ARGV
   binding = JSON.parse(File.read(binding_path))
   abort "binding receipt provenance mismatch" unless binding["github_run_id"] == run_id && binding["github_sha"] == commit_sha
-  group_info = JSON.parse(`#{File.expand_path(__FILE__)} assert-groups #{selected}`)
+  group_info = JSON.parse(`#{File.expand_path(__FILE__)} assert-group #{selected}`)
   build_id = binding.fetch("build_resource_id")
-  memberships = {}
-  { "selected" => group_info.fetch("selected_id"), "nonselected" => group_info.fetch("nonselected_id") }.each do |key, group_id|
-    relationship = api_request("get", "/betaGroups/#{group_id}/relationships/builds?limit=200")["data"] || []
-    memberships[key] = relationship.any? { |item| item["id"] == build_id }
+  selected_group_id = group_info.fetch("selected_id")
+  selected_membership = (api_request("get", "/betaGroups/#{selected_group_id}/relationships/builds?limit=200")["data"] || []).any? { |item| item["id"] == build_id }
+  unless selected_membership
+    api_request("post", "/betaGroups/#{selected_group_id}/relationships/builds", { data: [{ type: "builds", id: build_id }] })
   end
-  abort "build is already associated with the non-selected group" if memberships["nonselected"]
-  unless memberships["selected"]
-    api_request("post", "/betaGroups/#{group_info.fetch("selected_id")}/relationships/builds", { data: [{ type: "builds", id: build_id }] })
-  end
-  memberships["selected"] = true
-  final_nonselected = (api_request("get", "/betaGroups/#{group_info.fetch("nonselected_id")}/relationships/builds?limit=200")["data"] || []).any? { |item| item["id"] == build_id }
-  final_selected = (api_request("get", "/betaGroups/#{group_info.fetch("selected_id")}/relationships/builds?limit=200")["data"] || []).any? { |item| item["id"] == build_id }
-  abort "exclusive TestFlight assignment assertion failed" unless final_selected && !final_nonselected
+  final_selected = (api_request("get", "/betaGroups/#{selected_group_id}/relationships/builds?limit=200")["data"] || []).any? { |item| item["id"] == build_id }
+  abort "TestFlight group assignment assertion failed" unless final_selected
   puts JSON.generate("selected_group" => selected, "build_resource_id" => build_id)
 else
   abort "unknown command: #{command}"
