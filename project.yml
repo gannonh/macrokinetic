@@ -2,10 +2,10 @@ name: JabTracker
 options:
   bundleIdPrefix: com.gannonhall
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "17.5"
   defaultConfig: Debug
   createIntermediateGroups: true
-  xcodeVersion: "26.2"
+  xcodeVersion: "26.5"
   fileTypes:
     "icon":
       file: true
@@ -30,7 +30,7 @@ targets:
   JabTracker:
     type: application
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "17.5"
     sources:
       - path: JabTracker
         excludes:

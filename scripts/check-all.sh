@@ -33,7 +33,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Use the same configuration as test.sh - DEFAULT_DEVICE from working setup
-DEFAULT_DEVICE="iPhone 17 Pro,OS=26.2"
+DEFAULT_DEVICE="iPhone 17 Pro,OS=26.5"
 SIMULATOR="platform=iOS Simulator,name=${DEFAULT_DEVICE}"
 
 print_header() {

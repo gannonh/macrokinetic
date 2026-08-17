@@ -6,12 +6,10 @@ set -o pipefail  # Ensure pipeline failures are detected
 
 # Available simulators
 DEVICES=(
-    "iPhone 17 Pro,OS=26.2"
-    "iPhone 17,OS=26.2"
-    "iPhone 17 Pro Max,OS=26.2"
+    "iPhone 17 Pro,OS=26.5"
 )
 
-DEFAULT_DEVICE="iPhone 17 Pro,OS=26.2"
+DEFAULT_DEVICE="iPhone 17 Pro,OS=26.5"
 
 show_usage() {
     echo "Usage: $0 [device]"
@@ -23,8 +21,7 @@ show_usage() {
     echo ""
     echo "Examples:"
     echo "  $0           # Use default: $DEFAULT_DEVICE"
-    echo "  $0 1         # Use iPhone 17 Pro,OS=26.2"
-    echo "  $0 4         # Use iPhone 16,OS=18.6"
+    echo "  $0 1         # Use iPhone 17 Pro,OS=26.5"
     exit 1
 }
 

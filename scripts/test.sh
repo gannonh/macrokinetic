@@ -5,18 +5,12 @@ set -o pipefail  # Ensure pipeline failures are detected
 # Run tests with pretty output and device selection
 
 # Available simulators
-# NOTE: iOS 26.2 simulators recommended with Xcode 26.2 to avoid SwiftData/CloudKit crashes
-# iOS 17.5 simulators have compatibility issues with Xcode 26's NSPersistentStoreCoordinator
-# iPhone 17 Pro - F10F879D-2403-4529-8850-91DE259C1312
-# iPhone 17- 63B35940-1E74-4D29-821B-4DB5CAB5FA9C
-# iPhone 17 Pro Max - 38218630-EBEC-4196-80A2-92AB0A855715
+# Local testing uses the single maintained simulator and the app's iOS 17.5 deployment target.
 DEVICES=(
-    "iPhone 17 Pro,OS=26.2"
-    "iPhone 17,OS=26.2"
-    "iPhone 17 Pro Max,OS=26.2"
+    "iPhone 17 Pro,OS=26.5"
 )
 
-DEFAULT_DEVICE="iPhone 17 Pro,OS=26.2"
+DEFAULT_DEVICE="iPhone 17 Pro,OS=26.5"
 ENABLE_COVERAGE=false
 RESET_DEVICE=false
 ENABLE_LOGGING=true
