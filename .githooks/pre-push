@@ -32,9 +32,10 @@ if ! git diff --quiet -- JabTracker.xcodeproj; then
 fi
 
 echo "Running Python tooling tests..."
-python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+    python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
 echo "Running unit tests..."
-./scripts/test.sh unit 1 --no-log
+./scripts/test.sh unit --no-log
 
 git lfs pre-push "$@"
