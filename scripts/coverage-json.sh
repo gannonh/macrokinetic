@@ -13,7 +13,7 @@ RESULT_BUNDLE=".coverage/coverage.xcresult"
 
 if [ ! -d "$RESULT_BUNDLE" ]; then
     echo "❌ No coverage data found at $RESULT_BUNDLE"
-    echo "🔧 Run tests with coverage first: ./scripts/check-all.sh --skip-ui"
+    echo "🔧 Run tests with coverage first: ./scripts/check-all.sh"
     exit 1
 fi
 
