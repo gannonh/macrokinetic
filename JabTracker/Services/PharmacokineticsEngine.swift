@@ -65,7 +65,7 @@ final class PharmacokineticsEngine {
         guard let medication = medicationProfile.medication else { return 0.0 }
 
         let doses = medicationProfile.doses ?? []
-        return self.calculateConcentration(
+        return self.calculateConcentrationOptimized(
             from: doses,
             medication: medication,
             at: Date())
@@ -127,7 +127,7 @@ final class PharmacokineticsEngine {
         let troughTime = nextDoseTime.addingTimeInterval(-3600)  // 1 hour before next dose
 
         // Calculate concentration at trough time from all historical doses
-        let troughLevel = self.calculateConcentration(
+        let troughLevel = self.calculateConcentrationOptimized(
             from: doses,
             medication: medication,
             at: troughTime)

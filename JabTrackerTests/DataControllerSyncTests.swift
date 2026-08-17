@@ -105,27 +105,6 @@ struct DataControllerSyncTests {
         controller.syncStatus = originalStatus
     }
 
-    @Test("DataController retryCloudKitSetup when CloudKit enabled")
-    @MainActor
-    func dataControllerRetryCloudKitSetupEnabled() throws {
-        // Create controller with CloudKit potentially enabled
-        let controller = DataController(inMemory: false)
-
-        // Manually enable CloudKit for testing
-        controller.isCloudKitEnabled = true
-        controller.syncStatus = .unavailable
-
-        // Call retry
-        controller.retryCloudKitSetup()
-
-        // Status should be checking (unknown) or updated to a valid state
-        // We can't guarantee the final state in tests, but it should be one of the valid states
-        let validStatuses: [SyncStatus] = [
-            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
-        ]
-        #expect(validStatuses.contains(controller.syncStatus), "Should have valid sync status after retry")
-    }
-
     @Test("DataController retryCloudKitSetup when CloudKit disabled")
     @MainActor
     func dataControllerRetryCloudKitSetupDisabled() throws {

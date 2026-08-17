@@ -652,7 +652,8 @@ struct ScheduleServiceAdherenceTests {
             currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
         }
 
-        // Create scheduled doses and mark some as taken
+        // Create scheduled doses and mark the first three as taken
+        let expectedTaken = min(3, scheduledTimes.count)
         for (index, scheduledTime) in scheduledTimes.enumerated() {
             let dose = createTestScheduledDose(
                 context: context,
@@ -660,7 +661,7 @@ struct ScheduleServiceAdherenceTests {
                 scheduledTime: scheduledTime
             )
 
-            if index < 3 {
+            if index < expectedTaken {
                 // Mark first 3 as taken
                 let actualDose = Dose(
                     amount: 0.5,
@@ -684,10 +685,12 @@ struct ScheduleServiceAdherenceTests {
         )
 
         // Verify monthly adherence
-        #expect(metrics.totalScheduled >= 4)  // At least 4 Mondays in a month
-        #expect(metrics.totalTaken == 3)
-        #expect(metrics.totalMissed == 1)
-        #expect(metrics.adherencePercentage == 0.75)  // 3/4 = 75%
+        #expect(metrics.totalScheduled == scheduledTimes.count)
+        #expect(metrics.totalTaken == expectedTaken)
+        #expect(metrics.totalMissed == scheduledTimes.count - expectedTaken)
+        #expect(
+            abs(metrics.adherencePercentage - Double(expectedTaken) / Double(scheduledTimes.count)) < 0.01
+        )
     }
 
     @Test("Calculate schedule adherence with zero scheduled doses")
