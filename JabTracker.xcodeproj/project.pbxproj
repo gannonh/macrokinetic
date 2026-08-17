@@ -1140,7 +1140,7 @@
 		C7EDD54B293AC83AAD572820 /* ChartDataProcessor+Interpolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChartDataProcessor+Interpolation.swift"; sourceTree = "<group>"; };
 		C80224AFE1CDA152A307F155 /* AdherencePatternTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherencePatternTests.swift; sourceTree = "<group>"; };
 		C9112A2E4F44474B8B4F72B9 /* ServingPillPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServingPillPicker.swift; sourceTree = "<group>"; };
-		CAC38D3CC1705D3039EC26FE /* AppIcon.icon */ = {isa = PBXFileReference; path = AppIcon.icon; sourceTree = "<group>"; };
+		CAC38D3CC1705D3039EC26FE /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		CAF24FAF1F65F4ED96874B2B /* ChartDataProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataProcessorTests.swift; sourceTree = "<group>"; };
 		CB13A43CB0C2E01BC2AA642B /* ScheduleServiceModificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleServiceModificationTests.swift; sourceTree = "<group>"; };
 		CBFF761338F2D8BA7249DCF5 /* SplitDoseIntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDoseIntegrationUITests.swift; sourceTree = "<group>"; };
@@ -2522,7 +2522,6 @@
 				};
 			};
 			buildConfigurationList = 922E0CD7412372F0FA47C43C /* Build configuration list for PBXProject "JabTracker" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -2532,13 +2531,14 @@
 			mainGroup = 15AC0FC3C5A25C9AA3E198F8;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			productRefGroup = 68DE571FBB5435CD66A76AE4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				C7A0EA69BE8F86B301F96F40 /* JabTracker */,
-				A6FA734BA85FA56FE465D859 /* JabTrackerFoodSearchBenchmarkTests */,
 				333C61C80CB435D02EDE87C5 /* JabTrackerTests */,
 				0EAE947DED48D0D345FE2DDA /* JabTrackerUITests */,
+				A6FA734BA85FA56FE465D859 /* JabTrackerFoodSearchBenchmarkTests */,
 			);
 		};
 /* End PBXProject section */
