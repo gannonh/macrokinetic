@@ -15,16 +15,16 @@ Key singletons: `DataController.shared`, `AuthenticationManager`, `BiometricAuth
 
 ### Build & Test Commands
 ```bash
-./scripts/build.sh 1              # Build on iPhone 17 Pro (default)
-./scripts/test.sh unit 1          # Run unit tests
-./scripts/test.sh ui 1            # Run UI tests
-./scripts/test.sh unit 1 --coverage  # With coverage report
-./scripts/test.sh ui 1 FoodLogUITests/testMethod  # Single test
+./scripts/build.sh                # Build on iPhone 17 Pro (default)
+./scripts/test.sh unit            # Run unit tests
+./scripts/test.sh ui              # Run UI tests
+./scripts/test.sh unit --coverage # With coverage report
+./scripts/test.sh ui FoodLogUITests/testMethod  # Single test
 ```
 **Important:** Do NOT run build commands while user iterates - they need to run builds to see changes in the simulator.
 
 ### Simulator Requirements
-Use **iOS 26.2 simulators only** with Xcode 26.2 to avoid SwiftData/CloudKit crashes. Device options: iPhone 17 Pro (1), iPhone 17 (2), iPhone 17 Pro Max (3).
+Use the maintained iPhone 17 Pro iOS 26.5 simulator with Xcode 26.5.
 
 ## Key Code Patterns
 
@@ -74,7 +74,7 @@ TestUtilities.debugScreenshot(app, name: "before-failure")
 print(app.debugDescription)
 
 // 2. Run test and examine
-./scripts/test.sh ui 1 YourTestClass/testMethod
+./scripts/test.sh ui YourTestClass/testMethod
 open logs/latest/screenshots/
 ```
 

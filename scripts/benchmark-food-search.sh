@@ -8,7 +8,7 @@ Usage: scripts/benchmark-food-search.sh <physical-device-udid>
 
 Runs the Release-only pizza/chicken/bread food-search benchmark. The device
 must be a connected physical iPhone 17 Pro running iOS 26.2. Each query gets
-10 cold runs (a fresh app process per run) and 10 warm runs (one warmed process).
+20 cold runs (a fresh app process per run) and 20 warm runs (one warmed process).
 The XCTest output reports cold and warm p95 in milliseconds.
 
 Set FOOD_SEARCH_DEVICE_UDID instead of passing the UDID as the first argument.
@@ -35,7 +35,7 @@ if ! command -v sqlite3 >/dev/null 2>&1; then
     exit 2
 fi
 
-device_json="$(mktemp "${TMPDIR:-/tmp}/food-search-device.XXXXXX.json")"
+device_json="$(mktemp "${TMPDIR:-/tmp}/food-search-device.json.XXXXXX")"
 trap 'rm -f "$device_json"' EXIT
 if ! xcrun devicectl list devices --json-output "$device_json" >/dev/null 2>&1; then
     echo "Physical benchmark unavailable: could not enumerate CoreDevice devices." >&2
@@ -90,7 +90,7 @@ benchmark_log="$(mktemp "${TMPDIR:-/tmp}/food-search-release-benchmark.XXXXXX")"
 trap 'rm -f "$benchmark_log" "$device_json"' EXIT
 
 echo "Running Release food-search benchmark on: $device_line"
-echo "Results are reported only after the XCTest emits all 10 cold and 10 warm runs per query."
+echo "Results are reported only after the XCTest emits all 20 cold and 20 warm runs per query."
 
 set -o pipefail
 xcodebuild test \

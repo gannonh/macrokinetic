@@ -349,7 +349,14 @@ final class FoodSearchSheetViewModel {
             )
             searchState = .completed(query: query)
         } catch is CancellationError {
-            // Cancellation is expected when the user replaces the query.
+            guard !Task.isCancelled,
+                searchGeneration == generation,
+                searchText.trimmingCharacters(in: .whitespacesAndNewlines) == query
+            else { return }
+
+            Self.logger.error("Search failed: unexpected cancellation")
+            clearResults()
+            searchState = .failed(query: query, message: "Search was cancelled unexpectedly.")
         } catch {
             guard !Task.isCancelled,
                 searchGeneration == generation,

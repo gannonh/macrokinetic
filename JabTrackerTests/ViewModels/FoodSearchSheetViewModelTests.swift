@@ -24,6 +24,16 @@ private actor SearchResultGate {
 
     func wait(for query: String) async -> CategorizedSearchResults {
         await withCheckedContinuation { continuation in
+            if let previous = pending.removeValue(forKey: query) {
+                previous.resume(
+                    returning: CategorizedSearchResults(
+                        historyResults: [],
+                        customResults: [],
+                        commonResults: [],
+                        brandedResults: []
+                    )
+                )
+            }
             pending[query] = continuation
         }
     }
@@ -693,6 +703,27 @@ struct FoodSearchSheetViewModelTests {
                 == .failed(
                     query: "Pizza",
                     message: "Search service unavailable"
+                )
+        )
+        #expect(viewModel.hasResults == false)
+    }
+
+    @Test("Unexpected search cancellation is retryable")
+    @MainActor
+    func unexpectedSearchCancellationIsRetryable() async {
+        let viewModel = makeViewModel { _, _ in
+            throw CancellationError()
+        }
+
+        viewModel.searchText = "Pizza"
+        viewModel.searchTextDidChange()
+        await viewModel.performSearch()
+
+        #expect(
+            viewModel.searchState
+                == .failed(
+                    query: "Pizza",
+                    message: "Search was cancelled unexpectedly."
                 )
         )
         #expect(viewModel.hasResults == false)

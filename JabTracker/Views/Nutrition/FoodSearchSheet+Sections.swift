@@ -198,12 +198,10 @@ extension FoodSearchSheet {
                 .font(.headline)
                 .accessibilityIdentifier(FoodSearchSheet.searchErrorIdentifier)
 
-            if case let .failed(_, message) = viewModel.searchState {
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
+            Text("Unable to complete the search. Please try again.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
 
             Button(action: retrySearch) {
                 Text("Try Again")

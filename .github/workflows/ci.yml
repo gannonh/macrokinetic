@@ -15,7 +15,6 @@ concurrency:
 env:
   XCODE_APP: /Applications/Xcode_26.5.app
   IOS_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5
-  IPHONEOS_DEPLOYMENT_TARGET: "17.5"
 
 jobs:
   pr-checks:
@@ -60,30 +59,9 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
       - name: Run unit tests
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -project JabTracker.xcodeproj \
-            -scheme JabTracker \
-            -configuration Debug \
-            -destination "$IOS_DESTINATION" \
-            -only-testing:JabTrackerTests \
-            -resultBundlePath "$RUNNER_TEMP/unit-tests.xcresult" \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            -disable-concurrent-destination-testing \
-            -parallel-testing-enabled NO \
-            CODE_SIGNING_ALLOWED=NO \
-            IPHONEOS_DEPLOYMENT_TARGET="$IPHONEOS_DEPLOYMENT_TARGET" \
-            | tee "$RUNNER_TEMP/unit-tests.log"
-
-      - name: Summarize unit test results
-        if: always()
-        run: |
-          if [ -d "$RUNNER_TEMP/unit-tests.xcresult" ]; then
-            xcrun xcresulttool get test-results summary \
-              --path "$RUNNER_TEMP/unit-tests.xcresult" \
-              --format json | tee -a "$GITHUB_STEP_SUMMARY"
-          fi
+        uses: ./.github/actions/run-unit-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
 
       - name: Upload failed unit test results
         if: failure()

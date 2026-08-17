@@ -10,7 +10,7 @@ import XCTest
 
 final class FoodSearchReleaseBenchmarkUITests: XCTestCase {
     private let queries = ["pizza", "chicken", "bread"]
-    private let runCount = 10
+    private let runCount = 20
     private let resultTimeout: TimeInterval = 15
 
     var app: XCUIApplication!
@@ -133,6 +133,8 @@ final class FoodSearchReleaseBenchmarkUITests: XCTestCase {
     }
 
     private func p95Milliseconds(_ durations: [TimeInterval]) -> Double {
+        guard !durations.isEmpty else { return 0 }
+
         let sortedDurations = durations.sorted()
         let index = max(
             0,

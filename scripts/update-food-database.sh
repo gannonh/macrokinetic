@@ -370,7 +370,7 @@ print_header "Step 7: Running Tests"
 
 if [ -f "$SCRIPT_DIR/test.sh" ]; then
     print_step "Running LocalFoodDatabaseTests..."
-    if "$SCRIPT_DIR/test.sh" unit 1 LocalFoodDatabaseTests --no-log 2>/dev/null; then
+    if "$SCRIPT_DIR/test.sh" unit LocalFoodDatabaseTests --no-log 2>/dev/null; then
         print_success "All tests passed"
     else
         print_error "Some tests failed - check output above"

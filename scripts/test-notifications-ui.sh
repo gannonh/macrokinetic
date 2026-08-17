@@ -9,4 +9,4 @@ xcrun simctl privacy booted reset all com.gannonhall.JabTracker
 
 # Run the notification flow tests
 echo "🧪 Running notification UI tests..."
-./scripts/test.sh ui 1 OnboardingNotificationFlowUITests "$@"
+./scripts/test.sh ui OnboardingNotificationFlowUITests "$@"

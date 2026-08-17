@@ -2,14 +2,8 @@
 
 set -o pipefail  # Ensure pipeline failures are detected
 
-# Run tests with pretty output and device selection
-
-# Available simulators
+# Run tests with pretty output on the maintained simulator.
 # Local testing uses the single maintained simulator and the app's iOS 17.5 deployment target.
-DEVICES=(
-    "iPhone 17 Pro,OS=26.5"
-)
-
 DEFAULT_DEVICE="iPhone 17 Pro,OS=26.5"
 ENABLE_COVERAGE=false
 RESET_DEVICE=false
@@ -17,17 +11,12 @@ ENABLE_LOGGING=true
 LOG_ONLY=false
 
 show_usage() {
-    echo "Usage: $0 {unit|ui|all} [device] [test_file] [--coverage] [--reset] [--no-log] [--log-only] [--help]"
+    echo "Usage: $0 {unit|ui|all} [test_file] [--coverage] [--reset] [--no-log] [--log-only] [--help]"
     echo ""
     echo "Test types:"
     echo "  unit - Run unit tests only"
     echo "  ui   - Run UI tests only"  
     echo "  all  - Run all tests"
-    echo ""
-    echo "Available devices:"
-    for i in "${!DEVICES[@]}"; do
-        echo "  $((i+1)). ${DEVICES[$i]}"
-    done
     echo ""
     echo "Options:"
     echo "  --coverage  Generate code coverage report and display results"
@@ -48,15 +37,14 @@ show_usage() {
     echo "    DesignSystemUITests         - Design system component tests"
     echo ""
     echo "Examples:"
-    echo "  $0 ui                                                    # Run all UI tests on default device"
-    echo "  $0 ui 1                                                  # Run all UI tests on iPhone 17 Pro"
-    echo "  $0 ui 1 DesignSystemUITests                             # Run specific UI test class"
-    echo "  $0 ui 1 DesignSystemUITests/testDesignSystemComponents  # Run specific UI test method"
-    echo "  $0 ui 1 ManualAuthenticationUITests                     # Run manual Apple ID tests (requires manual interaction)"
-    echo "  $0 unit 1 PersistenceTests                              # Run all persistence-related unit tests"
-    echo "  $0 unit 1 DesignSystemTests                             # Run all design system unit tests"
-    echo "  $0 unit 1 --coverage                                    # Run unit tests with coverage report"
-    echo "  $0 ui 1 --reset                                         # Run UI tests with fresh simulator state"
+    echo "  $0 ui                                                    # Run all UI tests on the default device"
+    echo "  $0 ui DesignSystemUITests                               # Run specific UI test class"
+    echo "  $0 ui DesignSystemUITests/testDesignSystemComponents    # Run specific UI test method"
+    echo "  $0 ui ManualAuthenticationUITests                       # Run manual Apple ID tests (requires manual interaction)"
+    echo "  $0 unit PersistenceTests                                # Run all persistence-related unit tests"
+    echo "  $0 unit DesignSystemTests                               # Run all design system unit tests"
+    echo "  $0 unit --coverage                                      # Run unit tests with coverage report"
+    echo "  $0 ui --reset                                           # Run UI tests with fresh simulator state"
     echo "  $0 all --coverage                                       # Run all tests with coverage report (excludes manual tests)"
     echo ""
     echo "Note: Unit tests use file-based organization for Swift Testing compatibility."
@@ -78,7 +66,6 @@ fi
 
 # Parse arguments (handle --coverage flag anywhere in args)
 TEST_TYPE="$1"
-DEVICE_NUM=""
 TEST_FILE=""
 
 # Parse remaining arguments
@@ -102,9 +89,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            if [[ -z "$DEVICE_NUM" && "$1" =~ ^[0-9]+$ ]]; then
-                DEVICE_NUM="$1"
-            elif [[ -z "$TEST_FILE" && ! "$1" =~ ^[0-9]+$ ]]; then
+            if [ -z "$TEST_FILE" ]; then
                 TEST_FILE="$1"
             fi
             shift
@@ -112,18 +97,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Select device
-if [ -n "$DEVICE_NUM" ]; then
-    if [[ "$DEVICE_NUM" =~ ^[0-9]+$ ]] && [ "$DEVICE_NUM" -ge 1 ] && [ "$DEVICE_NUM" -le ${#DEVICES[@]} ]; then
-        SELECTED_DEVICE="${DEVICES[$((10#$DEVICE_NUM-1))]}"
-    else
-        echo "❌ Invalid device number. Choose 1-${#DEVICES[@]}"
-        show_usage
-    fi
-else
-    SELECTED_DEVICE="$DEFAULT_DEVICE"
-fi
-
+SELECTED_DEVICE="$DEFAULT_DEVICE"
 SIMULATOR="platform=iOS Simulator,name=${SELECTED_DEVICE}"
 
 # Set up logging

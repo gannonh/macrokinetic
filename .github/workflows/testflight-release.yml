@@ -267,20 +267,9 @@ jobs:
           APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
         run: scripts/release/signing-preflight.sh
       - name: Run the complete unit-test suite
-        run: |
-          set -o pipefail
-          xcodebuild test -project JabTracker.xcodeproj -scheme JabTracker \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
-            -only-testing:JabTrackerTests \
-            -resultBundlePath "$RUNNER_TEMP/unit-tests.xcresult" \
-            -disable-concurrent-destination-testing \
-            -parallel-testing-enabled NO \
-            CODE_SIGNING_ALLOWED=NO \
-            IPHONEOS_DEPLOYMENT_TARGET=17.5 \
-            | tee "$RUNNER_TEMP/unit-tests.log"
-          xcrun xcresulttool get test-results summary \
-            --path "$RUNNER_TEMP/unit-tests.xcresult" \
-            --format json | tee -a "$GITHUB_STEP_SUMMARY"
+        uses: ./.github/actions/run-unit-tests
+        with:
+          destination: platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5
       - name: Archive signed Release build
         run: |
           xcodebuild archive -project JabTracker.xcodeproj -scheme JabTracker \

@@ -61,7 +61,7 @@ print(app.debugDescription)
 
 ### Step 3: Run Test and Examine Output
 ```bash
-./scripts/test.sh ui 1 YourTestClass/testMethod
+./scripts/test.sh ui YourTestClass/testMethod
 open logs/latest/screenshots/
 ```
 

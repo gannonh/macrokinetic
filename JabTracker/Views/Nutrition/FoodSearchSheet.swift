@@ -366,15 +366,18 @@ struct FoodSearchSheet: View {
         }
     }
 
+    @ViewBuilder
     private var searchExecutionMarker: some View {
-        Text("Search execution")
-            .frame(width: 1, height: 1)
-            .opacity(0.01)
-            .accessibilityElement(children: .ignore)
-            .accessibilityIdentifier(Self.searchExecutionStartIdentifier)
-            .accessibilityValue(
-                viewModel.searchStartedAt.map { String($0.timeIntervalSince1970) } ?? ""
-            )
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+            Text("Search execution")
+                .frame(width: 1, height: 1)
+                .opacity(0.01)
+                .accessibilityElement(children: .ignore)
+                .accessibilityIdentifier(Self.searchExecutionStartIdentifier)
+                .accessibilityValue(
+                    viewModel.searchStartedAt.map { String($0.timeIntervalSince1970) } ?? ""
+                )
+        }
     }
 
     // MARK: - Content Section
