@@ -14,7 +14,9 @@ concurrency:
 
 env:
   XCODE_APP: /Applications/Xcode_26.5.app
-  IOS_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5
+  # iOS 26.5's xcodebuild StoreKit test environment returns SKInternalErrorDomain
+  # Code=3. Keep CI on the installed 26.2 runtime until that Apple regression is fixed.
+  IOS_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2
 
 jobs:
   pr-checks:

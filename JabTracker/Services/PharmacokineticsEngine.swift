@@ -115,9 +115,8 @@ final class PharmacokineticsEngine {
             return (level: 0.0, time: Date())
         }
 
-        // Find the most recent dose
-        let sortedDoses = doses.sorted { $0.timestamp > $1.timestamp }
-        guard let mostRecentDose = sortedDoses.first else {
+        // Find the most recent dose without sorting the full history.
+        guard let mostRecentDose = doses.max(by: { $0.timestamp < $1.timestamp }) else {
             return (level: 0.0, time: Date())
         }
 
@@ -303,15 +302,23 @@ extension PharmacokineticsEngine {
         at currentTime: Date,
         concentrationCutoff _: Double = 0.001
     ) -> Double {
-        // Filter doses that could still contribute meaningfully
+        // Filter doses that could still contribute meaningfully while summing them
+        // to avoid allocating an intermediate array and filtering twice.
         let cutoffTime = currentTime.addingTimeInterval(-10 * medication.halfLifeDays * 24 * 3600)
-        let recentDoses = doses.filter { dose in
-            !dose.skipped && dose.timestamp <= currentTime && dose.timestamp >= cutoffTime
-        }
+        let eliminationRate = medication.eliminationRateConstant
+        let bioavailability = medication.subcutaneousBioavailability
 
-        return self.calculateConcentration(
-            from: recentDoses,
-            medication: medication,
-            at: currentTime)
+        return doses.reduce(0.0) { total, dose in
+            guard !dose.skipped,
+                dose.timestamp <= currentTime,
+                dose.timestamp >= cutoffTime
+            else {
+                return total
+            }
+
+            let elapsedHours = currentTime.timeIntervalSince(dose.timestamp) / 3600
+            let effectiveDose = dose.amount * bioavailability
+            return total + effectiveDose * exp(-eliminationRate * elapsedHours)
+        }
     }
 }
