@@ -11,6 +11,65 @@ import Testing
 
 @testable import JabTracker
 
+private enum SearchTestError: LocalizedError {
+    case unavailable
+
+    var errorDescription: String? {
+        "Search service unavailable"
+    }
+}
+
+private actor SearchResultGate {
+    private var pending: [String: CheckedContinuation<CategorizedSearchResults, Never>] = [:]
+
+    func wait(for query: String) async -> CategorizedSearchResults {
+        await withCheckedContinuation { continuation in
+            if let previous = pending.removeValue(forKey: query) {
+                previous.resume(
+                    returning: CategorizedSearchResults(
+                        historyResults: [],
+                        customResults: [],
+                        commonResults: [],
+                        brandedResults: []
+                    )
+                )
+            }
+            pending[query] = continuation
+        }
+    }
+
+    func hasPending(for query: String) -> Bool {
+        pending[query] != nil
+    }
+
+    func release(query: String, with results: CategorizedSearchResults) {
+        pending.removeValue(forKey: query)?.resume(returning: results)
+    }
+}
+
+private actor RetrySearchProvider {
+    private let successfulResults: CategorizedSearchResults
+    private var attemptCount = 0
+
+    init(successfulResults: CategorizedSearchResults) {
+        self.successfulResults = successfulResults
+    }
+
+    func search(query: String, limit: Int) throws -> CategorizedSearchResults {
+        _ = query
+        _ = limit
+        attemptCount += 1
+        if attemptCount == 1 {
+            throw SearchTestError.unavailable
+        }
+        return successfulResults
+    }
+
+    func attempts() -> Int {
+        attemptCount
+    }
+}
+
 @Suite("FoodSearchSheetViewModel Tests")
 struct FoodSearchSheetViewModelTests {
 
@@ -55,8 +114,7 @@ struct FoodSearchSheetViewModelTests {
 
         #expect(viewModel.searchText.isEmpty)
         #expect(viewModel.selectedMethod == .search)
-        #expect(!viewModel.isSearching)
-        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.searchState == .idle)
     }
 
     @Test("ViewModel selectedTime defaults to now")
@@ -155,13 +213,13 @@ struct FoodSearchSheetViewModelTests {
 
         // Set some search state
         viewModel.searchText = "Burger"
-        viewModel.isSearching = true
+        viewModel.searchTextDidChange()
 
         // Clear
         viewModel.clearSearch()
 
         #expect(viewModel.searchText.isEmpty)
-        #expect(viewModel.isSearching == false)
+        #expect(viewModel.searchState == .idle)
         #expect(viewModel.historyResults.isEmpty)
         #expect(viewModel.customResults.isEmpty)
         #expect(viewModel.commonResults.isEmpty)
@@ -564,6 +622,230 @@ struct FoodSearchSheetViewModelTests {
 
     // MARK: - performSearch Tests
 
+    @Test("Changing search text enters debounce and clears previous results")
+    @MainActor
+    func changingSearchTextEntersDebounceAndClearsPreviousResults() async {
+        let (context, container) = createTestContext()
+        _ = container
+
+        let foodService = FoodService(context: context)
+        let mealLogService = MealLogService(context: context)
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: foodService,
+            mealLogService: mealLogService,
+            searchProvider: { _, _ in
+                CategorizedSearchResults(
+                    historyResults: [],
+                    customResults: [],
+                    commonResults: [],
+                    brandedResults: []
+                )
+            }
+        )
+
+        viewModel.commonResults = createMockResults(count: 1)
+        viewModel.searchText = "Pizza"
+        viewModel.searchTextDidChange()
+
+        #expect(viewModel.searchState == .debouncing(query: "Pizza"))
+        #expect(viewModel.hasResults == false)
+    }
+
+    @Test("Debounced search stays searching until the current query completes")
+    @MainActor
+    func searchStaysSearchingUntilCurrentQueryCompletes() async {
+        let gate = SearchResultGate()
+        let viewModel = makeViewModel { query, _ in
+            await gate.wait(for: query)
+        }
+
+        viewModel.searchText = "Pizza"
+        viewModel.searchTextDidChange()
+        #expect(viewModel.searchState == .debouncing(query: "Pizza"))
+
+        while !(await gate.hasPending(for: "Pizza")) {
+            await Task.yield()
+        }
+
+        #expect(viewModel.searchState == .searching(query: "Pizza"))
+
+        await gate.release(
+            query: "Pizza",
+            with: CategorizedSearchResults(
+                historyResults: [],
+                customResults: [],
+                commonResults: [],
+                brandedResults: []
+            )
+        )
+
+        while viewModel.searchState != .completed(query: "Pizza") {
+            await Task.yield()
+        }
+
+        #expect(viewModel.searchState == .completed(query: "Pizza"))
+        #expect(viewModel.hasResults == false)
+    }
+
+    @Test("Failed search is retryable and never exposes empty results")
+    @MainActor
+    func failedSearchIsRetryableAndNeverExposesEmptyResults() async {
+        let viewModel = makeViewModel { _, _ in
+            throw SearchTestError.unavailable
+        }
+
+        viewModel.searchText = "Pizza"
+        viewModel.searchTextDidChange()
+        await viewModel.performSearch()
+
+        #expect(
+            viewModel.searchState
+                == .failed(
+                    query: "Pizza",
+                    message: "Search service unavailable"
+                )
+        )
+        #expect(viewModel.hasResults == false)
+    }
+
+    @Test("Unexpected search cancellation is retryable")
+    @MainActor
+    func unexpectedSearchCancellationIsRetryable() async {
+        let viewModel = makeViewModel { _, _ in
+            throw CancellationError()
+        }
+
+        viewModel.searchText = "Pizza"
+        viewModel.searchTextDidChange()
+        await viewModel.performSearch()
+
+        #expect(
+            viewModel.searchState
+                == .failed(
+                    query: "Pizza",
+                    message: "Search was cancelled unexpectedly."
+                )
+        )
+        #expect(viewModel.hasResults == false)
+    }
+
+    @Test("Retrying a failed search publishes results after the next attempt succeeds")
+    @MainActor
+    func retryingFailedSearchPublishesResultsAfterNextAttemptSucceeds() async {
+        let provider = RetrySearchProvider(
+            successfulResults: CategorizedSearchResults(
+                historyResults: [],
+                customResults: [],
+                commonResults: [makeResult(name: "Pizza", source: .local)],
+                brandedResults: []
+            )
+        )
+        let viewModel = makeViewModel { query, limit in
+            try await provider.search(query: query, limit: limit)
+        }
+
+        viewModel.searchText = "Pizza"
+        viewModel.searchTextDidChange()
+        await viewModel.performSearch()
+        #expect(viewModel.searchState == .failed(query: "Pizza", message: "Search service unavailable"))
+
+        // The UI retry button delegates to performSearch(), so exercise that public retry path directly.
+        await viewModel.performSearch()
+
+        #expect(viewModel.searchState == .completed(query: "Pizza"))
+        #expect(viewModel.commonResults.map(\.name) == ["Pizza"])
+        let attempts = await provider.attempts()
+        #expect(attempts == 2)
+    }
+
+    @Test("Late results from a replaced query are ignored")
+    @MainActor
+    func lateResultsFromReplacedQueryAreIgnored() async {
+        let gate = SearchResultGate()
+        let viewModel = makeViewModel { query, _ in
+            await gate.wait(for: query)
+        }
+
+        viewModel.searchText = "Pizza"
+        viewModel.searchTextDidChange()
+        let firstSearch = Task { await viewModel.performSearch() }
+        while !(await gate.hasPending(for: "Pizza")) {
+            await Task.yield()
+        }
+
+        viewModel.searchText = "Chicken"
+        viewModel.searchTextDidChange()
+        #expect(viewModel.searchState == .debouncing(query: "Chicken"))
+        #expect(viewModel.hasResults == false)
+
+        let secondSearch = Task { await viewModel.performSearch() }
+        while !(await gate.hasPending(for: "Chicken")) {
+            await Task.yield()
+        }
+
+        await gate.release(
+            query: "Pizza",
+            with: CategorizedSearchResults(
+                historyResults: [],
+                customResults: [],
+                commonResults: [makeResult(name: "Old pizza", source: .local)],
+                brandedResults: []
+            )
+        )
+        await firstSearch.value
+
+        #expect(viewModel.searchState == .searching(query: "Chicken"))
+        #expect(viewModel.hasResults == false)
+
+        await gate.release(
+            query: "Chicken",
+            with: CategorizedSearchResults(
+                historyResults: [],
+                customResults: [],
+                commonResults: [],
+                brandedResults: [makeResult(name: "New chicken", source: .openFoodFacts)]
+            )
+        )
+        await secondSearch.value
+
+        #expect(viewModel.searchState == .completed(query: "Chicken"))
+        #expect(viewModel.commonResults.isEmpty)
+        #expect(viewModel.brandedResults.map(\.name) == ["New chicken"])
+    }
+
+    @Test("Completed search preserves category and result ordering")
+    @MainActor
+    func completedSearchPreservesCategoryAndResultOrdering() async {
+        let history = [
+            makeResult(name: "History first", source: .userCreated),
+            makeResult(name: "History second", source: .userCreated),
+        ]
+        let custom = [makeResult(name: "My food", source: .userCreated)]
+        let common = [
+            makeResult(name: "Common first", source: .local),
+            makeResult(name: "Common second", source: .local),
+        ]
+        let branded = [makeResult(name: "Branded first", source: .openFoodFacts)]
+
+        let viewModel = makeViewModel { _, _ in
+            CategorizedSearchResults(
+                historyResults: history,
+                customResults: custom,
+                commonResults: common,
+                brandedResults: branded
+            )
+        }
+
+        viewModel.searchText = "food"
+        viewModel.searchTextDidChange()
+        await viewModel.performSearch()
+
+        #expect(viewModel.historyResults.map(\.name) == ["History first", "History second"])
+        #expect(viewModel.customResults.map(\.name) == ["My food"])
+        #expect(viewModel.commonResults.map(\.name) == ["Common first", "Common second"])
+        #expect(viewModel.brandedResults.map(\.name) == ["Branded first"])
+    }
+
     @Test("performSearch clears results when query is empty")
     @MainActor
     func performSearchClearsResultsWhenQueryEmpty() async {
@@ -609,49 +891,23 @@ struct FoodSearchSheetViewModelTests {
         #expect(viewModel.commonResults.isEmpty)
     }
 
-    @Test("performSearch sets isSearching flag during search")
+    @Test("performSearch completes the current query lifecycle")
     @MainActor
-    func performSearchSetsIsSearchingFlag() async {
-        let (context, container) = createTestContext()
-        _ = container
-
-        let foodService = FoodService(context: context)
-        let mealLogService = MealLogService(context: context)
-        let viewModel = FoodSearchSheetViewModel(
-            foodService: foodService,
-            mealLogService: mealLogService
-        )
+    func performSearchCompletesCurrentQueryLifecycle() async {
+        let viewModel = makeViewModel { _, _ in
+            CategorizedSearchResults(
+                historyResults: [],
+                customResults: [],
+                commonResults: [],
+                brandedResults: []
+            )
+        }
 
         viewModel.searchText = "chicken"
-
-        // Search completes immediately in tests (no real database)
+        viewModel.searchTextDidChange()
         await viewModel.performSearch()
 
-        // After completion, isSearching should be false
-        #expect(viewModel.isSearching == false)
-    }
-
-    @Test("performSearch clears error message before searching")
-    @MainActor
-    func performSearchClearsErrorMessage() async {
-        let (context, container) = createTestContext()
-        _ = container
-
-        let foodService = FoodService(context: context)
-        let mealLogService = MealLogService(context: context)
-        let viewModel = FoodSearchSheetViewModel(
-            foodService: foodService,
-            mealLogService: mealLogService
-        )
-
-        viewModel.errorMessage = "Previous error"
-        viewModel.searchText = "test"
-
-        await viewModel.performSearch()
-
-        // Error should be cleared (may be set again if search fails)
-        // But at least we exercised the code path
-        #expect(viewModel.errorMessage == nil || viewModel.errorMessage != "Previous error")
+        #expect(viewModel.searchState == .completed(query: "chicken"))
     }
 
     // MARK: - Clear Search Resets Expansion Tests
@@ -690,6 +946,36 @@ struct FoodSearchSheetViewModelTests {
     }
 
     // MARK: - Helper Methods
+
+    @MainActor
+    private func makeViewModel(
+        searchProvider: @escaping FoodSearchSheetViewModel.SearchProvider
+    ) -> FoodSearchSheetViewModel {
+        let (context, container) = createTestContext()
+        _ = container
+
+        return FoodSearchSheetViewModel(
+            foodService: FoodService(context: context),
+            mealLogService: MealLogService(context: context),
+            searchProvider: searchProvider
+        )
+    }
+
+    private func makeResult(name: String, source: FoodSource) -> FoodSearchResult {
+        FoodSearchResult(
+            fdcId: nil,
+            barcode: nil,
+            name: name,
+            brand: nil,
+            source: source,
+            caloriesPer100g: 100,
+            proteinPer100g: 10,
+            carbsPer100g: 20,
+            fatPer100g: 5,
+            fiberPer100g: 2,
+            category: nil
+        )
+    }
 
     @MainActor
     private func createMockResults(count: Int) -> [FoodSearchResult] {

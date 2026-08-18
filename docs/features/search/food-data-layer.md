@@ -91,7 +91,7 @@ ignored rather than committed.
 ./scripts/update-food-database.sh
 
 # 2. Run full test suite
-./scripts/check-all.sh --skip-ui
+./scripts/check-all.sh
 
 # 3. Test in simulator
 # Build and run app, search for various foods

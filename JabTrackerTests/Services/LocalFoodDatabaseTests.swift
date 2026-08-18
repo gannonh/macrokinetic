@@ -251,6 +251,32 @@ struct LocalFoodDatabaseTests {
         #expect(!results3.isEmpty)
     }
 
+    @Test("Independent connections support concurrent filtered searches")
+    func testConcurrentFilteredSearchesUseIndependentConnections() async throws {
+        let commonDatabase = LocalFoodDatabase()
+        let brandedDatabase = LocalFoodDatabase()
+
+        async let commonResults = commonDatabase.search(
+            query: "chicken",
+            limit: 15,
+            sources: ["foundation", "sr_legacy"]
+        )
+        async let brandedResults = brandedDatabase.search(
+            query: "chicken",
+            limit: 15,
+            sources: ["openFoodFacts"]
+        )
+
+        let (common, branded) = try await (commonResults, brandedResults)
+
+        #expect(!common.isEmpty, "Common search should return USDA results")
+        #expect(!branded.isEmpty, "Branded search should return Open Food Facts results")
+        #expect(common.allSatisfy { $0.source == "foundation" || $0.source == "sr_legacy" })
+        #expect(branded.allSatisfy { $0.source == "openFoodFacts" })
+        #expect(common.count <= 15)
+        #expect(branded.count <= 15)
+    }
+
     // MARK: - Source Filtering Tests
 
     @Test("Search with USDA sources returns only USDA results")

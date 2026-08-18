@@ -168,6 +168,11 @@ extension FoodSearchSheet {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityIdentifier(
+            viewModel.searchState.isExecuting
+                ? FoodSearchSheet.searchExecutingIdentifier
+                : FoodSearchSheet.searchLoadingIdentifier
+        )
     }
 
     @ViewBuilder
@@ -175,8 +180,37 @@ extension FoodSearchSheet {
         ContentUnavailableView(
             "No Results",
             systemImage: "magnifyingglass",
-            description: Text("No foods found for \"\(viewModel.searchText)\"")
+            description: Text(
+                "No foods found for \"\(viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines))\""
+            )
         )
+        .accessibilityIdentifier(FoodSearchSheet.searchEmptyIdentifier)
+    }
+
+    @ViewBuilder
+    var retryableErrorSection: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.title2)
+                .foregroundStyle(.secondary)
+
+            Text("Search Failed")
+                .font(.headline)
+                .accessibilityIdentifier(FoodSearchSheet.searchErrorIdentifier)
+
+            Text("Unable to complete the search. Please try again.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            Button(action: retrySearch) {
+                Text("Try Again")
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier(FoodSearchSheet.searchRetryIdentifier)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Time Picker Sheet

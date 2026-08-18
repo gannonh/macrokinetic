@@ -352,7 +352,8 @@ final class FoodSearchV08UITests: XCTestCase {
         // Verify search field appears
         let searchField = app.textFields["food-search-field"]
         XCTAssertTrue(
-            searchField.waitForExistence(timeout: 3), "Search field should appear after switching to search mode")
+            searchField.waitForExistence(timeout: 3), "Search field should appear after switching to search mode"
+        )
     }
 
     // MARK: - Search Performance
@@ -387,6 +388,142 @@ final class FoodSearchV08UITests: XCTestCase {
 
         XCTAssertTrue(hasResults, "Should have search results for 'bread'")
         XCTAssertLessThan(searchDuration, 3.0, "Search should complete within 3 seconds")
+    }
+
+    /// Test that a query exposes the pending lifecycle state before final results.
+    func testSearchShowsPendingThenFinalState() throws {
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let foodSearchSheet = app.otherElements["food-search-sheet"]
+        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 3), "Food search sheet should appear")
+
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
+        searchField.tap()
+        searchField.typeText("bread")
+
+        let pendingState = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier IN %@", ["food-search-loading", "food-search-searching"])
+        ).firstMatch
+        XCTAssertTrue(
+            pendingState.exists,
+            "Search should expose a loading state during debounce/execution"
+        )
+
+        let prematureEmptyState = app.descendants(matching: .any)["food-search-empty"].firstMatch
+        XCTAssertFalse(prematureEmptyState.exists, "Pending search must not show No Results")
+
+        let firstResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10), "Final search results should appear")
+        XCTAssertFalse(pendingState.exists, "Loading state should end when results render")
+    }
+
+    /// Test that the empty state appears only after a completed zero-result query.
+    func testSearchShowsCompletedEmptyState() throws {
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
+        searchField.tap()
+        searchField.typeText("xyznonexistent123")
+
+        let emptyState = app.descendants(matching: .any)["food-search-empty"].firstMatch
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 10), "Completed zero-result search should show No Results")
+        XCTAssertTrue(app.staticTexts["No Results"].exists, "No Results title should be visible")
+        XCTAssertTrue(
+            app.staticTexts["No foods found for \"xyznonexistent123\""].exists,
+            "Empty state should name the completed query"
+        )
+    }
+
+    /// Test that replacing a query clears stale results before the replacement completes.
+    func testSearchReplacementClearsStaleResultsAndPreservesCategoryOrder() throws {
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
+        searchField.tap()
+        searchField.typeText("bread")
+
+        let firstBreadResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstBreadResult.waitForExistence(timeout: 10), "Bread results should appear")
+
+        let existingQuery = (searchField.value as? String) ?? "bread"
+        searchField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existingQuery.count))
+        searchField.typeText("chicken")
+
+        let staleBreadResults = app.buttons.matching(
+            NSPredicate(format: "identifier CONTAINS[c] 'bread'")
+        )
+        XCTAssertEqual(staleBreadResults.count, 0, "Replacement query must clear stale bread results")
+
+        let firstChickenResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstChickenResult.waitForExistence(timeout: 10), "Chicken results should appear")
+
+        let commonHeader = app.staticTexts["Common"]
+        let brandedHeader = app.staticTexts["Branded"]
+        XCTAssertTrue(commonHeader.waitForExistence(timeout: 5), "Common category should appear")
+        XCTAssertTrue(brandedHeader.waitForExistence(timeout: 10), "Branded category should appear")
+        XCTAssertLessThan(commonHeader.frame.minY, brandedHeader.frame.minY, "Common should precede Branded")
+    }
+
+    /// Test that a database failure shows a retryable error instead of No Results.
+    func testSearchShowsRetryableError() throws {
+        app.terminate()
+        app = TestUtilities.launchAppWithConfiguration(
+            testMode: true,
+            resetData: true,
+            additionalArguments: ["--food-search-fail-once"]
+        )
+
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        TestUtilities.openShortcutsSheet(app)
+
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3), "Search shortcut should exist")
+        searchButton.tap()
+
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should exist")
+        searchField.tap()
+        searchField.typeText("pizza")
+
+        let errorState = app.staticTexts["Search Failed"]
+        XCTAssertTrue(errorState.waitForExistence(timeout: 5), "Search failure should be visible")
+        let retryButton = app.buttons["Try Again"]
+        XCTAssertTrue(retryButton.waitForExistence(timeout: 1), "Retry button should be visible")
+        XCTAssertFalse(
+            app.descendants(matching: .any)["food-search-empty"].exists,
+            "Search failure must not show No Results"
+        )
+
+        retryButton.tap()
+        let firstResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10), "Retry should recover with search results")
+        XCTAssertFalse(errorState.exists, "Retryable error should clear after a successful retry")
     }
 
     /// Test that whole word matches appear first (search ranking improvement)

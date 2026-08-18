@@ -2,10 +2,10 @@ name: JabTracker
 options:
   bundleIdPrefix: com.gannonhall
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "17.5"
   defaultConfig: Debug
   createIntermediateGroups: true
-  xcodeVersion: "26.2"
+  xcodeVersion: "26.5"
   fileTypes:
     "icon":
       file: true
@@ -30,7 +30,7 @@ targets:
   JabTracker:
     type: application
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "17.5"
     sources:
       - path: JabTracker
         excludes:
@@ -67,9 +67,25 @@ targets:
   JabTrackerUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [JabTrackerUITests]
+    sources:
+      - path: JabTrackerUITests
+        excludes:
+          - Nutrition/FoodSearchReleaseBenchmarkUITests.swift
     resources:
       - path: JabTrackerStoreKit.storekit
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - target: JabTracker
+
+  JabTrackerFoodSearchBenchmarkTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: JabTrackerUITests/Utils/TestUtilities.swift
+      - path: JabTrackerUITests/Utils/TestUtilities+ElementTypes.swift
+      - path: JabTrackerUITests/Nutrition/FoodSearchReleaseBenchmarkUITests.swift
     settings:
       GENERATE_INFOPLIST_FILE: YES
       CODE_SIGN_STYLE: Automatic
@@ -164,3 +180,17 @@ schemes:
       #   "--seed-1-month-active": false  # 30 days food/weight + 4 doses
       #   "--seed-90-day-active": false  # 90 days food/weight + 13 doses
       # storeKitConfiguration: JabTrackerStoreKit.storekit
+
+  JabTrackerFoodSearchBenchmark:
+    build:
+      targets:
+        JabTracker: all
+        JabTrackerFoodSearchBenchmarkTests: [test]
+    test:
+      config: Release
+      targets:
+        - name: JabTrackerFoodSearchBenchmarkTests
+          parallelizable: false
+      commandLineArguments:
+        "--bypass-onboarding": true
+        "--ui-testing": true

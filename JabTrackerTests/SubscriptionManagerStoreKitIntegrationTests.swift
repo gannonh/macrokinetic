@@ -6,7 +6,7 @@ import Testing
 @testable import JabTracker
 
 @MainActor
-@Suite("SubscriptionManager StoreKit Tests")
+@Suite("SubscriptionManager StoreKit Tests", .serialized)
 struct SubscriptionManagerStoreKitTests {
     // MARK: - Test Configuration
 

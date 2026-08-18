@@ -3,23 +3,23 @@
 # Comprehensive check script for local CI testing
 # Runs all tests, SwiftLint, and build verification
 #
-# Usage: ./scripts/check-all.sh [--skip-ui]
-#   --skip-ui: Skip UI tests (faster for development)
+# Usage: ./scripts/check-all.sh [--with-ui]
+#   --with-ui: Include UI tests (skipped by default)
 
 set -e  # Exit on any error
 set -o pipefail  # Ensure pipeline failures are detected
 
 # Parse command line arguments
-SKIP_UI_TESTS=true # Default to skipping UI tests for speed
+SKIP_UI_TESTS=true # UI tests are opt-in because they are slow and stateful.
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --skip-ui)
-            SKIP_UI_TESTS=true
+        --with-ui)
+            SKIP_UI_TESTS=false
             shift
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--skip-ui]"
+            echo "Usage: $0 [--with-ui]"
             exit 1
             ;;
     esac
@@ -33,7 +33,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Use the same configuration as test.sh - DEFAULT_DEVICE from working setup
-DEFAULT_DEVICE="iPhone 17 Pro,OS=26.2"
+DEFAULT_DEVICE="iPhone 17 Pro,OS=26.5"
 SIMULATOR="platform=iOS Simulator,name=${DEFAULT_DEVICE}"
 
 print_header() {
@@ -76,34 +76,6 @@ run_check() {
 # Start checks
 print_header "🚀 JabTracker - Full CI Check Suite"
 
-# Auto-fix common issues before running checks
-print_header "🔧 Auto-fixing Code Style Issues"
-
-if command -v swiftlint &> /dev/null; then
-    echo -e "${BLUE}Running SwiftLint auto-fix...${NC}"
-    swiftlint --fix
-    print_success "SwiftLint auto-fix completed"
-else
-    print_warning "SwiftLint not installed - skipping auto-fix"
-fi
-
-if command -v swift-format &> /dev/null; then
-    echo -e "${BLUE}Running swift-format auto-fix...${NC}"
-    swift-format --configuration .swift-format --in-place --recursive .
-    print_success "swift-format auto-fix completed"
-else
-    print_warning "swift-format not installed - skipping auto-fix"
-fi
-
-# Quick build check after auto-fix to catch any issues early
-echo -e "${BLUE}Verifying build after auto-fix...${NC}"
-if xcodebuild build -scheme JabTracker -destination "$SIMULATOR" > /dev/null 2>&1; then
-    print_success "Build verification passed"
-else
-    print_warning "Build issues detected after auto-fix - continuing with checks"
-    print_warning "You may need to manually fix Swift compiler errors"
-fi
-
 FAILED_CHECKS=0
 
 # 1. SwiftLint check
@@ -136,10 +108,10 @@ if [ "$SKIP_UI_TESTS" = false ]; then
     fi
 else
     print_header "4️⃣ UI Tests (SKIPPED)"
-    print_warning "UI tests skipped with --skip-ui flag"
+    print_warning "UI tests skipped by default; use --with-ui to run them"
 fi
 
-# Note: swift-format check removed - auto-fix handles formatting during the preparation phase
+# Formatting is intentionally separate from verification; use swift-format explicitly when needed.
 
 # 5. Coverage Configuration Check (must pass before coverage policy check)
 print_header "5️⃣ Coverage Configuration Check"
@@ -184,7 +156,7 @@ else
     echo "• SwiftLint issues: swiftlint --fix"
     echo "• Format issues: swift-format --configuration .swift-format --in-place --recursive ."
     echo "• Re-run: ./scripts/check-all.sh"
-    echo "• Skip slow UI tests: ./scripts/check-all.sh --skip-ui"
+    echo "• Include UI tests: ./scripts/check-all.sh --with-ui"
     echo ""
     exit 1
 fi

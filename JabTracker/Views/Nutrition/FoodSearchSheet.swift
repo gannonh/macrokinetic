@@ -43,23 +43,21 @@ struct FoodSearchSheet: View {
     @State var isLookingUpBarcode = false
     @State var barcodeNotFound = false
     @State var lastScannedBarcode: String?
-    @State private var searchTask: Task<Void, Never>?
     @State var schedulingFood: Food?
     @State var existingScheduleForFood: FoodSchedule?
     @FocusState private var isSearchFocused: Bool
-
-    // MARK: - Constants
-
-    /// Debounce timing for search input
-    private enum SearchTiming {
-        static let debounceNanoseconds: UInt64 = 200_000_000
-    }
 
     // MARK: - Static Identifiers
 
     static let accessibilityIdentifierValue = "food-search-sheet"
     static let searchFieldIdentifier = "food-search-field"
     static let timePickerIdentifier = "time-picker-button"
+    static let searchLoadingIdentifier = "food-search-loading"
+    static let searchExecutingIdentifier = "food-search-searching"
+    static let searchExecutionStartIdentifier = "food-search-execution-start"
+    static let searchEmptyIdentifier = "food-search-empty"
+    static let searchErrorIdentifier = "food-search-error"
+    static let searchRetryIdentifier = "food-search-retry-button"
 
     // MARK: - Initialization
 
@@ -173,6 +171,7 @@ struct FoodSearchSheet: View {
                 } else {
                     // Search field
                     searchFieldSection
+                    searchExecutionMarker
 
                     // Content: Recent foods or search results
                     contentSection
@@ -353,13 +352,7 @@ struct FoodSearchSheet: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .onChange(of: viewModel.searchText) { _, _ in
-            // Cancel any pending search task before starting a new one
-            searchTask?.cancel()
-            searchTask = Task {
-                try? await Task.sleep(nanoseconds: SearchTiming.debounceNanoseconds)
-                guard !Task.isCancelled else { return }
-                await viewModel.performSearch()
-            }
+            viewModel.searchTextDidChange()
         }
         .onAppear {
             // Auto-focus search field when in search mode
@@ -373,19 +366,50 @@ struct FoodSearchSheet: View {
         }
     }
 
+    @ViewBuilder
+    private var searchExecutionMarker: some View {
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+            Text("Search execution")
+                .frame(width: 1, height: 1)
+                .opacity(0.01)
+                .accessibilityElement(children: .ignore)
+                .accessibilityIdentifier(Self.searchExecutionStartIdentifier)
+                .accessibilityValue(
+                    viewModel.searchStartedAt.map { String($0.timeIntervalSince1970) } ?? ""
+                )
+        }
+    }
+
     // MARK: - Content Section
 
     private var contentSection: some View {
         Group {
-            if viewModel.searchText.isEmpty {
+            if viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 recentFoodsSection
-            } else if viewModel.hasResults {
-                searchResultsSection
-            } else if viewModel.isSearching {
+            } else if let stateQuery = viewModel.searchState.query,
+                stateQuery != viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            {
                 loadingSection
             } else {
-                emptyResultsSection
+                switch viewModel.searchState {
+                case .idle, .debouncing, .searching:
+                    loadingSection
+                case .completed:
+                    if viewModel.hasResults {
+                        searchResultsSection
+                    } else {
+                        emptyResultsSection
+                    }
+                case .failed:
+                    retryableErrorSection
+                }
             }
+        }
+    }
+
+    func retrySearch() {
+        Task { @MainActor in
+            await viewModel.performSearch()
         }
     }
 

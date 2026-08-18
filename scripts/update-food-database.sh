@@ -370,7 +370,7 @@ print_header "Step 7: Running Tests"
 
 if [ -f "$SCRIPT_DIR/test.sh" ]; then
     print_step "Running LocalFoodDatabaseTests..."
-    if "$SCRIPT_DIR/test.sh" unit 1 LocalFoodDatabaseTests --no-log 2>/dev/null; then
+    if "$SCRIPT_DIR/test.sh" unit LocalFoodDatabaseTests --no-log 2>/dev/null; then
         print_success "All tests passed"
     else
         print_error "Some tests failed - check output above"
@@ -396,7 +396,7 @@ if [ "$TOTAL_COUNT" -gt 7000 ]; then
     print_success "Food database build complete!"
     echo ""
     echo "Next steps:"
-    echo "  1. Run full tests:  ./scripts/check-all.sh --skip-ui"
+    echo "  1. Run tests:  ./scripts/check-all.sh"
     echo "  2. Test in app:     Build and run in simulator"
     echo "  3. Commit changes:  git add JabTracker/Resources/usda_foods.sqlite"
 

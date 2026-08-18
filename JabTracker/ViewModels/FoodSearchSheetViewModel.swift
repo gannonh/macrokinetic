@@ -13,12 +13,39 @@ import SwiftData
 @Observable
 @MainActor
 final class FoodSearchSheetViewModel {
+    enum SearchState: Equatable {
+        case idle
+        case debouncing(query: String)
+        case searching(query: String)
+        case completed(query: String)
+        case failed(query: String, message: String)
+
+        var query: String? {
+            switch self {
+            case .idle:
+                return nil
+            case let .debouncing(query), let .searching(query), let .completed(query), let .failed(query, _):
+                return query
+            }
+        }
+
+        var isExecuting: Bool {
+            if case .searching = self {
+                return true
+            }
+            return false
+        }
+    }
+
+    typealias SearchProvider = (String, Int) async throws -> CategorizedSearchResults
+
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "FoodSearchSheetViewModel")
 
     // MARK: - Dependencies
 
     private let foodService: FoodService
     private let mealLogService: MealLogService
+    private let searchProvider: SearchProvider
 
     // MARK: - Search State
 
@@ -31,11 +58,9 @@ final class FoodSearchSheetViewModel {
     /// Selected time for the food entry
     var selectedTime: Date = Date()
 
-    /// Whether a search is in progress
-    var isSearching = false
-
-    /// Error message from the last operation
-    var errorMessage: String?
+    /// Current lifecycle state for the active search query.
+    var searchState: SearchState = .idle
+    var searchStartedAt: Date?
 
     // MARK: - Results (Grouped by Source)
 
@@ -163,12 +188,21 @@ final class FoodSearchSheetViewModel {
 
     /// Task handle for cancelling ongoing search
     private var searchTask: Task<Void, Never>?
+    private var searchGeneration = 0
 
     // MARK: - Initialization
 
-    init(foodService: FoodService, mealLogService: MealLogService) {
+    init(
+        foodService: FoodService,
+        mealLogService: MealLogService,
+        searchProvider: SearchProvider? = nil
+    ) {
         self.foodService = foodService
         self.mealLogService = mealLogService
+        self.searchProvider =
+            searchProvider ?? { query, limit in
+                try await foodService.searchCategorized(query: query, limit: limit)
+            }
     }
 
     // MARK: - Public Methods
@@ -192,7 +226,6 @@ final class FoodSearchSheetViewModel {
             Self.logger.debug("Remaining: \(self.remainingCalories) cal, \(self.remainingProtein)g protein")
         } catch {
             Self.logger.error("Failed to load daily totals: \(error.localizedDescription)")
-            errorMessage = "Unable to load nutrition data"
             consumedCalories = 0
             consumedProtein = 0
             remainingCalories = user.dailyCalorieGoal
@@ -205,75 +238,136 @@ final class FoodSearchSheetViewModel {
             Self.logger.debug("Loaded \(self.recentFoods.count) recent foods")
         } catch {
             Self.logger.error("Failed to load recent foods: \(error.localizedDescription)")
-            // Don't override errorMessage if already set from daily totals failure
-            if errorMessage == nil {
-                errorMessage = "Unable to load recent foods"
-            }
             recentFoods = []
         }
     }
 
-    /// Perform search with the current search text
-    /// Note: Spinner is not shown for local searches since FTS5 queries complete in <50ms.
-    /// The 200ms debounce provides enough "thinking time" without visual spinner noise.
-    func performSearch() async {
-        // Cancel any ongoing search
+    /// Notify the view model that the text input changed.
+    ///
+    /// This immediately invalidates the previous query so its results cannot remain
+    /// visible during the debounce interval or publish after a replacement query.
+    func searchTextDidChange() {
         searchTask?.cancel()
+        searchGeneration += 1
+        searchStartedAt = nil
+        clearResults()
+
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            searchState = .idle
+            return
+        }
+
+        searchState = .debouncing(query: query)
+        let generation = searchGeneration
+        searchTask = Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                await self.runSearch(query: query, generation: generation)
+            } catch is CancellationError {
+                // Cancellation is expected when the user replaces the query.
+            } catch {
+                // Task.sleep currently only throws CancellationError.
+            }
+        }
+    }
+
+    /// Perform search with the current search text.
+    func performSearch() async {
+        searchTask?.cancel()
+        searchGeneration += 1
+        let generation = searchGeneration
 
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Clear results if query is empty
         guard !query.isEmpty else {
             clearResults()
+            searchStartedAt = nil
+            searchState = .idle
             return
         }
 
         Self.logger.debug("Searching for: \(query)")
-        // Note: isSearching is not set to true here - local searches are fast enough
-        // that showing a spinner causes more visual noise than benefit.
-        // The 200ms debounce in FoodSearchSheet already provides "thinking time".
-        errorMessage = nil
+        clearResults()
+        searchStartedAt = Date()
+        searchState = .searching(query: query)
 
-        searchTask = Task {
-            do {
-                // Search with categorized results (each source gets its own limit)
-                // This ensures USDA common foods aren't drowned out by 1.7M OFF branded products
-                let results = try await foodService.searchCategorized(query: query, limit: 15)
-
-                guard !Task.isCancelled else { return }
-
-                // Assign results directly (already categorized by source)
-                historyResults = results.historyResults
-                customResults = results.customResults
-                commonResults = results.commonResults
-                brandedResults = results.brandedResults
-
-                Self.logger.debug(
-                    """
-                    Search complete: \(results.totalCount) results \
-                    (history=\(results.historyResults.count), common=\(results.commonResults.count))
-                    """
-                )
-            } catch {
-                guard !Task.isCancelled else { return }
-
-                Self.logger.error("Search failed: \(error.localizedDescription)")
-                errorMessage = error.localizedDescription
-            }
+        let task = Task { [weak self] in
+            guard let self else { return }
+            await self.runSearch(query: query, generation: generation)
         }
+        searchTask = task
 
-        await searchTask?.value
+        await task.value
     }
 
     /// Clear search text and results
     func clearSearch() {
         searchText = ""
-        isSearching = false
         searchTask?.cancel()
+        searchGeneration += 1
+        searchStartedAt = nil
         clearResults()
+        searchState = .idle
     }
 
     // MARK: - Private Methods
+
+    private func runSearch(query: String, generation: Int) async {
+        guard !Task.isCancelled,
+            searchGeneration == generation,
+            searchText.trimmingCharacters(in: .whitespacesAndNewlines) == query
+        else { return }
+
+        searchStartedAt = Date()
+        searchState = .searching(query: query)
+
+        do {
+            // Search with categorized results (each source gets its own limit).
+            // This ensures USDA common foods aren't drowned out by 1.7M OFF branded products.
+            let results = try await searchProvider(query, 15)
+
+            guard !Task.isCancelled,
+                searchGeneration == generation,
+                searchText.trimmingCharacters(in: .whitespacesAndNewlines) == query
+            else { return }
+
+            historyResults = results.historyResults
+            customResults = results.customResults
+            commonResults = results.commonResults
+            brandedResults = results.brandedResults
+
+            Self.logger.debug(
+                """
+                Search complete: \(results.totalCount) results \
+                (history=\(results.historyResults.count), common=\(results.commonResults.count))
+                """
+            )
+            searchState = .completed(query: query)
+        } catch is CancellationError {
+            guard !Task.isCancelled,
+                searchGeneration == generation,
+                searchText.trimmingCharacters(in: .whitespacesAndNewlines) == query
+            else { return }
+
+            Self.logger.error("Search failed: unexpected cancellation")
+            clearResults()
+            searchState = .failed(query: query, message: "Search was cancelled unexpectedly.")
+        } catch {
+            guard !Task.isCancelled,
+                searchGeneration == generation,
+                searchText.trimmingCharacters(in: .whitespacesAndNewlines) == query
+            else { return }
+
+            Self.logger.error("Search failed: \(error.localizedDescription)")
+            clearResults()
+            searchState = .failed(query: query, message: error.localizedDescription)
+        }
+    }
 
     /// Clear all result arrays and reset expansion state
     private func clearResults() {

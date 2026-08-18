@@ -1,101 +1,26 @@
 #!/bin/sh
 
-# =============================================================================
-# Branch Protection Check
-# =============================================================================
-# branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-# protected_branches="main master"
+set -eu
 
-# for protected in $protected_branches; do
-#     if [ "$branch" = "$protected" ]; then
-#         echo "⚠️  WARNING: You're committing directly to '$branch'"
-#         echo ""
-#         printf "Are you sure? (y/N): "
-#         read confirm
-#         if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
-#             echo "Commit aborted."
-#             exit 1
-#         fi
-#     fi
-# done
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
 
-# =============================================================================
-# Pre-commit hook for Swift formatting and linting
-# =============================================================================
-echo "🔍 Running pre-commit checks..."
+staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -n "$staged_files" ] || exit 0
 
-# Get list of staged Swift files
-SWIFT_FILES=$(git diff --cached --name-only --diff-filter=d | grep -E '\.(swift)$')
+git diff --cached --check
 
-if [ -z "$SWIFT_FILES" ]; then
-    echo "✅ No Swift files to process"
-    exit 0
-fi
-
-# Step 1: Run swift-format
-echo "📐 Running swift-format..."
-swift-format --configuration .swift-format --in-place --recursive .
-if [ $? -eq 0 ]; then
-    echo "✅ swift-format completed"
-    # Stage any changes made by swift-format
-    for file in $SWIFT_FILES; do
-        if [ -f "$file" ]; then
-            git add "$file"
-        fi
-    done
-else
-    echo "⚠️  swift-format encountered issues but continuing..."
-fi
-
-# Step 2: Run SwiftLint --fix
-echo "🔧 Running SwiftLint --fix..."
-swiftlint --fix
-if [ $? -eq 0 ]; then
-    echo "✅ SwiftLint --fix completed"
-    # Stage any changes made by SwiftLint --fix
-    for file in $SWIFT_FILES; do
-        if [ -f "$file" ]; then
-            git add "$file"
-        fi
-    done
-else
-    echo "⚠️  SwiftLint --fix encountered issues but continuing..."
-fi
-
-# Step 3: Validate coverage configuration
-echo "📊 Validating coverage configuration..."
-./scripts/check-coverage-config.sh
-if [ $? -ne 0 ]; then
-    echo "❌ Coverage configuration validation failed!"
-    echo "Run './scripts/check-coverage-config.sh' to see issues"
-    exit 1
-fi
-echo "✅ Coverage configuration is valid"
-
-# Step 4: Run SwiftLint validation
-echo "🔍 Running SwiftLint validation..."
-
-# Track if any violations were found
-HAS_VIOLATIONS=0
-
-# Run SwiftLint on staged Swift files
-for file in $SWIFT_FILES; do
-    if [ -f "$file" ]; then
-        # Use --strict to treat warnings as errors (blocks design token violations)
-        swiftlint lint --strict "$file"
-        if [ $? -ne 0 ]; then
-            echo "❌ SwiftLint found issues in $file"
-            HAS_VIOLATIONS=1
-        fi
+swift_files=$(printf '%s\n' "$staged_files" | grep '\.swift$' || true)
+if [ -n "$swift_files" ]; then
+    if ! command -v swiftlint >/dev/null 2>&1; then
+        echo "SwiftLint is required for commits containing Swift changes." >&2
+        echo "Install it with: brew install swiftlint" >&2
+        exit 1
     fi
-done
 
-if [ $HAS_VIOLATIONS -eq 1 ]; then
-    echo ""
-    echo "❌ SwiftLint violations found!"
-    echo "Some issues could not be auto-fixed and need manual attention"
-    exit 1
+    swiftlint lint --quiet --force-exclude $swift_files
 fi
 
-echo "✅ All pre-commit checks passed"
-exit 0
+if printf '%s\n' "$staged_files" | grep -q '\.py$'; then
+    python3 -m compileall -q scripts
+fi

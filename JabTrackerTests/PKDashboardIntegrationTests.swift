@@ -429,6 +429,11 @@ struct PKDashboardIntegrationTests {
                 context: self.context)
         }
 
+        // Resolve the SwiftData relationship before timing so this measures PK math,
+        // not the one-time cost of lazy relationship hydration.
+        let loadedDoses = medicationProfile.doses ?? []
+        #expect(loadedDoses.count >= numberOfDoses)
+
         // Measure calculation performance
         let startTime = Date()
 

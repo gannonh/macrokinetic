@@ -249,7 +249,7 @@ jobs:
           test -d /Applications/Xcode_26.5.app/Contents/Developer || { ls -d /Applications/Xcode*.app; exit 1; }
           sudo xcode-select -s /Applications/Xcode_26.5.app/Contents/Developer
           xcodebuild -version
-          xcrun simctl list runtimes | grep -q 'iOS 26' || { xcrun simctl list runtimes; exit 1; }
+          xcrun simctl list runtimes | grep -Fq 'iOS 26.5' || { xcrun simctl list runtimes; exit 1; }
       - name: Generate project and install exact database
         run: |
           command -v xcodegen >/dev/null || brew install xcodegen
@@ -267,11 +267,9 @@ jobs:
           APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
         run: scripts/release/signing-preflight.sh
       - name: Run the complete unit-test suite
-        run: |
-          xcodebuild test -project JabTracker.xcodeproj -scheme JabTracker \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
-            -only-testing:JabTrackerTests -resultBundlePath "$RUNNER_TEMP/unit-tests.xcresult" | tee "$RUNNER_TEMP/unit-tests.log"
-          grep -q 'LocalFoodDatabaseTests' "$RUNNER_TEMP/unit-tests.log"
+        uses: ./.github/actions/run-unit-tests
+        with:
+          destination: platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5
       - name: Archive signed Release build
         run: |
           xcodebuild archive -project JabTracker.xcodeproj -scheme JabTracker \

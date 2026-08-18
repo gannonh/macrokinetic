@@ -30,9 +30,41 @@ struct LocalFoodResult {
 actor LocalFoodDatabase {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "LocalFoodDatabase")
 
+    /// Coordinates the UI-only failure hook across the two database connections used by
+    /// categorized search. The hook must fail exactly one search per app process.
+    private final class SearchFailureGate: @unchecked Sendable {
+        private let lock = NSLock()
+        private var isArmed: Bool
+
+        init(isArmed: Bool) {
+            self.isArmed = isArmed
+        }
+
+        func consume(query: String) -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+
+            let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard isArmed, normalizedQuery == "pizza" else {
+                return false
+            }
+            isArmed = false
+            return true
+        }
+    }
+
+    private static let sharedUITestFailureGate: SearchFailureGate? = {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard arguments.contains("--ui-testing"), arguments.contains("--food-search-fail-once") else {
+            return nil
+        }
+        return SearchFailureGate(isArmed: true)
+    }()
+
     private var database: OpaquePointer?
     private let databasePath: String
     private var hasOpened = false
+    private let uiTestFailureGate: SearchFailureGate?
 
     /// Whether the database is available for queries
     var isAvailable: Bool {
@@ -44,6 +76,8 @@ actor LocalFoodDatabase {
 
     /// Initialize with the bundled database
     init() {
+        self.uiTestFailureGate = Self.sharedUITestFailureGate
+
         // Find bundled database in app bundle
         if let bundlePath = Bundle.main.path(forResource: "usda_foods", ofType: "sqlite") {
             self.databasePath = bundlePath
@@ -56,6 +90,7 @@ actor LocalFoodDatabase {
 
     /// Initialize with a custom path (for testing)
     init(databasePath: String) {
+        self.uiTestFailureGate = nil
         self.databasePath = databasePath
         // Database opened lazily on first query
     }
@@ -107,6 +142,10 @@ actor LocalFoodDatabase {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             return []
+        }
+
+        if uiTestFailureGate?.consume(query: query) == true {
+            throw LocalFoodDatabaseError.queryFailed("Forced UI test search failure")
         }
 
         ensureDatabaseOpen()

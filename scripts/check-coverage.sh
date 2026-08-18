@@ -12,10 +12,10 @@ USE_EXISTING=false
 if [[ "$1" == "--use-existing" ]]; then
     USE_EXISTING=true
 fi
-# iPhone 17 Pro,OS=26.2
+# iPhone 17 Pro,OS=26.5
 RESULT_BUNDLE="${RESULT_BUNDLE:-.coverage/coverage.xcresult}"
 SCHEME="JabTracker"
-DESTINATION="platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2"
+DESTINATION="platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5"
 CONFIG_FILE="$(dirname "$0")/../coverage-config.json"
 
 if [ "$USE_EXISTING" = false ]; then
