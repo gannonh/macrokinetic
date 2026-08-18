@@ -90,6 +90,14 @@ runs:
             --format json | tee -a "$GITHUB_STEP_SUMMARY"
         fi
 
+    - name: Enforce StoreKit execution requirements
+      if: ${{ always() && inputs.lane == 'storekit' }}
+      shell: bash
+      run: |
+        python3 scripts/ci/check_storekit_results.py \
+          --xcresult "$RUNNER_TEMP/${{ inputs.result_name }}.xcresult" \
+          --log "$RUNNER_TEMP/${{ inputs.result_name }}.log"
+
     - name: Write lane manifest and timing
       if: always()
       shell: bash

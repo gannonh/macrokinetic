@@ -15,7 +15,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from ci import lanes  # noqa: E402
+from ci import check_storekit_results, lanes  # noqa: E402
 
 
 CI_YML = ROOT / ".github" / "workflows" / "ci.yml"
@@ -311,6 +311,69 @@ class ManifestCliTests(unittest.TestCase):
             payload = json.loads(output.read_text())
             self.assertEqual(payload["baseline"]["total_tests"], 3233)
             self.assertIn("tests", payload)
+
+
+class ScannerIsolationTests(unittest.TestCase):
+    def test_nested_helper_types_do_not_steal_the_enclosing_suite(self) -> None:
+        types = {
+            type_name
+            for type_name, _ in lanes.scan_swift_tests(
+                ROOT / "JabTrackerTests" / "TitrationErrorMessagesTests.swift"
+            )
+        }
+        self.assertIn("TitrationErrorMessagesTests", types)
+        self.assertNotIn("GenericError", types)
+
+        types = {
+            type_name
+            for type_name, _ in lanes.scan_swift_tests(
+                ROOT
+                / "JabTrackerTests"
+                / "Services"
+                / "ChartDataProcessorIntegrationTests.swift"
+            )
+        }
+        self.assertIn("ChartDataProcessorIntegrationTests", types)
+        self.assertNotIn("IntegrationTestData", types)
+
+
+class StoreKitResultGateTests(unittest.TestCase):
+    def test_action_enforces_storekit_execution_requirements(self) -> None:
+        action = (ROOT / ".github" / "actions" / "run-xcode-tests" / "action.yml").read_text()
+        self.assertIn("check_storekit_results.py", action)
+        self.assertIn("inputs.lane == 'storekit'", action)
+
+    def test_storekit_gate_rejects_skips_and_skinternal_errors(self) -> None:
+        self.assertIsNone(
+            check_storekit_results.evaluate_storekit_results(
+                {"totalTestCount": 17, "skippedTests": 0},
+                "Test case passed",
+            )
+        )
+        self.assertIn(
+            "executed 0",
+            check_storekit_results.evaluate_storekit_results(
+                {"totalTestCount": 0, "skippedTests": 0},
+                "",
+            )
+            or "",
+        )
+        self.assertIn(
+            "skipped",
+            check_storekit_results.evaluate_storekit_results(
+                {"totalTestCount": 17, "skippedTests": 1},
+                "",
+            )
+            or "",
+        )
+        self.assertIn(
+            "SKInternalErrorDomain",
+            check_storekit_results.evaluate_storekit_results(
+                {"totalTestCount": 17, "skippedTests": 0},
+                "Error Domain=SKInternalErrorDomain Code=3",
+            )
+            or "",
+        )
 
 
 if __name__ == "__main__":

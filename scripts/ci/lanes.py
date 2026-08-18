@@ -76,15 +76,25 @@ def assign_sources(root: Path) -> list[dict[str, str]]:
     return assignments
 
 
+def _is_test_type(name: str, line: str, pending_suite: bool) -> bool:
+    return pending_suite or "@Suite" in line or name.endswith("Tests")
+
+
 def scan_swift_tests(path: Path) -> list[tuple[str, str]]:
     current_type = path.stem
     found: list[tuple[str, str]] = []
     pending_test = False
+    pending_suite = False
     seen: set[tuple[str, str]] = set()
     for line in path.read_text().splitlines():
+        if "@Suite" in line:
+            pending_suite = True
         struct_match = STRUCT_RE.search(line)
         if struct_match:
-            current_type = struct_match.group(1)
+            name = struct_match.group(1)
+            if _is_test_type(name, line, pending_suite):
+                current_type = name
+            pending_suite = False
         if TEST_ATTR_RE.search(line):
             pending_test = True
         func_match = FUNC_RE.search(line)
