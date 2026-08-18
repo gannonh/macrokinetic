@@ -311,4 +311,9 @@ struct SwiftDataModelTests {
         #expect(dose.user?.id == user.id)
         #expect(user.doses?.contains { $0.id == dose.id } ?? false)
     }
+
+    @Test("Issue 354 deliberate integration failure proof")
+    func issue354DeliberateIntegrationFailure() {
+        #expect(Bool(false), "Deliberate integration failure for issue #354")
+    }
 }

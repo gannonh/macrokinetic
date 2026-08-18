@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 import SwiftUI
 import Testing
@@ -175,5 +176,13 @@ struct JabTrackerTests {
         }
 
         // Test passes if no crashes or memory issues occur during component creation
+    }
+
+    @Test("Issue 354 deliberate unit failure proof")
+    func issue354DeliberateUnitFailure() {
+        guard ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" else {
+            return
+        }
+        #expect(Bool(false), "Deliberate unit failure for issue #354")
     }
 }
