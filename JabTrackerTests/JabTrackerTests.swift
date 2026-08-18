@@ -180,8 +180,9 @@ struct JabTrackerTests {
 
     @Test("Issue 354 deliberate unit failure proof")
     func issue354DeliberateUnitFailure() {
-        // CI unit clones set this; local `./scripts/test.sh unit` does not.
-        guard ProcessInfo.processInfo.environment["SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH"] == "1" else {
+        // CI unit lane uses iOS 26.2; local pre-push uses 26.5.
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        guard version.majorVersion == 26, version.minorVersion == 2 else {
             return
         }
         #expect(Bool(false), "Deliberate unit failure for issue #354")
