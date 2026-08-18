@@ -22,10 +22,7 @@ struct DoseHistoryViewModelErrorTests {
     init() throws {
         // Create in-memory container for testing
         let schema = Schema([User.self, Dose.self, MedicationProfile.self, DoseTitration.self])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none)
+        let configuration = InMemoryTestStore.configuration(schema: schema)
         self.container = try ModelContainer(for: schema, configurations: [configuration])
         self.context = self.container.mainContext
         self.viewModel = DoseHistoryViewModel()

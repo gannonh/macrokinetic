@@ -1,0 +1,228 @@
+name: Full Validation
+
+# Required protected-workflow checks:
+#   Full Validation / Fast unit tests
+#   Full Validation / SwiftLint
+#   Full Validation / Python tooling
+#   Full Validation / Integration tests
+#   Full Validation / StoreKit tests
+#   Full Validation / Performance tests
+# Nightly schedule: 12:00 UTC (04:00 PT during PDT, 05:00 PT during PST).
+# TestFlight Release calls this workflow for the exact release commit before archive/export.
+# Every xcode lane uploads xcresult, log, manifest, and timing artifacts with if: always().
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      git-ref:
+        description: Commit SHA to validate
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-validation-${{ github.workflow }}-${{ github.ref }}-${{ inputs.git-ref || github.sha }}
+  cancel-in-progress: true
+
+env:
+  XCODE_APP: /Applications/Xcode_26.5.app
+  # iOS 26.5's xcodebuild StoreKit test environment returns SKInternalErrorDomain
+  # Code=3. Keep validation on the installed 26.2 runtime until that Apple regression is fixed.
+  IOS_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2
+  CHECKOUT_REF: ${{ inputs.git-ref || github.sha }}
+
+jobs:
+  unit:
+    name: Fast unit tests
+    runs-on: macos-26-xlarge
+    timeout-minutes: 10
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run fast unit tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: unit
+          result_name: unit-tests
+          scheme: JabTrackerUnitTests
+          parallel_testing: "YES"
+          max_workers: "4"
+      - name: Upload unit test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: unit-tests
+          artifact_name: full-validation-unit-tests-${{ github.run_id }}
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-26
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Install SwiftLint
+        run: |
+          set -euo pipefail
+          command -v swiftlint >/dev/null 2>&1 || brew install swiftlint
+          swiftlint version
+      - name: Run SwiftLint
+        run: swiftlint lint
+
+  python:
+    name: Python tooling
+    runs-on: macos-26
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Install XcodeGen
+        run: |
+          set -euo pipefail
+          command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodegen --version
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run Python tooling tests
+        run: |
+          python3 -m compileall -q scripts
+          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Generate source test manifest
+        if: always()
+        run: |
+          python3 scripts/generate-test-manifest.py \
+            --validate \
+            --output "$RUNNER_TEMP/source-test-manifest.json"
+      - name: Verify generated project is committed
+        run: |
+          set -euo pipefail
+          xcodegen generate
+          git diff --check
+          git diff --exit-code -- JabTracker.xcodeproj
+      - name: Upload source manifest
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: full-validation-source-test-manifest-${{ github.run_id }}
+          path: ${{ runner.temp }}/source-test-manifest.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  integration:
+    name: Integration tests
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run integration tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: integration
+          result_name: integration-tests
+          scheme: JabTrackerIntegrationTests
+          parallel_testing: "NO"
+      - name: Upload integration test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: integration-tests
+          artifact_name: full-validation-integration-tests-${{ github.run_id }}
+
+  storekit:
+    name: StoreKit tests
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run StoreKit tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: storekit
+          result_name: storekit-tests
+          scheme: JabTrackerIntegrationTests
+          parallel_testing: "NO"
+      - name: Upload StoreKit test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: storekit-tests
+          artifact_name: full-validation-storekit-tests-${{ github.run_id }}
+
+  performance:
+    name: Performance tests
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run performance tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: performance
+          result_name: performance-tests
+          scheme: JabTrackerIntegrationTests
+          parallel_testing: "NO"
+      - name: Upload performance test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: performance-tests
+          artifact_name: full-validation-performance-tests-${{ github.run_id }}

@@ -1,0 +1,128 @@
+name: Run Xcode test lane
+description: Run one JabTracker test lane and write its xcresult, log, and source manifest.
+
+inputs:
+  destination:
+    description: xcodebuild destination
+    required: true
+  lane:
+    description: unit, integration, storekit, or performance
+    required: true
+  result_name:
+    description: Artifact basename written under RUNNER_TEMP
+    required: true
+  scheme:
+    description: Xcode scheme that contains only the targets this lane should build
+    required: false
+    default: JabTracker
+  parallel_testing:
+    description: YES or NO
+    required: false
+    default: "NO"
+  max_workers:
+    description: Maximum parallel test workers when parallel testing is enabled
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Run lane tests
+      shell: bash
+      run: |
+        set -euo pipefail
+        ARGS_FILE="$RUNNER_TEMP/${{ inputs.lane }}-xcodebuild-filters.txt"
+        python3 scripts/generate-test-manifest.py --print-xcodebuild-args "${{ inputs.lane }}" > "$ARGS_FILE"
+        FILTER_ARGS=()
+        while IFS= read -r arg; do
+          [ -n "$arg" ] || continue
+          FILTER_ARGS+=("$arg")
+        done < "$ARGS_FILE"
+        if [ ${#FILTER_ARGS[@]} -eq 0 ]; then
+          echo "No xcodebuild filters generated for lane ${{ inputs.lane }}" >&2
+          exit 1
+        fi
+        if [ "${{ inputs.parallel_testing }}" = "YES" ]; then
+          PARALLEL_ARGS=(-parallel-testing-enabled YES)
+          if [ -n "${{ inputs.max_workers }}" ]; then
+            PARALLEL_ARGS+=(-maximum-parallel-testing-workers "${{ inputs.max_workers }}")
+          fi
+          # Keep xcodebuild clones (max 4 workers) but run Swift Testing serially
+          # inside each clone. In-process Swift Testing plus four clones was
+          # trapping hundreds of tests on macos-26-xlarge.
+          export SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
+          export TEST_RUNNER_SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
+          export SIMCTL_CHILD_SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
+        else
+          PARALLEL_ARGS=(-parallel-testing-enabled NO)
+        fi
+
+        set -o pipefail
+        # Explicit modules and the compiler index store dominate clean Intel
+        # simulator builds. Disable them for CI lanes so compile can finish
+        # inside the 10-minute unit timeout and the 5-minute SLO.
+        xcodebuild test \
+          -project JabTracker.xcodeproj \
+          -scheme "${{ inputs.scheme }}" \
+          -configuration Debug \
+          -destination "${{ inputs.destination }}" \
+          "${FILTER_ARGS[@]}" \
+          -resultBundlePath "$RUNNER_TEMP/${{ inputs.result_name }}.xcresult" \
+          -derivedDataPath "$RUNNER_TEMP/DerivedData-${{ inputs.lane }}" \
+          -disable-concurrent-destination-testing \
+          "${PARALLEL_ARGS[@]}" \
+          CODE_SIGNING_ALLOWED=NO \
+          COMPILER_INDEX_STORE_ENABLE=NO \
+          SWIFT_ENABLE_EXPLICIT_MODULES=NO \
+          COMPRESS_PNG_FILES=NO \
+          SWIFT_EMIT_LOC_STRINGS=NO \
+          ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS=NO \
+          ENABLE_PREVIEWS=NO \
+          > "$RUNNER_TEMP/${{ inputs.result_name }}.log" 2>&1
+
+    - name: Summarize test results
+      if: always()
+      shell: bash
+      run: |
+        if [ -d "$RUNNER_TEMP/${{ inputs.result_name }}.xcresult" ]; then
+          xcrun xcresulttool get test-results summary \
+            --path "$RUNNER_TEMP/${{ inputs.result_name }}.xcresult" \
+            --format json | tee -a "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Enforce StoreKit execution requirements
+      if: ${{ always() && inputs.lane == 'storekit' }}
+      shell: bash
+      run: |
+        python3 scripts/ci/check_storekit_results.py \
+          --xcresult "$RUNNER_TEMP/${{ inputs.result_name }}.xcresult" \
+          --log "$RUNNER_TEMP/${{ inputs.result_name }}.log"
+
+    - name: Write lane manifest and timing
+      if: always()
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 scripts/generate-test-manifest.py \
+          --output "$RUNNER_TEMP/${{ inputs.result_name }}-manifest.json"
+        python3 - <<'PY'
+        import json
+        import os
+        import time
+        from pathlib import Path
+
+        start = int(os.environ.get("JOB_START_EPOCH", "0"))
+        end = int(time.time())
+        payload = {
+            "lane": os.environ["LANE_NAME"],
+            "result_name": os.environ["RESULT_NAME"],
+            "start_epoch": start,
+            "end_epoch": end,
+            "duration_seconds": end - start if start else None,
+        }
+        Path(os.environ["TIMING_PATH"]).write_text(json.dumps(payload, indent=2) + "\n")
+        PY
+      env:
+        LANE_NAME: ${{ inputs.lane }}
+        RESULT_NAME: ${{ inputs.result_name }}
+        TIMING_PATH: ${{ runner.temp }}/${{ inputs.result_name }}-timing.json

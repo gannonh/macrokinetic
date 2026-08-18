@@ -1,5 +1,12 @@
 name: CI
 
+# Required PR checks: CI / Fast unit tests, CI / SwiftLint, CI / Python tooling.
+# Advisory PR checks (visible failures, not branch-protection required):
+#   CI / Integration tests, CI / StoreKit tests, CI / Performance tests.
+# Every xcode lane uploads xcresult, log, manifest, and timing artifacts with if: always().
+# Apple Silicon macos-26-xlarge is required for the 5-minute unit SLO; a 4-core
+# macos-26 clean compile of the app plus unit bundle exceeds the 10-minute timeout.
+
 on:
   pull_request:
     branches: [main, develop]
@@ -19,83 +26,177 @@ env:
   IOS_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2
 
 jobs:
-  pr-checks:
-    name: PR checks
-    runs-on: macos-26-intel
-    timeout-minutes: 45
+  unit:
+    name: Fast unit tests
+    runs-on: macos-26-xlarge
+    timeout-minutes: 10
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run fast unit tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: unit
+          result_name: unit-tests
+          scheme: JabTrackerUnitTests
+          parallel_testing: "YES"
+          max_workers: "4"
+      - name: Upload unit test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: unit-tests
+          artifact_name: unit-tests-${{ github.run_id }}
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-26
+    timeout-minutes: 5
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Select Xcode 26.5
+      - name: Install SwiftLint
         run: |
           set -euo pipefail
-          test -d "$XCODE_APP/Contents/Developer"
-          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
-          xcodebuild -version
+          command -v swiftlint >/dev/null 2>&1 || brew install swiftlint
+          swiftlint version
+      - name: Run SwiftLint
+        run: swiftlint lint
 
-      - name: Install quality tools
+  python:
+    name: Python tooling
+    runs-on: macos-26
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install XcodeGen
         run: |
           set -euo pipefail
           command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
-          command -v swiftlint >/dev/null 2>&1 || brew install swiftlint
           xcodegen --version
-          swiftlint version
-
       - name: Prepare deterministic CI food database
         run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
-
-      - name: Prepare iOS 26.2 simulator
+      - name: Run Python tooling tests
         run: |
-          set -euo pipefail
-          runtime_id=$(xcrun simctl list runtimes --json | jq -r '
-            first(.runtimes[]
-              | select(.identifier == "com.apple.CoreSimulator.SimRuntime.iOS-26-2" and .isAvailable == true)
-              | .identifier) // empty
-          ')
-          test -n "$runtime_id"
-
-          device_id=$(xcrun simctl list devices --json | jq -r --arg runtime_id "$runtime_id" '
-            first(.devices[$runtime_id][]?
-              | select(.name == "iPhone 17 Pro")
-              | .udid) // empty
-          ')
-          if [ -z "$device_id" ]; then
-            device_id=$(xcrun simctl create "iPhone 17 Pro" \
-              com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro \
-              "$runtime_id")
-          fi
-
-          xcrun simctl boot "$device_id" 2>/dev/null || true
-          xcrun simctl list devices available
-
+          python3 -m compileall -q scripts
+          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Generate source test manifest
+        if: always()
+        run: |
+          python3 scripts/generate-test-manifest.py \
+            --validate \
+            --output "$RUNNER_TEMP/source-test-manifest.json"
       - name: Verify generated project is committed
         run: |
           set -euo pipefail
           xcodegen generate
           git diff --check
           git diff --exit-code -- JabTracker.xcodeproj
-
-      - name: Run SwiftLint
-        run: swiftlint lint
-
-      - name: Run Python tooling tests
-        run: |
-          python3 -m compileall -q scripts
-          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
-
-      - name: Run unit tests
-        uses: ./.github/actions/run-unit-tests
-        with:
-          destination: ${{ env.IOS_DESTINATION }}
-
-      - name: Upload failed unit test results
-        if: failure()
+      - name: Upload source manifest
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: unit-tests-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/unit-tests.xcresult
-            ${{ runner.temp }}/unit-tests.log
+          name: source-test-manifest-${{ github.run_id }}
+          path: ${{ runner.temp }}/source-test-manifest.json
           if-no-files-found: warn
           retention-days: 7
+
+  integration:
+    name: Integration tests
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run integration tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: integration
+          result_name: integration-tests
+          scheme: JabTrackerIntegrationTests
+          parallel_testing: "NO"
+      - name: Upload integration test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: integration-tests
+          artifact_name: integration-tests-${{ github.run_id }}
+
+  storekit:
+    name: StoreKit tests
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run StoreKit tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: storekit
+          result_name: storekit-tests
+          scheme: JabTrackerIntegrationTests
+          parallel_testing: "NO"
+      - name: Upload StoreKit test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: storekit-tests
+          artifact_name: storekit-tests-${{ github.run_id }}
+
+  performance:
+    name: Performance tests
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - name: Record job start
+        run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Xcode
+        uses: ./.github/actions/setup-xcode
+        with:
+          boot_simulator: "true"
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Run performance tests
+        uses: ./.github/actions/run-xcode-tests
+        with:
+          destination: ${{ env.IOS_DESTINATION }}
+          lane: performance
+          result_name: performance-tests
+          scheme: JabTrackerIntegrationTests
+          parallel_testing: "NO"
+      - name: Upload performance test artifacts
+        if: always()
+        uses: ./.github/actions/upload-test-artifacts
+        with:
+          result_name: performance-tests
+          artifact_name: performance-tests-${{ github.run_id }}

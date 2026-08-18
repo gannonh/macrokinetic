@@ -23,17 +23,7 @@ struct DoseHistoryViewModelUnitTests {
             DoseTitration.self,
         ])
 
-        // Check if we're in test environment (should always be true here)
-        let isTestEnvironment =
-            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
-
-        // Disable CloudKit for testing - same logic as DataController
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: isTestEnvironment ? .none : .none  // Always none for tests
-        )
+        let modelConfiguration = InMemoryTestStore.configuration(schema: schema)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

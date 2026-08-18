@@ -14,7 +14,7 @@ final class NutritionSummaryViewModelTests: XCTestCase {
     var container: ModelContainer!
 
     override func setUp() async throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         container = try ModelContainer(for: User.self, configurations: config)
 
         user = User()

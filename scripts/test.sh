@@ -171,7 +171,7 @@ build_test_target() {
         case "$test_type" in
             "unit")
                 # Run specific unit test suite (Swift Testing supports suite-level targeting)
-                echo "-only-testing:JabTrackerTests/$test_file"
+                echo "-only-testing:JabTrackerUnitTests/$test_file"
                 ;;
             "ui")
                 # Run specific UI test file
@@ -181,7 +181,7 @@ build_test_target() {
     else
         case "$test_type" in
             "unit")
-                echo "-only-testing:JabTrackerTests"
+                echo "-only-testing:JabTrackerUnitTests"
                 ;;
             "ui")
                 # Exclude manual tests from automated runs
@@ -196,6 +196,10 @@ build_test_target() {
 }
 
 TEST_TARGET=$(build_test_target "$TEST_TYPE" "$TEST_FILE")
+SCHEME="JabTracker"
+if [ "$TEST_TYPE" = "unit" ]; then
+    SCHEME="JabTrackerUnitTests"
+fi
 
 # Build coverage and result bundle options
 COVERAGE_OPTIONS=""
@@ -250,13 +254,13 @@ run_tests() {
 
         if [ "$LOG_ONLY" = true ]; then
             # Log only - capture raw output
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 > "$RAW_LOG_FILE"
+            xcodebuild test -scheme "$SCHEME" -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 > "$RAW_LOG_FILE"
             # Process with xcbeautify for the main log file
             cat "$RAW_LOG_FILE" | xcbeautify > "$LOG_FILE" 2>&1
         else
             # Log and display - tee raw output to file while piping to xcbeautify for display
             # This preserves real-time output while capturing everything
-            xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 | \
+            xcodebuild test -scheme "$SCHEME" -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 | \
                 tee "$RAW_LOG_FILE" | \
                 xcbeautify --renderer terminal
             # Also save beautified version for easier reading
@@ -265,7 +269,7 @@ run_tests() {
         TEST_EXIT_CODE=${PIPESTATUS[0]}
     else
         # No logging - use xcbeautify with terminal renderer for real-time output
-        xcodebuild test -scheme JabTracker -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 | \
+        xcodebuild test -scheme "$SCHEME" -destination "$SIMULATOR" $TEST_TARGET $COVERAGE_OPTIONS $RESULT_BUNDLE_PATH $PARALLEL_OPTIONS 2>&1 | \
             xcbeautify --renderer terminal
         TEST_EXIT_CODE=${PIPESTATUS[0]}
     fi

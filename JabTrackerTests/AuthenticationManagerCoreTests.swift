@@ -76,7 +76,7 @@ struct AuthenticationErrorTests {
 // MARK: - AuthenticationManager Core Tests
 
 @MainActor
-@Suite("Authentication Manager Core Tests")
+@Suite("Authentication Manager Core Tests", .serialized)
 struct AuthenticationManagerCoreTests {
     @Test("AuthenticationManager initialization")
     @MainActor

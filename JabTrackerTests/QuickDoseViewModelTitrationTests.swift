@@ -17,7 +17,7 @@ struct QuickDoseViewModelTitrationTests {
     @MainActor
     func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([User.self, MedicationProfile.self, Dose.self, DoseTitration.self])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration(schema: schema)
         do {
             let container = try ModelContainer(for: schema, configurations: [config])
             return (container.mainContext, container)

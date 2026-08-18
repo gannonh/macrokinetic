@@ -14,7 +14,7 @@ if [[ "$1" == "--use-existing" ]]; then
 fi
 # iPhone 17 Pro,OS=26.5
 RESULT_BUNDLE="${RESULT_BUNDLE:-.coverage/coverage.xcresult}"
-SCHEME="JabTracker"
+SCHEME="JabTrackerUnitTests"
 DESTINATION="platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5"
 CONFIG_FILE="$(dirname "$0")/../coverage-config.json"
 
@@ -31,7 +31,7 @@ if [ "$USE_EXISTING" = false ]; then
     xcodebuild test -scheme "$SCHEME" -destination "$DESTINATION" \
         -enableCodeCoverage YES \
         -resultBundlePath "$RESULT_BUNDLE" \
-        -only-testing:JabTrackerTests | xcbeautify
+        -only-testing:JabTrackerUnitTests | xcbeautify
 else
     echo "📊 Using existing coverage data from $RESULT_BUNDLE"
 fi

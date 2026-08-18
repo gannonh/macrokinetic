@@ -16,7 +16,7 @@ struct DoseAnalyticsTests {
 
     @MainActor
     func createTestModelContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         return try ModelContainer(
             for: Dose.self, User.self, MedicationProfile.self, configurations: config)
     }

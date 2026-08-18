@@ -24,10 +24,7 @@ private func createTestContainer() throws -> ModelContainer {
         Food.self,
         WeightEntry.self,
     ])
-    let configuration = ModelConfiguration(
-        isStoredInMemoryOnly: true,
-        cloudKitDatabase: .none
-    )
+    let configuration = InMemoryTestStore.configuration()
     return try ModelContainer(for: schema, configurations: configuration)
 }
 

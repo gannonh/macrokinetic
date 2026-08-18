@@ -20,7 +20,7 @@ final class CalorieAdjustmentServiceTests: XCTestCase {
 
     override func setUp() async throws {
         // Setup SwiftData container
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         container = try ModelContainer(for: User.self, configurations: config)
         user = User()
         container.mainContext.insert(user)

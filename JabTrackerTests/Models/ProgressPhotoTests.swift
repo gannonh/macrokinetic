@@ -19,11 +19,7 @@ struct ProgressPhotoTests {
 
     private func createTestContainer() throws -> ModelContainer {
         let schema = Schema([ProgressPhoto.self])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let configuration = InMemoryTestStore.configuration(schema: schema)
         return try ModelContainer(for: schema, configurations: [configuration])
     }
 

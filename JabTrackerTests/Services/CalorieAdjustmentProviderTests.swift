@@ -19,7 +19,7 @@ final class CalorieAdjustmentProviderTests: XCTestCase {
     var mockNutritionDataSource: MockNutritionDataSource!
 
     override func setUp() async throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         container = try ModelContainer(for: User.self, FoodEntry.self, configurations: config)
         context = container.mainContext
         user = User()

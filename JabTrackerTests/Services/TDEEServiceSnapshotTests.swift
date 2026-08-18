@@ -20,10 +20,7 @@ private struct TDEEServiceSnapshotTestFixture {
     let service: TDEEService
 
     init() throws {
-        let configuration = ModelConfiguration(
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let configuration = InMemoryTestStore.configuration()
         container = try ModelContainer(
             for: User.self, NutritionGoal.self, NutritionProgram.self,
             WeightEntry.self, FoodEntry.self, TDEESnapshot.self,

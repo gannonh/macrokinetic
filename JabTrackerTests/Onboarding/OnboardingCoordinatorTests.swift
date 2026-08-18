@@ -4,6 +4,7 @@ import Testing
 @testable import JabTracker
 
 @MainActor
+@Suite("OnboardingCoordinator Tests", .serialized)
 final class OnboardingCoordinatorTests {
 
     private func createTestContext() -> DataController {

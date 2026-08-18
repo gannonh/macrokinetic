@@ -15,7 +15,7 @@ struct DoseServiceTests {
     // MARK: - Test Setup
 
     private func createTestContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         return try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self, configurations: config)
     }

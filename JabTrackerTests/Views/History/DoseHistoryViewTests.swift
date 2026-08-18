@@ -16,7 +16,7 @@ struct DoseHistoryViewTests {
     // MARK: - Test Infrastructure
 
     private func createTestModelContext() throws -> ModelContext {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         let container = try ModelContainer(
             for: User.self, Dose.self, MedicationProfile.self, configurations: config)
         return ModelContext(container)

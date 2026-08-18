@@ -24,10 +24,7 @@ struct DoseSearchServiceUnitTests {
         ])
 
         // Disable CloudKit for testing - same logic as DataController
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none)
+        let modelConfiguration = InMemoryTestStore.configuration(schema: schema)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

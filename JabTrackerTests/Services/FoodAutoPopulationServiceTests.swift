@@ -13,7 +13,7 @@ import Testing
 
 /// Tests for FoodAutoPopulationService
 /// Verifies population logic, duplicate prevention, and schedule date range handling
-@Suite("FoodAutoPopulationService Tests")
+@Suite("FoodAutoPopulationService Tests", .serialized)
 @MainActor
 struct FoodAutoPopulationServiceTests {
 

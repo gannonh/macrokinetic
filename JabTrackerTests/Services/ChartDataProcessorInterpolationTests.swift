@@ -18,7 +18,7 @@ struct ChartDataProcessorInterpolationTests {
 
     /// Create test container with in-memory storage
     private func createTestContainer() -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         do {
             return try ModelContainer(
                 for: User.self, Dose.self, MedicationProfile.self, configurations: config)
