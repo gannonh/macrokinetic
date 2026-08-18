@@ -42,7 +42,7 @@ env:
 jobs:
   unit:
     name: Fast unit tests
-    runs-on: macos-26
+    runs-on: macos-26-xlarge
     timeout-minutes: 10
     steps:
       - name: Record job start
@@ -55,8 +55,16 @@ jobs:
         uses: ./.github/actions/setup-xcode
         with:
           boot_simulator: "true"
-      - name: Prepare deterministic CI food database
-        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Prepare app resource stub
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          path = Path("JabTracker/Resources/usda_foods.sqlite")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          sqlite3.connect(path).close()
+          PY
       - name: Restore unit DerivedData cache
         id: unit-deriveddata
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3

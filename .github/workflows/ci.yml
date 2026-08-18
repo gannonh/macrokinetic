@@ -4,8 +4,8 @@ name: CI
 # Advisory PR checks (visible failures, not branch-protection required):
 #   CI / Integration tests, CI / StoreKit tests, CI / Performance tests.
 # Every xcode lane uploads xcresult, log, manifest, and timing artifacts with if: always().
-# Apple Silicon (macos-26) is required for the 5-minute unit SLO; Intel clean compiles
-# of the app target exceed the 10-minute job timeout.
+# Apple Silicon macos-26-xlarge is required for the 5-minute unit SLO; a 4-core
+# macos-26 clean compile of the app plus unit bundle exceeds the 10-minute timeout.
 
 on:
   pull_request:
@@ -28,7 +28,7 @@ env:
 jobs:
   unit:
     name: Fast unit tests
-    runs-on: macos-26
+    runs-on: macos-26-xlarge
     timeout-minutes: 10
     steps:
       - name: Record job start
@@ -39,8 +39,16 @@ jobs:
         uses: ./.github/actions/setup-xcode
         with:
           boot_simulator: "true"
-      - name: Prepare deterministic CI food database
-        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Prepare app resource stub
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          path = Path("JabTracker/Resources/usda_foods.sqlite")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          sqlite3.connect(path).close()
+          PY
       - name: Restore unit DerivedData cache
         id: unit-deriveddata
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3

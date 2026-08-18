@@ -108,6 +108,7 @@ class PRWorkflowContractTests(unittest.TestCase):
         self.assertIn("COMPRESS_PNG_FILES=NO", action)
         self.assertNotIn("macos-26-intel", self.text)
         self.assertIn("runs-on: macos-26\n", self.text)
+        self.assertIn("runs-on: macos-26-xlarge\n", self.text)
         self.assertIn("actions/cache/restore", self.text)
         self.assertIn("actions/cache/save", self.text)
         self.assertEqual(
