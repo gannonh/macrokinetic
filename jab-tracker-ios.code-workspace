@@ -4,19 +4,8 @@
 			"path": "."
 		},
 		{
-			"path": "../../.claude"
-		},
-		{
-			"path": "../../.gemini"
-		},
-		{
-			"path": "../../Library/Application Support/Code/User"
+			"path": "../../herdr-worktrees/jab-tracker-ios"
 		}
 	],
-	"settings": {
-		"sweetpad.testing.configuration": "Debug",
-		"chat.tools.terminal.autoApprove": {
-			"gh": true
-		}
-	}
+	"settings": {}
 }
