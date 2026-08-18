@@ -81,6 +81,8 @@ jobs:
           set -euo pipefail
           command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
           xcodegen --version
+      - name: Prepare deterministic CI food database
+        run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
       - name: Run Python tooling tests
         run: |
           python3 -m compileall -q scripts

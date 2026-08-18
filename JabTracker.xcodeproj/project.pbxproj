@@ -467,6 +467,7 @@
 		C2BFD42C0E357432B6FD0176 /* MedicationProfileViewModelScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61639608F79641ACAD7953 /* MedicationProfileViewModelScheduleTests.swift */; };
 		C3252EF5536143F82DE71261 /* WeeklyNutritionHeroWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DF9CF387DB7C0A148A94B8 /* WeeklyNutritionHeroWidget.swift */; };
 		C37C33130408C521AE68DCBF /* CalendarAccessibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7C3B0C007CFE71B5FE56C1 /* CalendarAccessibilityUITests.swift */; };
+		C395CC75D4D807116357B138 /* usda_foods.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */; };
 		C43AA3E491B0B0898DBCBF91 /* MealSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D73FD66FDC6992764A72E8 /* MealSectionTests.swift */; };
 		C4E16659592C94BA10C17384 /* TestUtilities+Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23133480CAEB59ED1B12CA8 /* TestUtilities+Schedule.swift */; };
 		C546D818B928824F86AFB78E /* DataControllerCloudKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */; };
@@ -690,6 +691,7 @@
 		0D0B4625956A1B270B09DCC1 /* DayStatusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStatusServiceTests.swift; sourceTree = "<group>"; };
 		0E66064080F4AC5CCFAECF96 /* NutritionSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionSummaryCard.swift; sourceTree = "<group>"; };
 		103BC0C5A928D9F16AE014D8 /* PricingCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingCalculator.swift; sourceTree = "<group>"; };
+		104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = usda_foods.sqlite; sourceTree = "<group>"; };
 		106421FCA575BB46D42EEA98 /* ChartControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartControlsView.swift; sourceTree = "<group>"; };
 		108AB2061EDFE0F41AED28A0 /* EnergyBalanceHeroViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnergyBalanceHeroViewModel.swift; sourceTree = "<group>"; };
 		12278A5A98645DDEF61B77A5 /* LegacyOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyOnboardingView.swift; sourceTree = "<group>"; };
@@ -1707,6 +1709,14 @@
 			path = Strategy;
 			sourceTree = "<group>";
 		};
+		7CF8F87FC3E0C1ADFC478A4B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		7EDF9808D9D9424A7F56EEEA /* JabTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -2390,6 +2400,7 @@
 				5BDA577888EEAAF4894C22FE /* Extensions */,
 				92297A72E18EC457BD9DDB0C /* Models */,
 				D403E44CE1798EB538E62166 /* Onboarding */,
+				7CF8F87FC3E0C1ADFC478A4B /* Resources */,
 				5EE7526B96AE972EC9462251 /* Services */,
 				7A2A4E3AC1B44137B797A7E3 /* Utilities */,
 				D14BE4DAB49C0084D3B7C2B3 /* Utils */,
@@ -2582,6 +2593,7 @@
 				4F1FAEDED60404CF678ED8EA /* AppIcon.icon in Resources */,
 				666E70338436B5345B89C04B /* Assets.xcassets in Resources */,
 				B75439369EF479C6C7679BEF /* JabTrackerStoreKit.storekit in Resources */,
+				C395CC75D4D807116357B138 /* usda_foods.sqlite in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
