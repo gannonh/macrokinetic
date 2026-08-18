@@ -23,6 +23,7 @@
     "DataControllerTestDataTests.swift",
     "DataControllerTests.swift",
     "Integration/CalendarPerformanceTests.swift",
+    "Integration/PKDashboardPerformanceTests.swift",
     "NotificationServicePersistenceTests.swift",
     "PKDashboardIntegrationTests.swift",
     "PersistenceTests.swift",
@@ -46,7 +47,7 @@
     "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformance",
     "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformanceMinimal",
     "JabTrackerIntegrationTests/AnalyticsServiceIntegrationTests/performanceWithLargeDoseHistory",
-    "JabTrackerIntegrationTests/PKDashboardIntegrationTests/dashboardPerformanceWithLargeDoseHistory",
+    "JabTrackerIntegrationTests/PKDashboardPerformanceTests",
     "JabTrackerIntegrationTests/LocalFoodDatabaseTests/testSearchPerformance"
   ],
   "out_of_scope": [

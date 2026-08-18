@@ -451,6 +451,7 @@
 		BA286C2AE5A41793D033003D /* MedicationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6519CA320978C5B82231B1E1 /* MedicationManagerTests.swift */; };
 		BA31440BC731D9DCE897FAE2 /* DoseCalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB1FE9FBC4A3EEF509C518A /* DoseCalendarViewModel.swift */; };
 		BB0B0BE3932C0675496AC8AD /* SubscriptionManager+Testing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797DA89486FFE995221D6609 /* SubscriptionManager+Testing.swift */; };
+		BB540A99617C4C248D9425C1 /* PKDashboardPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0190DFFFC9FE6CAD7701D4 /* PKDashboardPerformanceTests.swift */; };
 		BBD3CB2F0EABE392C54C3BC9 /* QuickDoseEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F473B4ACD616736B51CFBE /* QuickDoseEntryTests.swift */; };
 		BC621B8876DE5FB5020704D9 /* CalorieExpenditureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E4E367655C34142B5E6D31 /* CalorieExpenditureUITests.swift */; };
 		BCE62F0B9D51EB5312415B75 /* QuickAddViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB53EFB89CCBCA00CC0EA3FD /* QuickAddViewModelTests.swift */; };
@@ -689,6 +690,7 @@
 		09AF345202BFA0B973607A7A /* USPShowcaseStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USPShowcaseStepView.swift; sourceTree = "<group>"; };
 		09C0B767E6E0E137E241FD1F /* ProgramConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramConfigurationTests.swift; sourceTree = "<group>"; };
 		0A86006400D59F3647A20D3C /* JabTrackerUnitTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JabTrackerUnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B0190DFFFC9FE6CAD7701D4 /* PKDashboardPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PKDashboardPerformanceTests.swift; sourceTree = "<group>"; };
 		0BB336F084EFB16010D7C347 /* NotificationServiceActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceActionTests.swift; sourceTree = "<group>"; };
 		0D0B4625956A1B270B09DCC1 /* DayStatusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStatusServiceTests.swift; sourceTree = "<group>"; };
 		0E66064080F4AC5CCFAECF96 /* NutritionSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionSummaryCard.swift; sourceTree = "<group>"; };
@@ -1292,6 +1294,7 @@
 			isa = PBXGroup;
 			children = (
 				3387170739F2F95E68946A3D /* CalendarPerformanceTests.swift */,
+				0B0190DFFFC9FE6CAD7701D4 /* PKDashboardPerformanceTests.swift */,
 			);
 			path = Integration;
 			sourceTree = "<group>";
@@ -3038,6 +3041,7 @@
 				23EFBEC8AE09243893958701 /* MockNotificationCenter.swift in Sources */,
 				CDA6539946FDFB5A59AB26D5 /* NotificationServicePersistenceTests.swift in Sources */,
 				20C5B41D113EAA94BE598698 /* PKDashboardIntegrationTests.swift in Sources */,
+				BB540A99617C4C248D9425C1 /* PKDashboardPerformanceTests.swift in Sources */,
 				DEDFF10DA7F8AA007384CE68 /* PersistenceTests.swift in Sources */,
 				5211EEE98E66BC13EBFD3200 /* ScheduleServiceSplitDoseIntegrationTests.swift in Sources */,
 				8388C3B6CCF8915B93565B83 /* SettingsViewNotificationIntegrationTests.swift in Sources */,

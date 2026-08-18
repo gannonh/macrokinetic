@@ -107,6 +107,9 @@ class PRWorkflowContractTests(unittest.TestCase):
         self.assertIn("maximum-parallel-testing-workers", action)
         self.assertIn("SWIFT_ENABLE_EXPLICIT_MODULES=NO", action)
         self.assertIn("COMPILER_INDEX_STORE_ENABLE=NO", action)
+        self.assertIn("COMPRESS_PNG_FILES=NO", action)
+        self.assertNotIn("macos-26-intel", self.text)
+        self.assertIn("runs-on: macos-26\n", self.text)
         self.assertEqual(
             lanes.xcodebuild_args_for_lane(ROOT, "unit"),
             ["-only-testing:JabTrackerUnitTests"],
@@ -133,6 +136,7 @@ class FullValidationWorkflowTests(unittest.TestCase):
 
     def test_full_validation_jobs_match_the_lane_matrix(self) -> None:
         self.assertEqual(job_display_names(self.text), set(ALL_PR_JOBS))
+        self.assertNotIn("macos-26-intel", self.text)
         by_name = {str(job["name"]): job for job in self.jobs.values()}
         for name, timeout in ALL_PR_JOBS.items():
             self.assertEqual(by_name[name]["timeout-minutes"], timeout, name)
@@ -274,8 +278,12 @@ class ManifestContractTests(unittest.TestCase):
         ]
         self.assertEqual(len(matches), 1, matches)
         self.assertEqual(matches[0]["lane"], "performance")
+        self.assertEqual(
+            matches[0]["identifier"],
+            "JabTrackerIntegrationTests/PKDashboardPerformanceTests/dashboardPerformanceWithLargeDoseHistory",
+        )
         self.assertIn(
-            "JabTrackerIntegrationTests/PKDashboardIntegrationTests/dashboardPerformanceWithLargeDoseHistory",
+            "JabTrackerIntegrationTests/PKDashboardPerformanceTests",
             lanes.load_lane_config(ROOT)["performance_only_testing"],
         )
 

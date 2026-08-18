@@ -42,7 +42,7 @@ env:
 jobs:
   unit:
     name: Fast unit tests
-    runs-on: macos-26-intel
+    runs-on: macos-26
     timeout-minutes: 10
     steps:
       - name: Record job start
@@ -75,7 +75,7 @@ jobs:
 
   lint:
     name: SwiftLint
-    runs-on: macos-26-intel
+    runs-on: macos-26
     timeout-minutes: 5
     steps:
       - name: Check out repository
@@ -92,7 +92,7 @@ jobs:
 
   python:
     name: Python tooling
-    runs-on: macos-26-intel
+    runs-on: macos-26
     timeout-minutes: 5
     steps:
       - name: Check out repository
@@ -133,7 +133,7 @@ jobs:
 
   integration:
     name: Integration tests
-    runs-on: macos-26-intel
+    runs-on: macos-26
     timeout-minutes: 20
     steps:
       - name: Record job start
@@ -165,7 +165,7 @@ jobs:
 
   storekit:
     name: StoreKit tests
-    runs-on: macos-26-intel
+    runs-on: macos-26
     timeout-minutes: 10
     steps:
       - name: Record job start
@@ -197,7 +197,7 @@ jobs:
 
   performance:
     name: Performance tests
-    runs-on: macos-26-intel
+    runs-on: macos-26
     timeout-minutes: 10
     steps:
       - name: Record job start

@@ -69,6 +69,7 @@ targets:
           - DataControllerTestDataTests.swift
           - DataControllerTests.swift
           - Integration/CalendarPerformanceTests.swift
+          - Integration/PKDashboardPerformanceTests.swift
           - NotificationServicePersistenceTests.swift
           - PKDashboardIntegrationTests.swift
           - PersistenceTests.swift
@@ -106,6 +107,7 @@ targets:
           - DataControllerTests.swift
           - Helpers/CustomFoodTestHelpers.swift
           - Integration/CalendarPerformanceTests.swift
+          - Integration/PKDashboardPerformanceTests.swift
           - Mocks/MockActiveEnergyDataSource.swift
           - Mocks/MockNotificationCenter.swift
           - NotificationServicePersistenceTests.swift

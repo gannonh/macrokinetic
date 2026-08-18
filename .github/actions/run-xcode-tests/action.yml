@@ -68,6 +68,10 @@ runs:
           CODE_SIGNING_ALLOWED=NO \
           COMPILER_INDEX_STORE_ENABLE=NO \
           SWIFT_ENABLE_EXPLICIT_MODULES=NO \
+          COMPRESS_PNG_FILES=NO \
+          SWIFT_EMIT_LOC_STRINGS=NO \
+          ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS=NO \
+          ENABLE_PREVIEWS=NO \
           | tee "$RUNNER_TEMP/${{ inputs.result_name }}.log"
 
     - name: Summarize test results

@@ -401,65 +401,6 @@ struct PKDashboardIntegrationTests {
             "Concentration should increase after resuming doses")
     }
 
-    // MARK: - Test: Dashboard Refresh Performance
-
-    @Test("Dashboard calculation performance with large dose history")
-    func dashboardPerformanceWithLargeDoseHistory() async throws {
-        // Setup test data
-        let user = self.createTestUser()
-        let medicationProfile = self.createTestMedicationProfile(user: user)
-
-        self.context.insert(user)
-        self.context.insert(medicationProfile)
-        try self.context.save()
-
-        // Create dose service using struct's PK engine
-        let doseService = DoseService(pkEngine: pkEngine)
-
-        // Add many doses to simulate long medication history
-        let numberOfDoses = 100
-        for index in 0..<numberOfDoses {
-            let daysAgo = Double(numberOfDoses - index)
-            _ = try await doseService.saveDose(
-                amount: 1.0,
-                timestamp: Date().addingTimeInterval(-daysAgo * 24 * 3600),
-                medicationProfile: medicationProfile,
-                site: index % 2 == 0 ? "Abdomen" : "Thigh",
-                notes: "Dose \(index + 1)",
-                context: self.context)
-        }
-
-        // Resolve the SwiftData relationship before timing so this measures PK math,
-        // not the one-time cost of lazy relationship hydration.
-        let loadedDoses = medicationProfile.doses ?? []
-        #expect(loadedDoses.count >= numberOfDoses)
-
-        // Measure calculation performance
-        let startTime = Date()
-
-        let concentration = self.pkEngine.calculateCurrentConcentration(
-            for: user,
-            medication: medicationProfile)
-        _ = self.pkEngine.calculateTroughLevel(for: medicationProfile)
-        _ = self.pkEngine.calculateSteadyStateProgress(for: medicationProfile)
-
-        let calculationTime = Date().timeIntervalSince(startTime)
-
-        // Verify calculations completed quickly (< 50ms as per requirements)
-        #expect(
-            calculationTime < 0.05,
-            "Calculations should complete in under 50ms, actual: \(calculationTime * 1000)ms")
-        #expect(concentration > 0.0, "Concentration should be positive with large dose history")
-
-        // Verify all doses were properly saved for this medication profile
-        let allDoses = try context.fetch(FetchDescriptor<Dose>())
-        let profileDoses = allDoses.filter { $0.medication?.id == medicationProfile.id }
-        #expect(
-            profileDoses.count >= numberOfDoses,
-            "Should have at least the expected number of doses for this profile in isolated test container"
-        )
-    }
-
     // MARK: - Test: Real-time Dashboard Updates
 
     @Test("Dashboard updates in real-time when dose data changes")
