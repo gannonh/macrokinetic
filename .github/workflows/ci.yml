@@ -45,6 +45,7 @@ jobs:
           destination: ${{ env.IOS_DESTINATION }}
           lane: unit
           result_name: unit-tests
+          scheme: JabTrackerUnitTests
           parallel_testing: "YES"
           max_workers: "4"
       - name: Upload unit test artifacts
@@ -129,6 +130,7 @@ jobs:
           destination: ${{ env.IOS_DESTINATION }}
           lane: integration
           result_name: integration-tests
+          scheme: JabTrackerIntegrationTests
           parallel_testing: "NO"
       - name: Upload integration test artifacts
         if: always()
@@ -158,6 +160,7 @@ jobs:
           destination: ${{ env.IOS_DESTINATION }}
           lane: storekit
           result_name: storekit-tests
+          scheme: JabTrackerIntegrationTests
           parallel_testing: "NO"
       - name: Upload StoreKit test artifacts
         if: always()
@@ -187,6 +190,7 @@ jobs:
           destination: ${{ env.IOS_DESTINATION }}
           lane: performance
           result_name: performance-tests
+          scheme: JabTrackerIntegrationTests
           parallel_testing: "NO"
       - name: Upload performance test artifacts
         if: always()

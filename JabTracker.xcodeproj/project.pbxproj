@@ -117,6 +117,7 @@
 		2290D803C3CEEED0AD2BD3B4 /* ChartDataProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF24FAF1F65F4ED96874B2B /* ChartDataProcessorTests.swift */; };
 		231EEF7FADEE59C2E5B2A66A /* ProgramOptimizationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE2B828EC67658F54CA5064 /* ProgramOptimizationSheet.swift */; };
 		23C2AA41A7EF4B5D79DE8C23 /* DoseHistoryViewModelErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1B06AAB60967FA3C0B9B69 /* DoseHistoryViewModelErrorTests.swift */; };
+		23EFBEC8AE09243893958701 /* MockNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352C3C79DB4CC3585EAB580C /* MockNotificationCenter.swift */; };
 		248F674B38E78FFD859EEDB2 /* ScheduleSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D2D8F1CA0B3B5140169C47 /* ScheduleSetupView.swift */; };
 		256481AD9A591A47F7AF17D5 /* AdherenceChartsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE540D708975143C8E3FA4BE /* AdherenceChartsUITests.swift */; };
 		258EF7F42068A258183FE7B6 /* FoodSearchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48822924C474D2E7E3E2BD2D /* FoodSearchSheet.swift */; };
@@ -391,6 +392,7 @@
 		9D4CC78848561E2BE543B2CE /* ChartDataProcessor+Interpolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EDD54B293AC83AAD572820 /* ChartDataProcessor+Interpolation.swift */; };
 		9D6F8414A8F65CD4C47BFFF5 /* FoodLogCopyPasteMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707B3D9D18FF4DDDD7414FAE /* FoodLogCopyPasteMenu.swift */; };
 		9D9B20E1485FEB61A75358FD /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED772CA0C6C4452DE5A4901 /* OnboardingViewModelTests.swift */; };
+		9DFF0351FB9402939C98E42F /* MockActiveEnergyDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BA2542FC7B794320938063 /* MockActiveEnergyDataSource.swift */; };
 		9E1018B257D629B301FA9AEE /* DoseDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211434EFA04C1DC2C79C5ABA /* DoseDataService.swift */; };
 		9E89DBFDEEF9BB83C613E7EC /* ButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4068B3EB73128183393A2D3B /* ButtonComponents.swift */; };
 		9F00C194C960E72871401279 /* NotificationService+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5A600F8251B32730E8FEF6 /* NotificationService+Actions.swift */; };
@@ -3032,6 +3034,8 @@
 				3A56AA264A13FD887538B3EF /* DataControllerTests.swift in Sources */,
 				1C4F767E00C6B70C3058C2DF /* FoodServiceCustomFoodIntegrationTests.swift in Sources */,
 				F84987D3A1803A0372CD9F4F /* LocalFoodDatabaseTests.swift in Sources */,
+				9DFF0351FB9402939C98E42F /* MockActiveEnergyDataSource.swift in Sources */,
+				23EFBEC8AE09243893958701 /* MockNotificationCenter.swift in Sources */,
 				CDA6539946FDFB5A59AB26D5 /* NotificationServicePersistenceTests.swift in Sources */,
 				20C5B41D113EAA94BE598698 /* PKDashboardIntegrationTests.swift in Sources */,
 				DEDFF10DA7F8AA007384CE68 /* PersistenceTests.swift in Sources */,

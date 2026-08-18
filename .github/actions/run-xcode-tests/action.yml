@@ -11,6 +11,10 @@ inputs:
   result_name:
     description: Artifact basename written under RUNNER_TEMP
     required: true
+  scheme:
+    description: Xcode scheme that contains only the targets this lane should build
+    required: false
+    default: JabTracker
   parallel_testing:
     description: YES or NO
     required: false
@@ -50,7 +54,7 @@ runs:
         set -o pipefail
         xcodebuild test \
           -project JabTracker.xcodeproj \
-          -scheme JabTracker \
+          -scheme "${{ inputs.scheme }}" \
           -configuration Debug \
           -destination "${{ inputs.destination }}" \
           "${FILTER_ARGS[@]}" \

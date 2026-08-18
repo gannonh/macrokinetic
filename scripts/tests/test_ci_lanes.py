@@ -100,6 +100,8 @@ class PRWorkflowContractTests(unittest.TestCase):
         action = (ROOT / ".github" / "actions" / "run-xcode-tests" / "action.yml").read_text()
         self.assertIn("OS=26.2", self.text)
         self.assertIn("lane: unit", self.text)
+        self.assertIn("scheme: JabTrackerUnitTests", self.text)
+        self.assertIn("scheme: JabTrackerIntegrationTests", self.text)
         self.assertIn("max_workers: \"4\"", self.text)
         self.assertIn("parallel-testing-enabled YES", action)
         self.assertIn("maximum-parallel-testing-workers", action)
@@ -168,6 +170,15 @@ class ProjectTargetTests(unittest.TestCase):
         self.assertIn("name: JabTrackerUnitTests", self.text)
         self.assertIn("name: JabTrackerIntegrationTests", self.text)
         self.assertIn("parallelizable: true", self.text)
+
+    def test_shared_sources_include_test_mocks(self) -> None:
+        config = lanes.load_lane_config(ROOT)
+        mocks = {
+            path.relative_to(ROOT / "JabTrackerTests").as_posix()
+            for path in (ROOT / "JabTrackerTests" / "Mocks").rglob("*.swift")
+        }
+        self.assertTrue(mocks)
+        self.assertTrue(mocks.issubset(set(config["shared_sources"])), mocks)
 
     def test_explicit_source_membership_matches_lane_config(self) -> None:
         config = lanes.load_lane_config(ROOT)

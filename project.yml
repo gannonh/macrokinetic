@@ -106,6 +106,8 @@ targets:
           - DataControllerTests.swift
           - Helpers/CustomFoodTestHelpers.swift
           - Integration/CalendarPerformanceTests.swift
+          - Mocks/MockActiveEnergyDataSource.swift
+          - Mocks/MockNotificationCenter.swift
           - NotificationServicePersistenceTests.swift
           - PKDashboardIntegrationTests.swift
           - PersistenceTests.swift
@@ -262,3 +264,24 @@ schemes:
       commandLineArguments:
         "--bypass-onboarding": true
         "--ui-testing": true
+
+  JabTrackerUnitTests:
+    build:
+      targets:
+        JabTracker: all
+        JabTrackerUnitTests: [test]
+    test:
+      targets:
+        - name: JabTrackerUnitTests
+          parallelizable: true
+
+  JabTrackerIntegrationTests:
+    build:
+      targets:
+        JabTracker: all
+        JabTrackerIntegrationTests: [test]
+    test:
+      targets:
+        - name: JabTrackerIntegrationTests
+          parallelizable: false
+      storeKitConfiguration: JabTrackerStoreKit.storekit

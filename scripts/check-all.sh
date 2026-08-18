@@ -96,7 +96,7 @@ print_header "3️⃣ Unit Tests with Coverage"
 RESULT_BUNDLE=".coverage/coverage.xcresult"
 mkdir -p .coverage
 rm -rf "$RESULT_BUNDLE"
-if ! run_check "Unit Tests with Coverage" "set -o pipefail && xcodebuild test -scheme JabTracker -destination '$SIMULATOR' -only-testing:JabTrackerUnitTests -enableCodeCoverage YES -resultBundlePath '$RESULT_BUNDLE' | xcbeautify"; then
+if ! run_check "Unit Tests with Coverage" "set -o pipefail && xcodebuild test -scheme JabTrackerUnitTests -destination '$SIMULATOR' -only-testing:JabTrackerUnitTests -enableCodeCoverage YES -resultBundlePath '$RESULT_BUNDLE' | xcbeautify"; then
     ((FAILED_CHECKS++))
 fi
 
