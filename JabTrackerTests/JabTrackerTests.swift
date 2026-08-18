@@ -1,4 +1,3 @@
-import Foundation
 import SwiftData
 import SwiftUI
 import Testing
@@ -176,15 +175,5 @@ struct JabTrackerTests {
         }
 
         // Test passes if no crashes or memory issues occur during component creation
-    }
-
-    @Test("Issue 354 deliberate unit failure proof")
-    func issue354DeliberateUnitFailure() {
-        // CI unit lane uses iOS 26.2; local pre-push uses 26.5.
-        let version = ProcessInfo.processInfo.operatingSystemVersion
-        guard version.majorVersion == 26, version.minorVersion == 2 else {
-            return
-        }
-        #expect(Bool(false), "Deliberate unit failure for issue #354")
     }
 }
