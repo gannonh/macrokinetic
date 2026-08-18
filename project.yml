@@ -276,6 +276,8 @@ schemes:
       targets:
         - name: JabTrackerUnitTests
           parallelizable: true
+      environmentVariables:
+        SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH: "1"
 
   JabTrackerIntegrationTests:
     build:

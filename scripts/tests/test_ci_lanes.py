@@ -103,6 +103,8 @@ class PRWorkflowContractTests(unittest.TestCase):
         self.assertIn("max_workers: \"4\"", self.text)
         self.assertIn("parallel-testing-enabled YES", action)
         self.assertIn("maximum-parallel-testing-workers", action)
+        self.assertIn("SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1", action)
+        self.assertIn("TEST_RUNNER_SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1", action)
         self.assertIn("SWIFT_ENABLE_EXPLICIT_MODULES=NO", action)
         self.assertIn("COMPILER_INDEX_STORE_ENABLE=NO", action)
         self.assertIn("COMPRESS_PNG_FILES=NO", action)

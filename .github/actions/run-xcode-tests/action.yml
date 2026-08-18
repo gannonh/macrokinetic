@@ -47,6 +47,12 @@ runs:
           if [ -n "${{ inputs.max_workers }}" ]; then
             PARALLEL_ARGS+=(-maximum-parallel-testing-workers "${{ inputs.max_workers }}")
           fi
+          # Keep xcodebuild clones (max 4 workers) but run Swift Testing serially
+          # inside each clone. In-process Swift Testing plus four clones was
+          # trapping hundreds of tests on macos-26-xlarge.
+          export SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
+          export TEST_RUNNER_SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
+          export SIMCTL_CHILD_SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
         else
           PARALLEL_ARGS=(-parallel-testing-enabled NO)
         fi
