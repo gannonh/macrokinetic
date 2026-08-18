@@ -21,11 +21,7 @@ struct WeeklyNutritionHeroViewModelTests {
         let schema = Schema([
             User.self, Dose.self, Food.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [config])
         return (container.mainContext, container)
     }
@@ -321,11 +317,7 @@ struct WeeklyNutritionHeroViewModelTests {
             User.self, Dose.self, Food.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
             DayStatus.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         let container = try ModelContainer(for: schema, configurations: [config])
         let context = container.mainContext
 
@@ -375,11 +367,7 @@ struct WeeklyNutritionHeroViewModelTests {
             User.self, Dose.self, Food.self, FoodEntry.self, NutritionGoal.self, NutritionProgram.self,
             DayStatus.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         let container = try ModelContainer(for: schema, configurations: [config])
         let context = container.mainContext
 

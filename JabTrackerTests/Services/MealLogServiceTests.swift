@@ -397,11 +397,7 @@ struct MealLogServiceTests {
             Food.self,
             FoodEntry.self,
         ])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let configuration = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         return ModelContext(container)
     }

@@ -15,10 +15,7 @@ import Testing
 
 /// Create an in-memory model container for testing
 private func createTestContainer() throws -> ModelContainer {
-    let configuration = ModelConfiguration(
-        isStoredInMemoryOnly: true,
-        cloudKitDatabase: .none
-    )
+    let configuration = InMemoryTestStore.configuration()
     return try ModelContainer(
         for: TDEESnapshot.self,
         configurations: configuration

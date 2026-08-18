@@ -18,11 +18,7 @@ struct CreateFoodViewModelTests {
 
     private func createTestContext() -> (context: ModelContext, container: ModelContainer) {
         let schema = Schema([Food.self, FoodEntry.self, User.self])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [config])
         return (container.mainContext, container)
     }

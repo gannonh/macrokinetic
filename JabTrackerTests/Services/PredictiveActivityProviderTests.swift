@@ -23,7 +23,7 @@ struct PredictiveActivityProviderTests {
     var mockDataSource: MockActiveEnergyDataSource!
 
     init() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         container = try ModelContainer(for: User.self, NutritionGoal.self, configurations: config)
         context = container.mainContext
         user = User()

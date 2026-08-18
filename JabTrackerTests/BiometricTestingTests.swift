@@ -5,7 +5,7 @@ import Testing
 @testable import JabTracker
 
 @MainActor
-@Suite("Biometric Testing Environment Tests")
+@Suite("Biometric Testing Environment Tests", .serialized)
 struct BiometricTestingTests {
     @Test("BiometricAuthManager testing environment behavior")
     @MainActor

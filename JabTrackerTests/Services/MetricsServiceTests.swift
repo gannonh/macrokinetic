@@ -19,22 +19,14 @@ struct MetricsServiceTests {
 
     private func createTestContext() -> ModelContext {
         let schema = Schema([MetricsEntry.self])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let configuration = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         return ModelContext(container)
     }
 
     private func createWeightTestContext() -> ModelContext {
         let schema = Schema([WeightEntry.self, User.self])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let configuration = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         return ModelContext(container)
     }

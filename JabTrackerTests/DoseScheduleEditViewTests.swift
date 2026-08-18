@@ -27,11 +27,7 @@ struct DoseScheduleEditViewTests {
             Dose.self,
         ])
 
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
 
         return try ModelContainer(for: schema, configurations: [config])
     }

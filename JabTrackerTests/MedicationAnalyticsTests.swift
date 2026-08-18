@@ -85,7 +85,7 @@ struct MedicationAnalyticsTests {
     @Test("MedicationProfile should calculate adherence metrics")
     @MainActor
     func medicationProfileAdherenceCalculation() async throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         let container = try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
@@ -129,7 +129,7 @@ struct MedicationAnalyticsTests {
     @Test("MedicationProfile should calculate effectiveness score")
     @MainActor
     func medicationProfileEffectivenessScore() async throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         let container = try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
@@ -162,7 +162,7 @@ struct MedicationAnalyticsTests {
     @Test("MedicationProfile should provide time-based effectiveness insights")
     @MainActor
     func medicationProfileTimeBasedEffectiveness() async throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         let container = try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
@@ -198,7 +198,7 @@ struct MedicationAnalyticsTests {
     @Test("MedicationProfile timeBasedEffectivenessInsights with nil medication")
     @MainActor
     func medicationProfileTimeBasedEffectivenessInsightsWithNilMedication() async throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         let container = try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext
@@ -237,7 +237,7 @@ struct MedicationAnalyticsTests {
     @Test("MedicationProfile should generate concentration timeline")
     @MainActor
     func medicationProfileConcentrationTimeline() async throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration()
         let container = try ModelContainer(
             for: User.self, MedicationProfile.self, Dose.self, configurations: config)
         let context = container.mainContext

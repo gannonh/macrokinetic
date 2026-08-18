@@ -18,11 +18,7 @@ struct FoodEntryTests {
 
     private func createTestContainer() throws -> ModelContainer {
         let schema = Schema([Food.self, FoodEntry.self])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none  // Critical for tests
-        )
+        let configuration = InMemoryTestStore.configuration(schema: schema)
         return try ModelContainer(for: schema, configurations: [configuration])
     }
 

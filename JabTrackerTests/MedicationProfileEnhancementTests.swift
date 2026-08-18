@@ -22,11 +22,7 @@ struct MedicationProfileEnhancementTests {
             ScheduledDose.self,
             DoseSchedule.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         self.container = try ModelContainer(for: schema, configurations: [config])
         self.context = ModelContext(self.container)
     }

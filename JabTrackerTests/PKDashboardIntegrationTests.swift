@@ -26,10 +26,7 @@ struct PKDashboardIntegrationTests {
     init() throws {
         // Create isolated in-memory container for this test suite
         let schema = Schema([User.self, MedicationProfile.self, Dose.self, DoseTitration.self])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none)
+        let config = InMemoryTestStore.configuration(schema: schema)
         self.container = try ModelContainer(for: schema, configurations: [config])
         self.context = self.container.mainContext
         self.pkEngine = PharmacokineticsEngine()

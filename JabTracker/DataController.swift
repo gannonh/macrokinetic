@@ -168,12 +168,24 @@ class DataController: ObservableObject {
         let shouldEnableCloudKit = config.shouldEnableCloudKit
         config.log(with: Self.logger)
 
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: inMemory,
-            cloudKitDatabase: shouldEnableCloudKit
-                ? .private(cloudKitContainerIdentifier)
-                : .none)
+        let configuration: ModelConfiguration
+        if inMemory {
+            // Unique names keep parallel Swift Testing workers from sharing one
+            // in-memory store. Disk stores keep the default unnamed configuration
+            // so existing user data is unchanged.
+            configuration = ModelConfiguration(
+                "JabTracker-memory-\(UUID().uuidString)",
+                schema: schema,
+                isStoredInMemoryOnly: true,
+                cloudKitDatabase: .none)
+        } else {
+            configuration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                cloudKitDatabase: shouldEnableCloudKit
+                    ? .private(cloudKitContainerIdentifier)
+                    : .none)
+        }
 
         do {
             self.container = try ModelContainer(for: schema, configurations: [configuration])
@@ -201,6 +213,7 @@ class DataController: ObservableObject {
                     "Local storage failed, attempting in-memory fallback: \(fallbackError.localizedDescription)"
                 )
                 let inMemoryConfig = ModelConfiguration(
+                    "JabTracker-memory-\(UUID().uuidString)",
                     schema: schema,
                     isStoredInMemoryOnly: true,
                     cloudKitDatabase: .none)

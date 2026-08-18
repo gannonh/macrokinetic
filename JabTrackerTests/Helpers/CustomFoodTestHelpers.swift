@@ -10,6 +10,19 @@ import SwiftData
 
 @testable import JabTracker
 
+/// Isolated in-memory SwiftData stores so parallel Swift Testing workers
+/// do not share one default configuration and crash with SIGTRAP.
+enum InMemoryTestStore {
+    static func configuration(schema: Schema? = nil) -> ModelConfiguration {
+        ModelConfiguration(
+            "test-\(UUID().uuidString)",
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+    }
+}
+
 /// Shared helpers for custom food tests
 enum CustomFoodTestHelpers {
 
@@ -28,11 +41,7 @@ enum CustomFoodTestHelpers {
             FoodEntry.self,
             FoodSchedule.self,
         ])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let configuration = InMemoryTestStore.configuration(schema: schema)
         // swiftlint:disable:next force_try
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         return (ModelContext(container), container)

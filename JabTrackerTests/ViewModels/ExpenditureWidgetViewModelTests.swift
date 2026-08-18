@@ -21,11 +21,7 @@ struct ExpenditureWidgetViewModelTests {
         let schema = Schema([
             User.self, NutritionGoal.self, NutritionProgram.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [config])
         return (container.mainContext, container)
     }
@@ -347,11 +343,7 @@ struct ExpenditureWidgetViewModelTests {
         let schema = Schema([
             User.self, NutritionGoal.self, NutritionProgram.self, TDEESnapshot.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [config])
         let context = container.mainContext
 
@@ -384,11 +376,7 @@ struct ExpenditureWidgetViewModelTests {
         let schema = Schema([
             User.self, NutritionGoal.self, NutritionProgram.self, TDEESnapshot.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true,
-            cloudKitDatabase: .none
-        )
+        let config = InMemoryTestStore.configuration(schema: schema)
         let container = try! ModelContainer(for: schema, configurations: [config])
         let context = container.mainContext
 
