@@ -31,7 +31,7 @@ if [ "$USE_EXISTING" = false ]; then
     xcodebuild test -scheme "$SCHEME" -destination "$DESTINATION" \
         -enableCodeCoverage YES \
         -resultBundlePath "$RESULT_BUNDLE" \
-        -only-testing:JabTrackerTests | xcbeautify
+        -only-testing:JabTrackerUnitTests | xcbeautify
 else
     echo "📊 Using existing coverage data from $RESULT_BUNDLE"
 fi

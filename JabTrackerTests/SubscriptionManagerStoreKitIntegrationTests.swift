@@ -11,14 +11,14 @@ struct SubscriptionManagerStoreKitTests {
     // MARK: - Test Configuration
 
     /// Helper to configure a StoreKit test session with our configuration file
-    private func configureStoreKitTestSession() throws -> SKTestSession? {
+    private func configureStoreKitTestSession() throws -> SKTestSession {
         let thisFile = URL(fileURLWithPath: #file)
         let repoRoot = thisFile.deletingLastPathComponent().deletingLastPathComponent()
         let configURL = repoRoot.appendingPathComponent("JabTrackerStoreKit.storekit")
 
         guard FileManager.default.fileExists(atPath: configURL.path) else {
-            // Config not available in this environment; tests will be skipped
-            return nil
+            throw TestError.testSetupFailed(
+                "StoreKit configuration missing at \(configURL.path)")
         }
 
         let session = try SKTestSession(contentsOf: configURL)
@@ -32,10 +32,7 @@ struct SubscriptionManagerStoreKitTests {
 
     @Test("loadProducts() successfully loads products from StoreKit")
     func loadProductsSuccessPath() async throws {
-        guard let session = try? configureStoreKitTestSession() else {
-            // StoreKit configuration not available, skip test
-            return
-        }
+        let session = try configureStoreKitTestSession()
         defer { session.clearTransactions() }
 
         let manager = SubscriptionManager(isTestEnvironment: false)
@@ -68,10 +65,7 @@ struct SubscriptionManagerStoreKitTests {
 
     @Test("loadProducts() handles empty product list gracefully")
     func loadProductsEmptyList() async throws {
-        guard let session = try? configureStoreKitTestSession() else {
-            // StoreKit configuration not available, skip test
-            return
-        }
+        let session = try configureStoreKitTestSession()
         defer { session.clearTransactions() }
 
         // Clear products from the session
@@ -322,10 +316,7 @@ struct SubscriptionManagerStoreKitTests {
 
     @Test("monthlyProducts and annualProducts filter correctly")
     func productFiltering() async throws {
-        guard let session = try? configureStoreKitTestSession() else {
-            // StoreKit configuration not available, skip test
-            return
-        }
+        let session = try configureStoreKitTestSession()
         defer { session.clearTransactions() }
 
         let manager = SubscriptionManager(isTestEnvironment: false)

@@ -171,7 +171,7 @@ build_test_target() {
         case "$test_type" in
             "unit")
                 # Run specific unit test suite (Swift Testing supports suite-level targeting)
-                echo "-only-testing:JabTrackerTests/$test_file"
+                echo "-only-testing:JabTrackerUnitTests/$test_file"
                 ;;
             "ui")
                 # Run specific UI test file
@@ -181,7 +181,7 @@ build_test_target() {
     else
         case "$test_type" in
             "unit")
-                echo "-only-testing:JabTrackerTests"
+                echo "-only-testing:JabTrackerUnitTests"
                 ;;
             "ui")
                 # Exclude manual tests from automated runs

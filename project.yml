@@ -51,13 +51,77 @@ targets:
       ENABLE_PREVIEWS: true
       SWIFT_EMIT_LOC_STRINGS: true
       
-  JabTrackerTests:
+  JabTrackerUnitTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: JabTrackerTests
         excludes:
           - "Onboarding/Legacy/**"
+          - AnalyticsServiceIntegrationTests.swift
+          - AuthenticationDatabaseIntegrationTests.swift
+          - AuthenticationDelegateIntegrationTests.swift
+          - DataControllerBasicTests.swift
+          - DataControllerCloudKitTests.swift
+          - DataControllerInitializationTests.swift
+          - DataControllerPreviewTests.swift
+          - DataControllerSyncTests.swift
+          - DataControllerTestDataTests.swift
+          - DataControllerTests.swift
+          - Integration/CalendarPerformanceTests.swift
+          - NotificationServicePersistenceTests.swift
+          - PKDashboardIntegrationTests.swift
+          - PersistenceTests.swift
+          - ScheduleServiceSplitDoseIntegrationTests.swift
+          - Services/ChartDataProcessorIntegrationTests.swift
+          - Services/ChartDataProcessorPerformanceTests.swift
+          - Services/FoodServiceCustomFoodIntegrationTests.swift
+          - Services/LocalFoodDatabaseTests.swift
+          - Services/TDEEServiceIntegrationTests.swift
+          - SettingsViewNotificationIntegrationTests.swift
+          - StoreKitConfigurationTests.swift
+          - SubscriptionManagerRestoreIntegrationTests.swift
+          - SubscriptionManagerStoreKitIntegrationTests.swift
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - target: JabTracker
+
+  JabTrackerIntegrationTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: JabTrackerTests
+        includes:
+          - AnalyticsServiceIntegrationTests.swift
+          - AuthenticationDatabaseIntegrationTests.swift
+          - AuthenticationDelegateIntegrationTests.swift
+          - DataControllerBasicTests.swift
+          - DataControllerCloudKitTests.swift
+          - DataControllerInitializationTests.swift
+          - DataControllerPreviewTests.swift
+          - DataControllerSyncTests.swift
+          - DataControllerTestDataTests.swift
+          - DataControllerTests.swift
+          - Helpers/CustomFoodTestHelpers.swift
+          - Integration/CalendarPerformanceTests.swift
+          - NotificationServicePersistenceTests.swift
+          - PKDashboardIntegrationTests.swift
+          - PersistenceTests.swift
+          - ScheduleServiceSplitDoseIntegrationTests.swift
+          - Services/ChartDataProcessorIntegrationTests.swift
+          - Services/ChartDataProcessorPerformanceTests.swift
+          - Services/FoodServiceCustomFoodIntegrationTests.swift
+          - Services/LocalFoodDatabaseTests.swift
+          - Services/TDEEServiceIntegrationTests.swift
+          - SettingsViewNotificationIntegrationTests.swift
+          - StoreKitConfigurationTests.swift
+          - SubscriptionManagerRestoreIntegrationTests.swift
+          - SubscriptionManagerStoreKitIntegrationTests.swift
+          - Utilities/TestError.swift
+    resources:
+      - path: JabTrackerStoreKit.storekit
     settings:
       GENERATE_INFOPLIST_FILE: YES
       CODE_SIGN_STYLE: Automatic
@@ -97,15 +161,19 @@ schemes:
     build:
       targets:
         JabTracker: all
-        JabTrackerTests: [test]
+        JabTrackerUnitTests: [test]
+        JabTrackerIntegrationTests: [test]
         JabTrackerUITests: [test]
     test:
       targets:
-        - name: JabTrackerTests
+        - name: JabTrackerUnitTests
+          parallelizable: true
+        - name: JabTrackerIntegrationTests
           parallelizable: false
         - name: JabTrackerUITests
           parallelizable: true
           randomExecutionOrder: true
+      storeKitConfiguration: JabTrackerStoreKit.storekit
       commandLineArguments:
         "--bypass-onboarding": true
         "--force-onboarding": false

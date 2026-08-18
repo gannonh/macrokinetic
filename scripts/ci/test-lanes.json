@@ -1,0 +1,61 @@
+{
+  "baseline_xcresult_total": 3233,
+  "baseline_bundle": "JabTrackerTests",
+  "obsolete_allowlist": [],
+  "legacy_excludes": [
+    "Onboarding/Legacy/**"
+  ],
+  "shared_sources": [
+    "Helpers/CustomFoodTestHelpers.swift",
+    "Utilities/TestError.swift"
+  ],
+  "integration_sources": [
+    "AnalyticsServiceIntegrationTests.swift",
+    "AuthenticationDatabaseIntegrationTests.swift",
+    "AuthenticationDelegateIntegrationTests.swift",
+    "DataControllerBasicTests.swift",
+    "DataControllerCloudKitTests.swift",
+    "DataControllerInitializationTests.swift",
+    "DataControllerPreviewTests.swift",
+    "DataControllerSyncTests.swift",
+    "DataControllerTestDataTests.swift",
+    "DataControllerTests.swift",
+    "Integration/CalendarPerformanceTests.swift",
+    "NotificationServicePersistenceTests.swift",
+    "PKDashboardIntegrationTests.swift",
+    "PersistenceTests.swift",
+    "ScheduleServiceSplitDoseIntegrationTests.swift",
+    "Services/ChartDataProcessorIntegrationTests.swift",
+    "Services/ChartDataProcessorPerformanceTests.swift",
+    "Services/FoodServiceCustomFoodIntegrationTests.swift",
+    "Services/LocalFoodDatabaseTests.swift",
+    "Services/TDEEServiceIntegrationTests.swift",
+    "SettingsViewNotificationIntegrationTests.swift",
+    "StoreKitConfigurationTests.swift",
+    "SubscriptionManagerRestoreIntegrationTests.swift",
+    "SubscriptionManagerStoreKitIntegrationTests.swift"
+  ],
+  "storekit_only_testing": [
+    "JabTrackerIntegrationTests/SubscriptionManagerStoreKitTests",
+    "JabTrackerIntegrationTests/StoreKitConfigurationTests"
+  ],
+  "performance_only_testing": [
+    "JabTrackerIntegrationTests/ChartDataProcessorPerformanceTests",
+    "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformance",
+    "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformanceMinimal",
+    "JabTrackerIntegrationTests/AnalyticsServiceIntegrationTests/performanceWithLargeDoseHistory",
+    "JabTrackerIntegrationTests/LocalFoodDatabaseTests/testSearchPerformance"
+  ],
+  "out_of_scope": [
+    {
+      "bundle": "JabTrackerUITests",
+      "path": "JabTrackerUITests",
+      "reason": "UI tests remain a separate target and are outside this spec's unit/integration manifest."
+    },
+    {
+      "bundle": "JabTrackerFoodSearchBenchmarkTests",
+      "path": "JabTrackerUITests/Nutrition/FoodSearchReleaseBenchmarkUITests.swift",
+      "reason": "Food-search benchmark UI tests remain a separate target and are outside this spec's unit/integration manifest."
+    }
+  ]
+}

@@ -29,9 +29,9 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "333C61C80CB435D02EDE87C5"
-               BuildableName = "JabTrackerTests.xctest"
-               BlueprintName = "JabTrackerTests"
+               BlueprintIdentifier = "E86738492E4B52299987F1C5"
+               BuildableName = "JabTrackerIntegrationTests.xctest"
+               BlueprintName = "JabTrackerIntegrationTests"
                ReferencedContainer = "container:JabTracker.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,6 +46,20 @@
                BlueprintIdentifier = "0EAE947DED48D0D345FE2DDA"
                BuildableName = "JabTrackerUITests.xctest"
                BlueprintName = "JabTrackerUITests"
+               ReferencedContainer = "container:JabTracker.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "23FF7E390CA17648FBCE01A4"
+               BuildableName = "JabTrackerUnitTests.xctest"
+               BlueprintName = "JabTrackerUnitTests"
                ReferencedContainer = "container:JabTracker.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -69,12 +83,23 @@
       <Testables>
          <TestableReference
             skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "23FF7E390CA17648FBCE01A4"
+               BuildableName = "JabTrackerUnitTests.xctest"
+               BlueprintName = "JabTrackerUnitTests"
+               ReferencedContainer = "container:JabTracker.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "333C61C80CB435D02EDE87C5"
-               BuildableName = "JabTrackerTests.xctest"
-               BlueprintName = "JabTrackerTests"
+               BlueprintIdentifier = "E86738492E4B52299987F1C5"
+               BuildableName = "JabTrackerIntegrationTests.xctest"
+               BlueprintName = "JabTrackerIntegrationTests"
                ReferencedContainer = "container:JabTracker.xcodeproj">
             </BuildableReference>
          </TestableReference>
