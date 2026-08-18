@@ -72,7 +72,7 @@ runs:
           SWIFT_EMIT_LOC_STRINGS=NO \
           ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS=NO \
           ENABLE_PREVIEWS=NO \
-          | tee "$RUNNER_TEMP/${{ inputs.result_name }}.log"
+          > "$RUNNER_TEMP/${{ inputs.result_name }}.log" 2>&1
 
     - name: Summarize test results
       if: always()

@@ -41,6 +41,14 @@ jobs:
           boot_simulator: "true"
       - name: Prepare deterministic CI food database
         run: python3 scripts/create-ci-food-database.py JabTracker/Resources/usda_foods.sqlite
+      - name: Restore unit DerivedData cache
+        id: unit-deriveddata
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/DerivedData-unit
+          key: unit-deriveddata-${{ runner.arch }}-${{ github.sha }}
+          restore-keys: |
+            unit-deriveddata-${{ runner.arch }}-
       - name: Run fast unit tests
         uses: ./.github/actions/run-xcode-tests
         with:
@@ -50,6 +58,13 @@ jobs:
           scheme: JabTrackerUnitTests
           parallel_testing: "YES"
           max_workers: "4"
+      - name: Save unit DerivedData cache
+        if: always() && steps.unit-deriveddata.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ runner.temp }}/DerivedData-unit
+          key: unit-deriveddata-${{ runner.arch }}-${{ github.sha }}
       - name: Upload unit test artifacts
         if: always()
         uses: ./.github/actions/upload-test-artifacts

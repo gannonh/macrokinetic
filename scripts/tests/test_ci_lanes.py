@@ -61,8 +61,6 @@ def workflow_jobs(text: str) -> dict[str, dict[str, object]]:
             jobs[current]["timeout-minutes"] = int(timeout_match.group(1))
         if re.match(r'^    continue-on-error:\s*', raw):
             jobs[current]["continue-on-error"] = "true" in raw.lower()
-        if "continue-on-error: true" in raw:
-            jobs[current]["continue-on-error"] = True
     return jobs
 
 
@@ -94,7 +92,7 @@ class PRWorkflowContractTests(unittest.TestCase):
         by_name = {str(job["name"]): job for job in self.jobs.values()}
         for name in ALL_PR_JOBS:
             self.assertFalse(by_name[name]["continue-on-error"], name)
-        self.assertNotIn("continue-on-error: true", self.text)
+        self.assertNotRegex(self.text, r"^    continue-on-error:\s*true", re.M)
 
     def test_unit_job_enables_four_worker_parallelism_on_ios_26_2(self) -> None:
         action = (ROOT / ".github" / "actions" / "run-xcode-tests" / "action.yml").read_text()
@@ -110,6 +108,8 @@ class PRWorkflowContractTests(unittest.TestCase):
         self.assertIn("COMPRESS_PNG_FILES=NO", action)
         self.assertNotIn("macos-26-intel", self.text)
         self.assertIn("runs-on: macos-26\n", self.text)
+        self.assertIn("actions/cache/restore", self.text)
+        self.assertIn("actions/cache/save", self.text)
         self.assertEqual(
             lanes.xcodebuild_args_for_lane(ROOT, "unit"),
             ["-only-testing:JabTrackerUnitTests"],
@@ -143,7 +143,7 @@ class FullValidationWorkflowTests(unittest.TestCase):
             self.assertFalse(by_name[name]["continue-on-error"], name)
 
     def test_lane_failure_fails_the_workflow(self) -> None:
-        self.assertNotIn("continue-on-error: true", self.text)
+        self.assertNotRegex(self.text, r"^    continue-on-error:\s*true", re.M)
 
 
 class TestFlightFullValidationTests(unittest.TestCase):
