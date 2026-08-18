@@ -180,7 +180,8 @@ struct JabTrackerTests {
 
     @Test("Issue 354 deliberate unit failure proof")
     func issue354DeliberateUnitFailure() {
-        guard ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" else {
+        // CI unit clones set this; local `./scripts/test.sh unit` does not.
+        guard ProcessInfo.processInfo.environment["SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH"] == "1" else {
             return
         }
         #expect(Bool(false), "Deliberate unit failure for issue #354")
