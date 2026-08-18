@@ -46,6 +46,7 @@
     "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformance",
     "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformanceMinimal",
     "JabTrackerIntegrationTests/AnalyticsServiceIntegrationTests/performanceWithLargeDoseHistory",
+    "JabTrackerIntegrationTests/PKDashboardIntegrationTests/dashboardPerformanceWithLargeDoseHistory",
     "JabTrackerIntegrationTests/LocalFoodDatabaseTests/testSearchPerformance"
   ],
   "out_of_scope": [

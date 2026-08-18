@@ -105,6 +105,8 @@ class PRWorkflowContractTests(unittest.TestCase):
         self.assertIn("max_workers: \"4\"", self.text)
         self.assertIn("parallel-testing-enabled YES", action)
         self.assertIn("maximum-parallel-testing-workers", action)
+        self.assertIn("SWIFT_ENABLE_EXPLICIT_MODULES=NO", action)
+        self.assertIn("COMPILER_INDEX_STORE_ENABLE=NO", action)
         self.assertEqual(
             lanes.xcodebuild_args_for_lane(ROOT, "unit"),
             ["-only-testing:JabTrackerUnitTests"],
@@ -261,6 +263,20 @@ class ManifestContractTests(unittest.TestCase):
             set(config["performance_only_testing"]).issubset(
                 set(config["integration_skip_testing"])
             )
+        )
+
+    def test_dashboard_performance_identifier_is_in_performance_lane(self) -> None:
+        manifest = lanes.build_source_manifest(ROOT)
+        matches = [
+            item
+            for item in manifest["tests"]
+            if item["identifier"].endswith("/dashboardPerformanceWithLargeDoseHistory")
+        ]
+        self.assertEqual(len(matches), 1, matches)
+        self.assertEqual(matches[0]["lane"], "performance")
+        self.assertIn(
+            "JabTrackerIntegrationTests/PKDashboardIntegrationTests/dashboardPerformanceWithLargeDoseHistory",
+            lanes.load_lane_config(ROOT)["performance_only_testing"],
         )
 
 

@@ -122,9 +122,10 @@ struct AuthenticationDatabaseIntegrationTests {
         let authManager = AuthenticationManager(dataController: dataController)
         let context = dataController.container.mainContext
 
-        // Create an existing user in the database
+        // Create an existing user in the database. Leave appleUserId nil so
+        // checkAuthenticationStatus does not call ASAuthorizationAppleIDProvider,
+        // which returns not-authorized on CI simulators and would leave currentUser nil.
         let existingUser = User(email: "existing@example.com", name: "Existing User")
-        existingUser.appleUserId = "existing.apple.user.id"
         context.insert(existingUser)
         try context.save()
 

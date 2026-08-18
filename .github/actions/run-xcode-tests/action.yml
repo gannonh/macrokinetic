@@ -52,6 +52,9 @@ runs:
         fi
 
         set -o pipefail
+        # Explicit modules and the compiler index store dominate clean Intel
+        # simulator builds. Disable them for CI lanes so compile can finish
+        # inside the 10-minute unit timeout and the 5-minute SLO.
         xcodebuild test \
           -project JabTracker.xcodeproj \
           -scheme "${{ inputs.scheme }}" \
@@ -63,6 +66,8 @@ runs:
           -disable-concurrent-destination-testing \
           "${PARALLEL_ARGS[@]}" \
           CODE_SIGNING_ALLOWED=NO \
+          COMPILER_INDEX_STORE_ENABLE=NO \
+          SWIFT_ENABLE_EXPLICIT_MODULES=NO \
           | tee "$RUNNER_TEMP/${{ inputs.result_name }}.log"
 
     - name: Summarize test results
