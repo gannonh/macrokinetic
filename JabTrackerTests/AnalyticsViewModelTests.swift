@@ -5,6 +5,7 @@ import Testing
 @testable import JabTracker
 
 /// Comprehensive tests for AnalyticsViewModel chart data management
+@Suite(.serialized)
 struct AnalyticsViewModelTests {
     // MARK: - Test Setup
 

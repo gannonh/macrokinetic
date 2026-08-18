@@ -57,6 +57,8 @@ final class ChartDatasetCache {
     /// Cache file location
     private let cacheURL: URL
 
+    var fileURL: URL { cacheURL }
+
     /// Current cache version for migration support
     private let cacheVersion = "1.0"
 
@@ -93,6 +95,11 @@ final class ChartDatasetCache {
             cacheURL = cacheDirectory.appendingPathComponent("concentrationDataset.json")
             Self.logger.warning("⚠️ Using temporary directory - cache will be cleared on app termination")
         }
+    }
+
+    /// Test-only initializer so parallel tests do not share one on-disk cache file.
+    init(cacheURL: URL) {
+        self.cacheURL = cacheURL
     }
 
     // MARK: - Public API

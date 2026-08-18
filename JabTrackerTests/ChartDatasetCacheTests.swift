@@ -4,9 +4,16 @@ import Testing
 @testable import JabTracker
 
 /// Comprehensive tests for ChartDatasetCache disk persistence functionality
+@Suite(.serialized)
 struct ChartDatasetCacheTests {
 
-    // MARK: - Helper Methods
+    private func isolatedCache() throws -> ChartDatasetCache {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ChartCache-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return ChartDatasetCache(
+            cacheURL: directory.appendingPathComponent("concentrationDataset.json"))
+    }
 
     private func createTestDataset() -> ConcentrationChartDataset {
         let point = AdvancedConcentrationPoint(
@@ -49,7 +56,7 @@ struct ChartDatasetCacheTests {
 
     @Test("save successfully persists dataset to disk")
     func savePersistsDataset() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
         let dataset = createTestDataset()
 
         // Clear any existing cache first
@@ -64,7 +71,7 @@ struct ChartDatasetCacheTests {
 
     @Test("save creates cache directory if needed")
     func saveCreatesDirectory() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
         let dataset = createTestDataset()
 
         // Even if directory doesn't exist, save should create it
@@ -77,7 +84,7 @@ struct ChartDatasetCacheTests {
 
     @Test("load returns notFound when no cache exists")
     func loadReturnsNotFoundWithoutCache() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
 
         // Clear cache to ensure no file exists
         cache.clear()
@@ -93,7 +100,7 @@ struct ChartDatasetCacheTests {
 
     @Test("load successfully retrieves saved dataset")
     func loadRetrievesSavedDataset() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
         let originalDataset = createTestDataset()
 
         // Clear and save
@@ -117,7 +124,7 @@ struct ChartDatasetCacheTests {
 
     @Test("load preserves dataset structure")
     func loadPreservesStructure() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
         let originalDataset = createTestDataset()
 
         cache.clear()
@@ -151,14 +158,14 @@ struct ChartDatasetCacheTests {
 
     @Test("load handles corrupted cache gracefully")
     func loadHandlesCorruptedCache() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
 
         // Save valid dataset first
         let dataset = createTestDataset()
         try cache.save(dataset)
 
         // Now corrupt the file by writing invalid JSON
-        let cacheURL = getCacheURL()
+        let cacheURL = cache.fileURL
         let corruptedData = Data("corrupted data".utf8)
         try corruptedData.write(to: cacheURL, options: .atomic)
 
@@ -175,7 +182,7 @@ struct ChartDatasetCacheTests {
 
     @Test("clear removes cache file")
     func clearRemovesCacheFile() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
         let dataset = createTestDataset()
 
         // Save then clear
@@ -189,7 +196,7 @@ struct ChartDatasetCacheTests {
 
     @Test("clear handles non-existent cache gracefully")
     func clearHandlesNonExistentCache() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
 
         // Clear when no cache exists should not error
         cache.clear()
@@ -202,7 +209,7 @@ struct ChartDatasetCacheTests {
 
     @Test("hasCachedData reflects cache state correctly")
     func hasCachedDataReflectsState() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
 
         // Initially no cache
         cache.clear()
@@ -222,7 +229,7 @@ struct ChartDatasetCacheTests {
 
     @Test("full save-load-clear cycle works correctly")
     func fullCycleWorksCorrectly() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
         let dataset = createTestDataset()
 
         // 1. Start clean
@@ -255,7 +262,7 @@ struct ChartDatasetCacheTests {
 
     @Test("multiple save-load cycles maintain data integrity")
     func multipleCyclesMaintainIntegrity() throws {
-        let cache = ChartDatasetCache()
+        let cache = try isolatedCache()
 
         for iteration in 1...3 {
             let dataset = createTestDataset()
@@ -277,21 +284,5 @@ struct ChartDatasetCacheTests {
                 loaded.doseMarkers.count == 1,
                 "Iteration \(iteration) should have 1 marker")
         }
-    }
-
-    // MARK: - Helper to get cache URL
-
-    private func getCacheURL() -> URL {
-        guard
-            let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask
-            ).first
-        else {
-            fatalError("Unable to access Application Support directory")
-        }
-
-        let cacheDirectory = appSupport.appendingPathComponent("ChartCache", isDirectory: true)
-        return cacheDirectory.appendingPathComponent("concentrationDataset.json")
     }
 }
