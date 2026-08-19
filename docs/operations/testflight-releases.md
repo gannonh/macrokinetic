@@ -2,10 +2,10 @@
 
 The supported release path is GitHub Actions. A maintainer uses **Actions →
 TestFlight Release → Run workflow**, selects exactly one internal group
-(`dev` or `internal`), and optionally supplies a marketing version and build
-number. Both groups must be configured as internal explicit-access groups; the
-selected group receives the build and the other group must not already contain
-it.
+(`internal`), and optionally supplies a marketing version and build number.
+The `internal` group must be configured as an internal explicit-access group;
+the App Store Connect `dev` group intentionally has automatic access to all
+builds and is not a release target.
 The workflow only accepts the `main` branch and never edits
 `project.yml`.
 
@@ -85,8 +85,6 @@ build, sign, or upload locally:
 
 ```bash
 scripts/upload-testflight.sh --group internal --version 0.10.2 --build 17 --watch
-# The same workflow can target the dev group:
-scripts/upload-testflight.sh --group dev --version 0.10.2 --build 18 --watch
 ```
 
 It requires `gh` authentication with Actions access. It rejects invalid group,
@@ -102,11 +100,9 @@ version, build, and non-`main` ref values before dispatch.
   rebuild rather than applying an unsafe chain.
 - **Signing preflight:** rotate the certificate/profile together and confirm
   the team, bundle ID, entitlements, and expiry.
-- **Group preflight:** both `dev` and `internal` must exist exactly once, be
-  internal groups, and have `hasAccessToAllBuilds=false`. The selected group
-  receives the build; if the non-selected group already contains that build,
-  the workflow fails without removing the relationship. Inspect and correct
-  the relationship in App Store Connect before retrying.
+- **Group preflight:** `internal` must exist exactly once, be an internal group,
+  and have `hasAccessToAllBuilds=false`. The `dev` group is intentionally not
+  validated or assigned because it has automatic access to all builds.
 - **Missing Test Details:** the workflow generates notes with the local
   [`testflight-release-notes`](../../.agents/skills/testflight-release-notes/SKILL.md)
   skill and sends them through Fastlane’s `--changelog` option. A missing or

@@ -8,7 +8,6 @@ on:
         required: true
         type: choice
         options:
-          - dev
           - internal
       marketing_version:
         description: Optional marketing version; blank uses project.yml
@@ -355,12 +354,12 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
         run: scripts/release/write-api-key.sh "$RUNNER_TEMP/app-store-connect-api-key.json"
-      - name: Validate both internal groups
+      - name: Validate internal group
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
-        run: bundle exec ruby scripts/release/testflight.rb assert-groups '${{ needs.resolve.outputs.group }}'
+        run: bundle exec ruby scripts/release/testflight.rb assert-group '${{ needs.resolve.outputs.group }}'
       - name: Generate TestFlight release notes
         id: release_notes
         shell: bash
@@ -455,21 +454,12 @@ jobs:
           overwrite: true
           if-no-files-found: error
           retention-days: 14
-      - name: Assign and assert exclusive group membership
+      - name: Assign and assert group membership
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
-        id: assignment
-        shell: bash
-        run: |
-          assignment=$(bundle exec ruby scripts/release/testflight.rb assign-group receipts/binding-receipt.json '${{ needs.resolve.outputs.group }}' "$GITHUB_RUN_ID" '${{ needs.resolve.outputs.commit_sha }}')
-          printf '%s\n' "$assignment"
-          jq -e . >/dev/null <<<"$assignment"
-          echo "selected_group=$(jq -r .selected_group <<<"$assignment")" >> "$GITHUB_OUTPUT"
-          echo "excluded_group=$(jq -r .excluded_group <<<"$assignment")" >> "$GITHUB_OUTPUT"
-          echo "selected_group_id=$(jq -r .selected_group_id <<<"$assignment")" >> "$GITHUB_OUTPUT"
-          echo "excluded_group_id=$(jq -r .excluded_group_id <<<"$assignment")" >> "$GITHUB_OUTPUT"
+        run: bundle exec ruby scripts/release/testflight.rb assign-group receipts/binding-receipt.json '${{ needs.resolve.outputs.group }}' "$GITHUB_RUN_ID" '${{ needs.resolve.outputs.commit_sha }}'
       - name: Write release summary
         run: |
           backtick='`'
@@ -479,8 +469,7 @@ jobs:
             printf '%s\n' '### TestFlight release'
             printf '%s\n' "- commit: ${backtick}${{ needs.resolve.outputs.commit_sha }}${backtick}"
             printf '%s\n' "- version/build: ${backtick}${{ needs.resolve.outputs.marketing_version }} (${{ needs.resolve.outputs.build_number }})${backtick}"
-            printf '%s\n' "- selected group: ${backtick}${{ steps.assignment.outputs.selected_group }}${backtick}"
-            printf '%s\n' "- excluded group: ${backtick}${{ steps.assignment.outputs.excluded_group }}${backtick} (verified absent)"
+            printf '%s\n' "- group: ${backtick}${{ needs.resolve.outputs.group }}${backtick}"
             printf '%s\n' "- resume: ${backtick}${{ steps.delivery.outputs.resume }}${backtick}"
             printf '%s\n' "- release notes SHA-256: ${backtick}${{ steps.release_notes.outputs.sha256 }}${backtick}"
             printf '%s\n' "- database rows: ${backtick}${database_rows}${backtick}"

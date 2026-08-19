@@ -23,8 +23,7 @@ class ReleaseToolTests(unittest.TestCase):
 
     def test_input_validation_rejects_invalid_values_before_dispatch(self):
         self.run_tool("scripts/release/validate-inputs.sh", "internal", "0.10.2", "17")
-        self.run_tool("scripts/release/validate-inputs.sh", "dev", "0.10.2", "18")
-        result = self.run_tool("scripts/release/validate-inputs.sh", "staging", "10", "0", check=False)
+        result = self.run_tool("scripts/release/validate-inputs.sh", "dev", "0.10.2", "18", check=False)
         self.assertNotEqual(result.returncode, 0)
 
     def test_delivery_receipt_records_release_notes_provenance(self):
@@ -93,7 +92,8 @@ class ReleaseToolTests(unittest.TestCase):
 
     def test_release_workflow_keeps_summary_metadata_literal(self):
         workflow = (ROOT / ".github/workflows/testflight-release.yml").read_text()
-        self.assertIn("- dev\n          - internal", workflow)
+        self.assertIn("- internal", workflow)
+        self.assertNotIn("- dev", workflow)
         self.assertIn("printf '%s\\n' \"- commit:", workflow)
         self.assertNotIn('echo "- commit: `${{', workflow)
 

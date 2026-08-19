@@ -6,8 +6,8 @@ group="${1:-}"
 marketing_version="${2:-}"
 build_number="${3:-}"
 
-if [[ "$group" != "dev" && "$group" != "internal" ]]; then
-    echo "group must be dev or internal" >&2
+if [[ "$group" != "internal" ]]; then
+    echo "group must be internal" >&2
     exit 1
 fi
 if [[ -n "$marketing_version" && ! "$marketing_version" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; then

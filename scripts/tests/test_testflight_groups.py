@@ -25,7 +25,7 @@ class FakeAppStoreConnect:
                 "attributes": {
                     "name": "dev",
                     "isInternalGroup": True,
-                    "hasAccessToAllBuilds": False,
+                    "hasAccessToAllBuilds": True,
                 },
             },
             {
@@ -141,7 +141,7 @@ class TestFlightGroupTests(unittest.TestCase):
         )
         return binding
 
-    def test_assignment_targets_selected_group_and_proves_exclusion(self):
+    def test_assignment_targets_selected_group(self):
         server = FakeAppStoreConnect()
         try:
             with tempfile.TemporaryDirectory() as directory:
@@ -159,42 +159,33 @@ class TestFlightGroupTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
         self.assertEqual(payload["selected_group"], "internal")
-        self.assertEqual(payload["excluded_group"], "dev")
         self.assertEqual(server.posts, [("internal", ["build-1"])])
         self.assertEqual(server.memberships["dev"], set())
 
-    def test_existing_non_selected_relationship_fails_without_removal(self):
-        server = FakeAppStoreConnect(memberships={"dev": {"build-1"}, "internal": set()})
-        try:
-            with tempfile.TemporaryDirectory() as directory:
-                result = self.run_client(
-                    server,
-                    "assign-group",
-                    str(self.binding_file(directory)),
-                    "internal",
-                    "run-1",
-                    "sha-1",
-                )
-        finally:
-            server.close()
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("non-selected group dev", result.stderr)
-        self.assertEqual(server.posts, [])
-
-    def test_group_configuration_must_be_explicit_access_for_both_groups(self):
+    def test_selected_group_must_be_explicit_access(self):
         template = FakeAppStoreConnect()
         groups = template.groups
         template.close()
-        groups[0]["attributes"]["hasAccessToAllBuilds"] = True
+        groups[1]["attributes"]["hasAccessToAllBuilds"] = True
         server = FakeAppStoreConnect(groups=groups)
         try:
-            result = self.run_client(server, "assert-groups", "internal")
+            result = self.run_client(server, "assert-group", "internal")
         finally:
             server.close()
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("dev is not an internal explicit-access group", result.stderr)
+        self.assertIn("internal is not an internal explicit-access group", result.stderr)
+        self.assertEqual(server.posts, [])
+
+    def test_dev_is_not_a_supported_release_group(self):
+        server = FakeAppStoreConnect()
+        try:
+            result = self.run_client(server, "assert-group", "dev")
+        finally:
+            server.close()
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("group must be internal", result.stderr)
 
 
 if __name__ == "__main__":

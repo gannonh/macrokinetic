@@ -15,7 +15,7 @@ APP_ID = ENV.fetch("ASC_APP_ID", "6757370520")
 TEAM_ID = ENV.fetch("APPLE_TEAM_ID", "ZBZKKWF95G")
 API_BASE = ENV.fetch("ASC_API_BASE", "https://api.appstoreconnect.apple.com/v1")
 INTERNAL_TESTABLE_STATES = %w[READY_FOR_BETA_TESTING IN_BETA_TESTING].freeze
-SUPPORTED_INTERNAL_GROUPS = %w[dev internal].freeze
+INTERNAL_GROUP = "internal"
 
 def api_request(method, path, body = nil)
   uri = URI(path.start_with?("http://", "https://") ? path : "#{API_BASE}#{path}")
@@ -98,28 +98,21 @@ def sha256(path)
 end
 
 def internal_group_info(selected)
-  abort "group must be one of: #{SUPPORTED_INTERNAL_GROUPS.join(", ")}" unless SUPPORTED_INTERNAL_GROUPS.include?(selected)
+  abort "group must be #{INTERNAL_GROUP}" unless selected == INTERNAL_GROUP
 
   groups = api_collection("/apps/#{APP_ID}/betaGroups?limit=200")
-  resolved = SUPPORTED_INTERNAL_GROUPS.to_h do |name|
-    matches = groups.select { |group| group.dig("attributes", "name") == name }
-    abort "#{name} must resolve to exactly one group" unless matches.one?
+  matches = groups.select { |group| group.dig("attributes", "name") == selected }
+  abort "#{selected} must resolve to exactly one group" unless matches.one?
 
-    group = matches.first
-    attributes = group.fetch("attributes")
-    unless attributes["isInternalGroup"] == true && attributes["hasAccessToAllBuilds"] == false
-      abort "#{name} is not an internal explicit-access group"
-    end
-
-    [name, group.fetch("id")]
+  group = matches.first
+  attributes = group.fetch("attributes")
+  unless attributes["isInternalGroup"] == true && attributes["hasAccessToAllBuilds"] == false
+    abort "#{selected} is not an internal explicit-access group"
   end
 
-  excluded = (SUPPORTED_INTERNAL_GROUPS - [selected]).fetch(0)
   {
     "selected" => selected,
-    "selected_id" => resolved.fetch(selected),
-    "excluded" => excluded,
-    "excluded_id" => resolved.fetch(excluded),
+    "selected_id" => group.fetch("id"),
   }
 end
 
@@ -148,7 +141,7 @@ when "existing-build"
 when "write-delivery-receipt"
   ipa, output, delivery_id, version, build, run_id, commit_sha, selected_group, what_to_test = ARGV
   abort "delivery identifier is required" if delivery_id.to_s.empty?
-  abort "group must be one of: #{SUPPORTED_INTERNAL_GROUPS.join(", ")}" unless SUPPORTED_INTERNAL_GROUPS.include?(selected_group)
+  abort "group must be #{INTERNAL_GROUP}" unless selected_group == INTERNAL_GROUP
   abort "TestFlight what-to-test file is required" if what_to_test.to_s.empty? || !File.file?(what_to_test)
   write_immutable(output, {
     "stage" => "delivery",
@@ -212,7 +205,7 @@ when "poll-and-bind"
     "ipa_sha256" => delivery["ipa_sha256"],
     "created_at" => Time.now.utc.iso8601,
   })
-when "assert-groups", "assert-group"
+when "assert-group"
   selected = ARGV.fetch(0)
   puts JSON.generate(internal_group_info(selected))
 when "assign-group"
@@ -223,27 +216,17 @@ when "assign-group"
   group_info = internal_group_info(selected)
   build_id = binding.fetch("build_resource_id")
   selected_group_id = group_info.fetch("selected_id")
-  excluded_group_id = group_info.fetch("excluded_id")
-  if group_contains_build?(excluded_group_id, build_id)
-    abort "TestFlight build #{build_id} already belongs to non-selected group #{group_info.fetch("excluded")}; remove that relationship before retrying"
-  end
-
   selected_membership = group_contains_build?(selected_group_id, build_id)
   unless selected_membership
     api_request("post", "/betaGroups/#{selected_group_id}/relationships/builds", { data: [{ type: "builds", id: build_id }] })
   end
   final_selected = group_contains_build?(selected_group_id, build_id)
-  final_excluded = group_contains_build?(excluded_group_id, build_id)
   abort "TestFlight selected-group assignment assertion failed" unless final_selected
-  abort "TestFlight non-selected group assertion failed" if final_excluded
   puts JSON.generate(
     "selected_group" => selected,
     "selected_group_id" => selected_group_id,
-    "excluded_group" => group_info.fetch("excluded"),
-    "excluded_group_id" => excluded_group_id,
     "build_resource_id" => build_id,
     "selected_membership" => true,
-    "excluded_membership" => false,
   )
 else
   abort "unknown command: #{command}"
