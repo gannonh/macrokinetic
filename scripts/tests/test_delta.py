@@ -20,6 +20,13 @@ def write_delta(path: Path, products: object) -> None:
         json.dump(products, output)
 
 
+def write_ndjson_delta(path: Path, products: list[dict]) -> None:
+    with gzip.open(path, "wt", encoding="utf-8") as output:
+        for product in products:
+            output.write(json.dumps(product))
+            output.write("\n")
+
+
 def valid_product(code: str, name: str, calories: str = "450") -> dict:
     return {
         "code": code,
@@ -143,6 +150,25 @@ class DeltaTests(unittest.TestCase):
                     valid_product("not-a-barcode", "Still no identity"),
                     valid_product("003", "Valid product"),
                 ],
+            )
+
+            cursor = apply_delta_chain(database, [(100, delta)], cursor=100)
+            with closing(sqlite3.connect(database)) as connection:
+                rows = connection.execute(
+                    "SELECT barcode FROM foods WHERE source = 'openFoodFacts' ORDER BY barcode"
+                ).fetchall()
+
+        self.assertEqual(cursor, 200)
+        self.assertEqual(rows, [("001",), ("002",), ("003",)])
+
+    def test_delta_accepts_newline_delimited_products(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "foods.sqlite"
+            delta = Path(directory) / "openfoodfacts_products_100_200.json.gz"
+            create_fixture_database(database)
+            write_ndjson_delta(
+                delta,
+                [valid_product("003", "New granola", "380")],
             )
 
             cursor = apply_delta_chain(database, [(100, delta)], cursor=100)

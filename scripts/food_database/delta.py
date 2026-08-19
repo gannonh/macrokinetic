@@ -201,7 +201,15 @@ def _coerce_interval(
 def _load_products(path: Path) -> list[Mapping[str, Any]]:
     try:
         with gzip.open(path, "rt", encoding="utf-8") as source:
-            payload = json.load(source)
+            try:
+                payload = json.load(source)
+            except json.JSONDecodeError:
+                source.seek(0)
+                payload = [
+                    json.loads(line)
+                    for line in source
+                    if line.strip()
+                ]
     except (OSError, json.JSONDecodeError) as error:
         raise DeltaPayloadError(f"Malformed delta payload: {path}") from error
 
@@ -211,6 +219,8 @@ def _load_products(path: Path) -> list[Mapping[str, Any]]:
         products = payload["products"]
     elif isinstance(payload, Mapping) and isinstance(payload.get("product"), Mapping):
         products = [payload["product"]]
+    elif isinstance(payload, Mapping) and ("code" in payload or "_id" in payload):
+        products = [payload]
     else:
         raise DeltaPayloadError(f"Malformed delta payload shape: {path}")
 
