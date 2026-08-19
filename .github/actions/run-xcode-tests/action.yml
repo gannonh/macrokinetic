@@ -49,7 +49,7 @@ runs:
           fi
           # Keep xcodebuild clones (max 4 workers) but run Swift Testing serially
           # inside each clone. In-process Swift Testing plus four clones was
-          # trapping hundreds of tests on macos-26-xlarge.
+          # trapping hundreds of tests on the larger macOS runner.
           export SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
           export TEST_RUNNER_SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
           export SIMCTL_CHILD_SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
@@ -58,9 +58,9 @@ runs:
         fi
 
         set -o pipefail
-        # Explicit modules and the compiler index store dominate clean Intel
-        # simulator builds. Disable them for CI lanes so compile can finish
-        # inside the 10-minute unit timeout and the 5-minute SLO.
+        # Explicit modules and the compiler index store dominate clean simulator
+        # builds. Disable them for CI lanes so compile can finish inside the
+        # 20-minute standard-runner unit timeout.
         xcodebuild test \
           -project JabTracker.xcodeproj \
           -scheme "${{ inputs.scheme }}" \

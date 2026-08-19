@@ -25,7 +25,7 @@ PROJECT_YML = ROOT / "project.yml"
 LANE_CONFIG = ROOT / "scripts" / "ci" / "test-lanes.json"
 
 REQUIRED_PR_JOBS = {
-    "Fast unit tests": 10,
+    "Fast unit tests": 20,
     "SwiftLint": 5,
     "Python tooling": 5,
 }
@@ -110,7 +110,7 @@ class PRWorkflowContractTests(unittest.TestCase):
         self.assertIn("COMPRESS_PNG_FILES=NO", action)
         self.assertNotIn("macos-26-intel", self.text)
         self.assertIn("runs-on: macos-26\n", self.text)
-        self.assertIn("runs-on: macos-26-xlarge\n", self.text)
+        self.assertNotIn("macos-26-xlarge", self.text)
         self.assertEqual(
             lanes.xcodebuild_args_for_lane(ROOT, "unit"),
             ["-only-testing:JabTrackerUnitTests"],
@@ -138,6 +138,7 @@ class FullValidationWorkflowTests(unittest.TestCase):
     def test_full_validation_jobs_match_the_lane_matrix(self) -> None:
         self.assertEqual(job_display_names(self.text), set(ALL_PR_JOBS))
         self.assertNotIn("macos-26-intel", self.text)
+        self.assertNotIn("macos-26-xlarge", self.text)
         by_name = {str(job["name"]): job for job in self.jobs.values()}
         for name, timeout in ALL_PR_JOBS.items():
             self.assertEqual(by_name[name]["timeout-minutes"], timeout, name)
