@@ -42,8 +42,8 @@ env:
 jobs:
   unit:
     name: Fast unit tests
-    runs-on: macos-26-xlarge
-    timeout-minutes: 10
+    runs-on: macos-26
+    timeout-minutes: 20
     steps:
       - name: Record job start
         run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
