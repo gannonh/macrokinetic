@@ -7,5 +7,5 @@ git -C "$repo_root" config core.hooksPath .githooks
 
 echo "Installed repository hooks at $repo_root/.githooks"
 echo "Pre-commit: staged whitespace, SwiftLint, and Python compile checks"
-echo "Pre-push: project integrity, Python tests, unit tests, and Git LFS"
-echo "Use git push --no-verify only when intentionally bypassing local checks."
+echo "Pre-push: Git LFS object upload"
+echo "CI runs project integrity, lint, Python, and test validation."

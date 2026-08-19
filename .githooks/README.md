@@ -15,9 +15,9 @@ After cloning the repo, install the repository hooks:
 | Hook            | Purpose                                                                    |
 | --------------- | -------------------------------------------------------------------------- |
 | `pre-commit`    | Staged whitespace, SwiftLint, and Python compile checks              |
-| `pre-push`      | Project integrity, Python tests, unit tests, and Git LFS             |
+| `pre-push`      | Git LFS object upload                                             |
 | `post-checkout` | Git LFS - downloads large files after checkout                       |
 | `post-commit`   | Git LFS                                                               |
 | `post-merge`    | Git LFS - downloads large files after merge                           |
 
-The local hooks are convenience checks and can be bypassed intentionally with `git push --no-verify`. GitHub CI remains the independent merge gate.
+CI owns project integrity, lint, Python, and test validation. The pre-push hook only uploads Git LFS objects; do not bypass it when pushing LFS content.
