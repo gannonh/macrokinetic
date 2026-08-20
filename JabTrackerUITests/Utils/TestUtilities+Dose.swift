@@ -150,53 +150,73 @@ extension TestUtilities {
             "Created profile should appear in list")
     }
 
-    /// Navigates to History view (via Shots tab -> History segment) and waits for history content to load
+    /// Navigates to History view (via More tab -> GLP-1 Programs -> Analytics -> History) and waits for history content to load
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Timeout for history content to appear (default: 3 seconds)
     /// - Returns: The visible history content element (list or calendar)
     @discardableResult
-    static func navigateToHistoryView(in app: XCUIApplication, timeout: TimeInterval = 3)
+    static func navigateToHistoryView(in app: XCUIApplication, timeout: TimeInterval = 5)
         -> XCUIElement
     {
-        // Navigate to Shots tab and select History segment
         navigateToHistory(app, timeout: timeout)
 
-        // Wait for the history container or list to load
         let listContainer = app.descendants(matching: .any)["dose-history-container"]
+        let historyView = app.descendants(matching: .any)["dose-history-view"]
+        let searchField = app.descendants(matching: .any)["dose-history-search"]
         let listView = app.descendants(matching: .any)["dose-history-list"]
+        let emptyState = app.descendants(matching: .any)["dose-history-empty-state"]
+        let filterButton = app.buttons["filter-button"]
+        let doseRows = app.buttons.matching(identifier: "dose-history-row")
 
-        // Try container first (ShotsView wrapper), then internal list
         if listContainer.waitForExistence(timeout: timeout) {
-            // Now wait for the internal list with dose rows
             _ = listView.waitForExistence(timeout: 2)
             return listContainer
+        }
+
+        if historyView.waitForExistence(timeout: timeout) {
+            return historyView
+        }
+
+        if searchField.waitForExistence(timeout: timeout) {
+            return searchField
+        }
+
+        if filterButton.waitForExistence(timeout: timeout) {
+            return filterButton
+        }
+
+        let historyLoaded = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "count >= 1"),
+            object: doseRows
+        )
+        if XCTWaiter().wait(for: [historyLoaded], timeout: timeout) == .completed {
+            return doseRows.firstMatch
         }
 
         if listView.waitForExistence(timeout: timeout) {
             return listView
         }
 
+        if emptyState.waitForExistence(timeout: timeout) {
+            return emptyState
+        }
+
         // Check for segmented control to switch to list mode if in calendar mode
-        let segmentedControl = app.segmentedControls["history-view-mode-picker"]
-        if segmentedControl.waitForExistence(timeout: 2) {
-            let calendarContainer = app.descendants(matching: .any)["dose-calendar-container"]
-            let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
-            if calendarContainer.exists || calendarView.exists {
-                // Button is labeled "List" based on HistoryMode.list.rawValue
-                let listToggle = segmentedControl.buttons["List"]
-                if listToggle.exists {
-                    listToggle.tap()
-                    XCTAssertTrue(
-                        listContainer.waitForExistence(timeout: 2) || listView.waitForExistence(timeout: 2),
-                        "List view should appear after switching from calendar")
-                    return listContainer.exists ? listContainer : listView
-                }
+        let listToggle = app.buttons["List"]
+        if listToggle.waitForExistence(timeout: 2), !listToggle.isSelected {
+            listToggle.tap()
+            if filterButton.waitForExistence(timeout: 2)
+                || XCTWaiter().wait(for: [historyLoaded], timeout: 2) == .completed
+            {
+                return filterButton.exists ? filterButton : doseRows.firstMatch
             }
         }
 
+        debugScreenshot(app, name: "history-navigation-failure")
+        print(app.debugDescription)
         XCTFail("Could not navigate to history list view within \(timeout) seconds")
-        return listView  // This will be non-existent, but satisfies return requirement
+        return historyView
     }
 
     /// Gets dose rows from the history list

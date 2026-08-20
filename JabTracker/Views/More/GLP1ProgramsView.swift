@@ -72,7 +72,9 @@ struct GLP1ProgramsView: View {
             .pickerStyle(SegmentedPickerStyle())
             .padding(.horizontal)
             .padding(.vertical, 12)
-            .accessibilityIdentifier("glp1-section-picker")
+            // Scoped to the picker (not the whole body) so it does not override
+            // descendant accessibility identifiers such as dose-history-search.
+            .accessibilityIdentifier("glp1-programs-view")
 
             // Content based on selected section
             switch selectedSection {
@@ -115,7 +117,6 @@ struct GLP1ProgramsView: View {
                 refreshChartDataset()
             }
         }
-        .accessibilityIdentifier("glp1-programs-view")
         .sheet(isPresented: $showingAddMedication) {
             // Use currentUser from loadData() for consistency with view state
             if let user = currentUser {

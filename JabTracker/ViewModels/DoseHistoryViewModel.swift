@@ -6,6 +6,13 @@
 import Foundation
 import SwiftData
 
+/// Quick date range presets for dose history filtering
+enum DoseDateRangePreset: CaseIterable, Equatable {
+    case today
+    case thisWeek
+    case thisMonth
+}
+
 /// View model for dose history list with filtering, search, and CRUD operations
 /// Handles business logic for displaying and managing dose history data
 @MainActor
@@ -64,6 +71,20 @@ class DoseHistoryViewModel: ObservableObject {
         }
     }
 
+    /// Dose amount range filter - minimum (nil means use full bounds)
+    @Published var filterAmountMin: Double? {
+        didSet {
+            self.applyFiltersAndSearch()
+        }
+    }
+
+    /// Dose amount range filter - maximum (nil means use full bounds)
+    @Published var filterAmountMax: Double? {
+        didSet {
+            self.applyFiltersAndSearch()
+        }
+    }
+
     /// Loading state
     @Published var isLoading: Bool = false
 
@@ -75,11 +96,65 @@ class DoseHistoryViewModel: ObservableObject {
 
     // MARK: - Computed Properties
 
+    private static let defaultAmountBounds: ClosedRange<Double> = 0.25...15.0
+    static let amountBoundsEpsilon = 0.001
+
     /// Whether any filters are currently active
     var hasActiveFilters: Bool {
-        !self.searchText.isEmpty || self.selectedMedicationFilter != nil
-            || self.selectedInjectionSiteFilter != nil || self.filterStartDate != nil
-            || self.filterEndDate != nil || !self.showSkippedDoses
+        self.activeFilterCount > 0
+    }
+
+    /// Count of distinct active filters for badge display
+    var activeFilterCount: Int {
+        var count = 0
+        if !self.searchText.isEmpty { count += 1 }
+        if self.selectedMedicationFilter != nil { count += 1 }
+        if self.selectedInjectionSiteFilter != nil { count += 1 }
+        if self.filterStartDate != nil || self.filterEndDate != nil { count += 1 }
+        if !self.showSkippedDoses { count += 1 }
+        if self.isAmountFilterActive { count += 1 }
+        return count
+    }
+
+    /// Dynamic dose amount bounds derived from user's dose history
+    var doseAmountBounds: ClosedRange<Double> {
+        let amounts = self.allDoses.map(\.amount)
+        guard let minAmount = amounts.min(), let maxAmount = amounts.max() else {
+            return Self.defaultAmountBounds
+        }
+        if abs(minAmount - maxAmount) < Self.amountBoundsEpsilon {
+            let padding = max(0.25, minAmount * 0.1)
+            return max(0, minAmount - padding)...(maxAmount + padding)
+        }
+        return minAmount...maxAmount
+    }
+
+    /// Whether the dose amount filter narrows results from full bounds.
+    /// Both bounds must be set; slider bindings always set them together.
+    var isAmountFilterActive: Bool {
+        guard let min = filterAmountMin, let max = filterAmountMax else {
+            return false
+        }
+        let bounds = doseAmountBounds
+        return min > bounds.lowerBound + Self.amountBoundsEpsilon
+            || max < bounds.upperBound - Self.amountBoundsEpsilon
+    }
+
+    /// Active date range preset when current dates match a preset exactly
+    var activeDateRangePreset: DoseDateRangePreset? {
+        guard let start = filterStartDate, let end = filterEndDate else {
+            return nil
+        }
+        let calendar = Calendar.current
+        for preset in DoseDateRangePreset.allCases {
+            let (presetStart, presetEnd) = Self.dateRange(for: preset, calendar: calendar)
+            if calendar.isDate(start, inSameDayAs: presetStart),
+                calendar.isDate(end, inSameDayAs: presetEnd)
+            {
+                return preset
+            }
+        }
+        return nil
     }
 
     /// Available medications for filtering (extracted from dose data)
@@ -243,8 +318,23 @@ class DoseHistoryViewModel: ObservableObject {
             }
         }
 
+        // Apply dose amount range filter
+        if let min = filterAmountMin, let max = filterAmountMax, self.isAmountFilterActive {
+            filtered = filtered.filter { dose in
+                dose.amountIsInRange(min: min, max: max)
+            }
+        }
+
         // Update filtered results
         self.filteredDoses = filtered.sorted { $0.timestamp > $1.timestamp }
+    }
+
+    /// Apply a date range preset (Today, This Week, This Month)
+    func setDateRange(_ preset: DoseDateRangePreset) {
+        let calendar = Calendar.current
+        let (start, end) = Self.dateRange(for: preset, calendar: calendar)
+        self.filterStartDate = start
+        self.filterEndDate = end
     }
 
     /// Clear all active filters
@@ -255,7 +345,34 @@ class DoseHistoryViewModel: ObservableObject {
         self.filterStartDate = nil
         self.filterEndDate = nil
         self.showSkippedDoses = true
+        self.filterAmountMin = nil
+        self.filterAmountMax = nil
         // applyFiltersAndSearch() is called automatically via didSet
+    }
+
+    private static func dateRange(
+        for preset: DoseDateRangePreset,
+        calendar: Calendar
+    ) -> (start: Date, end: Date) {
+        let today = calendar.startOfDay(for: Date())
+        switch preset {
+        case .today:
+            return (today, today)
+        case .thisWeek:
+            var mondayCalendar = calendar
+            mondayCalendar.firstWeekday = 2
+            let weekStart = mondayCalendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+            let weekEnd = mondayCalendar.date(byAdding: .day, value: 6, to: weekStart) ?? today
+            return (calendar.startOfDay(for: weekStart), calendar.startOfDay(for: weekEnd))
+        case .thisMonth:
+            let components = calendar.dateComponents([.year, .month], from: today)
+            let monthStart = calendar.date(from: components) ?? today
+            let monthEnd = calendar.date(
+                byAdding: DateComponents(month: 1, day: -1),
+                to: monthStart
+            ) ?? today
+            return (monthStart, monthEnd)
+        }
     }
 
     // MARK: - CRUD Operations

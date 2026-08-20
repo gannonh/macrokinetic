@@ -110,6 +110,67 @@ struct DoseHistoryViewModelComputedTests {
         #expect(self.viewModel.hasActiveFilters == false)
     }
 
+    @Test("ViewModel doseAmountBounds derives from dose history")
+    func doseAmountBoundsFromHistory() async throws {
+        let dose1 = self.createTestDose(timestamp: Date(), amount: 0.5)
+        let dose2 = self.createTestDose(
+            timestamp: Date().addingTimeInterval(3600), amount: 2.5)
+
+        [dose1, dose2].forEach { self.context.insert($0) }
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let bounds = self.viewModel.doseAmountBounds
+        #expect(bounds.lowerBound == 0.5)
+        #expect(bounds.upperBound == 2.5)
+    }
+
+    @Test("ViewModel doseAmountBounds uses fallback when no doses")
+    func doseAmountBoundsFallback() async {
+        let bounds = self.viewModel.doseAmountBounds
+        #expect(bounds.lowerBound == 0.25)
+        #expect(bounds.upperBound == 15.0)
+    }
+
+    @Test("ViewModel isAmountFilterActive false at full bounds")
+    func isAmountFilterActiveAtFullBounds() async throws {
+        let dose1 = self.createTestDose(timestamp: Date(), amount: 1.0)
+        let dose2 = self.createTestDose(
+            timestamp: Date().addingTimeInterval(3600), amount: 2.0)
+        [dose1, dose2].forEach { self.context.insert($0) }
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let bounds = self.viewModel.doseAmountBounds
+        self.viewModel.filterAmountMin = bounds.lowerBound
+        self.viewModel.filterAmountMax = bounds.upperBound
+
+        #expect(self.viewModel.isAmountFilterActive == false)
+    }
+
+    @Test("ViewModel activeDateRangePreset nil for custom date range")
+    func activeDateRangePresetNilForCustomRange() async throws {
+        let dose = self.createTestDose(timestamp: Date(), amount: 1.0)
+        self.context.insert(dose)
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let customStart = try #require(
+            Calendar.current.date(byAdding: .day, value: -10, to: Date()))
+        let customEnd = try #require(
+            Calendar.current.date(byAdding: .day, value: -5, to: Date()))
+        self.viewModel.filterStartDate = customStart
+        self.viewModel.filterEndDate = customEnd
+
+        #expect(self.viewModel.activeDateRangePreset == nil)
+    }
+
     @Test("ViewModel provides dose counts per date for calendar indicators")
     func doseCountsPerDateForCalendarIndicators() async throws {
         // Given: Multiple doses on same date and single doses on other dates

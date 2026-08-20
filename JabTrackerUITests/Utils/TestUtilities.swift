@@ -334,26 +334,32 @@ enum TestUtilities {
         settingsButton.tap()
     }
 
-    /// Navigate to History view (via Shots tab -> History segment)
+    /// Navigate to History view (via More tab -> GLP-1 Programs -> Analytics -> History)
     /// - Parameters:
     ///   - app: The XCUIApplication instance
     ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
     static func navigateToHistory(_ app: XCUIApplication, timeout: TimeInterval = 5) {
-        // Navigate to Shots tab
-        self.navigateToTab(app, tabName: "Shots")
+        self.navigateToTab(app, tabName: "More")
 
-        // Wait for Shots view to load
-        let shotsView = app.scrollViews["shots-scroll-view"]
-        _ = shotsView.waitForExistence(timeout: timeout)
-
-        // Tap History segment
-        let segmentedControl = app.segmentedControls["shots-section-picker"]
+        let glp1Row = app.buttons["glp1-programs-row"].firstMatch
         XCTAssertTrue(
-            segmentedControl.waitForExistence(timeout: timeout),
-            "Shots segmented control should exist")
+            glp1Row.waitForExistence(timeout: timeout),
+            "GLP-1 Programs row should exist in More menu")
+        glp1Row.tap()
 
-        let historySegment = segmentedControl.buttons["History"]
-        XCTAssertTrue(historySegment.exists, "History segment should exist")
+        let glp1View = app.descendants(matching: .any)["glp1-programs-view"].firstMatch
+        XCTAssertTrue(
+            glp1View.waitForExistence(timeout: timeout),
+            "GLP-1 Programs view should appear")
+
+        // SwiftUI segmented pickers expose segment buttons by label, not picker identifier
+        let analyticsButton = app.buttons["Analytics"]
+        if analyticsButton.waitForExistence(timeout: 2), !analyticsButton.isSelected {
+            analyticsButton.tap()
+        }
+
+        let historySegment = app.buttons["History"]
+        XCTAssertTrue(historySegment.waitForExistence(timeout: timeout), "History segment should exist")
         historySegment.tap()
     }
 

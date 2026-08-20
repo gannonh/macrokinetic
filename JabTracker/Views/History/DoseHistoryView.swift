@@ -33,6 +33,10 @@ struct DoseHistoryView: View {
             // Search field for E2E test compatibility
             self.searchFieldView
 
+            if !self.viewModel.allDoses.isEmpty {
+                self.resultsCountView
+            }
+
             Group {
                 if self.viewModel.isLoading {
                     self.loadingView
@@ -56,9 +60,6 @@ struct DoseHistoryView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        .sheet(isPresented: self.$showingSearchAndFilter) {
-            self.searchAndFilterSheet
-        }
         .sheet(item: self.$editingDose) { editData in
             self.editDoseSheet(for: editData)
         }
@@ -67,6 +68,9 @@ struct DoseHistoryView: View {
                 viewModel: self.quickDoseViewModel,
                 doseService: self.doseService,
                 showingSuccessMessage: self.$showingSuccessMessage)
+        }
+        .sheet(isPresented: self.$showingSearchAndFilter) {
+            self.searchAndFilterSheet
         }
         .onAppear {
             self.viewModel.setDoses(self.allDoses)
@@ -110,6 +114,18 @@ struct DoseHistoryView: View {
         }
         .padding(.horizontal)
         .padding(.top, 8)
+    }
+
+    private var resultsCountView: some View {
+        Text("\(self.viewModel.filteredDoses.count) of \(self.viewModel.allDoses.count) doses")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .padding(.top, 4)
+            .accessibilityIdentifier("dose-results-count")
+            .accessibilityLabel(
+                "\(self.viewModel.filteredDoses.count) of \(self.viewModel.allDoses.count) doses shown")
     }
 
     private var loadingView: some View {
@@ -242,10 +258,28 @@ struct DoseHistoryView: View {
                     : "line.3.horizontal.decrease.circle"
             )
             .foregroundColor(self.viewModel.hasActiveFilters ? .accentColor : .primary)
+            .overlay(alignment: .topTrailing) {
+                if self.viewModel.activeFilterCount > 0 {
+                    Text("\(self.viewModel.activeFilterCount)")
+                        .font(.caption2.bold())
+                        .foregroundStyle(.white)
+                        .padding(4)
+                        .background(Circle().fill(DesignTokens.Colors.accent))
+                        .offset(x: 6, y: -6)
+                }
+            }
         }
         .accessibilityIdentifier("filter-button")
-        .accessibilityLabel("Search and filter")
+        .accessibilityLabel(self.filterButtonAccessibilityLabel)
         .accessibilityHint(self.viewModel.hasActiveFilters ? "Filters are active" : "No active filters")
+    }
+
+    private var filterButtonAccessibilityLabel: String {
+        let count = self.viewModel.activeFilterCount
+        if count > 0 {
+            return "Search and filter, \(count) active filters"
+        }
+        return "Search and filter"
     }
 
     // MARK: - Alerts and Sheets
@@ -270,13 +304,14 @@ struct DoseHistoryView: View {
                 .navigationTitle("Search & Filter")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .cancellationAction) {
                         Button("Done") {
                             self.showingSearchAndFilter = false
                         }
                     }
                 }
         }
+        .presentationDetents([.large])
     }
 
     private func editDoseSheet(for editData: DoseEditData) -> some View {
