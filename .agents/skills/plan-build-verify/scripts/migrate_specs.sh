@@ -146,7 +146,7 @@ NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-WORK_DIR="$(mktemp -d -t pbv-migrate)"
+WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/pbv-migrate.XXXXXX")"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 RECORDS="$WORK_DIR/records.tsv"
