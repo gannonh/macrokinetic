@@ -1,0 +1,5 @@
+{
+  "name": "JabTracker (Linux tooling)",
+  "user": "ubuntu",
+  "install": "bash scripts/cloud-agent-setup.sh"
+}
