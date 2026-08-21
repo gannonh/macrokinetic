@@ -257,6 +257,138 @@ struct DoseHistoryViewModelFilterTests {
         #expect(self.viewModel.selectedMedicationFilter == nil)
         #expect(self.viewModel.filterStartDate == nil)
         #expect(self.viewModel.filterEndDate == nil)
+        #expect(self.viewModel.filterAmountMin == nil)
+        #expect(self.viewModel.filterAmountMax == nil)
+    }
+
+    // MARK: - Date Range Preset Tests
+
+    @Test("ViewModel setDateRange today preset filters to today only")
+    func setDateRangeTodayPreset() async throws {
+        let today = Date()
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: today))
+
+        let dose1 = self.createTestDose(timestamp: yesterday, amount: 1.0)
+        let dose2 = self.createTestDose(timestamp: today, amount: 2.0)
+
+        [dose1, dose2].forEach { self.context.insert($0) }
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        self.viewModel.setDateRange(.today)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(self.viewModel.filteredDoses.count == 1)
+        #expect(self.viewModel.filteredDoses.first?.amount == 2.0)
+        #expect(self.viewModel.activeDateRangePreset == .today)
+    }
+
+    @Test("ViewModel setDateRange thisWeek preset uses Monday-first week")
+    func setDateRangeThisWeekPreset() async throws {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
+        let today = Date()
+        let weekStart = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+        let beforeWeek = try #require(calendar.date(byAdding: .day, value: -1, to: weekStart))
+
+        let dose1 = self.createTestDose(timestamp: beforeWeek, amount: 1.0)
+        let dose2 = self.createTestDose(timestamp: today, amount: 2.0)
+
+        [dose1, dose2].forEach { self.context.insert($0) }
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        self.viewModel.setDateRange(.thisWeek)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(self.viewModel.filteredDoses.contains { $0.amount == 2.0 })
+        #expect(!self.viewModel.filteredDoses.contains { $0.amount == 1.0 })
+        #expect(self.viewModel.activeDateRangePreset == .thisWeek)
+    }
+
+    @Test("ViewModel setDateRange thisMonth preset filters to current month")
+    func setDateRangeThisMonthPreset() async throws {
+        let calendar = Calendar.current
+        let today = Date()
+        let lastMonth = try #require(calendar.date(byAdding: .month, value: -1, to: today))
+
+        let dose1 = self.createTestDose(timestamp: lastMonth, amount: 1.0)
+        let dose2 = self.createTestDose(timestamp: today, amount: 2.0)
+
+        [dose1, dose2].forEach { self.context.insert($0) }
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        self.viewModel.setDateRange(.thisMonth)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(self.viewModel.filteredDoses.count == 1)
+        #expect(self.viewModel.filteredDoses.first?.amount == 2.0)
+        #expect(self.viewModel.activeDateRangePreset == .thisMonth)
+    }
+
+    // MARK: - Amount Range Filtering Tests
+
+    @Test("ViewModel filters doses by amount range")
+    func filterByAmountRange() async throws {
+        let dose1 = self.createTestDose(timestamp: Date(), amount: 0.5)
+        let dose2 = self.createTestDose(
+            timestamp: Date().addingTimeInterval(3600), amount: 1.0)
+        let dose3 = self.createTestDose(
+            timestamp: Date().addingTimeInterval(7200), amount: 2.5)
+
+        [dose1, dose2, dose3].forEach { self.context.insert($0) }
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        self.viewModel.filterAmountMin = 0.75
+        self.viewModel.filterAmountMax = 2.0
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(self.viewModel.isAmountFilterActive)
+        #expect(self.viewModel.filteredDoses.count == 1)
+        #expect(self.viewModel.filteredDoses.first?.amount == 1.0)
+    }
+
+    // MARK: - Active Filter Count Tests
+
+    @Test("ViewModel activeFilterCount counts distinct active filters")
+    func activeFilterCount() async throws {
+        let dose = self.createTestDose(timestamp: Date(), amount: 1.0)
+        self.context.insert(dose)
+        try self.context.save()
+
+        self.viewModel.loadData(context: self.context)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(self.viewModel.activeFilterCount == 0)
+
+        self.viewModel.searchText = "test"
+        #expect(self.viewModel.activeFilterCount == 1)
+
+        self.viewModel.selectedMedicationFilter = "semaglutide"
+        #expect(self.viewModel.activeFilterCount == 2)
+
+        self.viewModel.setDateRange(.today)
+        #expect(self.viewModel.activeFilterCount == 3)
+
+        self.viewModel.showSkippedDoses = false
+        #expect(self.viewModel.activeFilterCount == 4)
+
+        self.viewModel.filterAmountMin = 0.5
+        self.viewModel.filterAmountMax = 0.75
+        #expect(self.viewModel.activeFilterCount == 5)
+
+        self.viewModel.clearAllFilters()
+        #expect(self.viewModel.activeFilterCount == 0)
     }
 
     // MARK: - Helper Methods

@@ -381,6 +381,8 @@ struct DoseSearchAndFilterViewTests {
             #expect(viewModel.filterStartDate == nil)
             #expect(viewModel.filterEndDate == nil)
             #expect(viewModel.showSkippedDoses == true)
+            #expect(viewModel.filterAmountMin == nil)
+            #expect(viewModel.filterAmountMax == nil)
             #expect(viewModel.hasActiveFilters == false)
         }
 
@@ -389,6 +391,41 @@ struct DoseSearchAndFilterViewTests {
         // Should show all doses again
         await MainActor.run {
             #expect(viewModel.filteredDoses.count == 3)
+        }
+    }
+
+    // MARK: - Date Range Preset Tests
+
+    @Test("Date range preset sets filter dates correctly")
+    func dateRangePresetSelection() async throws {
+        let context = try self.createTestModelContext()
+        let viewModel = await createTestViewModel()
+        try await setupTestData(context: context, viewModel: viewModel)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        await MainActor.run {
+            viewModel.setDateRange(.today)
+            #expect(viewModel.filterStartDate != nil)
+            #expect(viewModel.filterEndDate != nil)
+            #expect(viewModel.activeDateRangePreset == .today)
+        }
+    }
+
+    @Test("Amount filter is included in active filter state")
+    func amountFilterActiveState() async throws {
+        let context = try self.createTestModelContext()
+        let viewModel = await createTestViewModel()
+        try await setupTestData(context: context, viewModel: viewModel)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        await MainActor.run {
+            let bounds = viewModel.doseAmountBounds
+            viewModel.filterAmountMin = bounds.lowerBound
+            viewModel.filterAmountMax = bounds.upperBound - 0.5
+            #expect(viewModel.isAmountFilterActive)
+            #expect(viewModel.activeFilterCount >= 1)
         }
     }
 

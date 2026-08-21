@@ -411,6 +411,23 @@ struct DoseHistoryViewTests {
         }
     }
 
+    @Test("DoseHistoryViewModel activeFilterCount matches active filters")
+    func viewModelActiveFilterCount() async throws {
+        let viewModel = await DoseHistoryViewModel()
+
+        await MainActor.run {
+            #expect(viewModel.activeFilterCount == 0)
+
+            viewModel.searchText = "test"
+            viewModel.selectedInjectionSiteFilter = "Thigh"
+            viewModel.setDateRange(.today)
+            #expect(viewModel.activeFilterCount == 3)
+
+            viewModel.clearAllFilters()
+            #expect(viewModel.activeFilterCount == 0)
+        }
+    }
+
     @Test("DoseHistoryViewModel available medications and sites work")
     func viewModelAvailableData() async throws {
         let context = try self.createTestModelContext()

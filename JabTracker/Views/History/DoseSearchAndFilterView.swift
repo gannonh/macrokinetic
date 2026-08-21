@@ -11,6 +11,8 @@ struct DoseSearchAndFilterView: View {
     @ObservedObject var viewModel: DoseHistoryViewModel
     @State private var showingDateRangePicker = false
 
+    private static let amountStep = 0.25
+
     var body: some View {
         Form {
             self.searchSection
@@ -55,6 +57,7 @@ struct DoseSearchAndFilterView: View {
 
     // MARK: - Filters Section
 
+    @ViewBuilder
     private var filtersSection: some View {
         Section {
             // Medication filter
@@ -69,6 +72,8 @@ struct DoseSearchAndFilterView: View {
         } header: {
             Text("Filters")
         }
+
+        self.doseAmountSection
     }
 
     private var medicationFilterPicker: some View {
@@ -124,6 +129,13 @@ struct DoseSearchAndFilterView: View {
 
     private var dateRangeSection: some View {
         Section {
+            HStack(spacing: 8) {
+                self.datePresetButton("Today", preset: .today, identifier: "date-preset-today")
+                self.datePresetButton("This Week", preset: .thisWeek, identifier: "date-preset-this-week")
+                self.datePresetButton("This Month", preset: .thisMonth, identifier: "date-preset-this-month")
+            }
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
             Button {
                 self.showingDateRangePicker = true
             } label: {
@@ -148,6 +160,31 @@ struct DoseSearchAndFilterView: View {
         } header: {
             Text("Date Range")
         }
+    }
+
+    private func datePresetButton(
+        _ title: String,
+        preset: DoseDateRangePreset,
+        identifier: String
+    ) -> some View {
+        let isActive = self.viewModel.activeDateRangePreset == preset
+        return Group {
+            if isActive {
+                Button(title) {
+                    self.viewModel.setDateRange(preset)
+                }
+                .buttonStyle(.borderedProminent)
+            } else {
+                Button(title) {
+                    self.viewModel.setDateRange(preset)
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .font(.caption)
+        .accessibilityIdentifier(identifier)
+        .accessibilityLabel("\(title) date preset")
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 
     private var dateRangeDisplayText: String {
@@ -255,6 +292,13 @@ struct DoseSearchAndFilterView: View {
             filters.append("Hide skipped")
         }
 
+        if self.viewModel.isAmountFilterActive,
+            let min = viewModel.filterAmountMin,
+            let max = viewModel.filterAmountMax
+        {
+            filters.append(String(format: "Amount: %.2f–%.2f mg", min, max))
+        }
+
         return filters
     }
 
@@ -315,7 +359,7 @@ struct DoseSearchAndFilterView: View {
             .navigationTitle("Date Range")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
                         self.showingDateRangePicker = false
                     }
@@ -323,6 +367,86 @@ struct DoseSearchAndFilterView: View {
             }
         }
         .accessibilityIdentifier("dose-filter-sheet")
+    }
+}
+
+// MARK: - Dose Amount Filter
+
+private extension DoseSearchAndFilterView {
+    private var doseAmountSection: some View {
+        Section {
+            Text("Dose Amount: \(self.formattedAmountRange)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            self.amountSlider(label: "Minimum", binding: self.amountMinBinding, identifier: "dose-amount-min-slider")
+            self.amountSlider(label: "Maximum", binding: self.amountMaxBinding, identifier: "dose-amount-max-slider")
+        } header: {
+            Text("Dose Amount")
+        }
+        // No section-level identifier: it would override the slider identifiers
+    }
+
+    private func amountSlider(
+        label: String, binding: Binding<Double>, identifier: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Slider(
+                value: binding,
+                in: self.viewModel.doseAmountBounds,
+                step: Self.amountStep
+            )
+            .accessibilityIdentifier(identifier)
+        }
+    }
+
+    private var formattedAmountRange: String {
+        let bounds = self.viewModel.doseAmountBounds
+        let min = self.viewModel.filterAmountMin ?? bounds.lowerBound
+        let max = self.viewModel.filterAmountMax ?? bounds.upperBound
+        return String(format: "%.2f – %.2f mg", min, max)
+    }
+
+    private var amountMinBinding: Binding<Double> {
+        Binding(
+            get: {
+                self.viewModel.filterAmountMin ?? self.viewModel.doseAmountBounds.lowerBound
+            },
+            set: { newValue in
+                let bounds = self.viewModel.doseAmountBounds
+                let currentMax = self.viewModel.filterAmountMax ?? bounds.upperBound
+                let clampedMin = min(newValue, currentMax)
+                self.updateAmountFilter(min: clampedMin, max: currentMax)
+            })
+    }
+
+    private var amountMaxBinding: Binding<Double> {
+        Binding(
+            get: {
+                self.viewModel.filterAmountMax ?? self.viewModel.doseAmountBounds.upperBound
+            },
+            set: { newValue in
+                let bounds = self.viewModel.doseAmountBounds
+                let currentMin = self.viewModel.filterAmountMin ?? bounds.lowerBound
+                let clampedMax = max(newValue, currentMin)
+                self.updateAmountFilter(min: currentMin, max: clampedMax)
+            })
+    }
+
+    private func updateAmountFilter(min: Double, max: Double) {
+        let bounds = self.viewModel.doseAmountBounds
+        let atFullBounds = min <= bounds.lowerBound + DoseHistoryViewModel.amountBoundsEpsilon
+            && max >= bounds.upperBound - DoseHistoryViewModel.amountBoundsEpsilon
+        if atFullBounds {
+            self.viewModel.filterAmountMin = nil
+            self.viewModel.filterAmountMax = nil
+        } else {
+            self.viewModel.filterAmountMin = min
+            self.viewModel.filterAmountMax = max
+        }
     }
 }
 
