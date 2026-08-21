@@ -412,6 +412,22 @@ struct DoseEventTests {
 
     // MARK: - Edge Cases
 
+    @Test("Detached generic DoseEvent uses its canonical medication name")
+    func detachedGenericEventDisplayName() {
+        let event = DoseEvent(
+            id: UUID(),
+            timestamp: Date(),
+            type: .scheduled,
+            scheduledDose: nil,
+            actualDose: nil,
+            doseAmount: 0.5,
+            adherenceStatus: .pending,
+            medicationBrandName: " Generic ",
+            medicationGenericName: " semaglutide ")
+
+        #expect(event.medicationDisplayName == "Semaglutide")
+    }
+
     @Test("DoseEvent with zero dose amount")
     @MainActor
     func eventWithZeroDoseAmount() throws {

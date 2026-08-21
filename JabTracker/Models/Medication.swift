@@ -12,6 +12,32 @@ enum DoseFrequency: String, CaseIterable, Codable {
     }
 }
 
+struct MedicationNames {
+    let genericName: String?
+    let brandName: String?
+
+    var singleLabel: String? {
+        let brandName = self.normalized(self.brandName)
+        if let brandName,
+           brandName.caseInsensitiveCompare("Generic") != .orderedSame
+        {
+            return brandName
+        }
+
+        guard let genericName = self.normalized(self.genericName) else {
+            return nil
+        }
+
+        return Medication.fromGenericName(genericName)?.displayName ?? genericName
+    }
+
+    private func normalized(_ name: String?) -> String? {
+        guard let name else { return nil }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName.isEmpty ? nil : trimmedName
+    }
+}
+
 enum Medication: String, CaseIterable, Codable, Identifiable {
     case semaglutide
     case tirzepatide

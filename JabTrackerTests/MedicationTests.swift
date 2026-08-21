@@ -105,6 +105,42 @@ struct MedicationTests {
         }
     }
 
+    @Test("Single labels prefer branded names")
+    func singleLabelsPreferBrandedNames() {
+        let names = MedicationNames(
+            genericName: "Semaglutide",
+            brandName: "  Ozempic  ")
+
+        #expect(names.singleLabel == "Ozempic")
+    }
+
+    @Test("Single labels replace Generic with the canonical medication name")
+    func genericSingleLabelsUseCanonicalMedicationNames() {
+        let names = MedicationNames(
+            genericName: "  sEmAgLuTiDe  ",
+            brandName: "  gEnErIc  ")
+
+        #expect(names.singleLabel == "Semaglutide")
+    }
+
+    @Test("Single labels preserve unknown generic names")
+    func unknownGenericSingleLabelsArePreserved() {
+        let names = MedicationNames(
+            genericName: "  Retatrutide  ",
+            brandName: "Generic")
+
+        #expect(names.singleLabel == "Retatrutide")
+    }
+
+    @Test("Single labels are absent when both names are empty")
+    func emptySingleLabelsAreAbsent() {
+        let names = MedicationNames(
+            genericName: " \n ",
+            brandName: "  ")
+
+        #expect(names.singleLabel == nil)
+    }
+
     @Test("Brand names are complete and accurate")
     func brandNames() throws {
         // Test exact brand arrays - these are FDA-approved brand names plus Generic option

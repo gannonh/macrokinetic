@@ -123,6 +123,17 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.displayName == "Semaglutide")
     }
 
+    @Test("Legacy profiles without medicationType canonicalize known generic names")
+    func legacyProfileDisplayName() {
+        let profile = MedicationProfile(
+            genericName: "sEmAgLuTiDe",
+            brandName: "generic")
+
+        profile.medicationType = ""
+
+        #expect(profile.displayName == "Semaglutide")
+    }
+
     @Test("Single medication labels preserve branded names")
     func brandedProfileDisplayName() {
         let profile = MedicationProfile(
