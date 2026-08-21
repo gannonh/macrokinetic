@@ -263,7 +263,7 @@ struct QuickDoseSheet: View {
                     // Medication Selection
                     Picker("Medication", selection: self.$viewModel.selectedMedicationProfile) {
                         ForEach(self.viewModel.medicationProfiles, id: \.id) { profile in
-                            Text("\(profile.brandName) (\(profile.currentDose, specifier: "%.2f") mg)")
+                            Text("\(profile.displayName) (\(profile.currentDose, specifier: "%.2f") mg)")
                                 .tag(profile as MedicationProfile?)
                         }
                     }

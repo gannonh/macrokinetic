@@ -250,7 +250,7 @@ private struct QuickDoseEntrySheet: View {
                     HStack {
                         Text("Medication")
                         Spacer()
-                        Text(preSelectedProfile.brandName)
+                        Text(preSelectedProfile.displayName)
                             .foregroundColor(.secondary)
                     }
                     .accessibilityIdentifier("quick-dose-entry-medication")

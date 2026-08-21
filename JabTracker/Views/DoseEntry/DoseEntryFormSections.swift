@@ -24,7 +24,7 @@ enum DoseEntryFormSections {
             Section {
                 Picker("Medication", selection: self.$selectedMedicationProfile) {
                     ForEach(self.medicationProfiles, id: \.id) { profile in
-                        Text("\(profile.brandName) (\(profile.currentDose, specifier: "%.2f") mg)")
+                        Text("\(profile.displayName) (\(profile.currentDose, specifier: "%.2f") mg)")
                             .tag(profile as MedicationProfile?)
                     }
                 }

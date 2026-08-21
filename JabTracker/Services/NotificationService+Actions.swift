@@ -207,7 +207,7 @@ extension NotificationService {
         let content = UNMutableNotificationContent()
         content.title = "Missed Dose Alert"
         let scheduledTime = formatTime(scheduledDose.scheduledTime)
-        content.body = "You missed your \(medicationProfile.brandName) dose scheduled for \(scheduledTime)"
+        content.body = "You missed your \(medicationProfile.displayName) dose scheduled for \(scheduledTime)"
         content.sound = .default
         content.categoryIdentifier = "MISSED_DOSE"
         content.userInfo = [NotificationService.UserInfoKeys.scheduledDoseId: scheduledDose.id.uuidString]

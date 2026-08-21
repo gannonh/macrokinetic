@@ -38,7 +38,7 @@ struct DoseTitrationView: View {
 
                                 Spacer()
 
-                                Text(self.profile.brandName)
+                                Text(self.profile.displayName)
                                     .font(DesignTokens.Typography.body)
                                     .foregroundColor(.secondary)
                             }
