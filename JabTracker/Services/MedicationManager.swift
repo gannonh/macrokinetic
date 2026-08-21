@@ -176,6 +176,7 @@ class MedicationManager: ObservableObject {
         // Update medication type if provided
         if let medication {
             profile.medicationType = medication.rawValue
+            profile.genericName = medication.displayName
         }
 
         // Update brand name if provided

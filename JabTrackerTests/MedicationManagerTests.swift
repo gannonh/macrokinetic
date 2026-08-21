@@ -148,6 +148,28 @@ struct MedicationManagerTests {
         #expect(profile.updatedAt > profile.createdAt)
     }
 
+    @Test("Updating medication refreshes the generic name used by dose events")
+    @MainActor
+    func updateProfileMedicationRefreshesGenericName() throws {
+        let manager = MedicationManager(modelContext: context)
+        let testUser = try createTestUser()
+        let profile = try manager.createProfile(
+            for: testUser,
+            medication: .semaglutide,
+            brandName: "Generic",
+            currentDose: 0.25)
+
+        try manager.updateProfile(
+            profile,
+            medication: .tirzepatide,
+            brandName: "Generic",
+            currentDose: 2.5)
+
+        #expect(profile.medicationType == Medication.tirzepatide.rawValue)
+        #expect(profile.genericName == Medication.tirzepatide.displayName)
+        #expect(profile.displayName == Medication.tirzepatide.displayName)
+    }
+
     @Test("Update profile with invalid dose throws error")
     @MainActor
     func updateProfileWithInvalidDose() throws {
