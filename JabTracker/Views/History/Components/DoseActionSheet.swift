@@ -33,13 +33,13 @@ struct DoseActionSheet: View {
                 // Event details section
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(event.medicationBrandName ?? "Medication")
+                        Text(event.medicationDisplayName ?? "Medication")
                             .font(.headline)
-                            .foregroundColor(event.medicationBrandName == nil ? .secondary : .primary)
+                            .foregroundColor(event.medicationDisplayName == nil ? .secondary : .primary)
                             .accessibilityIdentifier("dose-action-medication-name")
                             .onAppear {
-                                if event.medicationBrandName == nil {
-                                    logger.error("Missing medication brand name for dose event")
+                                if event.medicationDisplayName == nil {
+                                    logger.error("Missing medication name for dose event")
                                 }
                             }
 

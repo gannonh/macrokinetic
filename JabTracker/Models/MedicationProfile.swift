@@ -90,22 +90,11 @@ final class MedicationProfile {
         }
     }
 
-    /// The preferred name when a profile is represented by a single medication label.
-    /// Branded medications use their brand, while a generic profile uses the medication name.
     var displayName: String {
-        let normalizedBrandName = self.brandName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !normalizedBrandName.isEmpty,
-           normalizedBrandName.caseInsensitiveCompare("Generic") != .orderedSame
-        {
-            return normalizedBrandName
-        }
-
-        if let medication = self.medication ?? Medication.fromGenericName(self.genericName) {
-            return medication.displayName
-        }
-
-        let normalizedGenericName = self.genericName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return normalizedGenericName.isEmpty ? normalizedBrandName : normalizedGenericName
+        MedicationNames(
+            genericName: self.medication?.displayName ?? self.genericName,
+            brandName: self.brandName
+        ).singleLabel ?? ""
     }
 }
 

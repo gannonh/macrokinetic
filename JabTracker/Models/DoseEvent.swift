@@ -69,6 +69,13 @@ struct DoseEvent: Identifiable, Comparable {
         adherenceStatus == .adherent && type == .taken
     }
 
+    var medicationDisplayName: String? {
+        MedicationNames(
+            genericName: self.medicationGenericName,
+            brandName: self.medicationBrandName
+        ).singleLabel
+    }
+
     // MARK: - Factory Methods
 
     /// Create a DoseEvent from a ScheduledDose
