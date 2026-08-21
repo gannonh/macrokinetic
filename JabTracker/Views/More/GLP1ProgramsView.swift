@@ -343,7 +343,7 @@ struct GLP1ProgramsView: View {
                 .accessibilityIdentifier("cancel-delete-button")
             } message: { profile in
                 Text(
-                    "Permanently deleting '\(profile.brandName)' will remove ALL data including "
+                    "Permanently deleting '\(profile.displayName)' will remove ALL data including "
                         + "historical doses and analytics. Disable instead to preserve your historical dose data."
                 )
             }

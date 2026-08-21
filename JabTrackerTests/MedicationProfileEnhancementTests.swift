@@ -113,6 +113,26 @@ struct MedicationProfileEnhancementTests {
         #expect(profile.medicationType == Medication.tirzepatide.rawValue)
     }
 
+    @Test("Single medication labels prefer the medication name over Generic")
+    func genericProfileDisplayName() {
+        let profile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Generic",
+            medicationType: Medication.semaglutide.rawValue)
+
+        #expect(profile.displayName == "Semaglutide")
+    }
+
+    @Test("Single medication labels preserve branded names")
+    func brandedProfileDisplayName() {
+        let profile = MedicationProfile(
+            genericName: "semaglutide",
+            brandName: "Ozempic",
+            medicationType: Medication.semaglutide.rawValue)
+
+        #expect(profile.displayName == "Ozempic")
+    }
+
     @Test("Medication computed property works")
     func medicationComputedProperty() {
         // Given

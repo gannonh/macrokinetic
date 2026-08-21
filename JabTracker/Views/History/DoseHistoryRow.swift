@@ -87,7 +87,7 @@ struct DoseHistoryRow: View {
     private var medicationText: some View {
         Group {
             if let medication = dose.medication {
-                Text(medication.brandName.isEmpty ? medication.genericName : medication.brandName)
+                Text(medication.displayName)
                     .font(.subheadline)
                     .foregroundColor(self.dose.skipped ? .secondary : .primary)
             } else {
@@ -150,8 +150,7 @@ struct DoseHistoryRow: View {
 
         // Medication
         if let medication = dose.medication {
-            let medName = medication.brandName.isEmpty ? medication.genericName : medication.brandName
-            components.append(medName)
+            components.append(medication.displayName)
         }
 
         // Time

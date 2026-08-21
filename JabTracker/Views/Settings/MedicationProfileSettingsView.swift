@@ -142,7 +142,7 @@ struct MedicationProfileSettingsView: View {
             } message: { profile in
                 Text(
                     """
-                    Permanently deleting '\(profile.brandName)' will remove ALL data including historical doses \
+                    Permanently deleting '\(profile.displayName)' will remove ALL data including historical doses \
                     and analytics. Disable instead to preserve your historical dose data.
                     """
                 )
@@ -458,7 +458,7 @@ struct MedicationProfileDetailView: View {
 
     var body: some View {
         mainContent
-            .navigationTitle(self.profile.brandName)
+            .navigationTitle(self.profile.displayName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

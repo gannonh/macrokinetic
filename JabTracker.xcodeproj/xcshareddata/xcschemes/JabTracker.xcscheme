@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "2650"
-   version = "1.7">
+   version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES"
-      runPostActionsOnFailure = "NO">
+      buildImplicitDependencies = "YES">
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -69,8 +68,7 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "NO"
-      onlyGenerateCoverageForSpecifiedTargets = "NO">
+      shouldUseLaunchSchemeArgsEnv = "NO">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -80,42 +78,6 @@
             ReferencedContainer = "container:JabTracker.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "23FF7E390CA17648FBCE01A4"
-               BuildableName = "JabTrackerUnitTests.xctest"
-               BlueprintName = "JabTrackerUnitTests"
-               ReferencedContainer = "container:JabTracker.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E86738492E4B52299987F1C5"
-               BuildableName = "JabTrackerIntegrationTests.xctest"
-               BlueprintName = "JabTrackerIntegrationTests"
-               ReferencedContainer = "container:JabTracker.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES"
-            testExecutionOrdering = "random">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0EAE947DED48D0D345FE2DDA"
-               BuildableName = "JabTrackerUITests.xctest"
-               BlueprintName = "JabTrackerUITests"
-               ReferencedContainer = "container:JabTracker.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--bypass-onboarding"
@@ -206,6 +168,42 @@
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "23FF7E390CA17648FBCE01A4"
+               BuildableName = "JabTrackerUnitTests.xctest"
+               BlueprintName = "JabTrackerUnitTests"
+               ReferencedContainer = "container:JabTracker.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E86738492E4B52299987F1C5"
+               BuildableName = "JabTrackerIntegrationTests.xctest"
+               BlueprintName = "JabTrackerIntegrationTests"
+               ReferencedContainer = "container:JabTracker.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES"
+            testExecutionOrdering = "random">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "0EAE947DED48D0D345FE2DDA"
+               BuildableName = "JabTrackerUITests.xctest"
+               BlueprintName = "JabTrackerUITests"
+               ReferencedContainer = "container:JabTracker.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
