@@ -25,9 +25,7 @@
 ## Source of Truth
 
 - `AGENTS.md` contains repository working conventions and durable product context.
-- GitHub Issues and `.agents/skills/plan-build-verify/` contain specs, the backlog, and the Plan/Build/Verify workflow.
-- Focused files under `docs/features/` contain complex domain behavior.
-- Git history, tags, and release notes contain historical work.
+- Specs are GitHub Issues. Product OS is `plan-build-verify` (see Skills). Domain docs under `docs/features/` cover complex behavior; git history, tags, and release notes cover historical work.
 
 ### Important Documentation
 
@@ -36,6 +34,19 @@ Read these documents when working in the corresponding domain:
 @docs/features/algorithms/TDEE-CALORIE-ALGORITHMS.md
 @docs/features/onboarding-strategy-checkin-flows/FLOWS.md
 
+## Skills
+
+Product OS is `plan-build-verify`. Specs are GitHub Issues, not files under `docs/specs/`.
+
+Install project-local skills (never global `-g`, never the whole `gannonh/skills` pack):
+
+```bash
+bash scripts/install-skills.sh
+# or:
+npx skills add gannonh/skills --skill plan-build-verify --skill address-pr-comments -y
+```
+
+That installs only `plan-build-verify` and `address-pr-comments`. Leave existing vendored skills under `.agents/skills/` alone (`plan-build-verify`, `ps`, `testflight-release-notes`). Cursor engineering execution is the **pstack** plugin, not npx-installed `ps`. Do not install `ps`, `okf`, or `kata-linear` for this repo. OKF is retired.
 
 ## Important Reminders
 
