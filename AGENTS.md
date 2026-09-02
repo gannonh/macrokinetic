@@ -36,17 +36,24 @@ Read these documents when working in the corresponding domain:
 
 ## Skills
 
-Product OS is `plan-build-verify`. Specs are GitHub Issues, not files under `docs/specs/`.
+Product OS is [plan-build-verify](https://github.com/gannonh/plan-build-verify). Specs are GitHub Issues, not files under `docs/specs/`.
 
-Install project-local skills (never global `-g`, never the whole `gannonh/skills` pack):
+Install the plugin (not the deleted `gannonh/skills` pack path):
 
 ```bash
 bash scripts/install-skills.sh
-# or:
-npx skills add gannonh/skills --skill plan-build-verify --skill address-pr-comments -y
 ```
 
-That installs only `plan-build-verify` and `address-pr-comments`. Leave existing vendored skills under `.agents/skills/` alone (`plan-build-verify`, `ps`, `testflight-release-notes`). Cursor engineering execution is the **pstack** plugin, not npx-installed `ps`. Do not install `ps`, `okf`, or `kata-linear` for this repo. OKF is retired.
+**Cursor** — after install, enable **Allow Local Plugin Imports**, then enable `plan-build-verify`.
+
+**Claude Code**
+
+```text
+/plugin marketplace add gannonh/plan-build-verify
+/plugin install plan-build-verify@plan-build-verify
+```
+
+Leave existing vendored skills under `.agents/skills/` alone (`ps`, `testflight-release-notes`). Cursor engineering execution is the **pstack** plugin, not npx-installed `ps`. Do not install `ps`, `okf`, or `kata-linear` for this repo. OKF is retired.
 
 ## Important Reminders
 
