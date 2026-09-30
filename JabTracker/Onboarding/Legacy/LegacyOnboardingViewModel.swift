@@ -45,11 +45,11 @@ class LegacyOnboardingViewModel: ObservableObject {
     private let authManager: AuthenticationManager
     let pkEngine = PharmacokineticsEngine()  // Internal for ScheduleSetupView access
 
-    // Test hooks (internal so testable with @testable import). In production these remain nil.
-    // They allow unit tests to simulate HealthKit availability and forced authorization result
-    // without invoking real HKHealthStore UI.
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     var testIsHealthDataAvailable: Bool?
     var testForcedHealthAuthResult: Bool?
+
+    #endif
 
     init(dataController: DataController, authManager: AuthenticationManager) {
         self.dataController = dataController
@@ -181,6 +181,7 @@ class LegacyOnboardingViewModel: ObservableObject {
         self.isLoading = true
         defer { isLoading = false }
 
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         // Short-circuit during unit / snapshot / Swift Testing runs to avoid hanging on real
         // HealthKit permission UI (which requires user interaction that's not available in
         // non-UI test environments). We detect a test context via the presence of the
@@ -195,29 +196,34 @@ class LegacyOnboardingViewModel: ObservableObject {
         }
 
         let isAvailable = self.testIsHealthDataAvailable ?? MetricsService.isHealthKitAvailable
+        #else
+        let isAvailable = MetricsService.isHealthKitAvailable
+        #endif
+
         guard isAvailable else {
             self.healthKitGranted = false
             return
         }
 
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         if let forced = testForcedHealthAuthResult {
             self.healthKitGranted = forced
-        } else {
-            // Use MetricsService as single source of truth for HealthKit authorization
-            let metricsService = MetricsService(context: dataController.container.mainContext)
-            do {
-                let granted = try await metricsService.requestFullHealthKitAuthorization()
-                self.healthKitGranted = granted
-                if !granted {
-                    self.errorMessage =
-                        "HealthKit permissions were denied. You can enable them later in Settings."
-                } else {
-                    self.errorMessage = nil
-                }
-            } catch {
-                self.errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
-                self.healthKitGranted = false
+            return
+        }
+        #endif
+        let metricsService = MetricsService(context: dataController.container.mainContext)
+        do {
+            let granted = try await metricsService.requestFullHealthKitAuthorization()
+            self.healthKitGranted = granted
+            if !granted {
+                self.errorMessage =
+                    "HealthKit permissions were denied. You can enable them later in Settings."
+            } else {
+                self.errorMessage = nil
             }
+        } catch {
+            self.errorMessage = "Failed to request HealthKit permissions: \(error.localizedDescription)"
+            self.healthKitGranted = false
         }
     }
 

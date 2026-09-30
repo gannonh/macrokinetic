@@ -836,6 +836,7 @@
 		4614C62282B8059E7287C7F9 /* CalendarStatsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarStatsUITests.swift; sourceTree = "<group>"; };
 		46A434A0D2624548AEB5450F /* EnergyBalanceWidgetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnergyBalanceWidgetViewModel.swift; sourceTree = "<group>"; };
 		4714983CEAB76E9A97FCEC51 /* NotificationServicePersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServicePersistenceTests.swift; sourceTree = "<group>"; };
+		48042A272175BCF5897733B8 /* JabTrackerTestHarness.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JabTrackerTestHarness.entitlements; sourceTree = "<group>"; };
 		48822924C474D2E7E3E2BD2D /* FoodSearchSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodSearchSheet.swift; sourceTree = "<group>"; };
 		492D51FC0AD7FF47E83A6ABD /* ReminderTimingPickerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTimingPickerTests.swift; sourceTree = "<group>"; };
 		495FFF1903E06283AF425B11 /* DayStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStatus.swift; sourceTree = "<group>"; };
@@ -2400,6 +2401,7 @@
 				F34F27A0FE76AB78F5C77DB6 /* JabTracker.entitlements */,
 				E45ABB67198C53503C20D15E /* JabTrackerApp.swift */,
 				6E8F25682AB8F7F1EEDB80C2 /* JabTrackerStoreKit.storekit */,
+				48042A272175BCF5897733B8 /* JabTrackerTestHarness.entitlements */,
 				46B3C8F8D291F0645667012E /* App */,
 				692FF9348E5A0E755003F23B /* Design */,
 				5BDA577888EEAAF4894C22FE /* Extensions */,
@@ -2496,6 +2498,7 @@
 			buildPhases = (
 				6DEF962A451BF787D5147FA7 /* Sources */,
 				5BDEEF783F50B42795AA7354 /* Resources */,
+				912CFA4E931D82D8E4B2867D /* Record resolved Swift build inputs */,
 			);
 			buildRules = (
 			);
@@ -2611,6 +2614,32 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		912CFA4E931D82D8E4B2867D /* Record resolved Swift build inputs */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/release/build-controls.py",
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Record resolved Swift build inputs";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/JabTrackerBuildManifest.json",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/JabTrackerBuildManifest.json.tmp",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/python3 \"$SRCROOT/scripts/release/build-controls.py\" generate \\\n  --info-plist \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\" \\\n  --output \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/JabTrackerBuildManifest.json\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		154F6C0DBD06F8E2152C1C09 /* Sources */ = {
@@ -3285,6 +3314,24 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		1BA247FF654F2195962AE95C /* ReleaseTestHarness */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTrackerUnitTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JabTracker.app/JabTracker";
+			};
+			name = ReleaseTestHarness;
+		};
 		289AF50641E5E7ADA77DD548 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3349,6 +3396,71 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
+		};
+		2D647DA18E19787C5FCF6773 /* ReleaseTestHarness */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 16;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = ZBZKKWF95G;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				MARKETING_VERSION = 0.10.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = ReleaseTestHarness;
 		};
 		3C80636E6EC991F4B7F168DE /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -3456,10 +3568,33 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTracker;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		65370AB308CCA5CA2058C707 /* ReleaseTestHarness */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = JabTracker/JabTrackerTestHarness.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = JabTracker/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTrackerTestHarness;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = JABTRACKER_TEST_HARNESS;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = ReleaseTestHarness;
 		};
 		6F05E3FC45A71E51C079F379 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -3515,6 +3650,24 @@
 			};
 			name = Debug;
 		};
+		920380671667C5E2C253D288 /* ReleaseTestHarness */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTrackerUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = JabTracker;
+			};
+			name = ReleaseTestHarness;
+		};
 		A36137E11319B8A5178B6D7D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3553,6 +3706,24 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JabTracker.app/JabTracker";
 			};
 			name = Release;
+		};
+		D5365455A0F3DA0D0D5D2DC7 /* ReleaseTestHarness */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTrackerFoodSearchBenchmarkTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = JabTracker;
+			};
+			name = ReleaseTestHarness;
 		};
 		D8942B152EFB1C9E09E7338F /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -3608,6 +3779,24 @@
 			};
 			name = Debug;
 		};
+		FFBD33625D63FFFF0C3D2949 /* ReleaseTestHarness */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gannonhall.JabTrackerIntegrationTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JabTracker.app/JabTracker";
+			};
+			name = ReleaseTestHarness;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -3616,6 +3805,7 @@
 			buildConfigurations = (
 				EFFF2D288CC4C3C0608F636E /* Debug */,
 				B0A7647D8CA5B4F4D1D5EDA6 /* Release */,
+				1BA247FF654F2195962AE95C /* ReleaseTestHarness */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -3625,6 +3815,7 @@
 			buildConfigurations = (
 				6F05E3FC45A71E51C079F379 /* Debug */,
 				D8942B152EFB1C9E09E7338F /* Release */,
+				FFBD33625D63FFFF0C3D2949 /* ReleaseTestHarness */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -3634,6 +3825,7 @@
 			buildConfigurations = (
 				7EA20B2F357AAE7CE2C9C388 /* Debug */,
 				EFE686196E2793E0C979D6A7 /* Release */,
+				920380671667C5E2C253D288 /* ReleaseTestHarness */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -3643,6 +3835,7 @@
 			buildConfigurations = (
 				5967EC98C5C0D0BF64178CEE /* Debug */,
 				289AF50641E5E7ADA77DD548 /* Release */,
+				2D647DA18E19787C5FCF6773 /* ReleaseTestHarness */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -3652,6 +3845,7 @@
 			buildConfigurations = (
 				A36137E11319B8A5178B6D7D /* Debug */,
 				5AD4377EBE94B41A725CAD17 /* Release */,
+				65370AB308CCA5CA2058C707 /* ReleaseTestHarness */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -3661,6 +3855,7 @@
 			buildConfigurations = (
 				3C80636E6EC991F4B7F168DE /* Debug */,
 				7404126A2CFE36EADC0C0ECF /* Release */,
+				D5365455A0F3DA0D0D5D2DC7 /* ReleaseTestHarness */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

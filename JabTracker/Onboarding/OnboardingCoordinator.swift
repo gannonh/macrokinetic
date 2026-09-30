@@ -24,6 +24,7 @@ class OnboardingCoordinator: ObservableObject {
     }
 
     private func needsOnboarding() -> Bool {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         // IMPORTANT: Only apply testing flags when running the actual app (not unit tests)
         // Unit tests run in-process and have XCTestConfigurationFilePath set
         let isUnitTestEnvironment =
@@ -52,6 +53,8 @@ class OnboardingCoordinator: ObservableObject {
             logger.debug("UI testing mode detected - bypassing onboarding")
             return false
         }
+
+        #endif
 
         // Check if user exists and has completed onboarding
         guard let user = authManager.currentUser else {
