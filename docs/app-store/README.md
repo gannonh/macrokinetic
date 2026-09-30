@@ -4,6 +4,8 @@ This is the draft submission packet for [KAT-3591](https://linear.app/kata-sh/is
 
 The current app displays **MacroKinetic**. The repository and stable bundle identifier retain JabTracker. Copy uses MacroKinetic pending the owner's branding decision. `metadata.json` proposes 1.0.0; it does not change `project.yml` or assign a build number.
 
+The [launch readiness plan](../launch-readiness.md) records ticket order, gate conditions, existing-ticket disposition, dated PR states, verified evidence, and the owner/candidate blockers. Refresh its status snapshot when work advances.
+
 ## Validate the draft
 
 Run these commands from the repository root:

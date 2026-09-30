@@ -22,7 +22,7 @@
     {"id": "dashboard", "caption": "Your daily record, together", "claim": "nutrition_logging", "state": "pending", "path": null},
     {"id": "food-search", "caption": "Log meals from a food library", "claim": "nutrition_logging", "state": "pending", "path": null},
     {"id": "food-log", "caption": "Review calories and macros", "claim": "nutrition_logging", "state": "pending", "path": null},
-    {"id": "metrics", "caption": "Follow your measurements over time", "claim": "metrics_history", "state": "pending", "path": null},
+    {"id": "metrics", "caption": "Record your body measurements", "claim": "metrics_recording", "route": "Add (+) > Metrics > Log Metrics", "state": "pending", "path": null},
     {"id": "dose-history", "caption": "Keep track of prescribed doses", "claim": "prescribed_dose_history", "state": "pending", "path": null}
   ]
 }
