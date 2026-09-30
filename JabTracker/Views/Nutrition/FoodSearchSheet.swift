@@ -34,7 +34,6 @@ struct FoodSearchSheet: View {
     @State var quickAddViewModel: QuickAddViewModel?
     @State var selectedFood: FoodSearchResult?
     @State var showingFoodDetail = false
-    @State private var showingComingSoon = false
     @State var showingTimePicker = false
     @State var editingCustomFood: Food?
     @State var foodToDelete: Food?
@@ -196,11 +195,6 @@ struct FoodSearchSheet: View {
                 }
             }
         }
-        .alert("Coming Soon", isPresented: $showingComingSoon) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("\(viewModel.selectedMethod.displayName) will be available in a future update.")
-        }
         .alert("Delete Custom Food?", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {
                 foodToDelete = nil
@@ -261,7 +255,7 @@ struct FoodSearchSheet: View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(SearchMethod.allCases) { method in
+                    ForEach(SearchMethod.allCases.filter { $0.isEnabled }) { method in
                         methodTabButton(method)
                             .id(method)
                     }
@@ -283,12 +277,7 @@ struct FoodSearchSheet: View {
 
     private func methodTabButton(_ method: SearchMethod) -> some View {
         Button {
-            if method.isEnabled {
-                viewModel.selectedMethod = method
-            } else {
-                viewModel.selectedMethod = method
-                showingComingSoon = true
-            }
+            viewModel.selectedMethod = method
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: method.icon)

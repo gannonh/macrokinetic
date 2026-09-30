@@ -1,6 +1,6 @@
 # TDEE & Calorie Algorithms
 
-**Last Updated:** 2026-01-15T00:00:00Z (Day Status rules for fasting days)
+**Last Updated:** 2026-09-30 (release historical backfill policy)
 **Source Files:**
 - `JabTracker/Models/BiologicalSex.swift`
 - `JabTracker/Models/DayStatus.swift`
@@ -35,6 +35,8 @@
 ---
 
 ## Overview
+
+Release historical backfill uses holding snapshots while `ReleasePolicy.isEnabled(.historicalTDEERecalculation)` returns false. `TDEEService.ensureDailySnapshots` carries the latest estimate forward with confidence decay, including when historical food and weight data are sufficient. It does not label an unchanged estimate as a new adaptive calculation. Current-day calculation and burned, predictive and rollover calorie adjustments remain active. See [release policy](../../operations/release-features.md).
 
 The app uses a two-phase TDEE (Total Daily Energy Expenditure) calculation:
 

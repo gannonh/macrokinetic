@@ -5,11 +5,9 @@ import XCTest
 /// Tests the complete user workflow for managing body metrics visibility preferences:
 /// - Navigation to Body Metrics Visibility from More tab
 /// - Toggling metric visibility (waist, chest, hip, neck, etc.)
-/// - Toggling photo type visibility (front, side, back)
 /// - Persistence of preferences across navigation
 /// - Accessibility compliance for VoiceOver users
 ///
-/// Note: These are test stubs created for Phase 11-01. Implementation required.
 final class BodyMetricsVisibilityUITests: XCTestCase {
     var app: XCUIApplication!
 
@@ -52,11 +50,11 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
         moreTab.tap()
 
         // Verify More view loaded
-        let moreView = self.app.otherElements["more-view"]
+        let moreView = self.app.descendants(matching: .any)["more-view"].firstMatch
         XCTAssertTrue(moreView.waitForExistence(timeout: 5.0), "More view should appear")
 
         // Tap Body Metrics Visibility link
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
+        let metricsLink = self.app.buttons["metrics-settings-link"]
         XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
         metricsLink.tap()
 
@@ -131,63 +129,15 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
         )
     }
 
-    // MARK: - Test 3: Toggle Photo Type Visibility
-
-    /// Test 3: Toggle a photo type on and off
-    ///
-    /// GIVEN: User is on Body Metrics Visibility screen
-    /// WHEN: User toggles a photo type (e.g., Side Photo)
-    /// THEN: Toggle state changes and persists
-    func testTogglePhotoTypeVisibility() throws {
+    func testPhotoControlsHiddenInRelease() throws {
         navigateToBodyMetricsVisibility()
-
-        // Find the Side Photo toggle (in Progress Photos section, near top)
-        let sideToggle = self.app.switches["photo-toggle-side"]
-        XCTAssertTrue(sideToggle.waitForExistence(timeout: 3.0), "Side Photo toggle should exist")
-
-        // Verify initial state is OFF (side is not in default enabled photo types)
-        XCTAssertEqual(
-            sideToggle.value as? String,
-            "0",
-            "Side Photo toggle should initially be disabled (only front is default)"
-        )
-
-        // Toggle ON using coordinate tap for reliability
-        let toggleCoordinate = sideToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
-        toggleCoordinate.tap()
-
-        // Wait for toggle value to update
-        let onExpectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "value == %@", "1"),
-            object: sideToggle
-        )
-        let onResult = XCTWaiter().wait(for: [onExpectation], timeout: 3.0)
-        XCTAssertEqual(onResult, .completed, "Side Photo toggle should change to ON within 3 seconds")
-
-        // Verify toggle is now ON
-        XCTAssertEqual(
-            sideToggle.value as? String,
-            "1",
-            "Side Photo toggle should be enabled after tapping"
-        )
-
-        // Toggle OFF
-        toggleCoordinate.tap()
-
-        // Wait for toggle value to update
-        let offExpectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "value == %@", "0"),
-            object: sideToggle
-        )
-        let offResult = XCTWaiter().wait(for: [offExpectation], timeout: 3.0)
-        XCTAssertEqual(offResult, .completed, "Side Photo toggle should change to OFF within 3 seconds")
-
-        // Verify toggle is now OFF
-        XCTAssertEqual(
-            sideToggle.value as? String,
-            "0",
-            "Side Photo toggle should be disabled after second tap"
-        )
+        TestUtilities.debugScreenshot(app, name: "release-hidden-photo-controls")
+        print(app.debugDescription)
+        XCTAssertFalse(app.staticTexts["Progress Photos"].exists)
+        XCTAssertFalse(app.switches["photo-toggle-front"].exists)
+        XCTAssertFalse(app.switches["photo-toggle-side"].exists)
+        XCTAssertFalse(app.switches["photo-toggle-back"].exists)
+        XCTAssertTrue(app.switches["metric-toggle-waist"].exists)
     }
 
     // MARK: - Test 4: Preferences Persist After Navigation
@@ -226,14 +176,14 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
         backButton.tap()
 
         // Verify we're back on More view
-        let moreView = self.app.otherElements["more-view"]
+        let moreView = self.app.descendants(matching: .any)["more-view"].firstMatch
         XCTAssertTrue(
             moreView.waitForExistence(timeout: 5.0),
             "Should return to More view after tapping back"
         )
 
         // Navigate back to Body Metrics Visibility
-        let metricsLink = self.app.buttons["body-metrics-visibility-link"]
+        let metricsLink = self.app.buttons["metrics-settings-link"]
         XCTAssertTrue(metricsLink.waitForExistence(timeout: 3.0), "Body Metrics Visibility link should exist")
         metricsLink.tap()
 
@@ -266,37 +216,12 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
     ///
     /// GIVEN: Fresh app install (--reset-app-data)
     /// WHEN: User opens Body Metrics Visibility
-    /// THEN: Only Waist metric and Front photo are enabled by default
     func testDefaultToggleStates() throws {
         navigateToBodyMetricsVisibility()
 
-        // Check Progress Photos section defaults (near top of list)
-        // Front Photo should be ON by default
-        let frontToggle = self.app.switches["photo-toggle-front"]
-        XCTAssertTrue(frontToggle.waitForExistence(timeout: 3.0), "Front Photo toggle should exist")
-        XCTAssertEqual(
-            frontToggle.value as? String,
-            "1",
-            "Front Photo toggle should be ON by default"
-        )
-
-        // Side Photo should be OFF by default
-        let sideToggle = self.app.switches["photo-toggle-side"]
-        XCTAssertTrue(sideToggle.waitForExistence(timeout: 3.0), "Side Photo toggle should exist")
-        XCTAssertEqual(
-            sideToggle.value as? String,
-            "0",
-            "Side Photo toggle should be OFF by default"
-        )
-
-        // Back Photo should be OFF by default
-        let backToggle = self.app.switches["photo-toggle-back"]
-        XCTAssertTrue(backToggle.waitForExistence(timeout: 3.0), "Back Photo toggle should exist")
-        XCTAssertEqual(
-            backToggle.value as? String,
-            "0",
-            "Back Photo toggle should be OFF by default"
-        )
+        XCTAssertFalse(app.switches["photo-toggle-front"].exists)
+        XCTAssertFalse(app.switches["photo-toggle-side"].exists)
+        XCTAssertFalse(app.switches["photo-toggle-back"].exists)
 
         // Scroll down to Upper Body section
         self.app.swipeUp()
@@ -330,66 +255,21 @@ final class BodyMetricsVisibilityUITests: XCTestCase {
         )
     }
 
-    // MARK: - Test 6: All Sections Visible
-
-    /// Test 6: Verify all settings sections are visible and scrollable
-    ///
-    /// GIVEN: User is on Body Metrics Visibility screen
-    /// WHEN: User scrolls through the list
-    /// THEN: All sections are accessible (Weight & Body Fat, Progress Photos, Upper Body, Arms, Legs, Ratios)
-    func testAllSectionsVisible() throws {
+    func testSupportedSectionsVisibleAndExtendedMetricsHidden() throws {
         navigateToBodyMetricsVisibility()
-
-        // Verify initial sections visible at top
-        let weightSectionHeader = self.app.staticTexts["Weight & Body Fat"]
-        XCTAssertTrue(
-            weightSectionHeader.waitForExistence(timeout: 3.0),
-            "Weight & Body Fat section header should exist"
-        )
-
-        let photosSectionHeader = self.app.staticTexts["Progress Photos"]
-        XCTAssertTrue(
-            photosSectionHeader.waitForExistence(timeout: 3.0),
-            "Progress Photos section header should exist"
-        )
-
-        // Scroll to reveal more sections and verify some toggles from each section are accessible
-        // Check Upper Body section via a toggle (Waist)
-        self.app.swipeUp()
-        usleep(300_000)
-
-        let waistToggle = self.app.switches["metric-toggle-waist"]
-        XCTAssertTrue(
-            waistToggle.waitForExistence(timeout: 3.0),
-            "Waist toggle (Upper Body section) should exist"
-        )
-
-        // Check Arms section via a toggle (Left Bicep)
-        let leftBicepToggle = self.app.switches["metric-toggle-leftBicep"]
-        XCTAssertTrue(
-            leftBicepToggle.waitForExistence(timeout: 3.0),
-            "Left Bicep toggle (Arms section) should exist"
-        )
-
-        // Scroll down more to reveal Legs and Ratios
-        self.app.swipeUp()
-        usleep(300_000)
-        self.app.swipeUp()
-        usleep(300_000)
-
-        // Check Legs section via a toggle (Left Thigh)
-        let leftThighToggle = self.app.switches["metric-toggle-leftThigh"]
-        XCTAssertTrue(
-            leftThighToggle.waitForExistence(timeout: 3.0),
-            "Left Thigh toggle (Legs section) should exist"
-        )
-
-        // Check Ratios section via a toggle (Waist to Height)
-        let waistToHeightToggle = self.app.switches["metric-toggle-waistToHeight"]
-        XCTAssertTrue(
-            waistToHeightToggle.waitForExistence(timeout: 3.0),
-            "Waist to Height toggle (Ratios section) should exist"
-        )
+        TestUtilities.debugScreenshot(app, name: "release-supported-metrics")
+        print(app.debugDescription)
+        XCTAssertTrue(app.staticTexts["Scale Weight"].exists)
+        XCTAssertTrue(app.staticTexts["Visual Body Fat"].exists)
+        for key in ["neck", "chest", "waist", "hip"] {
+            XCTAssertTrue(app.switches["metric-toggle-\(key)"].exists)
+        }
+        for key in ["shoulders", "bust", "leftBicep", "rightBicep", "leftForearm", "rightForearm",
+                    "leftWrist", "rightWrist", "leftThigh", "rightThigh", "leftCalf", "rightCalf",
+                    "leftAnkle", "rightAnkle", "waistToHeight", "waistToHip"] {
+            XCTAssertFalse(app.switches["metric-toggle-\(key)"].exists)
+        }
+        XCTAssertFalse(app.staticTexts["Progress Photos"].exists)
     }
 
     // MARK: - Test 7: Description Text Displayed
