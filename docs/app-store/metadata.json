@@ -7,7 +7,7 @@
   "subtitle": "Food, weight & dose tracking",
   "promotional_text": "Keep food logs, body measurements, and prescribed-dose history together. Build a daily record that works offline.",
   "keywords": "nutrition,calorie,macro,meal,measurement,GLP-1,medication,history,offline",
-  "description": "MacroKinetic helps you keep a daily record of food, body measurements, and prescribed medication doses.\n\nSearch the bundled food library, log meals, and review daily nutrition totals. Record body measurements and review your history over time. If you use GLP-1 medication, keep a record of the doses and schedules prescribed by your healthcare professional. Nutrition tracking can be used on its own.\n\nCore logging works offline.\n\nMacroKinetic does not diagnose conditions or prescribe medication. Follow your healthcare professional's instructions and consult them before making medical decisions.",
+  "description": "MacroKinetic helps you keep a daily record of food, body measurements, and prescribed medication doses.\n\nSearch the bundled food library, log meals, and review daily nutrition totals. Record body measurements. If you use GLP-1 medication, keep a record of the doses and schedules prescribed by your healthcare professional. Nutrition tracking can be used on its own.\n\nCore logging works offline.\n\nMacroKinetic does not diagnose conditions or prescribe medication. Follow your healthcare professional's instructions and consult them before making medical decisions.",
   "whats_new": "Initial release with food logging, body measurements, and optional prescribed-dose tracking.",
   "support_url": null,
   "privacy_url": null,
@@ -17,7 +17,7 @@
     {"id": "nutrition_logging", "issue": "KAT-3587", "evidence": null},
     {"id": "nutrition_without_medication", "issue": "KAT-3587", "evidence": null},
     {"id": "offline_logging", "issue": "KAT-3590", "evidence": null},
-    {"id": "metrics_history", "issue": "KAT-3595", "evidence": null},
+    {"id": "metrics_recording", "issue": "KAT-3595", "evidence": null},
     {"id": "prescribed_dose_history", "issue": "KAT-3186", "evidence": null}
   ]
 }

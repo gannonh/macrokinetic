@@ -4,6 +4,12 @@ No candidate screenshots are present yet. `assets.json` contains the storyboard 
 
 Use the final Release configuration and fictional demonstration records. Capture complete screens at 1320x2868, 1290x2796, or 1260x2736 portrait pixels. Choose one device size consistently. Do not enlarge an iPhone Pro capture to a Pro Max size, stretch a screenshot, use mocks, or generate UI.
 
+## Body-measurement recording slot
+
+The pending `metrics` slot advertises **Record your body measurements** and uses the `metrics_recording` claim. Its source route is Add (+) → Metrics → Log Metrics. [ContentView](../../../JabTracker/ContentView.swift) presents [QuickMetricsSheet](../../../JabTracker/Views/Metrics/QuickMetricsSheet.swift) from [ShortcutsSheet](../../../JabTracker/Views/Shortcuts/ShortcutsSheet.swift). Save calls [MetricsService.logMetrics](../../../JabTracker/Services/MetricsService.swift), which inserts a MetricsEntry and saves the context. The release-flags branch retains this route. Source inspection establishes that the flow exists; candidate acceptance remains pending.
+
+If the fictional user's waist measurement is disabled, enable it through More → Metrics before recording. That More route configures measurement visibility; it is not the recording screen. On the candidate, enter a fictional waist value such as 80 cm, confirm the exact saved record/value and relaunch retention, then reopen Log Metrics and capture the recording form. Save this acceptance result separately from the image. Confirm the displayed fields, unit, date, and permission behavior before accepting the caption. Do not advertise a measurement-history screen or fabricate a chart. If recording is absent or fails on the final candidate, remove its copy, claim, and slot.
+
 ## Record the capture
 
 1. Confirm the candidate SHA, version/build, flags, and production food-database manifest.
