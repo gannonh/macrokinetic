@@ -6,7 +6,7 @@
 //  with varying levels of data completeness (high/medium/low/new user).
 //
 
-#if DEBUG || TEST
+#if DEBUG || JABTRACKER_TEST_HARNESS
     import Foundation
     import OSLog
     import SwiftData

@@ -6,7 +6,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     cat <<'USAGE'
 Usage: scripts/benchmark-food-search.sh <physical-device-udid>
 
-Runs the Release-only pizza/chicken/bread food-search benchmark. The device
+Runs the optimized ReleaseTestHarness pizza/chicken/bread food-search benchmark. The device
 must be a connected physical iPhone 17 Pro running iOS 26.2. Each query gets
 20 cold runs (a fresh app process per run) and 20 warm runs (one warmed process).
 The XCTest output reports cold and warm p95 in milliseconds.
@@ -89,14 +89,14 @@ echo "Release database fixture: ${database_rows} rows, ${database_bytes} bytes"
 benchmark_log="$(mktemp "${TMPDIR:-/tmp}/food-search-release-benchmark.XXXXXX")"
 trap 'rm -f "$benchmark_log" "$device_json"' EXIT
 
-echo "Running Release food-search benchmark on: $device_line"
+echo "Running ReleaseTestHarness food-search benchmark on: $device_line"
 echo "Results are reported only after the XCTest emits all 20 cold and 20 warm runs per query."
 
 set -o pipefail
 xcodebuild test \
     -project "$project_root/JabTracker.xcodeproj" \
     -scheme JabTrackerFoodSearchBenchmark \
-    -configuration Release \
+    -configuration ReleaseTestHarness \
     -destination "platform=iOS,id=$device_udid" \
     -only-testing:JabTrackerFoodSearchBenchmarkTests/FoodSearchReleaseBenchmarkUITests/testReleaseSearchLatencyBenchmark \
     -parallel-testing-enabled NO \

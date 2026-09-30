@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 import OSLog
 import SQLite3
 
@@ -30,26 +31,23 @@ struct LocalFoodResult {
 actor LocalFoodDatabase {
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "LocalFoodDatabase")
 
-    /// Coordinates the UI-only failure hook across the two database connections used by
-    /// categorized search. The hook must fail exactly one search per app process.
-    private final class SearchFailureGate: @unchecked Sendable {
-        private let lock = NSLock()
-        private var isArmed: Bool
+    #if DEBUG || JABTRACKER_TEST_HARNESS
+    private final class SearchFailureGate: Sendable {
+        private let state: OSAllocatedUnfairLock<Bool>
 
         init(isArmed: Bool) {
-            self.isArmed = isArmed
+            self.state = OSAllocatedUnfairLock(initialState: isArmed)
         }
 
         func consume(query: String) -> Bool {
-            lock.lock()
-            defer { lock.unlock() }
-
             let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard isArmed, normalizedQuery == "pizza" else {
-                return false
+            return state.withLock { isArmed in
+                guard isArmed, normalizedQuery == "pizza" else {
+                    return false
+                }
+                isArmed = false
+                return true
             }
-            isArmed = false
-            return true
         }
     }
 
@@ -61,10 +59,14 @@ actor LocalFoodDatabase {
         return SearchFailureGate(isArmed: true)
     }()
 
+    #endif
+
     private var database: OpaquePointer?
     private let databasePath: String
     private var hasOpened = false
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     private let uiTestFailureGate: SearchFailureGate?
+    #endif
 
     /// Whether the database is available for queries
     var isAvailable: Bool {
@@ -76,7 +78,9 @@ actor LocalFoodDatabase {
 
     /// Initialize with the bundled database
     init() {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         self.uiTestFailureGate = Self.sharedUITestFailureGate
+        #endif
 
         // Find bundled database in app bundle
         if let bundlePath = Bundle.main.path(forResource: "usda_foods", ofType: "sqlite") {
@@ -90,7 +94,9 @@ actor LocalFoodDatabase {
 
     /// Initialize with a custom path (for testing)
     init(databasePath: String) {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         self.uiTestFailureGate = nil
+        #endif
         self.databasePath = databasePath
         // Database opened lazily on first query
     }
@@ -144,9 +150,12 @@ actor LocalFoodDatabase {
             return []
         }
 
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         if uiTestFailureGate?.consume(query: query) == true {
             throw LocalFoodDatabaseError.queryFailed("Forced UI test search failure")
         }
+
+        #endif
 
         ensureDatabaseOpen()
         guard database != nil else {
