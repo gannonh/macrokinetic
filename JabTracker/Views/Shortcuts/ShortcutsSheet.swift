@@ -19,15 +19,34 @@ enum ShortcutDestination: String, Identifiable {
     case quickPhoto
 
     var id: String { rawValue }
+
+    var isEnabled: Bool {
+        switch self {
+        case .quickPhoto:
+            return ReleasePolicy.isEnabled(.progressPhotos)
+        case .foodSearch, .quickDose, .barcodeScan, .foodLibrary, .quickAdd, .quickWeight, .quickMetrics:
+            return true
+        }
+    }
 }
 
 /// Data model for a shortcut item
 struct ShortcutItem: Identifiable {
     let icon: String
     let label: String
-    let isEnabled: Bool
+    let requiredFeature: ReleaseFeature?
 
     var id: String { label }
+
+    var isEnabled: Bool {
+        requiredFeature.map { ReleasePolicy.isEnabled($0) } ?? true
+    }
+
+    init(icon: String, label: String, requiredFeature: ReleaseFeature? = nil) {
+        self.icon = icon
+        self.label = label
+        self.requiredFeature = requiredFeature
+    }
 }
 
 /// Timing constants for sheet transitions
@@ -44,31 +63,35 @@ struct ShortcutsSheet: View {
     /// Binding to the active sheet destination
     @Binding var activeSheet: ShortcutDestination?
 
-    /// State for "Coming Soon" alert
-    @State private var showingComingSoon = false
-    @State private var comingSoonFeature = ""
-
     /// Accessibility identifier for the sheet
     static let accessibilityIdentifierValue = "shortcuts-sheet"
 
     /// Top row shortcuts configuration (Search, Barcode, AI, Shots)
     static let topRowShortcuts: [ShortcutItem] = [
-        ShortcutItem(icon: "magnifyingglass", label: "Search", isEnabled: true),
-        ShortcutItem(icon: "barcode.viewfinder", label: "Barcode", isEnabled: true),
-        ShortcutItem(icon: "camera.fill", label: "AI", isEnabled: false),
-        ShortcutItem(icon: "syringe.fill", label: "Shots", isEnabled: true),
+        ShortcutItem(icon: "magnifyingglass", label: "Search"),
+        ShortcutItem(icon: "barcode.viewfinder", label: "Barcode"),
+        ShortcutItem(icon: "camera.fill", label: "AI", requiredFeature: .aiFoodCapture),
+        ShortcutItem(icon: "syringe.fill", label: "Shots"),
     ]
 
     /// List row shortcuts configuration
     static let listRowShortcuts: [ShortcutItem] = [
-        ShortcutItem(icon: "scalemass.fill", label: "Weight", isEnabled: true),
-        ShortcutItem(icon: "plus.circle.fill", label: "Quick Add", isEnabled: true),
-        ShortcutItem(icon: "chart.bar.fill", label: "Metrics", isEnabled: true),
-        ShortcutItem(icon: "camera.fill", label: "Progress Photos", isEnabled: true),
-        ShortcutItem(icon: "star.fill", label: "Your Foods", isEnabled: true),
-        ShortcutItem(icon: "book.fill", label: "Recipes", isEnabled: false),
-        ShortcutItem(icon: "calendar.badge.plus", label: "Edit Days", isEnabled: false),
+        ShortcutItem(icon: "scalemass.fill", label: "Weight"),
+        ShortcutItem(icon: "plus.circle.fill", label: "Quick Add"),
+        ShortcutItem(icon: "chart.bar.fill", label: "Metrics"),
+        ShortcutItem(icon: "camera.fill", label: "Progress Photos", requiredFeature: .progressPhotos),
+        ShortcutItem(icon: "star.fill", label: "Your Foods"),
+        ShortcutItem(icon: "book.fill", label: "Recipes", requiredFeature: .recipes),
+        ShortcutItem(icon: "calendar.badge.plus", label: "Edit Days", requiredFeature: .shortcutCustomization),
     ]
+
+    static var visibleTopRowShortcuts: [ShortcutItem] {
+        topRowShortcuts.filter { $0.isEnabled }
+    }
+
+    static var visibleListRowShortcuts: [ShortcutItem] {
+        listRowShortcuts.filter { $0.isEnabled }
+    }
 
     var body: some View {
         NavigationStack {
@@ -91,34 +114,29 @@ struct ShortcutsSheet: View {
                     .accessibilityIdentifier("shortcuts-close-button")
                 }
 
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        // Placeholder for future customization
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .foregroundColor(.secondary)
+                if ReleasePolicy.isEnabled(.shortcutCustomization) {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                        } label: {
+                            Image(systemName: "slider.horizontal.3")
+                                .foregroundColor(.secondary)
+                        }
+                        .disabled(true)
+                        .accessibilityIdentifier("shortcuts-customize-button")
                     }
-                    .disabled(true)
-                    .accessibilityIdentifier("shortcuts-customize-button")
-                    .accessibilityHint("Customization coming soon")
                 }
             }
         }
         .presentationDetents([.fraction(0.55)])
         .presentationDragIndicator(.visible)
         .accessibilityIdentifier(Self.accessibilityIdentifierValue)
-        .alert("Coming Soon", isPresented: $showingComingSoon) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("\(comingSoonFeature) will be available in a future update.")
-        }
     }
 
     // MARK: - Top Row Section
 
     private var topRowSection: some View {
         HStack(spacing: 16) {
-            ForEach(Self.topRowShortcuts) { shortcut in
+            ForEach(Self.visibleTopRowShortcuts) { shortcut in
                 ShortcutButton(
                     icon: shortcut.icon,
                     label: shortcut.label,
@@ -135,7 +153,7 @@ struct ShortcutsSheet: View {
 
     private var listRowsSection: some View {
         VStack(spacing: 0) {
-            ForEach(Array(Self.listRowShortcuts.enumerated()), id: \.element.id) { index, shortcut in
+            ForEach(Array(Self.visibleListRowShortcuts.enumerated()), id: \.element.id) { index, shortcut in
                 ShortcutRowButton(
                     icon: shortcut.icon,
                     label: shortcut.label,
@@ -144,7 +162,7 @@ struct ShortcutsSheet: View {
                     handleListRowAction(shortcut)
                 }
 
-                if index < Self.listRowShortcuts.count - 1 {
+                if index < Self.visibleListRowShortcuts.count - 1 {
                     Divider()
                         .padding(.leading, 56)
                 }
@@ -158,14 +176,17 @@ struct ShortcutsSheet: View {
 
     /// Dismiss sheet and present a new sheet after transition delay
     private func dismissAndPresent(_ destination: ShortcutDestination) {
+        guard destination.isEnabled else { return }
         dismiss()
         // Small delay to allow sheet dismissal before presenting new sheet
         DispatchQueue.main.asyncAfter(deadline: .now() + SheetTransitionTiming.delay) {
+            guard destination.isEnabled else { return }
             activeSheet = destination
         }
     }
 
     private func handleTopRowAction(_ shortcut: ShortcutItem) {
+        guard shortcut.isEnabled else { return }
         switch shortcut.label {
         case "Search":
             dismissAndPresent(.foodSearch)
@@ -174,12 +195,12 @@ struct ShortcutsSheet: View {
         case "Shots":
             dismissAndPresent(.quickDose)
         default:
-            comingSoonFeature = shortcut.label
-            showingComingSoon = true
+            return
         }
     }
 
     private func handleListRowAction(_ shortcut: ShortcutItem) {
+        guard shortcut.isEnabled else { return }
         switch shortcut.label {
         case "Your Foods":
             dismissAndPresent(.foodLibrary)
@@ -192,8 +213,7 @@ struct ShortcutsSheet: View {
         case "Progress Photos":
             dismissAndPresent(.quickPhoto)
         default:
-            comingSoonFeature = shortcut.label
-            showingComingSoon = true
+            return
         }
     }
 }

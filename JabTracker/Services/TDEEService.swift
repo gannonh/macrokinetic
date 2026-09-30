@@ -931,7 +931,6 @@ extension TDEEService {
     // MARK: - Backfill
 
     /// Ensure daily TDEE snapshots exist from last snapshot to today
-    /// Creates "holding" snapshots when data is insufficient, "adaptive" when sufficient
     /// - Parameter goal: The NutritionGoal to use for backfill calculations
     func ensureDailySnapshots(for goal: NutritionGoal) async throws {
         let calendar = Calendar.current
@@ -960,10 +959,7 @@ extension TDEEService {
         Self.logger.debug("Backfilling TDEE snapshots from \(lastSnapshotDate) to \(today)")
 
         while currentDate <= today {
-            if hasSufficientData(asOf: currentDate) {
-                // Sufficient data: attempt adaptive calculation
-                // For now, we'll use the existing TDEE since historical calculation is complex
-                // TODO: Implement calculateTDEEAsOf for true historical calculation
+            if ReleasePolicy.isEnabled(.historicalTDEERecalculation) && hasSufficientData(asOf: currentDate) {
                 try saveTDEESnapshot(
                     tdee: lastTDEE,
                     confidence: lastConfidence,
@@ -972,7 +968,6 @@ extension TDEEService {
                 )
                 Self.logger.debug("Created adaptive snapshot for \(currentDate)")
             } else {
-                // Insufficient: hold previous value with decayed confidence
                 let decayedConfidence = max(0.3, lastConfidence * 0.98)
                 try saveTDEESnapshot(
                     tdee: lastTDEE,

@@ -8,6 +8,8 @@ This document defines all conditional flows for onboarding, goal/program wizards
 
 **File:** `JabTracker/Onboarding/OnboardingViewModel.swift`
 
+The launch release offers Coached and Collaborative onboarding. `ReleasePolicy.isEnabled(.manualOnboarding)` returns false; direct Manual calculation or completion requests fail before profile, weight, goal, program or completion writes. The separate Strategy program wizard still supports Manual. See [release policy](../../operations/release-features.md).
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           ONBOARDING FLOW                                   │
@@ -55,16 +57,12 @@ START
   │
   ▼
 ┌──────────────┐
-│ programStyle │  Coached / Collaborative / Manual
+│ programStyle │  Coached / Collaborative
 └──────────────┘
   │
-  ├──────────────────────────────────────────────────────────────┐
-  │                                                              │
-  │ COACHED or COLLABORATIVE                                     │ MANUAL
-  │                                                              │
-  ▼                                                              ▼
-┌────────────────┐                                        (not implemented
-│ dietPreference │  Balanced / Low-Carb / High-Protein     in onboarding)
+  ▼
+┌────────────────┐
+│ dietPreference │  Balanced / Low-Carb / High-Protein
 └────────────────┘
   │
   ▼

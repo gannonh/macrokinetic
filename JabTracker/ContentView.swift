@@ -214,7 +214,10 @@ struct ContentView: View {
         .sheet(isPresented: $showingShortcuts) {
             ShortcutsSheet(activeSheet: $activeShortcutSheet)
         }
-        .sheet(item: $activeShortcutSheet) { destination in
+        .sheet(item: Binding(
+            get: { activeShortcutSheet.flatMap { $0.isEnabled ? $0 : nil } },
+            set: { activeShortcutSheet = $0.flatMap { $0.isEnabled ? $0 : nil } }
+        )) { destination in
             switch destination {
             case .foodSearch:
                 foodSearchSheet()

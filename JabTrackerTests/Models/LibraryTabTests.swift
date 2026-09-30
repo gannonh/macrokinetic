@@ -74,6 +74,13 @@ struct LibraryTabTests {
 
     // MARK: - CaseIterable Tests
 
+    @Test("Release library offers Foods and Scheduled while retaining the catalog")
+    func testReleaseTabs() {
+        #expect(LibraryTab.allCases.filter(\.isEnabled) == [.foods, .scheduled])
+        #expect(LibraryTab(rawValue: "recipes") == .recipes)
+        #expect(LibraryTab(rawValue: "favorites") == .favorites)
+    }
+
     @Test("allCases contains all tabs")
     func testAllCases() {
         let allCases = LibraryTab.allCases

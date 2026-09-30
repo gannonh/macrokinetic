@@ -256,7 +256,10 @@ struct OnboardingView: View {
             OnboardingProfileCompletionView(viewModel: viewModel)
                 .accessibilityIdentifier("onboarding-profileCompletion-step")
         case .programStyle:
-            ProgramStyleStepView(selection: Bindable(viewModel).programStyle)
+            ProgramStyleStepView(
+                selection: Bindable(viewModel).programStyle,
+                allowedStyles: viewModel.availableProgramStyles
+            )
                 .accessibilityIdentifier("onboarding-programStyle-step")
         case .dietPreference:
             DietPreferenceStepView(selection: Bindable(viewModel).dietPreference)

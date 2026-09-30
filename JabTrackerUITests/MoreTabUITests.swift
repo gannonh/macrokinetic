@@ -36,23 +36,20 @@ final class MoreTabUITests: XCTestCase {
         XCTAssertTrue(securityView.waitForExistence(timeout: 5), "Security view should appear")
     }
 
-    func testNavigateToSubscription() throws {
+    func testSubscriptionHiddenWhileSecurityRemainsAvailable() throws {
         TestUtilities.navigateToTab(app, tabName: "More")
 
         let moreView = app.descendants(matching: .any)["more-view"].firstMatch
         XCTAssertTrue(moreView.waitForExistence(timeout: 5))
 
-        // Need to scroll to find Subscription in Account Settings section
         app.swipeUp()
-
-        // NavigationLinks in SwiftUI List are exposed as Buttons, not Cells
-        let subscriptionRow = app.buttons["subscription-row"]
-        XCTAssertTrue(subscriptionRow.waitForExistence(timeout: 5))
-        subscriptionRow.tap()
-
-        // SwiftUI List views are exposed as CollectionView, use descendants query
-        let subscriptionView = app.descendants(matching: .any)["subscription-settings-view"].firstMatch
-        XCTAssertTrue(subscriptionView.waitForExistence(timeout: 5))
+        TestUtilities.debugScreenshot(app, name: "release-account-settings")
+        print(app.debugDescription)
+        XCTAssertFalse(app.buttons["subscription-row"].exists)
+        let securityRow = app.buttons["security-privacy-row"]
+        XCTAssertTrue(securityRow.waitForExistence(timeout: 5))
+        securityRow.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["security-privacy-view"].firstMatch.waitForExistence(timeout: 5))
     }
 
     func testNavigateToNotificationSettings() throws {
