@@ -1,0 +1,15 @@
+{
+  "state": "draft",
+  "inputs": [
+    {"id": "public_name_and_rights", "status": "unresolved", "value": null, "evidence": null, "question": "Confirm MacroKinetic as the public name and rights to the name, icon, and store artwork."},
+    {"id": "legal_seller", "status": "unresolved", "value": null, "evidence": null, "question": "Confirm the legal seller and Developer Program entity eligibility for this health-data scope."},
+    {"id": "public_contact", "status": "unresolved", "value": null, "evidence": null, "question": "Provide the supported public contact and legal contact details appropriate for launch regions."},
+    {"id": "public_urls", "status": "unresolved", "value": null, "evidence": null, "question": "Confirm the owned domain, publication authority, and tested support, privacy, and terms URLs."},
+    {"id": "storage_and_retention", "status": "unresolved", "value": null, "evidence": null, "question": "Resolve KAT-3584. Confirm health-data storage, sync, backup, retention, deletion, and processor facts."},
+    {"id": "privacy_label", "status": "unresolved", "value": null, "evidence": null, "question": "Approve privacy answers using the final data-flow inventory and actual processor access."},
+    {"id": "regions_age_medical_status", "status": "unresolved", "value": null, "evidence": null, "question": "Confirm launch regions, age questionnaire answers, minimum age, and substantiated medical-device declaration."},
+    {"id": "pricing_and_agreements", "status": "unresolved", "value": null, "evidence": null, "question": "Confirm launch pricing, subscriptions off, and relevant agreements, tax, banking, and regional trader requirements."},
+    {"id": "app_review_access", "status": "unresolved", "value": null, "evidence": null, "question": "Confirm App Review contact, review access, account-flow instructions, and any Apple-approved demo mode."},
+    {"id": "export_and_signing", "status": "unresolved", "value": null, "evidence": null, "question": "Confirm export-compliance answers and evidence of a submission-eligible signed candidate under KAT-3594."}
+  ]
+}

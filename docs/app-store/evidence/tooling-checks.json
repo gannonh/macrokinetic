@@ -1,0 +1,44 @@
+{
+  "issue": "KAT-3591",
+  "checked_on": "2026-09-30",
+  "repository_head": "edd81bd73ee84bf7cddf1e6fa62a3736f88a70fe",
+  "uncommitted_packet_changes": true,
+  "candidate_sha": null,
+  "scope": "Tooling and draft-resource checks only. This file is not candidate acceptance evidence.",
+  "checks": [
+    {
+      "scenario": "Metadata lengths and resource shape",
+      "status": "PASS",
+      "command": "python3 scripts/app-store.py validate",
+      "result": "Exit 0. Packet format checks passed. Submission readiness remains BLOCKED."
+    },
+    {
+      "scenario": "Image and manifest validation",
+      "status": "PARTIAL",
+      "command": "python3 -m unittest scripts.tests.test_app_store",
+      "result": "9 CLI tests passed with temporary generated pixel fixtures. Real candidate screenshot content and compiled icon are NOT RUN."
+    },
+    {
+      "scenario": "Claims match release flags",
+      "status": "UNVERIFIED",
+      "result": "Copy omits intended excluded features. Release flag implementation and candidate behavior evidence are pending."
+    },
+    {
+      "scenario": "Reviewer route and owner gaps",
+      "status": "PARTIAL",
+      "result": "Draft route, unresolved owner inputs, and visible public-page draft markers reviewed. Live reviewer route and public URLs are NOT RUN."
+    },
+    {
+      "scenario": "Python tooling regression suite",
+      "status": "PASS",
+      "command": "python3 -m unittest discover -s scripts/tests -p 'test_*.py'",
+      "result": "84 tests passed. No app build or simulator operation."
+    },
+    {
+      "scenario": "Strict readiness rejects the incomplete packet",
+      "status": "PASS",
+      "command": "python3 scripts/app-store.py validate --ready",
+      "result": "Expected exit 2. Missing candidate assets/evidence, public URLs, and owner facts remain explicit."
+    }
+  ]
+}
