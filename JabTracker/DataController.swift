@@ -9,13 +9,19 @@ import SwiftData
 
 @MainActor
 class DataController: ObservableObject {
-    static let shared = DataController()
+    static let shared: DataController = {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
+        if let fixture = StorageTestFixture.from(arguments: ProcessInfo.processInfo.arguments) {
+            return fixture.makeController()
+        }
+        #endif
+        return DataController()
+    }()
 
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DataController")
 
-    /// Error that occurred during initialization, if any
-    /// Views can check this to display appropriate error UI
-    @Published var initializationError: String?
+    @Published private(set) var storageState: StorageState
+    private let storeOpening: StoreOpening
 
     /// Preview container for SwiftUI previews
     static var preview: DataController = {
@@ -72,7 +78,12 @@ class DataController: ObservableObject {
         return controller
     }()
 
-    let container: ModelContainer
+    var container: ModelContainer {
+        guard case let .ready(container) = storageState else {
+            preconditionFailure("Storage must be ready before a model context is used")
+        }
+        return container
+    }
 
     /// All SwiftData model types registered with the app
     static let modelTypes: [any PersistentModel.Type] = [
@@ -105,75 +116,31 @@ class DataController: ObservableObject {
         #endif
     }
 
-    init(inMemory requestedInMemory: Bool = false) {
-        let schema = Schema(Self.modelTypes)
+    init(
+        inMemory requestedInMemory: Bool = false,
+        storeURL: URL? = nil,
+        makeContainer: @escaping StoreOpening.ContainerFactory = { schema, configurations in
+            try ModelContainer(for: schema, configurations: configurations)
+        }
+    ) {
         let arguments = ProcessInfo.processInfo.arguments
         #if DEBUG
         let inMemory = requestedInMemory || arguments.contains("-inMemory")
         #else
         let inMemory = requestedInMemory
         #endif
+        self.storeOpening = StoreOpening(
+            schema: Schema(Self.modelTypes),
+            inMemory: storeURL == nil && inMemory,
+            shouldEnableCloudKit: storeURL == nil && Self.shouldEnableCloudKit(arguments: arguments),
+            storeURL: storeURL,
+            makeContainer: makeContainer)
+        self.storageState = storeOpening.open(attempt: 1)
+    }
 
-        let configuration: ModelConfiguration
-        if inMemory {
-            // Unique names keep parallel Swift Testing workers from sharing one
-            // in-memory store. Disk stores keep the default unnamed configuration
-            // so existing user data is unchanged.
-            configuration = ModelConfiguration(
-                "JabTracker-memory-\(UUID().uuidString)",
-                schema: schema,
-                isStoredInMemoryOnly: true,
-                cloudKitDatabase: .none)
-        } else {
-            #if JABTRACKER_TEST_HARNESS
-            configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: .none)
-            #else
-            configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: Self.shouldEnableCloudKit(arguments: arguments)
-                    ? .private("iCloud.com.gannonhall.JabTracker")
-                    : .none)
-            #endif
-        }
-
-        do {
-            self.container = try ModelContainer(for: schema, configurations: [configuration])
-        } catch {
-            Self.logger.warning("Primary store failed, falling back to local storage: \(error.localizedDescription)")
-            let fallbackConfiguration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: inMemory,
-                cloudKitDatabase: .none)
-            do {
-                self.container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
-            } catch let fallbackError {
-                // Local storage also failed - try in-memory as last resort
-                Self.logger.error(
-                    "Local storage failed, attempting in-memory fallback: \(fallbackError.localizedDescription)"
-                )
-                let inMemoryConfig = ModelConfiguration(
-                    "JabTracker-memory-\(UUID().uuidString)",
-                    schema: schema,
-                    isStoredInMemoryOnly: true,
-                    cloudKitDatabase: .none)
-                do {
-                    self.container = try ModelContainer(for: schema, configurations: [inMemoryConfig])
-                    self.initializationError =
-                        "Unable to save data. Your changes will not persist after closing the app."
-                    Self.logger.error("Running in emergency in-memory mode - data will not persist")
-                } catch let finalError {
-                    // This should never happen - in-memory containers don't require disk access
-                    Self.logger.critical("Failed to create even in-memory ModelContainer: \(finalError)")
-                    preconditionFailure(
-                        "Unable to initialize data storage. Please reinstall the app or contact support."
-                    )
-                }
-            }
-        }
+    func retryStorage() {
+        guard case let .failed(failure) = storageState else { return }
+        storageState = storeOpening.open(attempt: failure.attemptCount + 1)
     }
 
     #if DEBUG || JABTRACKER_TEST_HARNESS
