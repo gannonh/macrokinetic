@@ -212,6 +212,7 @@
 		550AB3855CE4828313CE1B40 /* AuthenticationEnumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C09E1878495CFF7D03ED9ADE /* AuthenticationEnumTests.swift */; };
 		552D426D137E4180D2F54EC1 /* QuickMetricsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721B6C7CCE2BE60BB5BF378B /* QuickMetricsSheet.swift */; };
 		56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65714DDE038569FC5C471011 /* DesignSystemUITests.swift */; };
+		56C7AC51FB8B574828B3E522 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F558D3A4C004422B3C2F9960 /* PrivacyInfo.xcprivacy */; };
 		56D503FB4FDE0B4A8D3D4283 /* ReconstitutionCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3920FFDC07806ABF17F4B65F /* ReconstitutionCalculatorTests.swift */; };
 		571A0962A47699E66A4BD51D /* AuthenticationEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */; };
 		573944B33F96BAC51138C1FE /* SummaryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64E0C853856028A53F5D0588 /* SummaryRow.swift */; };
@@ -1248,6 +1249,7 @@
 		F46CAB1EB265743F8965E95E /* ShortcutButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutButtonTests.swift; sourceTree = "<group>"; };
 		F4E4D068F86F003F40B10E71 /* CalendarDoseActionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDoseActionsUITests.swift; sourceTree = "<group>"; };
 		F557EDDA6D9BA00312971726 /* NotificationAuthorizationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAuthorizationStatus.swift; sourceTree = "<group>"; };
+		F558D3A4C004422B3C2F9960 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F5A7F0370CC40B618BFF2A9B /* FoodServingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodServingTests.swift; sourceTree = "<group>"; };
 		F70B4425884ACD872183473F /* SettingsViewNotificationIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewNotificationIntegrationTests.swift; sourceTree = "<group>"; };
 		F78094472F5DE7764EA9C5CA /* CalendarDisplayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDisplayUITests.swift; sourceTree = "<group>"; };
@@ -1717,6 +1719,7 @@
 		7CF8F87FC3E0C1ADFC478A4B /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F558D3A4C004422B3C2F9960 /* PrivacyInfo.xcprivacy */,
 				104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */,
 			);
 			path = Resources;
@@ -2598,6 +2601,7 @@
 				4F1FAEDED60404CF678ED8EA /* AppIcon.icon in Resources */,
 				666E70338436B5345B89C04B /* Assets.xcassets in Resources */,
 				B75439369EF479C6C7679BEF /* JabTrackerStoreKit.storekit in Resources */,
+				56C7AC51FB8B574828B3E522 /* PrivacyInfo.xcprivacy in Resources */,
 				C395CC75D4D807116357B138 /* usda_foods.sqlite in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

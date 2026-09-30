@@ -35,6 +35,9 @@ targets:
       - path: JabTracker
         excludes:
           - "**/.swiftlint.yml"
+          - "Resources/PrivacyInfo.xcprivacy"
+      - path: JabTracker/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
     resources:
       - path: JabTracker/Assets.xcassets
         optional: true
