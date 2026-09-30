@@ -12,6 +12,8 @@ enum ReleaseFeature: CaseIterable {
     case helpCenter
     case historicalTDEERecalculation
     case barcodeScannerExtras
+    case medicalCalculators
+    case concentrationEstimates
 }
 
 enum ReleasePolicy {
@@ -20,7 +22,8 @@ enum ReleasePolicy {
         case .subscriptions, .aiFoodCapture, .recipes, .foodFavorites,
             .shortcutCustomization, .dashboardCustomization, .foodLogCustomization,
             .extendedBodyMetrics, .progressPhotos, .manualOnboarding, .helpCenter,
-            .historicalTDEERecalculation, .barcodeScannerExtras:
+            .historicalTDEERecalculation, .barcodeScannerExtras, .medicalCalculators,
+            .concentrationEstimates:
             return false
         }
     }

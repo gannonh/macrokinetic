@@ -72,7 +72,7 @@ struct DoseScheduleEditView: View {
         let defaultPattern: SchedulePatternType
         if let existingPattern = existingSchedule?.patternType {
             defaultPattern = existingPattern
-        } else if medicationProfile.medication?.frequency == .daily {
+        } else if ReleasePolicy.isEnabled(.medicalCalculators), medicationProfile.medication?.frequency == .daily {
             defaultPattern = .daily
         } else {
             defaultPattern = .weekly
@@ -170,7 +170,7 @@ struct DoseScheduleEditView: View {
                 Text("Current Dose")
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("\(String(format: "%.2f", medicationProfile.currentDose)) mg")
+                Text("\(RecordedAmountInput.displayText(for: medicationProfile.currentDose)) mg")
             }
         }
     }
@@ -180,7 +180,15 @@ struct DoseScheduleEditView: View {
         Section {
             Picker("Pattern", selection: $selectedPattern) {
                 // Show patterns based on medication frequency
-                if medicationProfile.medication?.frequency == .daily {
+                if !ReleasePolicy.isEnabled(.medicalCalculators) {
+                    Text("Daily").tag(SchedulePatternType.daily)
+                    Text("Weekly").tag(SchedulePatternType.weekly)
+                    if existingSchedule?.patternType == .splitDose {
+                        Text("Recorded Split Schedule").tag(SchedulePatternType.splitDose)
+                    } else if existingSchedule?.patternType == .custom {
+                        Text("Recorded Custom Schedule").tag(SchedulePatternType.custom)
+                    }
+                } else if medicationProfile.medication?.frequency == .daily {
                     Text("Daily").tag(SchedulePatternType.daily)
                 } else {
                     // Weekly medications
@@ -271,6 +279,9 @@ struct DoseScheduleEditView: View {
 
     /// Footer text for pattern selection
     private var patternFooterText: String {
+        if !ReleasePolicy.isEnabled(.medicalCalculators) {
+            return "Record the schedule prescribed by your clinician. This app does not recommend a dosing schedule."
+        }
         switch selectedPattern {
         case .daily:
             return "Doses scheduled at the same time each day"
@@ -320,6 +331,15 @@ struct DoseScheduleEditView: View {
     /// Save schedule configuration
     private func saveSchedule() {
         isSaving = true
+        if !ReleasePolicy.isEnabled(.medicalCalculators),
+            selectedPattern == .splitDose || selectedPattern == .custom,
+            existingSchedule?.patternType != selectedPattern
+        {
+            errorMessage = "Choose a supported prescribed schedule"
+            showError = true
+            isSaving = false
+            return
+        }
 
         // Validate inputs first
         if let error = validateInputs() {
@@ -329,60 +349,72 @@ struct DoseScheduleEditView: View {
             return
         }
 
-        // Build schedule configuration based on pattern
-        let config: ScheduleConfiguration
+        guard let config = scheduleConfiguration else {
+            errorMessage = "The recorded schedule could not be read"
+            showError = true
+            isSaving = false
+            return
+        }
+        onSave(config, selectedPattern)
+        isSaving = false
+        dismiss()
+    }
 
+    var scheduleConfiguration: ScheduleConfiguration? {
+        if !ReleasePolicy.isEnabled(.medicalCalculators),
+            selectedPattern == .splitDose || selectedPattern == .custom
+        {
+            guard existingSchedule?.patternType == selectedPattern else { return nil }
+            return preservedRecordedConfiguration
+        }
+        let amount = ReleasePolicy.isEnabled(.medicalCalculators) ? medicationProfile.currentDose : recordedDoseAmount
         switch selectedPattern {
         case .daily:
-            config = ScheduleConfiguration(
-                dayOfWeek: nil,  // No specific day - daily dosing
-                timeOfDay: timeOfDay,
-                secondTimeOfDay: nil,  // Not used for daily pattern
-                interval: 1,  // 1 day interval
-                doseAmount: medicationProfile.currentDose,
-                windowMinutesBefore: windowMinutesBefore,
-                windowMinutesAfter: windowMinutesAfter,
-                splitDoseCount: nil,
-                splitIntervalMinutes: nil,
-                customRecurrence: nil
-            )
-
-        case .weekly:
-            config = ScheduleConfiguration(
-                dayOfWeek: dayOfWeek,
-                timeOfDay: timeOfDay,
-                secondTimeOfDay: nil,  // Not used for weekly pattern
-                interval: interval,
-                doseAmount: medicationProfile.currentDose,
-                windowMinutesBefore: windowMinutesBefore,
-                windowMinutesAfter: windowMinutesAfter,
-                splitDoseCount: nil,
-                splitIntervalMinutes: nil,
-                customRecurrence: nil
-            )
-
-        case .splitDose:
-            config = ScheduleConfiguration(
+            return ScheduleConfiguration(
                 dayOfWeek: nil,
                 timeOfDay: timeOfDay,
-                secondTimeOfDay: nil,  // TODO: Add second time picker in Settings UI (Phase 3)
-                interval: 7,  // Weekly base interval
-                doseAmount: medicationProfile.currentDose,
+                secondTimeOfDay: nil,
+                interval: 1,
+                doseAmount: amount,
                 windowMinutesBefore: windowMinutesBefore,
                 windowMinutesAfter: windowMinutesAfter,
-                splitDoseCount: nil,  // Not used for twice-weekly pattern
+                splitDoseCount: nil,
+                splitIntervalMinutes: nil,
+                customRecurrence: nil
+            )
+        case .weekly:
+            return ScheduleConfiguration(
+                dayOfWeek: dayOfWeek,
+                timeOfDay: timeOfDay,
+                secondTimeOfDay: nil,
+                interval: interval,
+                doseAmount: amount,
+                windowMinutesBefore: windowMinutesBefore,
+                windowMinutesAfter: windowMinutesAfter,
+                splitDoseCount: nil,
+                splitIntervalMinutes: nil,
+                customRecurrence: nil
+            )
+        case .splitDose:
+            return ScheduleConfiguration(
+                dayOfWeek: nil,
+                timeOfDay: timeOfDay,
+                secondTimeOfDay: nil,
+                interval: 7,
+                doseAmount: amount,
+                windowMinutesBefore: windowMinutesBefore,
+                windowMinutesAfter: windowMinutesAfter,
+                splitDoseCount: nil,
                 splitIntervalMinutes: TimeConstants.splitDoseInterval,
                 customRecurrence: nil
             )
-
         case .custom:
-            // Basic custom configuration - user will need to configure via advanced editor
-            config = ScheduleConfiguration(
+            return ScheduleConfiguration(
                 dayOfWeek: nil,
                 timeOfDay: timeOfDay,
-                secondTimeOfDay: nil,  // Not used for custom pattern
+                secondTimeOfDay: nil,
                 interval: interval,
-                doseAmount: medicationProfile.currentDose,
+                doseAmount: amount,
                 windowMinutesBefore: windowMinutesBefore,
                 windowMinutesAfter: windowMinutesAfter,
                 splitDoseCount: nil,
@@ -390,12 +422,31 @@ struct DoseScheduleEditView: View {
                 customRecurrence: nil
             )
         }
+    }
 
-        // Call save callback
-        onSave(config, selectedPattern)
+    var recordedDoseAmount: Double {
+        guard let existingSchedule,
+            let recorded = try? JSONDecoder().decode(ScheduleConfiguration.self, from: existingSchedule.baseSchedule)
+        else { return medicationProfile.currentDose }
+        return recorded.doseAmount
+    }
 
-        isSaving = false
-        dismiss()
+    var preservedRecordedConfiguration: ScheduleConfiguration? {
+        guard let existingSchedule,
+            let recorded = try? JSONDecoder().decode(ScheduleConfiguration.self, from: existingSchedule.baseSchedule)
+        else { return nil }
+        return ScheduleConfiguration(
+            dayOfWeek: recorded.dayOfWeek,
+            timeOfDay: timeOfDay,
+            secondTimeOfDay: recorded.secondTimeOfDay,
+            interval: recorded.interval,
+            doseAmount: recorded.doseAmount,
+            windowMinutesBefore: windowMinutesBefore,
+            windowMinutesAfter: windowMinutesAfter,
+            splitDoseCount: recorded.splitDoseCount,
+            splitIntervalMinutes: recorded.splitIntervalMinutes,
+            customRecurrence: recorded.customRecurrence
+        )
     }
 }
 

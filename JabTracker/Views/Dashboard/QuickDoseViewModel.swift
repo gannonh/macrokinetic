@@ -25,7 +25,12 @@ class QuickDoseViewModel: ObservableObject {
         }
     }
 
-    @Published var doseAmount: Double = 0.0
+    @Published var doseAmount: Double = 0.0 {
+        didSet {
+            self.doseAmountText = RecordedAmountInput.text(for: self.doseAmount)
+        }
+    }
+    @Published var doseAmountText = ""
     @Published var selectedInjectionSite: String = ""
     @Published var doseDate: Date = .init()
     @Published var doseTime: Date = .init()
@@ -37,10 +42,8 @@ class QuickDoseViewModel: ObservableObject {
 
     // MARK: - Dose Adjustment Properties
 
-    /// Valid dose range based on medication type
-    /// - For compounded ("Generic" brand): Full therapeutic range in 0.25mg increments
-    /// - For branded: Uses available pen doses for the specific brand
     var doseAmountRange: ClosedRange<Double> {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return 0...0 }
         guard let profile = selectedMedicationProfile,
             let medication = profile.medication
         else {
@@ -64,10 +67,8 @@ class QuickDoseViewModel: ObservableObject {
         return minDose...maxDose
     }
 
-    /// Step increment for dose adjustments
-    /// - For compounded medications: 0.25mg increments for fine-grained titration
-    /// - For branded medications: Uses discrete pen dose steps
     var doseAmountStep: Double {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return 0 }
         guard let profile = selectedMedicationProfile,
             let medication = profile.medication
         else {
@@ -125,11 +126,12 @@ class QuickDoseViewModel: ObservableObject {
     /// Determines if dose can be saved based on current state
     var canSaveDose: Bool {
         guard self.selectedMedicationProfile != nil else { return false }
-        guard self.doseAmount > 0 else { return false }
+        guard let amount = self.amountToSave else { return false }
 
-        // Validate dose is within therapeutic range for selected medication
-        let range = doseAmountRange
-        guard range.lowerBound > 0, range.contains(doseAmount) else { return false }
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            let range = doseAmountRange
+            guard range.lowerBound > 0, range.contains(amount) else { return false }
+        }
 
         guard !self.selectedInjectionSite.isEmpty else { return false }
 
@@ -147,6 +149,13 @@ class QuickDoseViewModel: ObservableObject {
         return true
     }
 
+    var amountToSave: Double? {
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            return self.doseAmount.isFinite && self.doseAmount > 0 ? self.doseAmount : nil
+        }
+        return RecordedAmountInput.parse(self.doseAmountText)
+    }
+
     // MARK: - Initialization
 
     init() {
@@ -157,19 +166,19 @@ class QuickDoseViewModel: ObservableObject {
 
     // MARK: - Smart Defaults Loading
 
-    /// Loads smart defaults from user's medication profiles and dose history
-    /// - Parameters:
-    ///   - context: ModelContext for fetching medication profiles
-    ///   - prePopulatedTimestamp: Optional timestamp to pre-populate date/time (for scheduled doses)
-    func loadSmartDefaults(context: ModelContext, prePopulatedTimestamp: Date? = nil) {
-        // Pre-populate date/time SYNCHRONOUSLY if provided (for scheduled doses)
-        // This must happen BEFORE the async Task so date pickers bind to correct values
+    @discardableResult
+    func loadSmartDefaults(
+        context: ModelContext,
+        prePopulatedTimestamp: Date? = nil,
+        prePopulatedAmount: Double? = nil,
+        preSelectedProfile: MedicationProfile? = nil
+    ) -> Task<Void, Never> {
         if let timestamp = prePopulatedTimestamp {
             self.doseDate = timestamp
             self.doseTime = timestamp
         }
 
-        Task { @MainActor in
+        return Task { @MainActor in
             do {
                 self.isLoading = true
                 self.errorMessage = nil
@@ -189,11 +198,13 @@ class QuickDoseViewModel: ObservableObject {
                     return
                 }
 
-                // Select the most recent medication profile as default
-                self.selectedMedicationProfile = self.medicationProfiles.first
+                self.selectedMedicationProfile = preSelectedProfile ?? self.medicationProfiles.first
 
                 // Update dose amount from selected profile
                 self.updateDoseAmount()
+                if let prePopulatedAmount {
+                    self.doseAmount = prePopulatedAmount
+                }
 
                 // Get smart injection site recommendation
                 self.updateRecommendedInjectionSites()
@@ -208,7 +219,8 @@ class QuickDoseViewModel: ObservableObject {
     }
 
     /// Loads existing dose data for editing
-    func loadEditData(_ editData: DoseEditData, context: ModelContext) {
+    @discardableResult
+    func loadEditData(_ editData: DoseEditData, context: ModelContext) -> Task<Void, Never> {
         Task { @MainActor in
             do {
                 self.isLoading = true
@@ -249,7 +261,8 @@ class QuickDoseViewModel: ObservableObject {
     /// - Parameters:
     ///   - scheduledDoseId: UUID of the scheduled dose to load
     ///   - context: ModelContext for database access
-    func prepareForScheduledDose(scheduledDoseId: UUID, context: ModelContext) {
+    @discardableResult
+    func prepareForScheduledDose(scheduledDoseId: UUID, context: ModelContext) -> Task<Void, Never> {
         Task { @MainActor in
             do {
                 self.isLoading = true
@@ -268,7 +281,12 @@ class QuickDoseViewModel: ObservableObject {
                 }
 
                 // Load smart defaults with the scheduled time
-                self.loadSmartDefaults(context: context, prePopulatedTimestamp: scheduledDose.scheduledTime)
+                await self.loadSmartDefaults(
+                    context: context,
+                    prePopulatedTimestamp: scheduledDose.scheduledTime,
+                    prePopulatedAmount: scheduledDose.doseAmount,
+                    preSelectedProfile: scheduledDose.schedule?.medicationProfile
+                ).value
 
                 self.isLoading = false
 
@@ -281,11 +299,15 @@ class QuickDoseViewModel: ObservableObject {
 
     // MARK: - Smart Default Updates
 
-    /// Updates dose amount based on selected medication profile's current dose
-    /// For split-dose schedules, shows half the weekly dose per administration
     private func updateDoseAmount() {
         guard let profile = selectedMedicationProfile else {
             self.doseAmount = 0.0
+            return
+        }
+
+        if !ReleasePolicy.isEnabled(.medicalCalculators) {
+            let hasSplitSchedule = profile.schedules?.contains { $0.isActive && $0.patternType == .splitDose } ?? false
+            self.doseAmount = hasSplitSchedule ? 0 : profile.currentDose
             return
         }
 
@@ -305,10 +327,8 @@ class QuickDoseViewModel: ObservableObject {
         self.doseAmount = clampDoseAmount(newDose)
     }
 
-    /// Clamps a dose amount to the valid range for the selected medication
-    /// - Parameter dose: The dose to clamp
-    /// - Returns: The dose clamped to the valid range
     func clampDoseAmount(_ dose: Double) -> Double {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return dose }
         let range = doseAmountRange
         return min(max(dose, range.lowerBound), range.upperBound)
     }
@@ -378,6 +398,7 @@ class QuickDoseViewModel: ObservableObject {
     /// - Titration scheduled date is today or in the past
     /// - User hasn't selected "Remind Me Later" for this session
     func shouldShowTitrationDialog() -> Bool {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return false }
         logger.trace("Checking if titration dialog should be shown")
 
         guard let pendingTitration = getPendingTitration() else {
@@ -404,6 +425,7 @@ class QuickDoseViewModel: ObservableObject {
     /// Gets the pending titration for the selected medication profile
     /// Returns nil if no medication profile selected or no pending titration exists
     func getPendingTitration() -> DoseTitration? {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return nil }
         logger.trace("Getting pending titration")
 
         guard let profile = selectedMedicationProfile else {
@@ -451,6 +473,9 @@ class QuickDoseViewModel: ObservableObject {
     ///   - context: ModelContext for saving changes
     /// - Throws: Error if save fails
     func completeTitration(_ titration: DoseTitration, context: ModelContext) throws {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else {
+            throw MedicationManager.MedicationError.medicalCalculatorsUnavailable
+        }
         logger.debug("QuickDoseViewModel.completeTitration called")
 
         // Mark titration as completed
@@ -480,6 +505,9 @@ class QuickDoseViewModel: ObservableObject {
     ///   - context: ModelContext for saving changes
     /// - Throws: Error if save fails
     func rescheduleTitration(_ titration: DoseTitration, to newDate: Date, context: ModelContext) throws {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else {
+            throw MedicationManager.MedicationError.medicalCalculatorsUnavailable
+        }
         logger.debug("QuickDoseViewModel.rescheduleTitration called")
 
         let formatter = DateFormatter()
