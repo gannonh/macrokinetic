@@ -33,7 +33,6 @@ struct FoodSearchSheet: View {
     @State var viewModel: FoodSearchSheetViewModel
     @State var quickAddViewModel: QuickAddViewModel?
     @State var selectedFood: FoodSearchResult?
-    @State var showingFoodDetail = false
     @State private var showingComingSoon = false
     @State var showingTimePicker = false
     @State var editingCustomFood: Food?
@@ -142,7 +141,6 @@ struct FoodSearchSheet: View {
                             customFoodService: customFoodService,
                             onFoodSelected: { food in
                                 selectedFood = food.toSearchResult()
-                                showingFoodDetail = true
                             },
                             editingCustomFood: $editingCustomFood,
                             foodToDelete: $foodToDelete,
@@ -180,20 +178,18 @@ struct FoodSearchSheet: View {
             .navigationBarHidden(true)
         }
         .accessibilityIdentifier(Self.accessibilityIdentifierValue)
-        .sheet(isPresented: $showingFoodDetail) {
-            if let food = selectedFood {
-                FoodDetailSheet(
-                    food: food,
-                    user: user,
-                    selectedMeal: MealSection.from(date: viewModel.selectedTime),
-                    selectedTime: viewModel.selectedTime,
-                    foodService: foodService,
-                    mealLogService: mealLogService,
-                    customFoodService: customFoodService
-                ) {
-                    onComplete()
-                    dismiss()
-                }
+        .sheet(item: $selectedFood) { food in
+            FoodDetailSheet(
+                food: food,
+                user: user,
+                selectedMeal: MealSection.from(date: viewModel.selectedTime),
+                selectedTime: viewModel.selectedTime,
+                foodService: foodService,
+                mealLogService: mealLogService,
+                customFoodService: customFoodService
+            ) {
+                onComplete()
+                dismiss()
             }
         }
         .alert("Coming Soon", isPresented: $showingComingSoon) {
@@ -438,7 +434,6 @@ struct FoodSearchSheet: View {
         let result = food.toSearchResult()
         return Button {
             selectedFood = result
-            showingFoodDetail = true
         } label: {
             FoodSearchResultRow(result: result)
         }

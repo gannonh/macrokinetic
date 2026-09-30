@@ -315,6 +315,8 @@ struct FoodDetailSheet: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("food-detail-calories")
 
             // Macro row with percentages
             HStack(spacing: 24) {
@@ -322,19 +324,22 @@ struct FoodDetailSheet: View {
                     value: scaledProtein,
                     label: "Protein",
                     percentage: Int(proteinImpact * 100),
-                    color: DesignTokens.Colors.protein
+                    color: DesignTokens.Colors.protein,
+                    accessibilityIdentifier: "food-detail-macro-protein"
                 )
                 macroItem(
                     value: scaledFat,
                     label: "Fat",
                     percentage: Int(fatImpact * 100),
-                    color: DesignTokens.Colors.fat
+                    color: DesignTokens.Colors.fat,
+                    accessibilityIdentifier: "food-detail-macro-fat"
                 )
                 macroItem(
                     value: scaledCarbs,
                     label: "Carbs",
                     percentage: Int(carbImpact * 100),
-                    color: DesignTokens.Colors.carbs
+                    color: DesignTokens.Colors.carbs,
+                    accessibilityIdentifier: "food-detail-macro-carbs"
                 )
             }
         }
@@ -342,7 +347,9 @@ struct FoodDetailSheet: View {
         .cardStyle()
     }
 
-    private func macroItem(value: Double, label: String, percentage: Int, color: Color) -> some View {
+    private func macroItem(
+        value: Double, label: String, percentage: Int, color: Color, accessibilityIdentifier: String
+    ) -> some View {
         VStack(spacing: 4) {
             Text("\(Int(value))")
                 .font(.title2.weight(.semibold))
@@ -359,6 +366,8 @@ struct FoodDetailSheet: View {
                 .foregroundColor(color)
                 .cornerRadius(4)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 
     // MARK: - Action Buttons
