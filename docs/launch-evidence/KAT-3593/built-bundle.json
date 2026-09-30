@@ -1,0 +1,14 @@
+{
+  "configuration": "Debug",
+  "bundle": "com.gannonhall.JabTracker",
+  "version": "0.10.1",
+  "build": "16",
+  "notices_present": true,
+  "notices_sources": [
+    "usda",
+    "off"
+  ],
+  "database_bytes": 439869440,
+  "database_sha256": "b2c637b3cd700350cca0399c7be9456185ce23b4d2fcb55ef0e4b7f2dcc5c5c4",
+  "manifest_present": false
+}
